@@ -14,6 +14,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -57,14 +58,14 @@ namespace TouchSocket.Http.WebSockets
             if (this.Closed != null)
             {
                 // 如果已注册，则调用处理程序并传递事件参数
-                await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 如果事件已被处理，则直接返回
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnWebSocketClosed(e).ConfigureAwait(false);
+            await base.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -78,14 +79,14 @@ namespace TouchSocket.Http.WebSockets
             if (this.Closing != null)
             {
                 // 如果已注册，调用处理程序并传递事件参数
-                await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 如果事件已被处理，则直接返回，不再执行后续代码
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnWebSocketClosing(e).ConfigureAwait(false);
+            await base.OnWebSocketClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -93,14 +94,14 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Handshaked != null)
             {
-                await this.Handshaked.Invoke(this, e).ConfigureAwait(false);
+                await this.Handshaked.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnWebSocketHandshaked(e).ConfigureAwait(false);
+            await base.OnWebSocketHandshaked(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -108,14 +109,14 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Handshaking != null)
             {
-                await this.Handshaking.Invoke(this, e).ConfigureAwait(false);
+                await this.Handshaking.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnWebSocketHandshaking(e).ConfigureAwait(false);
+            await base.OnWebSocketHandshaking(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -123,13 +124,13 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnWebSocketReceived(e).ConfigureAwait(false);
+            await base.OnWebSocketReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件

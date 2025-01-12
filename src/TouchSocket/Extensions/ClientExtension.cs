@@ -141,7 +141,7 @@ namespace TouchSocket.Sockets
                 else
                 {
                     // 异步调用CloseAsync方法关闭客户端，传递关闭消息，并指定ConfigureAwait为false以避免同步上下文。
-                    await client.CloseAsync(msg).ConfigureAwait(false);
+                    await client.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch
@@ -251,7 +251,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>
         public static async Task ConnectAsync(this IConnectableClient client, int millisecondsTimeout = 5000)
         {
-            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(false);
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, System.Threading.CancellationToken)"/>
@@ -262,14 +262,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetRemoteIPHost(ipHost);
-                await client.SetupAsync(config).ConfigureAwait(false);
+                await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 config = client.Config;
                 config.SetRemoteIPHost(ipHost);
             }
-            await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
+            await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace TouchSocket.Sockets
             // 尝试进行连接操作
             try
             {
-                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
+                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return new Result(ResultCode.Success);
             }
             // 捕获连接过程中可能抛出的任何异常
@@ -305,7 +305,7 @@ namespace TouchSocket.Sockets
             try
             {
                 // 尝试连接操作，如果超时或发生其他异常，将捕获异常并返回相应的结果。
-                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
+                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)

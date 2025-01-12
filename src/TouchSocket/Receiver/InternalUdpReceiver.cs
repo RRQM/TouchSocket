@@ -107,7 +107,7 @@ namespace TouchSocket.Sockets
             this.m_receiverResult.EndPoint = remoteEndPoint;
 
             this.Complete(false);
-            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(false);
+            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         public async Task Complete(string msg)
@@ -116,7 +116,7 @@ namespace TouchSocket.Sockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceive(default, default, default).ConfigureAwait(false);
+                await this.InputReceive(default, default, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {

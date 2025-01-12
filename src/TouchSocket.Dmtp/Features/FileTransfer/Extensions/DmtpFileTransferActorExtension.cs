@@ -132,7 +132,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
             try
             {
-                var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
+                var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (!resourceInfoResult.IsSuccess)
                 {
                     return fileOperator.SetResult(new Result(resourceInfoResult));
@@ -183,7 +183,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                          }
                          try
                          {
-                             using (var result = await actor.PullFileSectionAsync(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false))
+                             using (var result = await actor.PullFileSectionAsync(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                              {
                                  if (result.IsSuccess)
                                  {
@@ -192,7 +192,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                          var res = locator.WriteFileSection(result);
                                          if (res.IsSuccess)
                                          {
-                                             await fileOperator.AddFlowAsync(fileSection.Length).ConfigureAwait(false);
+                                             await fileOperator.AddFlowAsync(fileSection.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                              failed = 0;
                                              break;
                                          }
@@ -207,7 +207,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                      }
                                      failed++;
                                      sections.Push(fileSection);
-                                     await Task.Delay(500).ConfigureAwait(false);
+                                     await Task.Delay(500).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                  }
                              }
                          }
@@ -215,22 +215,22 @@ namespace TouchSocket.Dmtp.FileTransfer
                          {
                              failed++;
                              failResult = new Result(ex);
-                             await Task.Delay(500).ConfigureAwait(false);
+                             await Task.Delay(500).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                          }
                      }
-                 }).ConfigureAwait(false);
+                 }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (fileOperator.Token.IsCancellationRequested)
                 {
                     if (actor.DmtpActor.Online)
                     {
-                        await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
+                        await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     return fileOperator.SetResult(Result.Canceled);
                 }
                 var result1 = locator.TryFinished();
                 if (actor.DmtpActor.Online)
                 {
-                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
+                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 return result1.IsSuccess ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);

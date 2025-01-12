@@ -93,7 +93,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (this.AllowJsonRpc != null)
                 {
-                    if (await this.AllowJsonRpc.Invoke(client).ConfigureAwait(false))
+                    if (await this.AllowJsonRpc.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         var jsonRpcActor = new JsonRpcActor()
                         {
@@ -109,7 +109,7 @@ namespace TouchSocket.JsonRpc
                 }
             }
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -135,10 +135,10 @@ namespace TouchSocket.JsonRpc
                 {
                     return;
                 }
-                await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client)).ConfigureAwait(false);
+                await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

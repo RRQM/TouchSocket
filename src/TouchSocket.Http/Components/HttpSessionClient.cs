@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -66,7 +67,7 @@ namespace TouchSocket.Http
             {
                 var e = new HttpContextEventArgs(httpContext);
 
-                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -75,9 +76,9 @@ namespace TouchSocket.Http
         {
             if (this.m_webSocket != null)
             {
-                await this.PrivateWebSocketClosed(e).ConfigureAwait(false);
+                await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -93,13 +94,13 @@ namespace TouchSocket.Http
             if (e.RequestInfo is HttpRequest request)
             {
                 this.m_httpContext ??= new HttpContext(request, new HttpResponse(request, this));
-                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(false);
+                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_httpContext.Response.ResetHttp();
             }
             else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
             {
                 e.Handled = true;
-                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(false);
+                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
         }

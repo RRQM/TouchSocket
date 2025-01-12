@@ -109,12 +109,12 @@ namespace TouchSocket.Sockets
                         switch (method.TaskType)
                         {
                             case TaskReturnType.Task:
-                                await method.InvokeAsync(this, os).ConfigureAwait(false);
+                                await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 result = default;
                                 break;
 
                             case TaskReturnType.TaskObject:
-                                result = await method.InvokeObjectAsync(this, os).ConfigureAwait(false);
+                                result = await method.InvokeObjectAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 break;
 
                             case TaskReturnType.None:
@@ -141,7 +141,7 @@ namespace TouchSocket.Sockets
                 this.m_logger.Log(LogLevel.Error, this, ex.Message, ex);
             }
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

@@ -56,14 +56,14 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Closed != null)
                 {
-                    await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                    await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
 
-                await base.OnSerialClosed(e).ConfigureAwait(false);
+                await base.OnSerialClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -81,14 +81,14 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Closing != null)
                 {
-                    await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                    await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
 
-                await base.OnSerialClosing(e).ConfigureAwait(false);
+                await base.OnSerialClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -106,13 +106,13 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Connected != null)
                 {
-                    await this.Connected.Invoke(this, e).ConfigureAwait(false);
+                    await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-                await base.OnSerialConnected(e).ConfigureAwait(false);
+                await base.OnSerialConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -130,14 +130,14 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Connecting != null)
                 {
-                    await this.Connecting.Invoke(this, e).ConfigureAwait(false);
+                    await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
 
-                await base.OnSerialConnecting(e).ConfigureAwait(false);
+                await base.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -150,14 +150,14 @@ namespace TouchSocket.SerialPorts
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnSerialReceived(e).ConfigureAwait(false);
+            await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件

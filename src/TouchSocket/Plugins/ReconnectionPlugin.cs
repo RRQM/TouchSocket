@@ -34,7 +34,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await c.ConnectAsync().ConfigureAwait(false);
+                    await c.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return true;
                 }
                 catch
@@ -81,7 +81,7 @@ namespace TouchSocket.Sockets
             this.ActionForCheck = async (c, i) =>
             {
                 // 不等待任务完成，直接返回委托的执行结果。
-                await EasyTask.CompletedTask.ConfigureAwait(false);
+                await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return actionForCheck.Invoke(c, i);
             };
             return this;
@@ -123,8 +123,8 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            await Task.Delay(1000).ConfigureAwait(false);
-                            await client.ConnectAsync().ConfigureAwait(false);
+                            await Task.Delay(1000).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await client.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
 
                         successCallback?.Invoke(client);
@@ -132,7 +132,7 @@ namespace TouchSocket.Sockets
                     }
                     catch (Exception ex)
                     {
-                        await Task.Delay(sleepTime).ConfigureAwait(false);
+                        await Task.Delay(sleepTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (failCallback?.Invoke(client, ++tryT, ex) != true)
                         {
                             return true;
@@ -166,8 +166,8 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            await Task.Delay(1000).ConfigureAwait(false);
-                            await client.ConnectAsync().ConfigureAwait(false);
+                            await Task.Delay(1000).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await client.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         successCallback?.Invoke(client);
                         return true;
@@ -178,7 +178,7 @@ namespace TouchSocket.Sockets
                         {
                             client.Logger?.Exception(ex);
                         }
-                        await Task.Delay(sleepTime).ConfigureAwait(false);
+                        await Task.Delay(sleepTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 return true;
@@ -235,17 +235,17 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-                await Task.Delay(this.Tick).ConfigureAwait(false);
+                await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
-                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(false);
+                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (b == null)
                     {
                         continue;
                     }
                     else if (b == false)
                     {
-                        if (await this.ActionForConnect.Invoke(client).ConfigureAwait(false))
+                        if (await this.ActionForConnect.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             failCount = 0;
                         }
@@ -277,7 +277,7 @@ namespace TouchSocket.Sockets
         {
             this.m_beginReconnectTask = Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

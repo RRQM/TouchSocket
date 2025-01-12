@@ -53,7 +53,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             }
             if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
             {
-                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
+                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -76,7 +76,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+                var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 var id = this.GetNextNewId();
                 var client = new WebSocketDmtpSessionClient();
                 client.InternalSetId(id);
@@ -90,7 +90,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 client.InternalSetContainer(this.Resolver);
                 client.InternalSetPluginManager(this.PluginManager);
                 client.SetDmtpActor(this.CreateDmtpActor(client));
-                await client.Start(webSocket, context).ConfigureAwait(false);
+                await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -169,7 +169,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 if (this.TryGetClient(id, out var client))
                 {
-                    await client.CloseAsync().ConfigureAwait(false);
+                    await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     client.SafeDispose();
                 }
             }

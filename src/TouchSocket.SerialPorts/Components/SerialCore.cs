@@ -97,7 +97,7 @@ namespace TouchSocket.SerialPorts
 
         public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
-            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);
+            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 var segment = memory.GetArray();

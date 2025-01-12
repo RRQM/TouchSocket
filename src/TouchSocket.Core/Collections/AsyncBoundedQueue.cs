@@ -55,9 +55,9 @@ namespace TouchSocket.Core
         /// <param name="capacity">队列的最大容量，必须为正数。</param>
         public AsyncBoundedQueue(int capacity)
         {
-            if (capacity <= 0)
+            if (capacity < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be positive.");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(capacity), capacity, 1);
             }
 
             this.m_writeLock = new SemaphoreSlim(capacity, capacity);
@@ -66,12 +66,30 @@ namespace TouchSocket.Core
 
         /// <summary>
         /// 异步取出队列中的一个元素。
+        /// <para>
+        /// 注意：此方法为线程安全的方法，可以在多个线程中同时调用，但是await后的结果只能被一个线程获取。所以在多个线程中调用此方法时，可能会出现await为null的情况。
+        /// </para>
         /// </summary>
         /// <param name="cancellationToken">取消操作的令牌。</param>
         /// <returns>一个ValueTask对象，可以异步等待。</returns>
         public ValueTask<T> DequeueAsync(CancellationToken cancellationToken = default)
         {
             return base.ValueWaitAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// 尝试从队列中取出一个元素。
+        /// </summary>
+        /// <param name="result">当此方法返回时，如果操作成功，则包含从队列中移除的对象；否则为默认值。</param>
+        /// <returns>如果成功从队列中移除并返回了一个对象，则为 true；否则为 false。</returns>
+        public bool TryDequeue(out T result)
+        {
+            if (this.m_queue.TryDequeue(out result))
+            {
+                this.m_writeLock.Release();
+                return true;
+            }
+            return false;
         }
 
         /// <inheritdoc/>
@@ -101,7 +119,8 @@ namespace TouchSocket.Core
         public async Task EnqueueAsync(T item, CancellationToken cancellationToken = default)
         {
             this.ThrowIfDisposed();
-            await this.m_writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            //this.m_writeLock.CurrentCount
+            await this.m_writeLock.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_queue.Enqueue(item);
             base.Complete(false);
@@ -116,10 +135,10 @@ namespace TouchSocket.Core
         public async Task EnqueueAsync(T item, int timeout, CancellationToken cancellationToken)
         {
             this.ThrowIfDisposed();
-            await this.m_writeLock.WaitTimeAsync(timeout, cancellationToken).ConfigureAwait(false);
+            await this.m_writeLock.WaitTimeAsync(timeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_queue.Enqueue(item);
-            base.Complete(false);
+            base.Complete(true);
         }
 
         /// <summary>
@@ -128,13 +147,14 @@ namespace TouchSocket.Core
         /// <returns>队列中的一个元素。</returns>
         protected override T GetResult()
         {
-            if (this.m_queue.TryDequeue(out var result))
+            if (this.TryDequeue(out var result))
             {
-                this.m_writeLock.Release();
                 return result;
             }
-
-            ThrowHelper.ThrowInvalidOperationException("队列意外为空。");
+            //移除下面这行代码
+            //主要是因为公布了TryDequeue方法，有可能异步完成了，但是取数据时已被其他线程通过TryDequeue取走。
+            //所以这里不再抛出异常，而是返回默认值。
+            //ThrowHelper.ThrowInvalidOperationException("队列意外为空。");
             return default;
         }
 
@@ -145,7 +165,7 @@ namespace TouchSocket.Core
         /// <param name="state">操作的状态对象。</param>
         protected override void Scheduler(Action<object> action, object state)
         {
-            action(state);
+            Task.Factory.StartNew(action,state);
         }
     }
 }

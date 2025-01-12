@@ -54,7 +54,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace TouchSocket.SerialPorts
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace TouchSocket.SerialPorts
 
         private async Task PrivateOnClosing(ClosingEventArgs e)
         {
-            await this.OnSerialClosing(e).ConfigureAwait(false);
+            await this.OnSerialClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task PrivateOnSerialClosed(object obj)
@@ -134,9 +134,9 @@ namespace TouchSocket.SerialPorts
                 var receiver = this.m_receiver;
                 if (receiver != null)
                 {
-                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                    await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
-                await this.OnSerialClosed(e).ConfigureAwait(false);
+                await this.OnSerialClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -147,7 +147,7 @@ namespace TouchSocket.SerialPorts
         {
             try
             {
-                await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(false);
+                await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -156,7 +156,7 @@ namespace TouchSocket.SerialPorts
 
         private async Task PrivateOnSerialConnecting(ConnectingEventArgs e)
         {
-            await this.OnSerialConnecting(e).ConfigureAwait(false);
+            await this.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(SerialPortConfigExtension.SerialDataHandlingAdapterProperty)?.Invoke();
@@ -201,7 +201,7 @@ namespace TouchSocket.SerialPorts
         {
             if (this.m_online)
             {
-                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
+                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.Abort(true, msg);
             }
         }
@@ -225,7 +225,7 @@ namespace TouchSocket.SerialPorts
         {
             this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -238,7 +238,7 @@ namespace TouchSocket.SerialPorts
                 this.m_serialCore.SafeDispose();
 
                 var serialCore = CreateSerial(serialPortOption);
-                await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
+                await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 serialCore.SerialPort.Open();
 
@@ -336,12 +336,12 @@ namespace TouchSocket.SerialPorts
                 {
                     using (var byteBlock = new ByteBlock(1024 * 64))
                     {
-                        var result = await this.m_serialCore.ReceiveAsync(byteBlock).ConfigureAwait(false);
+                        var result = await this.m_serialCore.ReceiveAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         if (result.BytesTransferred > 0)
                         {
                             byteBlock.SetLength(result.BytesTransferred);
-                            await this.HandleReceivingData(byteBlock).ConfigureAwait(false);
+                            await this.HandleReceivingData(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                 }
@@ -362,18 +362,18 @@ namespace TouchSocket.SerialPorts
                     return;
                 }
 
-                if (await this.OnSerialReceiving(byteBlock).ConfigureAwait(false))
+                if (await this.OnSerialReceiving(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     return;
                 }
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
+                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
@@ -416,10 +416,10 @@ namespace TouchSocket.SerialPorts
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(false);
+                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-            await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
+            await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region Throw
@@ -460,9 +460,9 @@ namespace TouchSocket.SerialPorts
             // 检查客户端是否已连接，防止在未连接状态下尝试发送数据。
             this.ThrowIfClientNotConnected();
             // 触发序列发送事件之前置处理，为实际数据发送做准备。
-            await this.OnSerialSending(memory).ConfigureAwait(false);
+            await this.OnSerialSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 通过序列核心发送数据，实际的数据发送操作。
-            await this.m_serialCore.SendAsync(memory).ConfigureAwait(false);
+            await this.m_serialCore.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 发送
@@ -535,19 +535,19 @@ namespace TouchSocket.SerialPorts
                     if (this.m_dataHandlingAdapter == null)
                     {
                         // 如果没有数据处理适配器，则使用默认方式发送
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
                         // 如果有数据处理适配器，则通过适配器发送
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }
             else
             {
                 // 如果数据处理适配器支持拼接发送，则直接发送字节列表
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

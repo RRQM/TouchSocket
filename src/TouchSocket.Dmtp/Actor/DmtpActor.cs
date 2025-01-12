@@ -157,7 +157,7 @@ namespace TouchSocket.Dmtp
 
             this.m_handshakeFinished.Reset();
 
-            await this.OnHandshaking(args).ConfigureAwait(false);
+            await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             var waitVerify = new WaitVerify()
             {
@@ -170,8 +170,8 @@ namespace TouchSocket.Dmtp
 
             try
             {
-                await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureAwait(false);
-                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(false))
+                await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -185,7 +185,7 @@ namespace TouchSocket.Dmtp
                                     Id = verifyResult.Id,
                                     Metadata = verifyResult.Metadata,
                                     Token = verifyResult.Token,
-                                }).ConfigureAwait(false);
+                                }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                                 this.m_cancellationTokenSource = new CancellationTokenSource();
                                 this.m_handshakeFinished.Set();
@@ -236,7 +236,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.Closing.Invoke(this, msg).ConfigureAwait(false);
+            await this.Closing.Invoke(this, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -400,7 +400,7 @@ namespace TouchSocket.Dmtp
             {
                 case P0_Close:
                     {
-                        await this.OnClosed(false, message.GetBodyString()).ConfigureAwait(false);
+                        await this.OnClosed(false, message.GetBodyString()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return true;
                     }
                 case P1_Handshake_Request:
@@ -415,11 +415,11 @@ namespace TouchSocket.Dmtp
                                 Metadata = waitVerify.Metadata,
                                 Id = waitVerify.Id,
                             };
-                            await this.OnHandshaking(args).ConfigureAwait(false);
+                            await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                             if (args.Id.HasValue())
                             {
-                                await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureAwait(false);
+                                await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 this.Id = args.Id;
                             }
 
@@ -427,24 +427,24 @@ namespace TouchSocket.Dmtp
                             {
                                 waitVerify.Id = this.Id;
                                 waitVerify.Status = 1;
-                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
+                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 this.Online = true;
                                 args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                                 this.m_cancellationTokenSource = new CancellationTokenSource();
-                                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args).ConfigureAwait(false);
+                                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             else//不允许连接
                             {
                                 waitVerify.Status = 2;
                                 waitVerify.Message ??= "Fail";
-                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
-                                await this.OnClosed(false, args.Message).ConfigureAwait(false);
+                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await this.OnClosed(false, args.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         catch (Exception ex)
                         {
                             this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
-                            await this.OnClosed(false, ex.Message).ConfigureAwait(false);
+                            await this.OnClosed(false, ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         return true;
                     }
@@ -454,7 +454,7 @@ namespace TouchSocket.Dmtp
                         {
                             var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
                             this.WaitHandlePool.SetRun(waitVerify);
-                            await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                            await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (Exception ex)
                         {
@@ -470,7 +470,7 @@ namespace TouchSocket.Dmtp
                             var waitSetId = ResolveJsonObject<WaitSetId>(message.GetBodyString());
                             try
                             {
-                                await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(false);
+                                await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 this.Id = waitSetId.NewId;
                                 waitSetId.Status = 1;
                             }
@@ -479,7 +479,7 @@ namespace TouchSocket.Dmtp
                                 waitSetId.Status = 2;
                                 waitSetId.Message = ex.Message;
                             }
-                            await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureAwait(false);
+                            await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (Exception ex)
                         {
@@ -507,11 +507,11 @@ namespace TouchSocket.Dmtp
 
                             if (this.AllowRoute && waitPing.Route)
                             {
-                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureAwait(false))
+                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                 {
-                                    if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                                    if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                     {
-                                        await actor.SendAsync(P5_Ping_Request, byteBlock.Memory).ConfigureAwait(false);
+                                        await actor.SendAsync(P5_Ping_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                         return true;
                                     }
                                     else
@@ -529,7 +529,7 @@ namespace TouchSocket.Dmtp
                                 waitPing.Status = TouchSocketDmtpStatus.Success.ToValue();
                             }
                             waitPing.SwitchId();
-                            await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureAwait(false);
+                            await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (Exception ex)
                         {
@@ -545,9 +545,9 @@ namespace TouchSocket.Dmtp
 
                             if (this.AllowRoute && waitPing.Route)
                             {
-                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P6_Ping_Response, byteBlock.Memory).ConfigureAwait(false);
+                                    await actor.SendAsync(P6_Ping_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
                             }
                             else
@@ -570,11 +570,11 @@ namespace TouchSocket.Dmtp
                             waitCreateChannel.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && waitCreateChannel.Route)
                             {
-                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureAwait(false))
+                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                 {
-                                    if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                                    if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                     {
-                                        await actor.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(false);
+                                        await actor.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                         return true;
                                     }
                                     else
@@ -617,7 +617,7 @@ namespace TouchSocket.Dmtp
 
                             waitCreateChannel.Package(ref byteBlock);
 
-                            await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(false);
+                            await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (Exception ex)
                         {
@@ -634,9 +634,9 @@ namespace TouchSocket.Dmtp
                             waitCreateChannel.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && waitCreateChannel.Route)
                             {
-                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(false);
+                                    await actor.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     return true;
                                 }
                             }
@@ -661,9 +661,9 @@ namespace TouchSocket.Dmtp
                             channelPackage.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && channelPackage.Route)
                             {
-                                if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
+                                    await actor.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
                                 else
                                 {
@@ -676,7 +676,7 @@ namespace TouchSocket.Dmtp
 
                                     channelPackage.Package(ref byteBlock);
 
-                                    await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
+                                    await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
                             }
                             else
@@ -711,13 +711,13 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public virtual async Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000)
         {
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
             {
-                return await actor.PingAsync(millisecondsTimeout).ConfigureAwait(false);
+                return await actor.PingAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureAwait(false);
+                return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -728,15 +728,15 @@ namespace TouchSocket.Dmtp
 
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
-            await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureAwait(false);
+            await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            switch (await waitData.WaitAsync(5000).ConfigureAwait(false))
+            switch (await waitData.WaitAsync(5000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.SetRunning:
                     {
                         if (waitData.WaitResult.Status == 1)
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(false);
+                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.Id = newId;
                         }
                         else
@@ -785,7 +785,7 @@ namespace TouchSocket.Dmtp
                 var block = byteBlock;
                 package.Package(ref block);
 
-                await this.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(false);
+                await this.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -805,7 +805,7 @@ namespace TouchSocket.Dmtp
             }
             if (this.FindDmtpActor != null)
             {
-                if (await this.FindDmtpActor.Invoke(targetId).ConfigureAwait(false) is DmtpActor newActor)
+                if (await this.FindDmtpActor.Invoke(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor newActor)
                 {
                     return newActor;
                 }
@@ -821,7 +821,7 @@ namespace TouchSocket.Dmtp
             {
                 if (this.Routing != null)
                 {
-                    await this.Routing.Invoke(this, e).ConfigureAwait(false);
+                    await this.Routing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return e.IsPermitOperation;
                 }
                 return false;
@@ -842,8 +842,8 @@ namespace TouchSocket.Dmtp
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
             try
             {
-                await this.SendJsonObjectAsync(P5_Ping_Request, waitPing).ConfigureAwait(false);
-                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(false))
+                await this.SendJsonObjectAsync(P5_Ping_Request, waitPing).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -905,7 +905,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public async Task CloseAsync(string msg)
         {
-            await this.OnClosed(true, msg).ConfigureAwait(false);
+            await this.OnClosed(true, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -917,7 +917,7 @@ namespace TouchSocket.Dmtp
             }
             try
             {
-                await this.SendStringAsync(0, msg).ConfigureAwait(false);
+                await this.SendStringAsync(0, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
             catch
@@ -940,7 +940,7 @@ namespace TouchSocket.Dmtp
                 byteBlock.WriteInt32(memory.Length, EndianType.Big);
                 byteBlock.Write(memory.Span);
 
-                await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureAwait(false);
+                await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             //var transferBytes = new ArraySegment<byte>[]
             //{
@@ -990,13 +990,13 @@ namespace TouchSocket.Dmtp
             {
                 throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
             }
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
             {
-                return await actor.CreateChannelAsync(id, metadata).ConfigureAwait(false);
+                return await actor.CreateChannelAsync(id, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureAwait(false);
+                return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -1008,13 +1008,13 @@ namespace TouchSocket.Dmtp
                 throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
             }
 
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
             {
-                return await actor.CreateChannelAsync(metadata).ConfigureAwait(false);
+                return await actor.CreateChannelAsync(metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureAwait(false);
+                return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -1047,7 +1047,7 @@ namespace TouchSocket.Dmtp
             {
                 var block = byteBlock;
                 channelPackage.Package(ref block);
-                await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
+                await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -1082,8 +1082,8 @@ namespace TouchSocket.Dmtp
             {
                 waitCreateChannel.Package(ref byteBlock);
 
-                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(false);
-                switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(false))
+                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     case WaitDataStatus.SetRunning:
                         {

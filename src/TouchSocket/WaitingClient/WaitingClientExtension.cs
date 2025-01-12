@@ -165,7 +165,7 @@ namespace TouchSocket.Sockets
                 // 尝试发送数据并等待响应
                 try
                 {
-                    return await client.SendThenResponseAsync(memory, tokenSource.Token).ConfigureAwait(false);
+                    return await client.SendThenResponseAsync(memory, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 // 捕获操作取消异常，并将其转换为超时异常
                 catch (OperationCanceledException)
@@ -195,7 +195,7 @@ namespace TouchSocket.Sockets
                 // 尝试发送数据并等待响应
                 try
                 {
-                    return await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(false);
+                    return await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 // 捕获操作取消异常，并将其转换为超时异常
                 catch (OperationCanceledException)
@@ -244,7 +244,7 @@ namespace TouchSocket.Sockets
                 try
                 {
                     // 使用client对象的SendThenReturnAsync方法发送数据并返回响应
-                    return await client.SendThenReturnAsync(memory, tokenSource.Token).ConfigureAwait(false);
+                    return await client.SendThenReturnAsync(memory, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (OperationCanceledException)
                 {
@@ -274,7 +274,7 @@ namespace TouchSocket.Sockets
                 try
                 {
                     // 使用client对象的SendThenReturnAsync方法发送数据并返回响应
-                    return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(false)).ByteBlock?.ToArray();
+                    return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).ByteBlock?.ToArray();
                 }
                 catch (OperationCanceledException)
                 {
@@ -298,7 +298,7 @@ namespace TouchSocket.Sockets
             where TResult : IReceiverResult
         {
             // 使用client对象的SendThenResponseAsync方法发送数据并返回响应
-            return (await client.SendThenResponseAsync(memory, token).ConfigureAwait(false)).ByteBlock?.ToArray();
+            return (await client.SendThenResponseAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).ByteBlock?.ToArray();
         }
 
         #endregion SendThenReturnAsync

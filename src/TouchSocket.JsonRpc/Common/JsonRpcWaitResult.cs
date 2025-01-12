@@ -14,13 +14,13 @@ using TouchSocket.Core;
 
 namespace TouchSocket.JsonRpc
 {
-    internal class InternalJsonRpcWaitResult : JsonRpcResponseBase, IWaitResult
+    public class JsonRpcWaitResult : JsonRpcBase, IWaitResult
     {
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
         public string Message { get; set; }
         public string Result { get; set; }
-        public int Sign { get => this.Id.HasValue ? this.Id.Value : -1; set => this.Id = value; }
+        public int Sign { get => this.Id ?? -1; set => this.Id = value; }
 
         public byte Status { get; set; }
     }

@@ -153,7 +153,7 @@ namespace TouchSocket.Core
         {
             this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
-            await this.RunAsync().ConfigureAwait(false);
+            await this.RunAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -175,13 +175,13 @@ namespace TouchSocket.Core
                          {
                              return;
                          }
-                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                          this.ExecutedCount++;
                          if (this.RunStatus == RunStatus.Paused)
                          {
-                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                          }
-                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                      }
                  }
                  else
@@ -192,13 +192,13 @@ namespace TouchSocket.Core
                          {
                              return;
                          }
-                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                          this.ExecutedCount++;
                          if (this.RunStatus == RunStatus.Paused)
                          {
-                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                          }
-                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                      }
                  }
                  this.RunStatus = RunStatus.Completed;

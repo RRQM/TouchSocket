@@ -85,11 +85,11 @@ namespace TouchSocket.Dmtp.Rpc
                     rpcPackage.UnpackageRouter(ref byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureAwait(false))
+                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                            if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                             {
-                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
+                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 return true;
                             }
                             else
@@ -108,7 +108,7 @@ namespace TouchSocket.Dmtp.Rpc
                         var block = byteBlock;
                         rpcPackage.Package(ref block);
 
-                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
@@ -126,9 +126,9 @@ namespace TouchSocket.Dmtp.Rpc
 
                         rpcPackage.LoadInfo(callContext, this.m_serializationSelector);
                         rpcPackage.UnpackageBody(ref byteBlock);
-                        //await this.InvokeThisAsync(callContext).ConfigureAwait(false);
-                        //await Task.Factory.StartNew(this.InvokeThisAsync, callContext).ConfigureAwait(false);
-                        await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync).ConfigureAwait(false);
+                        //await this.InvokeThisAsync(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        //await Task.Factory.StartNew(this.InvokeThisAsync, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 catch (Exception ex)
@@ -146,9 +146,9 @@ namespace TouchSocket.Dmtp.Rpc
                     rpcPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
+                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                     else
@@ -178,9 +178,9 @@ namespace TouchSocket.Dmtp.Rpc
                     canceledPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && canceledPackage.Route)
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(false);
+                            await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                     else
@@ -245,7 +245,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                 try
                 {
-                    await this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(false);
+                    await this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch
                 {
@@ -276,7 +276,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                         rpcResponsePackage.Package(ref returnByteBlock);
 
-                        await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureAwait(false);
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     finally
                     {
@@ -297,7 +297,7 @@ namespace TouchSocket.Dmtp.Rpc
                     }
                 }
 
-                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (rpcRequestPackage.Feedback != FeedbackType.WaitInvoke)
                 {
@@ -346,7 +346,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcResponsePackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -368,7 +368,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 return this;
             }
-            if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor dmtpActor)
+            if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor dmtpActor)
             {
                 if (dmtpActor.GetDmtpRpcActor() is DmtpRpcActor newActor)
                 {
@@ -403,7 +403,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcPackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -418,15 +418,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
+                            ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                             return returnType?.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
+                            var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             if (waitDataStatus == WaitDataStatus.Canceled)
                             {
-                                await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(false);
+                                await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             ThrowExceptionIfNotSetRunning(waitDataStatus);
                             var resultRpcPackage = (DmtpRpcResponsePackage)waitData.WaitResult;
@@ -483,7 +483,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcPackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -498,15 +498,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
+                            ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                             return returnType?.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
+                            var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             if (waitDataStatus == WaitDataStatus.Canceled)
                             {
-                                await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(false);
+                                await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
 
                             ThrowExceptionIfNotSetRunning(waitDataStatus);

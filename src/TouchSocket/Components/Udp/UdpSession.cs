@@ -35,14 +35,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnUdpReceived(e).ConfigureAwait(false);
+            await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region 向默认远程异步发送

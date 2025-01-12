@@ -37,7 +37,7 @@ namespace TouchSocket.Http
         {
             // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
             // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-            return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(false)).GetFalseAwaitResult();
+            return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).GetFalseAwaitResult();
         }
 
 
@@ -272,7 +272,7 @@ namespace TouchSocket.Http
             {
                 if (request.ContentType == @"application/x-www-form-urlencoded")
                 {
-                    return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(false));
+                    return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                 }
                 return new InternalFormCollection();
             }
@@ -280,7 +280,7 @@ namespace TouchSocket.Http
             {
                 var boundary = $"--{boundaryString}".ToUTF8Bytes();
 
-                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(false), boundary);
+                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), boundary);
             }
         }
 
@@ -592,6 +592,23 @@ namespace TouchSocket.Http
             return response;
         }
 
+
+        ///<summary>
+        /// 设置重定向响应。
+        /// <para>
+        /// 默认状态码为302，状态信息为"Found"。如果需要自定义状态码和状态信息，请使用<see cref="SetStatus{TResponse}(TResponse, int, string)"/>方法。
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
+        /// <param name="response">响应对象，用于设置重定向。</param>
+        /// <param name="url">重定向的目标URL。</param>
+        /// <returns>返回设置了重定向的响应对象。</returns>
+        public static TResponse SetRedirect<TResponse>(this TResponse response, string url) where TResponse : HttpResponse
+        {
+            response.Headers.Add(HttpHeaders.Location, url);
+            response.SetStatus(302, "Found");
+            return response;
+        }
         #endregion HttpResponse
     }
 }

@@ -81,7 +81,7 @@ namespace TouchSocket.Http
         protected async Task<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             // 等待信号量，以控制并发请求的数量，超时和取消策略
-            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 // 标记不获取响应内容
@@ -89,10 +89,10 @@ namespace TouchSocket.Http
                 // 重置状态，为发送请求做准备
                 this.Reset(token);
 
-                await this.BuildAndSend(request, token).ConfigureAwait(false);
+                await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 等待响应状态，超时设定
-                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 如果响应状态不是运行中，抛出异常
                 status.ThrowIfNotRunning();
@@ -114,11 +114,16 @@ namespace TouchSocket.Http
             var content = request.Content;
             if (content == null)
             {
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
-                    request.BuildHeader(byteBlock);
+                    request.BuildHeader(ref byteBlock);
                     // 异步发送请求
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
             else
@@ -127,16 +132,16 @@ namespace TouchSocket.Http
                 var byteBlock = new ByteBlock();
                 try
                 {
-                    request.BuildHeader(byteBlock);
+                    request.BuildHeader(ref byteBlock);
 
                     var result = content.InternalBuildingContent(ref byteBlock);
 
                     // 异步发送请求
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (!result)
                     {
-                        await content.InternalWriteContent(this.ProtectedDefaultSendAsync, token).ConfigureAwait(false);
+                        await content.InternalWriteContent(this.ProtectedDefaultSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 finally
@@ -160,7 +165,7 @@ namespace TouchSocket.Http
         protected async Task<HttpResponseResult> ProtectedRequestContentAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             // 使用信号量控制并发，确保系统稳定性
-            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 // 标记为获取内容状态
@@ -171,10 +176,10 @@ namespace TouchSocket.Http
                 // 重置状态，为发送请求做准备
                 this.Reset(token);
 
-                await this.BuildAndSend(request, token).ConfigureAwait(false);
+                await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 等待响应状态，超时设定
-                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 如果响应状态不是运行中，抛出异常
                 status.ThrowIfNotRunning();
@@ -218,10 +223,10 @@ namespace TouchSocket.Http
             {
                 if (this.m_getContent)
                 {
-                    await response.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
+                    await response.GetContentAsync(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 this.m_waitResponseDataAsync.Set(response);
-                //await this.SetAsync(response).ConfigureAwait(false);
+                //await this.SetAsync(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

@@ -48,15 +48,15 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
                 var modbusTcpRequest = new ModbusRtuRequest(request);
 
-                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(false);
+                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
@@ -77,7 +77,7 @@ namespace TouchSocket.Modbus
             {
                 this.SetRun(response);
             }
-            await base.OnUdpReceived(e).ConfigureAwait(false);
+            await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private void SetRun(ModbusRtuResponse response)

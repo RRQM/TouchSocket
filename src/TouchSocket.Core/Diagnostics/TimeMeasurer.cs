@@ -58,7 +58,7 @@ namespace TouchSocket.Core
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            await func.Invoke().ConfigureAwait(false);
+            await func.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             stopwatch.Stop();
             return stopwatch.Elapsed;
         }

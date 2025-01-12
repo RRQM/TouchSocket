@@ -27,7 +27,7 @@ namespace TouchSocket.JsonRpc
     {
         private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
         private readonly JsonRpcWaitResultConverter m_jsonRpcWaitResultConverter = new JsonRpcWaitResultConverter();
-        private readonly WaitHandlePool<InternalJsonRpcWaitResult> m_waitHandle = new WaitHandlePool<InternalJsonRpcWaitResult>();
+        private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new WaitHandlePool<JsonRpcWaitResult>();
         private IRpcServerProvider m_rpcServerProvider;
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace TouchSocket.JsonRpc
 
                     this.BuildRequestContext(callContext, jsonRpcRequest);
 
-                    await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeAsync).ConfigureAwait(false);
+                    await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeAsync).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else if (this.TryParseResponse(str, out var internalJsonRpcWaitResult))
                 {
@@ -164,7 +164,7 @@ namespace TouchSocket.JsonRpc
                 {
                     var str = this.BuildJsonRpcRequest(jsonRpcRequest);
                     byteBlock.WriteNormalString(str, this.Encoding);
-                    await this.SendAction(byteBlock.Memory).ConfigureAwait(false);
+                    await this.SendAction(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 switch (invokeOption.FeedbackType)
@@ -182,7 +182,7 @@ namespace TouchSocket.JsonRpc
                                 waitData.SetCancellationToken(invokeOption.Token);
                             }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
@@ -399,7 +399,7 @@ namespace TouchSocket.JsonRpc
         {
             try
             {
-                var response = new InternalJsonRpcWaitResult()
+                var response = new JsonRpcWaitResult()
                 {
                     ErrorCode = error.Code,
                     ErrorMessage = error.Message,
@@ -411,7 +411,7 @@ namespace TouchSocket.JsonRpc
                 using (var byteBlock = new ByteBlock(1024 * 64))
                 {
                     byteBlock.WriteNormalString(str, this.Encoding);
-                    await this.SendAction(byteBlock.Memory).ConfigureAwait(false);
+                    await this.SendAction(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
@@ -451,14 +451,14 @@ namespace TouchSocket.JsonRpc
             var callContext = (JsonRpcCallContextBase)obj;
             try
             {
-                var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(false);
+                var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (!callContext.JsonRpcId.HasValue)
                 {
                     return;
                 }
                 var error = GetJsonRpcError(invokeResult);
-                await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
+                await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -514,9 +514,9 @@ namespace TouchSocket.JsonRpc
         /// <param name="str">字符串。</param>
         /// <param name="response">响应。</param>
         /// <returns>是否成功。</returns>
-        private bool TryParseResponse(string str, out InternalJsonRpcWaitResult response)
+        private bool TryParseResponse(string str, out JsonRpcWaitResult response)
         {
-            var rpcWaitResult = JsonConvert.DeserializeObject<InternalJsonRpcWaitResult>(str, this.m_jsonRpcWaitResultConverter);
+            var rpcWaitResult = JsonConvert.DeserializeObject<JsonRpcWaitResult>(str, this.m_jsonRpcWaitResultConverter);
 
             if (rpcWaitResult == null)
             {

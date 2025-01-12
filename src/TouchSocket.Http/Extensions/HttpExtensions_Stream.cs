@@ -82,7 +82,7 @@ namespace TouchSocket.Http
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count)).ConfigureAwait(false);
+                await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

@@ -68,7 +68,7 @@ namespace TouchSocket.Core
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(false);
+                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             });
 
@@ -125,7 +125,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    await Task.Delay(1).ConfigureAwait(false);
+                    await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }

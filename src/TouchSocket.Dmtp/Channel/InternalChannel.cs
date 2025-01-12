@@ -112,7 +112,7 @@ namespace TouchSocket.Dmtp
                     SourceId = this.m_actor.Id,
                     TargetId = this.TargetId
                 };
-                await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
+                await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_lastOperationTime = DateTime.UtcNow;
             }
             catch
@@ -137,7 +137,7 @@ namespace TouchSocket.Dmtp
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
+            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTime.UtcNow;
         }
 
@@ -156,7 +156,7 @@ namespace TouchSocket.Dmtp
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
+            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTime.UtcNow;
         }
 
@@ -297,9 +297,9 @@ namespace TouchSocket.Dmtp
             }
 
             //this.Reset();
-            if (await this.WaitAsync().ConfigureAwait(false))
+            if (await this.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                return await this.MoveNextAsync().ConfigureAwait(false);
+                return await this.MoveNextAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -315,7 +315,7 @@ namespace TouchSocket.Dmtp
                 throw new Exception($"通道已{this.Status}");
             }
 
-            await this.m_flowGate.AddCheckWaitAsync(memory.Length).ConfigureAwait(false);
+            await this.m_flowGate.AddCheckWaitAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             var channelPackage = new ChannelPackage()
             {
                 ChannelId = this.Id,
@@ -330,7 +330,7 @@ namespace TouchSocket.Dmtp
 
             using (channelPackage.Data)
             {
-                await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
+                await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_lastOperationTime = DateTime.UtcNow;
             }
         }
@@ -463,7 +463,7 @@ namespace TouchSocket.Dmtp
                 {
                     return false;
                 }
-                await Task.Delay(1).ConfigureAwait(false);
+                await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

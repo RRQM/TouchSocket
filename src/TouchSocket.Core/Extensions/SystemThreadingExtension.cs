@@ -77,7 +77,7 @@ namespace TouchSocket.Core
         /// </remarks>
         public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
         {
-            if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(false))
+            if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 ThrowHelper.ThrowTimeoutException();
             }
@@ -96,7 +96,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetFalseAwaitResult<T>(this Task<T> task)
         {
-            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+            return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetFalseAwaitResult(this Task task)
         {
-            task.ConfigureAwait(false).GetAwaiter().GetResult();
+            task.ConfigureAwait(EasyTask.ContinueOnCapturedContext).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConfiguredTaskAwaitable<T> ConfigureFalseAwait<T>(this Task<T> task)
         {
-            return task.ConfigureAwait(false);
+            return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
         {
-            return task.ConfigureAwait(false);
+            return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -147,14 +147,14 @@ namespace TouchSocket.Core
                 // 创建一个延迟任务，用于等待指定的最大时间
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
                 // 配置延迟任务不使用上下文继续，避免阻塞调用线程
-                _ = delayTask.ConfigureAwait(false);
+                _ = delayTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 使用Task.WhenAny等待task和delayTask中第一个完成的任务
-                if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
+                if (await Task.WhenAny(task, delayTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext) == task)
                 {
                     // 如果task先完成，则取消延迟任务
                     timeoutCancellationTokenSource.Cancel();
                     // 返回task的结果
-                    return await task.ConfigureAwait(false);
+                    return await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 // 如果延迟任务先完成，说明task超时，抛出超时异常
                 ThrowHelper.ThrowTimeoutException();
@@ -180,14 +180,14 @@ namespace TouchSocket.Core
                 // 创建一个延迟任务，用于计时
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
                 // 配置延迟任务不使用上下文等待
-                _ = delayTask.ConfigureAwait(false);
+                _ = delayTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 等待任务或延迟任务完成
-                if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
+                if (await Task.WhenAny(task, delayTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext) == task)
                 {
                     // 如果任务先完成，取消延迟任务
                     timeoutCancellationTokenSource.Cancel();
                     // 继续等待任务完成
-                    await task.ConfigureAwait(false);
+                    await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return;
                 }
                 // 如果延迟任务先完成，抛出超时异常

@@ -109,11 +109,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             if (this.m_dmtpActor != null)
             {
-                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
+                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             if (this.m_client != null)
             {
-                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(false);
+                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -130,8 +130,8 @@ namespace TouchSocket.Dmtp.AspNetCore
                 return;
             }
 
-            await this.DmtpActor.ResetIdAsync(newId).ConfigureAwait(false);
-            await this.ProtectedResetIdAsync(newId).ConfigureAwait(false);
+            await this.DmtpActor.ResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         internal void InternalSetConfig(TouchSocketConfig config)
@@ -192,13 +192,13 @@ namespace TouchSocket.Dmtp.AspNetCore
                 {
                     using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
-                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(false);
+                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         if (result.MessageType == WebSocketMessageType.Close)
                         {
                             try
                             {
-                                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+                                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             catch
                             {
@@ -212,7 +212,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        await this.m_dmtpAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                        await this.m_dmtpAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
 
@@ -241,7 +241,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, targetId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, sessionClient, e).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     return;
                 }
@@ -254,7 +254,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                     }
                     else
                     {
-                        await sessionClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
+                        await sessionClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }
@@ -334,7 +334,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 e.Message = "Token不受理";
             }
-            await this.OnHandshaking(e).ConfigureAwait(false);
+            await this.OnHandshaking(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -370,7 +370,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
-            await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
+            await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_sentCounter.Increment(memory.Length);
         }
 
@@ -389,7 +389,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 return;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -402,7 +402,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -415,7 +415,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件
@@ -436,15 +436,15 @@ namespace TouchSocket.Dmtp.AspNetCore
         private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var message = (DmtpMessage)requestInfo;
-            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
+            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
         private async Task ThisOnResetId(DmtpActor actor, IdChangedEventArgs e)
         {
-            await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(false);
+            await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

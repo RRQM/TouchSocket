@@ -56,7 +56,7 @@ namespace TouchSocket.Dmtp
         public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             // 等待信号量，以确保同时只有一个连接操作
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -68,7 +68,7 @@ namespace TouchSocket.Dmtp
                 // 如果基础连接不在状态，则尝试建立TCP连接
                 if (!base.Online)
                 {
-                    await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(false);
+                    await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 // 创建并配置HttpRequest，为升级到Dmtp协议做准备
@@ -80,7 +80,7 @@ namespace TouchSocket.Dmtp
                 request.AsMethod(DmtpUtility.Dmtp);
 
                 // 发送请求并处理响应
-                using (var responseResult = await this.ProtectedRequestContentAsync(request).ConfigureAwait(false))
+                using (var responseResult = await this.ProtectedRequestContentAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var response = responseResult.Response;
                     // 如果状态码为101，则切换协议为Dmtp
@@ -96,7 +96,7 @@ namespace TouchSocket.Dmtp
                 }
 
                 // 与Dmtp服务器进行握手操作，完成连接
-                await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(false);
+                await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -120,12 +120,12 @@ namespace TouchSocket.Dmtp
             if (this.m_dmtpActor != null)
             {
                 // 向IDmtpActor对象发送关闭消息
-                await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(false);
+                await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 关闭IDmtpActor对象
-                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
+                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             // 调用基类的关闭方法
-            await base.CloseAsync(msg).ConfigureAwait(false);
+            await base.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 断开
@@ -154,16 +154,16 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
-            await this.m_dmtpActor.CloseAsync(e.Message).ConfigureAwait(false);
-            await this.OnDmtpClosed(e).ConfigureAwait(false);
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await this.m_dmtpActor.CloseAsync(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
         protected override async Task OnTcpClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
-            await base.OnTcpClosing(e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -171,16 +171,16 @@ namespace TouchSocket.Dmtp
         {
             if (this.Protocol == DmtpUtility.DmtpProtocol && e.RequestInfo is DmtpMessage message)
             {
-                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     if (this.PluginManager.Enable)
                     {
-                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 return;
             }
-            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion Override
@@ -225,7 +225,7 @@ namespace TouchSocket.Dmtp
 
         private async Task OnDmtpActorClose(DmtpActor actor, string msg)
         {
-            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
+            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.Abort(false, msg);
         }
 
@@ -267,7 +267,7 @@ namespace TouchSocket.Dmtp
             }
 
             // 异步调用插件管理器，通知所有实现了IDmtpCreatedChannelPlugin接口的插件处理创建通道事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             //通知插件管理器，Dmtp已经关闭
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 触发插件管理器中的握手完成插件事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 触发握手过程的插件事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -351,7 +351,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包
-            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件触发

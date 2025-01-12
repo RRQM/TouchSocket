@@ -81,9 +81,9 @@ namespace TouchSocket.Sockets
         {
             if (this.m_internalClosed != null)
             {
-                await this.m_internalClosed.Invoke(this, e).ConfigureAwait(false);
+                await this.m_internalClosed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -91,9 +91,9 @@ namespace TouchSocket.Sockets
         {
             if (this.m_internalReceived != null)
             {
-                await this.m_internalReceived.Invoke(this, e).ConfigureAwait(false);
+                await this.m_internalReceived.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

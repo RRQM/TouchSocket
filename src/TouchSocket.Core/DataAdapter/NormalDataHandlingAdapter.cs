@@ -32,7 +32,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">数据流</param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(false);
+            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         ///// <summary>

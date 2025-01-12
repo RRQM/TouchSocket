@@ -179,14 +179,14 @@ namespace TouchSocket.Core
             }
             if (this.m_tempByteBlock.IsEmpty)
             {
-                await this.SingleAsync(byteBlock, false).ConfigureAwait(false);
+                await this.SingleAsync(byteBlock, false).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 this.m_tempByteBlock.Write(byteBlock.Span);
                 var block = this.m_tempByteBlock;
                 this.m_tempByteBlock = ValueByteBlock.Empty;
-                await this.SingleAsync(block, true).ConfigureAwait(false);
+                await this.SingleAsync(block, true).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -286,7 +286,7 @@ namespace TouchSocket.Core
                     case FilterResult.Success:
                         if (this.OnReceivingSuccess(this.m_tempRequest))
                         {
-                            await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(false);
+                            await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.OnReceivedSuccess(this.m_tempRequest);
                         }
                         this.m_tempRequest = default;

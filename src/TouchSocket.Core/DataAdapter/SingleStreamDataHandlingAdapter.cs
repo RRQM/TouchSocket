@@ -69,7 +69,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                await this.PreviewReceivedAsync(byteBlock).ConfigureAwait(false);
+                await this.PreviewReceivedAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -120,7 +120,7 @@ namespace TouchSocket.Core
             try
             {
                 requestInfoBuilder.Build(ref byteBlock);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {

@@ -34,7 +34,7 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -43,7 +43,7 @@ namespace TouchSocket.Modbus
                 try
                 {
                     modbusRequest.Build(ref byteBlock);
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -51,7 +51,7 @@ namespace TouchSocket.Modbus
                 }
 
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
@@ -69,7 +69,7 @@ namespace TouchSocket.Modbus
         protected override async Task OnSerialConnecting(ConnectingEventArgs e)
         {
             this.SetAdapter(new ModbusRtuAdapter());
-            await base.OnSerialConnecting(e).ConfigureAwait(false);
+            await base.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region 字段
@@ -87,7 +87,7 @@ namespace TouchSocket.Modbus
             {
                 this.SetRun(response);
             }
-            await base.OnSerialReceived(e).ConfigureAwait(false);
+            await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private void SetRun(ModbusRtuResponse response)

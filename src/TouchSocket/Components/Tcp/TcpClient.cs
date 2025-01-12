@@ -48,14 +48,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -63,14 +63,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnTcpClosing(e).ConfigureAwait(false);
+            await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -78,14 +78,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Connected != null)
             {
-                await this.Connected.Invoke(this, e).ConfigureAwait(false);
+                await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnTcpConnected(e).ConfigureAwait(false);
+            await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -96,14 +96,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Connecting != null)
             {
-                await this.Connecting.Invoke(this, e).ConfigureAwait(false);
+                await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnTcpConnecting(e).ConfigureAwait(false);
+            await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件
@@ -142,14 +142,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region 异步发送

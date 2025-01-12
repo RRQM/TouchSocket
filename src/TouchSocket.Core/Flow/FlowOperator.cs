@@ -124,7 +124,7 @@ namespace TouchSocket.Core
         protected virtual async Task ProtectedAddFlowAsync(int flow)
         {
             // 使用流速门控机制，安全地添加并检查流速，确保线程安全
-            await this.m_flowGate.AddCheckWaitAsync(flow).ConfigureAwait(false);
+            await this.m_flowGate.AddCheckWaitAsync(flow).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 原子操作更新临时速度值，以确保线程安全
             Interlocked.Add(ref this.m_speedTemp, flow);
 

@@ -151,9 +151,9 @@ namespace TouchSocket.Sockets
 
             await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
                 , sslOption.SslProtocols
-                , sslOption.CheckCertificateRevocation).ConfigureAwait(false);
+                , sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            //await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(false);
+            //await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
@@ -174,11 +174,11 @@ namespace TouchSocket.Sockets
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
             if (sslOption.ClientCertificates == null)
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureAwait(false);
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(false);
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
@@ -190,11 +190,11 @@ namespace TouchSocket.Sockets
             {
 #if NET6_0_OR_GREATER
 
-                var r = await this.m_sslStream.ReadAsync(memory).ConfigureAwait(false);
+                var r = await this.m_sslStream.ReadAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
 #else
                 var bytes = memory.GetArray();
-                var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureAwait(false);
+                var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #endif
                 this.m_result.BytesTransferred = r;
                 this.m_receiveCounter.Increment(r);
@@ -202,7 +202,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                var result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
+                var result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_receiveCounter.Increment(result.BytesTransferred);
                 return result;
             }
@@ -258,7 +258,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
-            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);
+            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 if (memory.Length < MaxMemoryLength)
@@ -266,7 +266,7 @@ namespace TouchSocket.Sockets
                     var dispatchInfo = this.m_exceptionDispatchInfo;
                     dispatchInfo?.Throw();
 
-                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureAwait(false);
+                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     var sendSegment = BytePool.Default.Rent(memory.Length);
                     //if (!this.m_stores.TryPop(out var sendSegment))
@@ -293,8 +293,8 @@ namespace TouchSocket.Sockets
                     return;
                 }
 
-                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(false);
-                await this.PrivateSendAsync(memory).ConfigureAwait(false);
+                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateSendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -341,7 +341,7 @@ namespace TouchSocket.Sockets
 
                             try
                             {
-                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             catch (Exception ex)
                             {
@@ -359,7 +359,7 @@ namespace TouchSocket.Sockets
                     //Debug.WriteLine("Pause");
                     // 队列为空，设置事件并等待
                     this.m_asyncResetEventForSend.Set();
-                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureAwait(false);
+                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }
@@ -370,13 +370,13 @@ namespace TouchSocket.Sockets
 #if NET6_0_OR_GREATER
             if (this.UseSsl)
             {
-                await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+                await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 #else
             if (this.m_useSsl)
             {
                 var segment = memory.GetArray();
-                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureAwait(false);
+                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 #endif
             else
@@ -384,7 +384,7 @@ namespace TouchSocket.Sockets
                 var offset = 0;
                 while (length > 0)
                 {
-                    var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(false);
+                    var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (result.SocketError != null)
                     {
                         throw result.SocketError;

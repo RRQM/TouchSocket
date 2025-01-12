@@ -74,7 +74,7 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.TryGetClient(id, out var client))
                 {
-                    await client.CloseAsync().ConfigureAwait(false);
+                    await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     client.SafeDispose();
                 }
             }
@@ -120,7 +120,7 @@ namespace TouchSocket.NamedPipe
             }
             if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
             {
-                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
+                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -188,13 +188,13 @@ namespace TouchSocket.NamedPipe
                 }
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 throw;
             }
         }
@@ -202,7 +202,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public override async Task StopAsync()
         {
-            await EasyTask.CompletedTask.ConfigureAwait(false);
+            await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             throw new NotImplementedException();
         }
 
@@ -228,19 +228,19 @@ namespace TouchSocket.NamedPipe
 
             this.ClientInitialized(client);
 
-            await client.InternalInitialized().ConfigureAwait(false);
+            await client.InternalInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             var args = new ConnectingEventArgs()
             {
                 Id = this.GetNextNewId()
             };
-            await client.InternalNamedPipeConnecting(args).ConfigureAwait(false);//Connecting
+            await client.InternalNamedPipeConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
             if (args.IsPermitOperation)
             {
                 client.InternalSetId(args.Id);
                 if (this.m_clients.TryAdd(client))
                 {
-                    await client.InternalNamedPipeConnected(new ConnectedEventArgs()).ConfigureAwait(false);
+                    await client.InternalNamedPipeConnected(new ConnectedEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
@@ -269,7 +269,7 @@ namespace TouchSocket.NamedPipe
 
                     namedPipe.WaitForConnection();
 
-                    await this.OnClientSocketInit(namedPipe, monitor).ConfigureAwait(false);
+                    await this.OnClientSocketInit(namedPipe, monitor).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {

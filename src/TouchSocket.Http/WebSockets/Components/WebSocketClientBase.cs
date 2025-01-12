@@ -39,22 +39,22 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
                 if (!base.Online)
                 {
-                    await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(false);
+                    await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 var option = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
 
                 var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
-                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request, default))).ConfigureAwait(false);
+                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request, default))).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
+                using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var response = responseResult.Response;
                     if (response.StatusCode != 101)
@@ -98,7 +98,7 @@ namespace TouchSocket.Http.WebSockets
         protected virtual async Task OnWebSocketClosed(ClosedEventArgs e)
         {
             // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace TouchSocket.Http.WebSockets
         protected virtual async Task OnWebSocketClosing(ClosingEventArgs e)
         {
             // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个表示任务已完成的Task对象。</returns>
         protected virtual async Task OnWebSocketHandshaked(HttpContextEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个表示异步操作完成的任务</returns>
         protected virtual async Task OnWebSocketHandshaking(HttpContextEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task PrivateOnHandshaked(object obj)
@@ -148,9 +148,9 @@ namespace TouchSocket.Http.WebSockets
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.Complete(e.Message).ConfigureAwait(false);
+                await this.m_webSocket.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await this.OnWebSocketClosed(e).ConfigureAwait(false);
+            await this.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private Task PrivateWebSocketClosing(ClosedEventArgs e)
@@ -163,17 +163,17 @@ namespace TouchSocket.Http.WebSockets
             if (dataFrame.IsClose)
             {
                 var msg = dataFrame.PayloadData?.ToString();
-                await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(false);
-                await this.m_webSocket.CloseAsync(msg).ConfigureAwait(false);
+                await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_webSocket.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(false);
+                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
 
-            await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(false);
+            await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件
@@ -185,7 +185,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个Task对象，表示异步操作</returns>
         protected virtual async Task OnWebSocketReceived(WSDataFrameEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private void InitWebSocket()
@@ -211,8 +211,8 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
-            await this.PrivateWebSocketClosed(e).ConfigureAwait(false);
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -222,16 +222,16 @@ namespace TouchSocket.Http.WebSockets
             {
                 var dataFrame = (WSDataFrame)e.RequestInfo;
 
-                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(false);
+                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 if (e.RequestInfo is HttpResponse)
                 {
-                    await base.OnTcpReceived(e).ConfigureAwait(false);
+                    await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
-            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion Override

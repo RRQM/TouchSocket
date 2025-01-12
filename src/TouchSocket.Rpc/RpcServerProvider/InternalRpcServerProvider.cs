@@ -43,7 +43,7 @@ namespace TouchSocket.Rpc
                 for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                        .ConfigureAwait(false);
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 if (invokeResult.Status == InvokeStatus.Ready)
@@ -55,14 +55,14 @@ namespace TouchSocket.Rpc
                     {
                         case TaskReturnType.Task:
                             {
-                                await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(false);
+                                await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             break;
 
                         case TaskReturnType.TaskObject:
                             {
                                 invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
-                                    .ConfigureAwait(false);
+                                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             break;
 
@@ -99,7 +99,7 @@ namespace TouchSocket.Rpc
                 for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
-                        .ConfigureAwait(false);
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
 

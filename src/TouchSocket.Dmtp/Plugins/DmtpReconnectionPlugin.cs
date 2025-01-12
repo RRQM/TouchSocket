@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
@@ -37,12 +38,12 @@ namespace TouchSocket.Dmtp
                 return null;
             }
 
-            return await client.PingAsync().ConfigureAwait(false);
+            return await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (client is not TClient tClient)
             {
@@ -63,7 +64,7 @@ namespace TouchSocket.Dmtp
                         return;
                     }
 
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         return;
                     }

@@ -150,7 +150,7 @@ namespace TouchSocket.Sockets
         public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(TimeSpan waitTime)
         {
             // 租用客户端，并配置不等待主线程
-            return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(false), this.ReturnClient);
+            return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
         }
 
         /// <summary>
@@ -212,12 +212,12 @@ namespace TouchSocket.Sockets
                 // 等待指定时间，然后递归尝试租赁客户端
                 if (SpinWait.SpinUntil(this.Wait, waitTime))
                 {
-                    return await this.RentClient(waitTime).ConfigureAwait(false);
+                    return await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
 
             // 创建一个新的客户端
-            var clientRes = await this.CreateClient().ConfigureAwait(false);
+            var clientRes = await this.CreateClient().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 将新创建的客户端添加到已创建的客户端列表中
             this.m_createdClients.Add(clientRes);
             // 返回新创建的客户端

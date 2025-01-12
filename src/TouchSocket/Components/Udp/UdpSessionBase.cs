@@ -196,12 +196,12 @@ namespace TouchSocket.Sockets
 
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 throw;
             }
         }
@@ -212,14 +212,14 @@ namespace TouchSocket.Sockets
             this.m_monitor?.Socket.Dispose();
             this.m_monitor = null;
             this.m_serverState = ServerState.Stopped;
-            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(false);
+            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_receiveTasks.Clear();
 
             if (this.m_receiver != null)
             {
-                await this.m_receiver.Complete(default).ConfigureAwait(false);
+                await this.m_receiver.Complete(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -246,7 +246,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
             // 触发所有实现了IUdpReceivedPlugin接口的插件的处理方法，并传递接收到的数据事件参数。
-            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -377,12 +377,12 @@ namespace TouchSocket.Sockets
                             {
                                 return;
                             }
-                            var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, byteBlock.TotalMemory).ConfigureAwait(false);
+                            var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                             if (result.BytesTransferred > 0)
                             {
                                 byteBlock.SetLength(result.BytesTransferred);
-                                await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(false);
+                                await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             else if (result.SocketError != null)
                             {
@@ -416,18 +416,18 @@ namespace TouchSocket.Sockets
 
                 this.m_lastReceivedTime = DateTime.UtcNow;
 
-                if (await this.OnUdpReceiving(new ByteBlockEventArgs(byteBlock)).ConfigureAwait(false))
+                if (await this.OnUdpReceiving(new ByteBlockEventArgs(byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     return;
                 }
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureAwait(false);
+                    await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureAwait(false);
+                    await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
@@ -454,10 +454,10 @@ namespace TouchSocket.Sockets
         {
             if (this.m_receiver != null)
             {
-                await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(false);
+                await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
-                    await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureAwait(false);
+                    await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return;
                 }
                 finally
@@ -465,7 +465,7 @@ namespace TouchSocket.Sockets
                     this.m_semaphoreSlimForReceiver.Release();
                 }
             }
-            await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureAwait(false);
+            await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region Throw
@@ -575,7 +575,7 @@ namespace TouchSocket.Sockets
             // 如果远程IP主机为空，则抛出异常。
             this.ThrowIfRemoteIPHostNull();
             // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
-            await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
+            await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
 #if NET6_0_OR_GREATER
@@ -600,7 +600,7 @@ namespace TouchSocket.Sockets
         {
             this.ThrowIfDisposed();
             this.ThrowIfCannotSend();
-            await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
+            await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
             this.m_lastSendTime = DateTime.UtcNow;
         }
@@ -623,7 +623,7 @@ namespace TouchSocket.Sockets
             this.ThrowIfDisposed();
 
             // 触发发送前的事件，允许修改数据或执行其他操作。
-            await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
+            await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 尝试将只读内存转换为数组形式，以便发送。
             if (MemoryMarshal.TryGetArray(memory, out var segment))
             {
@@ -697,18 +697,18 @@ namespace TouchSocket.Sockets
                     // 根据数据处理适配器的存在与否，选择不同的发送方法
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
+                        await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
+                        await this.m_dataHandlingAdapter.SendInputAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }
             else
             {
                 // 如果数据处理适配器支持拼接发送，则直接使用适配器发送数据列表
-                await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureAwait(false);
+                await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

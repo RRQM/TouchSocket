@@ -59,7 +59,7 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 if (this.m_isHandshaked)
@@ -71,7 +71,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     this.m_client.SafeDispose();
                     this.m_client = new ClientWebSocket();
-                    await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(false);
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     _ = this.BeginReceive();
                 }
 
@@ -95,7 +95,7 @@ namespace TouchSocket.Http.WebSockets
         public Protocol Protocol { get; set; } = Protocol.WebSocket;
 
         /// <inheritdoc/>
-        public IPHost RemoteIPHost { get; private set; }
+        public IPHost RemoteIPHost => this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
 
         /// <summary>
         /// 是否已完成连接
@@ -150,15 +150,6 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="config"></param>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-        }
-
-        /// <summary>
         /// 已断开连接。
         /// </summary>
         /// <param name="e"></param>
@@ -180,7 +171,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
-                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory.GetArray(), default).ConfigureAwait(false);
+                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory.GetArray(), default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (result.Count == 0)
                         {
                             break;
@@ -188,7 +179,7 @@ namespace TouchSocket.Http.WebSockets
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        await this.OnReceived(result, byteBlock).ConfigureAwait(false);
+                        await this.OnReceived(result, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
 

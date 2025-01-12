@@ -90,7 +90,7 @@ namespace TouchSocket.Http.WebSockets
         {
             this.VerifyConnection = async (client, context) =>
             {
-                await EasyTask.CompletedTask.ConfigureAwait(false);
+                await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return func.Invoke(client, context);
             };
             return this;
@@ -134,10 +134,10 @@ namespace TouchSocket.Http.WebSockets
         {
             if (client.Protocol == Protocol.Http)
             {
-                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(false))
+                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     e.Handled = true;
-                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(false);
+                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (!this.AutoClose)
                     {
                         client.SetValue(AutoCloseProperty, false);
@@ -149,12 +149,12 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task<bool> ThisVerifyConnection(IHttpSessionClient client, HttpContext context)
         {
-            await EasyTask.CompletedTask.ConfigureAwait(false);
+            await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (context.Request.Method == HttpMethod.Get)
             {
                 if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))

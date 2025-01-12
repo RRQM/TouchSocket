@@ -37,15 +37,15 @@ namespace TouchSocket.Sockets
             {
                 if (this.CheckClearType == CheckClearType.OnlyReceive)
                 {
-                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(false);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else if (this.CheckClearType == CheckClearType.OnlySend)
                 {
-                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(false);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
-                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(false);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             };
             this.m_logger = logger;
@@ -71,7 +71,7 @@ namespace TouchSocket.Sockets
         public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
             _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -146,12 +146,12 @@ namespace TouchSocket.Sockets
                 {
                     if (first)
                     {
-                        await Task.Delay(this.Tick).ConfigureAwait(false);
+                        await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         first = false;
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
 
                     if (client is IOnlineClient onlineClient && !onlineClient.Online)
@@ -163,7 +163,7 @@ namespace TouchSocket.Sockets
                     {
                         if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
                         {
-                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             return;
                         }
                     }
@@ -171,7 +171,7 @@ namespace TouchSocket.Sockets
                     {
                         if (DateTime.UtcNow - client.LastSentTime > this.Tick)
                         {
-                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             return;
                         }
                     }
@@ -179,7 +179,7 @@ namespace TouchSocket.Sockets
                     {
                         if (DateTime.UtcNow - client.GetLastActiveTime() > this.Tick)
                         {
-                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             return;
                         }
                     }
@@ -193,7 +193,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await this.OnClose.Invoke(client, checkClearType).ConfigureAwait(false);
+                    await this.OnClose.Invoke(client, checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch
                 {
@@ -214,7 +214,7 @@ namespace TouchSocket.Sockets
                     }
                     try
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (sender is IConnectableService connectableService)
                         {
                             foreach (var client in connectableService.GetClients())

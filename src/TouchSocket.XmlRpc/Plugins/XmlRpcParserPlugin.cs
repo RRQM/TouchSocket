@@ -71,7 +71,7 @@ namespace TouchSocket.XmlRpc
                     try
                     {
                         var xml = new XmlDocument();
-                        var xmlstring = await e.Context.Request.GetBodyAsync().ConfigureAwait(false);
+                        var xmlstring = await e.Context.Request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         xml.LoadXml(xmlstring);
                         var methodName = xml.SelectSingleNode("methodCall/methodName");
                         var actionKey = methodName.InnerText;
@@ -127,7 +127,7 @@ namespace TouchSocket.XmlRpc
                         }
 
                         callContext.SetParameters(ps);
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         var httpResponse = e.Context.Response;
 
@@ -144,7 +144,7 @@ namespace TouchSocket.XmlRpc
                         }
                         try
                         {
-                            await httpResponse.AnswerAsync().ConfigureAwait(false);
+                            await httpResponse.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         finally
                         {
@@ -164,7 +164,7 @@ namespace TouchSocket.XmlRpc
                 }
             }
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>

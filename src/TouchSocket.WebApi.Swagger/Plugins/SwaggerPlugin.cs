@@ -95,7 +95,7 @@ namespace TouchSocket.WebApi.Swagger
                     this.m_swagger.Add(key, bytes);
                 }
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (this.LaunchBrowser)
             {
@@ -665,10 +665,10 @@ namespace TouchSocket.WebApi.Swagger
                     .SetStatus()
                     .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                     .SetContent(bytes);
-                await context.Response.AnswerAsync().ConfigureAwait(false);
+                await context.Response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
     }

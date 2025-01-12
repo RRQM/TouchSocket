@@ -46,7 +46,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (client is not TClient tClient)
             {
@@ -66,7 +66,7 @@ namespace TouchSocket.NamedPipe
                     {
                         return;
                     }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         return;
                     }

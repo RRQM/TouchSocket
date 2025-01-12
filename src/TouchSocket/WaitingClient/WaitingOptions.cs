@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -36,7 +37,7 @@ namespace TouchSocket.Sockets
                     Task<bool> FilterFuncValue(ResponsedData data)
                     {
                         var task = Task.FromResult(value.Invoke(data));
-                        task.ConfigureAwait(false);
+                        task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return task;
                     }
 

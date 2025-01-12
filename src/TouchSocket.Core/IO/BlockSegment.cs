@@ -97,7 +97,7 @@ namespace TouchSocket.Core
             // 标记为未完成
             this.Complete(false);
             // 等待读取完成
-            await this.m_resetEventForCompleteRead.WaitOneAsync().ConfigureAwait(false);
+            await this.m_resetEventForCompleteRead.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace TouchSocket.Core
                 // 设置完成消息
                 this.m_result.Message = msg;
                 // 触发输入操作，以应用完成状态
-                await this.InputAsync(default).ConfigureAwait(false);
+                await this.InputAsync(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {

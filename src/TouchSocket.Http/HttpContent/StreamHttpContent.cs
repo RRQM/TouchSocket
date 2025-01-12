@@ -78,14 +78,14 @@ namespace TouchSocket.Http
             {
                 while (true)
                 {
-                    var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(false);
+                    var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (r == 0)
                     {
                         break;
                     }
-                    await writeFunc.Invoke(memory).ConfigureAwait(false);
+                    await writeFunc.Invoke(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                    await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(false);
+                    await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 this.m_flowOperator.SetResult(Result.Success);

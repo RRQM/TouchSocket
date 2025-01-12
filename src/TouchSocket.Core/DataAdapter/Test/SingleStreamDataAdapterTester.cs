@@ -83,7 +83,7 @@ namespace TouchSocket.Core
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(false);
+                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             });
 
@@ -117,7 +117,7 @@ namespace TouchSocket.Core
                     {
                         try
                         {
-                            await this.m_adapter.ReceivedInputAsync(block).ConfigureAwait(false);
+                            await this.m_adapter.ReceivedInputAsync(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         finally
                         {
@@ -127,7 +127,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    await Task.Delay(1).ConfigureAwait(false);
+                    await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }
@@ -137,7 +137,7 @@ namespace TouchSocket.Core
             this.m_count++;
             if (this.m_receivedCallBack != null)
             {
-                await this.m_receivedCallBack.Invoke(byteBlock, requestInfo).ConfigureAwait(false);
+                await this.m_receivedCallBack.Invoke(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

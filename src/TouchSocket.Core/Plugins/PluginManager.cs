@@ -316,13 +316,13 @@ namespace TouchSocket.Core
             if (resolver == null)
             {
                 e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, this.Resolver);
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return e.Handled;
             }
             else
             {
                 e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, resolver);
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return e.Handled;
             }
         }

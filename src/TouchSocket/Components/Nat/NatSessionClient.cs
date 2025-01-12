@@ -43,7 +43,7 @@ namespace TouchSocket.Sockets
 
             if (!client.Online)
             {
-                await client.ConnectAsync().ConfigureAwait(false);
+                await client.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             // 将新的TcpClient添加到目标客户端列表中。
@@ -58,8 +58,8 @@ namespace TouchSocket.Sockets
             var config = new TouchSocketConfig();
             setupAction.Invoke(config);
 
-            await client.SetupAsync(config).ConfigureAwait(false);
-            await this.AddTargetClientAsync(client).ConfigureAwait(false);
+            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.AddTargetClientAsync(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -133,7 +133,7 @@ namespace TouchSocket.Sockets
 
                     try
                     {
-                        await client.SendAsync(e.ByteBlock.Memory).ConfigureAwait(false);
+                        await client.SendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -146,7 +146,7 @@ namespace TouchSocket.Sockets
                     // 转发数据到目标客户端
                     try
                     {
-                        await client.SendAsync(e.RequestInfo).ConfigureAwait(false);
+                        await client.SendAsync(e.RequestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -183,7 +183,7 @@ namespace TouchSocket.Sockets
 
                 try
                 {
-                    await this.ProtectedSendAsync(e.ByteBlock.Memory).ConfigureAwait(false);
+                    await this.ProtectedSendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
@@ -196,7 +196,7 @@ namespace TouchSocket.Sockets
                 // 转发数据到当前客户端
                 try
                 {
-                    await this.ProtectedSendAsync(e.RequestInfo).ConfigureAwait(false);
+                    await this.ProtectedSendAsync(e.RequestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
@@ -208,24 +208,24 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected sealed override async Task OnTcpClosed(ClosedEventArgs e)
         {
-            await this.OnNatClosed(e).ConfigureAwait(false);
+            await this.OnNatClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             // 调用基类的事件处理程序。
-            await base.OnTcpClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
         protected override async Task OnTcpConnected(ConnectedEventArgs e)
         {
-            await base.OnTcpConnected(e).ConfigureAwait(false);
-            await this.OnNatConnected(e).ConfigureAwait(false);
+            await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnNatConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
         protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
-            await base.OnTcpReceived(e).ConfigureAwait(false);
-            await this.OnNatReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnNatReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace TouchSocket.Sockets
         /// <param name="e">包含断开连接信息的事件参数。</param>
         private async Task NatTargetClient_Closed(ITcpSession client, ClosedEventArgs e)
         {
-            await this.OnTargetClientClosed((NatTargetClient)client, e).ConfigureAwait(false);
+            await this.OnTargetClientClosed((NatTargetClient)client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace TouchSocket.Sockets
             }
 
             // 调用接收数据的委托方法处理数据。
-            await this.OnTargetClientReceived(client, e).ConfigureAwait(false);
+            await this.OnTargetClientReceived(client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

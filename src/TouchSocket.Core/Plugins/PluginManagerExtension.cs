@@ -111,9 +111,9 @@ namespace TouchSocket.Core
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 // 执行传入的插件逻辑，不捕获当前上下文
-                await func().ConfigureAwait(false);
+                await func().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 继续执行插件链中的下一个插件，不捕获当前上下文
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             // 将封装后的插件逻辑添加到插件管理器中
@@ -138,7 +138,7 @@ namespace TouchSocket.Core
                     // 执行传入的action，这里将e转换为T类型
                     action(e as T);
                     // 调用下一个插件，确保插件链的执行顺序
-                    await e.InvokeNext().ConfigureAwait(false);
+                    await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 // 将新定义的处理方法添加到插件管理器中
                 pluginManager.Add(interfaceType, newFunc, action);
@@ -151,7 +151,7 @@ namespace TouchSocket.Core
                     // 执行传入的action，这里将sender转换为T类型
                     action((T)sender);
                     // 调用下一个插件，确保插件链的执行顺序
-                    await e.InvokeNext().ConfigureAwait(false);
+                    await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 // 将新定义的处理方法添加到插件管理器中
                 pluginManager.Add(interfaceType, newFunc, action);
@@ -171,7 +171,7 @@ namespace TouchSocket.Core
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 action(); // 执行插件处理程序指定的动作。
-                await e.InvokeNext().ConfigureAwait(false); // 继续执行下一个插件处理程序。
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext); // 继续执行下一个插件处理程序。
             }
 
             // 调用插件管理器的Add方法，注册新的异步处理程序和动作。
