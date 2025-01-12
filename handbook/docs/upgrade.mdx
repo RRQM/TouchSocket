@@ -13,11 +13,38 @@ import Highlight from '@site/src/components/Highlight.js';
 
 版本号规则：`主版本号.次版本号.修订版本号`
 
-- 只要确认为框架 `bug`，则当天修复，当天发版，修订版本号 `加 1`。
-- 如果 `.csproj` 文件有变更，则当天发版，修订版本号 `加 1`。
+- 只要确认为框架 `bug`，则当天修复，下个周日发版，修订版本号 `加 1`。
 - 其余情况，每年发布一个 `主版本`，发布时间跟随Dotnet的发布时间。
 
 :::
+
+## v3.0.11
+
+**更新日期：** 2025.1.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>新增</Tag> 全系新增`EasyTask.ContinueOnCapturedContext`的设定，以解决`Unity3d`在`webgl`平台下，会卡住的问题。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `IWaitHandlePool<T>`的接口抽象。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpResponse`新增`SetRedirect`重定向功能。[#IBG1QT](https://gitee.com/RRQM_Home/TouchSocket/issues/IBG1QT)
+- &nbsp;<Tag>优化</Tag> `HttpRequest`在请求时的编码效率。
+- &nbsp;<Tag>修复</Tag> `HttpRequest`不会对中文等非`Ascii`编码的字符进行`url encode`的`bug`。[#IBGATN](https://gitee.com/RRQM_Home/TouchSocket/issues/IBGATN)
+- &nbsp;<Tag>修复</Tag> 在客户端，执行`IWebApiRequestPlugin`插件时，`HttpRequest`无法通过`GetContent`或者`GetBody`获取数据。[#IBGARB](https://gitee.com/RRQM_Home/TouchSocket/issues/IBGARB)
+
+***
 
 ## v3.0.10
 
