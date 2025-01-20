@@ -426,7 +426,7 @@ class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPl
         {
             if (await actor.InputReceivedData(e.DmtpMessage))
             {
-                e.Handled = true;
+                
                 return;
             }
         }

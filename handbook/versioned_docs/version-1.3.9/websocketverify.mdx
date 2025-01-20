@@ -21,7 +21,7 @@ class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
         if (e.Context.Request.Query["token"]!="123")
         {
             e.IsPermitOperation = false; //参数不符合，直接拒绝
-            e.Handled = true;//表示该条消息已被本插件处理，不需要在向其他插件投递了。
+            //表示该条消息已被本插件处理，不需要在向其他插件投递了。
             return;
 
             //或者直接回复，此处部分和http操作一致。

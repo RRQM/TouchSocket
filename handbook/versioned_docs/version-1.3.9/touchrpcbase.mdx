@@ -35,7 +35,7 @@ internal class MyTouchRpcPlugin : TouchRpcPluginBase
         if (e.Token == "123")
         {
             e.IsPermitOperation = true;
-            e.Handled = true;
+            
             return;
         }
         base.OnHandshaking(client, e);

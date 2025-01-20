@@ -89,7 +89,7 @@ public interface ISayPlugin : IPlugin
              //当满足的时候输出，且不在调用下一个插件。
 
              //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-             e.Handled = true;
+             
              return;
          }
          await e.InvokeNext();
@@ -108,7 +108,7 @@ public interface ISayPlugin : IPlugin
              //当满足的时候输出，且不在调用下一个插件。
 
              //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-             e.Handled = true;
+             
              return;
          }
 
@@ -277,7 +277,7 @@ public class SayHelloAction: PluginBase
             //当满足的时候输出，且不在调用下一个插件。
 
             //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-            e.Handled = true;
+            
             return;
         }
         await e.InvokeNext();
@@ -326,7 +326,7 @@ public partial class SayHelloGenerator : PluginBase
             //当满足的时候输出，且不在调用下一个插件。
 
             //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-            e.Handled = true;
+            
             return;
         }
         await e.InvokeNext();
