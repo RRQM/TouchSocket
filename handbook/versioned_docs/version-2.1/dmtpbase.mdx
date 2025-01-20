@@ -51,7 +51,7 @@ internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
         {
             e.IsPermitOperation = false;//不允许连接
             e.Message = "元数据不对";//同时返回消息
-            e.Handled = true;//表示该消息已在此处处理。
+            //表示该消息已在此处处理。
             return;
         }
 
@@ -64,7 +64,7 @@ internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
         if (e.Token == "Dmtp")
         {
             e.IsPermitOperation = true;
-            e.Handled = true;
+            
             return;
         }
 

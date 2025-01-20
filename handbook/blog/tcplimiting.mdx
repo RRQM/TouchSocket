@@ -104,7 +104,7 @@ var rateLimitLease = this.m_rateLimiter.AttemptAcquire(1);
 if (!rateLimitLease.IsAcquired)
 {
     e.IsPermitOperation = false;//表示不许连接
-    e.Handled = true;//并且已经处理该消息。
+    //并且已经处理该消息。
     this.m_logger.Warning($"IP={client.IP}的客户端，连接数达到设置阈值。已拒绝连接。");
     return;
 }

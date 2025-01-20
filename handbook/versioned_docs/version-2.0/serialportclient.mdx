@@ -227,7 +227,7 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin<ISerialPortClient>
         ByteBlock byteBlock = e.ByteBlock;
         IRequestInfo requestInfo = e.RequestInfo;
 
-        //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+        ////表示该数据已经被本插件处理，无需再投递到其他插件。
 
         await e.InvokeNext();
     }
