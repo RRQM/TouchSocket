@@ -45,6 +45,7 @@ namespace ConsoleApp
                       a.Add<MyUploadBigFileHttpPlug>();
                       a.Add<MyBigWriteHttpPlug>();
                       a.Add<MyCustomDownloadHttpPlug>();
+                      a.Add<TestFormPlugin>();
 
                       a.UseHttpStaticPage()
                       .SetNavigateAction(request =>
@@ -321,6 +322,29 @@ namespace ConsoleApp
 
 
             //无法处理，调用下一个插件
+            await e.InvokeNext();
+        }
+    }
+
+    public class TestFormPlugin:PluginBase, IHttpPlugin
+    {
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.IsPost())
+            {
+                if (e.Context.Request.UrlEquals("/form"))
+                {
+                    var formCollection = await e.Context.Request.GetFormCollectionAsync();
+                    foreach (var item in formCollection)
+                    {
+                        Console.WriteLine($"{item.Key}={item.Value}");
+                    }
+                    await e.Context.Response
+                             .SetStatus()
+                             .FromText("Ok")
+                             .AnswerAsync();
+                }
+            }
             await e.InvokeNext();
         }
     }
