@@ -13,13 +13,12 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal class SocketOperationResult
 {
-    internal class SocketOperationResult
-    {
-        public int BytesTransferred;
-        public EndPoint RemoteEndPoint;
-        public SocketException SocketError;
-        public IPPacketInformation ReceiveMessageFromPacketInfo;
-    }
+    public int BytesTransferred;
+    public EndPoint RemoteEndPoint;
+    public SocketException SocketError;
+    public IPPacketInformation ReceiveMessageFromPacketInfo;
 }

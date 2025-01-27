@@ -14,62 +14,61 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// DmtpRouteServiceExtension
+/// </summary>
+public static class DmtpRouteServiceExtension
 {
     /// <summary>
-    /// DmtpRouteServiceExtension
+    /// 添加Dmtp路由服务。
     /// </summary>
-    public static class DmtpRouteServiceExtension
+    /// <param name="registrator"></param>
+    public static void AddDmtpRouteService(this IRegistrator registrator)
     {
-        /// <summary>
-        /// 添加Dmtp路由服务。
-        /// </summary>
-        /// <param name="registrator"></param>
-        public static void AddDmtpRouteService(this IRegistrator registrator)
-        {
-            registrator.RegisterSingleton<IDmtpRouteService, DmtpRouteService>();
-        }
+        registrator.RegisterSingleton<IDmtpRouteService, DmtpRouteService>();
+    }
 
-        /// <summary>
-        /// 扩展方法用于在服务容器中注册DMTP路由服务的单例实例。
-        /// </summary>
-        /// <typeparam name="TDmtpRouteService">DMTP路由服务的具体类型。</typeparam>
-        /// <param name="registrator">服务注册器接口，用于在服务容器中注册服务。</param>
-        public static void AddDmtpRouteService<TDmtpRouteService>(this IRegistrator registrator)
-            where TDmtpRouteService : class, IDmtpRouteService
-        {
-            // 使用单例模式注册DMTP路由服务，确保在整个应用生命周期中只创建一个实例。
-            registrator.RegisterSingleton<IDmtpRouteService, TDmtpRouteService>();
-        }
+    /// <summary>
+    /// 扩展方法用于在服务容器中注册DMTP路由服务的单例实例。
+    /// </summary>
+    /// <typeparam name="TDmtpRouteService">DMTP路由服务的具体类型。</typeparam>
+    /// <param name="registrator">服务注册器接口，用于在服务容器中注册服务。</param>
+    public static void AddDmtpRouteService<TDmtpRouteService>(this IRegistrator registrator)
+        where TDmtpRouteService : class, IDmtpRouteService
+    {
+        // 使用单例模式注册DMTP路由服务，确保在整个应用生命周期中只创建一个实例。
+        registrator.RegisterSingleton<IDmtpRouteService, TDmtpRouteService>();
+    }
 
-        /// <summary>
-        /// 添加基于设定委托的Dmtp路由服务。
-        /// </summary>
-        /// <param name="registrator"></param>
-        /// <param name="func"></param>
-        public static void AddDmtpRouteService(this IRegistrator registrator, Func<string, Task<IDmtpActor>> func)
+    /// <summary>
+    /// 添加基于设定委托的Dmtp路由服务。
+    /// </summary>
+    /// <param name="registrator"></param>
+    /// <param name="func"></param>
+    public static void AddDmtpRouteService(this IRegistrator registrator, Func<string, Task<IDmtpActor>> func)
+    {
+        registrator.RegisterSingleton<IDmtpRouteService>(new DmtpRouteService()
         {
-            registrator.RegisterSingleton<IDmtpRouteService>(new DmtpRouteService()
-            {
-                FindDmtpActor = func
-            });
-        }
+            FindDmtpActor = func
+        });
+    }
 
-        /// <summary>
-        /// 添加基于设定委托的Dmtp路由服务。
-        /// </summary>
-        /// <param name="registrator">服务注册器接口，用于注册服务。</param>
-        /// <param name="action">一个函数委托，根据ID返回一个IDmtpActor实例。</param>
-        public static void AddDmtpRouteService(this IRegistrator registrator, Func<string, IDmtpActor> action)
+    /// <summary>
+    /// 添加基于设定委托的Dmtp路由服务。
+    /// </summary>
+    /// <param name="registrator">服务注册器接口，用于注册服务。</param>
+    /// <param name="action">一个函数委托，根据ID返回一个IDmtpActor实例。</param>
+    public static void AddDmtpRouteService(this IRegistrator registrator, Func<string, IDmtpActor> action)
+    {
+        // 调用重载版本的AddDmtpRouteService方法，处理异步操作
+        AddDmtpRouteService(registrator, async (id) =>
         {
-            // 调用重载版本的AddDmtpRouteService方法，处理异步操作
-            AddDmtpRouteService(registrator, async (id) =>
-            {
-                // 完成一个已经完成的任务，用于简化异步操作
-                await EasyTask.CompletedTask;
-                // 调用传入的委托，并返回结果
-                return action.Invoke(id);
-            });
-        }
+            // 完成一个已经完成的任务，用于简化异步操作
+            await EasyTask.CompletedTask;
+            // 调用传入的委托，并返回结果
+            return action.Invoke(id);
+        });
     }
 }

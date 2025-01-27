@@ -13,67 +13,66 @@
 using Autofac;
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// AutofacConfigExtension
+/// </summary>
+public static class AutofacConfigExtension
 {
     /// <summary>
-    /// AutofacConfigExtension
+    /// 配置容器。
     /// </summary>
-    public static class AutofacConfigExtension
+    /// <param name="containerBuilder"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static ContainerBuilder ConfigureContainer(this ContainerBuilder containerBuilder, Action<IRegistrator> action)
     {
-        /// <summary>
-        /// 配置容器。
-        /// </summary>
-        /// <param name="containerBuilder"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static ContainerBuilder ConfigureContainer(this ContainerBuilder containerBuilder, Action<IRegistrator> action)
-        {
-            var container = new AutofacContainer(containerBuilder);
-            action.Invoke(container);
-            return containerBuilder;
-        }
+        var container = new AutofacContainer(containerBuilder);
+        action.Invoke(container);
+        return containerBuilder;
+    }
 
-        /// <summary>
-        /// 使用<see cref="AutofacContainer"/>作为容器。
-        /// <para>
-        /// 注意：使用此方法，在构建组件时，内部会自行调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
-        /// </para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="containerBuilder"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config, ContainerBuilder containerBuilder)
-        {
-            config.SetRegistrator(new AutofacContainer(containerBuilder));
-            return config;
-        }
+    /// <summary>
+    /// 使用<see cref="AutofacContainer"/>作为容器。
+    /// <para>
+    /// 注意：使用此方法，在构建组件时，内部会自行调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="containerBuilder"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config, ContainerBuilder containerBuilder)
+    {
+        config.SetRegistrator(new AutofacContainer(containerBuilder));
+        return config;
+    }
 
-        /// <summary>
-        /// 使用<see cref="AutofacContainer"/>作为容器。
-        /// <para>
-        /// 注意：使用此方法，在构建组件时，内部会直接使用解决器，不再调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
-        /// </para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="container"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config, Autofac.IContainer container)
-        {
-            config.SetResolver(new AutofacContainer(container));
-            return config;
-        }
+    /// <summary>
+    /// 使用<see cref="AutofacContainer"/>作为容器。
+    /// <para>
+    /// 注意：使用此方法，在构建组件时，内部会直接使用解决器，不再调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config, Autofac.IContainer container)
+    {
+        config.SetResolver(new AutofacContainer(container));
+        return config;
+    }
 
-        /// <summary>
-        /// 使用<see cref="AutofacContainer"/>作为容器。
-        /// </summary>
-        /// <para>
-        /// 注意：使用此方法，在构建组件时，内部会自行调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
-        /// </para>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config)
-        {
-            return UseAutofacContainer(config, new ContainerBuilder());
-        }
+    /// <summary>
+    /// 使用<see cref="AutofacContainer"/>作为容器。
+    /// </summary>
+    /// <para>
+    /// 注意：使用此方法，在构建组件时，内部会自行调用<see cref="ContainerBuilder.Build(Autofac.Builder.ContainerBuildOptions)"/>.
+    /// </para>
+    /// <param name="config"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig UseAutofacContainer(this TouchSocketConfig config)
+    {
+        return UseAutofacContainer(config, new ContainerBuilder());
     }
 }

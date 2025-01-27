@@ -12,26 +12,25 @@
 
 using System.Threading;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 调用配置接口
+/// </summary>
+public interface IInvokeOption
 {
     /// <summary>
-    /// 调用配置接口
+    /// 可以取消的调用令箭
     /// </summary>
-    public interface IInvokeOption
-    {
-        /// <summary>
-        /// 可以取消的调用令箭
-        /// </summary>
-        CancellationToken Token { get; set; }
+    CancellationToken Token { get; set; }
 
-        /// <summary>
-        /// 调用反馈
-        /// </summary>
-        FeedbackType FeedbackType { get; set; }
+    /// <summary>
+    /// 调用反馈
+    /// </summary>
+    FeedbackType FeedbackType { get; set; }
 
-        /// <summary>
-        /// 调用超时
-        /// </summary>
-        int Timeout { get; set; }
-    }
+    /// <summary>
+    /// 调用超时
+    /// </summary>
+    int Timeout { get; set; }
 }

@@ -13,31 +13,30 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 终端接口
+/// </summary>
+public interface IClient : IDependencyObject, ILoggerObject
 {
     /// <summary>
-    /// 终端接口
+    /// 终端协议
     /// </summary>
-    public interface IClient : IDependencyObject, ILoggerObject
-    {
-        /// <summary>
-        /// 终端协议
-        /// </summary>
-        Protocol Protocol { get; }
+    Protocol Protocol { get; }
 
-        /// <summary>
-        /// 最后一次接收到数据的时间
-        /// </summary>
-        DateTime LastReceivedTime { get; }
+    /// <summary>
+    /// 最后一次接收到数据的时间
+    /// </summary>
+    DateTime LastReceivedTime { get; }
 
-        /// <summary>
-        /// 最后一次发送数据的时间
-        /// </summary>
-        DateTime LastSentTime { get; }
+    /// <summary>
+    /// 最后一次发送数据的时间
+    /// </summary>
+    DateTime LastSentTime { get; }
 
-        /// <summary>
-        /// 表示是否为客户端终端。当为<see langword="true"/>时，表示是客户端。否则为服务器通讯终端。
-        /// </summary>
-        bool IsClient { get; }
-    }
+    /// <summary>
+    /// 表示是否为客户端终端。当为<see langword="true"/>时，表示是客户端。否则为服务器通讯终端。
+    /// </summary>
+    bool IsClient { get; }
 }

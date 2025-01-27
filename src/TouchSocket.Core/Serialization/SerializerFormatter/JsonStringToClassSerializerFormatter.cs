@@ -13,58 +13,57 @@
 using Newtonsoft.Json;
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// Json字符串转到对应类
+/// </summary>
+public class JsonStringToClassSerializerFormatter<TState> : ISerializerFormatter<string, TState>
 {
+    /// <inheritdoc/>
+    public int Order { get; set; }
+
     /// <summary>
-    /// Json字符串转到对应类
+    /// JsonSettings
     /// </summary>
-    public class JsonStringToClassSerializerFormatter<TState> : ISerializerFormatter<string, TState>
+    public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
+
+    /// <inheritdoc/>
+    /// <param name="state"></param>
+    /// <param name="source"></param>
+    /// <param name="targetType"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
     {
-        /// <inheritdoc/>
-        public int Order { get; set; }
-
-        /// <summary>
-        /// JsonSettings
-        /// </summary>
-        public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
-
-        /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
+        try
         {
-            try
-            {
-                target = JsonConvert.DeserializeObject(source, targetType, this.JsonSettings);
-                return true;
-            }
-            catch
-            {
-                target = default;
-                return false;
-            }
+            target = JsonConvert.DeserializeObject(source, targetType, this.JsonSettings);
+            return true;
         }
-
-        /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public virtual bool TrySerialize(TState state, in object target, out string source)
+        catch
         {
-            try
-            {
-                source = JsonConvert.SerializeObject(target, this.JsonSettings);
-                return true;
-            }
-            catch
-            {
-                source = null;
-                return false;
-            }
+            target = default;
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
+    /// <param name="state"></param>
+    /// <param name="target"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    public virtual bool TrySerialize(TState state, in object target, out string source)
+    {
+        try
+        {
+            source = JsonConvert.SerializeObject(target, this.JsonSettings);
+            return true;
+        }
+        catch
+        {
+            source = null;
+            return false;
         }
     }
 }

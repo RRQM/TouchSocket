@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
+namespace TouchSocket.Sockets;
 
-    /// <summary>
-    /// 定义会话客户端接口，继承自IClient, IIdClient, IClosableClient接口
-    /// </summary>
-    public interface ISessionClient : IClient, IIdClient, IClosableClient
-    {
-    }
+
+/// <summary>
+/// 定义会话客户端接口，继承自IClient, IIdClient, IClosableClient接口
+/// </summary>
+public interface ISessionClient : IClient, IIdClient, IClosableClient
+{
 }

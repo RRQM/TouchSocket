@@ -12,43 +12,84 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
 {
-    internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
+    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref ModbusRtuResponse request, ref int tempCapacity)
     {
-        protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref ModbusRtuResponse request, ref int tempCapacity)
+        if (byteBlock.CanReadLength < 3)
         {
-            if (byteBlock.CanReadLength < 3)
+            return FilterResult.Cache;
+        }
+
+        var pos = byteBlock.Position;
+
+        var slaveId = byteBlock.ReadByte();
+        FunctionCode functionCode;
+        var isError = false;
+        var code = byteBlock.ReadByte();
+        if ((code & 0x80) == 0)
+        {
+            functionCode = (FunctionCode)code;
+        }
+        else
+        {
+            code = code.SetBit(7, false);
+            functionCode = (FunctionCode)code;
+            isError = true;
+        }
+
+        ModbusErrorCode errorCode;
+
+        var bodyLength = 0;
+        byte[] data;
+        ushort startingAddress;
+        if (isError)
+        {
+            errorCode = (ModbusErrorCode)byteBlock.ReadByte();
+            bodyLength = 2;
+
+            if (byteBlock.CanReadLength < bodyLength)
             {
+                byteBlock.Position = pos;
                 return FilterResult.Cache;
             }
 
-            var pos = byteBlock.Position;
+            var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+            var crc = byteBlock.ReadUInt16(EndianType.Big);
 
-            var slaveId = byteBlock.ReadByte();
-            FunctionCode functionCode;
-            var isError = false;
-            var code = byteBlock.ReadByte();
-            if ((code & 0x80) == 0)
+            //下面crc验证失败时，不再抛出错误，而是返回错误码。
+            //https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2
+
+            if (crc == newCrc)
             {
-                functionCode = (FunctionCode)code;
+                request = new ModbusRtuResponse()
+                {
+                    SlaveId = slaveId,
+                    ErrorCode = errorCode,
+                    FunctionCode = functionCode,
+                };
+
+                return FilterResult.Success;
             }
             else
             {
-                code = code.SetBit(7, false);
-                functionCode = (FunctionCode)code;
-                isError = true;
+                request = new ModbusRtuResponse()
+                {
+                    SlaveId = slaveId,
+                    ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                    FunctionCode = functionCode,
+                };
+
+                return FilterResult.Success;
             }
-
-            ModbusErrorCode errorCode;
-
-            var bodyLength = 0;
-            byte[] data;
-            ushort startingAddress;
-            if (isError)
+        }
+        else
+        {
+            if ((byte)functionCode <= 4 || functionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                errorCode = (ModbusErrorCode)byteBlock.ReadByte();
-                bodyLength = 2;
+                bodyLength = byteBlock.ReadByte() + 2;
 
                 if (byteBlock.CanReadLength < bodyLength)
                 {
@@ -56,21 +97,19 @@ namespace TouchSocket.Modbus
                     return FilterResult.Cache;
                 }
 
+                data = byteBlock.ReadToSpan(bodyLength - 2).ToArray();
+
                 var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
                 var crc = byteBlock.ReadUInt16(EndianType.Big);
-
-                //下面crc验证失败时，不再抛出错误，而是返回错误码。
-                //https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2
 
                 if (crc == newCrc)
                 {
                     request = new ModbusRtuResponse()
                     {
                         SlaveId = slaveId,
-                        ErrorCode = errorCode,
                         FunctionCode = functionCode,
+                        Data = data,
                     };
-
                     return FilterResult.Success;
                 }
                 else
@@ -78,137 +117,97 @@ namespace TouchSocket.Modbus
                     request = new ModbusRtuResponse()
                     {
                         SlaveId = slaveId,
-                        ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
                         FunctionCode = functionCode,
+                        ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                        Data = data,
                     };
+                    return FilterResult.Success;
+                }
+            }
+            else if (functionCode == FunctionCode.WriteSingleCoil || functionCode == FunctionCode.WriteSingleRegister)
+            {
+                bodyLength = 6;
+                if (byteBlock.CanReadLength < bodyLength)
+                {
+                    byteBlock.Position = pos;
+                    return FilterResult.Cache;
+                }
+                startingAddress = byteBlock.ReadUInt16(EndianType.Big);
+                data = byteBlock.ReadToSpan(bodyLength - 4).ToArray();
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                var crc = byteBlock.ReadUInt16(EndianType.Big);
 
+                if (crc == newCrc)
+                {
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        FunctionCode = functionCode,
+                        StartingAddress = startingAddress,
+                        Data = data,
+                    };
+                    return FilterResult.Success;
+                }
+                else
+                {
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        FunctionCode = functionCode,
+                        StartingAddress = startingAddress,
+                        ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                        Data = data,
+                    };
+                    return FilterResult.Success;
+                }
+
+                //this.m_headerLength = byteBlock.Position - pos;
+                //return true;
+            }
+            else if (functionCode == FunctionCode.WriteMultipleCoils || functionCode == FunctionCode.WriteMultipleRegisters)
+            {
+                bodyLength = 6;
+                if (byteBlock.CanReadLength < bodyLength)
+                {
+                    byteBlock.Position = pos;
+                    return FilterResult.Cache;
+                }
+                startingAddress = byteBlock.ReadUInt16(EndianType.Big);
+                var quantity = byteBlock.ReadUInt16(EndianType.Big);
+                data = new byte[0];
+
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                var crc = byteBlock.ReadUInt16(EndianType.Big);
+
+                if (crc == newCrc)
+                {
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        FunctionCode = functionCode,
+                        StartingAddress = startingAddress,
+                        Quantity = quantity,
+                        Data = data,
+                    };
+                    return FilterResult.Success;
+                }
+                else
+                {
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        FunctionCode = functionCode,
+                        StartingAddress = startingAddress,
+                        Quantity = quantity,
+                        ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                        Data = data,
+                    };
                     return FilterResult.Success;
                 }
             }
             else
             {
-                if ((byte)functionCode <= 4 || functionCode == FunctionCode.ReadWriteMultipleRegisters)
-                {
-                    bodyLength = byteBlock.ReadByte() + 2;
-
-                    if (byteBlock.CanReadLength < bodyLength)
-                    {
-                        byteBlock.Position = pos;
-                        return FilterResult.Cache;
-                    }
-
-                    data = byteBlock.ReadToSpan(bodyLength - 2).ToArray();
-
-                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                    var crc = byteBlock.ReadUInt16(EndianType.Big);
-
-                    if (crc == newCrc)
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-                    else
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-                }
-                else if (functionCode == FunctionCode.WriteSingleCoil || functionCode == FunctionCode.WriteSingleRegister)
-                {
-                    bodyLength = 6;
-                    if (byteBlock.CanReadLength < bodyLength)
-                    {
-                        byteBlock.Position = pos;
-                        return FilterResult.Cache;
-                    }
-                    startingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                    data = byteBlock.ReadToSpan(bodyLength - 4).ToArray();
-                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                    var crc = byteBlock.ReadUInt16(EndianType.Big);
-
-                    if (crc == newCrc)
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            StartingAddress = startingAddress,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-                    else
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            StartingAddress = startingAddress,
-                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-
-                    //this.m_headerLength = byteBlock.Position - pos;
-                    //return true;
-                }
-                else if (functionCode == FunctionCode.WriteMultipleCoils || functionCode == FunctionCode.WriteMultipleRegisters)
-                {
-                    bodyLength = 6;
-                    if (byteBlock.CanReadLength < bodyLength)
-                    {
-                        byteBlock.Position = pos;
-                        return FilterResult.Cache;
-                    }
-                    startingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                    var quantity = byteBlock.ReadUInt16(EndianType.Big);
-                    data = new byte[0];
-
-                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                    var crc = byteBlock.ReadUInt16(EndianType.Big);
-
-                    if (crc == newCrc)
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            StartingAddress = startingAddress,
-                            Quantity = quantity,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-                    else
-                    {
-                        request = new ModbusRtuResponse()
-                        {
-                            SlaveId = slaveId,
-                            FunctionCode = functionCode,
-                            StartingAddress = startingAddress,
-                            Quantity = quantity,
-                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
-                            Data = data,
-                        };
-                        return FilterResult.Success;
-                    }
-                }
-                else
-                {
-                    throw new System.Exception("无法识别的功能码");
-                }
+                throw new System.Exception("无法识别的功能码");
             }
         }
     }

@@ -14,16 +14,15 @@ using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// 基于Tcp协议的JsonRpc客户端。
+/// </summary>
+public interface ITcpJsonRpcClient : IJsonRpcClient, ISetupConfigObject, IClient, ITcpSession, IOnlineClient, ITcpConnectableClient
 {
     /// <summary>
-    /// 基于Tcp协议的JsonRpc客户端。
+    /// 获取ActionMap。
     /// </summary>
-    public interface ITcpJsonRpcClient : IJsonRpcClient, ISetupConfigObject, IClient, ITcpSession, IOnlineClient, ITcpConnectableClient
-    {
-        /// <summary>
-        /// 获取ActionMap。
-        /// </summary>
-        ActionMap ActionMap { get; }
-    }
+    ActionMap ActionMap { get; }
 }

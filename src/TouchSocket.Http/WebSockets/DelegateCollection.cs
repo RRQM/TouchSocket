@@ -12,12 +12,11 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Http.WebSockets
-{
-    /// <summary>
-    /// 收到WebSocket数据
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate Task WSDataFrameEventHandler<TClient>(TClient client, WSDataFrameEventArgs e);
-}
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// 收到WebSocket数据
+/// </summary>
+/// <param name="client"></param>
+/// <param name="e"></param>
+public delegate Task WSDataFrameEventHandler<TClient>(TClient client, WSDataFrameEventArgs e);

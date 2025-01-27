@@ -14,48 +14,47 @@ using System.Collections.Concurrent;
 using System.Threading;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal sealed class TcpCorePool : DisposableObject
 {
-    internal sealed class TcpCorePool : DisposableObject
+    private const int MaxQueueSize = 5000;
+
+    private readonly ConcurrentQueue<TcpCore> m_queue = new();
+    private int m_count;
+
+    public TcpCore Rent()
     {
-        private const int MaxQueueSize = 5000;
-
-        private readonly ConcurrentQueue<TcpCore> m_queue = new();
-        private int m_count;
-
-        public TcpCore Rent()
+        if (this.m_queue.TryDequeue(out var sender))
         {
-            if (this.m_queue.TryDequeue(out var sender))
-            {
-                Interlocked.Decrement(ref this.m_count);
-                return sender;
-            }
-            return new TcpCore();
+            Interlocked.Decrement(ref this.m_count);
+            return sender;
+        }
+        return new TcpCore();
+    }
+
+    public void Return(TcpCore tcpCore)
+    {
+        if (this.DisposedValue || Interlocked.Increment(ref this.m_count) > MaxQueueSize)
+        {
+            Interlocked.Decrement(ref this.m_count);
+            tcpCore.Dispose();
+            return;
         }
 
-        public void Return(TcpCore tcpCore)
+        tcpCore.Reset();
+        this.m_queue.Enqueue(tcpCore);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            if (this.DisposedValue || Interlocked.Increment(ref this.m_count) > MaxQueueSize)
+            while (this.m_queue.TryDequeue(out var tcpCore))
             {
-                Interlocked.Decrement(ref this.m_count);
                 tcpCore.Dispose();
-                return;
             }
-
-            tcpCore.Reset();
-            this.m_queue.Enqueue(tcpCore);
         }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                while (this.m_queue.TryDequeue(out var tcpCore))
-                {
-                    tcpCore.Dispose();
-                }
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

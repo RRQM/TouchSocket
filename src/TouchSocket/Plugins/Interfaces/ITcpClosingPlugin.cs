@@ -13,22 +13,21 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了即将断开TCP连接时的插件接口。
+/// 该接口仅在主动断开连接时有效。
+/// </summary>
+[DynamicMethod]
+public interface ITcpClosingPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了即将断开TCP连接时的插件接口。
-    /// 该接口仅在主动断开连接时有效。
+    /// 处理TCP连接即将断开的情况（仅在主动断开连接时有效）。
+    /// 此方法主要用于执行断开连接前的清理工作。
     /// </summary>
-    [DynamicMethod]
-    public interface ITcpClosingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 处理TCP连接即将断开的情况（仅在主动断开连接时有效）。
-        /// 此方法主要用于执行断开连接前的清理工作。
-        /// </summary>
-        /// <param name="client">发起断开连接请求的客户端会话对象。</param>
-        /// <param name="e">断开连接事件的相关信息。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnTcpClosing(ITcpSession client, ClosingEventArgs e);
-    }
+    /// <param name="client">发起断开连接请求的客户端会话对象。</param>
+    /// <param name="e">断开连接事件的相关信息。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnTcpClosing(ITcpSession client, ClosingEventArgs e);
 }

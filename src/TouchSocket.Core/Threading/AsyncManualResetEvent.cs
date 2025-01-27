@@ -10,22 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 一个手动恢复的异步通知事件
+/// </summary>
+public class AsyncManualResetEvent : AsyncResetEvent
 {
     /// <summary>
     /// 一个手动恢复的异步通知事件
     /// </summary>
-    public class AsyncManualResetEvent : AsyncResetEvent
-    {
-        /// <summary>
-        /// 一个手动恢复的异步通知事件
-        /// </summary>
-        public AsyncManualResetEvent() : this(false) { }
+    public AsyncManualResetEvent() : this(false) { }
 
-        /// <summary>
-        ///  一个手动恢复的异步通知事件
-        /// </summary>
-        /// <param name="set"></param>
-        public AsyncManualResetEvent(bool set) : base(set, false) { }
-    }
+    /// <summary>
+    ///  一个手动恢复的异步通知事件
+    /// </summary>
+    /// <param name="set"></param>
+    public AsyncManualResetEvent(bool set) : base(set, false) { }
 }

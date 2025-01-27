@@ -14,20 +14,19 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// 定义一个接口，用于表示与串行端口连接的插件
+/// </summary>
+[DynamicMethod]
+public interface ISerialConnectedPlugin : IPlugin
 {
     /// <summary>
-    /// 定义一个接口，用于表示与串行端口连接的插件
+    /// 当串行端口会话建立连接时调用的方法。
     /// </summary>
-    [DynamicMethod]
-    public interface ISerialConnectedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当串行端口会话建立连接时调用的方法。
-        /// </summary>
-        /// <param name="client">建立连接的串行端口会话客户端。</param>
-        /// <param name="e">连接事件的参数。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnSerialConnected(ISerialPortSession client, ConnectedEventArgs e);
-    }
+    /// <param name="client">建立连接的串行端口会话客户端。</param>
+    /// <param name="e">连接事件的参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnSerialConnected(ISerialPortSession client, ConnectedEventArgs e);
 }

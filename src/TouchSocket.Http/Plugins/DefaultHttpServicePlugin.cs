@@ -13,36 +13,35 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 默认的Http服务。为Http做兜底拦截。该插件应该最后添加。
+/// </summary>
+public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
 {
-    /// <summary>
-    /// 默认的Http服务。为Http做兜底拦截。该插件应该最后添加。
-    /// </summary>
-    public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
+    /// <inheritdoc/>
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        var response = e.Context.Response;
+        if (response.Responsed)
         {
-            var response = e.Context.Response;
-            if (response.Responsed)
-            {
-                return;
-            }
+            return;
+        }
 
-            if (e.Context.Request.IsMethod("OPTIONS"))
-            {
-                response.SetStatus(204, "No Content");
-                response.Headers.Add("Access-Control-Allow-Origin", "*");
-                response.Headers.Add("Access-Control-Allow-Headers", "*");
-                response.Headers.Add("Allow", "OPTIONS, GET, POST");
-                response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        if (e.Context.Request.IsMethod("OPTIONS"))
+        {
+            response.SetStatus(204, "No Content");
+            response.Headers.Add("Access-Control-Allow-Origin", "*");
+            response.Headers.Add("Access-Control-Allow-Headers", "*");
+            response.Headers.Add("Allow", "OPTIONS, GET, POST");
+            response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 
-                await response.AnswerAsync();
-            }
-            else
-            {
-                await response.UrlNotFind().AnswerAsync();
-            }
+            await response.AnswerAsync();
+        }
+        else
+        {
+            await response.UrlNotFind().AnswerAsync();
         }
     }
 }

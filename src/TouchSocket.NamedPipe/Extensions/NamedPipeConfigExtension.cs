@@ -15,111 +15,110 @@ using System.Collections.Generic;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// NamedPipeConfigExtension
+/// </summary>
+public static class NamedPipeConfigExtension
 {
     /// <summary>
-    /// NamedPipeConfigExtension
+    /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
+    /// 所需类型<see cref="Func{TResult}"/>
     /// </summary>
-    public static class NamedPipeConfigExtension
+    public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = new("NamedPipeDataHandlingAdapter", null
+        );
+
+    /// <summary>
+    /// 直接单个配置命名管道监听的地址组。所需类型<see cref="Action"/>
+    /// </summary>
+    public static readonly DependencyProperty<Action<List<NamedPipeListenOption>>> NamedPipeListenOptionProperty = new("NamedPipeListenOption", null);
+
+    /// <summary>
+    /// 命名管道名称
+    /// </summary>
+    public static readonly DependencyProperty<string> PipeNameProperty = new("PipeName", null);
+
+    /// <summary>
+    /// 命名管道的服务主机名称。
+    /// </summary>
+    public static readonly DependencyProperty<string> PipeServerNameProperty = new("PipeServerName", ".");
+
+    /// <summary>
+    /// 设置(命名管道系)数据处理适配器。
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetNamedPipeDataHandlingAdapter(this TouchSocketConfig config, Func<SingleStreamDataHandlingAdapter> value)
     {
-        /// <summary>
-        /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
-        /// 所需类型<see cref="Func{TResult}"/>
-        /// </summary>
-        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = new("NamedPipeDataHandlingAdapter", null
-            );
-
-        /// <summary>
-        /// 直接单个配置命名管道监听的地址组。所需类型<see cref="Action"/>
-        /// </summary>
-        public static readonly DependencyProperty<Action<List<NamedPipeListenOption>>> NamedPipeListenOptionProperty = new("NamedPipeListenOption", null);
-
-        /// <summary>
-        /// 命名管道名称
-        /// </summary>
-        public static readonly DependencyProperty<string> PipeNameProperty = new("PipeName", null);
-
-        /// <summary>
-        /// 命名管道的服务主机名称。
-        /// </summary>
-        public static readonly DependencyProperty<string> PipeServerNameProperty = new("PipeServerName", ".");
-
-        /// <summary>
-        /// 设置(命名管道系)数据处理适配器。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetNamedPipeDataHandlingAdapter(this TouchSocketConfig config, Func<SingleStreamDataHandlingAdapter> value)
-        {
-            config.SetValue(NamedPipeDataHandlingAdapterProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 直接单个配置命名管道监听的地址组。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetNamedPipeListenOptions(this TouchSocketConfig config, Action<List<NamedPipeListenOption>> value)
-        {
-            config.SetValue(NamedPipeListenOptionProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 当管道在本机时，仅设置管道名称即可。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetPipeName(this TouchSocketConfig config, string value)
-        {
-            config.SetValue(PipeNameProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 设置命名管道的主机名称。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetPipeServer(this TouchSocketConfig config, string value)
-        {
-            config.SetValue(PipeServerNameProperty, value);
-            return config;
-        }
-
-        #region Reconnection
-
-        /// <summary>
-        /// 使用命名管道断线重连。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static ReconnectionPlugin<TClient> UseNamedPipeReconnection<TClient>(this IPluginManager pluginManager) where TClient : INamedPipeClient
-        {
-            var reconnectionPlugin = new NamedPipeReconnectionPlugin<TClient>();
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
-        }
-
-        /// <summary>
-        /// 使用命名管道断线重连。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static ReconnectionPlugin<INamedPipeClient> UseNamedPipeReconnection(this IPluginManager pluginManager)
-        {
-            var reconnectionPlugin = new NamedPipeReconnectionPlugin<INamedPipeClient>();
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
-        }
-
-
-        #endregion Reconnection
+        config.SetValue(NamedPipeDataHandlingAdapterProperty, value);
+        return config;
     }
+
+    /// <summary>
+    /// 直接单个配置命名管道监听的地址组。
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetNamedPipeListenOptions(this TouchSocketConfig config, Action<List<NamedPipeListenOption>> value)
+    {
+        config.SetValue(NamedPipeListenOptionProperty, value);
+        return config;
+    }
+
+    /// <summary>
+    /// 当管道在本机时，仅设置管道名称即可。
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetPipeName(this TouchSocketConfig config, string value)
+    {
+        config.SetValue(PipeNameProperty, value);
+        return config;
+    }
+
+    /// <summary>
+    /// 设置命名管道的主机名称。
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetPipeServer(this TouchSocketConfig config, string value)
+    {
+        config.SetValue(PipeServerNameProperty, value);
+        return config;
+    }
+
+    #region Reconnection
+
+    /// <summary>
+    /// 使用命名管道断线重连。
+    /// </summary>
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static ReconnectionPlugin<TClient> UseNamedPipeReconnection<TClient>(this IPluginManager pluginManager) where TClient : INamedPipeClient
+    {
+        var reconnectionPlugin = new NamedPipeReconnectionPlugin<TClient>();
+        pluginManager.Add(reconnectionPlugin);
+        return reconnectionPlugin;
+    }
+
+    /// <summary>
+    /// 使用命名管道断线重连。
+    /// </summary>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static ReconnectionPlugin<INamedPipeClient> UseNamedPipeReconnection(this IPluginManager pluginManager)
+    {
+        var reconnectionPlugin = new NamedPipeReconnectionPlugin<INamedPipeClient>();
+        pluginManager.Add(reconnectionPlugin);
+        return reconnectionPlugin;
+    }
+
+
+    #endregion Reconnection
 }

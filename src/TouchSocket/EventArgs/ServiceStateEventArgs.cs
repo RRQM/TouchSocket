@@ -13,32 +13,31 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 服务器状态事件参数
+/// </summary>
+public class ServiceStateEventArgs : MsgPermitEventArgs
 {
     /// <summary>
-    /// 服务器状态事件参数
+    /// 初始化服务器状态事件参数类
     /// </summary>
-    public class ServiceStateEventArgs : MsgPermitEventArgs
+    /// <param name="serverState">服务器的状态信息</param>
+    /// <param name="exception">与状态变化相关的异常（如果有的话）</param>
+    public ServiceStateEventArgs(ServerState serverState, Exception exception)
     {
-        /// <summary>
-        /// 初始化服务器状态事件参数类
-        /// </summary>
-        /// <param name="serverState">服务器的状态信息</param>
-        /// <param name="exception">与状态变化相关的异常（如果有的话）</param>
-        public ServiceStateEventArgs(ServerState serverState, Exception exception)
-        {
-            this.ServerState = serverState;
-            this.Exception = exception;
-        }
-
-        /// <summary>
-        /// 获取服务器状态
-        /// </summary>
-        public ServerState ServerState { get; }
-
-        /// <summary>
-        /// 获取与状态变化相关的异常信息
-        /// </summary>
-        public Exception Exception { get; }
+        this.ServerState = serverState;
+        this.Exception = exception;
     }
+
+    /// <summary>
+    /// 获取服务器状态
+    /// </summary>
+    public ServerState ServerState { get; }
+
+    /// <summary>
+    /// 获取与状态变化相关的异常信息
+    /// </summary>
+    public Exception Exception { get; }
 }

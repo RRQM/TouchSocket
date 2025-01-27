@@ -12,22 +12,21 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.Redis
+namespace TouchSocket.Dmtp.Redis;
+
+internal class RedisResponseWaitPackage : WaitPackage
 {
-    internal class RedisResponseWaitPackage : WaitPackage
+    public byte[] value;
+
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        public byte[] value;
+        base.Package(ref byteBlock);
+        byteBlock.WriteBytesPackage(this.value);
+    }
 
-        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.Package(ref byteBlock);
-            byteBlock.WriteBytesPackage(this.value);
-        }
-
-        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.Unpackage(ref byteBlock);
-            this.value = byteBlock.ReadBytesPackage();
-        }
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.Unpackage(ref byteBlock);
+        this.value = byteBlock.ReadBytesPackage();
     }
 }

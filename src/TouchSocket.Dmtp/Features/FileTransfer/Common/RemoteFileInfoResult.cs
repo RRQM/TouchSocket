@@ -12,38 +12,37 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 远程访问结果
+/// </summary>
+public struct RemoteFileInfoResult : IResult
 {
     /// <summary>
-    /// 远程访问结果
+    /// 构造函数：初始化远程访问结果对象
     /// </summary>
-    public struct RemoteFileInfoResult : IResult
+    /// <param name="fileInfo">远程文件信息</param>
+    /// <param name="resultCode">操作结果代码</param>
+    /// <param name="message">结果描述信息</param>
+    public RemoteFileInfoResult(RemoteFileInfo fileInfo, ResultCode resultCode, string message)
     {
-        /// <summary>
-        /// 构造函数：初始化远程访问结果对象
-        /// </summary>
-        /// <param name="fileInfo">远程文件信息</param>
-        /// <param name="resultCode">操作结果代码</param>
-        /// <param name="message">结果描述信息</param>
-        public RemoteFileInfoResult(RemoteFileInfo fileInfo, ResultCode resultCode, string message)
-        {
-            this.FileInfo = fileInfo;
-            this.ResultCode = resultCode;
-            this.Message = message;
-        }
-
-        /// <summary>
-        /// 文件信息
-        /// </summary>
-        public RemoteFileInfo FileInfo { get; private set; }
-
-        /// <inheritdoc/>
-        public ResultCode ResultCode { get; private set; }
-
-        /// <inheritdoc/>
-        public string Message { get; private set; }
-
-        /// <inheritdoc/>
-        public bool IsSuccess => this.ResultCode == ResultCode.Success;
+        this.FileInfo = fileInfo;
+        this.ResultCode = resultCode;
+        this.Message = message;
     }
+
+    /// <summary>
+    /// 文件信息
+    /// </summary>
+    public RemoteFileInfo FileInfo { get; private set; }
+
+    /// <inheritdoc/>
+    public ResultCode ResultCode { get; private set; }
+
+    /// <inheritdoc/>
+    public string Message { get; private set; }
+
+    /// <inheritdoc/>
+    public bool IsSuccess => this.ResultCode == ResultCode.Success;
 }

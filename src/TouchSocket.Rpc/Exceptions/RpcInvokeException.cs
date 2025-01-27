@@ -12,31 +12,30 @@
 
 using System;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc调用异常
+/// </summary>
+[Serializable]
+public class RpcInvokeException : Exception
 {
+
     /// <summary>
-    /// Rpc调用异常
+    /// 默认构造函数，初始化RpcInvokeException类的实例。
     /// </summary>
-    [Serializable]
-    public class RpcInvokeException : Exception
-    {
+    public RpcInvokeException() : base() { }
 
-        /// <summary>
-        /// 默认构造函数，初始化RpcInvokeException类的实例。
-        /// </summary>
-        public RpcInvokeException() : base() { }
+    /// <summary>
+    /// 初始化RpcInvokeException类的实例，并指定异常消息。
+    /// </summary>
+    /// <param name="message">解释异常原因的错误消息。</param>
+    public RpcInvokeException(string message) : base(message) { }
 
-        /// <summary>
-        /// 初始化RpcInvokeException类的实例，并指定异常消息。
-        /// </summary>
-        /// <param name="message">解释异常原因的错误消息。</param>
-        public RpcInvokeException(string message) : base(message) { }
-
-        /// <summary>
-        /// 使用指定的错误消息和内部异常初始化RpcInvokeException类的实例。
-        /// </summary>
-        /// <param name="message">解释异常原因的错误消息。</param>
-        /// <param name="inner">导致当前异常的异常。</param>
-        public RpcInvokeException(string message, System.Exception inner) : base(message, inner) { }
-    }
+    /// <summary>
+    /// 使用指定的错误消息和内部异常初始化RpcInvokeException类的实例。
+    /// </summary>
+    /// <param name="message">解释异常原因的错误消息。</param>
+    /// <param name="inner">导致当前异常的异常。</param>
+    public RpcInvokeException(string message, System.Exception inner) : base(message, inner) { }
 }

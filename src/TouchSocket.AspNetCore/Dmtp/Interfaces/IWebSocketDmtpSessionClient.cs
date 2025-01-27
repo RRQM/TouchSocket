@@ -14,21 +14,20 @@ using Microsoft.AspNetCore.Http;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore;
+
+/// <summary>
+/// 基于WebSocket协议的Dmtp服务器辅助客户端。
+/// </summary>
+public interface IWebSocketDmtpSessionClient : IClient, IIdClient, IDmtpActorObject, IClosableClient, IResolverConfigObject, IOnlineClient
 {
     /// <summary>
-    /// 基于WebSocket协议的Dmtp服务器辅助客户端。
+    /// Http上下文
     /// </summary>
-    public interface IWebSocketDmtpSessionClient : IClient, IIdClient, IDmtpActorObject, IClosableClient, IResolverConfigObject, IOnlineClient
-    {
-        /// <summary>
-        /// Http上下文
-        /// </summary>
-        HttpContext HttpContext { get; }
+    HttpContext HttpContext { get; }
 
-        /// <summary>
-        /// 包含该客户端的服务器。
-        /// </summary>
-        IWebSocketDmtpService Service { get; }
-    }
+    /// <summary>
+    /// 包含该客户端的服务器。
+    /// </summary>
+    IWebSocketDmtpService Service { get; }
 }

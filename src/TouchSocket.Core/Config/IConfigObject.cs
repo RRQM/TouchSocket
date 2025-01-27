@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有配置的对象接口
+/// </summary>
+public interface IConfigObject : IDependencyObject, ILoggerObject
 {
     /// <summary>
-    /// 具有配置的对象接口
+    /// 配置项
     /// </summary>
-    public interface IConfigObject : IDependencyObject, ILoggerObject
-    {
-        /// <summary>
-        /// 配置项
-        /// </summary>
-        TouchSocketConfig Config { get; }
-    }
+    TouchSocketConfig Config { get; }
 }

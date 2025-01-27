@@ -14,63 +14,62 @@ using System;
 using System.IO;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 远程文件系统信息
+/// </summary>
+public abstract class RemoteFileSystemInfo : PackageBase
 {
     /// <summary>
-    /// 远程文件系统信息
+    /// 当前文件或目录的特性
     /// </summary>
-    public abstract class RemoteFileSystemInfo : PackageBase
+    public FileAttributes Attributes { get; set; }
+
+    /// <summary>
+    /// 当前文件或目录的创建时间
+    /// </summary>
+    public DateTime CreationTime { get; set; }
+
+    /// <summary>
+    /// 目录或文件的完整目录。
+    /// </summary>
+    public string FullName { get; set; }
+
+    /// <summary>
+    /// 上次访问当前文件或目录的时间
+    /// </summary>
+    public DateTime LastAccessTime { get; set; }
+
+    /// <summary>
+    /// 上次写入当前文件或目录的时间
+    /// </summary>
+    public DateTime LastWriteTime { get; set; }
+
+    /// <summary>
+    /// 目录或文件的名称。
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <inheritdoc/>
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <summary>
-        /// 当前文件或目录的特性
-        /// </summary>
-        public FileAttributes Attributes { get; set; }
+        byteBlock.WriteDateTime(this.LastWriteTime);
+        byteBlock.WriteDateTime(this.LastAccessTime);
+        byteBlock.WriteDateTime(this.CreationTime);
+        byteBlock.WriteInt32((int)this.Attributes);
+        byteBlock.WriteString(this.FullName);
+        byteBlock.WriteString(this.Name);
+    }
 
-        /// <summary>
-        /// 当前文件或目录的创建时间
-        /// </summary>
-        public DateTime CreationTime { get; set; }
-
-        /// <summary>
-        /// 目录或文件的完整目录。
-        /// </summary>
-        public string FullName { get; set; }
-
-        /// <summary>
-        /// 上次访问当前文件或目录的时间
-        /// </summary>
-        public DateTime LastAccessTime { get; set; }
-
-        /// <summary>
-        /// 上次写入当前文件或目录的时间
-        /// </summary>
-        public DateTime LastWriteTime { get; set; }
-
-        /// <summary>
-        /// 目录或文件的名称。
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <inheritdoc/>
-        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            byteBlock.WriteDateTime(this.LastWriteTime);
-            byteBlock.WriteDateTime(this.LastAccessTime);
-            byteBlock.WriteDateTime(this.CreationTime);
-            byteBlock.WriteInt32((int)this.Attributes);
-            byteBlock.WriteString(this.FullName);
-            byteBlock.WriteString(this.Name);
-        }
-
-        /// <inheritdoc/>
-        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            this.LastWriteTime = byteBlock.ReadDateTime();
-            this.LastAccessTime = byteBlock.ReadDateTime();
-            this.CreationTime = byteBlock.ReadDateTime();
-            this.Attributes = (FileAttributes)byteBlock.ReadInt32();
-            this.FullName = byteBlock.ReadString();
-            this.Name = byteBlock.ReadString();
-        }
+    /// <inheritdoc/>
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        this.LastWriteTime = byteBlock.ReadDateTime();
+        this.LastAccessTime = byteBlock.ReadDateTime();
+        this.CreationTime = byteBlock.ReadDateTime();
+        this.Attributes = (FileAttributes)byteBlock.ReadInt32();
+        this.FullName = byteBlock.ReadString();
+        this.Name = byteBlock.ReadString();
     }
 }

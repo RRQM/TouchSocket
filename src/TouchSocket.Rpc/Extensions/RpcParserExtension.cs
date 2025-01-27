@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// RpcParserExtension
+/// </summary>
+public static class RpcParserExtension
 {
-    /// <summary>
-    /// RpcParserExtension
-    /// </summary>
-    public static class RpcParserExtension
-    {
-    }
 }

@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+internal enum InstanceType
 {
-    internal enum InstanceType
-    {
-        Class,
-        List,
-        Array,
-        Dictionary
-    }
+    Class,
+    List,
+    Array,
+    Dictionary
 }

@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.JsonRpc
-{
-    internal class InternalJsonRpcRequest:JsonRpcBase
-    {
-        public string Method { get; set; }
+namespace TouchSocket.JsonRpc;
 
-        public object ParamsObject { get; set; }
-        public string[] ParamsStrings { get; set; }
-    }
+internal class InternalJsonRpcRequest : JsonRpcBase
+{
+    public string Method { get; set; }
+
+    public object ParamsObject { get; set; }
+    public string[] ParamsStrings { get; set; }
 }

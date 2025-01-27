@@ -14,67 +14,66 @@ using System;
 using System.Collections.Generic;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHeader
 {
-    internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHeader
+    public InternalHttpHeader() : base(StringComparer.OrdinalIgnoreCase)
     {
-        public InternalHttpHeader() : base(StringComparer.OrdinalIgnoreCase)
+    }
+
+    public new string this[string key]
+    {
+        get
         {
+            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
         }
 
-        public new string this[string key]
-        {
-            get
-            {
-                return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
-            }
-
-            set
-            {
-                if (key == null)
-                {
-                    return;
-                }
-
-                this.AddOrUpdate(key, value);
-            }
-        }
-
-        public string this[HttpHeaders headers]
-        {
-            get
-            {
-                return this.TryGetValue(headers.GetDescription(), out var value) ? value : null;
-            }
-
-            set
-            {
-                this.AddOrUpdate(headers.GetDescription(), value);
-            }
-        }
-
-        public new void Add(string key, string value)
+        set
         {
             if (key == null)
             {
                 return;
             }
+
             this.AddOrUpdate(key, value);
         }
+    }
 
-        public void Add(HttpHeaders key, string value)
+    public string this[HttpHeaders headers]
+    {
+        get
         {
-            this.AddOrUpdate(key.GetDescription(), value);
+            return this.TryGetValue(headers.GetDescription(), out var value) ? value : null;
         }
 
-        public string Get(string key)
+        set
         {
-            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
+            this.AddOrUpdate(headers.GetDescription(), value);
         }
+    }
 
-        public string Get(HttpHeaders key)
+    public new void Add(string key, string value)
+    {
+        if (key == null)
         {
-            return this.TryGetValue(key.GetDescription(), out var value) ? value : null;
+            return;
         }
+        this.AddOrUpdate(key, value);
+    }
+
+    public void Add(HttpHeaders key, string value)
+    {
+        this.AddOrUpdate(key.GetDescription(), value);
+    }
+
+    public string Get(string key)
+    {
+        return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
+    }
+
+    public string Get(HttpHeaders key)
+    {
+        return this.TryGetValue(key.GetDescription(), out var value) ? value : null;
     }
 }

@@ -12,13 +12,12 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+internal class ProxyModel
 {
-    internal class ProxyModel
-    {
-        public RpcMethod RpcMethod { get; set; }
-        public string InvokeKey { get; set; }
-        public bool InvokeOption { get; set; }
-        public Method GenericMethod { get; set; }
-    }
+    public RpcMethod RpcMethod { get; set; }
+    public string InvokeKey { get; set; }
+    public bool InvokeOption { get; set; }
+    public Method GenericMethod { get; set; }
 }

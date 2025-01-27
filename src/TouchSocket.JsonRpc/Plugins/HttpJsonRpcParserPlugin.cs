@@ -15,84 +15,83 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// HttpJsonRpcParserPlugin
+/// </summary>
+[PluginOption(Singleton = true)]
+public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
 {
+    private string m_jsonRpcUrl = "/jsonrpc";
+
     /// <summary>
-    /// HttpJsonRpcParserPlugin
+    /// 构造函数，用于初始化 <see cref="HttpJsonRpcParserPlugin"/> 类的新实例。
     /// </summary>
-    [PluginOption(Singleton = true)]
-    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
+    /// <param name="rpcServerProvider">IRpcServerProvider 类型的参数，提供 RPC 服务器服务。</param>
+    /// <remarks>
+    /// 该构造函数调用基类的构造函数，传递 <paramref name="rpcServerProvider"/>参数。
+    /// 这对于确保基类能够访问 RPC 服务器提供者和依赖项解析器至关重要。
+    /// </remarks>
+    public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
     {
-        private string m_jsonRpcUrl = "/jsonrpc";
+    }
 
-        /// <summary>
-        /// 构造函数，用于初始化 <see cref="HttpJsonRpcParserPlugin"/> 类的新实例。
-        /// </summary>
-        /// <param name="rpcServerProvider">IRpcServerProvider 类型的参数，提供 RPC 服务器服务。</param>
-        /// <remarks>
-        /// 该构造函数调用基类的构造函数，传递 <paramref name="rpcServerProvider"/>参数。
-        /// 这对于确保基类能够访问 RPC 服务器提供者和依赖项解析器至关重要。
-        /// </remarks>
-        public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
-        {
-        }
+    /// <summary>
+    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+    /// </summary>
+    public string JsonRpcUrl
+    {
+        get => this.m_jsonRpcUrl;
+        set => this.m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
+    }
 
-        /// <summary>
-        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
-        /// </summary>
-        public string JsonRpcUrl
+    /// <inheritdoc/>
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        if (e.Context.Request.Method == HttpMethod.Post)
         {
-            get => this.m_jsonRpcUrl;
-            set => this.m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
-        }
-
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            if (e.Context.Request.Method == HttpMethod.Post)
+            if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
             {
-                if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
+                e.Handled = true;
+
+                if (!client.TryGetValue(JsonRpcClientExtension.JsonRpcActorProperty, out var jsonRpcActor))
                 {
-                    e.Handled = true;
-
-                    if (!client.TryGetValue(JsonRpcClientExtension.JsonRpcActorProperty, out var jsonRpcActor))
+                    jsonRpcActor = new JsonRpcActor()
                     {
-                        jsonRpcActor = new JsonRpcActor()
+                        Resolver = client.Resolver,
+                        SendAction = async (data) =>
                         {
-                            Resolver = client.Resolver,
-                            SendAction = async (data) =>
-                            {
-                                var response = e.Context.Response;
-                                response.SetContent(data);
-                                response.SetStatus();
-                                await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            },
-                            SerializerConverter = this.SerializerConverter,
-                            RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()
-                        };
+                            var response = e.Context.Response;
+                            response.SetContent(data);
+                            response.SetStatus();
+                            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        },
+                        SerializerConverter = this.SerializerConverter,
+                        RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()
+                    };
 
-                        jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
-                        client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
-                    }
-
-                    await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    return;
+                    jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
+                    client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
                 }
-            }
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
 
-        /// <summary>
-        /// 设置JSON-RPC URL的匹配规则。
-        /// 当挂载在<see cref="HttpService"/>时，根据指定的URL进行匹配并响应请求。
-        /// 如果设置为null或空，将对所有请求进行响应。
-        /// </summary>
-        /// <param name="jsonRpcUrl">要匹配的JSON-RPC URL。</param>
-        /// <returns>返回当前的<see cref="HttpJsonRpcParserPlugin"/>实例，支持链式调用。</returns>
-        public HttpJsonRpcParserPlugin SetJsonRpcUrl(string jsonRpcUrl)
-        {
-            this.JsonRpcUrl = jsonRpcUrl;
-            return this;
+                await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return;
+            }
         }
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    /// <summary>
+    /// 设置JSON-RPC URL的匹配规则。
+    /// 当挂载在<see cref="HttpService"/>时，根据指定的URL进行匹配并响应请求。
+    /// 如果设置为null或空，将对所有请求进行响应。
+    /// </summary>
+    /// <param name="jsonRpcUrl">要匹配的JSON-RPC URL。</param>
+    /// <returns>返回当前的<see cref="HttpJsonRpcParserPlugin"/>实例，支持链式调用。</returns>
+    public HttpJsonRpcParserPlugin SetJsonRpcUrl(string jsonRpcUrl)
+    {
+        this.JsonRpcUrl = jsonRpcUrl;
+        return this;
     }
 }

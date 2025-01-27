@@ -12,38 +12,37 @@
 
 using System;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 代理类
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
+public class RpcProxyAttribute : Attribute
 {
     /// <summary>
-    /// 代理类
+    /// 构造函数
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
-    public class RpcProxyAttribute : Attribute
+    /// <param name="className"></param>
+    public RpcProxyAttribute(string className)
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="className"></param>
-        public RpcProxyAttribute(string className)
+        if (string.IsNullOrEmpty(className))
         {
-            if (string.IsNullOrEmpty(className))
-            {
-                throw new ArgumentException($"“{nameof(className)}”不能为 null 或空。", nameof(className));
-            }
-
-            this.ClassName = className;
+            throw new ArgumentException($"“{nameof(className)}”不能为 null 或空。", nameof(className));
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public RpcProxyAttribute()
-        {
-        }
-
-        /// <summary>
-        /// 代理类名
-        /// </summary>
-        public string ClassName { get; set; }
+        this.ClassName = className;
     }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    public RpcProxyAttribute()
+    {
+    }
+
+    /// <summary>
+    /// 代理类名
+    /// </summary>
+    public string ClassName { get; set; }
 }

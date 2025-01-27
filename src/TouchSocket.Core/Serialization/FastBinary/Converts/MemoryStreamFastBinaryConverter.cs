@@ -13,25 +13,24 @@
 using System;
 using System.IO;
 
-namespace TouchSocket.Core
-{
-    internal class MemoryStreamFastBinaryConverter : FastBinaryConverter<MemoryStream>
-    {
-        protected override MemoryStream Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
-        {
-            return new MemoryStream(byteBlock.ReadBytesPackage());
-        }
+namespace TouchSocket.Core;
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in MemoryStream obj)
-        {
+internal class MemoryStreamFastBinaryConverter : FastBinaryConverter<MemoryStream>
+{
+    protected override MemoryStream Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    {
+        return new MemoryStream(byteBlock.ReadBytesPackage());
+    }
+
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in MemoryStream obj)
+    {
 #if !NET45
-            if (obj.TryGetBuffer(out var array))
-            {
-                byteBlock.WriteBytesPackage(array.Array, array.Offset, array.Count);
-            }
-#endif
-            var bytes = obj.ToArray();
-            byteBlock.Write(bytes);
+        if (obj.TryGetBuffer(out var array))
+        {
+            byteBlock.WriteBytesPackage(array.Array, array.Offset, array.Count);
         }
+#endif
+        var bytes = obj.ToArray();
+        byteBlock.Write(bytes);
     }
 }

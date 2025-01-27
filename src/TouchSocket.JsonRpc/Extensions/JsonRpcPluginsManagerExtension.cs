@@ -12,41 +12,40 @@
 
 using TouchSocket.JsonRpc;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// JsonRpcPluginManagerExtension
+/// </summary>
+public static class JsonRpcPluginManagerExtension
 {
     /// <summary>
-    /// JsonRpcPluginManagerExtension
+    /// 使用基于Tcp协议的JsonRpc的插件。仅服务器有用。
     /// </summary>
-    public static class JsonRpcPluginManagerExtension
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static TcpJsonRpcParserPlugin UseTcpJsonRpc(this IPluginManager pluginManager)
     {
-        /// <summary>
-        /// 使用基于Tcp协议的JsonRpc的插件。仅服务器有用。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static TcpJsonRpcParserPlugin UseTcpJsonRpc(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<TcpJsonRpcParserPlugin>();
-        }
+        return pluginManager.Add<TcpJsonRpcParserPlugin>();
+    }
 
-        /// <summary>
-        /// 使用基于Http协议的JsonRpc的插件。仅服务器有用。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static HttpJsonRpcParserPlugin UseHttpJsonRpc(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<HttpJsonRpcParserPlugin>();
-        }
+    /// <summary>
+    /// 使用基于Http协议的JsonRpc的插件。仅服务器有用。
+    /// </summary>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static HttpJsonRpcParserPlugin UseHttpJsonRpc(this IPluginManager pluginManager)
+    {
+        return pluginManager.Add<HttpJsonRpcParserPlugin>();
+    }
 
-        /// <summary>
-        /// 使用基于WebSocket协议的JsonRpc的插件。仅服务器有用。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static WebSocketJsonRpcParserPlugin UseWebSocketJsonRpc(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<WebSocketJsonRpcParserPlugin>();
-        }
+    /// <summary>
+    /// 使用基于WebSocket协议的JsonRpc的插件。仅服务器有用。
+    /// </summary>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static WebSocketJsonRpcParserPlugin UseWebSocketJsonRpc(this IPluginManager pluginManager)
+    {
+        return pluginManager.Add<WebSocketJsonRpcParserPlugin>();
     }
 }

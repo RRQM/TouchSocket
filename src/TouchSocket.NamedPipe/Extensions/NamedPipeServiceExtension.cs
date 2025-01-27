@@ -14,47 +14,46 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
-{
-    /// <summary>
-    /// NamedPipeServiceExtension
-    /// </summary>
-    public static class NamedPipeServiceExtension
-    {
-        /// <inheritdoc cref="IServiceBase.StartAsync"/>
-        public static void Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
-        {
-            TouchSocketConfig config;
-            if (service.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetPipeName(pipeName);
-                service.Setup(config);
-            }
-            else
-            {
-                config = service.Config;
-                config.SetPipeName(pipeName);
-            }
-            service.Start();
-        }
+namespace TouchSocket.NamedPipe;
 
-        /// <inheritdoc cref="IServiceBase.StartAsync"/>
-        public static async Task StartAsync<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
+/// <summary>
+/// NamedPipeServiceExtension
+/// </summary>
+public static class NamedPipeServiceExtension
+{
+    /// <inheritdoc cref="IServiceBase.StartAsync"/>
+    public static void Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
+    {
+        TouchSocketConfig config;
+        if (service.Config == null)
         {
-            TouchSocketConfig config;
-            if (service.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetPipeName(pipeName);
-                await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                config = service.Config;
-                config.SetPipeName(pipeName);
-            }
-            await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            config = new TouchSocketConfig();
+            config.SetPipeName(pipeName);
+            service.Setup(config);
         }
+        else
+        {
+            config = service.Config;
+            config.SetPipeName(pipeName);
+        }
+        service.Start();
+    }
+
+    /// <inheritdoc cref="IServiceBase.StartAsync"/>
+    public static async Task StartAsync<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
+    {
+        TouchSocketConfig config;
+        if (service.Config == null)
+        {
+            config = new TouchSocketConfig();
+            config.SetPipeName(pipeName);
+            await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else
+        {
+            config = service.Config;
+            config.SetPipeName(pipeName);
+        }
+        await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

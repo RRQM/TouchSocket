@@ -17,66 +17,65 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// 基于Http协议的JsonRpc客户端
+/// </summary>
+public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 {
-    /// <summary>
-    /// 基于Http协议的JsonRpc客户端
-    /// </summary>
-    public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
+    private readonly JsonRpcActor m_jsonRpcActor;
+
+    public HttpJsonRpcClient()
     {
-        private readonly JsonRpcActor m_jsonRpcActor;
-
-        public HttpJsonRpcClient()
+        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+        this.m_jsonRpcActor = new JsonRpcActor()
         {
-            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
-            this.m_jsonRpcActor = new JsonRpcActor()
-            {
-                SendAction = this.SendAction,
-                SerializerConverter = this.SerializerConverter
-            };
-        }
+            SendAction = this.SendAction,
+            SerializerConverter = this.SerializerConverter
+        };
+    }
 
-        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 
-        #region JsonRpcActor
+    #region JsonRpcActor
 
-        private async Task SendAction(ReadOnlyMemory<byte> memory)
+    private async Task SendAction(ReadOnlyMemory<byte> memory)
+    {
+        var request = new HttpRequest();
+        request.Method = HttpMethod.Post;
+        request.SetUrl(this.RemoteIPHost.PathAndQuery);
+        request.SetContent(memory);
+
+        using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
-            var request = new HttpRequest();
-            request.Method = HttpMethod.Post;
-            request.SetUrl(this.RemoteIPHost.PathAndQuery);
-            request.SetContent(memory);
+            var response = responseResult.Response;
 
-            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (response.IsSuccess())
             {
-                var response = responseResult.Response;
-
-                if (response.IsSuccess())
-                {
-                    await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
-                }
+                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
             }
         }
+    }
 
-        #endregion JsonRpcActor
+    #endregion JsonRpcActor
 
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
-        }
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return this.TcpConnectAsync(millisecondsTimeout, token);
+    }
 
-        /// <inheritdoc/>
-        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
-        }
+    /// <inheritdoc/>
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
+    }
 
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            base.LoadConfig(config);
-            this.m_jsonRpcActor.Logger = this.Logger;
-        }
+    /// <inheritdoc/>
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        base.LoadConfig(config);
+        this.m_jsonRpcActor.Logger = this.Logger;
     }
 }

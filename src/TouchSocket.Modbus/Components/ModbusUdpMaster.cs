@@ -15,66 +15,65 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于Udp协议的Modbus
+/// </summary>
+public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
 {
+    private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
+
     /// <summary>
     /// 基于Udp协议的Modbus
     /// </summary>
-    public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
+    public ModbusUdpMaster()
     {
-        private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
-
-        /// <summary>
-        /// 基于Udp协议的Modbus
-        /// </summary>
-        public ModbusUdpMaster()
+        this.Protocol = TouchSocketModbusUtility.ModbusUdp;
+        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
         {
-            this.Protocol = TouchSocketModbusUtility.ModbusUdp;
-            this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
-            {
-                MaxSign = ushort.MaxValue
-            };
-        }
+            MaxSign = ushort.MaxValue
+        };
+    }
 
-        /// <inheritdoc/>
-        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    /// <inheritdoc/>
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    {
+        var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
+        try
         {
-            var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
-            try
-            {
-                var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
+            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                waitData.SetCancellationToken(token);
-                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                waitDataStatus.ThrowIfNotRunning();
+            await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            waitData.SetCancellationToken(token);
+            var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            waitDataStatus.ThrowIfNotRunning();
 
-                var response = waitData.WaitResult;
-                response.Request = request;
-                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-                return response;
-            }
-            finally
-            {
-                this.m_waitHandlePool.Destroy(waitData);
-            }
+            var response = waitData.WaitResult;
+            response.Request = request;
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+            return response;
         }
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
+        finally
         {
-            this.SetAdapter(new ModbusUdpAdapter());
-            base.LoadConfig(config);
+            this.m_waitHandlePool.Destroy(waitData);
         }
+    }
 
-        /// <inheritdoc/>
-        protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
+    /// <inheritdoc/>
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        this.SetAdapter(new ModbusUdpAdapter());
+        base.LoadConfig(config);
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
+    {
+        if (e.RequestInfo is ModbusTcpResponse response)
         {
-            if (e.RequestInfo is ModbusTcpResponse response)
-            {
-                this.m_waitHandlePool.SetRun(response);
-            }
-            await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_waitHandlePool.SetRun(response);
         }
+        await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

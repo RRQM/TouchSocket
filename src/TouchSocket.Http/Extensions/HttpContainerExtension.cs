@@ -13,24 +13,23 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// HttpContainerExtension
+/// </summary>
+public static class HttpContainerExtension
 {
     /// <summary>
-    /// HttpContainerExtension
+    /// 向注册器中添加跨域服务。
     /// </summary>
-    public static class HttpContainerExtension
+    /// <param name="registrator"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static IRegistrator AddCors(this IRegistrator registrator, Action<CorsOptions> action)
     {
-        /// <summary>
-        /// 向注册器中添加跨域服务。
-        /// </summary>
-        /// <param name="registrator"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IRegistrator AddCors(this IRegistrator registrator, Action<CorsOptions> action)
-        {
-            var corsOptions = new CorsOptions();
-            action.Invoke(corsOptions);
-            return registrator.RegisterSingleton<ICorsService>(new CorsService(corsOptions));
-        }
+        var corsOptions = new CorsOptions();
+        action.Invoke(corsOptions);
+        return registrator.RegisterSingleton<ICorsService>(new CorsService(corsOptions));
     }
 }

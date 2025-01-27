@@ -10,32 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 生成的代码单元
+/// </summary>
+
+public class MethodCellCode
 {
     /// <summary>
-    /// 生成的代码单元
+    /// 方法名
     /// </summary>
+    public string Name { get; set; }
 
-    public class MethodCellCode
-    {
-        /// <summary>
-        /// 方法名
-        /// </summary>
-        public string Name { get; set; }
+    /// <summary>
+    /// 代码本体
+    /// </summary>
+    public string CodeTemple { get; set; }
 
-        /// <summary>
-        /// 代码本体
-        /// </summary>
-        public string CodeTemple { get; set; }
+    /// <summary>
+    /// 接口代码。
+    /// </summary>
+    public string InterfaceTemple { get; set; }
 
-        /// <summary>
-        /// 接口代码。
-        /// </summary>
-        public string InterfaceTemple { get; set; }
-
-        /// <summary>
-        /// 扩展代码
-        /// </summary>
-        public string ExtensionsTemple { get; set; }
-    }
+    /// <summary>
+    /// 扩展代码
+    /// </summary>
+    public string ExtensionsTemple { get; set; }
 }

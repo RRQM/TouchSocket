@@ -15,39 +15,38 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了<see cref="INatSessionClient"/>接口。
+/// 该接口专门用于处理需要网络地址转换（Nat）支持的TCP会话客户端操作。
+/// </summary>
+public interface INatSessionClient : ITcpSession, ITcpListenableClient, IClient, IIdClient
 {
     /// <summary>
-    /// 定义了<see cref="INatSessionClient"/>接口。
-    /// 该接口专门用于处理需要网络地址转换（Nat）支持的TCP会话客户端操作。
+    /// 异步添加目标客户端。
     /// </summary>
-    public interface INatSessionClient : ITcpSession, ITcpListenableClient, IClient, IIdClient
-    {
-        /// <summary>
-        /// 异步添加目标客户端。
-        /// </summary>
-        /// <param name="setupAction">配置操作委托，用于设置TouchSocket配置。</param>
-        /// <returns>Task异步任务对象。</returns>
-        Task AddTargetClientAsync(Action<TouchSocketConfig> setupAction);
+    /// <param name="setupAction">配置操作委托，用于设置TouchSocket配置。</param>
+    /// <returns>Task异步任务对象。</returns>
+    Task AddTargetClientAsync(Action<TouchSocketConfig> setupAction);
 
-        /// <summary>
-        /// 异步添加目标客户端。
-        /// </summary>
-        /// <param name="client">要添加的TCP客户端。</param>
-        /// <returns>Task异步任务对象。</returns>
-        Task AddTargetClientAsync(NatTargetClient client);
+    /// <summary>
+    /// 异步添加目标客户端。
+    /// </summary>
+    /// <param name="client">要添加的TCP客户端。</param>
+    /// <returns>Task异步任务对象。</returns>
+    Task AddTargetClientAsync(NatTargetClient client);
 
-        /// <summary>
-        /// 移除目标客户端。
-        /// </summary>
-        /// <param name="client">要移除的TCP客户端。</param>
-        /// <returns>如果移除成功则返回true，否则返回false。</returns>
-        bool RemoveTargetClient(NatTargetClient client);
+    /// <summary>
+    /// 移除目标客户端。
+    /// </summary>
+    /// <param name="client">要移除的TCP客户端。</param>
+    /// <returns>如果移除成功则返回true，否则返回false。</returns>
+    bool RemoveTargetClient(NatTargetClient client);
 
-        /// <summary>
-        /// 获取所有目标客户端。
-        /// </summary>
-        /// <returns>返回一个包含所有目标客户端的数组。</returns>
-        IEnumerable<NatTargetClient> GetTargetClients();
-    }
+    /// <summary>
+    /// 获取所有目标客户端。
+    /// </summary>
+    /// <returns>返回一个包含所有目标客户端的数组。</returns>
+    IEnumerable<NatTargetClient> GetTargetClients();
 }

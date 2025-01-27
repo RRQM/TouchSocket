@@ -12,14 +12,13 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义了一个UdpDmtp接口，它继承自IServiceBase, IClient和IDmtpActorObject接口。
+/// 该接口的目的是为UdpDmtp通信协议提供一个标准的服务接口，使得客户端和服务端可以在分布式系统中进行交互。
+/// 它结合了服务的基本特性、客户端功能以及分布式对象的交互行为。
+/// </summary>
+public interface IUdpDmtp : IServiceBase, IClient, IDmtpActorObject
 {
-    /// <summary>
-    /// 定义了一个UdpDmtp接口，它继承自IServiceBase, IClient和IDmtpActorObject接口。
-    /// 该接口的目的是为UdpDmtp通信协议提供一个标准的服务接口，使得客户端和服务端可以在分布式系统中进行交互。
-    /// 它结合了服务的基本特性、客户端功能以及分布式对象的交互行为。
-    /// </summary>
-    public interface IUdpDmtp : IServiceBase, IClient, IDmtpActorObject
-    {
-    }
 }

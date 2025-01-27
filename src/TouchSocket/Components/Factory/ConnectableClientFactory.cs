@@ -14,50 +14,49 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 适用于可连接客户端的连接工厂。
+/// </summary>
+/// <typeparam name="TClient">客户端类型，必须实现IClient和IConnectableClient接口。</typeparam>
+public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient> where TClient : class, IClient, IConnectableClient, IOnlineClient
 {
     /// <summary>
-    /// 适用于可连接客户端的连接工厂。
+    /// 连接超时设定
     /// </summary>
-    /// <typeparam name="TClient">客户端类型，必须实现IClient和IConnectableClient接口。</typeparam>
-    public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient> where TClient : class, IClient, IConnectableClient, IOnlineClient
+    public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// 获取传输的客户端配置
+    /// </summary>
+    public Func<TouchSocketConfig> GetConfig { get; set; }
+
+    /// <inheritdoc/>
+    public override bool IsAlive(TClient client)
     {
-        /// <summary>
-        /// 连接超时设定
-        /// </summary>
-        public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        return client.Online;
+    }
 
-        /// <summary>
-        /// 获取传输的客户端配置
-        /// </summary>
-        public Func<TouchSocketConfig> GetConfig { get; set; }
+    /// <inheritdoc/>
+    protected sealed override Task<TClient> CreateClient()
+    {
+        return this.CreateClient(this.OnGetConfig());
+    }
 
-        /// <inheritdoc/>
-        public override bool IsAlive(TClient client)
-        {
-            return client.Online;
-        }
+    /// <summary>
+    /// 创建客户端。
+    /// </summary>
+    /// <param name="config">传输客户端配置。</param>
+    /// <returns>返回创建的客户端任务。</returns>
+    protected abstract Task<TClient> CreateClient(TouchSocketConfig config);
 
-        /// <inheritdoc/>
-        protected sealed override Task<TClient> CreateClient()
-        {
-            return this.CreateClient(this.OnGetConfig());
-        }
-
-        /// <summary>
-        /// 创建客户端。
-        /// </summary>
-        /// <param name="config">传输客户端配置。</param>
-        /// <returns>返回创建的客户端任务。</returns>
-        protected abstract Task<TClient> CreateClient(TouchSocketConfig config);
-
-        /// <summary>
-        /// 获取配置。
-        /// </summary>
-        /// <returns>返回TouchSocketConfig对象，用于传输客户端配置。</returns>
-        protected virtual TouchSocketConfig OnGetConfig()
-        {
-            return this.GetConfig?.Invoke();
-        }
+    /// <summary>
+    /// 获取配置。
+    /// </summary>
+    /// <returns>返回TouchSocketConfig对象，用于传输客户端配置。</returns>
+    protected virtual TouchSocketConfig OnGetConfig()
+    {
+        return this.GetConfig?.Invoke();
     }
 }

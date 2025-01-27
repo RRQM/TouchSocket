@@ -12,13 +12,12 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// 表示连接事件的参数类，继承自PluginEventArgs。
-    /// </summary>
-    public class ConnectedEventArgs : PluginEventArgs
-    {
+namespace TouchSocket.Sockets;
 
-    }
+/// <summary>
+/// 表示连接事件的参数类，继承自PluginEventArgs。
+/// </summary>
+public class ConnectedEventArgs : PluginEventArgs
+{
+
 }

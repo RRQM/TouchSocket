@@ -13,28 +13,27 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+internal class InternalBlockResult : DisposableObject, IBlockResult<byte>
 {
-    internal class InternalBlockResult : DisposableObject, IBlockResult<byte>
+    public static readonly IBlockResult<byte> Completed = new InternalBlockResult(true);
+    private readonly ReadOnlyMemory<byte> m_segment;
+    private readonly bool m_isCompleted;
+
+    public InternalBlockResult(bool isCompleted) : this(default, isCompleted)
     {
-        public static readonly IBlockResult<byte> Completed = new InternalBlockResult(true);
-        private readonly ReadOnlyMemory<byte> m_segment;
-        private readonly bool m_isCompleted;
-
-        public InternalBlockResult(bool isCompleted) : this(default, isCompleted)
-        {
-        }
-
-        public InternalBlockResult(ReadOnlyMemory<byte> memory, bool isCompleted)
-        {
-            this.m_segment = memory;
-            this.m_isCompleted = isCompleted;
-        }
-
-        public ReadOnlyMemory<byte> Memory => this.m_segment;
-
-        public bool IsCompleted => this.m_isCompleted;
-
-        public string Message => null;
     }
+
+    public InternalBlockResult(ReadOnlyMemory<byte> memory, bool isCompleted)
+    {
+        this.m_segment = memory;
+        this.m_isCompleted = isCompleted;
+    }
+
+    public ReadOnlyMemory<byte> Memory => this.m_segment;
+
+    public bool IsCompleted => this.m_isCompleted;
+
+    public string Message => null;
 }

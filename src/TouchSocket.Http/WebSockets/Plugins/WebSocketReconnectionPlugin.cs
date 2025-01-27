@@ -15,48 +15,47 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets
-{
-    internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IWebSocketClosedPlugin where TClient : IWebSocketClient
-    {
-        public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+namespace TouchSocket.Http.WebSockets;
 
-        public WebSocketReconnectionPlugin()
+internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IWebSocketClosedPlugin where TClient : IWebSocketClient
+{
+    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+
+    public WebSocketReconnectionPlugin()
+    {
+        this.ActionForCheck = (c, i) =>
         {
-            this.ActionForCheck = (c, i) =>
-            {
-                return Task.FromResult<bool?>(c.Online);
-            };
+            return Task.FromResult<bool?>(c.Online);
+        };
+    }
+
+    public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
+    {
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (webSocket is not TClient tClient)
+        {
+            return;
         }
 
-        public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
+        _ = Task.Run(async () =>
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            if (webSocket is not TClient tClient)
+            if (e.Manual)
             {
                 return;
             }
 
-            _ = Task.Run(async () =>
+            while (true)
             {
-                if (e.Manual)
+                if (this.DisposedValue)
                 {
                     return;
                 }
-
-                while (true)
+                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    if (this.DisposedValue)
-                    {
-                        return;
-                    }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        return;
-                    }
+                    return;
                 }
-            });
-        }
+            }
+        });
     }
 }

@@ -10,27 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+
+/// <summary>
+/// 配置事件参数类，继承自PluginEventArgs
+/// 该类用于封装配置相关的事件参数，主要携带了TouchSocket配置信息
+/// </summary>
+public class ConfigEventArgs : PluginEventArgs
 {
+    /// <summary>
+    /// 初始化ConfigEventArgs类的实例
+    /// </summary>
+    /// <param name="config">TouchSocket配置对象</param>
+    public ConfigEventArgs(TouchSocketConfig config)
+    {
+        this.Config = config;
+    }
 
     /// <summary>
-    /// 配置事件参数类，继承自PluginEventArgs
-    /// 该类用于封装配置相关的事件参数，主要携带了TouchSocket配置信息
+    /// 具体配置
     /// </summary>
-    public class ConfigEventArgs : PluginEventArgs
-    {
-        /// <summary>
-        /// 初始化ConfigEventArgs类的实例
-        /// </summary>
-        /// <param name="config">TouchSocket配置对象</param>
-        public ConfigEventArgs(TouchSocketConfig config)
-        {
-            this.Config = config;
-        }
-
-        /// <summary>
-        /// 具体配置
-        /// </summary>
-        public TouchSocketConfig Config { get; }
-    }
+    public TouchSocketConfig Config { get; }
 }

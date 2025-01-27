@@ -13,23 +13,22 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 服务器基类
+/// </summary>
+public abstract class ServiceBase : SetupConfigObject, IServiceBase
 {
-    /// <summary>
-    /// 服务器基类
-    /// </summary>
-    public abstract class ServiceBase : SetupConfigObject, IServiceBase
-    {
-        /// <inheritdoc/>
-        public string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
+    /// <inheritdoc/>
+    public string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
-        /// <inheritdoc/>
-        public abstract ServerState ServerState { get; }
+    /// <inheritdoc/>
+    public abstract ServerState ServerState { get; }
 
-        /// <inheritdoc/>
-        public abstract Task StartAsync();
+    /// <inheritdoc/>
+    public abstract Task StartAsync();
 
-        /// <inheritdoc/>
-        public abstract Task StopAsync();
-    }
+    /// <inheritdoc/>
+    public abstract Task StopAsync();
 }

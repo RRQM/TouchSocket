@@ -13,21 +13,20 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 心跳插件的基类，定义了心跳插件的基本结构和功能。
+/// </summary>
+public abstract class HeartbeatPlugin : PluginBase
 {
     /// <summary>
-    /// 心跳插件的基类，定义了心跳插件的基本结构和功能。
+    /// 最大失败次数，默认3。
     /// </summary>
-    public abstract class HeartbeatPlugin : PluginBase
-    {
-        /// <summary>
-        /// 最大失败次数，默认3。
-        /// </summary>
-        public int MaxFailCount { get; set; } = 3;
+    public int MaxFailCount { get; set; } = 3;
 
-        /// <summary>
-        /// 心跳间隔。默认3秒。
-        /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(3);
-    }
+    /// <summary>
+    /// 心跳间隔。默认3秒。
+    /// </summary>
+    public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(3);
 }

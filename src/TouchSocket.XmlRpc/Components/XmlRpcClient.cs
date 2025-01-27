@@ -18,54 +18,53 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+/// <summary>
+/// XmlRpc客户端
+/// </summary>
+public class XmlRpcClient : HttpClientBase, IXmlRpcClient
 {
-    /// <summary>
-    /// XmlRpc客户端
-    /// </summary>
-    public class XmlRpcClient : HttpClientBase, IXmlRpcClient
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
     {
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
-        }
+        return this.TcpConnectAsync(millisecondsTimeout, token);
+    }
 
-        /// <inheritdoc/>
-        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
-        {
-            invokeOption ??= InvokeOption.WaitInvoke;
+    /// <inheritdoc/>
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        invokeOption ??= InvokeOption.WaitInvoke;
 
-            using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock())
+        {
+            var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
+
+            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
+                var response = responseResult.Response;
 
-                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {
-                    var response = responseResult.Response;
+                    return default;
+                }
 
-                    if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
+                if (response.StatusCode != 200)
+                {
+                    throw new Exception(response.StatusMessage);
+                }
+                else
+                {
+
+                    if (returnType != null)
                     {
-                        return default;
+                        var xml = new XmlDocument();
+                        xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        var paramNode = xml.SelectSingleNode("methodResponse/params/param");
+                        return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
                     }
 
-                    if (response.StatusCode != 200)
-                    {
-                        throw new Exception(response.StatusMessage);
-                    }
-                    else
-                    {
-
-                        if (returnType != null)
-                        {
-                            var xml = new XmlDocument();
-                            xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
-                            var paramNode = xml.SelectSingleNode("methodResponse/params/param");
-                            return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
-                        }
-
-                        return default;
-                    }
+                    return default;
                 }
             }
         }

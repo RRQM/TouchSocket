@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 字节类转换器
-    /// </summary>
-    public class BytesSerializerConverter<TState> : TouchSocketSerializerConverter<byte[], TState>
-    {
-        ///// <summary>
-        ///// 字节类转换器
-        ///// </summary>
-        //public BytesConverter()
-        //{
-        //    this.Add(new JsonBytesToClassConverter());
-        //}
-    }
+namespace TouchSocket.Core;
 
-    /// <summary>
-    /// 字节类转换器
-    /// </summary>
-    public class BytesSerializerConverter : BytesSerializerConverter<object>
-    {
-    }
+/// <summary>
+/// 字节类转换器
+/// </summary>
+public class BytesSerializerConverter<TState> : TouchSocketSerializerConverter<byte[], TState>
+{
+    ///// <summary>
+    ///// 字节类转换器
+    ///// </summary>
+    //public BytesConverter()
+    //{
+    //    this.Add(new JsonBytesToClassConverter());
+    //}
+}
+
+/// <summary>
+/// 字节类转换器
+/// </summary>
+public class BytesSerializerConverter : BytesSerializerConverter<object>
+{
 }

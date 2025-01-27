@@ -14,20 +14,19 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义即将断开连接时的插件行为（仅主动断开时有效）。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpClosingPlugin : IPlugin
 {
     /// <summary>
-    /// 定义即将断开连接时的插件行为（仅主动断开时有效）。
+    /// 在即将断开连接时执行（仅主动断开时有效）。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpClosingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在即将断开连接时执行（仅主动断开时有效）。
-        /// </summary>
-        /// <param name="client">正在断开连接的客户端对象。</param>
-        /// <param name="e">断开连接事件的相关参数。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnDmtpClosing(IDmtpActorObject client, ClosingEventArgs e);
-    }
+    /// <param name="client">正在断开连接的客户端对象。</param>
+    /// <param name="e">断开连接事件的相关参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnDmtpClosing(IDmtpActorObject client, ClosingEventArgs e);
 }

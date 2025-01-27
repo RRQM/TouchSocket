@@ -10,27 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// Task类型
+/// </summary>
+public enum TaskReturnType
 {
     /// <summary>
-    /// Task类型
+    /// 没有Task
     /// </summary>
-    public enum TaskReturnType
-    {
-        /// <summary>
-        /// 没有Task
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        /// 仅返回Task
-        /// </summary>
-        Task,
+    /// <summary>
+    /// 仅返回Task
+    /// </summary>
+    Task,
 
-        /// <summary>
-        /// 返回Task的值
-        /// </summary>
-        TaskObject
-    }
-
+    /// <summary>
+    /// 返回Task的值
+    /// </summary>
+    TaskObject
 }

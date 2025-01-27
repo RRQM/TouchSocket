@@ -13,42 +13,41 @@
 using System;
 using System.Threading;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 可取消文件传输操作器
+/// </summary>
+public class CancellationFileOperator : FileOperator
 {
-    /// <summary>
-    /// 可取消文件传输操作器
-    /// </summary>
-    public class CancellationFileOperator : FileOperator
+    private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
+
+    /// <inheritdoc/>
+    public override CancellationToken Token
     {
-        private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
-
-        /// <inheritdoc/>
-        public override CancellationToken Token
+        get
         {
-            get
-            {
-                return this.m_tokenSource.Token;
-            }
-
-            set => throw new NotSupportedException();
+            return this.m_tokenSource.Token;
         }
 
-        /// <summary>
-        /// 取消传输
-        /// </summary>
-        public void Cancel()
-        {
-            this.m_tokenSource.Cancel();
-        }
+        set => throw new NotSupportedException();
+    }
 
-        /// <summary>
-        /// 在指定的时间之后取消传输。
-        /// </summary>
-        /// <param name="delay">延迟时间，在该时间之后取消传输</param>
-        public void CancelAfter(TimeSpan delay)
-        {
-            // 使用内部的CancellationTokenSource来实现取消操作
-            this.m_tokenSource.CancelAfter(delay);
-        }
+    /// <summary>
+    /// 取消传输
+    /// </summary>
+    public void Cancel()
+    {
+        this.m_tokenSource.Cancel();
+    }
+
+    /// <summary>
+    /// 在指定的时间之后取消传输。
+    /// </summary>
+    /// <param name="delay">延迟时间，在该时间之后取消传输</param>
+    public void CancelAfter(TimeSpan delay)
+    {
+        // 使用内部的CancellationTokenSource来实现取消操作
+        this.m_tokenSource.CancelAfter(delay);
     }
 }

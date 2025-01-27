@@ -14,36 +14,35 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using TouchSocket.Core.AspNetCore;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// AspNetCoreConfigExtension
+/// </summary>
+public static class AspNetCoreConfigExtension
 {
     /// <summary>
-    /// AspNetCoreConfigExtension
+    /// 使用<see cref="AspNetCoreContainer"/>作为容器。
     /// </summary>
-    public static class AspNetCoreConfigExtension
+    /// <param name="config"></param>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig UseAspNetCoreContainer(this TouchSocketConfig config, IServiceCollection services)
     {
-        /// <summary>
-        /// 使用<see cref="AspNetCoreContainer"/>作为容器。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseAspNetCoreContainer(this TouchSocketConfig config, IServiceCollection services)
-        {
-            config.SetRegistrator(new AspNetCoreContainer(services));
-            return config;
-        }
+        config.SetRegistrator(new AspNetCoreContainer(services));
+        return config;
+    }
 
-        /// <summary>
-        /// 配置容器。
-        /// </summary>
-        /// <param name="services"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IServiceCollection ConfigureContainer(this IServiceCollection services, Action<IRegistrator> action)
-        {
-            var container = new AspNetCoreContainer(services);
-            action.Invoke(container);
-            return services;
-        }
+    /// <summary>
+    /// 配置容器。
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static IServiceCollection ConfigureContainer(this IServiceCollection services, Action<IRegistrator> action)
+    {
+        var container = new AspNetCoreContainer(services);
+        action.Invoke(container);
+        return services;
     }
 }

@@ -12,29 +12,28 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 配置文件基类
+/// </summary>
+public class TouchSocketConfig : DependencyObject, ICloneable
 {
     /// <summary>
-    /// 配置文件基类
+    /// 克隆配置依赖项，并返回一个新的克隆对象。
     /// </summary>
-    public class TouchSocketConfig : DependencyObject, ICloneable
+    /// <returns></returns>
+    public TouchSocketConfig Clone()
     {
-        /// <summary>
-        /// 克隆配置依赖项，并返回一个新的克隆对象。
-        /// </summary>
-        /// <returns></returns>
-        public TouchSocketConfig Clone()
-        {
-            this.ThrowIfDisposed();
+        this.ThrowIfDisposed();
 
-            var config = new TouchSocketConfig();
-            this.CloneTo(config, true);
-            return config;
-        }
+        var config = new TouchSocketConfig();
+        this.CloneTo(config, true);
+        return config;
+    }
 
-        object ICloneable.Clone()
-        {
-            return this.Clone();
-        }
+    object ICloneable.Clone()
+    {
+        return this.Clone();
     }
 }

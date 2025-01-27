@@ -13,80 +13,79 @@
 using System.Threading;
 using TouchSocket.Core;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc调用上下文的基本实现
+/// </summary>
+public abstract class CallContext : DependencyObject, ICallContext
 {
+    private readonly Lock m_locker = LockFactory.Create();
+    private bool m_canceled;
+    private CancellationTokenSource m_tokenSource;
+
     /// <summary>
-    /// Rpc调用上下文的基本实现
+    /// 初始化CallContext对象。
     /// </summary>
-    public abstract class CallContext : DependencyObject, ICallContext
+    /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
+    /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
+    /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
+    protected CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
     {
-        private readonly Lock m_locker = LockFactory.Create();
-        private bool m_canceled;
-        private CancellationTokenSource m_tokenSource;
+        this.Caller = caller;
+        this.RpcMethod = rpcMethod;
+        this.Resolver = resolver;
+    }
 
-        /// <summary>
-        /// 初始化CallContext对象。
-        /// </summary>
-        /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
-        /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
-        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
-        protected CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
-        {
-            this.Caller = caller;
-            this.RpcMethod = rpcMethod;
-            this.Resolver = resolver;
-        }
+    /// <summary>
+    /// 初始化CallContext对象。
+    /// </summary>
+    protected CallContext()
+    {
+    }
 
-        /// <summary>
-        /// 初始化CallContext对象。
-        /// </summary>
-        protected CallContext()
-        {
-        }
+    /// <inheritdoc/>
+    public object Caller { get; protected set; }
 
-        /// <inheritdoc/>
-        public object Caller { get; protected set; }
+    /// <inheritdoc/>
+    public object[] Parameters { get; protected set; }
 
-        /// <inheritdoc/>
-        public object[] Parameters { get; protected set; }
+    /// <inheritdoc/>
+    public IResolver Resolver { get; protected set; }
 
-        /// <inheritdoc/>
-        public IResolver Resolver { get; protected set; }
+    /// <inheritdoc/>
+    public RpcMethod RpcMethod { get; protected set; }
 
-        /// <inheritdoc/>
-        public RpcMethod RpcMethod { get; protected set; }
-
-        /// <inheritdoc/>
-        public CancellationToken Token
-        {
-            get
-            {
-                lock (this.m_locker)
-                {
-                    if (this.m_canceled)
-                    {
-                        return new CancellationToken(true);
-                    }
-
-                    this.m_tokenSource ??= new CancellationTokenSource();
-                    return this.m_tokenSource.Token;
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Cancel()
+    /// <inheritdoc/>
+    public CancellationToken Token
+    {
+        get
         {
             lock (this.m_locker)
             {
-                if (this.m_tokenSource != null)
+                if (this.m_canceled)
                 {
-                    this.m_tokenSource.Cancel();
+                    return new CancellationToken(true);
                 }
-                else
-                {
-                    this.m_canceled = true;
-                }
+
+                this.m_tokenSource ??= new CancellationTokenSource();
+                return this.m_tokenSource.Token;
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Cancel()
+    {
+        lock (this.m_locker)
+        {
+            if (this.m_tokenSource != null)
+            {
+                this.m_tokenSource.Cancel();
+            }
+            else
+            {
+                this.m_canceled = true;
             }
         }
     }

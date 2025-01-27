@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 协议安全服务，主要用于检测协议冲突的问题。
+/// </summary>
+public interface IProtocolSecureService
 {
-    /// <summary>
-    /// 协议安全服务，主要用于检测协议冲突的问题。
-    /// </summary>
-    public interface IProtocolSecureService
-    {
-    }
 }

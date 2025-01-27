@@ -12,67 +12,66 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 元数据键值对。
+/// </summary>
+[FastConverter(typeof(MetadataFastBinaryConverter))]
+public sealed class Metadata : Dictionary<string, string>, IPackage
 {
+
     /// <summary>
-    /// 元数据键值对。
+    /// 获取或设置指定键的值。
     /// </summary>
-    [FastConverter(typeof(MetadataFastBinaryConverter))]
-    public sealed class Metadata : Dictionary<string, string>, IPackage
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public new string this[string key]
     {
+        get => this.TryGetValue(key, out var value) ? value : null;
+        set => this.Add(key, value);
+    }
 
-        /// <summary>
-        /// 获取或设置指定键的值。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public new string this[string key]
+    /// <summary>
+    /// 向元数据集合添加一个键值对。如果键已经存在，则覆盖其值。
+    /// </summary>
+    /// <param name="name">要添加的键。</param>
+    /// <param name="value">与键关联的值。</param>
+    /// <returns>返回当前元数据对象，以支持链式调用。</returns>
+    public new Metadata Add(string name, string value)
+    {
+        if (this.ContainsKey(name))
         {
-            get => this.TryGetValue(key, out var value) ? value : null;
-            set => this.Add(key, value);
+            this[name] = value;
+        }
+        else
+        {
+            base.Add(name, value);
         }
 
-        /// <summary>
-        /// 向元数据集合添加一个键值对。如果键已经存在，则覆盖其值。
-        /// </summary>
-        /// <param name="name">要添加的键。</param>
-        /// <param name="value">与键关联的值。</param>
-        /// <returns>返回当前元数据对象，以支持链式调用。</returns>
-        public new Metadata Add(string name, string value)
-        {
-            if (this.ContainsKey(name))
-            {
-                this[name] = value;
-            }
-            else
-            {
-                base.Add(name, value);
-            }
+        return this;
+    }
 
-            return this;
+    /// <inheritdoc/>
+    public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.WriteInt32(this.Count);
+        foreach (var item in this)
+        {
+            byteBlock.WriteString(item.Key, FixedHeaderType.Byte);
+            byteBlock.WriteString(item.Value, FixedHeaderType.Byte);
         }
+    }
 
-        /// <inheritdoc/>
-        public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <inheritdoc/>
+    public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        var count = byteBlock.ReadInt32();
+        for (var i = 0; i < count; i++)
         {
-            byteBlock.WriteInt32(this.Count);
-            foreach (var item in this)
-            {
-                byteBlock.WriteString(item.Key, FixedHeaderType.Byte);
-                byteBlock.WriteString(item.Value, FixedHeaderType.Byte);
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-        {
-            var count = byteBlock.ReadInt32();
-            for (var i = 0; i < count; i++)
-            {
-                var key = byteBlock.ReadString(FixedHeaderType.Byte);
-                var value = byteBlock.ReadString(FixedHeaderType.Byte);
-                this.Add(key, value);
-            }
+            var key = byteBlock.ReadString(FixedHeaderType.Byte);
+            var value = byteBlock.ReadString(FixedHeaderType.Byte);
+            this.Add(key, value);
         }
     }
 }

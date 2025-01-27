@@ -12,31 +12,30 @@
 
 using System;
 
-namespace TouchSocket.Http
-{
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 代理身份认证类型
+/// </summary>
+[Obsolete("此配置已被弃用，不再支持代理", true)]
+public enum AuthenticationType
+{  /// <summary>
+   /// 不允许身份认证
+   /// </summary>
+    None,
+
     /// <summary>
-    /// 代理身份认证类型
+    /// 指定摘要身份验证。
     /// </summary>
-    [Obsolete("此配置已被弃用，不再支持代理", true)]
-    public enum AuthenticationType
-    {  /// <summary>
-       /// 不允许身份认证
-       /// </summary>
-        None,
+    Digest = 1,
 
-        /// <summary>
-        /// 指定摘要身份验证。
-        /// </summary>
-        Digest = 1,
+    /// <summary>
+    /// 指定基本身份验证。
+    /// </summary>
+    Basic = 8,
 
-        /// <summary>
-        /// 指定基本身份验证。
-        /// </summary>
-        Basic = 8,
-
-        /// <summary>
-        /// 指定匿名身份验证。
-        /// </summary>
-        Anonymous = 0x8000
-    }
+    /// <summary>
+    /// 指定匿名身份验证。
+    /// </summary>
+    Anonymous = 0x8000
 }

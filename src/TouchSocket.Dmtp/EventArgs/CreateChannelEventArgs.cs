@@ -12,32 +12,31 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 创建通道事件类
+/// </summary>
+public class CreateChannelEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 创建通道事件类
+    /// 初始化创建通道事件类的实例
     /// </summary>
-    public class CreateChannelEventArgs : PluginEventArgs
+    /// <param name="channelId">通道的标识符</param>
+    /// <param name="metadata">与通道相关的元数据</param>
+    public CreateChannelEventArgs(int channelId, Metadata metadata)
     {
-        /// <summary>
-        /// 初始化创建通道事件类的实例
-        /// </summary>
-        /// <param name="channelId">通道的标识符</param>
-        /// <param name="metadata">与通道相关的元数据</param>
-        public CreateChannelEventArgs(int channelId, Metadata metadata)
-        {
-            this.ChannelId = channelId;
-            this.Metadata = metadata;
-        }
-
-        /// <summary>
-        /// 通道Id
-        /// </summary>
-        public int ChannelId { get; private set; }
-
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; private set; }
+        this.ChannelId = channelId;
+        this.Metadata = metadata;
     }
+
+    /// <summary>
+    /// 通道Id
+    /// </summary>
+    public int ChannelId { get; private set; }
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; private set; }
 }

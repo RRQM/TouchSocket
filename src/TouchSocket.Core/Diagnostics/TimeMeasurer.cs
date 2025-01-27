@@ -14,53 +14,52 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 时间测量器
+/// </summary>
+public class TimeMeasurer
 {
     /// <summary>
-    /// 时间测量器
+    /// 开始运行
     /// </summary>
-    public class TimeMeasurer
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static TimeSpan Run(Action action)
     {
-        /// <summary>
-        /// 开始运行
-        /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static TimeSpan Run(Action action)
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            action.Invoke();
-            stopwatch.Stop();
-            return stopwatch.Elapsed;
-        }
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        action.Invoke();
+        stopwatch.Stop();
+        return stopwatch.Elapsed;
+    }
 
-        /// <summary>
-        /// 开始运行
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public static TimeSpan Run(Func<Task> func)
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            func.Invoke().GetFalseAwaitResult();
-            stopwatch.Stop();
-            return stopwatch.Elapsed;
-        }
+    /// <summary>
+    /// 开始运行
+    /// </summary>
+    /// <param name="func"></param>
+    /// <returns></returns>
+    public static TimeSpan Run(Func<Task> func)
+    {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        func.Invoke().GetFalseAwaitResult();
+        stopwatch.Stop();
+        return stopwatch.Elapsed;
+    }
 
-        /// <summary>
-        /// 开始运行
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public static async Task<TimeSpan> RunAsync(Func<Task> func)
-        {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            await func.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            stopwatch.Stop();
-            return stopwatch.Elapsed;
-        }
+    /// <summary>
+    /// 开始运行
+    /// </summary>
+    /// <param name="func"></param>
+    /// <returns></returns>
+    public static async Task<TimeSpan> RunAsync(Func<Task> func)
+    {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        await func.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        stopwatch.Stop();
+        return stopwatch.Elapsed;
     }
 }

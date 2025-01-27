@@ -10,27 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 过滤结果
+/// </summary>
+public enum FilterResult
 {
     /// <summary>
-    /// 过滤结果
+    /// 缓存后续所有<see cref="ByteBlock.CanReadLength"/>数据。
     /// </summary>
-    public enum FilterResult
-    {
-        /// <summary>
-        /// 缓存后续所有<see cref="ByteBlock.CanReadLength"/>数据。
-        /// </summary>
-        Cache,
+    Cache,
 
-        /// <summary>
-        /// 操作成功
-        /// </summary>
-        Success,
+    /// <summary>
+    /// 操作成功
+    /// </summary>
+    Success,
 
-        /// <summary>
-        /// 继续操作，一般原因是本次数据有部分无效，但已经调整了<see cref="ByteBlock.Position"/>属性，所以继续后续解析。
-        /// <para>或者想放弃当前数据的操作，直接设置<see cref="ByteBlock.Position"/>与<see cref="ByteBlock.Length"/>相等即可。</para>
-        /// </summary>
-        GoOn
-    }
+    /// <summary>
+    /// 继续操作，一般原因是本次数据有部分无效，但已经调整了<see cref="ByteBlock.Position"/>属性，所以继续后续解析。
+    /// <para>或者想放弃当前数据的操作，直接设置<see cref="ByteBlock.Position"/>与<see cref="ByteBlock.Length"/>相等即可。</para>
+    /// </summary>
+    GoOn
 }

@@ -13,19 +13,18 @@
 using System;
 using System.Data;
 
-namespace TouchSocket.Core
-{
-    internal class DataSetFastBinaryConverter : FastBinaryConverter<DataSet>
-    {
-        protected override DataSet Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
-        {
-            return SerializeConvert.BinaryDeserialize<DataSet>(byteBlock.ReadBytesPackage());
-        }
+namespace TouchSocket.Core;
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in DataSet obj)
-        {
-            var bytes = SerializeConvert.BinarySerialize(obj);
-            byteBlock.WriteBytesPackage(bytes);
-        }
+internal class DataSetFastBinaryConverter : FastBinaryConverter<DataSet>
+{
+    protected override DataSet Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    {
+        return SerializeConvert.BinaryDeserialize<DataSet>(byteBlock.ReadBytesPackage());
+    }
+
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in DataSet obj)
+    {
+        var bytes = SerializeConvert.BinarySerialize(obj);
+        byteBlock.WriteBytesPackage(bytes);
     }
 }

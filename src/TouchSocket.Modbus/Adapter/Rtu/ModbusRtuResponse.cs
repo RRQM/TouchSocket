@@ -12,12 +12,11 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Modbus
-{
-    internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse, IRequestInfo
-    {
-        public ModbusErrorCode ErrorCode { get; set; }
+namespace TouchSocket.Modbus;
 
-        public IModbusRequest Request { get; set; }
-    }
+internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse, IRequestInfo
+{
+    public ModbusErrorCode ErrorCode { get; set; }
+
+    public IModbusRequest Request { get; set; }
 }

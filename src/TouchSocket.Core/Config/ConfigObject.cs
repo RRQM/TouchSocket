@@ -14,30 +14,29 @@ using System;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有配置设置的对象
+/// </summary>
+public abstract class ConfigObject : DependencyObject, IConfigObject
 {
+    /// <inheritdoc/>
+    public abstract TouchSocketConfig Config { get; }
+
+    /// <inheritdoc/>
+    public ILog Logger { get; protected set; }
+
     /// <summary>
-    /// 具有配置设置的对象
+    /// 如果<see cref="Config"/>为空，则抛出<see cref="ArgumentNullException"/>的异常。
     /// </summary>
-    public abstract class ConfigObject : DependencyObject, IConfigObject
+    /// <exception cref="ArgumentNullException"></exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void ThrowIfConfigIsNull()
     {
-        /// <inheritdoc/>
-        public abstract TouchSocketConfig Config { get; }
-
-        /// <inheritdoc/>
-        public ILog Logger { get; protected set; }
-
-        /// <summary>
-        /// 如果<see cref="Config"/>为空，则抛出<see cref="ArgumentNullException"/>的异常。
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfConfigIsNull()
+        if (this.Config == null)
         {
-            if (this.Config == null)
-            {
-                ThrowHelper.ThrowArgumentNullException(nameof(this.Config), TouchSocketCoreResource.ConfigIsNull);
-            }
+            ThrowHelper.ThrowArgumentNullException(nameof(this.Config), TouchSocketCoreResource.ConfigIsNull);
         }
     }
 }

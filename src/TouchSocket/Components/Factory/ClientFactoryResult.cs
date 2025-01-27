@@ -12,39 +12,38 @@
 
 using System;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 客户端工厂结果
+/// </summary>
+/// <typeparam name="TClient">客户端类型，必须实现IClient接口</typeparam>
+public readonly struct ClientFactoryResult<TClient> : IDisposable where TClient : IClient
 {
+    // 私有字段，存储对客户端执行的操作
+    private readonly Action<TClient> m_action;
+
     /// <summary>
-    /// 客户端工厂结果
+    /// 初始化客户端工厂结果
     /// </summary>
-    /// <typeparam name="TClient">客户端类型，必须实现IClient接口</typeparam>
-    public readonly struct ClientFactoryResult<TClient> : IDisposable where TClient : IClient
+    /// <param name="client">客户端实例</param>
+    /// <param name="action">对客户端执行的操作</param>
+    public ClientFactoryResult(TClient client, Action<TClient> action)
     {
-        // 私有字段，存储对客户端执行的操作
-        private readonly Action<TClient> m_action;
+        this.Client = client;
+        this.m_action = action;
+    }
 
-        /// <summary>
-        /// 初始化客户端工厂结果
-        /// </summary>
-        /// <param name="client">客户端实例</param>
-        /// <param name="action">对客户端执行的操作</param>
-        public ClientFactoryResult(TClient client, Action<TClient> action)
-        {
-            this.Client = client;
-            this.m_action = action;
-        }
+    /// <summary>
+    /// 客户端
+    /// </summary>
+    public TClient Client { get; }
 
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        public TClient Client { get; }
-
-        /// <summary>
-        /// 释放资源，执行对客户端的操作
-        /// </summary>
-        public void Dispose()
-        {
-            this.m_action.Invoke(this.Client);
-        }
+    /// <summary>
+    /// 释放资源，执行对客户端的操作
+    /// </summary>
+    public void Dispose()
+    {
+        this.m_action.Invoke(this.Client);
     }
 }

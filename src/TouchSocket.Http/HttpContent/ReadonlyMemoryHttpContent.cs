@@ -15,55 +15,54 @@ using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 只读内存级别的Http内容。
+/// </summary>
+public class ReadonlyMemoryHttpContent : HttpContent
 {
+    private readonly ReadOnlyMemory<byte> m_memory;
+
     /// <summary>
-    /// 只读内存级别的Http内容。
+    /// 初始化 <see cref="ReadonlyMemoryHttpContent"/> 类的新实例。
     /// </summary>
-    public class ReadonlyMemoryHttpContent : HttpContent
+    /// <param name="memory">要封装的只读内存。</param>
+    public ReadonlyMemoryHttpContent(ReadOnlyMemory<byte> memory)
     {
-        private readonly ReadOnlyMemory<byte> m_memory;
+        this.m_memory = memory;
+    }
 
-        /// <summary>
-        /// 初始化 <see cref="ReadonlyMemoryHttpContent"/> 类的新实例。
-        /// </summary>
-        /// <param name="memory">要封装的只读内存。</param>
-        public ReadonlyMemoryHttpContent(ReadOnlyMemory<byte> memory)
+
+    public ReadOnlyMemory<byte> Memory => this.m_memory;
+
+    /// <inheritdoc/>
+    protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        if (this.m_memory.IsEmpty)
         {
-            this.m_memory = memory;
+            return true;//直接构建成功，也不用调用后续的WriteContent
+        }
+        if (byteBlock.FreeLength > this.m_memory.Length)
+        {
+            //如果空闲空间足够，构建成功，也不用调用后续的WriteContent
+            byteBlock.Write(this.m_memory.Span);
+            return true;
         }
 
+        //返回false，提示后续数据可能太大，通过WriteContent执行。
+        return false;
+    }
 
-        public ReadOnlyMemory<byte> Memory => this.m_memory;
+    /// <inheritdoc/>
+    protected override void OnBuildingHeader(IHttpHeader header)
+    {
+        header.Add(HttpHeaders.ContentLength, this.m_memory.Length.ToString());
+    }
 
-        /// <inheritdoc/>
-        protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            if (this.m_memory.IsEmpty)
-            {
-                return true;//直接构建成功，也不用调用后续的WriteContent
-            }
-            if (byteBlock.FreeLength > this.m_memory.Length)
-            {
-                //如果空闲空间足够，构建成功，也不用调用后续的WriteContent
-                byteBlock.Write(this.m_memory.Span);
-                return true;
-            }
-
-            //返回false，提示后续数据可能太大，通过WriteContent执行。
-            return false;
-        }
-
-        /// <inheritdoc/>
-        protected override void OnBuildingHeader(IHttpHeader header)
-        {
-            header.Add(HttpHeaders.ContentLength, this.m_memory.Length.ToString());
-        }
-
-        /// <inheritdoc/>
-        protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
-        {
-            await writeFunc(this.m_memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+    /// <inheritdoc/>
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
+    {
+        await writeFunc(this.m_memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

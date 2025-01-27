@@ -12,21 +12,20 @@
 
 using TouchSocket.WebApi;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// WebApiPluginManagerExtension
+/// </summary>
+public static class WebApiPluginManagerExtension
 {
     /// <summary>
-    /// WebApiPluginManagerExtension
+    /// 使用WebApi的插件。仅服务器可用。
     /// </summary>
-    public static class WebApiPluginManagerExtension
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static WebApiParserPlugin UseWebApi(this IPluginManager pluginManager)
     {
-        /// <summary>
-        /// 使用WebApi的插件。仅服务器可用。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static WebApiParserPlugin UseWebApi(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<WebApiParserPlugin>();
-        }
+        return pluginManager.Add<WebApiParserPlugin>();
     }
 }

@@ -12,25 +12,24 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 数据压缩机接口
+/// </summary>
+public interface IDataCompressor
 {
     /// <summary>
-    /// 数据压缩机接口
+    /// 压缩数据
     /// </summary>
-    public interface IDataCompressor
-    {
-        /// <summary>
-        /// 压缩数据
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        byte[] Compress(ArraySegment<byte> data);
+    /// <param name="data"></param>
+    /// <returns></returns>
+    byte[] Compress(ArraySegment<byte> data);
 
-        /// <summary>
-        /// 解压数据
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        byte[] Decompress(ArraySegment<byte> data);
-    }
+    /// <summary>
+    /// 解压数据
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    byte[] Decompress(ArraySegment<byte> data);
 }

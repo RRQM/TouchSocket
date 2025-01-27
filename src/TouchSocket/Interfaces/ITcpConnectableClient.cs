@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
+namespace TouchSocket.Sockets;
 
+
+/// <summary>
+/// 定义了ITcpConnectableClient接口，该接口继承自IConnectableClient接口，
+/// 用于特化基于TCP协议的客户端操作。
+/// </summary>
+public interface ITcpConnectableClient : IConnectableClient
+{
     /// <summary>
-    /// 定义了ITcpConnectableClient接口，该接口继承自IConnectableClient接口，
-    /// 用于特化基于TCP协议的客户端操作。
+    /// 获取远程主机信息。
     /// </summary>
-    public interface ITcpConnectableClient : IConnectableClient
-    {
-        /// <summary>
-        /// 获取远程主机信息。
-        /// </summary>
-        /// <value>
-        /// 远程IP主机信息。
-        /// </value>
-        IPHost RemoteIPHost { get; }
-    }
+    /// <value>
+    /// 远程IP主机信息。
+    /// </value>
+    IPHost RemoteIPHost { get; }
 }

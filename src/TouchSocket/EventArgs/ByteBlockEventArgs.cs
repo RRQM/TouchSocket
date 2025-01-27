@@ -12,25 +12,24 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 字节事件参数类，用于在插件之间传递字节块数据
+/// </summary>
+public class ByteBlockEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 字节事件参数类，用于在插件之间传递字节块数据
+    /// 初始化字节事件参数对象
     /// </summary>
-    public class ByteBlockEventArgs : PluginEventArgs
+    /// <param name="byteBlock">需要传递的字节块数据</param>
+    public ByteBlockEventArgs(ByteBlock byteBlock)
     {
-        /// <summary>
-        /// 初始化字节事件参数对象
-        /// </summary>
-        /// <param name="byteBlock">需要传递的字节块数据</param>
-        public ByteBlockEventArgs(ByteBlock byteBlock)
-        {
-            this.ByteBlock = byteBlock;
-        }
-
-        /// <summary>
-        /// 获取字节块数据
-        /// </summary>
-        public ByteBlock ByteBlock { get; private set; }
+        this.ByteBlock = byteBlock;
     }
+
+    /// <summary>
+    /// 获取字节块数据
+    /// </summary>
+    public ByteBlock ByteBlock { get; private set; }
 }

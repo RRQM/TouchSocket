@@ -13,40 +13,39 @@
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 跨域相关配置
+/// </summary>
+public class CorsOptions
 {
+    private readonly Dictionary<string, CorsPolicy> m_corsPolicys = new Dictionary<string, CorsPolicy>();
+
     /// <summary>
-    /// 跨域相关配置
+    /// 跨域策略集
     /// </summary>
-    public class CorsOptions
+    public Dictionary<string, CorsPolicy> CorsPolicys => this.m_corsPolicys;
+
+    /// <summary>
+    /// 添加跨域策略
+    /// </summary>
+    /// <param name="policyName"></param>
+    /// <param name="corsBuilderAction"></param>
+    public void Add(string policyName, Action<CorsBuilder> corsBuilderAction)
     {
-        private readonly Dictionary<string, CorsPolicy> m_corsPolicys = new Dictionary<string, CorsPolicy>();
+        var corsBuilder = new CorsBuilder();
+        corsBuilderAction.Invoke(corsBuilder);
+        this.m_corsPolicys.Add(policyName, corsBuilder.Build());
+    }
 
-        /// <summary>
-        /// 跨域策略集
-        /// </summary>
-        public Dictionary<string, CorsPolicy> CorsPolicys => this.m_corsPolicys;
-
-        /// <summary>
-        /// 添加跨域策略
-        /// </summary>
-        /// <param name="policyName"></param>
-        /// <param name="corsBuilderAction"></param>
-        public void Add(string policyName, Action<CorsBuilder> corsBuilderAction)
-        {
-            var corsBuilder = new CorsBuilder();
-            corsBuilderAction.Invoke(corsBuilder);
-            this.m_corsPolicys.Add(policyName, corsBuilder.Build());
-        }
-
-        /// <summary>
-        /// 添加跨域策略
-        /// </summary>
-        /// <param name="policyName"></param>
-        /// <param name="corsResult"></param>
-        public void Add(string policyName, CorsPolicy corsResult)
-        {
-            this.m_corsPolicys.Add(policyName, corsResult);
-        }
+    /// <summary>
+    /// 添加跨域策略
+    /// </summary>
+    /// <param name="policyName"></param>
+    /// <param name="corsResult"></param>
+    public void Add(string policyName, CorsPolicy corsResult)
+    {
+        this.m_corsPolicys.Add(policyName, corsResult);
     }
 }

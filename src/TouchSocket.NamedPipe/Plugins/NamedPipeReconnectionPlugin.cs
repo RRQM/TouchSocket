@@ -15,63 +15,62 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
-{
-    /// <summary>
-    /// 命名管道重连插件
-    /// </summary>
-    [PluginOption(Singleton = true)]
-    public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, INamedPipeClosedPlugin where TClient : INamedPipeClient
-    {
-        /// <inheritdoc/>
-        public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+namespace TouchSocket.NamedPipe;
 
-        /// <summary>
-        /// 构造函数，用于初始化NamedPipeReconnectionPlugin实例。
-        /// </summary>
-        /// <remarks>
-        /// 该构造函数通过设置ActionForCheck属性来定义检查管道连接状态的操作。
-        /// </remarks>
-        public NamedPipeReconnectionPlugin()
+/// <summary>
+/// 命名管道重连插件
+/// </summary>
+[PluginOption(Singleton = true)]
+public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, INamedPipeClosedPlugin where TClient : INamedPipeClient
+{
+    /// <inheritdoc/>
+    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+
+    /// <summary>
+    /// 构造函数，用于初始化NamedPipeReconnectionPlugin实例。
+    /// </summary>
+    /// <remarks>
+    /// 该构造函数通过设置ActionForCheck属性来定义检查管道连接状态的操作。
+    /// </remarks>
+    public NamedPipeReconnectionPlugin()
+    {
+        // 定义一个lambda表达式，用于检查连接状态。
+        // 参数c表示当前连接对象，参数i表示重试次数，但在此场景中未使用。
+        // 返回连接对象的Online属性值，表示连接状态。
+        this.ActionForCheck = (c, i) =>
         {
-            // 定义一个lambda表达式，用于检查连接状态。
-            // 参数c表示当前连接对象，参数i表示重试次数，但在此场景中未使用。
-            // 返回连接对象的Online属性值，表示连接状态。
-            this.ActionForCheck = (c, i) =>
-            {
-                return Task.FromResult<bool?>(c.Online);
-            };
+            return Task.FromResult<bool?>(c.Online);
+        };
+    }
+
+    /// <inheritdoc/>
+    public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
+    {
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (client is not TClient tClient)
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
+        _ = Task.Run(async () =>
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            if (client is not TClient tClient)
+            if (e.Manual)
             {
                 return;
             }
 
-            _ = Task.Run(async () =>
+            while (true)
             {
-                if (e.Manual)
+                if (this.DisposedValue)
                 {
                     return;
                 }
-
-                while (true)
+                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    if (this.DisposedValue)
-                    {
-                        return;
-                    }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        return;
-                    }
+                    return;
                 }
-            });
-        }
+            }
+        });
     }
 }

@@ -14,34 +14,33 @@ using System;
 using System.Net.Sockets;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// Udp监听器
+/// </summary>
+public class UdpNetworkMonitor
 {
     /// <summary>
-    /// Udp监听器
+    /// 初始化Udp监听器
     /// </summary>
-    public class UdpNetworkMonitor
+    /// <param name="iPHost">IP主机信息</param>
+    /// <param name="socket">Socket对象，用于网络通信</param>
+    /// <exception cref="ArgumentNullException">如果socket为null，则抛出此异常</exception>
+    public UdpNetworkMonitor(IPHost iPHost, Socket socket)
     {
-        /// <summary>
-        /// 初始化Udp监听器
-        /// </summary>
-        /// <param name="iPHost">IP主机信息</param>
-        /// <param name="socket">Socket对象，用于网络通信</param>
-        /// <exception cref="ArgumentNullException">如果socket为null，则抛出此异常</exception>
-        public UdpNetworkMonitor(IPHost iPHost, Socket socket)
-        {
-            this.IPHost = iPHost;
-            // 检查socket参数是否为空，为空则抛出ArgumentNullException
-            this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
-        }
-
-        /// <summary>
-        /// 获取IP主机信息
-        /// </summary>
-        public IPHost IPHost { get; }
-
-        /// <summary>
-        /// 获取或设置Socket组件
-        /// </summary>
-        public Socket Socket { get; private set; }
+        this.IPHost = iPHost;
+        // 检查socket参数是否为空，为空则抛出ArgumentNullException
+        this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
     }
+
+    /// <summary>
+    /// 获取IP主机信息
+    /// </summary>
+    public IPHost IPHost { get; }
+
+    /// <summary>
+    /// 获取或设置Socket组件
+    /// </summary>
+    public Socket Socket { get; private set; }
 }

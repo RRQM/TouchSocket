@@ -12,21 +12,20 @@
 
 using TouchSocket.XmlRpc;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// XmlRpcPluginManagerExtension
+/// </summary>
+public static class XmlRpcPluginManagerExtension
 {
     /// <summary>
-    /// XmlRpcPluginManagerExtension
+    /// 使用XmlRpc的插件。仅服务器可用。
     /// </summary>
-    public static class XmlRpcPluginManagerExtension
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager)
     {
-        /// <summary>
-        /// 使用XmlRpc的插件。仅服务器可用。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<XmlRpcParserPlugin>();
-        }
+        return pluginManager.Add<XmlRpcParserPlugin>();
     }
 }

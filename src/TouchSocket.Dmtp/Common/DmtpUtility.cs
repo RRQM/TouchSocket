@@ -12,31 +12,30 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// DmtpUtility
+/// </summary>
+public static partial class DmtpUtility
 {
     /// <summary>
-    /// DmtpUtility
+    /// Dmtp字符串
     /// </summary>
-    public static partial class DmtpUtility
+    public const string Dmtp = "Dmtp";
+
+    /// <summary>
+    /// Dmtp协议
+    /// </summary>
+    public static Protocol DmtpProtocol { get; private set; } = new Protocol(Dmtp);
+
+    /// <summary>
+    /// 是否为Dmtp协议
+    /// </summary>
+    /// <param name="protocol"></param>
+    /// <returns></returns>
+    public static bool IsDmtp(this Protocol protocol)
     {
-        /// <summary>
-        /// Dmtp字符串
-        /// </summary>
-        public const string Dmtp = "Dmtp";
-
-        /// <summary>
-        /// Dmtp协议
-        /// </summary>
-        public static Protocol DmtpProtocol { get; private set; } = new Protocol(Dmtp);
-
-        /// <summary>
-        /// 是否为Dmtp协议
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <returns></returns>
-        public static bool IsDmtp(this Protocol protocol)
-        {
-            return protocol == DmtpProtocol;
-        }
+        return protocol == DmtpProtocol;
     }
 }

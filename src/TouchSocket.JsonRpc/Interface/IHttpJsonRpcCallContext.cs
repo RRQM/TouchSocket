@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// IHttpJsonRpcCallContext
+/// </summary>
+public interface IHttpJsonRpcCallContext : IJsonRpcCallContext
 {
-    /// <summary>
-    /// IHttpJsonRpcCallContext
-    /// </summary>
-    public interface IHttpJsonRpcCallContext : IJsonRpcCallContext
-    {
-    }
 }

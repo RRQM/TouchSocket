@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// IWebSocketHandshakedPlugin
+/// </summary>
+[DynamicMethod]
+public interface IWebSocketHandshakedPlugin : IPlugin
 {
     /// <summary>
-    /// IWebSocketHandshakedPlugin
+    /// 表示完成握手后。
     /// </summary>
-    [DynamicMethod]
-    public interface IWebSocketHandshakedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 表示完成握手后。
-        /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e);
-    }
+    /// <param name="webSocket"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e);
 }

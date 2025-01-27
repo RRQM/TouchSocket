@@ -12,18 +12,17 @@
 
 using System;
 
-namespace TouchSocket.Core
-{
-    internal class GuidFastBinaryConverter : FastBinaryConverter<Guid>
-    {
-        protected override Guid Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
-        {
-            return byteBlock.ReadGuid();
-        }
+namespace TouchSocket.Core;
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Guid obj)
-        {
-            byteBlock.WriteGuid(obj);
-        }
+internal class GuidFastBinaryConverter : FastBinaryConverter<Guid>
+{
+    protected override Guid Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    {
+        return byteBlock.ReadGuid();
+    }
+
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Guid obj)
+    {
+        byteBlock.WriteGuid(obj);
     }
 }

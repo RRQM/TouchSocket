@@ -15,46 +15,45 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
 {
-    internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
+    public override bool CanSendRequestInfo => true;
+
+    protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
     {
-        public override bool CanSendRequestInfo => true;
+        var response = new ModbusRtuResponse();
+        response.SlaveId = byteBlock.ReadByte();
+        response.FunctionCode = (FunctionCode)byteBlock.ReadByte();
 
-        protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        var crcLen = 0;
+        if ((byte)response.FunctionCode <= 4)
         {
-            var response = new ModbusRtuResponse();
-            response.SlaveId = byteBlock.ReadByte();
-            response.FunctionCode = (FunctionCode)byteBlock.ReadByte();
+            var len = byteBlock.ReadByte();
+            response.SetValue(byteBlock.ReadToSpan(len).ToArray());
+            response.Crc = byteBlock.ReadUInt16(EndianType.Big);
+            crcLen = 3 + len;
+        }
+        else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
+        {
+            response.StartingAddress = byteBlock.ReadUInt16(EndianType.Big);
+            response.SetValue(byteBlock.ReadToSpan(2).ToArray());
+            response.Crc = byteBlock.ReadUInt16(EndianType.Big);
+            crcLen = 6;
+        }
+        else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
+        {
+            response.StartingAddress = byteBlock.ReadUInt16(EndianType.Big);
+            response.Quantity = byteBlock.ReadUInt16(EndianType.Big);
+            response.Crc = byteBlock.ReadUInt16(EndianType.Big);
+            crcLen = 6;
+        }
 
-            var crcLen = 0;
-            if ((byte)response.FunctionCode <= 4)
-            {
-                var len = byteBlock.ReadByte();
-                response.SetValue(byteBlock.ReadToSpan(len).ToArray());
-                response.Crc = byteBlock.ReadUInt16(EndianType.Big);
-                crcLen = 3 + len;
-            }
-            else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
-            {
-                response.StartingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                response.SetValue(byteBlock.ReadToSpan(2).ToArray());
-                response.Crc = byteBlock.ReadUInt16(EndianType.Big);
-                crcLen = 6;
-            }
-            else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
-            {
-                response.StartingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                response.Quantity = byteBlock.ReadUInt16(EndianType.Big);
-                response.Crc = byteBlock.ReadUInt16(EndianType.Big);
-                crcLen = 6;
-            }
-
-            var crc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(0, crcLen));
-            if (crc == (response.Crc))
-            {
-                await base.GoReceived(remoteEndPoint, null, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+        var crc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(0, crcLen));
+        if (crc == (response.Crc))
+        {
+            await base.GoReceived(remoteEndPoint, null, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

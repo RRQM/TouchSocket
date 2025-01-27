@@ -12,21 +12,20 @@
 
 using System;
 
-namespace TouchSocket.Core
-{
-    internal class VersionFastBinaryConverter : FastBinaryConverter<Version>
-    {
-        protected override Version Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
-        {
-            return new Version(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
-        }
+namespace TouchSocket.Core;
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Version obj)
-        {
-            byteBlock.WriteInt32(obj.Major);
-            byteBlock.WriteInt32(obj.Minor);
-            byteBlock.WriteInt32(obj.Build);
-            byteBlock.WriteInt32(obj.Revision);
-        }
+internal class VersionFastBinaryConverter : FastBinaryConverter<Version>
+{
+    protected override Version Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    {
+        return new Version(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
+    }
+
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Version obj)
+    {
+        byteBlock.WriteInt32(obj.Major);
+        byteBlock.WriteInt32(obj.Minor);
+        byteBlock.WriteInt32(obj.Build);
+        byteBlock.WriteInt32(obj.Revision);
     }
 }

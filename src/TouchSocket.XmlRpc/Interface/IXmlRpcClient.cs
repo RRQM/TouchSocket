@@ -15,12 +15,11 @@ using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+/// <summary>
+/// IWebApiClient
+/// </summary>
+public interface IXmlRpcClient : IRpcClient, IHttpSession, ISetupConfigObject, IOnlineClient, ITcpConnectableClient
 {
-    /// <summary>
-    /// IWebApiClient
-    /// </summary>
-    public interface IXmlRpcClient : IRpcClient, IHttpSession, ISetupConfigObject, IOnlineClient, ITcpConnectableClient
-    {
-    }
 }

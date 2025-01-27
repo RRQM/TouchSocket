@@ -12,16 +12,15 @@
 
 using TouchSocket.WebApi;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+/// <summary>
+/// IXmlRpcCallContext
+/// </summary>
+public interface IXmlRpcCallContext : IHttpCallContext
 {
     /// <summary>
-    /// IXmlRpcCallContext
+    /// XmlRpc的调用字符串。
     /// </summary>
-    public interface IXmlRpcCallContext : IHttpCallContext
-    {
-        /// <summary>
-        /// XmlRpc的调用字符串。
-        /// </summary>
-        string XmlString { get; }
-    }
+    string XmlString { get; }
 }

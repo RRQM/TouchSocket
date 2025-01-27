@@ -12,31 +12,30 @@
 
 using System;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// Token验证异常
+/// </summary>
+[Serializable]
+public class TokenVerifyException : Exception
 {
     /// <summary>
-    /// Token验证异常
+    /// 构造函数
     /// </summary>
-    [Serializable]
-    public class TokenVerifyException : Exception
-    {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public TokenVerifyException()
-        { }
+    public TokenVerifyException()
+    { }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="message">异常信息</param>
-        public TokenVerifyException(string message) : base(message) { }
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="message">异常信息</param>
+    public TokenVerifyException(string message) : base(message) { }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="message">异常信息</param>
-        /// <param name="inner">内部异常</param>
-        public TokenVerifyException(string message, System.Exception inner) : base(message, inner) { }
-    }
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="message">异常信息</param>
+    /// <param name="inner">内部异常</param>
+    public TokenVerifyException(string message, System.Exception inner) : base(message, inner) { }
 }

@@ -12,95 +12,94 @@
 
 using System.IO;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 包装的流。为避免该流释放时，内部流也会被释放的问题
+/// </summary>
+
+public partial class WrapStream : Stream
 {
+    private readonly Stream m_stream;
+
     /// <summary>
     /// 包装的流。为避免该流释放时，内部流也会被释放的问题
     /// </summary>
-
-    public partial class WrapStream : Stream
+    /// <param name="stream"></param>
+    public WrapStream(Stream stream)
     {
-        private readonly Stream m_stream;
+        this.m_stream = stream;
+    }
 
-        /// <summary>
-        /// 包装的流。为避免该流释放时，内部流也会被释放的问题
-        /// </summary>
-        /// <param name="stream"></param>
-        public WrapStream(Stream stream)
-        {
-            this.m_stream = stream;
-        }
+    /// <inheritdoc/>
+    public override bool CanRead => this.m_stream.CanRead;
 
-        /// <inheritdoc/>
-        public override bool CanRead => this.m_stream.CanRead;
+    /// <inheritdoc/>
+    public override bool CanSeek => this.m_stream.CanSeek;
 
-        /// <inheritdoc/>
-        public override bool CanSeek => this.m_stream.CanSeek;
+    /// <inheritdoc/>
+    public override bool CanWrite => this.m_stream.CanWrite;
 
-        /// <inheritdoc/>
-        public override bool CanWrite => this.m_stream.CanWrite;
+    /// <inheritdoc/>
+    public override long Length => this.m_stream.Length;
 
-        /// <inheritdoc/>
-        public override long Length => this.m_stream.Length;
+    /// <inheritdoc/>
+    public override long Position { get => this.m_stream.Position; set => this.m_stream.Position = value; }
 
-        /// <inheritdoc/>
-        public override long Position { get => this.m_stream.Position; set => this.m_stream.Position = value; }
+    /// <inheritdoc/>
 
-        /// <inheritdoc/>
+    public override void Flush()
+    {
+        this.m_stream.Flush();
+    }
 
-        public override void Flush()
-        {
-            this.m_stream.Flush();
-        }
+    /// <inheritdoc/>
+    /// <param name="buffer"></param>
+    /// <param name="offset"></param>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        return this.m_stream.Read(buffer, offset, count);
+    }
 
-        /// <inheritdoc/>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return this.m_stream.Read(buffer, offset, count);
-        }
+    /// <inheritdoc/>
+    /// <param name="offset"></param>
+    /// <param name="origin"></param>
+    /// <returns></returns>
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        return this.m_stream.Seek(offset, origin);
+    }
 
-        /// <inheritdoc/>
-        /// <param name="offset"></param>
-        /// <param name="origin"></param>
-        /// <returns></returns>
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return this.m_stream.Seek(offset, origin);
-        }
+    /// <inheritdoc/>
+    /// <param name="value"></param>
+    public override void SetLength(long value)
+    {
+        this.m_stream.SetLength(value);
+    }
 
-        /// <inheritdoc/>
-        /// <param name="value"></param>
-        public override void SetLength(long value)
-        {
-            this.m_stream.SetLength(value);
-        }
+    /// <inheritdoc/>
+    /// <param name="buffer"></param>
+    /// <param name="offset"></param>
+    /// <param name="count"></param>
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        this.m_stream.Write(buffer, offset, count);
+    }
 
-        /// <inheritdoc/>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            this.m_stream.Write(buffer, offset, count);
-        }
+    /// <summary>
+    /// 没有关闭效果
+    /// </summary>
+    public override void Close()
+    {
+    }
 
-        /// <summary>
-        /// 没有关闭效果
-        /// </summary>
-        public override void Close()
-        {
-        }
-
-        /// <summary>
-        /// 没有释放效果
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-        }
+    /// <summary>
+    /// 没有释放效果
+    /// </summary>
+    /// <param name="disposing"></param>
+    protected override void Dispose(bool disposing)
+    {
     }
 }

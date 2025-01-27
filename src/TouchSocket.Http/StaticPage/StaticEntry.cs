@@ -13,54 +13,53 @@
 using System;
 using System.IO;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 表示一个静态条目，可以是字节缓存或文件信息。
+/// </summary>
+public class StaticEntry
 {
     /// <summary>
-    /// 表示一个静态条目，可以是字节缓存或文件信息。
+    /// 使用字节数组和超时时间初始化静态条目。
     /// </summary>
-    public class StaticEntry
+    /// <param name="value">条目的值，如果条目代表的是字节缓存。</param>
+    /// <param name="timeout">条目的超时时间。</param>
+    public StaticEntry(byte[] value, TimeSpan timeout)
     {
-        /// <summary>
-        /// 使用字节数组和超时时间初始化静态条目。
-        /// </summary>
-        /// <param name="value">条目的值，如果条目代表的是字节缓存。</param>
-        /// <param name="timeout">条目的超时时间。</param>
-        public StaticEntry(byte[] value, TimeSpan timeout)
-        {
-            this.Value = value;
-            this.Timespan = timeout;
-        }
-
-        /// <summary>
-        /// 使用FileInfo和超时时间初始化静态条目。
-        /// </summary>
-        /// <param name="fileInfo">条目代表的文件信息。</param>
-        /// <param name="timespan">条目的超时时间。</param>
-        public StaticEntry(FileInfo fileInfo, TimeSpan timespan)
-        {
-            this.FileInfo = fileInfo;
-            this.Timespan = timespan;
-        }
-
-        /// <summary>
-        /// 获取一个值，指示当前条目是否为字节缓存。
-        /// </summary>
-        /// <value>如果条目的值非空，则为true；否则为false。</value>
-        public bool IsCacheBytes => this.Value != null;
-
-        /// <summary>
-        /// 获取或设置与条目关联的文件信息。
-        /// </summary>
-        public FileInfo FileInfo { get; set; }
-
-        /// <summary>
-        /// 获取与条目关联的字节数组。该值在初始化后不可更改。
-        /// </summary>
-        public byte[] Value { get; }
-
-        /// <summary>
-        /// 获取或设置条目的超时时间。
-        /// </summary>
-        public TimeSpan Timespan { get; set; }
+        this.Value = value;
+        this.Timespan = timeout;
     }
+
+    /// <summary>
+    /// 使用FileInfo和超时时间初始化静态条目。
+    /// </summary>
+    /// <param name="fileInfo">条目代表的文件信息。</param>
+    /// <param name="timespan">条目的超时时间。</param>
+    public StaticEntry(FileInfo fileInfo, TimeSpan timespan)
+    {
+        this.FileInfo = fileInfo;
+        this.Timespan = timespan;
+    }
+
+    /// <summary>
+    /// 获取一个值，指示当前条目是否为字节缓存。
+    /// </summary>
+    /// <value>如果条目的值非空，则为true；否则为false。</value>
+    public bool IsCacheBytes => this.Value != null;
+
+    /// <summary>
+    /// 获取或设置与条目关联的文件信息。
+    /// </summary>
+    public FileInfo FileInfo { get; set; }
+
+    /// <summary>
+    /// 获取与条目关联的字节数组。该值在初始化后不可更改。
+    /// </summary>
+    public byte[] Value { get; }
+
+    /// <summary>
+    /// 获取或设置条目的超时时间。
+    /// </summary>
+    public TimeSpan Timespan { get; set; }
 }

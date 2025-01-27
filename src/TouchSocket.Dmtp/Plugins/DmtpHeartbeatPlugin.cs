@@ -15,52 +15,51 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
-{
-    /// <summary>
-    /// 基于Dmtp的心跳插件。服务器和客户端均适用
-    /// </summary>
-    [PluginOption(Singleton = true)]
-    public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
-    {
-        /// <inheritdoc/>
-        public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
-        {
-            _ = Task.Factory.StartNew(async () =>
-            {
-                var failedCount = 0;
-                while (true)
-                {
-                    if (this.DisposedValue)
-                    {
-                        return;
-                    }
-                    await Task.Delay(this.Tick);
-                    if (client.DmtpActor == null || !client.DmtpActor.Online)
-                    {
-                        return;
-                    }
-                    if (DateTime.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
-                    {
-                        continue;
-                    }
+namespace TouchSocket.Dmtp;
 
-                    if (await client.DmtpActor.PingAsync())
+/// <summary>
+/// 基于Dmtp的心跳插件。服务器和客户端均适用
+/// </summary>
+[PluginOption(Singleton = true)]
+public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
+{
+    /// <inheritdoc/>
+    public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    {
+        _ = Task.Factory.StartNew(async () =>
+        {
+            var failedCount = 0;
+            while (true)
+            {
+                if (this.DisposedValue)
+                {
+                    return;
+                }
+                await Task.Delay(this.Tick);
+                if (client.DmtpActor == null || !client.DmtpActor.Online)
+                {
+                    return;
+                }
+                if (DateTime.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
+                {
+                    continue;
+                }
+
+                if (await client.DmtpActor.PingAsync())
+                {
+                    failedCount = 0;
+                }
+                else
+                {
+                    failedCount++;
+                    if (failedCount > this.MaxFailCount)
                     {
-                        failedCount = 0;
-                    }
-                    else
-                    {
-                        failedCount++;
-                        if (failedCount > this.MaxFailCount)
-                        {
-                            await client.DmtpActor.CloseAsync("自动心跳失败次数达到最大，已断开连接。");
-                        }
+                        await client.DmtpActor.CloseAsync("自动心跳失败次数达到最大，已断开连接。");
                     }
                 }
-            }, TaskCreationOptions.LongRunning);
+            }
+        }, TaskCreationOptions.LongRunning);
 
-            await e.InvokeNext();
-        }
+        await e.InvokeNext();
     }
 }

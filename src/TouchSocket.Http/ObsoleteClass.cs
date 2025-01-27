@@ -12,17 +12,16 @@
 
 using System;
 
-namespace TouchSocket.Http
-{
-    /// <inheritdoc/>
-    [Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IHttpSessionClient)}代替。", true)]
-    public interface IHttpSocketClient
-    {
-    }
+namespace TouchSocket.Http;
 
-    /// <inheritdoc/>
-    [Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IHttpSession)}代替。", true)]
-    public interface IHttpClientBase
-    {
-    }
+/// <inheritdoc/>
+[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IHttpSessionClient)}代替。", true)]
+public interface IHttpSocketClient
+{
+}
+
+/// <inheritdoc/>
+[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IHttpSession)}代替。", true)]
+public interface IHttpClientBase
+{
 }

@@ -12,20 +12,19 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 未找到消息异常类
+/// </summary>
+[Serializable]
+public class MessageNotFoundException : Exception
 {
     /// <summary>
-    /// 未找到消息异常类
+    /// 构造函数
     /// </summary>
-    [Serializable]
-    public class MessageNotFoundException : Exception
+    /// <param name="mes">异常消息</param>
+    public MessageNotFoundException(string mes) : base(mes)
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="mes">异常消息</param>
-        public MessageNotFoundException(string mes) : base(mes)
-        {
-        }
     }
 }

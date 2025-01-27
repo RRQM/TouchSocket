@@ -12,27 +12,26 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 表示结果的接口
+/// </summary>
+public interface IResult
 {
     /// <summary>
-    /// 表示结果的接口
+    /// 结果代码
     /// </summary>
-    public interface IResult
-    {
-        /// <summary>
-        /// 结果代码
-        /// </summary>
-        ResultCode ResultCode { get; }
+    ResultCode ResultCode { get; }
 
-        /// <summary>
-        /// 结果附加消息
-        /// </summary>
-        string Message { get; }
+    /// <summary>
+    /// 结果附加消息
+    /// </summary>
+    string Message { get; }
 
-        /// <summary>
-        /// 是否成功。一般的当<see cref="ResultCode"/>为<see cref="ResultCode.Success"/>时会返回<see langword="true"/>。其余情况返回<see langword="false"/>
-        /// </summary>
-        [MemberNotNullWhen(true, nameof(IResult<int>.Value))]
-        bool IsSuccess { get; }
-    }
+    /// <summary>
+    /// 是否成功。一般的当<see cref="ResultCode"/>为<see cref="ResultCode.Success"/>时会返回<see langword="true"/>。其余情况返回<see langword="false"/>
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(IResult<int>.Value))]
+    bool IsSuccess { get; }
 }

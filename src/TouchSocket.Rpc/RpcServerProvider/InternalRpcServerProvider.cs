@@ -15,123 +15,122 @@ using System.Reflection;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+internal sealed class InternalRpcServerProvider : IRpcServerProvider
 {
-    internal sealed class InternalRpcServerProvider : IRpcServerProvider
+    private readonly ILog m_logger;
+    private readonly RpcStore m_rpcStore;
+
+    public InternalRpcServerProvider(ILog logger, RpcStore rpcStore)
     {
-        private readonly ILog m_logger;
-        private readonly RpcStore m_rpcStore;
+        this.m_logger = logger;
+        this.m_rpcStore = rpcStore;
+    }
 
-        public InternalRpcServerProvider(ILog logger, RpcStore rpcStore)
+    public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, InvokeResult invokeResult)
+    {
+        var ps = callContext.Parameters;
+        var rpcMethod = callContext.RpcMethod;
+        if (rpcMethod is null)
         {
-            this.m_logger = logger;
-            this.m_rpcStore = rpcStore;
+            return new InvokeResult(InvokeStatus.UnFound);
         }
 
-        public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, InvokeResult invokeResult)
+        var filters = callContext.RpcMethod.GetFilters();
+        try
         {
-            var ps = callContext.Parameters;
-            var rpcMethod = callContext.RpcMethod;
-            if (rpcMethod is null)
+            for (var i = 0; i < filters.Count; i++)
             {
-                return new InvokeResult(InvokeStatus.UnFound);
+                invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            var filters = callContext.RpcMethod.GetFilters();
-            try
+            if (invokeResult.Status == InvokeStatus.Ready)
             {
-                for (var i = 0; i < filters.Count; i++)
+                var rpcServer = this.GetRpcServer(callContext);
+
+                //调用
+                switch (callContext.RpcMethod.TaskType)
                 {
-                    invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    case TaskReturnType.Task:
+                        {
+                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                        break;
+
+                    case TaskReturnType.TaskObject:
+                        {
+                            invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
+                                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                        break;
+
+                    default:
+                    case TaskReturnType.None:
+                        {
+                            if (callContext.RpcMethod.HasReturn)
+                            {
+                                invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
+                            }
+                            else
+                            {
+                                callContext.RpcMethod.Invoke(rpcServer, ps);
+                            }
+                        }
+                        break;
                 }
 
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    var rpcServer = this.GetRpcServer(callContext);
-
-                    //调用
-                    switch (callContext.RpcMethod.TaskType)
-                    {
-                        case TaskReturnType.Task:
-                            {
-                                await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            }
-                            break;
-
-                        case TaskReturnType.TaskObject:
-                            {
-                                invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
-                                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            }
-                            break;
-
-                        default:
-                        case TaskReturnType.None:
-                            {
-                                if (callContext.RpcMethod.HasReturn)
-                                {
-                                    invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
-                                }
-                                else
-                                {
-                                    callContext.RpcMethod.Invoke(rpcServer, ps);
-                                }
-                            }
-                            break;
-                    }
-
-                    invokeResult.Status = InvokeStatus.Success;
-                }
+                invokeResult.Status = InvokeStatus.Success;
             }
-            catch (TargetInvocationException ex)
+        }
+        catch (TargetInvocationException ex)
+        {
+            invokeResult.Status = InvokeStatus.InvocationException;
+            invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
+        }
+        catch (Exception ex)
+        {
+            invokeResult.Status = InvokeStatus.Exception;
+            invokeResult.Message = ex.Message;
+        }
+        finally
+        {
+            for (var i = 0; i < filters.Count; i++)
             {
-                invokeResult.Status = InvokeStatus.InvocationException;
-                invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
+                invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            catch (Exception ex)
-            {
-                invokeResult.Status = InvokeStatus.Exception;
-                invokeResult.Message = ex.Message;
-            }
-            finally
-            {
-                for (var i = 0; i < filters.Count; i++)
-                {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
-                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-
-            return invokeResult;
         }
 
-        /// <inheritdoc/>
-        public RpcMethod[] GetMethods()
-        {
-            return this.m_rpcStore.GetAllMethods();
-        }
+        return invokeResult;
+    }
 
-        private object GetRpcServer(ICallContext callContext)
+    /// <inheritdoc/>
+    public RpcMethod[] GetMethods()
+    {
+        return this.m_rpcStore.GetAllMethods();
+    }
+
+    private object GetRpcServer(ICallContext callContext)
+    {
+        try
         {
-            try
+            var rpcServer = callContext.Resolver.Resolve(callContext.RpcMethod.ServerFromType);
+            if (rpcServer is ITransientRpcServer transientRpcServer)
             {
-                var rpcServer = callContext.Resolver.Resolve(callContext.RpcMethod.ServerFromType);
-                if (rpcServer is ITransientRpcServer transientRpcServer)
-                {
-                    transientRpcServer.CallContext = callContext;
-                }
-                else if (rpcServer is IScopedRpcServer scopedRpcServer)
-                {
-                    scopedRpcServer.CallContext = callContext;
-                }
-                return rpcServer;
+                transientRpcServer.CallContext = callContext;
             }
-            catch (Exception ex)
+            else if (rpcServer is IScopedRpcServer scopedRpcServer)
             {
-                this.m_logger?.Exception(ex);
-                throw;
+                scopedRpcServer.CallContext = callContext;
             }
+            return rpcServer;
+        }
+        catch (Exception ex)
+        {
+            this.m_logger?.Exception(ex);
+            throw;
         }
     }
 }

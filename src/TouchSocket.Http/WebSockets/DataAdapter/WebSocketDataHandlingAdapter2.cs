@@ -12,17 +12,16 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WebSocket适配器
+/// </summary>
+public sealed class WebSocketDataHandlingAdapter2 : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
 {
-    /// <summary>
-    /// WebSocket适配器
-    /// </summary>
-    public sealed class WebSocketDataHandlingAdapter2 : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
+    /// <inheritdoc/>
+    protected override WSDataFrame GetInstance()
     {
-        /// <inheritdoc/>
-        protected override WSDataFrame GetInstance()
-        {
-            return new WSDataFrame();
-        }
+        return new WSDataFrame();
     }
 }

@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 属性单元代码。
+/// </summary>
+public class ClassCellCode
 {
     /// <summary>
-    /// 属性单元代码。
+    /// 属性名
     /// </summary>
-    public class ClassCellCode
-    {
-        /// <summary>
-        /// 属性名
-        /// </summary>
-        public string Name { get; set; }
+    public string Name { get; set; }
 
-        /// <summary>
-        /// 代码本体
-        /// </summary>
-        public string Code { get; set; }
-    }
+    /// <summary>
+    /// 代码本体
+    /// </summary>
+    public string Code { get; set; }
 }

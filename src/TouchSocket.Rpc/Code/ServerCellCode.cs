@@ -12,55 +12,54 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 服务单元代码
+/// </summary>
+public class ServerCellCode
 {
     /// <summary>
-    /// 服务单元代码
+    /// 构造函数
     /// </summary>
-    public class ServerCellCode
+    public ServerCellCode()
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public ServerCellCode()
-        {
-            this.Methods = new Dictionary<string, MethodCellCode>();
-            this.ClassCellCodes = new Dictionary<string, ClassCellCode>();
-        }
-
-        /// <summary>
-        /// 包含接口
-        /// </summary>
-        public bool IncludeInterface { get; set; }
-
-        /// <summary>
-        /// 包含实例
-        /// </summary>
-        public bool IncludeInstance { get; set; }
-
-        /// <summary>
-        /// 包含扩展
-        /// </summary>
-        public bool IncludeExtension { get; set; }
-
-        /// <summary>
-        /// 服务名
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// 生成代理时，额外的命名空间
-        /// </summary>
-        public List<string> Namespaces { get; } = new List<string>();
-
-        /// <summary>
-        /// 方法集合
-        /// </summary>
-        public Dictionary<string, MethodCellCode> Methods { get; set; }
-
-        /// <summary>
-        /// 类参数集合。
-        /// </summary>
-        public Dictionary<string, ClassCellCode> ClassCellCodes { get; set; }
+        this.Methods = new Dictionary<string, MethodCellCode>();
+        this.ClassCellCodes = new Dictionary<string, ClassCellCode>();
     }
+
+    /// <summary>
+    /// 包含接口
+    /// </summary>
+    public bool IncludeInterface { get; set; }
+
+    /// <summary>
+    /// 包含实例
+    /// </summary>
+    public bool IncludeInstance { get; set; }
+
+    /// <summary>
+    /// 包含扩展
+    /// </summary>
+    public bool IncludeExtension { get; set; }
+
+    /// <summary>
+    /// 服务名
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// 生成代理时，额外的命名空间
+    /// </summary>
+    public List<string> Namespaces { get; } = new List<string>();
+
+    /// <summary>
+    /// 方法集合
+    /// </summary>
+    public Dictionary<string, MethodCellCode> Methods { get; set; }
+
+    /// <summary>
+    /// 类参数集合。
+    /// </summary>
+    public Dictionary<string, ClassCellCode> ClassCellCodes { get; set; }
 }

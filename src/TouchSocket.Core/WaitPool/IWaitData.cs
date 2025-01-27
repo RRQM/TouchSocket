@@ -11,17 +11,26 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 定义等待数据接口。
+/// </summary>
+/// <typeparam name="T">等待结果的类型。</typeparam>
+public interface IWaitData<T> : IWaitDataBase<T>
 {
     /// <summary>
-    /// IWaitData
+    /// 等待指定的时间间隔。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public interface IWaitData<T> : IWaitDataBase<T>
-    {
-        WaitDataStatus Wait(TimeSpan timeSpan);
-        WaitDataStatus Wait(int millisecond);
-    }
+    /// <param name="timeSpan">等待的时间间隔。</param>
+    /// <returns>等待数据的状态。</returns>
+    WaitDataStatus Wait(TimeSpan timeSpan);
+
+    /// <summary>
+    /// 等待指定的毫秒数。
+    /// </summary>
+    /// <param name="millisecond">等待的毫秒数。</param>
+    /// <returns>等待数据的状态。</returns>
+    WaitDataStatus Wait(int millisecond);
 }

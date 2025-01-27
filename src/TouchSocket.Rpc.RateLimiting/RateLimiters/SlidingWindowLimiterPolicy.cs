@@ -13,23 +13,22 @@
 using System.Reflection;
 using System.Threading.RateLimiting;
 
-namespace TouchSocket.Rpc.RateLimiting
-{
-    internal sealed class SlidingWindowLimiterPolicy : RateLimiterPolicy<MethodInfo>
-    {
-        private readonly SlidingWindowRateLimiterOptions m_options;
+namespace TouchSocket.Rpc.RateLimiting;
 
-        public SlidingWindowLimiterPolicy(SlidingWindowRateLimiterOptions options)
-        {
-            this.m_options = options;
-        }
-        protected override MethodInfo GetPartitionKey(ICallContext callContext)
-        {
-            return callContext.RpcMethod.Info;
-        }
-        protected override RateLimiter NewRateLimiter(MethodInfo method)
-        {
-            return new SlidingWindowRateLimiter(this.m_options);
-        }
+internal sealed class SlidingWindowLimiterPolicy : RateLimiterPolicy<MethodInfo>
+{
+    private readonly SlidingWindowRateLimiterOptions m_options;
+
+    public SlidingWindowLimiterPolicy(SlidingWindowRateLimiterOptions options)
+    {
+        this.m_options = options;
+    }
+    protected override MethodInfo GetPartitionKey(ICallContext callContext)
+    {
+        return callContext.RpcMethod.Info;
+    }
+    protected override RateLimiter NewRateLimiter(MethodInfo method)
+    {
+        return new SlidingWindowRateLimiter(this.m_options);
     }
 }

@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于Udp协议，且使用Rtu格式的Modbus主站接口
+/// </summary>
+public interface IModbusRtuOverUdpMaster : IModbusUdpMaster
 {
-    /// <summary>
-    /// 基于Udp协议，且使用Rtu格式的Modbus主站接口
-    /// </summary>
-    public interface IModbusRtuOverUdpMaster : IModbusUdpMaster
-    {
-    }
 }

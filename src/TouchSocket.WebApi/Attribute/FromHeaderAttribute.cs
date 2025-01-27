@@ -12,13 +12,12 @@
 
 using System;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 指定参数应使用请求头绑定。
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+public sealed class FromHeaderAttribute : WebApiNameAttribute
 {
-    /// <summary>
-    /// 指定参数应使用请求头绑定。
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    public sealed class FromHeaderAttribute : WebApiNameAttribute
-    {
-    }
 }

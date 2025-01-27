@@ -12,25 +12,24 @@
 
 using System;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+
+/// <summary>
+/// TouchSocketHttp辅助工具类
+/// </summary>
+public static class TouchSocketHttpUtility
 {
+    /// <summary>
+    /// 获取一个只读的字节序列，表示回车换行(CRLF)。
+    /// </summary>
+    /// <value>
+    /// 一个包含回车和换行字节的只读字节序列。
+    /// </value>
+    public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
 
     /// <summary>
-    /// TouchSocketHttp辅助工具类
+    /// 非缓存上限
     /// </summary>
-    public static class TouchSocketHttpUtility
-    {
-        /// <summary>
-        /// 获取一个只读的字节序列，表示回车换行(CRLF)。
-        /// </summary>
-        /// <value>
-        /// 一个包含回车和换行字节的只读字节序列。
-        /// </value>
-        public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
-
-        /// <summary>
-        /// 非缓存上限
-        /// </summary>
-        public const int NoCacheMaxSize = 1024 * 1024;
-    }
+    public const int NoCacheMaxSize = 1024 * 1024;
 }

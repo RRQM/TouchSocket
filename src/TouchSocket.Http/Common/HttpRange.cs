@@ -13,127 +13,126 @@
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Range: bytes=0-499 表示第 0-499 字节范围的内容
+/// Range: bytes=500-999 表示第 500-999 字节范围的内容
+/// Range: bytes=-500 表示最后 500 字节的内容
+/// Range: bytes=500- 表示从第 500 字节开始到文件结束部分的内容
+/// Range: bytes=0-0,-1 表示第一个和最后一个字节
+/// Range: bytes=500-600,601-999 同时指定几个范围
+/// </summary>
+public class HttpRange
 {
     /// <summary>
-    /// Range: bytes=0-499 表示第 0-499 字节范围的内容
-    /// Range: bytes=500-999 表示第 500-999 字节范围的内容
-    /// Range: bytes=-500 表示最后 500 字节的内容
-    /// Range: bytes=500- 表示从第 500 字节开始到文件结束部分的内容
-    /// Range: bytes=0-0,-1 表示第一个和最后一个字节
-    /// Range: bytes=500-600,601-999 同时指定几个范围
+    /// 转换获取的集合
     /// </summary>
-    public class HttpRange
+    /// <param name="rangeStr"></param>
+    /// <param name="size"></param>
+    /// <returns></returns>
+    public static HttpRange[] GetRanges(string rangeStr, long size)
     {
-        /// <summary>
-        /// 转换获取的集合
-        /// </summary>
-        /// <param name="rangeStr"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public static HttpRange[] GetRanges(string rangeStr, long size)
+        var ranges = rangeStr.Split('=');
+        if (ranges.Length != 2)
         {
-            var ranges = rangeStr.Split('=');
-            if (ranges.Length != 2)
-            {
-                return new HttpRange[0];
-            }
-            rangeStr = ranges[1];
-            if (string.IsNullOrEmpty(rangeStr))
-            {
-                return new HttpRange[0];
-            }
-            ranges = rangeStr.Split(',');
-            var httpRanges = new List<HttpRange>();
-            foreach (var range in ranges)
-            {
-                var httpRange = new HttpRange();
-                ranges = range.Split('-');
-                if (ranges.Length == 2)
-                {
-                    if (range.StartsWith("-"))
-                    {
-                        httpRange.Length = Convert.ToInt64(ranges[1]);
-                        httpRange.Start = size - httpRange.Length;
-                    }
-                    else if (range.EndsWith("-"))
-                    {
-                        httpRange.Start = Convert.ToInt64(ranges[0]);
-                        httpRange.Length = size - httpRange.Start;
-                    }
-                    else
-                    {
-                        httpRange.Start = Convert.ToInt64(ranges[0]);
-                        httpRange.Length = Convert.ToInt64(ranges[1]) - httpRange.Start + 1;
-                    }
-                }
-                else
-                {
-                    continue;
-                }
-                httpRanges.Add(httpRange);
-            }
-            return httpRanges.ToArray();
+            return new HttpRange[0];
         }
-
-        /// <summary>
-        /// 转换获取的集合
-        /// </summary>
-        /// <param name="rangeStr"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        public static HttpRange GetRange(string rangeStr, long size)
+        rangeStr = ranges[1];
+        if (string.IsNullOrEmpty(rangeStr))
         {
-            var ranges = rangeStr.Split('=');
-            if (ranges.Length != 2)
+            return new HttpRange[0];
+        }
+        ranges = rangeStr.Split(',');
+        var httpRanges = new List<HttpRange>();
+        foreach (var range in ranges)
+        {
+            var httpRange = new HttpRange();
+            ranges = range.Split('-');
+            if (ranges.Length == 2)
             {
-                return null;
-            }
-            rangeStr = ranges[1];
-            if (string.IsNullOrEmpty(rangeStr))
-            {
-                return null;
-            }
-            ranges = rangeStr.Split(',');
-            foreach (var range in ranges)
-            {
-                var httpRange = new HttpRange();
-                ranges = range.Split('-');
-                if (ranges.Length == 2)
+                if (range.StartsWith("-"))
                 {
-                    if (range.StartsWith("-"))
-                    {
-                        httpRange.Length = Convert.ToInt64(ranges[1]);
-                        httpRange.Start = size - httpRange.Length;
-                    }
-                    else if (range.EndsWith("-"))
-                    {
-                        httpRange.Start = Convert.ToInt64(ranges[0]);
-                        httpRange.Length = size - httpRange.Start;
-                    }
-                    else
-                    {
-                        httpRange.Start = Convert.ToInt64(ranges[0]);
-                        httpRange.Length = Convert.ToInt64(ranges[1]) - httpRange.Start + 1;
-                    }
+                    httpRange.Length = Convert.ToInt64(ranges[1]);
+                    httpRange.Start = size - httpRange.Length;
+                }
+                else if (range.EndsWith("-"))
+                {
+                    httpRange.Start = Convert.ToInt64(ranges[0]);
+                    httpRange.Length = size - httpRange.Start;
                 }
                 else
                 {
-                    continue;
+                    httpRange.Start = Convert.ToInt64(ranges[0]);
+                    httpRange.Length = Convert.ToInt64(ranges[1]) - httpRange.Start + 1;
                 }
-                return httpRange;
             }
+            else
+            {
+                continue;
+            }
+            httpRanges.Add(httpRange);
+        }
+        return httpRanges.ToArray();
+    }
+
+    /// <summary>
+    /// 转换获取的集合
+    /// </summary>
+    /// <param name="rangeStr"></param>
+    /// <param name="size"></param>
+    /// <returns></returns>
+    public static HttpRange GetRange(string rangeStr, long size)
+    {
+        var ranges = rangeStr.Split('=');
+        if (ranges.Length != 2)
+        {
             return null;
         }
-
-        /// <summary>
-        /// 起始位置
-        /// </summary>
-        public long Start { get; set; } = -1;
-
-        /// <summary>
-        /// 长度
-        /// </summary>
-        public long Length { get; set; } = -1;
+        rangeStr = ranges[1];
+        if (string.IsNullOrEmpty(rangeStr))
+        {
+            return null;
+        }
+        ranges = rangeStr.Split(',');
+        foreach (var range in ranges)
+        {
+            var httpRange = new HttpRange();
+            ranges = range.Split('-');
+            if (ranges.Length == 2)
+            {
+                if (range.StartsWith("-"))
+                {
+                    httpRange.Length = Convert.ToInt64(ranges[1]);
+                    httpRange.Start = size - httpRange.Length;
+                }
+                else if (range.EndsWith("-"))
+                {
+                    httpRange.Start = Convert.ToInt64(ranges[0]);
+                    httpRange.Length = size - httpRange.Start;
+                }
+                else
+                {
+                    httpRange.Start = Convert.ToInt64(ranges[0]);
+                    httpRange.Length = Convert.ToInt64(ranges[1]) - httpRange.Start + 1;
+                }
+            }
+            else
+            {
+                continue;
+            }
+            return httpRange;
+        }
+        return null;
     }
+
+    /// <summary>
+    /// 起始位置
+    /// </summary>
+    public long Start { get; set; } = -1;
+
+    /// <summary>
+    /// 长度
+    /// </summary>
+    public long Length { get; set; } = -1;
 }

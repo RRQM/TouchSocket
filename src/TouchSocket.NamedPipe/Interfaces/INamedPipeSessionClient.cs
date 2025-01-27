@@ -12,23 +12,22 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 命名管道服务器客户端接口
+/// </summary>
+public interface INamedPipeSessionClient : INamedPipeSession, ISessionClient, IClientSender, IIdSender, IIdRequestInfoSender, IReceiverClient<IReceiverResult>, IClient, IIdClient, INamedPipeStreamClient, INamedPipeListenableClient
 {
     /// <summary>
-    /// 命名管道服务器客户端接口
+    /// 断开连接
     /// </summary>
-    public interface INamedPipeSessionClient : INamedPipeSession, ISessionClient, IClientSender, IIdSender, IIdRequestInfoSender, IReceiverClient<IReceiverResult>, IClient, IIdClient, INamedPipeStreamClient, INamedPipeListenableClient
-    {
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        ClosedEventHandler<INamedPipeSessionClient> Closed { get; set; }
+    ClosedEventHandler<INamedPipeSessionClient> Closed { get; set; }
 
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// </para>
-        /// </summary>
-        ClosingEventHandler<INamedPipeSessionClient> Closing { get; set; }
-    }
+    /// <summary>
+    /// 即将断开连接(仅主动断开时有效)。
+    /// <para>
+    /// </para>
+    /// </summary>
+    ClosingEventHandler<INamedPipeSessionClient> Closing { get; set; }
 }

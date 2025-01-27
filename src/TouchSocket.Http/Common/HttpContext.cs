@@ -10,32 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http上下文
+/// </summary>
+public class HttpContext
 {
     /// <summary>
-    /// Http上下文
+    /// 初始化 <see cref="HttpContext"/> 类的新实例。
     /// </summary>
-    public class HttpContext
+    /// <param name="request">Http请求</param>
+    /// <param name="response">Http响应</param>
+    public HttpContext(HttpRequest request, HttpResponse response)
     {
-        /// <summary>
-        /// 初始化 <see cref="HttpContext"/> 类的新实例。
-        /// </summary>
-        /// <param name="request">Http请求</param>
-        /// <param name="response">Http响应</param>
-        public HttpContext(HttpRequest request, HttpResponse response)
-        {
-            this.Request = request;
-            this.Response = response;
-        }
-
-        /// <summary>
-        /// Http请求
-        /// </summary>
-        public HttpRequest Request { get; }
-
-        /// <summary>
-        /// Http响应
-        /// </summary>
-        public HttpResponse Response { get; }
+        this.Request = request;
+        this.Response = response;
     }
+
+    /// <summary>
+    /// Http请求
+    /// </summary>
+    public HttpRequest Request { get; }
+
+    /// <summary>
+    /// Http响应
+    /// </summary>
+    public HttpResponse Response { get; }
 }

@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc服务接口
+/// </summary>
+public interface IRpcServer
 {
-    /// <summary>
-    /// Rpc服务接口
-    /// </summary>
-    public interface IRpcServer
-    {
-    }
 }

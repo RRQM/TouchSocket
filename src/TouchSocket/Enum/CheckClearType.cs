@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 检查清理类型
+/// </summary>
+public enum CheckClearType
 {
     /// <summary>
-    /// 检查清理类型
+    /// 仅统计发送
     /// </summary>
-    public enum CheckClearType
-    {
-        /// <summary>
-        /// 仅统计发送
-        /// </summary>
-        OnlySend,
+    OnlySend,
 
-        /// <summary>
-        /// 仅统计接收
-        /// </summary>
-        OnlyReceive,
+    /// <summary>
+    /// 仅统计接收
+    /// </summary>
+    OnlyReceive,
 
-        /// <summary>
-        /// 全部
-        /// </summary>
-        All
-    }
+    /// <summary>
+    /// 全部
+    /// </summary>
+    All
 }

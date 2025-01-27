@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 传输类型
+/// </summary>
+public enum TransferType
 {
     /// <summary>
-    /// 传输类型
+    /// 推送
     /// </summary>
-    public enum TransferType
-    {
-        /// <summary>
-        /// 推送
-        /// </summary>
-        Push,
+    Push,
 
-        /// <summary>
-        /// 拉取
-        /// </summary>
-        Pull,
+    /// <summary>
+    /// 拉取
+    /// </summary>
+    Pull,
 
-        /// <summary>
-        /// 小文件推送
-        /// </summary>
-        SmallPush,
+    /// <summary>
+    /// 小文件推送
+    /// </summary>
+    SmallPush,
 
-        /// <summary>
-        /// 小文件拉取
-        /// </summary>
-        SmallPull
-    }
+    /// <summary>
+    /// 小文件拉取
+    /// </summary>
+    SmallPull
 }

@@ -14,25 +14,24 @@ using System.Collections.Generic;
 using System.Threading;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
-{
+namespace TouchSocket.Dmtp;
+
 #if AsyncEnumerable
 
-    internal partial class InternalChannel
+internal partial class InternalChannel
+{
+    public async IAsyncEnumerator<ByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        public async IAsyncEnumerator<ByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        ByteBlock byteBlock = null;
+        while (await this.MoveNextAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
-            ByteBlock byteBlock = null;
-            while (await this.MoveNextAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                byteBlock.SafeDispose();
-                byteBlock = this.GetCurrent();
-                yield return byteBlock;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
             byteBlock.SafeDispose();
+            byteBlock = this.GetCurrent();
+            yield return byteBlock;
         }
+        byteBlock.SafeDispose();
     }
+}
 
 #endif
-}

@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 只读的路由包接口
+/// </summary>
+public interface IReadonlyRouterPackage
 {
     /// <summary>
-    /// 只读的路由包接口
+    /// 标识是否路由
     /// </summary>
-    public interface IReadonlyRouterPackage
-    {
-        /// <summary>
-        /// 标识是否路由
-        /// </summary>
-        bool Route { get; }
+    bool Route { get; }
 
-        /// <summary>
-        /// 源Id
-        /// </summary>
-        string SourceId { get; }
+    /// <summary>
+    /// 源Id
+    /// </summary>
+    string SourceId { get; }
 
-        /// <summary>
-        /// 目标Id
-        /// </summary>
-        string TargetId { get; }
-    }
+    /// <summary>
+    /// 目标Id
+    /// </summary>
+    string TargetId { get; }
 }

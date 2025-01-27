@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// Modbus响应
+/// </summary>
+public interface IModbusResponse
 {
     /// <summary>
-    /// Modbus响应
+    /// 数据
     /// </summary>
-    public interface IModbusResponse
-    {
-        /// <summary>
-        /// 数据
-        /// </summary>
-        byte[] Data { get; }
+    byte[] Data { get; }
 
-        /// <summary>
-        /// 功能码
-        /// </summary>
-        FunctionCode FunctionCode { get; }
+    /// <summary>
+    /// 功能码
+    /// </summary>
+    FunctionCode FunctionCode { get; }
 
-        /// <summary>
-        /// 错误码
-        /// </summary>
-        ModbusErrorCode ErrorCode { get; }
+    /// <summary>
+    /// 错误码
+    /// </summary>
+    ModbusErrorCode ErrorCode { get; }
 
-        /// <summary>
-        /// 获取和当前响应对应的请求
-        /// </summary>
-        IModbusRequest Request { get; }
-    }
+    /// <summary>
+    /// 获取和当前响应对应的请求
+    /// </summary>
+    IModbusRequest Request { get; }
 }

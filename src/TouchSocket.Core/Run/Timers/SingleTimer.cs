@@ -13,161 +13,160 @@
 using System;
 using System.Threading;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 不可重入的Timer
+/// </summary>
+public class SingleTimer : DisposableObject
 {
+    private readonly Action<SingleTimer> m_action1;
+    private readonly Action<SingleTimer, object> m_action2;
+    private readonly object m_state;
+    private readonly Timer m_timer;
+    private readonly Action m_action3;
+    private int m_signal = 1;
+
+    /// <summary>
+    /// 是否暂停执行。
+    /// </summary>
+    public bool Pause { get; set; }
+
+    /// <summary>
+    /// 自启动以来执行的次数。
+    /// </summary>
+    public long Count { get; private set; }
+
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    public class SingleTimer : DisposableObject
+    /// <param name="action"></param>
+    /// <param name="period"></param>
+    public SingleTimer(int period, Action action)
     {
-        private readonly Action<SingleTimer> m_action1;
-        private readonly Action<SingleTimer, object> m_action2;
-        private readonly object m_state;
-        private readonly Timer m_timer;
-        private readonly Action m_action3;
-        private int m_signal = 1;
+        this.m_timer = new Timer(this.OnTimer, null, 0, period);
+        this.m_action3 = action;
+        this.m_state = null;
+    }
 
-        /// <summary>
-        /// 是否暂停执行。
-        /// </summary>
-        public bool Pause { get; set; }
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="period"></param>
+    public SingleTimer(TimeSpan period, Action action)
+    {
+        this.m_timer = new Timer(this.OnTimer, null, TimeSpan.Zero, period);
+        this.m_action3 = action;
+        this.m_state = null;
+    }
 
-        /// <summary>
-        /// 自启动以来执行的次数。
-        /// </summary>
-        public long Count { get; private set; }
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="period"></param>
+    public SingleTimer(int period, Action<SingleTimer> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, null, 0, period);
+        this.m_action1 = action;
+        this.m_state = null;
+    }
 
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="period"></param>
-        public SingleTimer(int period, Action action)
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="period"></param>
+    public SingleTimer(int period, Action<SingleTimer, object> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, null, 0, period);
+        this.m_action2 = action;
+        this.m_state = null;
+    }
+
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="state"></param>
+    /// <param name="period"></param>
+    public SingleTimer(object state, TimeSpan period, Action<SingleTimer> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
+        this.m_action1 = action;
+        this.m_state = state;
+    }
+
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="state"></param>
+    /// <param name="period"></param>
+    public SingleTimer(object state, TimeSpan period, Action<SingleTimer, object> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
+        this.m_action2 = action;
+        this.m_state = state;
+    }
+
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="state"></param>
+    /// <param name="period"></param>
+    public SingleTimer(object state, int period, Action<SingleTimer> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, state, 0, period);
+        this.m_action1 = action;
+        this.m_state = state;
+    }
+
+    /// <summary>
+    /// 不可重入的Timer
+    /// </summary>
+    /// <param name="action"></param>
+    /// <param name="state"></param>
+    /// <param name="period"></param>
+    public SingleTimer(object state, int period, Action<SingleTimer, object> action)
+    {
+        this.m_timer = new Timer(this.OnTimer, state, 0, period);
+        this.m_action2 = action;
+        this.m_state = state;
+    }
+
+    private void OnTimer(object state)
+    {
+        if (this.Pause)
         {
-            this.m_timer = new Timer(this.OnTimer, null, 0, period);
-            this.m_action3 = action;
-            this.m_state = null;
+            return;
         }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="period"></param>
-        public SingleTimer(TimeSpan period, Action action)
+        if (Interlocked.Decrement(ref this.m_signal) == 0)
         {
-            this.m_timer = new Timer(this.OnTimer, null, TimeSpan.Zero, period);
-            this.m_action3 = action;
-            this.m_state = null;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="period"></param>
-        public SingleTimer(int period, Action<SingleTimer> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, null, 0, period);
-            this.m_action1 = action;
-            this.m_state = null;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="period"></param>
-        public SingleTimer(int period, Action<SingleTimer, object> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, null, 0, period);
-            this.m_action2 = action;
-            this.m_state = null;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="state"></param>
-        /// <param name="period"></param>
-        public SingleTimer(object state, TimeSpan period, Action<SingleTimer> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
-            this.m_action1 = action;
-            this.m_state = state;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="state"></param>
-        /// <param name="period"></param>
-        public SingleTimer(object state, TimeSpan period, Action<SingleTimer, object> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
-            this.m_action2 = action;
-            this.m_state = state;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="state"></param>
-        /// <param name="period"></param>
-        public SingleTimer(object state, int period, Action<SingleTimer> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, state, 0, period);
-            this.m_action1 = action;
-            this.m_state = state;
-        }
-
-        /// <summary>
-        /// 不可重入的Timer
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="state"></param>
-        /// <param name="period"></param>
-        public SingleTimer(object state, int period, Action<SingleTimer, object> action)
-        {
-            this.m_timer = new Timer(this.OnTimer, state, 0, period);
-            this.m_action2 = action;
-            this.m_state = state;
-        }
-
-        private void OnTimer(object state)
-        {
-            if (this.Pause)
+            try
             {
-                return;
+                this.Count++;
+                this.m_action1?.Invoke(this);
+                this.m_action2?.Invoke(this, this.m_state);
+                this.m_action3?.Invoke();
             }
-            if (Interlocked.Decrement(ref this.m_signal) == 0)
+            catch
             {
-                try
-                {
-                    this.Count++;
-                    this.m_action1?.Invoke(this);
-                    this.m_action2?.Invoke(this, this.m_state);
-                    this.m_action3?.Invoke();
-                }
-                catch
-                {
-                }
-                finally
-                {
-                    this.m_signal = 1;
-                }
+            }
+            finally
+            {
+                this.m_signal = 1;
             }
         }
+    }
 
-        /// <inheritdoc/>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            this.m_timer.SafeDispose();
-            base.Dispose(disposing);
-        }
+    /// <inheritdoc/>
+    /// <param name="disposing"></param>
+    protected override void Dispose(bool disposing)
+    {
+        this.m_timer.SafeDispose();
+        base.Dispose(disposing);
     }
 }

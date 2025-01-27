@@ -13,57 +13,56 @@
 using System;
 using System.Threading;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 读取锁
+/// </summary>
+public readonly struct ReadLock : IDisposable
 {
+    private readonly ReaderWriterLockSlim m_locks;
+
     /// <summary>
-    /// 读取锁
+    /// 构造函数
     /// </summary>
-    public readonly struct ReadLock : IDisposable
+    /// <param name="locks"></param>
+    public ReadLock(ReaderWriterLockSlim locks)
     {
-        private readonly ReaderWriterLockSlim m_locks;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="locks"></param>
-        public ReadLock(ReaderWriterLockSlim locks)
-        {
-            this.m_locks = locks;
-            this.m_locks.EnterReadLock();
-        }
-
-        /// <summary>
-        /// 释放
-        /// </summary>
-        public void Dispose()
-        {
-            this.m_locks.ExitReadLock();
-        }
+        this.m_locks = locks;
+        this.m_locks.EnterReadLock();
     }
 
     /// <summary>
-    /// 写入锁
+    /// 释放
     /// </summary>
-    public readonly struct WriteLock : IDisposable
+    public void Dispose()
     {
-        private readonly ReaderWriterLockSlim m_locks;
+        this.m_locks.ExitReadLock();
+    }
+}
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="locks"></param>
-        public WriteLock(ReaderWriterLockSlim locks)
-        {
-            this.m_locks = locks;
-            this.m_locks.EnterWriteLock();
-        }
+/// <summary>
+/// 写入锁
+/// </summary>
+public readonly struct WriteLock : IDisposable
+{
+    private readonly ReaderWriterLockSlim m_locks;
 
-        /// <summary>
-        /// 释放
-        /// </summary>
-        public void Dispose()
-        {
-            this.m_locks.ExitWriteLock();
-        }
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="locks"></param>
+    public WriteLock(ReaderWriterLockSlim locks)
+    {
+        this.m_locks = locks;
+        this.m_locks.EnterWriteLock();
+    }
+
+    /// <summary>
+    /// 释放
+    /// </summary>
+    public void Dispose()
+    {
+        this.m_locks.ExitWriteLock();
     }
 }

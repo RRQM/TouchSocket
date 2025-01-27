@@ -14,42 +14,41 @@ using System;
 using System.Net.Sockets;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// Tcp网络监听器
+/// </summary>
+public class TcpNetworkMonitor
 {
     /// <summary>
     /// Tcp网络监听器
     /// </summary>
-    public class TcpNetworkMonitor
+    /// <param name="option">监听配置选项</param>
+    /// <param name="socket">Socket组件</param>
+    /// <param name="e">Socket异步事件参数</param>
+    /// <exception cref="ArgumentNullException">如果option或socket为null，则抛出此异常</exception>
+    public TcpNetworkMonitor(TcpListenOption option, Socket socket, SocketAsyncEventArgs e)
     {
-        /// <summary>
-        /// Tcp网络监听器
-        /// </summary>
-        /// <param name="option">监听配置选项</param>
-        /// <param name="socket">Socket组件</param>
-        /// <param name="e">Socket异步事件参数</param>
-        /// <exception cref="ArgumentNullException">如果option或socket为null，则抛出此异常</exception>
-        public TcpNetworkMonitor(TcpListenOption option, Socket socket, SocketAsyncEventArgs e)
-        {
-            // 使用ThrowHelper方法验证option参数是否为null，如果为null则抛出ArgumentNullException异常
-            this.Option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
-            // 使用ThrowHelper方法验证socket参数是否为null，如果为null则抛出ArgumentNullException异常
-            this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
-            this.SocketAsyncEvent = e;
-        }
-
-        /// <summary>
-        /// 监听配置
-        /// </summary>
-        public TcpListenOption Option { get; }
-
-        /// <summary>
-        /// Socket组件
-        /// </summary>
-        public Socket Socket { get; private set; }
-
-        /// <summary>
-        /// SocketAsyncEventArgs
-        /// </summary>
-        public SocketAsyncEventArgs SocketAsyncEvent { get; }
+        // 使用ThrowHelper方法验证option参数是否为null，如果为null则抛出ArgumentNullException异常
+        this.Option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+        // 使用ThrowHelper方法验证socket参数是否为null，如果为null则抛出ArgumentNullException异常
+        this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
+        this.SocketAsyncEvent = e;
     }
+
+    /// <summary>
+    /// 监听配置
+    /// </summary>
+    public TcpListenOption Option { get; }
+
+    /// <summary>
+    /// Socket组件
+    /// </summary>
+    public Socket Socket { get; private set; }
+
+    /// <summary>
+    /// SocketAsyncEventArgs
+    /// </summary>
+    public SocketAsyncEventArgs SocketAsyncEvent { get; }
 }

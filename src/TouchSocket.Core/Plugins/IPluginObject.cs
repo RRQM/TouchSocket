@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有插件功能的对象
+/// </summary>
+public interface IPluginObject
 {
     /// <summary>
-    /// 具有插件功能的对象
+    /// 插件管理器
     /// </summary>
-    public interface IPluginObject
-    {
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        IPluginManager PluginManager { get; }
-    }
+    IPluginManager PluginManager { get; }
 }

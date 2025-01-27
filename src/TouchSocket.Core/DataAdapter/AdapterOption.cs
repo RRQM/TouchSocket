@@ -12,31 +12,30 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 适配器配置
+/// </summary>
+public class AdapterOption
 {
     /// <summary>
-    /// 适配器配置
+    /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.CacheTimeout"/>
     /// </summary>
-    public class AdapterOption
-    {
-        /// <summary>
-        /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.CacheTimeout"/>
-        /// </summary>
-        public bool? CacheTimeoutEnable { get; set; }
+    public bool? CacheTimeoutEnable { get; set; }
 
-        /// <summary>
-        /// 适配器数据包缓存时长。默认为缺省（null）。当该值有效时会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.CacheTimeout"/>
-        /// </summary>
-        public TimeSpan? CacheTimeout { get; set; }
+    /// <summary>
+    /// 适配器数据包缓存时长。默认为缺省（null）。当该值有效时会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.CacheTimeout"/>
+    /// </summary>
+    public TimeSpan? CacheTimeout { get; set; }
 
-        /// <summary>
-        /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
-        /// </summary>
-        public int? MaxPackageSize { get; set; }
+    /// <summary>
+    /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
+    /// </summary>
+    public int? MaxPackageSize { get; set; }
 
-        /// <summary>
-        ///  适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.UpdateCacheTimeWhenRev"/>
-        /// </summary>
-        public bool? UpdateCacheTimeWhenRev { get; set; }
-    }
+    /// <summary>
+    ///  适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.UpdateCacheTimeWhenRev"/>
+    /// </summary>
+    public bool? UpdateCacheTimeWhenRev { get; set; }
 }

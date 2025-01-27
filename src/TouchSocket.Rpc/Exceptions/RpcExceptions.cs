@@ -12,34 +12,33 @@
 
 using System;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc异常
+/// </summary>
+[Serializable]
+public class RpcException : Exception
 {
     /// <summary>
-    /// Rpc异常
+    /// 默认构造函数，初始化RpcException对象，不带特定错误信息和内部异常
     /// </summary>
-    [Serializable]
-    public class RpcException : Exception
-    {
-        /// <summary>
-        /// 默认构造函数，初始化RpcException对象，不带特定错误信息和内部异常
-        /// </summary>
-        public RpcException() : base() { }
+    public RpcException() : base() { }
 
 
-        /// <summary>
-        /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息
-        /// </summary>
-        /// <param name="message">解释异常原因的错误消息</param>
-        public RpcException(string message) : base(message) { }
+    /// <summary>
+    /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息
+    /// </summary>
+    /// <param name="message">解释异常原因的错误消息</param>
+    public RpcException(string message) : base(message) { }
 
 
-        /// <summary>
-        /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息和内部异常
-        /// </summary>
-        /// <param name="message">解释异常原因的错误消息</param>
-        /// <param name="inner">导致当前异常发生的内部异常</param>
-        public RpcException(string message, System.Exception inner) : base(message, inner) { }
+    /// <summary>
+    /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息和内部异常
+    /// </summary>
+    /// <param name="message">解释异常原因的错误消息</param>
+    /// <param name="inner">导致当前异常发生的内部异常</param>
+    public RpcException(string message, System.Exception inner) : base(message, inner) { }
 
 
-    }
 }

@@ -14,44 +14,43 @@ using System;
 using System.Collections.Generic;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+internal sealed class InternalHttpParams : Dictionary<string, string>, IHttpParams
 {
-    internal sealed class InternalHttpParams : Dictionary<string, string>, IHttpParams
+    public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
     {
-        public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
+    }
+
+    public new string this[string key]
+    {
+        get
         {
+            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
         }
 
-        public new string this[string key]
-        {
-            get
-            {
-                return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
-            }
-
-            set
-            {
-                if (key == null)
-                {
-                    return;
-                }
-
-                this.AddOrUpdate(key, value);
-            }
-        }
-
-        public new void Add(string key, string value)
+        set
         {
             if (key == null)
             {
                 return;
             }
+
             this.AddOrUpdate(key, value);
         }
+    }
 
-        public string Get(string key)
+    public new void Add(string key, string value)
+    {
+        if (key == null)
         {
-            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
+            return;
         }
+        this.AddOrUpdate(key, value);
+    }
+
+    public string Get(string key)
+    {
+        return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
     }
 }

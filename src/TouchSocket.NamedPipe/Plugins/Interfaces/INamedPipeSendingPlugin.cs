@@ -14,23 +14,22 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
-{
+namespace TouchSocket.NamedPipe;
 
+
+/// <summary>
+/// 定义了一个接口，用于在命名管道中发送数据的插件。
+/// 继承自IPlugin接口。
+/// </summary>
+[DynamicMethod]
+public interface INamedPipeSendingPlugin : IPlugin
+{
     /// <summary>
-    /// 定义了一个接口，用于在命名管道中发送数据的插件。
-    /// 继承自IPlugin接口。
+    /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
+    /// 该方法允许插件在数据发送前执行自定义逻辑。
     /// </summary>
-    [DynamicMethod]
-    public interface INamedPipeSendingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
-        /// 该方法允许插件在数据发送前执行自定义逻辑。
-        /// </summary>
-        /// <param name="client">表示命名管道会话的接口对象。</param>
-        /// <param name="e">包含发送数据事件相关信息的事件参数对象。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnNamedPipeSending(INamedPipeSession client, SendingEventArgs e);
-    }
+    /// <param name="client">表示命名管道会话的接口对象。</param>
+    /// <param name="e">包含发送数据事件相关信息的事件参数对象。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnNamedPipeSending(INamedPipeSession client, SendingEventArgs e);
 }

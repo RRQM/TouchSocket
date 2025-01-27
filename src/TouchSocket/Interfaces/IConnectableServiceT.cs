@@ -10,17 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 表示可连接的泛型服务器基类接口
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public interface IConnectableService<TClient> : IConnectableService where TClient : IClient, IIdClient
 {
     /// <summary>
-    /// 表示可连接的泛型服务器基类接口
+    /// 获取已连接的客户端集合。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public interface IConnectableService<TClient> : IConnectableService where TClient : IClient, IIdClient
-    {
-        /// <summary>
-        /// 获取已连接的客户端集合。
-        /// </summary>
-        IClientCollection<TClient> Clients { get; }
-    }
+    IClientCollection<TClient> Clients { get; }
 }

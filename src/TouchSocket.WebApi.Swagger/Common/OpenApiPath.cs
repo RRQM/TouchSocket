@@ -12,9 +12,8 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.WebApi.Swagger
+namespace TouchSocket.WebApi.Swagger;
+
+internal class OpenApiPath : Dictionary<string, OpenApiPathValue>
 {
-    internal class OpenApiPath : Dictionary<string, OpenApiPathValue>
-    {
-    }
 }

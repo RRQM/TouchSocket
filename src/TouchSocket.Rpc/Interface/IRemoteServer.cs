@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 远程服务接口
+/// </summary>
+public interface IRemoteServer
 {
     /// <summary>
-    /// 远程服务接口
+    /// 客户端
     /// </summary>
-    public interface IRemoteServer
-    {
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        IRpcClient Client { get; }
-    }
+    IRpcClient Client { get; }
 }

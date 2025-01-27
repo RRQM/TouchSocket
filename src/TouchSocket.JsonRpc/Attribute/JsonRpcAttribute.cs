@@ -14,48 +14,47 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// 适用于JsonRpc的标记
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+[DynamicMethod]
+public sealed class JsonRpcAttribute : RpcAttribute
 {
+    /// <summary>
+    ///  适用于JsonRpc的标记.
+    ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
+    /// </summary>
+    /// <param name="methodInvoke"></param>
+    [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
+    public JsonRpcAttribute(bool methodInvoke)
+    {
+        this.MethodInvoke = methodInvoke;
+    }
+
     /// <summary>
     /// 适用于JsonRpc的标记
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    [DynamicMethod]
-    public sealed class JsonRpcAttribute : RpcAttribute
+    public JsonRpcAttribute()
     {
-        /// <summary>
-        ///  适用于JsonRpc的标记.
-        ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
-        /// </summary>
-        /// <param name="methodInvoke"></param>
-        [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-        public JsonRpcAttribute(bool methodInvoke)
-        {
-            this.MethodInvoke = methodInvoke;
-        }
+    }
 
-        /// <summary>
-        /// 适用于JsonRpc的标记
-        /// </summary>
-        public JsonRpcAttribute()
-        {
-        }
+    /// <summary>
+    /// 适用于JsonRpc的标记.
+    /// </summary>
+    /// <param name="invokenKey"></param>
+    [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
+    public JsonRpcAttribute(string invokenKey)
+    {
+        this.InvokeKey = invokenKey;
+    }
 
-        /// <summary>
-        /// 适用于JsonRpc的标记.
-        /// </summary>
-        /// <param name="invokenKey"></param>
-        [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-        public JsonRpcAttribute(string invokenKey)
-        {
-            this.InvokeKey = invokenKey;
-        }
-
-        /// <inheritdoc/>
-        /// <returns></returns>
-        public override Type[] GetGenericConstraintTypes()
-        {
-            return new Type[] { typeof(IJsonRpcClient) };
-        }
+    /// <inheritdoc/>
+    /// <returns></returns>
+    public override Type[] GetGenericConstraintTypes()
+    {
+        return new Type[] { typeof(IJsonRpcClient) };
     }
 }

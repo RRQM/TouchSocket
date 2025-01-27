@@ -12,26 +12,25 @@
 
 using System;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// 定义WebSocket接收结果的接口，继承自IDisposable接口
+/// </summary>
+public interface IWebSocketReceiveResult : IDisposable
 {
     /// <summary>
-    /// 定义WebSocket接收结果的接口，继承自IDisposable接口
+    /// 获取接收操作是否已完成的标志
     /// </summary>
-    public interface IWebSocketReceiveResult : IDisposable
-    {
-        /// <summary>
-        /// 获取接收操作是否已完成的标志
-        /// </summary>
-        bool IsCompleted { get; }
+    bool IsCompleted { get; }
 
-        /// <summary>
-        /// 获取接收到的消息内容
-        /// </summary>
-        string Message { get; }
+    /// <summary>
+    /// 获取接收到的消息内容
+    /// </summary>
+    string Message { get; }
 
-        /// <summary>
-        /// WebSocket数据帧
-        /// </summary>
-        WSDataFrame DataFrame { get; }
-    }
+    /// <summary>
+    /// WebSocket数据帧
+    /// </summary>
+    WSDataFrame DataFrame { get; }
 }

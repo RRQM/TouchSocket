@@ -12,43 +12,42 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 定义了一个简化版本的ValueTask工具类。
+/// 该类提供了一些静态方法来创建ValueTask对象，旨在优化性能并简化异步编程。
+/// </summary>
+public class EasyValueTask
 {
     /// <summary>
-    /// 定义了一个简化版本的ValueTask工具类。
-    /// 该类提供了一些静态方法来创建ValueTask对象，旨在优化性能并简化异步编程。
+    /// 类的静态构造函数，用于初始化静态字段。
     /// </summary>
-    public class EasyValueTask
+    static EasyValueTask()
     {
-        /// <summary>
-        /// 类的静态构造函数，用于初始化静态字段。
-        /// </summary>
-        static EasyValueTask()
-        {
-            // 根据目标框架设置CompletedTask的值
-            // 对于.NET 6.0及以上版本，直接使用ValueTask类的静态属性CompletedTask
-            // 对于.NET 6.0以下版本，将CompletedTask设置为默认值
+        // 根据目标框架设置CompletedTask的值
+        // 对于.NET 6.0及以上版本，直接使用ValueTask类的静态属性CompletedTask
+        // 对于.NET 6.0以下版本，将CompletedTask设置为默认值
 #if NET6_0_OR_GREATER
-            CompletedTask = ValueTask.CompletedTask;
+        CompletedTask = ValueTask.CompletedTask;
 #else
-            CompletedTask = default;
+        CompletedTask = default;
 #endif
-        }
+    }
 
-        /// <summary>
-        /// 获取一个表示已完成任务的静态属性。
-        /// </summary>
-        public static ValueTask CompletedTask { get; }
+    /// <summary>
+    /// 获取一个表示已完成任务的静态属性。
+    /// </summary>
+    public static ValueTask CompletedTask { get; }
 
-        /// <summary>
-        /// 根据指定的结果创建一个ValueTask对象。
-        /// </summary>
-        /// <param name="result">作为ValueTask结果的值。</param>
-        /// <typeparam name="TResult">ValueTask结果的类型。</typeparam>
-        /// <returns>一个新的ValueTask对象，其结果被指定为传入的result参数。</returns>
-        public static ValueTask<TResult> FromResult<TResult>(TResult result)
-        {
-            return new ValueTask<TResult>(result);
-        }
+    /// <summary>
+    /// 根据指定的结果创建一个ValueTask对象。
+    /// </summary>
+    /// <param name="result">作为ValueTask结果的值。</param>
+    /// <typeparam name="TResult">ValueTask结果的类型。</typeparam>
+    /// <returns>一个新的ValueTask对象，其结果被指定为传入的result参数。</returns>
+    public static ValueTask<TResult> FromResult<TResult>(TResult result)
+    {
+        return new ValueTask<TResult>(result);
     }
 }

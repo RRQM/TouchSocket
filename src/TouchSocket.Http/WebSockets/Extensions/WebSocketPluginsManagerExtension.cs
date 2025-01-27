@@ -13,60 +13,59 @@
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// WebSocketPluginManagerExtension
+/// </summary>
+public static class WebSocketPluginManagerExtension
 {
     /// <summary>
-    /// WebSocketPluginManagerExtension
+    /// 使用WebSocket插件。
     /// </summary>
-    public static class WebSocketPluginManagerExtension
+    /// <returns>插件类型实例</returns>
+    public static WebSocketFeature UseWebSocket(this IPluginManager pluginManager)
     {
-        /// <summary>
-        /// 使用WebSocket插件。
-        /// </summary>
-        /// <returns>插件类型实例</returns>
-        public static WebSocketFeature UseWebSocket(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<WebSocketFeature>();
-        }
-
-        /// <summary>
-        /// 使用WebSocket心跳插件，客户端、服务器均有效。但是一般建议客户端使用即可。
-        /// </summary>
-        /// <returns>插件类型实例</returns>
-        public static WebSocketHeartbeatPlugin UseWebSocketHeartbeat(this IPluginManager pluginManager)
-        {
-            var heartbeatPlugin = new WebSocketHeartbeatPlugin();
-            pluginManager.Add(heartbeatPlugin);
-            return heartbeatPlugin;
-        }
-
-        #region WebSocketReconnection
-
-        /// <summary>
-        /// 使用<see cref="IWebSocketClient"/>断线重连。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static ReconnectionPlugin<TClient> UseWebSocketReconnection<TClient>(this IPluginManager pluginManager) where TClient : IWebSocketClient
-        {
-            var reconnectionPlugin = new WebSocketReconnectionPlugin<TClient>();
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
-        }
-
-        /// <summary>
-        /// 使用<see cref="IWebSocketClient"/>断线重连。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static ReconnectionPlugin<IWebSocketClient> UseWebSocketReconnection(this IPluginManager pluginManager)
-        {
-            var reconnectionPlugin = new WebSocketReconnectionPlugin<IWebSocketClient>();
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
-        }
-
-        #endregion WebSocketReconnection
+        return pluginManager.Add<WebSocketFeature>();
     }
+
+    /// <summary>
+    /// 使用WebSocket心跳插件，客户端、服务器均有效。但是一般建议客户端使用即可。
+    /// </summary>
+    /// <returns>插件类型实例</returns>
+    public static WebSocketHeartbeatPlugin UseWebSocketHeartbeat(this IPluginManager pluginManager)
+    {
+        var heartbeatPlugin = new WebSocketHeartbeatPlugin();
+        pluginManager.Add(heartbeatPlugin);
+        return heartbeatPlugin;
+    }
+
+    #region WebSocketReconnection
+
+    /// <summary>
+    /// 使用<see cref="IWebSocketClient"/>断线重连。
+    /// </summary>
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static ReconnectionPlugin<TClient> UseWebSocketReconnection<TClient>(this IPluginManager pluginManager) where TClient : IWebSocketClient
+    {
+        var reconnectionPlugin = new WebSocketReconnectionPlugin<TClient>();
+        pluginManager.Add(reconnectionPlugin);
+        return reconnectionPlugin;
+    }
+
+    /// <summary>
+    /// 使用<see cref="IWebSocketClient"/>断线重连。
+    /// </summary>
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static ReconnectionPlugin<IWebSocketClient> UseWebSocketReconnection(this IPluginManager pluginManager)
+    {
+        var reconnectionPlugin = new WebSocketReconnectionPlugin<IWebSocketClient>();
+        pluginManager.Add(reconnectionPlugin);
+        return reconnectionPlugin;
+    }
+
+    #endregion WebSocketReconnection
 }

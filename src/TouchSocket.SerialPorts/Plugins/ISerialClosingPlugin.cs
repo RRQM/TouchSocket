@@ -14,21 +14,20 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
-{
+namespace TouchSocket.SerialPorts;
 
+
+/// <summary>
+/// 定义串口关闭时的插件接口，继承自通用插件接口IPlugin
+/// </summary>
+[DynamicMethod]
+public interface ISerialClosingPlugin : IPlugin
+{
     /// <summary>
-    /// 定义串口关闭时的插件接口，继承自通用插件接口IPlugin
+    /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    [DynamicMethod]
-    public interface ISerialClosingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// </summary>
-        /// <param name="client">串口会话客户端</param>
-        /// <param name="e">关闭事件参数</param>
-        /// <returns>异步任务</returns>
-        Task OnSerialClosing(ISerialPortSession client, ClosingEventArgs e);
-    }
+    /// <param name="client">串口会话客户端</param>
+    /// <param name="e">关闭事件参数</param>
+    /// <returns>异步任务</returns>
+    Task OnSerialClosing(ISerialPortSession client, ClosingEventArgs e);
 }

@@ -10,36 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 运行状态
+/// </summary>
+public enum RunStatus : byte
 {
     /// <summary>
-    /// 运行状态
+    /// None
     /// </summary>
-    public enum RunStatus : byte
-    {
-        /// <summary>
-        /// None
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        /// Running
-        /// </summary>
-        Running,
+    /// <summary>
+    /// Running
+    /// </summary>
+    Running,
 
-        /// <summary>
-        /// Completed
-        /// </summary>
-        Completed,
+    /// <summary>
+    /// Completed
+    /// </summary>
+    Completed,
 
-        /// <summary>
-        /// Pause
-        /// </summary>
-        Paused,
+    /// <summary>
+    /// Pause
+    /// </summary>
+    Paused,
 
-        /// <summary>
-        /// Disposed
-        /// </summary>
-        Disposed
-    }
+    /// <summary>
+    /// Disposed
+    /// </summary>
+    Disposed
 }

@@ -13,27 +13,26 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// Modbus响应异常。
+/// </summary>
+[Serializable]
+public class ModbusResponseException : Exception
 {
     /// <summary>
-    /// Modbus响应异常。
+    /// Modbus响应异常
     /// </summary>
-    [Serializable]
-    public class ModbusResponseException : Exception
+    /// <param name="errorCode">异常错误码，用于标识异常的类型</param>
+    public ModbusResponseException(ModbusErrorCode errorCode) : base(errorCode.GetDescription())
     {
-        /// <summary>
-        /// Modbus响应异常
-        /// </summary>
-        /// <param name="errorCode">异常错误码，用于标识异常的类型</param>
-        public ModbusResponseException(ModbusErrorCode errorCode) : base(errorCode.GetDescription())
-        {
-            // 初始化异常对象，将错误码描述作为异常信息
-            this.ErrorCode = errorCode; // 保存异常错误码，以便后续处理
-        }
-
-        /// <summary>
-        /// 异常码
-        /// </summary>
-        public ModbusErrorCode ErrorCode { get; }
+        // 初始化异常对象，将错误码描述作为异常信息
+        this.ErrorCode = errorCode; // 保存异常错误码，以便后续处理
     }
+
+    /// <summary>
+    /// 异常码
+    /// </summary>
+    public ModbusErrorCode ErrorCode { get; }
 }

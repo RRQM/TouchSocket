@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// 定义了一个接口，用于异步发送标识符和请求信息
-    /// </summary>
-    public interface IIdRequestInfoSender
-    {
+namespace TouchSocket.Sockets;
 
-        /// <summary>
-        /// 异步发送指定标识符和请求信息的方法
-        /// </summary>
-        /// <param name="id">要发送的标识符</param>
-        /// <param name="requestInfo">请求信息对象，包含发送的具体内容</param>
-        /// <returns>返回一个任务，表示异步操作的完成</returns>
-        Task SendAsync(string id, IRequestInfo requestInfo);
-    }
+/// <summary>
+/// 定义了一个接口，用于异步发送标识符和请求信息
+/// </summary>
+public interface IIdRequestInfoSender
+{
+
+    /// <summary>
+    /// 异步发送指定标识符和请求信息的方法
+    /// </summary>
+    /// <param name="id">要发送的标识符</param>
+    /// <param name="requestInfo">请求信息对象，包含发送的具体内容</param>
+    /// <returns>返回一个任务，表示异步操作的完成</returns>
+    Task SendAsync(string id, IRequestInfo requestInfo);
 }

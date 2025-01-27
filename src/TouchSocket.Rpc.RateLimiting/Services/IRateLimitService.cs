@@ -10,18 +10,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc.RateLimiting
+namespace TouchSocket.Rpc.RateLimiting;
+
+/// <summary>
+/// Rpc速率限定服务接口
+/// </summary>
+public interface IRateLimitService
 {
     /// <summary>
-    /// Rpc速率限定服务接口
+    /// 获取限流策略
     /// </summary>
-    public interface IRateLimitService
-    {
-        /// <summary>
-        /// 获取限流策略
-        /// </summary>
-        /// <param name="policyName">限流策略名称</param>
-        /// <returns>返回对应的限流策略对象</returns>
-        IRateLimiterPolicy GetRateLimiterPolicy(string policyName);
-    }
+    /// <param name="policyName">限流策略名称</param>
+    /// <returns>返回对应的限流策略对象</returns>
+    IRateLimiterPolicy GetRateLimiterPolicy(string policyName);
 }

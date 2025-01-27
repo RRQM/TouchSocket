@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.NamedPipe
-{
-    /// <summary>
-    /// 命名管道服务器
-    /// </summary>
-    public class NamedPipeService : NamedPipeService<NamedPipeSessionClient>, INamedPipeService
-    {
-        /// <inheritdoc/>
-        protected override NamedPipeSessionClient NewClient()
-        {
-            return new PrivateNamedPipeSessionClient();
-        }
+namespace TouchSocket.NamedPipe;
 
-        private sealed class PrivateNamedPipeSessionClient : NamedPipeSessionClient
-        {
-        }
+/// <summary>
+/// 命名管道服务器
+/// </summary>
+public class NamedPipeService : NamedPipeService<NamedPipeSessionClient>, INamedPipeService
+{
+    /// <inheritdoc/>
+    protected override NamedPipeSessionClient NewClient()
+    {
+        return new PrivateNamedPipeSessionClient();
+    }
+
+    private sealed class PrivateNamedPipeSessionClient : NamedPipeSessionClient
+    {
     }
 }

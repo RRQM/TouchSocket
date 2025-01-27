@@ -15,23 +15,22 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+internal sealed class WebApiCallContext : CallContext, IWebApiCallContext
 {
-    internal sealed class WebApiCallContext : CallContext, IWebApiCallContext
+    public WebApiCallContext(object caller, RpcMethod rpcMethod, HttpContext httpContext, IResolver resolver) : base(caller, rpcMethod, resolver)
     {
-        public WebApiCallContext(object caller, RpcMethod rpcMethod, HttpContext httpContext, IResolver resolver) : base(caller, rpcMethod, resolver)
-        {
-            this.HttpContext = httpContext;
-        }
-
-        public void SetParameters(object[] ps)
-        {
-            base.Parameters = ps;
-        }
-
-        /// <inheritdoc/>
-        public HttpContext HttpContext { get; }
-
-        public Exception Exception { get; set; }
+        this.HttpContext = httpContext;
     }
+
+    public void SetParameters(object[] ps)
+    {
+        base.Parameters = ps;
+    }
+
+    /// <inheritdoc/>
+    public HttpContext HttpContext { get; }
+
+    public Exception Exception { get; set; }
 }

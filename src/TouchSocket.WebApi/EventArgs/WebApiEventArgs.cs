@@ -13,70 +13,69 @@
 using TouchSocket.Core;
 using TouchSocket.Http;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 提供Web API事件参数的类
+/// </summary>
+public partial class WebApiEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 提供Web API事件参数的类
+    /// 初始化WebApiEventArgs类的新实例
     /// </summary>
-    public partial class WebApiEventArgs : PluginEventArgs
+    /// <param name="request">表示HTTP请求的对象</param>
+    /// <param name="response">表示HTTP响应的对象</param>
+    public WebApiEventArgs(HttpRequest request, HttpResponse response)
     {
-        /// <summary>
-        /// 初始化WebApiEventArgs类的新实例
-        /// </summary>
-        /// <param name="request">表示HTTP请求的对象</param>
-        /// <param name="response">表示HTTP响应的对象</param>
-        public WebApiEventArgs(HttpRequest request, HttpResponse response)
-        {
-            this.Request = request;
-            this.Response = response;
-            this.IsHttpMessage = false;
-        }
-
-        /// <summary>
-        /// 获取或设置一个值，该值指示是否以HttpMessage方式请求
-        /// </summary>
-        public bool IsHttpMessage { get; set; }
-
-        /// <summary>
-        /// 获取HTTP请求对象
-        /// </summary>
-        public HttpRequest Request { get; }
-
-        /// <summary>
-        /// 获取HTTP响应对象
-        /// </summary>
-        public HttpResponse Response { get; }
+        this.Request = request;
+        this.Response = response;
+        this.IsHttpMessage = false;
     }
+
+    /// <summary>
+    /// 获取或设置一个值，该值指示是否以HttpMessage方式请求
+    /// </summary>
+    public bool IsHttpMessage { get; set; }
+
+    /// <summary>
+    /// 获取HTTP请求对象
+    /// </summary>
+    public HttpRequest Request { get; }
+
+    /// <summary>
+    /// 获取HTTP响应对象
+    /// </summary>
+    public HttpResponse Response { get; }
+}
 
 #if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
 
+/// <summary>
+/// WebAPI事件参数类，用于封装HTTP请求和响应信息
+/// </summary>
+public partial class WebApiEventArgs
+{
     /// <summary>
-    /// WebAPI事件参数类，用于封装HTTP请求和响应信息
+    /// Http请求
     /// </summary>
-    public partial class WebApiEventArgs
+    public System.Net.Http.HttpRequestMessage RequestMessage { get; }
+
+    /// <summary>
+    /// WebApiEventArgs
+    /// </summary>
+    /// <param name="requestMessage">HTTP请求消息</param>
+    /// <param name="responseMessage">HTTP响应消息</param>
+    public WebApiEventArgs(System.Net.Http.HttpRequestMessage requestMessage, System.Net.Http.HttpResponseMessage responseMessage)
     {
-        /// <summary>
-        /// Http请求
-        /// </summary>
-        public System.Net.Http.HttpRequestMessage RequestMessage { get; }
-
-        /// <summary>
-        /// WebApiEventArgs
-        /// </summary>
-        /// <param name="requestMessage">HTTP请求消息</param>
-        /// <param name="responseMessage">HTTP响应消息</param>
-        public WebApiEventArgs(System.Net.Http.HttpRequestMessage requestMessage, System.Net.Http.HttpResponseMessage responseMessage)
-        {
-            this.RequestMessage = requestMessage;
-            this.ResponseMessage = responseMessage;
-            this.IsHttpMessage = true;
-        }
-
-        /// <summary>
-        /// Http响应
-        /// </summary>
-        public System.Net.Http.HttpResponseMessage ResponseMessage { get; }
+        this.RequestMessage = requestMessage;
+        this.ResponseMessage = responseMessage;
+        this.IsHttpMessage = true;
     }
 
-#endif
+    /// <summary>
+    /// Http响应
+    /// </summary>
+    public System.Net.Http.HttpResponseMessage ResponseMessage { get; }
 }
+
+#endif

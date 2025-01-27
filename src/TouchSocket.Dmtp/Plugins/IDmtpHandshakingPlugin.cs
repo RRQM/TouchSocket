@@ -13,23 +13,22 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
-{
+namespace TouchSocket.Dmtp;
 
+
+/// <summary>
+/// IDmtpHandshakingPlugin接口定义了插件在Dmtp握手过程中需要实现的方法。
+/// 它继承自IPlugin接口。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpHandshakingPlugin : IPlugin
+{
     /// <summary>
-    /// IDmtpHandshakingPlugin接口定义了插件在Dmtp握手过程中需要实现的方法。
-    /// 它继承自IPlugin接口。
+    /// 在Dmtp建立握手连接之前执行的操作。
+    /// 此方法允许插件在握手过程中进行自定义的验证或处理。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpHandshakingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在Dmtp建立握手连接之前执行的操作。
-        /// 此方法允许插件在握手过程中进行自定义的验证或处理。
-        /// </summary>
-        /// <param name="client">正在与之建立握手连接的客户端对象。</param>
-        /// <param name="e">包含验证过程中需要的信息的事件参数。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e);
-    }
+    /// <param name="client">正在与之建立握手连接的客户端对象。</param>
+    /// <param name="e">包含验证过程中需要的信息的事件参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e);
 }

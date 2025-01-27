@@ -15,175 +15,174 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 手动IOC容器
+/// </summary>
+public abstract class ManualContainer : IContainer
 {
-    /// <summary>
-    /// 手动IOC容器
-    /// </summary>
-    public abstract class ManualContainer : IContainer
+    private readonly ConcurrentDictionary<string, object> m_singletonInstances = new ConcurrentDictionary<string, object>();
+
+    /// <inheritdoc/>
+    public IResolver BuildResolver()
     {
-        private readonly ConcurrentDictionary<string, object> m_singletonInstances = new ConcurrentDictionary<string, object>();
+        return this;
+    }
 
-        /// <inheritdoc/>
-        public IResolver BuildResolver()
-        {
-            return this;
-        }
+    /// <inheritdoc/>
+    public IScopedResolver CreateScopedResolver()
+    {
+        throw new NotImplementedException();
+    }
 
-        /// <inheritdoc/>
-        public IScopedResolver CreateScopedResolver()
-        {
-            throw new NotImplementedException();
-        }
+    /// <inheritdoc/>
+    public IEnumerable<DependencyDescriptor> GetDescriptors()
+    {
+        throw new NotImplementedException();
+    }
 
-        /// <inheritdoc/>
-        public IEnumerable<DependencyDescriptor> GetDescriptors()
-        {
-            throw new NotImplementedException();
-        }
+    /// <inheritdoc/>
+    public object GetService(Type serviceType)
+    {
+        return this.Resolve(serviceType);
+    }
 
-        /// <inheritdoc/>
-        public object GetService(Type serviceType)
-        {
-            return this.Resolve(serviceType);
-        }
+    /// <summary>
+    /// 判断指定的类型是否已在容器中注册。
+    /// <para>
+    /// 在本容器中，一般均会返回<see langword="true"/>。
+    /// </para>
+    /// </summary>
+    /// <param name="fromType"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public virtual bool IsRegistered(Type fromType, string key)
+    {
+        return true;
+    }
 
-        /// <summary>
-        /// 判断指定的类型是否已在容器中注册。
-        /// <para>
-        /// 在本容器中，一般均会返回<see langword="true"/>。
-        /// </para>
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public virtual bool IsRegistered(Type fromType, string key)
-        {
-            return true;
-        }
+    /// <summary>
+    /// 判断指定的类型是否已在容器中注册。
+    /// <para>
+    /// 在本容器中，一般均会返回<see langword="true"/>。
+    /// </para>
+    /// </summary>
+    /// <param name="fromType"></param>
+    /// <returns></returns>
+    public virtual bool IsRegistered(Type fromType)
+    {
+        return true;
+    }
 
-        /// <summary>
-        /// 判断指定的类型是否已在容器中注册。
-        /// <para>
-        /// 在本容器中，一般均会返回<see langword="true"/>。
-        /// </para>
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <returns></returns>
-        public virtual bool IsRegistered(Type fromType)
+    /// <summary>
+    /// 注册描述符。
+    /// <para>
+    /// 一般情况下，本容器只会处理单例实例模式。
+    /// </para>
+    /// </summary>
+    /// <param name="descriptor"></param>
+    /// <param name="key"></param>
+    public virtual void Register(DependencyDescriptor descriptor, string key)
+    {
+        if (descriptor.Lifetime == Lifetime.Singleton)
         {
-            return true;
-        }
-
-        /// <summary>
-        /// 注册描述符。
-        /// <para>
-        /// 一般情况下，本容器只会处理单例实例模式。
-        /// </para>
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <param name="key"></param>
-        public virtual void Register(DependencyDescriptor descriptor, string key)
-        {
-            if (descriptor.Lifetime == Lifetime.Singleton)
+            if (descriptor.ToInstance != null)
             {
-                if (descriptor.ToInstance != null)
-                {
-                    this.m_singletonInstances.AddOrUpdate($"{descriptor.FromType.FullName}{key}", descriptor.ToInstance, (k, v) => descriptor.ToInstance);
-                }
+                this.m_singletonInstances.AddOrUpdate($"{descriptor.FromType.FullName}{key}", descriptor.ToInstance, (k, v) => descriptor.ToInstance);
             }
         }
+    }
 
-        /// <summary>
-        /// 注册描述符。
-        /// <para>
-        /// 一般情况下，本容器只会处理单例实例模式。
-        /// </para>
-        /// </summary>
-        /// <param name="descriptor"></param>
-        public virtual void Register(DependencyDescriptor descriptor)
+    /// <summary>
+    /// 注册描述符。
+    /// <para>
+    /// 一般情况下，本容器只会处理单例实例模式。
+    /// </para>
+    /// </summary>
+    /// <param name="descriptor"></param>
+    public virtual void Register(DependencyDescriptor descriptor)
+    {
+        if (descriptor.Lifetime == Lifetime.Singleton)
         {
-            if (descriptor.Lifetime == Lifetime.Singleton)
+            if (descriptor.ToInstance != null)
             {
-                if (descriptor.ToInstance != null)
-                {
-                    this.m_singletonInstances.AddOrUpdate(descriptor.FromType.FullName, descriptor.ToInstance, (k, v) => descriptor.ToInstance);
-                }
+                this.m_singletonInstances.AddOrUpdate(descriptor.FromType.FullName, descriptor.ToInstance, (k, v) => descriptor.ToInstance);
             }
         }
+    }
 
-        /// <inheritdoc/>
-        /// <exception cref="Exception"></exception>
-        public object Resolve(Type fromType, string key)
-        {
-            return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
-                ? this
-                : this.TryResolve(fromType, out var instance, key)
-                ? instance
-                : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
-        }
+    /// <inheritdoc/>
+    /// <exception cref="Exception"></exception>
+    public object Resolve(Type fromType, string key)
+    {
+        return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
+            ? this
+            : this.TryResolve(fromType, out var instance, key)
+            ? instance
+            : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
+    }
 
-        /// <inheritdoc/>
-        /// <exception cref="Exception"></exception>
-        public object Resolve(Type fromType)
-        {
-            return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
-                ? this
-                : this.TryResolve(fromType, out var instance)
-                ? instance
-                : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
-        }
+    /// <inheritdoc/>
+    /// <exception cref="Exception"></exception>
+    public object Resolve(Type fromType)
+    {
+        return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
+            ? this
+            : this.TryResolve(fromType, out var instance)
+            ? instance
+            : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
+    }
 
-        /// <summary>
-        /// 默认不实现该功能
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <param name="key"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public virtual void Unregister(DependencyDescriptor descriptor, string key)
-        {
-            throw new NotImplementedException();
-        }
+    /// <summary>
+    /// 默认不实现该功能
+    /// </summary>
+    /// <param name="descriptor"></param>
+    /// <param name="key"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    public virtual void Unregister(DependencyDescriptor descriptor, string key)
+    {
+        throw new NotImplementedException();
+    }
 
-        /// <summary>
-        /// 默认不实现该功能
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public virtual void Unregister(DependencyDescriptor descriptor)
-        {
-            throw new NotImplementedException();
-        }
+    /// <summary>
+    /// 默认不实现该功能
+    /// </summary>
+    /// <param name="descriptor"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    public virtual void Unregister(DependencyDescriptor descriptor)
+    {
+        throw new NotImplementedException();
+    }
 
-        /// <summary>
-        /// 尝试解决Ioc容器所需类型。
-        /// <para>
-        /// 本方法仅实现了在单例实例注册下的获取。
-        /// </para>
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="instance"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        protected virtual bool TryResolve(Type fromType, out object instance, string key)
-        {
-            return key.IsNullOrEmpty()
-                ? this.m_singletonInstances.TryGetValue(fromType.FullName, out instance)
-                : this.m_singletonInstances.TryGetValue($"{fromType.FullName}{key}", out instance);
-        }
+    /// <summary>
+    /// 尝试解决Ioc容器所需类型。
+    /// <para>
+    /// 本方法仅实现了在单例实例注册下的获取。
+    /// </para>
+    /// </summary>
+    /// <param name="fromType"></param>
+    /// <param name="instance"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    protected virtual bool TryResolve(Type fromType, out object instance, string key)
+    {
+        return key.IsNullOrEmpty()
+            ? this.m_singletonInstances.TryGetValue(fromType.FullName, out instance)
+            : this.m_singletonInstances.TryGetValue($"{fromType.FullName}{key}", out instance);
+    }
 
-        /// <summary>
-        /// 尝试解决Ioc容器所需类型。
-        /// <para>
-        /// 本方法仅实现了在单例实例注册下的获取。
-        /// </para>
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="instance"></param>
-        /// <returns></returns>
-        protected virtual bool TryResolve(Type fromType, out object instance)
-        {
-            return this.m_singletonInstances.TryGetValue(fromType.FullName, out instance);
-        }
+    /// <summary>
+    /// 尝试解决Ioc容器所需类型。
+    /// <para>
+    /// 本方法仅实现了在单例实例注册下的获取。
+    /// </para>
+    /// </summary>
+    /// <param name="fromType"></param>
+    /// <param name="instance"></param>
+    /// <returns></returns>
+    protected virtual bool TryResolve(Type fromType, out object instance)
+    {
+        return this.m_singletonInstances.TryGetValue(fromType.FullName, out instance);
     }
 }

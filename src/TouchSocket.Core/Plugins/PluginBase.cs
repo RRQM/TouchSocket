@@ -10,39 +10,38 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// PluginBase
+/// </summary>
+public class PluginBase : DisposableObject, IPlugin
 {
+    private IPluginManager m_pluginManager;
+
     /// <summary>
-    /// PluginBase
+    /// 插件管理器
     /// </summary>
-    public class PluginBase : DisposableObject, IPlugin
+    public IPluginManager PluginManager => this.m_pluginManager;
+
+    void IPlugin.Unloaded(IPluginManager pluginManager)
     {
-        private IPluginManager m_pluginManager;
+        this.Unloaded(pluginManager);
+    }
 
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        public IPluginManager PluginManager => this.m_pluginManager;
+    void IPlugin.Loaded(IPluginManager pluginManager)
+    {
+        this.m_pluginManager = pluginManager;
+        this.Loaded(pluginManager);
+    }
 
-        void IPlugin.Unloaded(IPluginManager pluginManager)
-        {
-            this.Unloaded(pluginManager);
-        }
+    /// <inheritdoc cref="IPlugin.Loaded(IPluginManager)"/>
+    protected virtual void Loaded(IPluginManager pluginManager)
+    {
+    }
 
-        void IPlugin.Loaded(IPluginManager pluginManager)
-        {
-            this.m_pluginManager = pluginManager;
-            this.Loaded(pluginManager);
-        }
-
-        /// <inheritdoc cref="IPlugin.Loaded(IPluginManager)"/>
-        protected virtual void Loaded(IPluginManager pluginManager)
-        {
-        }
-
-        /// <inheritdoc cref="IPlugin.Unloaded(IPluginManager)"/>
-        protected virtual void Unloaded(IPluginManager pluginManager)
-        {
-        }
+    /// <inheritdoc cref="IPlugin.Unloaded(IPluginManager)"/>
+    protected virtual void Unloaded(IPluginManager pluginManager)
+    {
     }
 }

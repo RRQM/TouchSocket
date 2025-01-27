@@ -10,70 +10,69 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 可等待的路由包。
+/// </summary>
+public class WaitRouterPackage : MsgRouterPackage, IWaitResult
 {
+    /// <inheritdoc/>
+    public int Sign { get; set; }
+
+    /// <inheritdoc/>
+    public byte Status { get; set; }
+
     /// <summary>
-    /// 可等待的路由包。
+    /// 是否将<see cref="Sign"/>和<see cref="Status"/>等参数放置在Router中。
     /// </summary>
-    public class WaitRouterPackage : MsgRouterPackage, IWaitResult
+    protected virtual bool IncludedRouter { get; }
+
+    /// <inheritdoc/>
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <inheritdoc/>
-        public int Sign { get; set; }
-
-        /// <inheritdoc/>
-        public byte Status { get; set; }
-
-        /// <summary>
-        /// 是否将<see cref="Sign"/>和<see cref="Status"/>等参数放置在Router中。
-        /// </summary>
-        protected virtual bool IncludedRouter { get; }
-
-        /// <inheritdoc/>
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+        base.PackageBody(ref byteBlock);
+        if (this.IncludedRouter)
         {
-            base.PackageBody(ref byteBlock);
-            if (this.IncludedRouter)
-            {
-                return;
-            }
-
-            byteBlock.WriteInt32(this.Sign);
-            byteBlock.WriteByte(this.Status);
+            return;
         }
 
-        /// <inheritdoc/>
-        public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageRouter(ref byteBlock);
-            if (!this.IncludedRouter)
-            {
-                return;
-            }
+        byteBlock.WriteInt32(this.Sign);
+        byteBlock.WriteByte(this.Status);
+    }
 
-            byteBlock.WriteInt32(this.Sign);
-            byteBlock.WriteByte(this.Status);
+    /// <inheritdoc/>
+    public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.PackageRouter(ref byteBlock);
+        if (!this.IncludedRouter)
+        {
+            return;
         }
 
-        /// <inheritdoc/>
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            if (!this.IncludedRouter)
-            {
-                this.Sign = byteBlock.ReadInt32();
-                this.Status = byteBlock.ReadByte();
-            }
-        }
+        byteBlock.WriteInt32(this.Sign);
+        byteBlock.WriteByte(this.Status);
+    }
 
-        /// <inheritdoc/>
-        public override void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock)
+    /// <inheritdoc/>
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        if (!this.IncludedRouter)
         {
-            base.UnpackageRouter(ref byteBlock);
-            if (this.IncludedRouter)
-            {
-                this.Sign = byteBlock.ReadInt32();
-                this.Status = byteBlock.ReadByte();
-            }
+            this.Sign = byteBlock.ReadInt32();
+            this.Status = byteBlock.ReadByte();
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageRouter(ref byteBlock);
+        if (this.IncludedRouter)
+        {
+            this.Sign = byteBlock.ReadInt32();
+            this.Status = byteBlock.ReadByte();
         }
     }
 }

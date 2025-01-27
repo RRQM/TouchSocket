@@ -12,82 +12,81 @@
 
 using System.Xml.Linq;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 扩展XElement类，为其添加属性操作相关的方法。
+/// </summary>
+public static class XElementExtension
 {
     /// <summary>
-    /// 扩展XElement类，为其添加属性操作相关的方法。
+    /// 向指定的XElement元素添加一个属性。
     /// </summary>
-    public static class XElementExtension
+    /// <param name="element">要添加属性的XElement对象。</param>
+    /// <param name="name">要添加的属性的名称。</param>
+    /// <param name="value">要添加的属性的值。</param>
+    /// <remarks>
+    /// 此方法简化了向XElement对象添加属性的流程。
+    /// </remarks>
+    public static void AddAttribute(this XElement element, XName name, object value)
     {
-        /// <summary>
-        /// 向指定的XElement元素添加一个属性。
-        /// </summary>
-        /// <param name="element">要添加属性的XElement对象。</param>
-        /// <param name="name">要添加的属性的名称。</param>
-        /// <param name="value">要添加的属性的值。</param>
-        /// <remarks>
-        /// 此方法简化了向XElement对象添加属性的流程。
-        /// </remarks>
-        public static void AddAttribute(this XElement element, XName name, object value)
+        if (name is null)
         {
-            if (name is null)
-            {
-                ThrowHelper.ThrowArgumentNullException(nameof(name));
-            }
-
-            element.Add(new XAttribute(name, value ?? string.Empty));
+            ThrowHelper.ThrowArgumentNullException(nameof(name));
         }
 
-        /// <summary>
-        /// 获取指定名称的属性值，如果属性不存在或值为空，则返回默认值。
-        /// </summary>
-        /// <typeparam name="T">属性值的类型，必须是值类型。</typeparam>
-        /// <param name="xmlNode">要获取属性值的XElement对象。</param>
-        /// <param name="name">属性的名称。</param>
-        /// <param name="defaultValue">如果属性不存在或值为空时返回的默认值。</param>
-        /// <returns>属性值或默认值。</returns>
-        public static T GetAttributeValue<T>(this XElement xmlNode, XName name, T defaultValue) where T : unmanaged
-        {
-            var str = xmlNode.GetAttributeValue(name);
-            return str.IsNullOrEmpty() ? defaultValue : (T)StringExtension.ParseToType(str, typeof(T));
-        }
+        element.Add(new XAttribute(name, value ?? string.Empty));
+    }
 
-        /// <summary>
-        /// 获取指定名称的属性值，如果属性不存在，则返回默认值。
-        /// </summary>
-        /// <typeparam name="T">属性值的类型，必须是值类型。</typeparam>
-        /// <param name="xmlNode">要获取属性值的XElement对象。</param>
-        /// <param name="name">属性的名称。</param>
-        /// <returns>属性值或默认值。</returns>
-        /// <remarks>
-        /// 此方法重载了GetAttributeValue方法，用于在未指定默认值的情况下获取属性值。
-        /// </remarks>
-        public static T GetAttributeValue<T>(this XElement xmlNode, XName name) where T : unmanaged
-        {
-            return GetAttributeValue<T>(xmlNode, name, default);
-        }
+    /// <summary>
+    /// 获取指定名称的属性值，如果属性不存在或值为空，则返回默认值。
+    /// </summary>
+    /// <typeparam name="T">属性值的类型，必须是值类型。</typeparam>
+    /// <param name="xmlNode">要获取属性值的XElement对象。</param>
+    /// <param name="name">属性的名称。</param>
+    /// <param name="defaultValue">如果属性不存在或值为空时返回的默认值。</param>
+    /// <returns>属性值或默认值。</returns>
+    public static T GetAttributeValue<T>(this XElement xmlNode, XName name, T defaultValue) where T : unmanaged
+    {
+        var str = xmlNode.GetAttributeValue(name);
+        return str.IsNullOrEmpty() ? defaultValue : (T)StringExtension.ParseToType(str, typeof(T));
+    }
 
-        /// <summary>
-        /// 获取指定名称的属性值。
-        /// </summary>
-        /// <param name="xmlNode">要获取属性值的XElement对象。</param>
-        /// <param name="name">属性的名称。</param>
-        /// <returns>属性值，如果属性不存在则返回null。</returns>
-        public static string GetAttributeValue(this XElement xmlNode, XName name)
-        {
-            return xmlNode.Attribute(name)?.Value;
-        }
+    /// <summary>
+    /// 获取指定名称的属性值，如果属性不存在，则返回默认值。
+    /// </summary>
+    /// <typeparam name="T">属性值的类型，必须是值类型。</typeparam>
+    /// <param name="xmlNode">要获取属性值的XElement对象。</param>
+    /// <param name="name">属性的名称。</param>
+    /// <returns>属性值或默认值。</returns>
+    /// <remarks>
+    /// 此方法重载了GetAttributeValue方法，用于在未指定默认值的情况下获取属性值。
+    /// </remarks>
+    public static T GetAttributeValue<T>(this XElement xmlNode, XName name) where T : unmanaged
+    {
+        return GetAttributeValue<T>(xmlNode, name, default);
+    }
 
-        /// <summary>
-        /// 获取指定名称的属性值，如果属性不存在，则返回默认值。
-        /// </summary>
-        /// <param name="xmlNode">要获取属性值的XElement对象。</param>
-        /// <param name="name">属性的名称。</param>
-        /// <param name="defaultValue">如果属性不存在时返回的默认值。</param>
-        /// <returns>属性值或默认值。</returns>
-        public static string GetAttributeValue(this XElement xmlNode, XName name, string defaultValue)
-        {
-            return xmlNode.Attribute(name)?.Value ?? defaultValue;
-        }
+    /// <summary>
+    /// 获取指定名称的属性值。
+    /// </summary>
+    /// <param name="xmlNode">要获取属性值的XElement对象。</param>
+    /// <param name="name">属性的名称。</param>
+    /// <returns>属性值，如果属性不存在则返回null。</returns>
+    public static string GetAttributeValue(this XElement xmlNode, XName name)
+    {
+        return xmlNode.Attribute(name)?.Value;
+    }
+
+    /// <summary>
+    /// 获取指定名称的属性值，如果属性不存在，则返回默认值。
+    /// </summary>
+    /// <param name="xmlNode">要获取属性值的XElement对象。</param>
+    /// <param name="name">属性的名称。</param>
+    /// <param name="defaultValue">如果属性不存在时返回的默认值。</param>
+    /// <returns>属性值或默认值。</returns>
+    public static string GetAttributeValue(this XElement xmlNode, XName name, string defaultValue)
+    {
+        return xmlNode.Attribute(name)?.Value ?? defaultValue;
     }
 }

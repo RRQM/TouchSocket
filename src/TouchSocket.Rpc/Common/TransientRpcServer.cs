@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// TransientRpcServer
+/// </summary>
+public abstract class TransientRpcServer<TCallContext> : RpcServer, ITransientRpcServer where TCallContext : ICallContext
 {
-    /// <summary>
-    /// TransientRpcServer
-    /// </summary>
-    public abstract class TransientRpcServer<TCallContext> : RpcServer, ITransientRpcServer where TCallContext : ICallContext
-    {
-        ICallContext ITransientRpcServer.CallContext { get; set; }
-
-        /// <summary>
-        /// 调用上下文。
-        /// </summary>
-        protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient) ? Transient : default;
-    }
+    ICallContext ITransientRpcServer.CallContext { get; set; }
 
     /// <summary>
-    /// TransientRpcServer
+    /// 调用上下文。
     /// </summary>
-    public abstract class TransientRpcServer : RpcServer, ITransientRpcServer
-    {
-        ICallContext ITransientRpcServer.CallContext { get; set; }
+    protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient) ? Transient : default;
+}
 
-        /// <summary>
-        /// 调用上下文。
-        /// </summary>
-        protected ICallContext CallContext => ((ITransientRpcServer)this).CallContext;
-    }
+/// <summary>
+/// TransientRpcServer
+/// </summary>
+public abstract class TransientRpcServer : RpcServer, ITransientRpcServer
+{
+    ICallContext ITransientRpcServer.CallContext { get; set; }
+
+    /// <summary>
+    /// 调用上下文。
+    /// </summary>
+    protected ICallContext CallContext => ((ITransientRpcServer)this).CallContext;
 }

@@ -14,49 +14,48 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// Ssl配置
+/// </summary>
+public abstract class SslOption
 {
     /// <summary>
-    /// Ssl配置
+    /// 构造函数，初始化Ssl配置
     /// </summary>
-    public abstract class SslOption
+    public SslOption()
     {
-        /// <summary>
-        /// 构造函数，初始化Ssl配置
-        /// </summary>
-        public SslOption()
-        {
-            // 默认设置证书验证回调
-            this.CertificateValidationCallback = this.OnCertificateValidationCallback;
-        }
-
-        /// <summary>
-        /// 默认的证书验证回调实现
-        /// </summary>
-        /// <param name="sender">发送者对象</param>
-        /// <param name="certificate">客户端证书</param>
-        /// <param name="chain">证书链</param>
-        /// <param name="sslPolicyErrors">SSL策略错误</param>
-        /// <returns>总是返回true，表示接受证书</returns>
-        private bool OnCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
-        }
-
-        /// <summary>
-        /// 协议版本
-        /// </summary>
-        public SslProtocols SslProtocols { get; set; }
-
-        /// <summary>
-        /// 该值指定身份验证期间是否检查证书吊销列表
-        /// </summary>
-        public bool CheckCertificateRevocation { get; set; }
-
-        /// <summary>
-        /// SSL验证回调。
-        /// 用于自定义证书验证逻辑
-        /// </summary>
-        public RemoteCertificateValidationCallback CertificateValidationCallback { get; set; }
+        // 默认设置证书验证回调
+        this.CertificateValidationCallback = this.OnCertificateValidationCallback;
     }
+
+    /// <summary>
+    /// 默认的证书验证回调实现
+    /// </summary>
+    /// <param name="sender">发送者对象</param>
+    /// <param name="certificate">客户端证书</param>
+    /// <param name="chain">证书链</param>
+    /// <param name="sslPolicyErrors">SSL策略错误</param>
+    /// <returns>总是返回true，表示接受证书</returns>
+    private bool OnCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// 协议版本
+    /// </summary>
+    public SslProtocols SslProtocols { get; set; }
+
+    /// <summary>
+    /// 该值指定身份验证期间是否检查证书吊销列表
+    /// </summary>
+    public bool CheckCertificateRevocation { get; set; }
+
+    /// <summary>
+    /// SSL验证回调。
+    /// 用于自定义证书验证逻辑
+    /// </summary>
+    public RemoteCertificateValidationCallback CertificateValidationCallback { get; set; }
 }

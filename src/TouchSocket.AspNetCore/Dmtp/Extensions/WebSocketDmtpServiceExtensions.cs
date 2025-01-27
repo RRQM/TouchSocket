@@ -14,25 +14,24 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Dmtp.AspNetCore;
 
-namespace Microsoft.Extensions.DependencyInjection
-{
+namespace Microsoft.Extensions.DependencyInjection;
 
+
+/// <summary>
+/// 定义一个静态扩展类，提供与WebSocket相关的Dmtp服务扩展方法。
+/// 该类的目的是为了扩展WebSocket的功能，使其能够支持Dmtp协议相关的操作。
+/// </summary>
+public static class WebSocketDmtpServiceExtensions
+{
     /// <summary>
-    /// 定义一个静态扩展类，提供与WebSocket相关的Dmtp服务扩展方法。
-    /// 该类的目的是为了扩展WebSocket的功能，使其能够支持Dmtp协议相关的操作。
+    /// 添加<see cref="WebSocketDmtpService"/>服务。
     /// </summary>
-    public static class WebSocketDmtpServiceExtensions
+    /// <param name="services">要添加服务的<see cref="IServiceCollection"/>集合。</param>
+    /// <param name="configAction">用于配置<see cref="TouchSocketConfig"/>的配置操作。</param>
+    /// <returns>返回添加了<see cref="WebSocketDmtpService"/>服务的<see cref="IServiceCollection"/>集合。</returns>
+    public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection services, Action<TouchSocketConfig> configAction)
     {
-        /// <summary>
-        /// 添加<see cref="WebSocketDmtpService"/>服务。
-        /// </summary>
-        /// <param name="services">要添加服务的<see cref="IServiceCollection"/>集合。</param>
-        /// <param name="configAction">用于配置<see cref="TouchSocketConfig"/>的配置操作。</param>
-        /// <returns>返回添加了<see cref="WebSocketDmtpService"/>服务的<see cref="IServiceCollection"/>集合。</returns>
-        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection services, Action<TouchSocketConfig> configAction)
-        {
-            // 使用Singleton模式添加WebSocketDmtpService服务，并应用配置操作。
-            return services.AddSingletonSetupConfigObject<IWebSocketDmtpService, WebSocketDmtpService>(configAction);
-        }
+        // 使用Singleton模式添加WebSocketDmtpService服务，并应用配置操作。
+        return services.AddSingletonSetupConfigObject<IWebSocketDmtpService, WebSocketDmtpService>(configAction);
     }
 }

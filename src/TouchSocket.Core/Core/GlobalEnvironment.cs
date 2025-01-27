@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 全局环境设置
+/// </summary>
+public static class GlobalEnvironment
 {
     /// <summary>
-    /// 全局环境设置
+    /// 动态构建类型，默认使用IL
     /// </summary>
-    public static class GlobalEnvironment
-    {
-        /// <summary>
-        /// 动态构建类型，默认使用IL
-        /// </summary>
-        public static DynamicBuilderType DynamicBuilderType { get; set; } = DynamicBuilderType.IL;
-    }
+    public static DynamicBuilderType DynamicBuilderType { get; set; } = DynamicBuilderType.IL;
 }

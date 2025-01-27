@@ -12,80 +12,79 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 指定依赖类型。
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Parameter)]
+public class DependencyInjectAttribute : Attribute
 {
     /// <summary>
-    /// 指定依赖类型。
+    /// 默认注入配置
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Parameter)]
-    public class DependencyInjectAttribute : Attribute
+    public DependencyInjectAttribute()
     {
-        /// <summary>
-        /// 默认注入配置
-        /// </summary>
-        public DependencyInjectAttribute()
-        {
-        }
-
-        /// <summary>
-        /// 使用指定Key参数注入。
-        /// </summary>
-        /// <param name="key"></param>
-        public DependencyInjectAttribute(string key)
-        {
-            this.Key = key;
-        }
-
-        /// <summary>
-        /// 类型，Key指定性注入。
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="key"></param>
-        public DependencyInjectAttribute(Type type, string key)
-        {
-            this.Key = key;
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 类型，指定性注入。
-        /// </summary>
-        /// <param name="type"></param>
-        public DependencyInjectAttribute(Type type)
-        {
-            this.Key = string.Empty;
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 指定键。
-        /// </summary>
-        public string Key { get; }
-
-        /// <summary>
-        /// 注入类型
-        /// </summary>
-        public Type Type { get; }
     }
 
     /// <summary>
-    /// 指定依赖类型。
+    /// 使用指定Key参数注入。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class DependencyTypeAttribute : Attribute
+    /// <param name="key"></param>
+    public DependencyInjectAttribute(string key)
     {
-        /// <summary>
-        /// 初始化一个依赖类型。当确定某个类型仅以某种特定方式注入时，可以过滤不必要的注入操作，以提高效率。
-        /// </summary>
-        /// <param name="type">可以叠加位域</param>
-        public DependencyTypeAttribute(DependencyType type)
-        {
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 支持类型。
-        /// </summary>
-        public DependencyType Type { get; }
+        this.Key = key;
     }
+
+    /// <summary>
+    /// 类型，Key指定性注入。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="key"></param>
+    public DependencyInjectAttribute(Type type, string key)
+    {
+        this.Key = key;
+        this.Type = type;
+    }
+
+    /// <summary>
+    /// 类型，指定性注入。
+    /// </summary>
+    /// <param name="type"></param>
+    public DependencyInjectAttribute(Type type)
+    {
+        this.Key = string.Empty;
+        this.Type = type;
+    }
+
+    /// <summary>
+    /// 指定键。
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// 注入类型
+    /// </summary>
+    public Type Type { get; }
+}
+
+/// <summary>
+/// 指定依赖类型。
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class DependencyTypeAttribute : Attribute
+{
+    /// <summary>
+    /// 初始化一个依赖类型。当确定某个类型仅以某种特定方式注入时，可以过滤不必要的注入操作，以提高效率。
+    /// </summary>
+    /// <param name="type">可以叠加位域</param>
+    public DependencyTypeAttribute(DependencyType type)
+    {
+        this.Type = type;
+    }
+
+    /// <summary>
+    /// 支持类型。
+    /// </summary>
+    public DependencyType Type { get; }
 }

@@ -13,28 +13,27 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+
+/// <summary>
+/// 表示一个抽象类，用于实现RPC操作的过滤器属性。
+/// 继承自系统基类Attribute，并实现IRpcActionFilter接口。
+/// </summary>
+public abstract class RpcActionFilterAttribute : Attribute, IRpcActionFilter
 {
+    /// <inheritdoc/>
+    public virtual Type[] MutexAccessTypes => new Type[] { };
 
-    /// <summary>
-    /// 表示一个抽象类，用于实现RPC操作的过滤器属性。
-    /// 继承自系统基类Attribute，并实现IRpcActionFilter接口。
-    /// </summary>
-    public abstract class RpcActionFilterAttribute : Attribute, IRpcActionFilter
+    /// <inheritdoc/>
+    public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
     {
-        /// <inheritdoc/>
-        public virtual Type[] MutexAccessTypes => new Type[] { };
+        return Task.FromResult(invokeResult);
+    }
 
-        /// <inheritdoc/>
-        public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
-        {
-            return Task.FromResult(invokeResult);
-        }
-
-        /// <inheritdoc/>
-        public virtual Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
-        {
-            return Task.FromResult(invokeResult);
-        }
+    /// <inheritdoc/>
+    public virtual Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    {
+        return Task.FromResult(invokeResult);
     }
 }

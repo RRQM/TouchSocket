@@ -10,60 +10,58 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// HttpMethod
+/// </summary>
+[DebuggerDisplay("{m_value}")]
+public readonly record struct HttpMethod
 {
     /// <summary>
-    /// HttpMethod
+    /// 值
     /// </summary>
-    [DebuggerDisplay("{m_value}")]
-    public readonly record struct HttpMethod
+    private readonly string m_value;
+
+    /// <summary>
+    /// Get
+    /// </summary>
+    public static readonly HttpMethod Get = new HttpMethod("get");
+
+    /// <summary>
+    /// Post
+    /// </summary>
+    public static readonly HttpMethod Post = new HttpMethod("post");
+
+    /// <summary>
+    /// Put
+    /// </summary>
+    public static readonly HttpMethod Put = new HttpMethod("put");
+
+    /// <summary>
+    /// Delete
+    /// </summary>
+    public static readonly HttpMethod Delete = new HttpMethod("delete");
+
+    /// <summary>
+    /// 表示
+    /// </summary>
+    /// <param name="value">值</param>
+    public HttpMethod(string value)
     {
-        /// <summary>
-        /// 值
-        /// </summary>
-        private readonly string m_value;
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(value));
+        this.m_value = value.ToUpper();
+    }
 
-        /// <summary>
-        /// Get
-        /// </summary>
-        public static readonly HttpMethod Get = new HttpMethod("get");
-
-        /// <summary>
-        /// Post
-        /// </summary>
-        public static readonly HttpMethod Post = new HttpMethod("post");
-
-        /// <summary>
-        /// Put
-        /// </summary>
-        public static readonly HttpMethod Put = new HttpMethod("put");
-
-        /// <summary>
-        /// Delete
-        /// </summary>
-        public static readonly HttpMethod Delete = new HttpMethod("delete");
-
-        /// <summary>
-        /// 表示
-        /// </summary>
-        /// <param name="value">值</param>
-        public HttpMethod(string value)
-        {
-            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(value));
-            this.m_value = value.ToUpper();
-        }
-
-        /// <summary>
-        /// 转换为字符串
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return this.m_value;
-        }
+    /// <summary>
+    /// 转换为字符串
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return this.m_value;
     }
 }

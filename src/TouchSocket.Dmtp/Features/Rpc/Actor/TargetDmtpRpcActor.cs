@@ -14,30 +14,29 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// TargetDmtpRpcActor
+/// </summary>
+internal class TargetDmtpRpcActor : IRpcClient
 {
+    private readonly IDmtpRpcActor m_rpcActor;
+    private readonly string m_targetId;
+
     /// <summary>
-    /// TargetDmtpRpcActor
+    /// 构造函数
     /// </summary>
-    internal class TargetDmtpRpcActor : IRpcClient
+    /// <param name="targetId">目标标识符</param>
+    /// <param name="rpcActor">远程过程调用（RPC）行为接口</param>
+    public TargetDmtpRpcActor(string targetId, IDmtpRpcActor rpcActor)
     {
-        private readonly IDmtpRpcActor m_rpcActor;
-        private readonly string m_targetId;
+        this.m_targetId = targetId; // 初始化目标标识符
+        this.m_rpcActor = rpcActor; // 初始化RPC行为接口
+    }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="targetId">目标标识符</param>
-        /// <param name="rpcActor">远程过程调用（RPC）行为接口</param>
-        public TargetDmtpRpcActor(string targetId, IDmtpRpcActor rpcActor)
-        {
-            this.m_targetId = targetId; // 初始化目标标识符
-            this.m_rpcActor = rpcActor; // 初始化RPC行为接口
-        }
-
-        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
-        }
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        return this.m_rpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }
 }

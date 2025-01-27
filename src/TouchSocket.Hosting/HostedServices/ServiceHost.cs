@@ -19,36 +19,35 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Hosting.Sockets.HostService
+namespace TouchSocket.Hosting.Sockets.HostService;
+
+internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IServiceBase
 {
-    internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IServiceBase
+    private ILogger<ServiceHost<TService>> m_logger;
+
+    protected override void OnSetResolver(IResolver resolver)
     {
-        private ILogger<ServiceHost<TService>> m_logger;
+        base.OnSetResolver(resolver);
+        this.m_logger = resolver.GetService<ILogger<ServiceHost<TService>>>();
+    }
 
-        protected override void OnSetResolver(IResolver resolver)
+    public override async Task StartAsync(CancellationToken cancellationToken)
+    {
+        try
         {
-            base.OnSetResolver(resolver);
-            this.m_logger = resolver.GetService<ILogger<ServiceHost<TService>>>();
-        }
+            await base.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ConfigObject.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+            this.m_logger.LogInformation("{Message}", TouchSocketHostingResource.HostServerStarted);
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                await base.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                await this.ConfigObject.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                this.m_logger.LogInformation("{Message}", TouchSocketHostingResource.HostServerStarted);
-            }
-            catch (Exception ex)
-            {
-                this.m_logger.LogError(ex, "{Message}", ex.Message);
-            }
+            this.m_logger.LogError(ex, "{Message}", ex.Message);
         }
+    }
 
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await this.ConfigObject.StopAsync();
-        }
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await this.ConfigObject.StopAsync();
     }
 }

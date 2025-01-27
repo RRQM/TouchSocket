@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 请求解析对象接口。
-    /// </summary>
-    public interface IRequestInfo
-    {
+namespace TouchSocket.Core;
 
-    }
+/// <summary>
+/// 请求解析对象接口。
+/// </summary>
+public interface IRequestInfo
+{
+
 }

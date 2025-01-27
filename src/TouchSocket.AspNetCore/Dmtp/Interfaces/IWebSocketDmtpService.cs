@@ -14,19 +14,18 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.AspNetCore
-{
+namespace TouchSocket.Dmtp.AspNetCore;
 
+
+/// <summary>
+/// 定义一个接口，用于通过WebSocket提供Dmtp服务
+/// </summary>
+public interface IWebSocketDmtpService : IDmtpService, IConnectableService<WebSocketDmtpSessionClient>
+{
     /// <summary>
-    /// 定义一个接口，用于通过WebSocket提供Dmtp服务
+    /// 转换客户端
     /// </summary>
-    public interface IWebSocketDmtpService : IDmtpService, IConnectableService<WebSocketDmtpSessionClient>
-    {
-        /// <summary>
-        /// 转换客户端
-        /// </summary>
-        /// <param name="context">HTTP上下文，包含有关当前请求的所有信息</param>
-        /// <returns>一个任务，表示异步操作的结果</returns>
-        Task SwitchClientAsync(HttpContext context);
-    }
+    /// <param name="context">HTTP上下文，包含有关当前请求的所有信息</param>
+    /// <returns>一个任务，表示异步操作的结果</returns>
+    Task SwitchClientAsync(HttpContext context);
 }

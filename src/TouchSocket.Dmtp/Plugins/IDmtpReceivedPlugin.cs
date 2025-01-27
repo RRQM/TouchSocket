@@ -13,21 +13,20 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义了一个插件接口，该插件用于处理接收到的Dmtp消息。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpReceivedPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了一个插件接口，该插件用于处理接收到的Dmtp消息。
+    /// 当接收到DmtpMessage数据时触发。
+    /// 此方法允许插件处理通过Dmtp协议收到的消息。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpReceivedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当接收到DmtpMessage数据时触发。
-        /// 此方法允许插件处理通过Dmtp协议收到的消息。
-        /// </summary>
-        /// <param name="client">发送消息的客户端对象，实现了IDmtpActorObject接口。</param>
-        /// <param name="e">包含收到消息的详细信息的事件参数。</param>
-        /// <returns>一个Task对象，表明该方法是一个异步操作。</returns>
-        Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e);
-    }
+    /// <param name="client">发送消息的客户端对象，实现了IDmtpActorObject接口。</param>
+    /// <param name="e">包含收到消息的详细信息的事件参数。</param>
+    /// <returns>一个Task对象，表明该方法是一个异步操作。</returns>
+    Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e);
 }

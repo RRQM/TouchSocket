@@ -10,36 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 等待数据状态
+/// </summary>
+public enum WaitDataStatus : byte
 {
     /// <summary>
-    /// 等待数据状态
+    /// 默认
     /// </summary>
-    public enum WaitDataStatus : byte
-    {
-        /// <summary>
-        /// 默认
-        /// </summary>
-        Default,
+    Default,
 
-        /// <summary>
-        /// 收到信号运行
-        /// </summary>
-        SetRunning,
+    /// <summary>
+    /// 收到信号运行
+    /// </summary>
+    SetRunning,
 
-        /// <summary>
-        /// 超时
-        /// </summary>
-        Overtime,
+    /// <summary>
+    /// 超时
+    /// </summary>
+    Overtime,
 
-        /// <summary>
-        /// 已取消
-        /// </summary>
-        Canceled,
+    /// <summary>
+    /// 已取消
+    /// </summary>
+    Canceled,
 
-        /// <summary>
-        /// 已释放
-        /// </summary>
-        Disposed
-    }
+    /// <summary>
+    /// 已释放
+    /// </summary>
+    Disposed
 }

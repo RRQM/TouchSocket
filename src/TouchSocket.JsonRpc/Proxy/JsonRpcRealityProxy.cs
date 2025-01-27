@@ -18,26 +18,25 @@ using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// JsonRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="TClient"></typeparam>
+public abstract class JsonRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
 {
-    /// <summary>
-    /// JsonRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class JsonRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
-    {
 
-    }
+}
 
-    /// <summary>
-    /// JsonRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class JsonRpcRealityProxy<T> : JsonRpcRealityProxy<T, IJsonRpcClient>
-    {
+/// <summary>
+/// JsonRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class JsonRpcRealityProxy<T> : JsonRpcRealityProxy<T, IJsonRpcClient>
+{
 
-    }
 }
 
 #endif

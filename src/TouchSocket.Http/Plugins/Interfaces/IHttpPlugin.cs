@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// IHttpPlugin
+/// </summary>
+[DynamicMethod]
+public interface IHttpPlugin : IPlugin
 {
     /// <summary>
-    /// IHttpPlugin
+    /// 在收到Http请求。
     /// </summary>
-    [DynamicMethod]
-    public interface IHttpPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在收到Http请求。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e);
-    }
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e);
 }

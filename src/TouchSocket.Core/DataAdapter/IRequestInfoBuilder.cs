@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 指示<see cref="IRequestInfo"/>应当如何构建
-    /// </summary>
-    public interface IRequestInfoBuilder : IRequestInfo, IByteBlockBuilder
-    {
+namespace TouchSocket.Core;
 
-    }
+/// <summary>
+/// 指示<see cref="IRequestInfo"/>应当如何构建
+/// </summary>
+public interface IRequestInfoBuilder : IRequestInfo, IByteBlockBuilder
+{
+
 }

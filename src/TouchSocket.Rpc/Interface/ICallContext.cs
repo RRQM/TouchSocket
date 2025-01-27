@@ -13,43 +13,42 @@
 using System.Threading;
 using TouchSocket.Core;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc调用上下文
+/// </summary>
+public interface ICallContext : IResolverObject, IDependencyObject
 {
     /// <summary>
-    /// Rpc调用上下文
+    /// 调用此服务的主体。
+    /// <para>
+    /// <list type="bullet">
+    /// <item>当该服务在ITcpService及派生中调用时，该值一般为ISessionClient对象。</item>
+    /// <item>当该服务在ITcpClient及派生中调用时，该值一般为ITcpClient对象。</item>
+    /// </list>
+    /// </para>
     /// </summary>
-    public interface ICallContext : IResolverObject, IDependencyObject
-    {
-        /// <summary>
-        /// 调用此服务的主体。
-        /// <para>
-        /// <list type="bullet">
-        /// <item>当该服务在ITcpService及派生中调用时，该值一般为ISessionClient对象。</item>
-        /// <item>当该服务在ITcpClient及派生中调用时，该值一般为ITcpClient对象。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        object Caller { get; }
+    object Caller { get; }
 
-        /// <summary>
-        /// 本次调用的<see cref="RpcMethod"/>
-        /// </summary>
-        RpcMethod RpcMethod { get; }
+    /// <summary>
+    /// 本次调用的<see cref="RpcMethod"/>
+    /// </summary>
+    RpcMethod RpcMethod { get; }
 
-        /// <summary>
-        /// 可取消的调用令箭
-        /// </summary>
-        CancellationToken Token { get; }
+    /// <summary>
+    /// 可取消的调用令箭
+    /// </summary>
+    CancellationToken Token { get; }
 
-        /// <summary>
-        /// 执行取消<see cref="ICallContext.Token"/>。
-        /// </summary>
-        /// <returns></returns>
-        void Cancel();
+    /// <summary>
+    /// 执行取消<see cref="ICallContext.Token"/>。
+    /// </summary>
+    /// <returns></returns>
+    void Cancel();
 
-        /// <summary>
-        /// 调用参数
-        /// </summary>
-        object[] Parameters { get; }
-    }
+    /// <summary>
+    /// 调用参数
+    /// </summary>
+    object[] Parameters { get; }
 }

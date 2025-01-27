@@ -18,15 +18,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// TouchSocketJsonRpcSourceGenerationContext
+/// </summary>
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(object))]
+internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
 {
-    /// <summary>
-    /// TouchSocketJsonRpcSourceGenerationContext
-    /// </summary>
-    [JsonSourceGenerationOptions(WriteIndented = true)]
-    [JsonSerializable(typeof(object))]
-    internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
-    {
-    }
 }
 #endif

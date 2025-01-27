@@ -14,19 +14,18 @@ using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// IgnoreCaseNameValueCollection
+/// </summary>
+[DebuggerTypeProxy(typeof(NameValueCollectionDebugView))]
+public class IgnoreCaseNameValueCollection : NameValueCollection
 {
     /// <summary>
     /// IgnoreCaseNameValueCollection
     /// </summary>
-    [DebuggerTypeProxy(typeof(NameValueCollectionDebugView))]
-    public class IgnoreCaseNameValueCollection : NameValueCollection
+    public IgnoreCaseNameValueCollection() : base(StringComparer.OrdinalIgnoreCase)
     {
-        /// <summary>
-        /// IgnoreCaseNameValueCollection
-        /// </summary>
-        public IgnoreCaseNameValueCollection() : base(StringComparer.OrdinalIgnoreCase)
-        {
-        }
     }
 }

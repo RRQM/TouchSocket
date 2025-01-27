@@ -10,24 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+
+/// <summary>
+/// 定义了一个泛型接口，用于创建和管理同步数据接收器客户端
+/// </summary>
+/// <typeparam name="TResult">接收结果的类型，必须继承自<see cref="IReceiverResult"/>接口</typeparam>
+public interface IReceiverClient<TResult> where TResult : IReceiverResult
 {
+    /// <summary>
+    /// 获取一个同步数据接收器
+    /// </summary>
+    /// <returns>返回一个IReceiver接口实例，用于接收类型为TResult的数据</returns>
+    IReceiver<TResult> CreateReceiver();
 
     /// <summary>
-    /// 定义了一个泛型接口，用于创建和管理同步数据接收器客户端
+    /// 移除同步数据接收器
     /// </summary>
-    /// <typeparam name="TResult">接收结果的类型，必须继承自<see cref="IReceiverResult"/>接口</typeparam>
-    public interface IReceiverClient<TResult> where TResult : IReceiverResult
-    {
-        /// <summary>
-        /// 获取一个同步数据接收器
-        /// </summary>
-        /// <returns>返回一个IReceiver接口实例，用于接收类型为TResult的数据</returns>
-        IReceiver<TResult> CreateReceiver();
-
-        /// <summary>
-        /// 移除同步数据接收器
-        /// </summary>
-        void ClearReceiver();
-    }
+    void ClearReceiver();
 }

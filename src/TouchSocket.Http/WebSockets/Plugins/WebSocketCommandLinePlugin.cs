@@ -17,122 +17,121 @@ using System.Reflection;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WS命令行插件。
+/// </summary>
+public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
 {
+    private readonly ILog m_logger;
+    private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, Method>();
+
     /// <summary>
-    /// WS命令行插件。
+    /// WSCommandLinePlugin
     /// </summary>
-    public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
+    /// <param name="logger"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    protected WebSocketCommandLinePlugin(ILog logger)
     {
-        private readonly ILog m_logger;
-        private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, Method>();
-
-        /// <summary>
-        /// WSCommandLinePlugin
-        /// </summary>
-        /// <param name="logger"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        protected WebSocketCommandLinePlugin(ILog logger)
+        this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(), new JsonStringToClassSerializerFormatter<object>());
+        var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
+        foreach (var item in ms)
         {
-            this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(), new JsonStringToClassSerializerFormatter<object>());
-            var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
-            foreach (var item in ms)
+            this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
+        }
+    }
+
+    /// <summary>
+    /// 字符串转换器，默认支持基础类型和Json。可以自定义。
+    /// </summary>
+    public StringSerializerConverter Converter { get; }
+
+    /// <summary>
+    /// 是否返回执行异常。
+    /// </summary>
+    public bool ReturnException { get; set; } = true;
+
+    /// <summary>
+    /// 当有执行异常时，不返回异常。
+    /// </summary>
+    /// <returns></returns>
+    public WebSocketCommandLinePlugin NoReturnException()
+    {
+        this.ReturnException = false;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
+    {
+        if (e.DataFrame.Opcode != WSDataType.Text)
+        {
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
+        }
+        var strs = e.DataFrame.ToText().Split(' ');
+        if (!this.m_pairs.TryGetValue(strs[0], out var method))
+        {
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
+        }
+        var ps = method.Info.GetParameters();
+        var os = new object[ps.Length];
+        var index = 0;
+        for (var i = 0; i < ps.Length; i++)
+        {
+            if (ps[i].ParameterType.IsInterface)
             {
-                this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
+                if (typeof(IHttpSession).IsAssignableFrom(ps[i].ParameterType))
+                {
+                    os[i] = webSocket.Client;
+                }
+                else if (typeof(IWebSocket).IsAssignableFrom(ps[i].ParameterType))
+                {
+                    os[i] = webSocket;
+                }
+            }
+            else
+            {
+                os[i] = this.Converter.Deserialize(null, strs[index + 1], ps[i].ParameterType);
+                index++;
             }
         }
 
-        /// <summary>
-        /// 字符串转换器，默认支持基础类型和Json。可以自定义。
-        /// </summary>
-        public StringSerializerConverter Converter { get; }
+        e.Handled = true;
 
-        /// <summary>
-        /// 是否返回执行异常。
-        /// </summary>
-        public bool ReturnException { get; set; } = true;
-
-        /// <summary>
-        /// 当有执行异常时，不返回异常。
-        /// </summary>
-        /// <returns></returns>
-        public WebSocketCommandLinePlugin NoReturnException()
+        try
         {
-            this.ReturnException = false;
-            return this;
+            object result;
+            switch (method.TaskType)
+            {
+                case TaskReturnType.Task:
+                    await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    result = default;
+                    break;
+
+                case TaskReturnType.TaskObject:
+                    result = await method.InvokeObjectAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
+
+                case TaskReturnType.None:
+                default:
+                    result = method.Invoke(this, os);
+                    break;
+            }
+
+            if (method.HasReturn)
+            {
+                await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
-
-        /// <inheritdoc/>
-        public async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
+        catch (Exception ex)
         {
-            if (e.DataFrame.Opcode != WSDataType.Text)
+            if (this.ReturnException)
             {
-                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return;
-            }
-            var strs = e.DataFrame.ToText().Split(' ');
-            if (!this.m_pairs.TryGetValue(strs[0], out var method))
-            {
-                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return;
-            }
-            var ps = method.Info.GetParameters();
-            var os = new object[ps.Length];
-            var index = 0;
-            for (var i = 0; i < ps.Length; i++)
-            {
-                if (ps[i].ParameterType.IsInterface)
-                {
-                    if (typeof(IHttpSession).IsAssignableFrom(ps[i].ParameterType))
-                    {
-                        os[i] = webSocket.Client;
-                    }
-                    else if (typeof(IWebSocket).IsAssignableFrom(ps[i].ParameterType))
-                    {
-                        os[i] = webSocket;
-                    }
-                }
-                else
-                {
-                    os[i] = this.Converter.Deserialize(null, strs[index + 1], ps[i].ParameterType);
-                    index++;
-                }
-            }
-
-            e.Handled = true;
-
-            try
-            {
-                object result;
-                switch (method.TaskType)
-                {
-                    case TaskReturnType.Task:
-                        await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        result = default;
-                        break;
-
-                    case TaskReturnType.TaskObject:
-                        result = await method.InvokeObjectAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        break;
-
-                    case TaskReturnType.None:
-                    default:
-                        result = method.Invoke(this, os);
-                        break;
-                }
-
-                if (method.HasReturn)
-                {
-                    await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (this.ReturnException)
-                {
-                    await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
+                await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

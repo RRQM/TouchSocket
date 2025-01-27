@@ -12,48 +12,47 @@
 
 using System;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 调用结果
+/// </summary>
+public sealed class InvokeResult
 {
     /// <summary>
-    /// 调用结果
+    /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
     /// </summary>
-    public sealed class InvokeResult
+    /// <param name="status">调用状态。</param>
+    public InvokeResult(InvokeStatus status)
     {
-        /// <summary>
-        /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
-        /// </summary>
-        /// <param name="status">调用状态。</param>
-        public InvokeResult(InvokeStatus status)
-        {
-            this.Status = status;
-            this.Message = status.ToString();
-        }
-
-        /// <summary>
-        /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
-        /// </summary>
-        public InvokeResult()
-        {
-        }
-
-        /// <summary>
-        /// 异常
-        /// </summary>
-        public Exception Exception { get; set; }
-
-        /// <summary>
-        /// 信息
-        /// </summary>
-        public string Message { get; set; }
-
-        /// <summary>
-        /// 执行返回值结果
-        /// </summary>
-        public object Result { get; set; }
-
-        /// <summary>
-        /// 状态
-        /// </summary>
-        public InvokeStatus Status { get; set; }
+        this.Status = status;
+        this.Message = status.ToString();
     }
+
+    /// <summary>
+    /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
+    /// </summary>
+    public InvokeResult()
+    {
+    }
+
+    /// <summary>
+    /// 异常
+    /// </summary>
+    public Exception Exception { get; set; }
+
+    /// <summary>
+    /// 信息
+    /// </summary>
+    public string Message { get; set; }
+
+    /// <summary>
+    /// 执行返回值结果
+    /// </summary>
+    public object Result { get; set; }
+
+    /// <summary>
+    /// 状态
+    /// </summary>
+    public InvokeStatus Status { get; set; }
 }

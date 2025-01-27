@@ -13,46 +13,45 @@
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 表示Web API的映射方法。
+/// </summary>
+public readonly struct MappingMethod
 {
     /// <summary>
-    /// 表示Web API的映射方法。
+    /// 初始化<see cref="MappingMethod"/>结构的新实例。
     /// </summary>
-    public readonly struct MappingMethod
+    /// <param name="url">映射方法的URL。</param>
+    /// <param name="httpMethod">映射方法的HTTP方法。</param>
+    /// <param name="rpcMethod">映射方法的RPC方法。</param>
+    /// <param name="isRegex">指示URL是否为正则表达式。</param>
+    public MappingMethod(string url, HttpMethod httpMethod, RpcMethod rpcMethod, bool isRegex)
     {
-        /// <summary>
-        /// 初始化<see cref="MappingMethod"/>结构的新实例。
-        /// </summary>
-        /// <param name="url">映射方法的URL。</param>
-        /// <param name="httpMethod">映射方法的HTTP方法。</param>
-        /// <param name="rpcMethod">映射方法的RPC方法。</param>
-        /// <param name="isRegex">指示URL是否为正则表达式。</param>
-        public MappingMethod(string url, HttpMethod httpMethod, RpcMethod rpcMethod, bool isRegex)
-        {
-            this.Url = url;
-            this.HttpMethod = httpMethod;
-            this.RpcMethod = rpcMethod;
-            this.IsRegex = isRegex;
-        }
-
-        /// <summary>
-        /// 获取映射方法的URL。
-        /// </summary>
-        public string Url { get; }
-
-        /// <summary>
-        /// 获取映射方法的HTTP方法。
-        /// </summary>
-        public HttpMethod HttpMethod { get; }
-
-        /// <summary>
-        /// 获取映射方法的RPC方法。
-        /// </summary>
-        public RpcMethod RpcMethod { get; }
-
-        /// <summary>
-        /// 获取一个值，该值指示URL是否为正则表达式。
-        /// </summary>
-        public bool IsRegex { get; }
+        this.Url = url;
+        this.HttpMethod = httpMethod;
+        this.RpcMethod = rpcMethod;
+        this.IsRegex = isRegex;
     }
+
+    /// <summary>
+    /// 获取映射方法的URL。
+    /// </summary>
+    public string Url { get; }
+
+    /// <summary>
+    /// 获取映射方法的HTTP方法。
+    /// </summary>
+    public HttpMethod HttpMethod { get; }
+
+    /// <summary>
+    /// 获取映射方法的RPC方法。
+    /// </summary>
+    public RpcMethod RpcMethod { get; }
+
+    /// <summary>
+    /// 获取一个值，该值指示URL是否为正则表达式。
+    /// </summary>
+    public bool IsRegex { get; }
 }

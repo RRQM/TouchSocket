@@ -13,30 +13,29 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+internal class WaitFileSection : WaitRouterPackage, IDisposable
 {
-    internal class WaitFileSection : WaitRouterPackage, IDisposable
+    public FileSection FileSection { get; set; }
+    public ByteBlock Value { get; set; }
+
+    public void Dispose()
     {
-        public FileSection FileSection { get; set; }
-        public ByteBlock Value { get; set; }
+        this.Value?.Dispose();
+    }
 
-        public void Dispose()
-        {
-            this.Value?.Dispose();
-        }
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.PackageBody(ref byteBlock);
+        byteBlock.WritePackage(this.FileSection);
+        byteBlock.WriteByteBlock(this.Value);
+    }
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WritePackage(this.FileSection);
-            byteBlock.WriteByteBlock(this.Value);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.FileSection = byteBlock.ReadPackage<FileSection>();
-            this.Value = byteBlock.ReadByteBlock();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.FileSection = byteBlock.ReadPackage<FileSection>();
+        this.Value = byteBlock.ReadByteBlock();
     }
 }

@@ -14,20 +14,19 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WebSocketClientExtension
+/// </summary>
+public static class WebSocketClientExtension
 {
-    /// <summary>
-    /// WebSocketClientExtension
-    /// </summary>
-    public static class WebSocketClientExtension
+    public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true)
     {
-        public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true)
+        using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })
         {
-            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })
-            {
-                frame.AppendBinary(memory.Span);
-                await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            frame.AppendBinary(memory.Span);
+            await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

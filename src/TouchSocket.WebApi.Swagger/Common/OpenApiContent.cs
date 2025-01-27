@@ -12,11 +12,10 @@
 
 using Newtonsoft.Json;
 
-namespace TouchSocket.WebApi.Swagger
+namespace TouchSocket.WebApi.Swagger;
+
+internal class OpenApiContent
 {
-    internal class OpenApiContent
-    {
-        [JsonProperty("schema")]
-        public OpenApiSchema Schema { get; set; }
-    }
+    [JsonProperty("schema")]
+    public OpenApiSchema Schema { get; set; }
 }

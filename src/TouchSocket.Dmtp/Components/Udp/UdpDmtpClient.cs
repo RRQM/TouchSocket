@@ -16,94 +16,93 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
 {
-    internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
+    private readonly EndPoint m_endPoint;
+    private readonly UdpDmtp m_udpSession;
+    private IPluginManager m_pluginManager;
+
+    /// <summary>
+    /// UdpDmtp终端客户端
+    /// </summary>
+    /// <param name="udpSession"></param>
+    /// <param name="endPoint"></param>
+    /// <param name="logger"></param>
+    public UdpDmtpClient(UdpDmtp udpSession, EndPoint endPoint, ILog logger) : base(false, false)
     {
-        private readonly EndPoint m_endPoint;
-        private readonly UdpDmtp m_udpSession;
-        private IPluginManager m_pluginManager;
+        this.Id = endPoint.ToString();
+        //this.OutputSend = this.RpcActorSend;
+        this.OutputSendAsync = this.RpcActorSendAsync;
+        this.CreatedChannel = this.OnDmtpActorCreatedChannel;
+        this.m_udpSession = udpSession;
+        this.m_endPoint = endPoint;
+        this.Logger = logger;
+        this.Client = this;
+    }
 
-        /// <summary>
-        /// UdpDmtp终端客户端
-        /// </summary>
-        /// <param name="udpSession"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="logger"></param>
-        public UdpDmtpClient(UdpDmtp udpSession, EndPoint endPoint, ILog logger) : base(false, false)
+    private async Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
+    {
+        await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.m_udpSession.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    public async Task<bool> CreatedAsync(IPluginManager pluginManager)
+    {
+        this.m_pluginManager = pluginManager;
+        var args = new DmtpVerifyEventArgs()
         {
-            this.Id = endPoint.ToString();
-            //this.OutputSend = this.RpcActorSend;
-            this.OutputSendAsync = this.RpcActorSendAsync;
-            this.CreatedChannel = this.OnDmtpActorCreatedChannel;
-            this.m_udpSession = udpSession;
-            this.m_endPoint = endPoint;
-            this.Logger = logger;
-            this.Client = this;
+            Id = this.Id,
+            IsPermitOperation = true
+        };
+        await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (args.IsPermitOperation == false)
+        {
+            return false;
         }
 
-        private async Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
+        this.Online = true;
+
+        args = new DmtpVerifyEventArgs()
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.m_udpSession.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+            Id = this.Id
+        };
+        await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        public async Task<bool> CreatedAsync(IPluginManager pluginManager)
-        {
-            this.m_pluginManager = pluginManager;
-            var args = new DmtpVerifyEventArgs()
-            {
-                Id = this.Id,
-                IsPermitOperation = true
-            };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return true;
+    }
 
-            if (args.IsPermitOperation == false)
-            {
-                return false;
-            }
+    /// <inheritdoc/>
+    public IDmtpActor DmtpActor => this;
 
-            this.Online = true;
+    /// <inheritdoc/>
+    public EndPoint EndPoint => this.m_endPoint;
 
-            args = new DmtpVerifyEventArgs()
-            {
-                Id = this.Id
-            };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    /// <inheritdoc/>
+    public UdpSessionBase UdpSession => this.m_udpSession;
 
-            return true;
-        }
+    /// <inheritdoc/>
+    public IResolver Resolver => this.m_udpSession.Resolver;
 
-        /// <inheritdoc/>
-        public IDmtpActor DmtpActor => this;
+    /// <summary>
+    /// 不支持该操作
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
+    public override Task ResetIdAsync(string id)
+    {
+        throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
+    }
 
-        /// <inheritdoc/>
-        public EndPoint EndPoint => this.m_endPoint;
+    //private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+    //{
+    //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
+    //}
 
-        /// <inheritdoc/>
-        public UdpSessionBase UdpSession => this.m_udpSession;
-
-        /// <inheritdoc/>
-        public IResolver Resolver => this.m_udpSession.Resolver;
-
-        /// <summary>
-        /// 不支持该操作
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
-        public override Task ResetIdAsync(string id)
-        {
-            throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
-        }
-
-        //private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-        //{
-        //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
-        //}
-
-        private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
-        {
-            return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory);
-        }
+    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    {
+        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory);
     }
 }

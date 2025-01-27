@@ -13,40 +13,39 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// JsonRpcParser解析器插件
+/// </summary>
+public abstract class JsonRpcParserPluginBase : PluginBase
 {
     /// <summary>
-    /// JsonRpcParser解析器插件
+    /// 获取RPC服务器提供程序。
     /// </summary>
-    public abstract class JsonRpcParserPluginBase : PluginBase
+    public IRpcServerProvider RpcServerProvider { get; }
+
+    /// <summary>
+    /// 获取动作映射。
+    /// </summary>
+    public ActionMap ActionMap { get; } = new ActionMap(true);
+
+    /// <summary>
+    /// 初始化 <see cref="JsonRpcParserPluginBase"/> 类的新实例。
+    /// </summary>
+    /// <param name="rpcServerProvider">RPC服务器提供程序。</param>
+    public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider)
     {
-        /// <summary>
-        /// 获取RPC服务器提供程序。
-        /// </summary>
-        public IRpcServerProvider RpcServerProvider { get; }
-
-        /// <summary>
-        /// 获取动作映射。
-        /// </summary>
-        public ActionMap ActionMap { get; } = new ActionMap(true);
-
-        /// <summary>
-        /// 初始化 <see cref="JsonRpcParserPluginBase"/> 类的新实例。
-        /// </summary>
-        /// <param name="rpcServerProvider">RPC服务器提供程序。</param>
-        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider)
+        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+        if (rpcServerProvider is not null)
         {
-            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
-            if (rpcServerProvider is not null)
-            {
-                this.RpcServerProvider = rpcServerProvider;
-                JsonRpcActor.AddRpcToMap(rpcServerProvider, this.ActionMap);
-            }
+            this.RpcServerProvider = rpcServerProvider;
+            JsonRpcActor.AddRpcToMap(rpcServerProvider, this.ActionMap);
         }
-
-        /// <summary>
-        /// 获取序列化转换器。
-        /// </summary>
-        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
     }
+
+    /// <summary>
+    /// 获取序列化转换器。
+    /// </summary>
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 }

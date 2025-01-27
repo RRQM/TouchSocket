@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// RpcPluginManagerExtension
+/// </summary>
+public static class RpcPluginManagerExtension
 {
-    /// <summary>
-    /// RpcPluginManagerExtension
-    /// </summary>
-    public static class RpcPluginManagerExtension
-    {
-    }
 }

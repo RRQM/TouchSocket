@@ -12,19 +12,18 @@
 
 using System;
 
-namespace TouchSocket.WebApi
-{
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
-    public sealed class RegexRouterAttribute : Attribute
-    {
-        /// <summary>
-        /// 路由模板。
-        /// </summary>
-        public string RegexTemple { get; }
+namespace TouchSocket.WebApi;
 
-        public RegexRouterAttribute(string regexTemple)
-        {
-            this.RegexTemple = regexTemple;
-        }
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+public sealed class RegexRouterAttribute : Attribute
+{
+    /// <summary>
+    /// 路由模板。
+    /// </summary>
+    public string RegexTemple { get; }
+
+    public RegexRouterAttribute(string regexTemple)
+    {
+        this.RegexTemple = regexTemple;
     }
 }

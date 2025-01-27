@@ -12,26 +12,25 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 连接验证
+/// </summary>
+public class DmtpVerifyEventArgs : MsgPermitEventArgs
 {
     /// <summary>
-    /// 连接验证
+    /// 令箭
     /// </summary>
-    public class DmtpVerifyEventArgs : MsgPermitEventArgs
-    {
-        /// <summary>
-        /// 令箭
-        /// </summary>
-        public string Token { get; set; }
+    public string Token { get; set; }
 
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
 
-        /// <summary>
-        /// 设定的初始化Id。
-        /// </summary>
-        public string Id { get; set; }
-    }
+    /// <summary>
+    /// 设定的初始化Id。
+    /// </summary>
+    public string Id { get; set; }
 }

@@ -17,54 +17,53 @@ using TouchSocket.Core;
 using System.Diagnostics.CodeAnalysis;
 #endif
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// ContainerExtension
+/// </summary>
+public static class RpcContainerExtension
 {
     /// <summary>
-    /// ContainerExtension
+    /// 向容器中添加<see cref="RpcStore"/>。
     /// </summary>
-    public static class RpcContainerExtension
+    /// <param name="registrator"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static IRegistrator AddRpcStore(this IRegistrator registrator, Action<RpcStore> action)
     {
-        /// <summary>
-        /// 向容器中添加<see cref="RpcStore"/>。
-        /// </summary>
-        /// <param name="registrator"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static IRegistrator AddRpcStore(this IRegistrator registrator, Action<RpcStore> action)
-        {
-            AddRpcServerProvider(registrator);
-            var rpcStore = new RpcStore(registrator);
-            action.Invoke(rpcStore);
-            registrator.RegisterSingleton(rpcStore);
-            return registrator;
-        }
+        AddRpcServerProvider(registrator);
+        var rpcStore = new RpcStore(registrator);
+        action.Invoke(rpcStore);
+        registrator.RegisterSingleton(rpcStore);
+        return registrator;
+    }
 
-        /// <summary>
-        /// 添加Rpc服务器提供者
-        /// </summary>
-        /// <typeparam name="TRpcServerProvider"></typeparam>
-        /// <param name="registrator"></param>
-        /// <returns></returns>
+    /// <summary>
+    /// 添加Rpc服务器提供者
+    /// </summary>
+    /// <typeparam name="TRpcServerProvider"></typeparam>
+    /// <param name="registrator"></param>
+    /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(CoreContainerExtension.DynamicallyAccessed)] TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
+    public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(CoreContainerExtension.DynamicallyAccessed)] TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
 #else
 
-        public static IRegistrator AddRpcServerProvider<TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
+    public static IRegistrator AddRpcServerProvider<TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
 #endif
 
-        {
-            registrator.RegisterSingleton<IRpcServerProvider, TRpcServerProvider>();
-            return registrator;
-        }
+    {
+        registrator.RegisterSingleton<IRpcServerProvider, TRpcServerProvider>();
+        return registrator;
+    }
 
-        /// <summary>
-        /// 添加默认Rpc服务器提供者
-        /// </summary>
-        /// <param name="registrator"></param>
-        /// <returns></returns>
-        public static IRegistrator AddRpcServerProvider(this IRegistrator registrator)
-        {
-            return AddRpcServerProvider<InternalRpcServerProvider>(registrator);
-        }
+    /// <summary>
+    /// 添加默认Rpc服务器提供者
+    /// </summary>
+    /// <param name="registrator"></param>
+    /// <returns></returns>
+    public static IRegistrator AddRpcServerProvider(this IRegistrator registrator)
+    {
+        return AddRpcServerProvider<InternalRpcServerProvider>(registrator);
     }
 }

@@ -13,21 +13,20 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
-{
+namespace TouchSocket.Dmtp.FileTransfer;
 
+
+/// <summary>
+/// 定义了一个插件接口，用于处理文件传输完成时的通知。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpFileTransferredPlugin : IPlugin
+{
     /// <summary>
-    /// 定义了一个插件接口，用于处理文件传输完成时的通知。
+    /// 当文件通过Dmtp协议传输完成时触发的事件处理程序。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpFileTransferredPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当文件通过Dmtp协议传输完成时触发的事件处理程序。
-        /// </summary>
-        /// <param name="client">发起文件传输的客户端对象。</param>
-        /// <param name="e">包含文件传输相关信息的事件参数。</param>
-        /// <returns>一个Task对象，标识异步操作的完成。</returns>
-        Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e);
-    }
+    /// <param name="client">发起文件传输的客户端对象。</param>
+    /// <param name="e">包含文件传输相关信息的事件参数。</param>
+    /// <returns>一个Task对象，标识异步操作的完成。</returns>
+    Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e);
 }

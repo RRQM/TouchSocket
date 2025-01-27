@@ -15,47 +15,46 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 周期包适配
+/// </summary>
+public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 {
-    /// <summary>
-    /// 周期包适配
-    /// </summary>
-    public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
+    private readonly ConcurrentQueue<byte[]> m_bytes = new ConcurrentQueue<byte[]>();
+    private long m_count;
+
+    /// <inheritdoc/>
+    protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        private readonly ConcurrentQueue<byte[]> m_bytes = new ConcurrentQueue<byte[]>();
-        private long m_count;
+        this.m_bytes.Enqueue(byteBlock.ToArray());
+        Interlocked.Increment(ref this.m_count);
+        Task.Run(this.DelayGo);
+        return EasyTask.CompletedTask;
+    }
 
-        /// <inheritdoc/>
-        protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
+    private async Task DelayGo()
+    {
+        await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (Interlocked.Decrement(ref this.m_count) == 0)
         {
-            this.m_bytes.Enqueue(byteBlock.ToArray());
-            Interlocked.Increment(ref this.m_count);
-            Task.Run(this.DelayGo);
-            return EasyTask.CompletedTask;
-        }
-
-        private async Task DelayGo()
-        {
-            await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (Interlocked.Decrement(ref this.m_count) == 0)
+            using (var byteBlock = new ByteBlock())
             {
-                using (var byteBlock = new ByteBlock())
+                while (this.m_bytes.TryDequeue(out var bytes))
                 {
-                    while (this.m_bytes.TryDequeue(out var bytes))
-                    {
-                        byteBlock.Write(bytes);
-                    }
+                    byteBlock.Write(bytes);
+                }
 
-                    byteBlock.SeekToStart();
+                byteBlock.SeekToStart();
 
-                    try
-                    {
-                        await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.OnError(ex, ex.Message, true, true);
-                    }
+                try
+                {
+                    await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                catch (Exception ex)
+                {
+                    this.OnError(ex, ex.Message, true, true);
                 }
             }
         }

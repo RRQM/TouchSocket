@@ -14,155 +14,154 @@ using Autofac;
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// AutofacContainer
+/// </summary>
+public class AutofacContainer : IRegistrator, IResolver
 {
+    private readonly ContainerBuilder m_containerBuilder;
+    private Autofac.IContainer m_serviceProvider;
+
     /// <summary>
     /// AutofacContainer
     /// </summary>
-    public class AutofacContainer : IRegistrator, IResolver
+    /// <param name="containerBuilder"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public AutofacContainer(ContainerBuilder containerBuilder)
     {
-        private readonly ContainerBuilder m_containerBuilder;
-        private Autofac.IContainer m_serviceProvider;
+        this.m_containerBuilder = containerBuilder ?? throw new ArgumentNullException(nameof(containerBuilder));
+        containerBuilder.RegisterInstance(this).As<IResolver>();
+    }
 
-        /// <summary>
-        /// AutofacContainer
-        /// </summary>
-        /// <param name="containerBuilder"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public AutofacContainer(ContainerBuilder containerBuilder)
+    /// <summary>
+    /// AutofacContainer
+    /// </summary>
+    /// <param name="container"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public AutofacContainer(Autofac.IContainer container)
+    {
+        this.m_serviceProvider = container ?? throw new ArgumentNullException(nameof(container));
+    }
+
+    /// <inheritdoc/>
+    public IResolver BuildResolver()
+    {
+        this.m_serviceProvider = this.m_containerBuilder.Build();
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<DependencyDescriptor> GetDescriptors()
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public bool IsRegistered(Type fromType, string key)
+    {
+        throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+    }
+
+    /// <inheritdoc/>
+    public bool IsRegistered(Type fromType)
+    {
+        if (typeof(IResolver) == fromType)
         {
-            this.m_containerBuilder = containerBuilder ?? throw new ArgumentNullException(nameof(containerBuilder));
-            containerBuilder.RegisterInstance(this).As<IResolver>();
+            return true;
         }
-
-        /// <summary>
-        /// AutofacContainer
-        /// </summary>
-        /// <param name="container"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public AutofacContainer(Autofac.IContainer container)
+        if (this.m_serviceProvider == null)
         {
-            this.m_serviceProvider = container ?? throw new ArgumentNullException(nameof(container));
+            return false;
         }
+        return this.m_serviceProvider.IsRegistered(fromType);
+    }
 
-        /// <inheritdoc/>
-        public IResolver BuildResolver()
+    /// <inheritdoc/>
+    public void Register(DependencyDescriptor descriptor, string key)
+    {
+        throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+    }
+
+    /// <inheritdoc/>
+    public void Register(DependencyDescriptor descriptor)
+    {
+        switch (descriptor.Lifetime)
         {
-            this.m_serviceProvider = this.m_containerBuilder.Build();
+            case Lifetime.Singleton:
+                if (descriptor.ToInstance != null)
+                {
+                    this.m_containerBuilder.RegisterInstance(descriptor.ToInstance).As(descriptor.FromType).SingleInstance();
+                }
+                else
+                {
+                    this.m_containerBuilder.RegisterType(descriptor.ToType).As(descriptor.FromType).SingleInstance();
+                }
+                break;
+
+            case Lifetime.Transient:
+            default:
+                this.m_containerBuilder.RegisterType(descriptor.ToType).As(descriptor.FromType);
+                break;
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Unregister(DependencyDescriptor descriptor, string key)
+    {
+        throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+    }
+
+    /// <inheritdoc/>
+    public void Unregister(DependencyDescriptor descriptor)
+    {
+        throw new NotImplementedException();
+    }
+
+    #region Resolve
+
+    /// <inheritdoc/>
+    public object GetService(Type serviceType)
+    {
+        if (typeof(IResolver) == serviceType)
+        {
             return this;
         }
+        return this.m_serviceProvider.Resolve(serviceType);
+    }
 
-        /// <inheritdoc/>
-        public IEnumerable<DependencyDescriptor> GetDescriptors()
+    /// <inheritdoc/>
+    public object Resolve(Type fromType, string key)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public object Resolve(Type fromType)
+    {
+        if (typeof(IResolver) == fromType)
         {
-            throw new NotImplementedException();
+            return this;
         }
+        return this.m_serviceProvider.Resolve(fromType);
+    }
 
-        /// <inheritdoc/>
-        public bool IsRegistered(Type fromType, string key)
+    /// <inheritdoc/>
+    public IScopedResolver CreateScopedResolver()
+    {
+        return new InternalScopedResolver(this);
+    }
+
+    #endregion Resolve
+
+    internal class InternalScopedResolver : DisposableObject, IScopedResolver
+    {
+        public IResolver Resolver { get; set; }
+
+        public InternalScopedResolver(IResolver resolver)
         {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
-        }
-
-        /// <inheritdoc/>
-        public bool IsRegistered(Type fromType)
-        {
-            if (typeof(IResolver) == fromType)
-            {
-                return true;
-            }
-            if (this.m_serviceProvider == null)
-            {
-                return false;
-            }
-            return this.m_serviceProvider.IsRegistered(fromType);
-        }
-
-        /// <inheritdoc/>
-        public void Register(DependencyDescriptor descriptor, string key)
-        {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
-        }
-
-        /// <inheritdoc/>
-        public void Register(DependencyDescriptor descriptor)
-        {
-            switch (descriptor.Lifetime)
-            {
-                case Lifetime.Singleton:
-                    if (descriptor.ToInstance != null)
-                    {
-                        this.m_containerBuilder.RegisterInstance(descriptor.ToInstance).As(descriptor.FromType).SingleInstance();
-                    }
-                    else
-                    {
-                        this.m_containerBuilder.RegisterType(descriptor.ToType).As(descriptor.FromType).SingleInstance();
-                    }
-                    break;
-
-                case Lifetime.Transient:
-                default:
-                    this.m_containerBuilder.RegisterType(descriptor.ToType).As(descriptor.FromType);
-                    break;
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Unregister(DependencyDescriptor descriptor, string key)
-        {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
-        }
-
-        /// <inheritdoc/>
-        public void Unregister(DependencyDescriptor descriptor)
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Resolve
-
-        /// <inheritdoc/>
-        public object GetService(Type serviceType)
-        {
-            if (typeof(IResolver) == serviceType)
-            {
-                return this;
-            }
-            return this.m_serviceProvider.Resolve(serviceType);
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType, string key)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType)
-        {
-            if (typeof(IResolver) == fromType)
-            {
-                return this;
-            }
-            return this.m_serviceProvider.Resolve(fromType);
-        }
-
-        /// <inheritdoc/>
-        public IScopedResolver CreateScopedResolver()
-        {
-            return new InternalScopedResolver(this);
-        }
-
-        #endregion Resolve
-
-        internal class InternalScopedResolver : DisposableObject, IScopedResolver
-        {
-            public IResolver Resolver { get; set; }
-
-            public InternalScopedResolver(IResolver resolver)
-            {
-                this.Resolver = resolver;
-            }
+            this.Resolver = resolver;
         }
     }
 }

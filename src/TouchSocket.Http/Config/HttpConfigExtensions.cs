@@ -14,83 +14,82 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// HttpConfigExtensions
+/// </summary>
+public static class HttpConfigExtensions
 {
+    //#region 创建
+
+    ///// <summary>
+    ///// 构建Http类客户端，并连接
+    ///// </summary>
+    ///// <typeparam name="TClient"></typeparam>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static TClient BuildWithHttpClient<TClient>(this TouchSocketConfig config) where TClient : IHttpClient
+    //{
+    //    var client = Activator.CreateInstance<TClient>();
+    //    client.Setup(config);
+    //    client.Connect();
+    //    return client;
+    //}
+
+    ///// <summary>
+    ///// 构建Http类客户端，并连接
+    ///// </summary>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static HttpClient BuildWithHttpClient(this TouchSocketConfig config)
+    //{
+    //    return BuildWithHttpClient<HttpClient>(config);
+    //}
+
+    ///// <summary>
+    ///// 构建Http类服务器，并启动。
+    ///// </summary>
+    ///// <typeparam name="TService"></typeparam>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static TService BuildWithHttpService<TService>(this TouchSocketConfig config) where TService : IHttpServiceBase
+    //{
+    //    var service = Activator.CreateInstance<TService>();
+    //    service.Setup(config);
+    //    service.Start();
+    //    return service;
+    //}
+
+    ///// <summary>
+    ///// 构建Http类服务器，并启动。
+    ///// </summary>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static HttpService BuildWithHttpService(this TouchSocketConfig config)
+    //{
+    //    return BuildWithHttpService<HttpService>(config);
+    //}
+
+    //#endregion 创建
+
     /// <summary>
-    /// HttpConfigExtensions
+    /// Http代理
     /// </summary>
-    public static class HttpConfigExtensions
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
+    public static readonly DependencyProperty<HttpProxy> HttpProxyProperty =
+        DependencyProperty<HttpProxy>.Register("HttpProxy", null);
+
+    /// <summary>
+    ///设置Http代理
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
+    public static TouchSocketConfig SetHttpProxy(this TouchSocketConfig config, HttpProxy value)
     {
-        //#region 创建
-
-        ///// <summary>
-        ///// 构建Http类客户端，并连接
-        ///// </summary>
-        ///// <typeparam name="TClient"></typeparam>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static TClient BuildWithHttpClient<TClient>(this TouchSocketConfig config) where TClient : IHttpClient
-        //{
-        //    var client = Activator.CreateInstance<TClient>();
-        //    client.Setup(config);
-        //    client.Connect();
-        //    return client;
-        //}
-
-        ///// <summary>
-        ///// 构建Http类客户端，并连接
-        ///// </summary>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static HttpClient BuildWithHttpClient(this TouchSocketConfig config)
-        //{
-        //    return BuildWithHttpClient<HttpClient>(config);
-        //}
-
-        ///// <summary>
-        ///// 构建Http类服务器，并启动。
-        ///// </summary>
-        ///// <typeparam name="TService"></typeparam>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static TService BuildWithHttpService<TService>(this TouchSocketConfig config) where TService : IHttpServiceBase
-        //{
-        //    var service = Activator.CreateInstance<TService>();
-        //    service.Setup(config);
-        //    service.Start();
-        //    return service;
-        //}
-
-        ///// <summary>
-        ///// 构建Http类服务器，并启动。
-        ///// </summary>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static HttpService BuildWithHttpService(this TouchSocketConfig config)
-        //{
-        //    return BuildWithHttpService<HttpService>(config);
-        //}
-
-        //#endregion 创建
-
-        /// <summary>
-        /// Http代理
-        /// </summary>
-        [Obsolete("此配置已被弃用，不再支持代理", true)]
-        public static readonly DependencyProperty<HttpProxy> HttpProxyProperty =
-            DependencyProperty<HttpProxy>.Register("HttpProxy", null);
-
-        /// <summary>
-        ///设置Http代理
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用，不再支持代理", true)]
-        public static TouchSocketConfig SetHttpProxy(this TouchSocketConfig config, HttpProxy value)
-        {
-            config.SetValue(HttpProxyProperty, value);
-            return config;
-        }
+        config.SetValue(HttpProxyProperty, value);
+        return config;
     }
 }

@@ -10,11 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+public class JsonRpcBase
 {
-    public class JsonRpcBase
-    {
-        public int? Id { get; set; }
-        public string Jsonrpc { get; set; } = "2.0";
-    }
+    public int? Id { get; set; }
+    public string Jsonrpc { get; set; } = "2.0";
 }

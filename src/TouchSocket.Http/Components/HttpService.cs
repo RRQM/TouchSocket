@@ -12,28 +12,27 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// HTTP/HTTPS服务器
+/// </summary>
+public abstract class HttpService<TClient> : TcpServiceBase<TClient>, IHttpService<TClient> where TClient : HttpSessionClient
 {
-    /// <summary>
-    /// HTTP/HTTPS服务器
-    /// </summary>
-    public abstract class HttpService<TClient> : TcpServiceBase<TClient>, IHttpService<TClient> where TClient : HttpSessionClient
+}
+
+/// <summary>
+/// HTTP/HTTPS服务器
+/// </summary>
+public class HttpService : HttpService<HttpSessionClient>, IHttpService
+{
+    /// <inheritdoc/>
+    protected override HttpSessionClient NewClient()
     {
+        return new PrivateHttpSessionClient();
     }
 
-    /// <summary>
-    /// HTTP/HTTPS服务器
-    /// </summary>
-    public class HttpService : HttpService<HttpSessionClient>, IHttpService
+    private sealed class PrivateHttpSessionClient : HttpSessionClient
     {
-        /// <inheritdoc/>
-        protected override HttpSessionClient NewClient()
-        {
-            return new PrivateHttpSessionClient();
-        }
-
-        private sealed class PrivateHttpSessionClient : HttpSessionClient
-        {
-        }
     }
 }

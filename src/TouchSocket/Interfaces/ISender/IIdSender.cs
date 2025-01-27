@@ -13,21 +13,20 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了一个接口，用于向特定客户端发送数据
+/// </summary>
+public interface IIdSender
 {
     /// <summary>
-    /// 定义了一个接口，用于向特定客户端发送数据
+    /// 异步向对应Id的客户端发送数据
     /// </summary>
-    public interface IIdSender
-    {
-        /// <summary>
-        /// 异步向对应Id的客户端发送数据
-        /// </summary>
-        /// <param name="id">目标客户端的唯一标识符</param>
-        /// <param name="memory">要发送的数据，以字节形式存储在内存中</param>
-        /// <exception cref="ClientNotConnectedException">如果目标客户端未连接，则抛出此异常</exception>
-        /// <exception cref="ClientNotFindException">如果无法根据Id找到对应的客户端，则抛出此异常</exception>
-        /// <exception cref="Exception">如果发生其他异常情况</exception>
-        Task SendAsync(string id, ReadOnlyMemory<byte> memory);
-    }
+    /// <param name="id">目标客户端的唯一标识符</param>
+    /// <param name="memory">要发送的数据，以字节形式存储在内存中</param>
+    /// <exception cref="ClientNotConnectedException">如果目标客户端未连接，则抛出此异常</exception>
+    /// <exception cref="ClientNotFindException">如果无法根据Id找到对应的客户端，则抛出此异常</exception>
+    /// <exception cref="Exception">如果发生其他异常情况</exception>
+    Task SendAsync(string id, ReadOnlyMemory<byte> memory);
 }

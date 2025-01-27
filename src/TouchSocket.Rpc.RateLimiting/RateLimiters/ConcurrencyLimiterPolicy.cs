@@ -13,25 +13,24 @@
 using System.Reflection;
 using System.Threading.RateLimiting;
 
-namespace TouchSocket.Rpc.RateLimiting
+namespace TouchSocket.Rpc.RateLimiting;
+
+internal sealed class ConcurrencyLimiterPolicy : RateLimiterPolicy<MethodInfo>
 {
-    internal sealed class ConcurrencyLimiterPolicy : RateLimiterPolicy<MethodInfo>
+    private readonly ConcurrencyLimiterOptions m_options;
+
+    public ConcurrencyLimiterPolicy(ConcurrencyLimiterOptions options)
     {
-        private readonly ConcurrencyLimiterOptions m_options;
+        this.m_options = options;
+    }
 
-        public ConcurrencyLimiterPolicy(ConcurrencyLimiterOptions options)
-        {
-            this.m_options = options;
-        }
+    protected override MethodInfo GetPartitionKey(ICallContext callContext)
+    {
+        return callContext.RpcMethod.Info;
+    }
 
-        protected override MethodInfo GetPartitionKey(ICallContext callContext)
-        {
-            return callContext.RpcMethod.Info;
-        }
-
-        protected override RateLimiter NewRateLimiter(MethodInfo method)
-        {
-            return new ConcurrencyLimiter(this.m_options);
-        }
+    protected override RateLimiter NewRateLimiter(MethodInfo method)
+    {
+        return new ConcurrencyLimiter(this.m_options);
     }
 }

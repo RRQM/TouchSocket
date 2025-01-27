@@ -12,27 +12,26 @@
 
 using System;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WebSocket连接异常。
+/// </summary>
+[Serializable]
+public class WebSocketConnectException : Exception
 {
     /// <summary>
-    /// WebSocket连接异常。
+    /// WebSocket连接异常
     /// </summary>
-    [Serializable]
-    public class WebSocketConnectException : Exception
+    /// <param name="mes"></param>
+    /// <param name="context"></param>
+    public WebSocketConnectException(string mes, HttpContext context) : base(mes)
     {
-        /// <summary>
-        /// WebSocket连接异常
-        /// </summary>
-        /// <param name="mes"></param>
-        /// <param name="context"></param>
-        public WebSocketConnectException(string mes, HttpContext context) : base(mes)
-        {
-            this.Context = context;
-        }
-
-        /// <summary>
-        /// HttpContext
-        /// </summary>
-        public HttpContext Context { get; }
+        this.Context = context;
     }
+
+    /// <summary>
+    /// HttpContext
+    /// </summary>
+    public HttpContext Context { get; }
 }

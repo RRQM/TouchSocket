@@ -14,37 +14,36 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// NameValueCollectionDebugView
+/// </summary>
+public class NameValueCollectionDebugView
 {
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly NameValueCollection m_nameValue;
+
     /// <summary>
     /// NameValueCollectionDebugView
     /// </summary>
-    public class NameValueCollectionDebugView
+    /// <param name="nameValue"></param>
+    public NameValueCollectionDebugView(NameValueCollection nameValue)
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly NameValueCollection m_nameValue;
+        this.m_nameValue = nameValue;
+    }
 
-        /// <summary>
-        /// NameValueCollectionDebugView
-        /// </summary>
-        /// <param name="nameValue"></param>
-        public NameValueCollectionDebugView(NameValueCollection nameValue)
+    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+    private Dictionary<string, string> KV
+    {
+        get
         {
-            this.m_nameValue = nameValue;
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        private Dictionary<string, string> KV
-        {
-            get
+            var dic = new Dictionary<string, string>();
+            foreach (var item in this.m_nameValue.AllKeys)
             {
-                var dic = new Dictionary<string, string>();
-                foreach (var item in this.m_nameValue.AllKeys)
-                {
-                    dic.TryAdd(item, this.m_nameValue[item]);
-                }
-                return dic;
+                dic.TryAdd(item, this.m_nameValue[item]);
             }
+            return dic;
         }
     }
 }

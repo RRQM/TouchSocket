@@ -12,61 +12,60 @@
 
 using System;
 
-namespace TouchSocket.Core
-{
+namespace TouchSocket.Core;
+
 #if NET6_0_OR_GREATER
+/// <summary>
+/// RangeExtension
+/// </summary>
+public static class RangeExtension
+{
     /// <summary>
-    /// RangeExtension
+    /// 枚举扩展
     /// </summary>
-    public static class RangeExtension
+    /// <param name="range"></param>
+    /// <returns></returns>
+    public static CustomIntEnumerator GetEnumerator(this Range range)
     {
-        /// <summary>
-        /// 枚举扩展
-        /// </summary>
-        /// <param name="range"></param>
-        /// <returns></returns>
-        public static CustomIntEnumerator GetEnumerator(this Range range)
-        {
-            return new CustomIntEnumerator(range);
-        }
+        return new CustomIntEnumerator(range);
     }
+}
+
+/// <summary>
+/// CustomIntEnumerator
+/// </summary>
+public ref struct CustomIntEnumerator
+{
+    private int m_current;
+    private readonly int m_end;
 
     /// <summary>
     /// CustomIntEnumerator
     /// </summary>
-    public ref struct CustomIntEnumerator
+    /// <param name="range"></param>
+    public CustomIntEnumerator(Range range)
     {
-        private int m_current;
-        private readonly int m_end;
-
-        /// <summary>
-        /// CustomIntEnumerator
-        /// </summary>
-        /// <param name="range"></param>
-        public CustomIntEnumerator(Range range)
+        if (range.End.IsFromEnd)
         {
-            if (range.End.IsFromEnd)
-            {
-                throw new NotSupportedException("不支持无限枚举。");
-            }
-            this.m_current = range.Start.Value - 1;
-            this.m_end = range.End.Value;
+            throw new NotSupportedException("不支持无限枚举。");
         }
-
-        /// <summary>
-        /// Current
-        /// </summary>
-        public int Current => this.m_current;
-
-        /// <summary>
-        /// MoveNext
-        /// </summary>
-        /// <returns></returns>
-        public bool MoveNext()
-        {
-            this.m_current++;
-            return this.m_current <= this.m_end;
-        }
+        this.m_current = range.Start.Value - 1;
+        this.m_end = range.End.Value;
     }
-#endif
+
+    /// <summary>
+    /// Current
+    /// </summary>
+    public int Current => this.m_current;
+
+    /// <summary>
+    /// MoveNext
+    /// </summary>
+    /// <returns></returns>
+    public bool MoveNext()
+    {
+        this.m_current++;
+        return this.m_current <= this.m_end;
+    }
 }
+#endif

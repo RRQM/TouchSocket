@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// ModbusRtuBase
+/// </summary>
+public abstract class ModbusRtuBase : ModbusRequest
 {
     /// <summary>
-    /// ModbusRtuBase
+    /// 校验码
     /// </summary>
-    public abstract class ModbusRtuBase : ModbusRequest
-    {
-        /// <summary>
-        /// 校验码
-        /// </summary>
-        public ushort Crc { get; set; }
-    }
+    public ushort Crc { get; set; }
 }

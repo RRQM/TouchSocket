@@ -17,126 +17,125 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// WebApi客户端
+/// </summary>
+public class WebApiClient : HttpClientBase, IWebApiClient
 {
     /// <summary>
-    /// WebApi客户端
+    /// 构造函数
     /// </summary>
-    public class WebApiClient : HttpClientBase, IWebApiClient
+    public WebApiClient()
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public WebApiClient()
+        this.Converter = new StringSerializerConverter<HttpRequest>(
+            new StringToPrimitiveSerializerFormatter<HttpRequest>(),
+            new JsonStringToClassSerializerFormatter<HttpRequest>());
+    }
+
+    /// <summary>
+    /// 字符串转化器
+    /// </summary>
+    public StringSerializerConverter<HttpRequest> Converter { get; }
+
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return this.TcpConnectAsync(millisecondsTimeout, token);
+    }
+
+    #region Rpc调用
+
+    /// <inheritdoc/>
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
         {
-            this.Converter = new StringSerializerConverter<HttpRequest>(
-                new StringToPrimitiveSerializerFormatter<HttpRequest>(),
-                new JsonStringToClassSerializerFormatter<HttpRequest>());
+            throw new Exception("参数不正确");
         }
 
-        /// <summary>
-        /// 字符串转化器
-        /// </summary>
-        public StringSerializerConverter<HttpRequest> Converter { get; }
-
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        var request = new HttpRequest();
+        request.SetUrl(invokeKey);
+        switch (webApiRequest.Method)
         {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
+            case HttpMethodType.Get:
+                request.Method = HttpMethod.Get;
+                break;
+            case HttpMethodType.Post:
+                request.Method = HttpMethod.Post;
+                break;
+            case HttpMethodType.Put:
+                request.Method = HttpMethod.Put;
+                break;
+            case HttpMethodType.Delete:
+                request.Method = HttpMethod.Delete;
+                break;
+            default:
+                break;
+        }
+        request.InitHeaders();
+        if (webApiRequest.Headers != null)
+        {
+            foreach (var item in webApiRequest.Headers)
+            {
+                request.Headers.Add(item.Key, item.Value);
+            }
+        }
+        if (webApiRequest.Querys != null)
+        {
+            foreach (var item in webApiRequest.Querys)
+            {
+                request.Query.Add(item.Key, item.Value);
+            }
+        }
+        request.SetHost(this.RemoteIPHost.Host);
+
+        if (webApiRequest.Body != null)
+        {
+            request.SetContent(this.Converter.Serialize(request, webApiRequest.Body));
+        }
+        else if (webApiRequest.Forms != null)
+        {
+            request.SetFormUrlEncodedContent(webApiRequest.Forms);
         }
 
-        #region Rpc调用
+        invokeOption ??= InvokeOption.WaitInvoke;
 
-        /// <inheritdoc/>
-        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
+
+        using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
-            if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
+            var response = responseResult.Response;
+            await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
+
+            if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
-                throw new Exception("参数不正确");
+                return default;
             }
 
-            var request = new HttpRequest();
-            request.SetUrl(invokeKey);
-            switch (webApiRequest.Method)
+            if (response.StatusCode == 200)
             {
-                case HttpMethodType.Get:
-                    request.Method = HttpMethod.Get;
-                    break;
-                case HttpMethodType.Post:
-                    request.Method = HttpMethod.Post;
-                    break;
-                case HttpMethodType.Put:
-                    request.Method = HttpMethod.Put;
-                    break;
-                case HttpMethodType.Delete:
-                    request.Method = HttpMethod.Delete;
-                    break;
-                default:
-                    break;
-            }
-            request.InitHeaders();
-            if (webApiRequest.Headers != null)
-            {
-                foreach (var item in webApiRequest.Headers)
+                if (returnType != null)
                 {
-                    request.Headers.Add(item.Key, item.Value);
+                    var body = await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return this.Converter.Deserialize(request, body, returnType);
                 }
-            }
-            if (webApiRequest.Querys != null)
-            {
-                foreach (var item in webApiRequest.Querys)
-                {
-                    request.Query.Add(item.Key, item.Value);
-                }
-            }
-            request.SetHost(this.RemoteIPHost.Host);
-
-            if (webApiRequest.Body != null)
-            {
-                request.SetContent(this.Converter.Serialize(request, webApiRequest.Body));
-            }
-            else if (webApiRequest.Forms != null)
-            {
-                request.SetFormUrlEncodedContent(webApiRequest.Forms);
-            }
-
-            invokeOption ??= InvokeOption.WaitInvoke;
-
-            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
-
-            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-            {
-                var response = responseResult.Response;
-                await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
-
-                if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
+                else
                 {
                     return default;
                 }
 
-                if (response.StatusCode == 200)
-                {
-                    if (returnType != null)
-                    {
-                        var body = await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        return this.Converter.Deserialize(request, body, returnType);
-                    }
-                    else
-                    {
-                        return default;
-                    }
-
-                }
-                else if (response.StatusCode == 422)
-                {
-                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
-                }
-                else
-                {
-                    throw new RpcException(response.StatusMessage);
-                }
+            }
+            else if (response.StatusCode == 422)
+            {
+                throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
+            }
+            else
+            {
+                throw new RpcException(response.StatusMessage);
             }
         }
-        #endregion Rpc调用
     }
+    #endregion Rpc调用
 }

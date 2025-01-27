@@ -14,35 +14,34 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 可以配置跨域的插件
+/// </summary>
+public class CorsPlugin : PluginBase, IHttpPlugin
 {
+    private readonly ICorsService m_corsService;
+    private readonly string m_policyName;
+
     /// <summary>
     /// 可以配置跨域的插件
     /// </summary>
-    public class CorsPlugin : PluginBase, IHttpPlugin
+    /// <param name="corsService"></param>
+    /// <param name="policyName"></param>
+    public CorsPlugin(ICorsService corsService, string policyName)
     {
-        private readonly ICorsService m_corsService;
-        private readonly string m_policyName;
+        this.m_corsService = corsService;
+        this.m_policyName = policyName;
+    }
 
-        /// <summary>
-        /// 可以配置跨域的插件
-        /// </summary>
-        /// <param name="corsService"></param>
-        /// <param name="policyName"></param>
-        public CorsPlugin(ICorsService corsService, string policyName)
-        {
-            this.m_corsService = corsService;
-            this.m_policyName = policyName;
-        }
+    /// <inheritdoc/>
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var corsPolicy = this.m_corsService.GetPolicy(this.m_policyName) ?? throw new Exception($"没有找到名称为{this.m_policyName}的跨域策略。");
 
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            var corsPolicy = this.m_corsService.GetPolicy(this.m_policyName) ?? throw new Exception($"没有找到名称为{this.m_policyName}的跨域策略。");
+        corsPolicy.Apply(e.Context);
 
-            corsPolicy.Apply(e.Context);
-
-            await e.InvokeNext();
-        }
+        await e.InvokeNext();
     }
 }

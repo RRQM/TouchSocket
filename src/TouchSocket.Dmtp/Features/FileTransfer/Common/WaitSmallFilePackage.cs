@@ -12,33 +12,32 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+internal class WaitSmallFilePackage : WaitRouterPackage
 {
-    internal class WaitSmallFilePackage : WaitRouterPackage
+    protected override bool IncludedRouter => true;
+    public byte[] Data { get; set; }
+    public RemoteFileInfo FileInfo { get; set; }
+    public int Len { get; set; }
+    public Metadata Metadata { get; set; }
+    public string Path { get; set; }
+
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        protected override bool IncludedRouter => true;
-        public byte[] Data { get; set; }
-        public RemoteFileInfo FileInfo { get; set; }
-        public int Len { get; set; }
-        public Metadata Metadata { get; set; }
-        public string Path { get; set; }
+        base.PackageBody(ref byteBlock);
+        byteBlock.WriteString(this.Path);
+        byteBlock.WritePackage(this.Metadata);
+        byteBlock.WritePackage(this.FileInfo);
+        byteBlock.WriteBytesPackage(this.Data, 0, this.Len);
+    }
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WriteString(this.Path);
-            byteBlock.WritePackage(this.Metadata);
-            byteBlock.WritePackage(this.FileInfo);
-            byteBlock.WriteBytesPackage(this.Data, 0, this.Len);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.Path = byteBlock.ReadString();
-            this.Metadata = byteBlock.ReadPackage<Metadata>();
-            this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-            this.Data = byteBlock.ReadBytesPackage();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.Path = byteBlock.ReadString();
+        this.Metadata = byteBlock.ReadPackage<Metadata>();
+        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
+        this.Data = byteBlock.ReadBytesPackage();
     }
 }

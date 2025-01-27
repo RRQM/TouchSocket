@@ -13,32 +13,31 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// 提供JsonRpcParserPlugin的扩展方法。
+/// </summary>
+public static class JsonRpcParserPluginExtension
 {
-    /// <summary>
-    /// 提供JsonRpcParserPlugin的扩展方法。
-    /// </summary>
-    public static class JsonRpcParserPluginExtension
-    {
 #if SystemTextJson
 
-        /// <summary>
-        /// 使用System.Text.Json进行序列化
-        /// </summary>
-        /// <param name="jsonRpcParserPlugin">JsonRpcParserPlugin实例。</param>
-        /// <param name="options">配置JsonSerializer的选项。</param>
-        /// <typeparam name="TJsonRpcParserPlugin">JsonRpcParserPlugin的类型。</typeparam>
-        /// <returns>配置后的JsonRpcParserPlugin实例。</returns>
-        public static TJsonRpcParserPlugin UseSystemTextJson<TJsonRpcParserPlugin>(this TJsonRpcParserPlugin jsonRpcParserPlugin, Action<System.Text.Json.JsonSerializerOptions> options)
-            where TJsonRpcParserPlugin : JsonRpcParserPluginBase
-        {
-            var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-            options.Invoke(serializerOptions);
-            jsonRpcParserPlugin.SerializerConverter.Clear();
-            jsonRpcParserPlugin.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
+    /// <summary>
+    /// 使用System.Text.Json进行序列化
+    /// </summary>
+    /// <param name="jsonRpcParserPlugin">JsonRpcParserPlugin实例。</param>
+    /// <param name="options">配置JsonSerializer的选项。</param>
+    /// <typeparam name="TJsonRpcParserPlugin">JsonRpcParserPlugin的类型。</typeparam>
+    /// <returns>配置后的JsonRpcParserPlugin实例。</returns>
+    public static TJsonRpcParserPlugin UseSystemTextJson<TJsonRpcParserPlugin>(this TJsonRpcParserPlugin jsonRpcParserPlugin, Action<System.Text.Json.JsonSerializerOptions> options)
+        where TJsonRpcParserPlugin : JsonRpcParserPluginBase
+    {
+        var serializerOptions = new System.Text.Json.JsonSerializerOptions();
+        options.Invoke(serializerOptions);
+        jsonRpcParserPlugin.SerializerConverter.Clear();
+        jsonRpcParserPlugin.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
 
-            return jsonRpcParserPlugin;
-        }
-#endif
+        return jsonRpcParserPlugin;
     }
+#endif
 }

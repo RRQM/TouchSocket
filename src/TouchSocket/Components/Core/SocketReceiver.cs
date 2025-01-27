@@ -15,43 +15,42 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal sealed class SocketReceiver : SocketAwaitableEventArgs
 {
-    internal sealed class SocketReceiver : SocketAwaitableEventArgs
+    public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket)
     {
-        public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket)
-        {
 #if NET6_0_OR_GREATER
-            this.SetBuffer(Memory<byte>.Empty);
+        this.SetBuffer(Memory<byte>.Empty);
 #else
-            var empty = new byte[0];
-            this.SetBuffer(empty, 0, 0);
+        var empty = new byte[0];
+        this.SetBuffer(empty, 0, 0);
 #endif
 
-            if (socket.ReceiveAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        if (socket.ReceiveAsync(this))
+        {
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
 
-        public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, Memory<byte> buffer)
-        {
-#if NET6_0_OR_GREATER
-            this.SetBuffer(buffer);
-#else
-            var segment = buffer.GetArray();
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+    }
 
-            this.SetBuffer(segment.Array, segment.Offset, segment.Count);
+    public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, Memory<byte> buffer)
+    {
+#if NET6_0_OR_GREATER
+        this.SetBuffer(buffer);
+#else
+        var segment = buffer.GetArray();
+
+        this.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
 
-            if (socket.ReceiveAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        if (socket.ReceiveAsync(this))
+        {
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
+
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
     }
 }

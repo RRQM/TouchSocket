@@ -12,18 +12,17 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http参数
+/// </summary>
+public interface IHttpParams : IDictionary<string, string>
 {
     /// <summary>
-    /// Http参数
+    /// 获取参数
     /// </summary>
-    public interface IHttpParams : IDictionary<string, string>
-    {
-        /// <summary>
-        /// 获取参数
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        string Get(string key);
-    }
+    /// <param name="key"></param>
+    /// <returns></returns>
+    string Get(string key);
 }

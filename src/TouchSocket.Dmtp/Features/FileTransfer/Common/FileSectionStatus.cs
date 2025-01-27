@@ -10,36 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 文件片段状态
+/// </summary>
+public enum FileSectionStatus : byte
 {
     /// <summary>
-    /// 文件片段状态
+    /// 默认状态
     /// </summary>
-    public enum FileSectionStatus : byte
-    {
-        /// <summary>
-        /// 默认状态
-        /// </summary>
-        Default,
+    Default,
 
-        /// <summary>
-        /// 正在传输状态
-        /// </summary>
-        Transferring,
+    /// <summary>
+    /// 正在传输状态
+    /// </summary>
+    Transferring,
 
-        /// <summary>
-        /// 传输结束状态
-        /// </summary>
-        Transferred,
+    /// <summary>
+    /// 传输结束状态
+    /// </summary>
+    Transferred,
 
-        /// <summary>
-        /// 失败
-        /// </summary>
-        Fail,
+    /// <summary>
+    /// 失败
+    /// </summary>
+    Fail,
 
-        /// <summary>
-        /// 完成状态
-        /// </summary>
-        Finished
-    }
+    /// <summary>
+    /// 完成状态
+    /// </summary>
+    Finished
 }

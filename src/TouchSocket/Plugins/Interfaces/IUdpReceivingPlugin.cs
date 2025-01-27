@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了一个UDP接收插件接口，该接口继承自IPlugin。
+/// </summary>
+[DynamicMethod]
+public interface IUdpReceivingPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了一个UDP接收插件接口，该接口继承自IPlugin。
+    /// 在收到数据时触发
     /// </summary>
-    [DynamicMethod]
-    public interface IUdpReceivingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在收到数据时触发
-        /// </summary>
-        /// <param name="client">发送数据的客户端会话</param>
-        /// <param name="e">包含接收数据的信息的事件参数</param>
-        /// <returns>一个等待完成的异步任务</returns>
-        Task OnUdpReceiving(IUdpSessionBase client, ByteBlockEventArgs e);
-    }
+    /// <param name="client">发送数据的客户端会话</param>
+    /// <param name="e">包含接收数据的信息的事件参数</param>
+    /// <returns>一个等待完成的异步任务</returns>
+    Task OnUdpReceiving(IUdpSessionBase client, ByteBlockEventArgs e);
 }

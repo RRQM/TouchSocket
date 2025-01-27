@@ -15,61 +15,60 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IDmtpClosedPlugin where TClient : IDmtpClient
 {
-    internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IDmtpClosedPlugin where TClient : IDmtpClient
+    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+
+    public DmtpReconnectionPlugin()
     {
-        public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+        this.ActionForCheck = this.OnActionForCheck;
+    }
 
-        public DmtpReconnectionPlugin()
+    private async Task<bool?> OnActionForCheck(TClient client, int i)
+    {
+        if (!client.Online)
         {
-            this.ActionForCheck = this.OnActionForCheck;
+            return false;
         }
 
-        private async Task<bool?> OnActionForCheck(TClient client, int i)
+        if (DateTime.UtcNow - client.GetLastActiveTime() < this.Tick)
         {
-            if (!client.Online)
-            {
-                return false;
-            }
-
-            if (DateTime.UtcNow - client.GetLastActiveTime() < this.Tick)
-            {
-                return null;
-            }
-
-            return await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return null;
         }
 
-        public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
-        {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
-            if (client is not TClient tClient)
+    public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
+    {
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (client is not TClient tClient)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            if (e.Manual)
             {
                 return;
             }
 
-            _ = Task.Run(async () =>
+            while (true)
             {
-                if (e.Manual)
+                if (this.DisposedValue)
                 {
                     return;
                 }
 
-                while (true)
+                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    if (this.DisposedValue)
-                    {
-                        return;
-                    }
-
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        return;
-                    }
+                    return;
                 }
-            });
-        }
+            }
+        });
     }
 }

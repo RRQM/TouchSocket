@@ -12,16 +12,15 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// SerialPortUtility
+/// </summary>
+public class SerialPortUtility
 {
     /// <summary>
-    /// SerialPortUtility
+    /// SerialPort
     /// </summary>
-    public class SerialPortUtility
-    {
-        /// <summary>
-        /// SerialPort
-        /// </summary>
-        public static readonly Protocol SerialPort = new Protocol("SerialPort");
-    }
+    public static readonly Protocol SerialPort = new Protocol("SerialPort");
 }

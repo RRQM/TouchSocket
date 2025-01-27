@@ -18,26 +18,25 @@ using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// DmtpRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="TClient"></typeparam>
+public abstract class DmtpRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
 {
-    /// <summary>
-    /// DmtpRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class DmtpRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
-    {
 
-    }
+}
 
-    /// <summary>
-    /// DmtpRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class DmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T, IDmtpRpcActor>
-    {
+/// <summary>
+/// DmtpRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class DmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T, IDmtpRpcActor>
+{
 
-    }
 }
 
 #endif

@@ -13,63 +13,62 @@
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+internal sealed class PluginInvokeLine
 {
-    internal sealed class PluginInvokeLine
+    private List<PluginEntity> m_pluginEntities = new List<PluginEntity>();
+    private int m_fromIocCount;
+
+    public int FromIocCount => this.m_fromIocCount;
+
+    public void Add(PluginEntity pluginEntity)
     {
-        private List<PluginEntity> m_pluginEntities = new List<PluginEntity>();
-        private int m_fromIocCount;
-
-        public int FromIocCount => this.m_fromIocCount;
-
-        public void Add(PluginEntity pluginEntity)
+        if (pluginEntity.FromIoc)
         {
-            if (pluginEntity.FromIoc)
+            this.m_fromIocCount++;
+        }
+        //调用方线程安全
+        var list = new List<PluginEntity>(this.m_pluginEntities);
+        list.Add(pluginEntity);
+        this.m_pluginEntities = list;
+    }
+
+    public List<PluginEntity> GetPluginEntities()
+    {
+        return this.m_pluginEntities;
+    }
+
+    public void Remove(IPlugin plugin)
+    {
+        //调用方线程安全
+        var list = new List<PluginEntity>(this.m_pluginEntities);
+
+        foreach (var item in list)
+        {
+            if (!item.IsDelegate && item.Plugin == plugin)
             {
-                this.m_fromIocCount++;
+                list.Remove(item);
+                break;
             }
-            //调用方线程安全
-            var list = new List<PluginEntity>(this.m_pluginEntities);
-            list.Add(pluginEntity);
-            this.m_pluginEntities = list;
         }
 
-        public List<PluginEntity> GetPluginEntities()
-        {
-            return this.m_pluginEntities;
-        }
+        this.m_pluginEntities = list;
+    }
 
-        public void Remove(IPlugin plugin)
-        {
-            //调用方线程安全
-            var list = new List<PluginEntity>(this.m_pluginEntities);
+    internal void Remove(Delegate func)
+    {
+        //调用方线程安全
+        var list = new List<PluginEntity>(this.m_pluginEntities);
 
-            foreach (var item in list)
+        foreach (var item in list)
+        {
+            if (item.IsDelegate && item.SourceDelegate == func)
             {
-                if (!item.IsDelegate && item.Plugin == plugin)
-                {
-                    list.Remove(item);
-                    break;
-                }
+                list.Remove(item);
+                break;
             }
-
-            this.m_pluginEntities = list;
         }
-
-        internal void Remove(Delegate func)
-        {
-            //调用方线程安全
-            var list = new List<PluginEntity>(this.m_pluginEntities);
-
-            foreach (var item in list)
-            {
-                if (item.IsDelegate && item.SourceDelegate == func)
-                {
-                    list.Remove(item);
-                    break;
-                }
-            }
-            this.m_pluginEntities = list;
-        }
+        this.m_pluginEntities = list;
     }
 }

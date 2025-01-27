@@ -12,22 +12,21 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// ModbusResponseExtension
+/// </summary>
+public static class ModbusResponseExtension
 {
     /// <summary>
-    /// ModbusResponseExtension
+    /// 获取一个读取器。
     /// </summary>
-    public static class ModbusResponseExtension
+    /// <param name="response">The response.</param>
+    /// <returns></returns>
+    public static ValueByteBlock CreateReader(this IModbusResponse response)
     {
-        /// <summary>
-        /// 获取一个读取器。
-        /// </summary>
-        /// <param name="response">The response.</param>
-        /// <returns></returns>
-        public static ValueByteBlock CreateReader(this IModbusResponse response)
-        {
-            // 使用response的数据创建并返回一个新的ValueByteBlock对象
-            return new ValueByteBlock(response.Data);
-        }
+        // 使用response的数据创建并返回一个新的ValueByteBlock对象
+        return new ValueByteBlock(response.Data);
     }
 }

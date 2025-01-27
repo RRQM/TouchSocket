@@ -14,47 +14,46 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+internal sealed class DefaultFastSerializerContext : FastSerializerContext
 {
-    internal sealed class DefaultFastSerializerContext : FastSerializerContext
+    private readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
+
+    /// <summary>
+    /// 添加转换器。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="converter"></param>
+    public void AddFastBinaryConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
     {
-        private readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
+        base.AddConverter(type, converter);
+    }
 
-        /// <summary>
-        /// 添加转换器。
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="converter"></param>
-        public void AddFastBinaryConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
+    public override SerializObject GetSerializeObject(Type type)
+    {
+        var serializObject = base.GetSerializeObject(type);
+        if (serializObject != null)
         {
-            base.AddConverter(type, converter);
+            return serializObject;
         }
 
-        public override SerializObject GetSerializeObject(Type type)
+        if (type.IsNullableType())
         {
-            var serializObject = base.GetSerializeObject(type);
-            if (serializObject != null)
-            {
-                return serializObject;
-            }
-
-            if (type.IsNullableType())
-            {
-                type = type.GetGenericArguments()[0];
-            }
-
-            if (this.m_instanceCache.TryGetValue(type, out var instance))
-            {
-                return instance;
-            }
-
-            if (type.IsArray || type.IsClass || type.IsStruct())
-            {
-                var instanceObject = new SerializObject(type);
-                this.m_instanceCache.TryAdd(type, instanceObject);
-                return instanceObject;
-            }
-            return null;
+            type = type.GetGenericArguments()[0];
         }
+
+        if (this.m_instanceCache.TryGetValue(type, out var instance))
+        {
+            return instance;
+        }
+
+        if (type.IsArray || type.IsClass || type.IsStruct())
+        {
+            var instanceObject = new SerializObject(type);
+            this.m_instanceCache.TryAdd(type, instanceObject);
+            return instanceObject;
+        }
+        return null;
     }
 }

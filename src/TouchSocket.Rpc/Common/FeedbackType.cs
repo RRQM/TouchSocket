@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 反馈类型
+/// </summary>
+public enum FeedbackType : byte
 {
     /// <summary>
-    /// 反馈类型
+    /// 仅发送
     /// </summary>
-    public enum FeedbackType : byte
-    {
-        /// <summary>
-        /// 仅发送
-        /// </summary>
-        OnlySend,
+    OnlySend,
 
-        /// <summary>
-        /// 等待，直到发送抵达
-        /// </summary>
-        WaitSend,
+    /// <summary>
+    /// 等待，直到发送抵达
+    /// </summary>
+    WaitSend,
 
-        /// <summary>
-        /// 等待，直到调用完成
-        /// </summary>
-        WaitInvoke
-    }
+    /// <summary>
+    /// 等待，直到调用完成
+    /// </summary>
+    WaitInvoke
 }

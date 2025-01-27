@@ -13,29 +13,28 @@
 using System.Collections.Generic;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 命名管道服务器接口
+/// </summary>
+public interface INamedPipeServiceBase : IConnectableService
 {
     /// <summary>
-    /// 命名管道服务器接口
+    /// 管道监听集合
     /// </summary>
-    public interface INamedPipeServiceBase : IConnectableService
-    {
-        /// <summary>
-        /// 管道监听集合
-        /// </summary>
-        IEnumerable<NamedPipeMonitor> Monitors { get; }
+    IEnumerable<NamedPipeMonitor> Monitors { get; }
 
-        /// <summary>
-        /// 添加一个地址监听。支持在服务器运行过程中动态添加。
-        /// </summary>
-        /// <param name="option"></param>
-        void AddListen(NamedPipeListenOption option);
+    /// <summary>
+    /// 添加一个地址监听。支持在服务器运行过程中动态添加。
+    /// </summary>
+    /// <param name="option"></param>
+    void AddListen(NamedPipeListenOption option);
 
-        /// <summary>
-        /// 移除一个地址监听。支持在服务器运行过程中动态移除。
-        /// </summary>
-        /// <param name="monitor">监听器</param>
-        /// <returns>返回是否已成功移除</returns>
-        bool RemoveListen(NamedPipeMonitor monitor);
-    }
+    /// <summary>
+    /// 移除一个地址监听。支持在服务器运行过程中动态移除。
+    /// </summary>
+    /// <param name="monitor">监听器</param>
+    /// <returns>返回是否已成功移除</returns>
+    bool RemoveListen(NamedPipeMonitor monitor);
 }

@@ -16,93 +16,92 @@ using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// http辅助类
+/// </summary>
+public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClient
 {
+    private HttpContext m_httpContext;
+
     /// <summary>
-    /// http辅助类
+    /// 构造函数
     /// </summary>
-    public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClient
+    protected HttpSessionClient()
     {
-        private HttpContext m_httpContext;
+        this.Protocol = Protocol.Http;
+    }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        protected HttpSessionClient()
+    #region Send
+
+    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
+    {
+        return this.ProtectedDefaultSendAsync(memory);
+    }
+
+    #endregion Send
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (this.DisposedValue)
         {
-            this.Protocol = Protocol.Http;
+            return;
         }
 
-        #region Send
-
-        internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
+        if (disposing && this.m_webSocket != null)
         {
-            return this.ProtectedDefaultSendAsync(memory);
+            this.m_webSocket.Dispose();
         }
 
-        #endregion Send
+        base.Dispose(disposing);
+    }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
+    /// <summary>
+    /// 当收到到Http请求时。覆盖父类方法将不会触发插件。
+    /// </summary>
+    protected virtual async Task OnReceivedHttpRequest(HttpContext httpContext)
+    {
+        if (this.PluginManager.GetPluginCount(typeof(IHttpPlugin)) > 0)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
+            var e = new HttpContextEventArgs(httpContext);
 
-            if (disposing && this.m_webSocket != null)
-            {
-                this.m_webSocket.Dispose();
-            }
-
-            base.Dispose(disposing);
+            await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+    }
 
-        /// <summary>
-        /// 当收到到Http请求时。覆盖父类方法将不会触发插件。
-        /// </summary>
-        protected virtual async Task OnReceivedHttpRequest(HttpContext httpContext)
+    /// <inheritdoc/>
+    protected override async Task OnTcpClosed(ClosedEventArgs e)
+    {
+        if (this.m_webSocket != null)
         {
-            if (this.PluginManager.GetPluginCount(typeof(IHttpPlugin)) > 0)
-            {
-                var e = new HttpContextEventArgs(httpContext);
-
-                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
-        /// <inheritdoc/>
-        protected override async Task OnTcpClosed(ClosedEventArgs e)
+    /// <inheritdoc/>
+    protected override Task OnTcpConnecting(ConnectingEventArgs e)
+    {
+        this.SetAdapter(new HttpServerDataHandlingAdapter());
+        return base.OnTcpConnecting(e);
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    {
+        if (e.RequestInfo is HttpRequest request)
         {
-            if (this.m_webSocket != null)
-            {
-                await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_httpContext ??= new HttpContext(request, new HttpResponse(request, this));
+            await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_httpContext.Response.ResetHttp();
         }
-
-        /// <inheritdoc/>
-        protected override Task OnTcpConnecting(ConnectingEventArgs e)
+        else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
         {
-            this.SetAdapter(new HttpServerDataHandlingAdapter());
-            return base.OnTcpConnecting(e);
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-        {
-            if (e.RequestInfo is HttpRequest request)
-            {
-                this.m_httpContext ??= new HttpContext(request, new HttpResponse(request, this));
-                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_httpContext.Response.ResetHttp();
-            }
-            else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
-            {
-                e.Handled = true;
-                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return;
-            }
+            e.Handled = true;
+            await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
         }
     }
 }

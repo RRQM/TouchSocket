@@ -13,70 +13,69 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 文件传输操作器。
+/// </summary>
+public class FileOperator : FlowOperator
 {
     /// <summary>
-    /// 文件传输操作器。
+    /// 文件分块大小，默认512*1024字节。
+    /// 不要超过1024*1024字节。
     /// </summary>
-    public class FileOperator : FlowOperator
+    public int FileSectionSize { get; set; } = 512 * 1024;
+
+    /// <summary>
+    /// 文件资源信息。此值不为空时复用，可能会尝试断点续传。
+    /// </summary>
+    public FileResourceInfo ResourceInfo { get; set; }
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
+
+    /// <summary>
+    /// 资源文件路径，
+    /// 可输入绝对路径，也可以输入相对路径。
+    /// </summary>
+    public string ResourcePath { get; set; }
+
+    /// <summary>
+    /// 存放路径，
+    /// 可输入绝对路径，也可以输入相对路径。
+    /// 但是必须包含文件名及扩展名。
+    /// </summary>
+    public string SavePath { get; set; }
+
+    /// <summary>
+    /// 失败重试次数。默认10。
+    /// </summary>
+    public int TryCount { get; set; } = 10;
+
+    internal Result SetResult(Result result)
     {
-        /// <summary>
-        /// 文件分块大小，默认512*1024字节。
-        /// 不要超过1024*1024字节。
-        /// </summary>
-        public int FileSectionSize { get; set; } = 512 * 1024;
+        this.Result = result;
+        return result;
+    }
 
-        /// <summary>
-        /// 文件资源信息。此值不为空时复用，可能会尝试断点续传。
-        /// </summary>
-        public FileResourceInfo ResourceInfo { get; set; }
+    internal Task AddFlowAsync(int flow)
+    {
+        return this.ProtectedAddFlowAsync(flow);
+    }
 
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
+    internal void AddCompletedLength(int flow)
+    {
+        this.completedLength += flow;
+    }
 
-        /// <summary>
-        /// 资源文件路径，
-        /// 可输入绝对路径，也可以输入相对路径。
-        /// </summary>
-        public string ResourcePath { get; set; }
-
-        /// <summary>
-        /// 存放路径，
-        /// 可输入绝对路径，也可以输入相对路径。
-        /// 但是必须包含文件名及扩展名。
-        /// </summary>
-        public string SavePath { get; set; }
-
-        /// <summary>
-        /// 失败重试次数。默认10。
-        /// </summary>
-        public int TryCount { get; set; } = 10;
-
-        internal Result SetResult(Result result)
-        {
-            this.Result = result;
-            return result;
-        }
-
-        internal Task AddFlowAsync(int flow)
-        {
-            return this.ProtectedAddFlowAsync(flow);
-        }
-
-        internal void AddCompletedLength(int flow)
-        {
-            this.completedLength += flow;
-        }
-
-        /// <summary>
-        /// 设置流长度
-        /// </summary>
-        /// <param name="len"></param>
-        internal void SetLength(long len)
-        {
-            this.Length = len;
-        }
+    /// <summary>
+    /// 设置流长度
+    /// </summary>
+    /// <param name="len"></param>
+    internal void SetLength(long len)
+    {
+        this.Length = len;
     }
 }
