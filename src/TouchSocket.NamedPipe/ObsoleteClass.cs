@@ -12,17 +12,16 @@
 
 using System;
 
-namespace TouchSocket.NamedPipe
-{
-    /// <inheritdoc/>
-    [Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(INamedPipeSession)}代替。", true)]
-    public interface INamedPipeClientBase
-    {
-    }
+namespace TouchSocket.NamedPipe;
 
-    /// <inheritdoc/>
-    [Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(INamedPipeSessionClient)}代替。", true)]
-    public interface INamedPipeSocketClient
-    {
-    }
+/// <inheritdoc/>
+[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(INamedPipeSession)}代替。", true)]
+public interface INamedPipeClientBase
+{
+}
+
+/// <inheritdoc/>
+[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(INamedPipeSessionClient)}代替。", true)]
+public interface INamedPipeSocketClient
+{
 }

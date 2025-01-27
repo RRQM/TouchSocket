@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有操作许可的事件参数类
+/// </summary>
+public class PermitEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 具有操作许可的事件参数类
+    /// 是否允许操作
     /// </summary>
-    public class PermitEventArgs : PluginEventArgs
-    {
-        /// <summary>
-        /// 是否允许操作
-        /// </summary>
-        public bool IsPermitOperation { get; set; }
-    }
+    public bool IsPermitOperation { get; set; }
 }

@@ -12,28 +12,27 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+internal class WaitFinishedPackage : WaitRouterPackage
 {
-    internal class WaitFinishedPackage : WaitRouterPackage
+    public ResultCode Code { get; set; }
+    public Metadata Metadata { get; set; }
+    public int ResourceHandle { get; set; }
+
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        public ResultCode Code { get; set; }
-        public Metadata Metadata { get; set; }
-        public int ResourceHandle { get; set; }
+        base.PackageBody(ref byteBlock);
+        byteBlock.WriteInt32(this.ResourceHandle);
+        byteBlock.WritePackage(this.Metadata);
+        byteBlock.WriteByte((byte)this.Code);
+    }
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WriteInt32(this.ResourceHandle);
-            byteBlock.WritePackage(this.Metadata);
-            byteBlock.WriteByte((byte)this.Code);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.ResourceHandle = byteBlock.ReadInt32();
-            this.Metadata = byteBlock.ReadPackage<Metadata>();
-            this.Code = (ResultCode)byteBlock.ReadByte();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.ResourceHandle = byteBlock.ReadInt32();
+        this.Metadata = byteBlock.ReadPackage<Metadata>();
+        this.Code = (ResultCode)byteBlock.ReadByte();
     }
 }

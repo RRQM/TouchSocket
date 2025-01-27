@@ -14,35 +14,34 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 服务器接口
+/// </summary>
+public interface IServiceBase : ISetupConfigObject
 {
     /// <summary>
-    /// 服务器接口
+    /// 服务器名称
     /// </summary>
-    public interface IServiceBase : ISetupConfigObject
-    {
-        /// <summary>
-        /// 服务器名称
-        /// </summary>
-        string ServerName { get; }
+    string ServerName { get; }
 
-        /// <summary>
-        /// 服务器状态
-        /// </summary>
-        ServerState ServerState { get; }
+    /// <summary>
+    /// 服务器状态
+    /// </summary>
+    ServerState ServerState { get; }
 
-        /// <summary>
-        /// 异步启动
-        /// </summary>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="Exception"></exception>
-        Task StartAsync();
+    /// <summary>
+    /// 异步启动
+    /// </summary>
+    /// <exception cref="Exception"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="Exception"></exception>
+    Task StartAsync();
 
-        /// <summary>
-        /// 异步停止
-        /// </summary>
-        /// <exception cref="Exception"></exception>
-        Task StopAsync();
-    }
+    /// <summary>
+    /// 异步停止
+    /// </summary>
+    /// <exception cref="Exception"></exception>
+    Task StopAsync();
 }

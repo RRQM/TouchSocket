@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 定义了一个用于Web API调用上下文的接口，继承自IHttpCallContext。
+/// </summary>
+/// <remarks>
+/// 此接口旨在为Web API调用提供特定的上下文信息，以便在这样的调用中传递和处理额外的数据。
+/// 实现这个接口的类应该提供特定于Web API环境的方法和属性。
+/// </remarks>
+public interface IWebApiCallContext : IHttpCallContext
 {
-    /// <summary>
-    /// 定义了一个用于Web API调用上下文的接口，继承自IHttpCallContext。
-    /// </summary>
-    /// <remarks>
-    /// 此接口旨在为Web API调用提供特定的上下文信息，以便在这样的调用中传递和处理额外的数据。
-    /// 实现这个接口的类应该提供特定于Web API环境的方法和属性。
-    /// </remarks>
-    public interface IWebApiCallContext : IHttpCallContext
-    {
-    }
 }

@@ -15,88 +15,87 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
-{
-    /// <summary>
-    /// TCP分布式消息传输服务类，继承自TcpDmtpService并实现ITcpDmtpService接口。
-    /// 该类提供了基于TCP协议的分布式消息传输服务功能。
-    /// </summary>
-    public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpService
-    {
-        /// <inheritdoc/>
-        protected sealed override TcpDmtpSessionClient NewClient()
-        {
-            return new PrivateTcpDmtpSessionClient();
-        }
+namespace TouchSocket.Dmtp;
 
-        private class PrivateTcpDmtpSessionClient : TcpDmtpSessionClient
+/// <summary>
+/// TCP分布式消息传输服务类，继承自TcpDmtpService并实现ITcpDmtpService接口。
+/// 该类提供了基于TCP协议的分布式消息传输服务功能。
+/// </summary>
+public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpService
+{
+    /// <inheritdoc/>
+    protected sealed override TcpDmtpSessionClient NewClient()
+    {
+        return new PrivateTcpDmtpSessionClient();
+    }
+
+    private class PrivateTcpDmtpSessionClient : TcpDmtpSessionClient
+    {
+    }
+}
+
+/// <summary>
+/// 抽象类<see cref="TcpDmtpService{TClient}"/>;为基于TCP协议的Dmtp服务提供基础实现。
+/// 它扩展了<see cref="TcpServiceBase{TClient}"/>;，并实现了<see cref="ITcpDmtpService{TClient}"/>接口。
+/// TClient必须是<see cref="TcpDmtpSessionClient"/>的派生类。
+/// </summary>
+/// <typeparam name="TClient">客户端会话类型，必须继承自<see cref="TcpDmtpSessionClient"/>。</typeparam>
+public abstract class TcpDmtpService<TClient> : TcpServiceBase<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSessionClient
+{
+    #region 字段
+
+    private bool m_allowRoute;
+    private Func<string, Task<IDmtpActor>> m_findDmtpActor;
+
+    #endregion 字段
+
+    /// <inheritdoc/>
+    public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
+
+    /// <inheritdoc/>
+    protected override void ClientInitialized(TClient client)
+    {
+        base.ClientInitialized(client);
+        client.InternalSetAction(this.PrivateConnecting);
+    }
+
+    /// <inheritdoc/>
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        config.SetTcpDataHandlingAdapter(default);
+        base.LoadConfig(config);
+
+        var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+        if (dmtpRouteService != null)
         {
+            this.m_allowRoute = true;
+            this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
         }
     }
 
-    /// <summary>
-    /// 抽象类<see cref="TcpDmtpService{TClient}"/>;为基于TCP协议的Dmtp服务提供基础实现。
-    /// 它扩展了<see cref="TcpServiceBase{TClient}"/>;，并实现了<see cref="ITcpDmtpService{TClient}"/>接口。
-    /// TClient必须是<see cref="TcpDmtpSessionClient"/>的派生类。
-    /// </summary>
-    /// <typeparam name="TClient">客户端会话类型，必须继承自<see cref="TcpDmtpSessionClient"/>。</typeparam>
-    public abstract class TcpDmtpService<TClient> : TcpServiceBase<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSessionClient
+    private async Task<IDmtpActor> FindDmtpActor(string id)
     {
-        #region 字段
-
-        private bool m_allowRoute;
-        private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-
-        #endregion 字段
-
-        /// <inheritdoc/>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
-
-        /// <inheritdoc/>
-        protected override void ClientInitialized(TClient client)
+        if (this.m_allowRoute)
         {
-            base.ClientInitialized(client);
-            client.InternalSetAction(this.PrivateConnecting);
-        }
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            config.SetTcpDataHandlingAdapter(default);
-            base.LoadConfig(config);
-
-            var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
-            if (dmtpRouteService != null)
+            if (this.m_findDmtpActor != null)
             {
-                this.m_allowRoute = true;
-                this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
+                return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
+            return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
         }
-
-        private async Task<IDmtpActor> FindDmtpActor(string id)
+        else
         {
-            if (this.m_allowRoute)
-            {
-                if (this.m_findDmtpActor != null)
-                {
-                    return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
+    }
 
-        private Task PrivateConnecting(TcpDmtpSessionClient sessionClient, ConnectingEventArgs e)
+    private Task PrivateConnecting(TcpDmtpSessionClient sessionClient, ConnectingEventArgs e)
+    {
+        sessionClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
         {
-            sessionClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
-            {
-                Id = e.Id,
-                FindDmtpActor = this.FindDmtpActor
-            });
-            return EasyTask.CompletedTask;
-        }
+            Id = e.Id,
+            FindDmtpActor = this.FindDmtpActor
+        });
+        return EasyTask.CompletedTask;
     }
 }

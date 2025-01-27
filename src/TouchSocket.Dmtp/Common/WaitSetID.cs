@@ -12,39 +12,38 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 设置Id
+/// </summary>
+public class WaitSetId : WaitResult
 {
     /// <summary>
-    /// 设置Id
+    /// 构造函数
     /// </summary>
-    public class WaitSetId : WaitResult
+    /// <param name="sourceId"></param>
+    /// <param name="targetId"></param>
+    public WaitSetId(string sourceId, string targetId)
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="sourceId"></param>
-        /// <param name="targetId"></param>
-        public WaitSetId(string sourceId, string targetId)
-        {
-            this.OldId = sourceId;
-            this.NewId = targetId;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public WaitSetId()
-        {
-        }
-
-        /// <summary>
-        /// 旧Id
-        /// </summary>
-        public string OldId { get; set; }
-
-        /// <summary>
-        /// 新Id
-        /// </summary>
-        public string NewId { get; set; }
+        this.OldId = sourceId;
+        this.NewId = targetId;
     }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    public WaitSetId()
+    {
+    }
+
+    /// <summary>
+    /// 旧Id
+    /// </summary>
+    public string OldId { get; set; }
+
+    /// <summary>
+    /// 新Id
+    /// </summary>
+    public string NewId { get; set; }
 }

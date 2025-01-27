@@ -15,22 +15,21 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+internal class ModbusUdpAdapter : UdpDataHandlingAdapter
 {
-    internal class ModbusUdpAdapter : UdpDataHandlingAdapter
+    public override bool CanSendRequestInfo => true;
+
+    protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
     {
-        public override bool CanSendRequestInfo => true;
+        var response = new ModbusTcpResponse();
 
-        protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        if (((IFixedHeaderRequestInfo)response).OnParsingHeader(byteBlock.ToArray(0, 8)))
         {
-            var response = new ModbusTcpResponse();
-
-            if (((IFixedHeaderRequestInfo)response).OnParsingHeader(byteBlock.ToArray(0, 8)))
+            if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
             {
-                if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
-                {
-                    await this.GoReceived(remoteEndPoint, default, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
+                await this.GoReceived(remoteEndPoint, default, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

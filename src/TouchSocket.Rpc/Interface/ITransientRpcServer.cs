@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc服务接口
+/// </summary>
+public interface ITransientRpcServer : IRpcServer
 {
     /// <summary>
-    /// Rpc服务接口
+    /// 调用上下文
     /// </summary>
-    public interface ITransientRpcServer : IRpcServer
-    {
-        /// <summary>
-        /// 调用上下文
-        /// </summary>
-        ICallContext CallContext { get; set; }
-    }
+    ICallContext CallContext { get; set; }
 }

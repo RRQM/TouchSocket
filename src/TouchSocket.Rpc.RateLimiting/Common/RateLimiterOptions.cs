@@ -12,29 +12,28 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Rpc.RateLimiting
+namespace TouchSocket.Rpc.RateLimiting;
+
+
+/// <summary>
+/// 限速器配置类
+/// </summary>
+public class RateLimiterOptions
 {
+    /// <summary>
+    /// 限速策略字典，用于存储不同的限速策略
+    /// </summary>
+    public Dictionary<string, IRateLimiterPolicy> RateLimiterPolicies { get; private set; } = new Dictionary<string, IRateLimiterPolicy>();
 
     /// <summary>
-    /// 限速器配置类
+    /// 添加限速策略方法
     /// </summary>
-    public class RateLimiterOptions
+    /// <param name="policyName">限速策略名称，用作策略的唯一标识</param>
+    /// <param name="rateLimiterPolicy">具体的限速策略实例</param>
+    /// <returns>当前的RateLimiterOptions实例，支持链式调用</returns>
+    public RateLimiterOptions AddPolicy(string policyName, IRateLimiterPolicy rateLimiterPolicy)
     {
-        /// <summary>
-        /// 限速策略字典，用于存储不同的限速策略
-        /// </summary>
-        public Dictionary<string, IRateLimiterPolicy> RateLimiterPolicies { get; private set; } = new Dictionary<string, IRateLimiterPolicy>();
-
-        /// <summary>
-        /// 添加限速策略方法
-        /// </summary>
-        /// <param name="policyName">限速策略名称，用作策略的唯一标识</param>
-        /// <param name="rateLimiterPolicy">具体的限速策略实例</param>
-        /// <returns>当前的RateLimiterOptions实例，支持链式调用</returns>
-        public RateLimiterOptions AddPolicy(string policyName, IRateLimiterPolicy rateLimiterPolicy)
-        {
-            this.RateLimiterPolicies.Add(policyName, rateLimiterPolicy);
-            return this;
-        }
+        this.RateLimiterPolicies.Add(policyName, rateLimiterPolicy);
+        return this;
     }
 }

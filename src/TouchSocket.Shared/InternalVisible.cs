@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+#if DEBUG
 using System.Runtime.CompilerServices;
 
-#if DEBUG
 [assembly: InternalsVisibleTo("XUnitTestProject")]
 #endif

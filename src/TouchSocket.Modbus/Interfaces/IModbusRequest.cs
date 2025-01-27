@@ -10,46 +10,45 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// Modbus请求接口
+/// </summary>
+public interface IModbusRequest
 {
     /// <summary>
-    /// Modbus请求接口
+    /// 数量
     /// </summary>
-    public interface IModbusRequest
-    {
-        /// <summary>
-        /// 数量
-        /// </summary>
-        ushort Quantity { get; }
+    ushort Quantity { get; }
 
-        /// <summary>
-        /// 起始位置
-        /// </summary>
-        ushort StartingAddress { get; }
+    /// <summary>
+    /// 起始位置
+    /// </summary>
+    ushort StartingAddress { get; }
 
-        /// <summary>
-        /// 数据
-        /// </summary>
-        byte[] Data { get; }
+    /// <summary>
+    /// 数据
+    /// </summary>
+    byte[] Data { get; }
 
-        /// <summary>
-        /// 站点号（单元标识符）
-        /// </summary>
-        byte SlaveId { get; }
+    /// <summary>
+    /// 站点号（单元标识符）
+    /// </summary>
+    byte SlaveId { get; }
 
-        /// <summary>
-        /// 功能码
-        /// </summary>
-        FunctionCode FunctionCode { get; }
+    /// <summary>
+    /// 功能码
+    /// </summary>
+    FunctionCode FunctionCode { get; }
 
-        /// <summary>
-        /// 在读起始位置。
-        /// </summary>
-        ushort ReadStartAddress { get; }
+    /// <summary>
+    /// 在读起始位置。
+    /// </summary>
+    ushort ReadStartAddress { get; }
 
-        /// <summary>
-        /// 读取长度
-        /// </summary>
-        ushort ReadQuantity { get; }
-    }
+    /// <summary>
+    /// 读取长度
+    /// </summary>
+    ushort ReadQuantity { get; }
 }

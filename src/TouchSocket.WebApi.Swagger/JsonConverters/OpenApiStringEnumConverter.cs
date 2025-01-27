@@ -13,12 +13,11 @@
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger
+namespace TouchSocket.WebApi.Swagger;
+
+internal class OpenApiStringEnumConverter : StringEnumConverter
 {
-    internal class OpenApiStringEnumConverter : StringEnumConverter
+    public OpenApiStringEnumConverter() : base(new CamelCaseNamingStrategy())
     {
-        public OpenApiStringEnumConverter() : base(new CamelCaseNamingStrategy())
-        {
-        }
     }
 }

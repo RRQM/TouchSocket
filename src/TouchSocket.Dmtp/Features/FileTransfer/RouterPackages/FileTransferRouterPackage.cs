@@ -12,68 +12,67 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 文件传输请求包
+/// </summary>
+public class FileTransferRouterPackage : WaitRouterPackage
 {
     /// <summary>
-    /// 文件传输请求包
+    /// 续传索引
     /// </summary>
-    public class FileTransferRouterPackage : WaitRouterPackage
+    public int ContinuationIndex { get; set; }
+
+    /// <summary>
+    /// 文件信息
+    /// </summary>
+    public RemoteFileInfo FileInfo { get; set; }
+
+    /// <summary>
+    /// 分块大小
+    /// </summary>
+    public int FileSectionSize { get; set; }
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
+
+    /// <summary>
+    /// 路径
+    /// </summary>
+    public string Path { get; set; }
+
+    /// <summary>
+    /// 资源句柄
+    /// </summary>
+    public int ResourceHandle { get; set; }
+
+    /// <inheritdoc/>
+    protected override bool IncludedRouter => true;
+
+    /// <inheritdoc/>
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <summary>
-        /// 续传索引
-        /// </summary>
-        public int ContinuationIndex { get; set; }
+        base.PackageBody(ref byteBlock);
+        byteBlock.WriteInt32(this.ContinuationIndex);
+        byteBlock.WriteString(this.Path);
+        byteBlock.WriteInt32(this.ResourceHandle);
+        byteBlock.WriteInt32(this.FileSectionSize);
+        byteBlock.WritePackage(this.FileInfo);
+        byteBlock.WritePackage(this.Metadata);
+    }
 
-        /// <summary>
-        /// 文件信息
-        /// </summary>
-        public RemoteFileInfo FileInfo { get; set; }
-
-        /// <summary>
-        /// 分块大小
-        /// </summary>
-        public int FileSectionSize { get; set; }
-
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
-
-        /// <summary>
-        /// 路径
-        /// </summary>
-        public string Path { get; set; }
-
-        /// <summary>
-        /// 资源句柄
-        /// </summary>
-        public int ResourceHandle { get; set; }
-
-        /// <inheritdoc/>
-        protected override bool IncludedRouter => true;
-
-        /// <inheritdoc/>
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WriteInt32(this.ContinuationIndex);
-            byteBlock.WriteString(this.Path);
-            byteBlock.WriteInt32(this.ResourceHandle);
-            byteBlock.WriteInt32(this.FileSectionSize);
-            byteBlock.WritePackage(this.FileInfo);
-            byteBlock.WritePackage(this.Metadata);
-        }
-
-        /// <inheritdoc/>
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.ContinuationIndex = byteBlock.ReadInt32();
-            this.Path = byteBlock.ReadString();
-            this.ResourceHandle = byteBlock.ReadInt32();
-            this.FileSectionSize = byteBlock.ReadInt32();
-            this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-            this.Metadata = byteBlock.ReadPackage<Metadata>();
-        }
+    /// <inheritdoc/>
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.ContinuationIndex = byteBlock.ReadInt32();
+        this.Path = byteBlock.ReadString();
+        this.ResourceHandle = byteBlock.ReadInt32();
+        this.FileSectionSize = byteBlock.ReadInt32();
+        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
+        this.Metadata = byteBlock.ReadPackage<Metadata>();
     }
 }

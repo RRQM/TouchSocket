@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 标识在线状态的对象
+/// </summary>
+public interface IOnlineClient
 {
     /// <summary>
-    /// 标识在线状态的对象
+    /// 判断是否在线
     /// </summary>
-    public interface IOnlineClient
-    {
-        /// <summary>
-        /// 判断是否在线
-        /// </summary>
-        bool Online { get; }
-    }
+    bool Online { get; }
 }

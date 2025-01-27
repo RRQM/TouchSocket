@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 等待返回类
+/// </summary>
+public interface IWaitResult : IWaitHandle
 {
     /// <summary>
-    /// 等待返回类
+    /// 消息
     /// </summary>
-    public interface IWaitResult : IWaitHandle
-    {
-        /// <summary>
-        /// 消息
-        /// </summary>
-        string Message { get; set; }
+    string Message { get; set; }
 
-        /// <summary>
-        /// 状态
-        /// </summary>
-        byte Status { get; set; }
-    }
+    /// <summary>
+    /// 状态
+    /// </summary>
+    byte Status { get; set; }
 }

@@ -13,23 +13,22 @@
 #if NET6_0_OR_GREATER || NET481_OR_GREATER
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// JsonRpcDispatchProxy
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public abstract class JsonRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
 {
-    /// <summary>
-    /// JsonRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class JsonRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
-    {
 
-    }
+}
 
-    /// <summary>
-    /// JsonRpcDispatchProxy
-    /// </summary>
-    public abstract class JsonRpcDispatchProxy : JsonRpcDispatchProxy<IJsonRpcClient>
-    {
+/// <summary>
+/// JsonRpcDispatchProxy
+/// </summary>
+public abstract class JsonRpcDispatchProxy : JsonRpcDispatchProxy<IJsonRpcClient>
+{
 
-    }
 }
 #endif

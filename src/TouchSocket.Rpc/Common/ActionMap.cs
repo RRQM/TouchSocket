@@ -13,41 +13,40 @@
 using System;
 using System.Collections.Generic;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 服务映射图
+/// </summary>
+public sealed class ActionMap : Dictionary<string, RpcMethod>
 {
     /// <summary>
     /// 服务映射图
     /// </summary>
-    public sealed class ActionMap : Dictionary<string, RpcMethod>
+    /// <param name="ignoreCase"></param>
+    public ActionMap(bool ignoreCase) : base(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
     {
-        /// <summary>
-        /// 服务映射图
-        /// </summary>
-        /// <param name="ignoreCase"></param>
-        public ActionMap(bool ignoreCase) : base(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
-        {
-        }
+    }
 
-        /// <summary>
-        /// 通过actionKey获取函数实例
-        /// </summary>
-        /// <param name="actionKey"></param>
-        /// <returns></returns>
-        public RpcMethod GetRpcMethod(string actionKey)
-        {
-            this.TryGetValue(actionKey, out var rpcMethod);
-            return rpcMethod;
-        }
+    /// <summary>
+    /// 通过actionKey获取函数实例
+    /// </summary>
+    /// <param name="actionKey"></param>
+    /// <returns></returns>
+    public RpcMethod GetRpcMethod(string actionKey)
+    {
+        this.TryGetValue(actionKey, out var rpcMethod);
+        return rpcMethod;
+    }
 
-        /// <summary>
-        /// 通过actionKey获取函数实例
-        /// </summary>
-        /// <param name="actionKey"></param>
-        /// <param name="rpcMethod"></param>
-        /// <returns></returns>
-        public bool TryGetRpcMethod(string actionKey, out RpcMethod rpcMethod)
-        {
-            return this.TryGetValue(actionKey, out rpcMethod);
-        }
+    /// <summary>
+    /// 通过actionKey获取函数实例
+    /// </summary>
+    /// <param name="actionKey"></param>
+    /// <param name="rpcMethod"></param>
+    /// <returns></returns>
+    public bool TryGetRpcMethod(string actionKey, out RpcMethod rpcMethod)
+    {
+        return this.TryGetValue(actionKey, out rpcMethod);
     }
 }

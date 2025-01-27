@@ -13,54 +13,53 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// DmtpRpcCallContext
+/// </summary>
+internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
 {
-    /// <summary>
-    /// DmtpRpcCallContext
-    /// </summary>
-    internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
+    private readonly IScopedResolver m_scopedResolver;
+
+    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver) : base(caller, rpcMethod, scopedResolver.Resolver)
     {
-        private readonly IScopedResolver m_scopedResolver;
+        this.DmtpRpcPackage = dmtpRpcPackage;
+        this.m_scopedResolver = scopedResolver;
+    }
 
-        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver) : base(caller, rpcMethod, scopedResolver.Resolver)
+    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
+    {
+        this.DmtpRpcPackage = dmtpRpcPackage;
+        this.m_scopedResolver = default;
+    }
+
+    /// <inheritdoc/>
+    public DmtpRpcRequestPackage DmtpRpcPackage { get; }
+
+    /// <inheritdoc/>
+    public Metadata Metadata => this.DmtpRpcPackage.Metadata;
+
+    /// <inheritdoc/>
+    public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
+
+    public void SetParameters(object[] ps)
+    {
+        base.Parameters = ps;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (this.DisposedValue)
         {
-            this.DmtpRpcPackage = dmtpRpcPackage;
-            this.m_scopedResolver = scopedResolver;
+            return;
         }
 
-        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
+        if (disposing)
         {
-            this.DmtpRpcPackage = dmtpRpcPackage;
-            this.m_scopedResolver = default;
+            this.m_scopedResolver?.Dispose();
         }
-
-        /// <inheritdoc/>
-        public DmtpRpcRequestPackage DmtpRpcPackage { get; }
-
-        /// <inheritdoc/>
-        public Metadata Metadata => this.DmtpRpcPackage.Metadata;
-
-        /// <inheritdoc/>
-        public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
-
-        public void SetParameters(object[] ps)
-        {
-            base.Parameters = ps;
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.m_scopedResolver?.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

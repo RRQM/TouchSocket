@@ -15,94 +15,93 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
+/// </summary>
+public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
 {
     /// <summary>
     /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
     /// </summary>
-    public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
+    public ModbusRtuOverTcpMaster()
     {
-        /// <summary>
-        /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
-        /// </summary>
-        public ModbusRtuOverTcpMaster()
+        this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
+    }
+
+
+    /// <inheritdoc/>
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    {
+        await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        try
         {
-            this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
-        }
+            var modbusRequest = new ModbusRtuRequest(request);
 
-
-        /// <inheritdoc/>
-        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
-        {
-            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
+            var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
             try
             {
-                var modbusRequest = new ModbusRtuRequest(request);
+                modbusRequest.Build(ref byteBlock);
 
-                var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
-                try
-                {
-                    modbusRequest.Build(ref byteBlock);
-
-                    await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-
-                this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                waitDataStatus.ThrowIfNotRunning();
-
-                var response = this.m_waitData.WaitResult;
-                response.Request = request;
-                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-                return response;
+                await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
-                this.m_semaphoreSlimForRequest.Release();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override Task OnTcpConnecting(ConnectingEventArgs e)
-        {
-            this.SetAdapter(new ModbusRtuAdapter());
-            return base.OnTcpConnecting(e);
-        }
-
-        #region 字段
-
-        private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-        private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
-        private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
-
-        #endregion 字段
-
-        /// <inheritdoc/>
-        protected override Task OnTcpReceived(ReceivedDataEventArgs e)
-        {
-            if (e.RequestInfo is ModbusRtuResponse response)
-            {
-                this.SetRun(response);
+                byteBlock.Dispose();
             }
 
-            return EasyTask.CompletedTask;
+            this.m_waitDataAsync.SetCancellationToken(token);
+            var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            waitDataStatus.ThrowIfNotRunning();
+
+            var response = this.m_waitData.WaitResult;
+            response.Request = request;
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+            return response;
+        }
+        finally
+        {
+            this.m_semaphoreSlimForRequest.Release();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override Task OnTcpConnecting(ConnectingEventArgs e)
+    {
+        this.SetAdapter(new ModbusRtuAdapter());
+        return base.OnTcpConnecting(e);
+    }
+
+    #region 字段
+
+    private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
+    private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
+    private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+
+    #endregion 字段
+
+    /// <inheritdoc/>
+    protected override Task OnTcpReceived(ReceivedDataEventArgs e)
+    {
+        if (e.RequestInfo is ModbusRtuResponse response)
+        {
+            this.SetRun(response);
         }
 
-        private void SetRun(ModbusRtuResponse response)
-        {
-            this.m_waitData.Set(response);
-            this.m_waitDataAsync.Set(response);
-        }
+        return EasyTask.CompletedTask;
+    }
 
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
-        }
+    private void SetRun(ModbusRtuResponse response)
+    {
+        this.m_waitData.Set(response);
+        this.m_waitDataAsync.Set(response);
+    }
+
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return this.TcpConnectAsync(millisecondsTimeout, token);
     }
 }

@@ -12,111 +12,110 @@
 
 using System.Collections.Concurrent;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 安全双向字典
+/// </summary>
+public class ConcurrentDoublyDictionary<TKey, TValue>
 {
     /// <summary>
-    /// 安全双向字典
+    /// 构造函数
     /// </summary>
-    public class ConcurrentDoublyDictionary<TKey, TValue>
+    public ConcurrentDoublyDictionary()
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public ConcurrentDoublyDictionary()
+        this.KeyToValue = new ConcurrentDictionary<TKey, TValue>();
+        this.ValueToKey = new ConcurrentDictionary<TValue, TKey>();
+    }
+
+    /// <summary>
+    /// 由键指向值得集合
+    /// </summary>
+    public ConcurrentDictionary<TKey, TValue> KeyToValue { get; private set; }
+
+    /// <summary>
+    /// 由值指向键的集合
+    /// </summary>
+    public ConcurrentDictionary<TValue, TKey> ValueToKey { get; private set; }
+
+    /// <summary>
+    ///  尝试将指定的键和值添加到字典中。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryAdd(TKey key, TValue value)
+    {
+        if (this.KeyToValue.TryAdd(key, value))
         {
-            this.KeyToValue = new ConcurrentDictionary<TKey, TValue>();
-            this.ValueToKey = new ConcurrentDictionary<TValue, TKey>();
-        }
-
-        /// <summary>
-        /// 由键指向值得集合
-        /// </summary>
-        public ConcurrentDictionary<TKey, TValue> KeyToValue { get; private set; }
-
-        /// <summary>
-        /// 由值指向键的集合
-        /// </summary>
-        public ConcurrentDictionary<TValue, TKey> ValueToKey { get; private set; }
-
-        /// <summary>
-        ///  尝试将指定的键和值添加到字典中。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryAdd(TKey key, TValue value)
-        {
-            if (this.KeyToValue.TryAdd(key, value))
+            if (this.ValueToKey.TryAdd(value, key))
             {
-                if (this.ValueToKey.TryAdd(value, key))
-                {
-                    return true;
-                }
-                else
-                {
-                    this.KeyToValue.TryRemove(key, out _);
-                    return false;
-                }
+                return true;
             }
-            return false;
-        }
-
-        /// <summary>
-        /// 由键尝试移除
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryRemoveFromKey(TKey key, out TValue value)
-        {
-            if (this.KeyToValue.TryRemove(key, out value))
+            else
             {
-                if (this.ValueToKey.TryRemove(value, out _))
-                {
-                    return true;
-                }
+                this.KeyToValue.TryRemove(key, out _);
+                return false;
             }
-            return false;
         }
+        return false;
+    }
 
-        /// <summary>
-        /// 由值尝试移除
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool TryRemoveFromValue(TValue value, out TKey key)
+    /// <summary>
+    /// 由键尝试移除
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryRemoveFromKey(TKey key, out TValue value)
+    {
+        if (this.KeyToValue.TryRemove(key, out value))
         {
-            if (this.ValueToKey.TryRemove(value, out key))
+            if (this.ValueToKey.TryRemove(value, out _))
             {
-                if (this.KeyToValue.TryRemove(key, out _))
-                {
-                    return true;
-                }
+                return true;
             }
-            return false;
         }
+        return false;
+    }
 
-        /// <summary>
-        /// 由键获取到值
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryGetFromKey(TKey key, out TValue value)
+    /// <summary>
+    /// 由值尝试移除
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool TryRemoveFromValue(TValue value, out TKey key)
+    {
+        if (this.ValueToKey.TryRemove(value, out key))
         {
-            return this.KeyToValue.TryGetValue(key, out value);
+            if (this.KeyToValue.TryRemove(key, out _))
+            {
+                return true;
+            }
         }
+        return false;
+    }
 
-        /// <summary>
-        /// 由值获取到键
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool TryGetFromValue(TValue value, out TKey key)
-        {
-            return this.ValueToKey.TryGetValue(value, out key);
-        }
+    /// <summary>
+    /// 由键获取到值
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryGetFromKey(TKey key, out TValue value)
+    {
+        return this.KeyToValue.TryGetValue(key, out value);
+    }
+
+    /// <summary>
+    /// 由值获取到键
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool TryGetFromValue(TValue value, out TKey key)
+    {
+        return this.ValueToKey.TryGetValue(value, out key);
     }
 }

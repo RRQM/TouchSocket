@@ -13,21 +13,20 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// IDmtpRpcCallContext
+/// </summary>
+public interface IDmtpRpcCallContext : ICallContext
 {
     /// <summary>
-    /// IDmtpRpcCallContext
+    /// 序列化类型
     /// </summary>
-    public interface IDmtpRpcCallContext : ICallContext
-    {
-        /// <summary>
-        /// 序列化类型
-        /// </summary>
-        public SerializationType SerializationType { get; }
+    public SerializationType SerializationType { get; }
 
-        /// <summary>
-        /// 调用元数据
-        /// </summary>
-        Metadata Metadata { get; }
-    }
+    /// <summary>
+    /// 调用元数据
+    /// </summary>
+    Metadata Metadata { get; }
 }

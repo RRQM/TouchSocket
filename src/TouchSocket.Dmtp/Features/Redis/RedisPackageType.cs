@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp.Redis
+namespace TouchSocket.Dmtp.Redis;
+
+internal enum RedisPackageType : byte
 {
-    internal enum RedisPackageType : byte
-    {
-        Set,
-        Get,
-        Contains,
-        Remove,
-        Clear
-    }
+    Set,
+    Get,
+    Contains,
+    Remove,
+    Clear
 }

@@ -12,33 +12,32 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// MetadataFastBinaryConverter
+/// </summary>
+internal sealed class MetadataFastBinaryConverter : FastBinaryConverter<Metadata>
 {
-    /// <summary>
-    /// MetadataFastBinaryConverter
-    /// </summary>
-    internal sealed class MetadataFastBinaryConverter : FastBinaryConverter<Metadata>
+    protected override Metadata Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
     {
-        protected override Metadata Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
-        {
-            var count = byteBlock.ReadInt32();
+        var count = byteBlock.ReadInt32();
 
-            var metadata = new Metadata();
-            for (var i = 0; i < count; i++)
-            {
-                metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
-            }
-            return metadata;
+        var metadata = new Metadata();
+        for (var i = 0; i < count; i++)
+        {
+            metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
         }
+        return metadata;
+    }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Metadata obj)
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Metadata obj)
+    {
+        byteBlock.WriteInt32(obj.Count);
+        foreach (var item in obj)
         {
-            byteBlock.WriteInt32(obj.Count);
-            foreach (var item in obj)
-            {
-                byteBlock.WriteString(item.Key);
-                byteBlock.WriteString(item.Value);
-            }
+            byteBlock.WriteString(item.Key);
+            byteBlock.WriteString(item.Value);
         }
     }
 }

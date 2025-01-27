@@ -12,31 +12,30 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 接收数据事件参数类，继承自ByteBlockEventArgs
+/// 用于封装接收到的数据和相关的请求信息
+/// </summary>
+public class ReceivedDataEventArgs : ByteBlockEventArgs
 {
+
     /// <summary>
-    /// 接收数据事件参数类，继承自ByteBlockEventArgs
-    /// 用于封装接收到的数据和相关的请求信息
+    /// 构造函数，初始化接收到的数据和请求信息
     /// </summary>
-    public class ReceivedDataEventArgs : ByteBlockEventArgs
+    /// <param name="byteBlock">接收到的数据块</param>
+    /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
+    public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock)
     {
-
-        /// <summary>
-        /// 构造函数，初始化接收到的数据和请求信息
-        /// </summary>
-        /// <param name="byteBlock">接收到的数据块</param>
-        /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
-        public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock)
-        {
-            this.RequestInfo = requestInfo;
-        }
-
-        /// <summary>
-        /// 获取请求信息
-        /// </summary>
-        /// <remarks>
-        /// 该属性只读，用于提供接收数据时的请求上下文信息
-        /// </remarks>
-        public IRequestInfo RequestInfo { get; }
+        this.RequestInfo = requestInfo;
     }
+
+    /// <summary>
+    /// 获取请求信息
+    /// </summary>
+    /// <remarks>
+    /// 该属性只读，用于提供接收数据时的请求上下文信息
+    /// </remarks>
+    public IRequestInfo RequestInfo { get; }
 }

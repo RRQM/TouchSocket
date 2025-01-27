@@ -12,21 +12,20 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 等待返回类
+/// </summary>
+[Serializable]
+public class WaitResult : IWaitResult
 {
-    /// <summary>
-    /// 等待返回类
-    /// </summary>
-    [Serializable]
-    public class WaitResult : IWaitResult
-    {
-        /// <inheritdoc/>
-        public string Message { get; set; }
+    /// <inheritdoc/>
+    public string Message { get; set; }
 
-        /// <inheritdoc/>
-        public int Sign { get; set; }
+    /// <inheritdoc/>
+    public int Sign { get; set; }
 
-        /// <inheritdoc/>
-        public byte Status { get; set; }
-    }
+    /// <inheritdoc/>
+    public byte Status { get; set; }
 }

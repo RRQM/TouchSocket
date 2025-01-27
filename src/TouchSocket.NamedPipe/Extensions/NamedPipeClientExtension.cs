@@ -14,41 +14,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// NamedPipeClientExtension
+/// </summary>
+public static class NamedPipeClientExtension
 {
+    #region 连接
+
     /// <summary>
-    /// NamedPipeClientExtension
+    /// 异步连接到指定的命名管道
     /// </summary>
-    public static class NamedPipeClientExtension
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="client"></param>
+    /// <param name="pipeName">管道名称</param>
+    /// <param name="millisecondsTimeout">超时设定</param>
+    /// <returns></returns>
+    public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
     {
-        #region 连接
-
-        /// <summary>
-        /// 异步连接到指定的命名管道
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="pipeName">管道名称</param>
-        /// <param name="millisecondsTimeout">超时设定</param>
-        /// <returns></returns>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
+        TouchSocketConfig config;
+        if (client.Config == null)
         {
-            TouchSocketConfig config;
-            if (client.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetPipeName(pipeName);
-                await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                config = client.Config;
-                config.SetPipeName(pipeName);
-            }
-            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return client;
+            config = new TouchSocketConfig();
+            config.SetPipeName(pipeName);
+            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-
-        #endregion 连接
+        else
+        {
+            config = client.Config;
+            config.SetPipeName(pipeName);
+        }
+        await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return client;
     }
+
+    #endregion 连接
 }

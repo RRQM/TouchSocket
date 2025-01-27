@@ -14,19 +14,18 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// IWebSocketClosingPlugin
+/// </summary>
+[DynamicMethod]
+public interface IWebSocketClosingPlugin : IPlugin
 {
     /// <summary>
-    /// IWebSocketClosingPlugin
+    /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
     /// </summary>
-    [DynamicMethod]
-    public interface IWebSocketClosingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
-        /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="e"></param>
-        Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e);
-    }
+    /// <param name="webSocket"></param>
+    /// <param name="e"></param>
+    Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e);
 }

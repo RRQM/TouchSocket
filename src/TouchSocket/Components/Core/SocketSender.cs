@@ -18,69 +18,68 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal sealed class SocketSender : SocketAwaitableEventArgs
 {
-    internal sealed class SocketSender : SocketAwaitableEventArgs
+    private List<ArraySegment<byte>> m_bufferList;
+
+    public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlySequence<byte> buffers)
     {
-        private List<ArraySegment<byte>> m_bufferList;
-
-        public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlySequence<byte> buffers)
+        if (buffers.IsSingleSegment)
         {
-            if (buffers.IsSingleSegment)
-            {
-                return this.SendAsync(socket, buffers.First);
-            }
-
-            this.SetBufferList(buffers);
-
-            if (socket.SendAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+            return this.SendAsync(socket, buffers.First);
         }
 
-        public void Reset()
-        {
-            if (this.BufferList != null)
-            {
-                this.BufferList = null;
+        this.SetBufferList(buffers);
 
-                this.m_bufferList?.Clear();
-            }
-            else
-            {
-                this.SetBuffer(null, 0, 0);
-            }
+        if (socket.SendAsync(this))
+        {
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
 
-        public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlyMemory<byte> memory)
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+    }
+
+    public void Reset()
+    {
+        if (this.BufferList != null)
         {
+            this.BufferList = null;
+
+            this.m_bufferList?.Clear();
+        }
+        else
+        {
+            this.SetBuffer(null, 0, 0);
+        }
+    }
+
+    public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlyMemory<byte> memory)
+    {
 #if NET6_0_OR_GREATER
-            this.SetBuffer(MemoryMarshal.AsMemory(memory));
+        this.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
-            var segment = memory.GetArray();
+        var segment = memory.GetArray();
 
-            this.SetBuffer(segment.Array, segment.Offset, segment.Count);
+        this.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
-            if (socket.SendAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
-        }
-
-        private void SetBufferList(in ReadOnlySequence<byte> buffer)
+        if (socket.SendAsync(this))
         {
-            this.m_bufferList ??= new List<ArraySegment<byte>>();
-
-            foreach (var b in buffer)
-            {
-                this.m_bufferList.Add(b.GetArray());
-            }
-            this.BufferList = this.m_bufferList;
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
+
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+    }
+
+    private void SetBufferList(in ReadOnlySequence<byte> buffer)
+    {
+        this.m_bufferList ??= new List<ArraySegment<byte>>();
+
+        foreach (var b in buffer)
+        {
+            this.m_bufferList.Add(b.GetArray());
+        }
+        this.BufferList = this.m_bufferList;
     }
 }

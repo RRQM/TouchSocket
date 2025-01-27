@@ -13,49 +13,48 @@
 using System;
 using System.Reflection;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+internal class FastMemberInfo
 {
-    internal class FastMemberInfo
+    public byte Index;
+    private readonly PropertyInfo m_propertyInfo;
+    private readonly FieldInfo m_fieldInfo;
+    private readonly bool m_isField;
+
+    public FastMemberInfo(MemberInfo memberInfo, bool enableIndex)
     {
-        public byte Index;
-        private readonly PropertyInfo m_propertyInfo;
-        private readonly FieldInfo m_fieldInfo;
-        private readonly bool m_isField;
-
-        public FastMemberInfo(MemberInfo memberInfo, bool enableIndex)
+        if (enableIndex)
         {
-            if (enableIndex)
-            {
-                this.Index = memberInfo.GetCustomAttribute(typeof(FastMemberAttribute), false) is FastMemberAttribute fastMamberAttribute
-                    ? fastMamberAttribute.Index
-                    : throw new Exception($"成员{memberInfo.Name}未标识{nameof(FastMemberAttribute)}特性。");
-            }
-
-            if (memberInfo is PropertyInfo propertyInfo)
-            {
-                this.m_propertyInfo = propertyInfo;
-            }
-            else if (memberInfo is FieldInfo fieldInfo)
-            {
-                this.m_isField = true;
-                this.m_fieldInfo = fieldInfo;
-            }
+            this.Index = memberInfo.GetCustomAttribute(typeof(FastMemberAttribute), false) is FastMemberAttribute fastMamberAttribute
+                ? fastMamberAttribute.Index
+                : throw new Exception($"成员{memberInfo.Name}未标识{nameof(FastMemberAttribute)}特性。");
         }
 
-        public string Name => this.m_isField ? this.m_fieldInfo.Name : this.m_propertyInfo.Name;
-
-        public Type Type => this.m_isField ? this.m_fieldInfo.FieldType : this.m_propertyInfo.PropertyType;
-
-        public void SetValue(ref object instance, object obj)
+        if (memberInfo is PropertyInfo propertyInfo)
         {
-            if (this.m_isField)
-            {
-                this.m_fieldInfo.SetValue(instance, obj);
-            }
-            else
-            {
-                this.m_propertyInfo.SetValue(instance, obj);
-            }
+            this.m_propertyInfo = propertyInfo;
+        }
+        else if (memberInfo is FieldInfo fieldInfo)
+        {
+            this.m_isField = true;
+            this.m_fieldInfo = fieldInfo;
+        }
+    }
+
+    public string Name => this.m_isField ? this.m_fieldInfo.Name : this.m_propertyInfo.Name;
+
+    public Type Type => this.m_isField ? this.m_fieldInfo.FieldType : this.m_propertyInfo.PropertyType;
+
+    public void SetValue(ref object instance, object obj)
+    {
+        if (this.m_isField)
+        {
+            this.m_fieldInfo.SetValue(instance, obj);
+        }
+        else
+        {
+            this.m_propertyInfo.SetValue(instance, obj);
         }
     }
 }

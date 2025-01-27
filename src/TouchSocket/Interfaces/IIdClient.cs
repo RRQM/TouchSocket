@@ -12,22 +12,21 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 具有Id的客户端
+/// </summary>
+public interface IIdClient
 {
     /// <summary>
-    /// 具有Id的客户端
+    /// 重新设置Id
     /// </summary>
-    public interface IIdClient
-    {
-        /// <summary>
-        /// 重新设置Id
-        /// </summary>
-        /// <param name="newId">新的Id值</param>
-        Task ResetIdAsync(string newId);
+    /// <param name="newId">新的Id值</param>
+    Task ResetIdAsync(string newId);
 
-        /// <summary>
-        /// 用于索引的Id
-        /// </summary>
-        string Id { get; }
-    }
+    /// <summary>
+    /// 用于索引的Id
+    /// </summary>
+    string Id { get; }
 }

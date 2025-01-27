@@ -12,16 +12,15 @@
 
 using System.IO.Pipes;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 定义了一个接口，用于通过命名管道进行流式通信。
+/// </summary>
+public interface INamedPipeStreamClient
 {
     /// <summary>
-    /// 定义了一个接口，用于通过命名管道进行流式通信。
+    /// 用于通讯的管道流。
     /// </summary>
-    public interface INamedPipeStreamClient
-    {
-        /// <summary>
-        /// 用于通讯的管道流。
-        /// </summary>
-        public PipeStream PipeStream { get; }
-    }
+    public PipeStream PipeStream { get; }
 }

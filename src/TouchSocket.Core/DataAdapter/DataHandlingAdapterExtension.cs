@@ -12,100 +12,99 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// DateHandleAdapterExtension
+/// </summary>
+public static class DataHandlingAdapterExtension
 {
+    #region SingleStreamDataHandlingAdapter
+
     /// <summary>
-    /// DateHandleAdapterExtension
+    /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
     /// </summary>
-    public static class DataHandlingAdapterExtension
+    /// <param name="adapter"></param>
+    /// <param name="config"></param>
+    public static void Config(this SingleStreamDataHandlingAdapter adapter, TouchSocketConfig config)
     {
-        #region SingleStreamDataHandlingAdapter
+        var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
 
-        /// <summary>
-        /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
-        /// </summary>
-        /// <param name="adapter"></param>
-        /// <param name="config"></param>
-        public static void Config(this SingleStreamDataHandlingAdapter adapter, TouchSocketConfig config)
+        if (option.MaxPackageSize.HasValue)
         {
-            var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
-
-            if (option.MaxPackageSize.HasValue)
-            {
-                adapter.MaxPackageSize = option.MaxPackageSize.Value;
-            }
-
-            if (option.CacheTimeout.HasValue)
-            {
-                adapter.CacheTimeout = option.CacheTimeout.Value;
-            }
-
-            if (option.CacheTimeoutEnable.HasValue)
-            {
-                adapter.CacheTimeoutEnable = option.CacheTimeoutEnable.Value;
-            }
-
-            if (option.UpdateCacheTimeWhenRev.HasValue)
-            {
-                adapter.UpdateCacheTimeWhenRev = option.UpdateCacheTimeWhenRev.Value;
-            }
+            adapter.MaxPackageSize = option.MaxPackageSize.Value;
         }
 
-        /// <summary>
-        /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
-        /// </summary>
-        /// <param name="adapter"></param>
-        /// <param name="config"></param>
-        public static void Config(this DataHandlingAdapter adapter, TouchSocketConfig config)
+        if (option.CacheTimeout.HasValue)
         {
-            var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
-
-            if (option.MaxPackageSize.HasValue)
-            {
-                adapter.MaxPackageSize = option.MaxPackageSize.Value;
-            }
+            adapter.CacheTimeout = option.CacheTimeout.Value;
         }
 
-        #endregion SingleStreamDataHandlingAdapter
-
-        /// <summary>
-        /// 设置适配器相关的配置
-        /// </summary>
-        public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = new("AdapterOption", new AdapterOption());
-
-        /// <summary>
-        /// 设置适配器相关的配置
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetAdapterOption(this TouchSocketConfig config, AdapterOption value)
+        if (option.CacheTimeoutEnable.HasValue)
         {
-            config.SetValue(AdapterOptionProperty, value);
-            return config;
+            adapter.CacheTimeoutEnable = option.CacheTimeoutEnable.Value;
         }
 
-        #region BuildAsBytes
-
-        /// <summary>
-        /// 将对象构建到字节数组
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <returns></returns>
-        public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
+        if (option.UpdateCacheTimeWhenRev.HasValue)
         {
-            var byteBlock = new ByteBlock(requestInfo.MaxLength);
-            try
-            {
-                requestInfo.Build(ref byteBlock);
-                return byteBlock.ToArray();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            adapter.UpdateCacheTimeWhenRev = option.UpdateCacheTimeWhenRev.Value;
         }
-
-        #endregion BuildAsBytes
     }
+
+    /// <summary>
+    /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
+    /// </summary>
+    /// <param name="adapter"></param>
+    /// <param name="config"></param>
+    public static void Config(this DataHandlingAdapter adapter, TouchSocketConfig config)
+    {
+        var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
+
+        if (option.MaxPackageSize.HasValue)
+        {
+            adapter.MaxPackageSize = option.MaxPackageSize.Value;
+        }
+    }
+
+    #endregion SingleStreamDataHandlingAdapter
+
+    /// <summary>
+    /// 设置适配器相关的配置
+    /// </summary>
+    public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = new("AdapterOption", new AdapterOption());
+
+    /// <summary>
+    /// 设置适配器相关的配置
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetAdapterOption(this TouchSocketConfig config, AdapterOption value)
+    {
+        config.SetValue(AdapterOptionProperty, value);
+        return config;
+    }
+
+    #region BuildAsBytes
+
+    /// <summary>
+    /// 将对象构建到字节数组
+    /// </summary>
+    /// <param name="requestInfo"></param>
+    /// <returns></returns>
+    public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
+    {
+        var byteBlock = new ByteBlock(requestInfo.MaxLength);
+        try
+        {
+            requestInfo.Build(ref byteBlock);
+            return byteBlock.ToArray();
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
+    #endregion BuildAsBytes
 }

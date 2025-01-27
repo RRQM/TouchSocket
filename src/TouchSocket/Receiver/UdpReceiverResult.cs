@@ -13,17 +13,16 @@
 using System;
 using System.Net;
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// ReceiverResult
-    /// </summary>
-    internal class UdpReceiverResult : InternalReceiverResult, IUdpReceiverResult
-    {
-        public UdpReceiverResult(Action disAction) : base(disAction)
-        {
-        }
+namespace TouchSocket.Sockets;
 
-        public EndPoint EndPoint { get; set; }
+/// <summary>
+/// ReceiverResult
+/// </summary>
+internal class UdpReceiverResult : InternalReceiverResult, IUdpReceiverResult
+{
+    public UdpReceiverResult(Action disAction) : base(disAction)
+    {
     }
+
+    public EndPoint EndPoint { get; set; }
 }

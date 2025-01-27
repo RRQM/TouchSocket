@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Resources
+namespace TouchSocket.Resources;
+
+/// <summary>
+/// TouchSocketXmlRpc资源枚举
+/// </summary>
+public enum TouchSocketXmlRpcResource : byte
 {
-    /// <summary>
-    /// TouchSocketXmlRpc资源枚举
-    /// </summary>
-    public enum TouchSocketXmlRpcResource : byte
-    {
-    }
 }

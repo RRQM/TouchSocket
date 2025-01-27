@@ -14,46 +14,45 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 等待设置
+/// </summary>
+public class WaitingOptions
 {
     /// <summary>
-    /// 等待设置
+    /// 筛选函数
     /// </summary>
-    public class WaitingOptions
+    public Func<ResponsedData, bool> FilterFunc
     {
-        /// <summary>
-        /// 筛选函数
-        /// </summary>
-        public Func<ResponsedData, bool> FilterFunc
+        set
         {
-            set
+            if (value == default)
             {
-                if (value == default)
+                this.FilterFuncAsync = default;
+            }
+            else
+            {
+                Task<bool> FilterFuncValue(ResponsedData data)
                 {
-                    this.FilterFuncAsync = default;
+                    var task = Task.FromResult(value.Invoke(data));
+                    task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return task;
                 }
-                else
-                {
-                    Task<bool> FilterFuncValue(ResponsedData data)
-                    {
-                        var task = Task.FromResult(value.Invoke(data));
-                        task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        return task;
-                    }
 
-                    this.FilterFuncAsync = FilterFuncValue;
-                }
+                this.FilterFuncAsync = FilterFuncValue;
             }
         }
-
-        /// <summary>
-        /// 异步筛选函数
-        /// </summary>
-        public Func<ResponsedData, Task<bool>> FilterFuncAsync { get; set; }
-
-        /// <summary>
-        /// 远程地址(仅在Udp模式下生效)
-        /// </summary>
-        public IPHost RemoteIPHost { get; set; }
     }
+
+    /// <summary>
+    /// 异步筛选函数
+    /// </summary>
+    public Func<ResponsedData, Task<bool>> FilterFuncAsync { get; set; }
+
+    /// <summary>
+    /// 远程地址(仅在Udp模式下生效)
+    /// </summary>
+    public IPHost RemoteIPHost { get; set; }
 }

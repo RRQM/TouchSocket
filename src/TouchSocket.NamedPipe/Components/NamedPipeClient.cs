@@ -17,188 +17,187 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 命名管道客户端
+/// </summary>
+public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
 {
+    #region 事件
+
+    /// <inheritdoc/>
+    public ClosedEventHandler<INamedPipeClient> Closed { get; set; }
+
+    /// <inheritdoc/>
+    public ClosingEventHandler<INamedPipeClient> Closing { get; set; }
+
+    /// <inheritdoc/>
+    public ConnectedEventHandler<INamedPipeClient> Connected { get; set; }
+
+    /// <inheritdoc/>
+    public ConnectingEventHandler<INamedPipeClient> Connecting { get; set; }
+
     /// <summary>
-    /// 命名管道客户端
+    /// 接收到数据
     /// </summary>
-    public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
+    public ReceivedEventHandler<INamedPipeClient> Received { get; set; }
+
+    /// <summary>
+    /// 断开连接。在客户端未设置连接状态时，不会触发
+    /// </summary>
+    /// <param name="e"></param>
+    protected override async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
-        #region 事件
-
-        /// <inheritdoc/>
-        public ClosedEventHandler<INamedPipeClient> Closed { get; set; }
-
-        /// <inheritdoc/>
-        public ClosingEventHandler<INamedPipeClient> Closing { get; set; }
-
-        /// <inheritdoc/>
-        public ConnectedEventHandler<INamedPipeClient> Connected { get; set; }
-
-        /// <inheritdoc/>
-        public ConnectingEventHandler<INamedPipeClient> Connecting { get; set; }
-
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        public ReceivedEventHandler<INamedPipeClient> Received { get; set; }
-
-        /// <summary>
-        /// 断开连接。在客户端未设置连接状态时，不会触发
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnNamedPipeClosed(ClosedEventArgs e)
+        try
         {
-            try
+            if (this.Closed != null)
             {
-                if (this.Closed != null)
-                {
-                    await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    if (e.Handled)
-                    {
-                        return;
-                    }
-                }
-                await base.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            catch (Exception ex)
-            {
-                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
-            }
-        }
-
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnNamedPipeClosing(ClosingEventArgs e)
-        {
-            if (this.Closing != null)
-            {
-                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-
-        /// <summary>
-        /// 已经建立管道连接
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnNamedPipeConnected(ConnectedEventArgs e)
+        catch (Exception ex)
         {
-            try
-            {
-                if (this.Connected != null)
-                {
-                    await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    if (e.Handled)
-                    {
-                        return;
-                    }
-                }
-                await base.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            catch (Exception ex)
-            {
-                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
-            }
+            this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
         }
-
-        /// <summary>
-        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnNamedPipeConnecting(ConnectingEventArgs e)
-        {
-            try
-            {
-                if (this.Connecting != null)
-                {
-                    await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    if (e.Handled)
-                    {
-                        return;
-                    }
-                }
-
-                await base.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            catch (Exception ex)
-            {
-                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.OnNamedPipeConnecting)}中发生错误。", ex);
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
-        {
-            if (this.Received != null)
-            {
-                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (e.Handled)
-                {
-                    return;
-                }
-            }
-            await base.OnNamedPipeReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-
-        #endregion 事件
-
-        #region 属性
-
-        #endregion 属性
-
-        #region Connect
-
-        /// <inheritdoc/>
-        public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.PipeConnectAsync(millisecondsTimeout, token);
-        }
-
-        #endregion Connect
-
-        #region Receiver
-
-        /// <inheritdoc/>
-        public void ClearReceiver()
-        {
-            this.ProtectedClearReceiver();
-        }
-
-        /// <inheritdoc/>
-        public IReceiver<IReceiverResult> CreateReceiver()
-        {
-            return this.ProtectedCreateReceiver(this);
-        }
-
-        #endregion Receiver
-
-        #region 异步发送
-
-        /// <inheritdoc/>
-        public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
-        {
-            return this.ProtectedSendAsync(memory);
-        }
-
-        /// <inheritdoc/>
-        public virtual Task SendAsync(IRequestInfo requestInfo)
-        {
-            return this.ProtectedSendAsync(requestInfo);
-        }
-
-        /// <inheritdoc/>
-        public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-        {
-            return this.ProtectedSendAsync(transferBytes);
-        }
-
-        #endregion 异步发送
     }
+
+    /// <summary>
+    /// 即将断开连接(仅主动断开时有效)。
+    /// </summary>
+    /// <param name="e"></param>
+    protected override async Task OnNamedPipeClosing(ClosingEventArgs e)
+    {
+        if (this.Closing != null)
+        {
+            await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (e.Handled)
+            {
+                return;
+            }
+        }
+        await base.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    /// <summary>
+    /// 已经建立管道连接
+    /// </summary>
+    /// <param name="e"></param>
+    protected override async Task OnNamedPipeConnected(ConnectedEventArgs e)
+    {
+        try
+        {
+            if (this.Connected != null)
+            {
+                await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            await base.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+        }
+    }
+
+    /// <summary>
+    /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
+    /// </summary>
+    /// <param name="e"></param>
+    protected override async Task OnNamedPipeConnecting(ConnectingEventArgs e)
+    {
+        try
+        {
+            if (this.Connecting != null)
+            {
+                await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            await base.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.OnNamedPipeConnecting)}中发生错误。", ex);
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
+    {
+        if (this.Received != null)
+        {
+            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (e.Handled)
+            {
+                return;
+            }
+        }
+        await base.OnNamedPipeReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    #endregion 事件
+
+    #region 属性
+
+    #endregion 属性
+
+    #region Connect
+
+    /// <inheritdoc/>
+    public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return this.PipeConnectAsync(millisecondsTimeout, token);
+    }
+
+    #endregion Connect
+
+    #region Receiver
+
+    /// <inheritdoc/>
+    public void ClearReceiver()
+    {
+        this.ProtectedClearReceiver();
+    }
+
+    /// <inheritdoc/>
+    public IReceiver<IReceiverResult> CreateReceiver()
+    {
+        return this.ProtectedCreateReceiver(this);
+    }
+
+    #endregion Receiver
+
+    #region 异步发送
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    {
+        return this.ProtectedSendAsync(memory);
+    }
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(IRequestInfo requestInfo)
+    {
+        return this.ProtectedSendAsync(requestInfo);
+    }
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
+    {
+        return this.ProtectedSendAsync(transferBytes);
+    }
+
+    #endregion 异步发送
 }

@@ -10,28 +10,27 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 可承载消息的路由包
+/// </summary>
+public class MsgRouterPackage : RouterPackage
 {
     /// <summary>
-    /// 可承载消息的路由包
+    /// 消息
     /// </summary>
-    public class MsgRouterPackage : RouterPackage
+    public string Message { get; set; }
+
+    /// <inheritdoc/>
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <summary>
-        /// 消息
-        /// </summary>
-        public string Message { get; set; }
+        byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
+    }
 
-        /// <inheritdoc/>
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
-        }
-
-        /// <inheritdoc/>
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
-        }
+    /// <inheritdoc/>
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
     }
 }

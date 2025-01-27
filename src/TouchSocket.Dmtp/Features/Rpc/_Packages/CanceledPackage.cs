@@ -12,20 +12,19 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+internal class CanceledPackage : RouterPackage
 {
-    internal class CanceledPackage : RouterPackage
+    public long Sign { get; set; }
+
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        public long Sign { get; set; }
+        byteBlock.WriteInt64(this.Sign);
+    }
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            byteBlock.WriteInt64(this.Sign);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            this.Sign = byteBlock.ReadInt64();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        this.Sign = byteBlock.ReadInt64();
     }
 }

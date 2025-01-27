@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// DmtpChannelExtension
+/// </summary>
+public static class DmtpChannelExtension
 {
-    /// <summary>
-    /// DmtpChannelExtension
-    /// </summary>
-    public static class DmtpChannelExtension
-    {
-    }
 }

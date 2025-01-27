@@ -10,17 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
-{
+namespace TouchSocket.Core;
 
+
+/// <summary>
+/// 定义了等待句柄接口，用于同步或异步操作的等待机制。
+/// </summary>
+public interface IWaitHandle
+{
     /// <summary>
-    /// 定义了等待句柄接口，用于同步或异步操作的等待机制。
+    /// 获取或设置等待句柄的唯一标志。
     /// </summary>
-    public interface IWaitHandle
-    {
-        /// <summary>
-        /// 获取或设置等待句柄的唯一标志。
-        /// </summary>
-        int Sign { get; set; }
-    }
+    int Sign { get; set; }
 }

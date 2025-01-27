@@ -13,37 +13,36 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 保活机制
+/// </summary>
+public class KeepAliveValue
 {
     /// <summary>
     /// 保活机制
     /// </summary>
-    public class KeepAliveValue
+    public byte[] KeepAliveTime
     {
-        /// <summary>
-        /// 保活机制
-        /// </summary>
-        public byte[] KeepAliveTime
+        get
         {
-            get
-            {
-                uint dummy = 0;
-                var inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
-                BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
-                BitConverter.GetBytes(this.Interval).CopyTo(inOptionValues, Marshal.SizeOf(dummy));
-                BitConverter.GetBytes(this.AckInterval).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);
-                return inOptionValues;
-            }
+            uint dummy = 0;
+            var inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
+            BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
+            BitConverter.GetBytes(this.Interval).CopyTo(inOptionValues, Marshal.SizeOf(dummy));
+            BitConverter.GetBytes(this.AckInterval).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2);
+            return inOptionValues;
         }
-
-        /// <summary>
-        /// 发送间隔，默认20*1000ms
-        /// </summary>
-        public uint Interval { get; set; } = 20 * 1000;
-
-        /// <summary>
-        /// 确认间隔，默认2*1000ms
-        /// </summary>
-        public uint AckInterval { get; set; } = 2 * 1000;
     }
+
+    /// <summary>
+    /// 发送间隔，默认20*1000ms
+    /// </summary>
+    public uint Interval { get; set; } = 20 * 1000;
+
+    /// <summary>
+    /// 确认间隔，默认2*1000ms
+    /// </summary>
+    public uint AckInterval { get; set; } = 2 * 1000;
 }

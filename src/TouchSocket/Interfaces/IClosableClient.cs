@@ -12,17 +12,16 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 具有关闭动作的对象。
+/// </summary>
+public interface IClosableClient
 {
     /// <summary>
-    /// 具有关闭动作的对象。
+    /// 关闭客户端。
     /// </summary>
-    public interface IClosableClient
-    {
-        /// <summary>
-        /// 关闭客户端。
-        /// </summary>
-        /// <param name="msg">关闭时的提示信息。</param>
-        Task CloseAsync(string msg);
-    }
+    /// <param name="msg">关闭时的提示信息。</param>
+    Task CloseAsync(string msg);
 }

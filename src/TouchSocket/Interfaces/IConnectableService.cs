@@ -13,52 +13,51 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 表示可连接的服务器基类接口
+/// </summary>
+public interface IConnectableService : IServiceBase
 {
     /// <summary>
-    /// 表示可连接的服务器基类接口
+    /// 获取已连接的客户端数量
     /// </summary>
-    public interface IConnectableService : IServiceBase
-    {
-        /// <summary>
-        /// 获取已连接的客户端数量
-        /// </summary>
-        int Count { get; }
+    int Count { get; }
 
-        /// <summary>
-        /// 获取已配置的最大可连接数量
-        /// </summary>
-        int MaxCount { get; }
+    /// <summary>
+    /// 获取已配置的最大可连接数量
+    /// </summary>
+    int MaxCount { get; }
 
-        /// <summary>
-        /// 清理（断开）已连接的所有客户端
-        /// </summary>
-        Task ClearAsync();
+    /// <summary>
+    /// 清理（断开）已连接的所有客户端
+    /// </summary>
+    Task ClearAsync();
 
-        /// <summary>
-        /// 获取已连接的所有客户端Id集合
-        /// </summary>
-        /// <returns>返回客户端Id的集合</returns>
-        IEnumerable<string> GetIds();
+    /// <summary>
+    /// 获取已连接的所有客户端Id集合
+    /// </summary>
+    /// <returns>返回客户端Id的集合</returns>
+    IEnumerable<string> GetIds();
 
-        /// <summary>
-        /// 重置指定客户端的Id
-        /// </summary>
-        /// <param name="sourceId">源Id</param>
-        /// <param name="targetId">目标Id</param>
-        Task ResetIdAsync(string sourceId, string targetId);
+    /// <summary>
+    /// 重置指定客户端的Id
+    /// </summary>
+    /// <param name="sourceId">源Id</param>
+    /// <param name="targetId">目标Id</param>
+    Task ResetIdAsync(string sourceId, string targetId);
 
-        /// <summary>
-        /// 根据Id判断对应的客户端是否存在
-        /// </summary>
-        /// <param name="id">客户端的Id</param>
-        /// <returns>返回是否存在</returns>
-        bool ClientExists(string id);
+    /// <summary>
+    /// 根据Id判断对应的客户端是否存在
+    /// </summary>
+    /// <param name="id">客户端的Id</param>
+    /// <returns>返回是否存在</returns>
+    bool ClientExists(string id);
 
-        /// <summary>
-        /// 获取已连接的所有客户端。
-        /// </summary>
-        /// <returns>返回IClient的集合</returns>
-        IEnumerable<IClient> GetClients();
-    }
+    /// <summary>
+    /// 获取已连接的所有客户端。
+    /// </summary>
+    /// <returns>返回IClient的集合</returns>
+    IEnumerable<IClient> GetClients();
 }

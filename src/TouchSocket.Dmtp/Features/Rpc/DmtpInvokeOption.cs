@@ -13,38 +13,37 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// Rpc调用设置
+/// </summary>
+public class DmtpInvokeOption : InvokeOption
 {
     /// <summary>
-    /// Rpc调用设置
+    /// 构造函数：初始化DmtpInvokeOption对象
     /// </summary>
-    public class DmtpInvokeOption : InvokeOption
+    public DmtpInvokeOption() : base()
     {
-        /// <summary>
-        /// 构造函数：初始化DmtpInvokeOption对象
-        /// </summary>
-        public DmtpInvokeOption() : base()
-        {
-        }
-
-
-        /// <summary>
-        /// 初始化 DmtpInvokeOption 类的新实例，并设置超时时间。
-        /// </summary>
-        /// <param name="millisecondsTimeout">执行操作的超时时间，以毫秒为单位。</param>
-        public DmtpInvokeOption(int millisecondsTimeout) : base(millisecondsTimeout)
-        {
-            this.Timeout = millisecondsTimeout;
-        }
-
-        /// <summary>
-        /// DmtpRpc序列化类型
-        /// </summary>
-        public SerializationType SerializationType { get; set; } = SerializationType.FastBinary;
-
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
     }
+
+
+    /// <summary>
+    /// 初始化 DmtpInvokeOption 类的新实例，并设置超时时间。
+    /// </summary>
+    /// <param name="millisecondsTimeout">执行操作的超时时间，以毫秒为单位。</param>
+    public DmtpInvokeOption(int millisecondsTimeout) : base(millisecondsTimeout)
+    {
+        this.Timeout = millisecondsTimeout;
+    }
+
+    /// <summary>
+    /// DmtpRpc序列化类型
+    /// </summary>
+    public SerializationType SerializationType { get; set; } = SerializationType.FastBinary;
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
 }

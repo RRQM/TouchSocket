@@ -12,42 +12,41 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// WaitCreateChannelPackage
+/// </summary>
+internal class WaitCreateChannelPackage : WaitRouterPackage
 {
     /// <summary>
-    /// WaitCreateChannelPackage
+    /// 通道Id
     /// </summary>
-    internal class WaitCreateChannelPackage : WaitRouterPackage
+    public int ChannelId { get; set; }
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
+
+    /// <summary>
+    /// 随机Id
+    /// </summary>
+    public bool Random { get; set; }
+
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <summary>
-        /// 通道Id
-        /// </summary>
-        public int ChannelId { get; set; }
+        base.PackageBody(ref byteBlock);
+        byteBlock.WriteBoolean(this.Random);
+        byteBlock.WriteInt32(this.ChannelId);
+        byteBlock.WritePackage(this.Metadata);
+    }
 
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
-
-        /// <summary>
-        /// 随机Id
-        /// </summary>
-        public bool Random { get; set; }
-
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WriteBoolean(this.Random);
-            byteBlock.WriteInt32(this.ChannelId);
-            byteBlock.WritePackage(this.Metadata);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.Random = byteBlock.ReadBoolean();
-            this.ChannelId = byteBlock.ReadInt32();
-            this.Metadata = byteBlock.ReadPackage<Metadata>();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.Random = byteBlock.ReadBoolean();
+        this.ChannelId = byteBlock.ReadInt32();
+        this.Metadata = byteBlock.ReadPackage<Metadata>();
     }
 }

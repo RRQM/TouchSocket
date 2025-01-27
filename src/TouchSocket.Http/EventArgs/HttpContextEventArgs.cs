@@ -12,25 +12,24 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http请求事件类
+/// </summary>
+public class HttpContextEventArgs : MsgPermitEventArgs
 {
     /// <summary>
-    /// Http请求事件类
+    /// Http上下文
     /// </summary>
-    public class HttpContextEventArgs : MsgPermitEventArgs
-    {
-        /// <summary>
-        /// Http上下文
-        /// </summary>
-        public HttpContext Context { get; }
+    public HttpContext Context { get; }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="context"></param>
-        public HttpContextEventArgs(HttpContext context)
-        {
-            this.Context = context;
-        }
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="context"></param>
+    public HttpContextEventArgs(HttpContext context)
+    {
+        this.Context = context;
     }
 }

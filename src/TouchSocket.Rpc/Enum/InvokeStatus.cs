@@ -10,41 +10,40 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 调用状态
+/// </summary>
+public enum InvokeStatus : byte
 {
     /// <summary>
-    /// 调用状态
+    /// 就绪
     /// </summary>
-    public enum InvokeStatus : byte
-    {
-        /// <summary>
-        /// 就绪
-        /// </summary>
-        Ready,
+    Ready,
 
-        /// <summary>
-        /// 未找到服务
-        /// </summary>
-        UnFound,
+    /// <summary>
+    /// 未找到服务
+    /// </summary>
+    UnFound,
 
-        /// <summary>
-        /// 不可用
-        /// </summary>
-        UnEnable,
+    /// <summary>
+    /// 不可用
+    /// </summary>
+    UnEnable,
 
-        /// <summary>
-        /// 成功调用
-        /// </summary>
-        Success,
+    /// <summary>
+    /// 成功调用
+    /// </summary>
+    Success,
 
-        /// <summary>
-        /// 调用内部异常
-        /// </summary>
-        InvocationException,
+    /// <summary>
+    /// 调用内部异常
+    /// </summary>
+    InvocationException,
 
-        /// <summary>
-        /// 其他异常
-        /// </summary>
-        Exception
-    }
+    /// <summary>
+    /// 其他异常
+    /// </summary>
+    Exception
 }

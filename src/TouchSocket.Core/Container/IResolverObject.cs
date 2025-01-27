@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// IResolverObject接口定义了一个解析对象的标准，该对象包含一个解析器属性。
+/// </summary>
+public interface IResolverObject
 {
     /// <summary>
-    /// IResolverObject接口定义了一个解析对象的标准，该对象包含一个解析器属性。
+    /// 获取解析器实例。
     /// </summary>
-    public interface IResolverObject
-    {
-        /// <summary>
-        /// 获取解析器实例。
-        /// </summary>
-        IResolver Resolver { get; }
-    }
+    IResolver Resolver { get; }
 }

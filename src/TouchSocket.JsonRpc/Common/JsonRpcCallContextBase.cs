@@ -13,60 +13,59 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// JsonRpc调用上下文
+/// </summary>
+public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
 {
-    /// <summary>
-    /// JsonRpc调用上下文
-    /// </summary>
-    public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
+    private IScopedResolver m_scopedResolver;
+
+    public int? JsonRpcId { get; protected set; }
+
+    ///// <summary>
+    ///// JsonRpc上下文
+    ///// </summary>
+    //public InternalJsonRpcRequest JsonRpcContext { get; internal set; }
+
+    internal void SetJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
     {
-        private IScopedResolver m_scopedResolver;
+        this.JsonRpcId = jsonRpcRequest.Id;
+    }
 
-        public int? JsonRpcId { get; protected set; }
+    internal void SetRpcMethod(RpcMethod rpcMethod)
+    {
+        this.RpcMethod = rpcMethod;
+    }
 
-        ///// <summary>
-        ///// JsonRpc上下文
-        ///// </summary>
-        //public InternalJsonRpcRequest JsonRpcContext { get; internal set; }
+    internal void SetParameters(object[] parameters)
+    {
+        this.Parameters = parameters;
+    }
 
-        internal void SetJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
+    internal void SetResolver(IResolver resolver)
+    {
+        this.Resolver = resolver;
+    }
+
+    internal void SetResolver(IScopedResolver scopedResolver)
+    {
+        this.Resolver = scopedResolver.Resolver;
+        this.m_scopedResolver = scopedResolver;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (this.DisposedValue)
         {
-            this.JsonRpcId = jsonRpcRequest.Id;
+            return;
         }
-
-        internal void SetRpcMethod(RpcMethod rpcMethod)
+        if (disposing)
         {
-            this.RpcMethod = rpcMethod;
+            this.m_scopedResolver.SafeDispose();
         }
-
-        internal void SetParameters(object[] parameters)
-        {
-            this.Parameters = parameters;
-        }
-
-        internal void SetResolver(IResolver resolver)
-        {
-            this.Resolver = resolver;
-        }
-
-        internal void SetResolver(IScopedResolver scopedResolver)
-        {
-            this.Resolver = scopedResolver.Resolver;
-            this.m_scopedResolver = scopedResolver;
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-            if (disposing)
-            {
-                this.m_scopedResolver.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

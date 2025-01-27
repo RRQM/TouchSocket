@@ -12,22 +12,21 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 实例生成
+/// </summary>
+public static class InstanceCreater
 {
     /// <summary>
-    /// 实例生成
+    /// 根据对象类型创建对象实例
     /// </summary>
-    public static class InstanceCreater
+    /// <param name="key">对象类型</param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public static object Create(Type key, object[] args)
     {
-        /// <summary>
-        /// 根据对象类型创建对象实例
-        /// </summary>
-        /// <param name="key">对象类型</param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public static object Create(Type key, object[] args)
-        {
-            return Activator.CreateInstance(key, args);
-        }
+        return Activator.CreateInstance(key, args);
     }
 }

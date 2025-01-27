@@ -10,35 +10,34 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// XmlRpcConfigExtensions
-    /// </summary>
-    public static class XmlRpcConfigExtensions
-    {
-        ///// <summary>
-        ///// 构建XmlRpcClient类客户端，并连接
-        ///// </summary>
-        ///// <typeparam name="TClient"></typeparam>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static TClient BuildWithXmlRpcClient<TClient>(this TouchSocketConfig config) where TClient : IXmlRpcClient
-        //{
-        //    var client = Activator.CreateInstance<TClient>();
-        //    client.Setup(config);
-        //    client.Connect();
-        //    return client;
-        //}
+namespace TouchSocket.Sockets;
 
-        ///// <summary>
-        ///// 构建XmlRpcClient类客户端，并连接
-        ///// </summary>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static XmlRpcClient BuildWithXmlRpcClient(this TouchSocketConfig config)
-        //{
-        //    return BuildWithXmlRpcClient<XmlRpcClient>(config);
-        //}
-    }
+/// <summary>
+/// XmlRpcConfigExtensions
+/// </summary>
+public static class XmlRpcConfigExtensions
+{
+    ///// <summary>
+    ///// 构建XmlRpcClient类客户端，并连接
+    ///// </summary>
+    ///// <typeparam name="TClient"></typeparam>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static TClient BuildWithXmlRpcClient<TClient>(this TouchSocketConfig config) where TClient : IXmlRpcClient
+    //{
+    //    var client = Activator.CreateInstance<TClient>();
+    //    client.Setup(config);
+    //    client.Connect();
+    //    return client;
+    //}
+
+    ///// <summary>
+    ///// 构建XmlRpcClient类客户端，并连接
+    ///// </summary>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static XmlRpcClient BuildWithXmlRpcClient(this TouchSocketConfig config)
+    //{
+    //    return BuildWithXmlRpcClient<XmlRpcClient>(config);
+    //}
 }

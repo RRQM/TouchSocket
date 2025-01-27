@@ -13,26 +13,25 @@
 using System;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 未知错误异常类，继承自Exception，用于处理未知类型的错误。
+/// </summary>
+public sealed class UnknownErrorException : Exception
 {
     /// <summary>
-    /// 未知错误异常类，继承自Exception，用于处理未知类型的错误。
+    /// 默认构造函数，当不指定错误消息时，默认使用资源文件中定义的未知错误消息。
     /// </summary>
-    public sealed class UnknownErrorException : Exception
+    public UnknownErrorException() : this(TouchSocketCoreResource.UnknownError)
     {
-        /// <summary>
-        /// 默认构造函数，当不指定错误消息时，默认使用资源文件中定义的未知错误消息。
-        /// </summary>
-        public UnknownErrorException() : this(TouchSocketCoreResource.UnknownError)
-        {
-        }
+    }
 
-        /// <summary>
-        /// 构造函数，允许指定自定义的错误消息。
-        /// </summary>
-        /// <param name="message">发生的未知错误的详细信息。</param>
-        public UnknownErrorException(string message) : base(message)
-        {
-        }
+    /// <summary>
+    /// 构造函数，允许指定自定义的错误消息。
+    /// </summary>
+    /// <param name="message">发生的未知错误的详细信息。</param>
+    public UnknownErrorException(string message) : base(message)
+    {
     }
 }

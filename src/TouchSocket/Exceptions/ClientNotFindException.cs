@@ -13,24 +13,23 @@
 using System;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 没有找到Id对应的客户端
+/// </summary>
+[Serializable]
+public class ClientNotFindException : Exception
 {
     /// <summary>
-    /// 没有找到Id对应的客户端
+    /// 默认构造函数
     /// </summary>
-    [Serializable]
-    public class ClientNotFindException : Exception
-    {
-        /// <summary>
-        /// 默认构造函数
-        /// </summary>
-        public ClientNotFindException() : this(TouchSocketResource.ClientNotFind)
-        { }
+    public ClientNotFindException() : this(TouchSocketResource.ClientNotFind)
+    { }
 
-        /// <summary>
-        /// 带信息的构造函数
-        /// </summary>
-        /// <param name="message">异常信息</param>
-        public ClientNotFindException(string message) : base(message) { }
-    }
+    /// <summary>
+    /// 带信息的构造函数
+    /// </summary>
+    /// <param name="message">异常信息</param>
+    public ClientNotFindException(string message) : base(message) { }
 }

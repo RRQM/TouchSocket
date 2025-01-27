@@ -17,133 +17,90 @@ using System.Linq;
 using System.Reflection;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// IOC容器
+/// </summary>
+public sealed class Container : IContainer
 {
+    private readonly ConcurrentDictionary<string, DependencyDescriptor> m_registrations = new ConcurrentDictionary<string, DependencyDescriptor>();
+
     /// <summary>
     /// IOC容器
     /// </summary>
-    public sealed class Container : IContainer
+    public Container()
     {
-        private readonly ConcurrentDictionary<string, DependencyDescriptor> m_registrations = new ConcurrentDictionary<string, DependencyDescriptor>();
+        this.RegisterSingleton<IResolver>(this);
+        this.RegisterSingleton<IServiceProvider>(this);
+    }
 
-        /// <summary>
-        /// IOC容器
-        /// </summary>
-        public Container()
+    /// <inheritdoc/>
+    public IResolver BuildResolver()
+    {
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IScopedResolver CreateScopedResolver()
+    {
+        return new InternalScopedResolver(this);
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<DependencyDescriptor> GetDescriptors()
+    {
+        return this.m_registrations.Values;
+    }
+
+    /// <inheritdoc/>
+    public object GetService(Type serviceType)
+    {
+        return this.Resolve(serviceType);
+    }
+
+    /// <inheritdoc/>
+    public bool IsRegistered(Type fromType, string key)
+    {
+        return this.m_registrations.ContainsKey($"{fromType.FullName}{key}");
+    }
+
+    /// <inheritdoc/>
+    public bool IsRegistered(Type fromType)
+    {
+        return this.m_registrations.ContainsKey(fromType.FullName);
+    }
+
+    /// <inheritdoc/>
+    public void Register(DependencyDescriptor descriptor, string key)
+    {
+        var k = $"{descriptor.FromType.FullName}{key}";
+        this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
+    }
+
+    /// <inheritdoc/>
+    public void Register(DependencyDescriptor descriptor)
+    {
+        var k = descriptor.FromType.FullName;
+        this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
+    }
+
+    /// <inheritdoc/>
+    public object Resolve(Type fromType, string key)
+    {
+        string k;
+        DependencyDescriptor descriptor;
+        if (fromType.IsGenericType)
         {
-            this.RegisterSingleton<IResolver>(this);
-            this.RegisterSingleton<IServiceProvider>(this);
-        }
-
-        /// <inheritdoc/>
-        public IResolver BuildResolver()
-        {
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public IScopedResolver CreateScopedResolver()
-        {
-            return new InternalScopedResolver(this);
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<DependencyDescriptor> GetDescriptors()
-        {
-            return this.m_registrations.Values;
-        }
-
-        /// <inheritdoc/>
-        public object GetService(Type serviceType)
-        {
-            return this.Resolve(serviceType);
-        }
-
-        /// <inheritdoc/>
-        public bool IsRegistered(Type fromType, string key)
-        {
-            return this.m_registrations.ContainsKey($"{fromType.FullName}{key}");
-        }
-
-        /// <inheritdoc/>
-        public bool IsRegistered(Type fromType)
-        {
-            return this.m_registrations.ContainsKey(fromType.FullName);
-        }
-
-        /// <inheritdoc/>
-        public void Register(DependencyDescriptor descriptor, string key)
-        {
-            var k = $"{descriptor.FromType.FullName}{key}";
-            this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
-        }
-
-        /// <inheritdoc/>
-        public void Register(DependencyDescriptor descriptor)
-        {
-            var k = descriptor.FromType.FullName;
-            this.m_registrations.AddOrUpdate(k, descriptor, (k, v) => { return descriptor; });
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType, string key)
-        {
-            string k;
-            DependencyDescriptor descriptor;
-            if (fromType.IsGenericType)
-            {
-                var type = fromType.GetGenericTypeDefinition();
-                k = $"{type.FullName}{key}";
-                if (this.m_registrations.TryGetValue(k, out descriptor))
-                {
-                    if (descriptor.ImplementationFactory != null)
-                    {
-                        return descriptor.ImplementationFactory.Invoke(this);
-                    }
-
-                    if (descriptor.Lifetime == Lifetime.Singleton)
-                    {
-                        if (descriptor.ToInstance != null)
-                        {
-                            return descriptor.ToInstance;
-                        }
-                        lock (descriptor)
-                        {
-                            if (descriptor.ToInstance != null)
-                            {
-                                return descriptor.ToInstance;
-                            }
-                            else
-                            {
-                                if (descriptor.ToType.IsGenericType)
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                                }
-                                else
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
-                                }
-                            }
-                        }
-                    }
-
-                    if (descriptor.ToType.IsGenericType)
-                    {
-                        return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                    }
-                    else
-                    {
-                        return this.Create(descriptor, descriptor.ToType);
-                    }
-                }
-            }
-            k = $"{fromType.FullName}{key}";
+            var type = fromType.GetGenericTypeDefinition();
+            k = $"{type.FullName}{key}";
             if (this.m_registrations.TryGetValue(k, out descriptor))
             {
                 if (descriptor.ImplementationFactory != null)
                 {
                     return descriptor.ImplementationFactory.Invoke(this);
                 }
+
                 if (descriptor.Lifetime == Lifetime.Singleton)
                 {
                     if (descriptor.ToInstance != null)
@@ -152,73 +109,73 @@ namespace TouchSocket.Core
                     }
                     lock (descriptor)
                     {
-                        return descriptor.ToInstance ??= this.Create(descriptor, descriptor.ToType);
-                    }
-                }
-                return this.Create(descriptor, descriptor.ToType);
-            }
-            return default;
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType)
-        {
-            string k;
-            DependencyDescriptor descriptor;
-            if (fromType.IsGenericType)
-            {
-                var type = fromType.GetGenericTypeDefinition();
-                k = type.FullName;
-                if (this.m_registrations.TryGetValue(k, out descriptor))
-                {
-                    if (descriptor.ImplementationFactory != null)
-                    {
-                        return descriptor.ImplementationFactory.Invoke(this);
-                    }
-
-                    if (descriptor.Lifetime == Lifetime.Singleton)
-                    {
                         if (descriptor.ToInstance != null)
                         {
                             return descriptor.ToInstance;
                         }
-                        lock (descriptor)
+                        else
                         {
-                            if (descriptor.ToInstance != null)
+                            if (descriptor.ToType.IsGenericType)
                             {
-                                return descriptor.ToInstance;
+                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
                             }
                             else
                             {
-                                if (descriptor.ToType.IsGenericType)
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                                }
-                                else
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
-                                }
+                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                             }
                         }
                     }
+                }
 
-                    if (descriptor.ToType.IsGenericType)
-                    {
-                        return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                    }
-                    else
-                    {
-                        return this.Create(descriptor, descriptor.ToType);
-                    }
+                if (descriptor.ToType.IsGenericType)
+                {
+                    return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
+                }
+                else
+                {
+                    return this.Create(descriptor, descriptor.ToType);
                 }
             }
-            k = fromType.FullName;
+        }
+        k = $"{fromType.FullName}{key}";
+        if (this.m_registrations.TryGetValue(k, out descriptor))
+        {
+            if (descriptor.ImplementationFactory != null)
+            {
+                return descriptor.ImplementationFactory.Invoke(this);
+            }
+            if (descriptor.Lifetime == Lifetime.Singleton)
+            {
+                if (descriptor.ToInstance != null)
+                {
+                    return descriptor.ToInstance;
+                }
+                lock (descriptor)
+                {
+                    return descriptor.ToInstance ??= this.Create(descriptor, descriptor.ToType);
+                }
+            }
+            return this.Create(descriptor, descriptor.ToType);
+        }
+        return default;
+    }
+
+    /// <inheritdoc/>
+    public object Resolve(Type fromType)
+    {
+        string k;
+        DependencyDescriptor descriptor;
+        if (fromType.IsGenericType)
+        {
+            var type = fromType.GetGenericTypeDefinition();
+            k = type.FullName;
             if (this.m_registrations.TryGetValue(k, out descriptor))
             {
                 if (descriptor.ImplementationFactory != null)
                 {
                     return descriptor.ImplementationFactory.Invoke(this);
                 }
+
                 if (descriptor.Lifetime == Lifetime.Singleton)
                 {
                     if (descriptor.ToInstance != null)
@@ -227,53 +184,150 @@ namespace TouchSocket.Core
                     }
                     lock (descriptor)
                     {
-                        return descriptor.ToInstance ??= this.Create(descriptor, descriptor.ToType);
+                        if (descriptor.ToInstance != null)
+                        {
+                            return descriptor.ToInstance;
+                        }
+                        else
+                        {
+                            if (descriptor.ToType.IsGenericType)
+                            {
+                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
+                            }
+                            else
+                            {
+                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
+                            }
+                        }
                     }
                 }
-                return this.Create(descriptor, descriptor.ToType);
-            }
-            return default;
-        }
 
-        /// <inheritdoc/>
-        public void Unregister(DependencyDescriptor descriptor, string key)
-        {
-            var k = $"{descriptor.FromType.FullName}{key}";
-            this.m_registrations.TryRemove(k, out _);
-        }
-
-        /// <inheritdoc/>
-        public void Unregister(DependencyDescriptor descriptor)
-        {
-            var k = descriptor.FromType.FullName;
-            this.m_registrations.TryRemove(k, out _);
-        }
-
-        private object Create(DependencyDescriptor descriptor, Type toType)
-        {
-            var ctor = toType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
-            if (ctor is null)
-            {
-                //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
-                if (toType.GetConstructors().Length == 0)
+                if (descriptor.ToType.IsGenericType)
                 {
-                    throw new Exception(TouchSocketCoreResource.NotFindPublicConstructor.Format(toType));
+                    return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
                 }
-                ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
+                else
+                {
+                    return this.Create(descriptor, descriptor.ToType);
+                }
             }
-
-            DependencyTypeAttribute dependencyTypeAttribute = null;
-            if (toType.IsDefined(typeof(DependencyTypeAttribute), true))
+        }
+        k = fromType.FullName;
+        if (this.m_registrations.TryGetValue(k, out descriptor))
+        {
+            if (descriptor.ImplementationFactory != null)
             {
-                dependencyTypeAttribute = toType.GetCustomAttribute<DependencyTypeAttribute>();
+                return descriptor.ImplementationFactory.Invoke(this);
             }
-
-            var parameters = ctor.GetParameters();
-            var ps = new object[parameters.Length];
-
-            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Constructor))
+            if (descriptor.Lifetime == Lifetime.Singleton)
             {
-                for (var i = 0; i < parameters.Length; i++)
+                if (descriptor.ToInstance != null)
+                {
+                    return descriptor.ToInstance;
+                }
+                lock (descriptor)
+                {
+                    return descriptor.ToInstance ??= this.Create(descriptor, descriptor.ToType);
+                }
+            }
+            return this.Create(descriptor, descriptor.ToType);
+        }
+        return default;
+    }
+
+    /// <inheritdoc/>
+    public void Unregister(DependencyDescriptor descriptor, string key)
+    {
+        var k = $"{descriptor.FromType.FullName}{key}";
+        this.m_registrations.TryRemove(k, out _);
+    }
+
+    /// <inheritdoc/>
+    public void Unregister(DependencyDescriptor descriptor)
+    {
+        var k = descriptor.FromType.FullName;
+        this.m_registrations.TryRemove(k, out _);
+    }
+
+    private object Create(DependencyDescriptor descriptor, Type toType)
+    {
+        var ctor = toType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
+        if (ctor is null)
+        {
+            //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
+            if (toType.GetConstructors().Length == 0)
+            {
+                throw new Exception(TouchSocketCoreResource.NotFindPublicConstructor.Format(toType));
+            }
+            ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
+        }
+
+        DependencyTypeAttribute dependencyTypeAttribute = null;
+        if (toType.IsDefined(typeof(DependencyTypeAttribute), true))
+        {
+            dependencyTypeAttribute = toType.GetCustomAttribute<DependencyTypeAttribute>();
+        }
+
+        var parameters = ctor.GetParameters();
+        var ps = new object[parameters.Length];
+
+        if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Constructor))
+        {
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
+                {
+                    ps[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue : default;
+                }
+                else
+                {
+                    if (parameters[i].IsDefined(typeof(DependencyInjectAttribute), true))
+                    {
+                        var attribute = parameters[i].GetCustomAttribute<DependencyInjectAttribute>();
+                        var type = attribute.Type ?? parameters[i].ParameterType;
+                        ps[i] = this.Resolve(type, attribute.Key);
+                    }
+                    else
+                    {
+                        ps[i] = this.Resolve(parameters[i].ParameterType, null);
+                    }
+                }
+            }
+        }
+
+        var instance = ps.Length == 0 ? Activator.CreateInstance(toType) : Activator.CreateInstance(toType, ps);
+
+        if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Property))
+        {
+            var propetys = toType.GetProperties().Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
+            foreach (var item in propetys)
+            {
+                if (item.CanWrite)
+                {
+                    object obj;
+                    if (item.IsDefined(typeof(DependencyInjectAttribute), true))
+                    {
+                        var attribute = item.GetCustomAttribute<DependencyInjectAttribute>();
+                        var type = attribute.Type ?? item.PropertyType;
+                        obj = this.Resolve(type, attribute.Key);
+                    }
+                    else
+                    {
+                        obj = this.Resolve(item.PropertyType, null);
+                    }
+                    item.SetValue(instance, obj);
+                }
+            }
+        }
+
+        if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Method))
+        {
+            var methods = toType.GetMethods(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true)).ToList();
+            foreach (var item in methods)
+            {
+                parameters = item.GetParameters();
+                ps = new object[parameters.Length];
+                for (var i = 0; i < ps.Length; i++)
                 {
                     if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
                     {
@@ -293,65 +347,10 @@ namespace TouchSocket.Core
                         }
                     }
                 }
+                item.Invoke(instance, ps);
             }
-
-            var instance = ps.Length == 0 ? Activator.CreateInstance(toType) : Activator.CreateInstance(toType, ps);
-
-            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Property))
-            {
-                var propetys = toType.GetProperties().Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
-                foreach (var item in propetys)
-                {
-                    if (item.CanWrite)
-                    {
-                        object obj;
-                        if (item.IsDefined(typeof(DependencyInjectAttribute), true))
-                        {
-                            var attribute = item.GetCustomAttribute<DependencyInjectAttribute>();
-                            var type = attribute.Type ?? item.PropertyType;
-                            obj = this.Resolve(type, attribute.Key);
-                        }
-                        else
-                        {
-                            obj = this.Resolve(item.PropertyType, null);
-                        }
-                        item.SetValue(instance, obj);
-                    }
-                }
-            }
-
-            if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Method))
-            {
-                var methods = toType.GetMethods(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic).Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true)).ToList();
-                foreach (var item in methods)
-                {
-                    parameters = item.GetParameters();
-                    ps = new object[parameters.Length];
-                    for (var i = 0; i < ps.Length; i++)
-                    {
-                        if (parameters[i].ParameterType.IsPrimitive || parameters[i].ParameterType == typeof(string))
-                        {
-                            ps[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue : default;
-                        }
-                        else
-                        {
-                            if (parameters[i].IsDefined(typeof(DependencyInjectAttribute), true))
-                            {
-                                var attribute = parameters[i].GetCustomAttribute<DependencyInjectAttribute>();
-                                var type = attribute.Type ?? parameters[i].ParameterType;
-                                ps[i] = this.Resolve(type, attribute.Key);
-                            }
-                            else
-                            {
-                                ps[i] = this.Resolve(parameters[i].ParameterType, null);
-                            }
-                        }
-                    }
-                    item.Invoke(instance, ps);
-                }
-            }
-            descriptor.OnResolved?.Invoke(instance);
-            return instance;
         }
+        descriptor.OnResolved?.Invoke(instance);
+        return instance;
     }
 }

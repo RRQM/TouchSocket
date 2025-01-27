@@ -12,12 +12,11 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http终端基础接口
+/// </summary>
+public interface IHttpSession : ITcpSession
 {
-    /// <summary>
-    /// Http终端基础接口
-    /// </summary>
-    public interface IHttpSession : ITcpSession
-    {
-    }
 }

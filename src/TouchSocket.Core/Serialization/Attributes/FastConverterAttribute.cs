@@ -12,26 +12,25 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// FastConverterAttribute
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+public class FastConverterAttribute : Attribute
 {
     /// <summary>
     /// FastConverterAttribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class FastConverterAttribute : Attribute
+    /// <param name="type"></param>
+    public FastConverterAttribute(Type type)
     {
-        /// <summary>
-        /// FastConverterAttribute
-        /// </summary>
-        /// <param name="type"></param>
-        public FastConverterAttribute(Type type)
-        {
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 转化器类型。
-        /// </summary>
-        public Type Type { get; private set; }
+        this.Type = type;
     }
+
+    /// <summary>
+    /// 转化器类型。
+    /// </summary>
+    public Type Type { get; private set; }
 }

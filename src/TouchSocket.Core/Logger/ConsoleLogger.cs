@@ -12,75 +12,74 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 控制台日志记录器
+/// </summary>
+public sealed class ConsoleLogger : LoggerBase
 {
-    /// <summary>
-    /// 控制台日志记录器
-    /// </summary>
-    public sealed class ConsoleLogger : LoggerBase
+    static ConsoleLogger()
     {
-        static ConsoleLogger()
+        Default = new ConsoleLogger();
+    }
+
+    private readonly ConsoleColor m_consoleBackgroundColor;
+
+    private readonly ConsoleColor m_consoleForegroundColor;
+
+    private ConsoleLogger()
+    {
+        this.m_consoleForegroundColor = Console.ForegroundColor;
+        this.m_consoleBackgroundColor = Console.BackgroundColor;
+    }
+
+    /// <summary>
+    /// 默认的实例
+    /// </summary>
+    public static ConsoleLogger Default { get; }
+
+    /// <inheritdoc/>
+    /// <param name="logLevel"></param>
+    /// <param name="source"></param>
+    /// <param name="message"></param>
+    /// <param name="exception"></param>
+    protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+    {
+        lock (typeof(ConsoleLogger))
         {
-            Default = new ConsoleLogger();
-        }
-
-        private readonly ConsoleColor m_consoleBackgroundColor;
-
-        private readonly ConsoleColor m_consoleForegroundColor;
-
-        private ConsoleLogger()
-        {
-            this.m_consoleForegroundColor = Console.ForegroundColor;
-            this.m_consoleBackgroundColor = Console.BackgroundColor;
-        }
-
-        /// <summary>
-        /// 默认的实例
-        /// </summary>
-        public static ConsoleLogger Default { get; }
-
-        /// <inheritdoc/>
-        /// <param name="logLevel"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
-        {
-            lock (typeof(ConsoleLogger))
+            Console.Write(DateTime.Now.ToString(this.DateTimeFormat));
+            Console.Write(" | ");
+            switch (logLevel)
             {
-                Console.Write(DateTime.Now.ToString(this.DateTimeFormat));
-                Console.Write(" | ");
-                switch (logLevel)
-                {
-                    case LogLevel.Warning:
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        break;
+                case LogLevel.Warning:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    break;
 
-                    case LogLevel.Error:
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        break;
+                case LogLevel.Error:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    break;
 
-                    case LogLevel.Info:
-                    default:
-                        Console.ForegroundColor = this.m_consoleForegroundColor;
-                        break;
-                }
-                Console.Write(logLevel.ToString());
-                Console.ForegroundColor = this.m_consoleForegroundColor;
-                Console.Write(" | ");
-                Console.Write(message);
-
-                if (exception != null)
-                {
-                    Console.Write(" | ");
-                    Console.Write($"[Exception Message]：{exception.Message}");
-                    Console.Write($"[Stack Trace]：{exception.StackTrace}");
-                }
-                Console.WriteLine();
-
-                Console.ForegroundColor = this.m_consoleForegroundColor;
-                Console.BackgroundColor = this.m_consoleBackgroundColor;
+                case LogLevel.Info:
+                default:
+                    Console.ForegroundColor = this.m_consoleForegroundColor;
+                    break;
             }
+            Console.Write(logLevel.ToString());
+            Console.ForegroundColor = this.m_consoleForegroundColor;
+            Console.Write(" | ");
+            Console.Write(message);
+
+            if (exception != null)
+            {
+                Console.Write(" | ");
+                Console.Write($"[Exception Message]：{exception.Message}");
+                Console.Write($"[Stack Trace]：{exception.StackTrace}");
+            }
+            Console.WriteLine();
+
+            Console.ForegroundColor = this.m_consoleForegroundColor;
+            Console.BackgroundColor = this.m_consoleBackgroundColor;
         }
     }
 }

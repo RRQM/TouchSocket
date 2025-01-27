@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 注入项的生命周期。
+/// </summary>
+public enum Lifetime
 {
     /// <summary>
-    /// 注入项的生命周期。
+    /// 单例对象
     /// </summary>
-    public enum Lifetime
-    {
-        /// <summary>
-        /// 单例对象
-        /// </summary>
-        Singleton,
+    Singleton,
 
-        /// <summary>
-        /// 作用域对象
-        /// </summary>
-        Scoped,
+    /// <summary>
+    /// 作用域对象
+    /// </summary>
+    Scoped,
 
-        /// <summary>
-        /// 瞬时对象
-        /// </summary>
-        Transient
-    }
+    /// <summary>
+    /// 瞬时对象
+    /// </summary>
+    Transient
 }

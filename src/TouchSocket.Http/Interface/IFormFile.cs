@@ -13,71 +13,70 @@
 using System;
 using System.Collections.Specialized;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// 表单文件
+/// </summary>
+public interface IFormFile
 {
     /// <summary>
-    /// 表单文件
+    /// 获取Content-Disposition
     /// </summary>
-    public interface IFormFile
-    {
-        /// <summary>
-        /// 获取Content-Disposition
-        /// </summary>
-        string ContentDisposition { get; }
+    string ContentDisposition { get; }
 
-        /// <summary>
-        /// 获取Content-Type
-        /// </summary>
-        string ContentType { get; }
+    /// <summary>
+    /// 获取Content-Type
+    /// </summary>
+    string ContentType { get; }
 
-        /// <summary>
-        /// 实际的数据
-        /// </summary>
-        public ReadOnlyMemory<byte> Data { get; }
+    /// <summary>
+    /// 实际的数据
+    /// </summary>
+    public ReadOnlyMemory<byte> Data { get; }
 
-        /// <summary>
-        /// 数据对
-        /// </summary>
-        public NameValueCollection DataPair { get; }
+    /// <summary>
+    /// 数据对
+    /// </summary>
+    public NameValueCollection DataPair { get; }
 
-        /// <summary>
-        /// 获取file name
-        /// </summary>
-        string FileName { get; }
+    /// <summary>
+    /// 获取file name
+    /// </summary>
+    string FileName { get; }
 
-        /// <summary>
-        /// 文件长度。在数据接收完成之前，该值为-1;
-        /// </summary>
-        long Length { get; }
+    /// <summary>
+    /// 文件长度。在数据接收完成之前，该值为-1;
+    /// </summary>
+    long Length { get; }
 
-        /// <summary>
-        ///  获取name字段
-        /// </summary>
-        string Name { get; }
+    /// <summary>
+    ///  获取name字段
+    /// </summary>
+    string Name { get; }
 
-        ///// <summary>
-        ///// 读取文件数据  //太麻烦先不实现
-        ///// </summary>
-        //public int Read(byte[] buffer, int offset, int count);
-    }
+    ///// <summary>
+    ///// 读取文件数据  //太麻烦先不实现
+    ///// </summary>
+    //public int Read(byte[] buffer, int offset, int count);
+}
 
-    internal class InternalFormFile : IFormFile
-    {
-        public string ContentDisposition => this.DataPair["Content-Disposition"];
+internal class InternalFormFile : IFormFile
+{
+    public string ContentDisposition => this.DataPair["Content-Disposition"];
 
-        public string ContentType => this.DataPair["Content-Type"];
+    public string ContentType => this.DataPair["Content-Type"];
 
-        public ReadOnlyMemory<byte> Data { get; set; }
-        public NameValueCollection DataPair { get; set; }
-        public string FileName => this.DataPair["filename"];
-        public long Length => this.Data.IsEmpty ? 0 : this.Data.Length;
+    public ReadOnlyMemory<byte> Data { get; set; }
+    public NameValueCollection DataPair { get; set; }
+    public string FileName => this.DataPair["filename"];
+    public long Length => this.Data.IsEmpty ? 0 : this.Data.Length;
 
-        public string Name => this.DataPair["name"];
-        //public int Read(byte[] buffer, int offset, int count)
-        //{
-        //    return this.ReadAction(buffer, offset, count);
-        //}
+    public string Name => this.DataPair["name"];
+    //public int Read(byte[] buffer, int offset, int count)
+    //{
+    //    return this.ReadAction(buffer, offset, count);
+    //}
 
-        //public Func<byte[], int, int, int> ReadAction { get; set; }
-    }
+    //public Func<byte[], int, int, int> ReadAction { get; set; }
 }

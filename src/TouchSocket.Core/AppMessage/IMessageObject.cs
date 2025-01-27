@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 限定消息的接口
+/// </summary>
+public interface IMessageObject
 {
-    /// <summary>
-    /// 限定消息的接口
-    /// </summary>
-    public interface IMessageObject
-    {
-    }
 }

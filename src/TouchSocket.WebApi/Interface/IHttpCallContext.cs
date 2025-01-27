@@ -13,16 +13,15 @@
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// IHttpCallContext
+/// </summary>
+public interface IHttpCallContext : ICallContext
 {
     /// <summary>
-    /// IHttpCallContext
+    /// Http上下文
     /// </summary>
-    public interface IHttpCallContext : ICallContext
-    {
-        /// <summary>
-        /// Http上下文
-        /// </summary>
-        HttpContext HttpContext { get; }
-    }
+    HttpContext HttpContext { get; }
 }

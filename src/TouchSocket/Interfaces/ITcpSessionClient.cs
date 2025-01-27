@@ -10,26 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+
+/// <summary>
+/// 定义 ITcpSessionClient 接口，继承自多个接口，以支持 TCP 会话客户端的功能。
+/// </summary>
+public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequestInfoSender, ITcpListenableClient, ISessionClient, IReceiverClient<IReceiverResult>
 {
+    /// <summary>
+    /// 断开连接
+    /// </summary>
+    ClosedEventHandler<ITcpSessionClient> Closed { get; set; }
 
     /// <summary>
-    /// 定义 ITcpSessionClient 接口，继承自多个接口，以支持 TCP 会话客户端的功能。
+    /// 即将断开连接(仅主动断开时有效)。
+    /// <para>
+    /// 此事件标识在与 <see cref="ITcpSessionClient"/> 的连接即将主动断开时发生的事件。提供此事件是为了允许执行断开连接前的清理操作。
+    /// </para>
     /// </summary>
-    public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequestInfoSender, ITcpListenableClient, ISessionClient, IReceiverClient<IReceiverResult>
-    {
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        ClosedEventHandler<ITcpSessionClient> Closed { get; set; }
+    ClosingEventHandler<ITcpSessionClient> Closing { get; set; }
 
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 此事件标识在与 <see cref="ITcpSessionClient"/> 的连接即将主动断开时发生的事件。提供此事件是为了允许执行断开连接前的清理操作。
-        /// </para>
-        /// </summary>
-        ClosingEventHandler<ITcpSessionClient> Closing { get; set; }
-
-    }
 }

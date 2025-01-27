@@ -14,20 +14,19 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 即将断开连接(仅主动断开时有效)。
+/// </summary>
+[DynamicMethod]
+public interface INamedPipeClosingPlugin : IPlugin
 {
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    [DynamicMethod]
-    public interface INamedPipeClosingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// </summary>
-        /// <param name="client">命名管道的会话客户端。</param>
-        /// <param name="e">断开连接事件参数。</param>
-        /// <returns>一个表示异步操作的任务。</returns>
-        Task OnNamedPipeClosing(INamedPipeSession client, ClosingEventArgs e);
-    }
+    /// <param name="client">命名管道的会话客户端。</param>
+    /// <param name="e">断开连接事件参数。</param>
+    /// <returns>一个表示异步操作的任务。</returns>
+    Task OnNamedPipeClosing(INamedPipeSession client, ClosingEventArgs e);
 }

@@ -10,22 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 提供扩展方法以方便地构建字节块。
+/// </summary>
+public static class ByteBlockBuilderExtension
 {
     /// <summary>
-    /// 提供扩展方法以方便地构建字节块。
+    /// 扩展方法，用于构建给定的字节块。
+    /// 该方法通过引用传递字节块，以利用ref参数提高性能，避免不必要的复制。
     /// </summary>
-    public static class ByteBlockBuilderExtension
+    /// <param name="builder">实现IByteBlockBuilder接口的构建器对象。</param>
+    /// <param name="byteBlock">要构建的字节块对象。</param>
+    public static void Build(this IByteBlockBuilder builder, ByteBlock byteBlock)
     {
-        /// <summary>
-        /// 扩展方法，用于构建给定的字节块。
-        /// 该方法通过引用传递字节块，以利用ref参数提高性能，避免不必要的复制。
-        /// </summary>
-        /// <param name="builder">实现IByteBlockBuilder接口的构建器对象。</param>
-        /// <param name="byteBlock">要构建的字节块对象。</param>
-        public static void Build(this IByteBlockBuilder builder, ByteBlock byteBlock)
-        {
-            builder.Build(ref byteBlock);
-        }
+        builder.Build(ref byteBlock);
     }
 }

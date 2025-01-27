@@ -12,51 +12,50 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// String值转换为基础类型。
+/// </summary>
+public class StringToPrimitiveSerializerFormatter<TState> : ISerializerFormatter<string, TState>
 {
-    /// <summary>
-    /// String值转换为基础类型。
-    /// </summary>
-    public class StringToPrimitiveSerializerFormatter<TState> : ISerializerFormatter<string, TState>
+    /// <inheritdoc/>
+    public int Order { get; set; }
+
+    /// <inheritdoc/>
+    /// <param name="state"></param>
+    /// <param name="source"></param>
+    /// <param name="targetType"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
     {
-        /// <inheritdoc/>
-        public int Order { get; set; }
-
-        /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
+        if (targetType.IsPrimitive())
         {
-            if (targetType.IsPrimitive())
+            return StringExtension.TryParseToType(source, targetType, out target);
+        }
+        target = default;
+        return false;
+    }
+
+    /// <inheritdoc/>
+    /// <param name="state"></param>
+    /// <param name="target"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    public virtual bool TrySerialize(TState state, in object target, out string source)
+    {
+        if (target != null)
+        {
+            var type = target.GetType();
+            if (type.IsPrimitive())
             {
-                return StringExtension.TryParseToType(source, targetType, out target);
+                source = target.ToString();
+                return true;
             }
-            target = default;
-            return false;
         }
 
-        /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public virtual bool TrySerialize(TState state, in object target, out string source)
-        {
-            if (target != null)
-            {
-                var type = target.GetType();
-                if (type.IsPrimitive())
-                {
-                    source = target.ToString();
-                    return true;
-                }
-            }
-
-            source = null;
-            return false;
-        }
+        source = null;
+        return false;
     }
 }

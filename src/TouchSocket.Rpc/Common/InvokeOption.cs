@@ -12,78 +12,77 @@
 
 using System.Threading;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// Rpc调用设置
+/// </summary>
+public class InvokeOption : IInvokeOption
 {
-    /// <summary>
-    /// Rpc调用设置
-    /// </summary>
-    public class InvokeOption : IInvokeOption
+    static InvokeOption()
     {
-        static InvokeOption()
+        OnlySend = new InvokeOption(millisecondsTimeout: 5000)
         {
-            OnlySend = new InvokeOption(millisecondsTimeout: 5000)
-            {
-                FeedbackType = FeedbackType.OnlySend
-            };
+            FeedbackType = FeedbackType.OnlySend
+        };
 
-            WaitSend = new InvokeOption(millisecondsTimeout: 5000)
-            {
-                FeedbackType = FeedbackType.WaitSend
-            };
-
-            WaitInvoke = new InvokeOption(millisecondsTimeout: 5000)
-            {
-                FeedbackType = FeedbackType.WaitInvoke
-            };
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public InvokeOption()
+        WaitSend = new InvokeOption(millisecondsTimeout: 5000)
         {
-        }
+            FeedbackType = FeedbackType.WaitSend
+        };
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="millisecondsTimeout"></param>
-        public InvokeOption(int millisecondsTimeout)
+        WaitInvoke = new InvokeOption(millisecondsTimeout: 5000)
         {
-            this.Timeout = millisecondsTimeout;
-        }
-
-        /// <summary>
-        /// 默认设置。
-        /// Timeout=5000ms
-        /// </summary>
-        public static InvokeOption OnlySend { get; }
-
-        /// <summary>
-        /// 默认设置。
-        /// Timeout=5000ms
-        /// </summary>
-        public static InvokeOption WaitInvoke { get; }
-
-        /// <summary>
-        /// 默认设置。
-        /// Timeout=5000 ms
-        /// </summary>
-        public static InvokeOption WaitSend { get; }
-
-        /// <summary>
-        /// 调用反馈
-        /// </summary>
-        public FeedbackType FeedbackType { get; set; } = FeedbackType.WaitInvoke;
-
-        /// <summary>
-        /// 调用超时，
-        /// </summary>
-        public int Timeout { get; set; } = 5000;
-
-        /// <summary>
-        /// 可以取消的调用令箭
-        /// </summary>
-        public CancellationToken Token { get; set; } = CancellationToken.None;
+            FeedbackType = FeedbackType.WaitInvoke
+        };
     }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    public InvokeOption()
+    {
+    }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="millisecondsTimeout"></param>
+    public InvokeOption(int millisecondsTimeout)
+    {
+        this.Timeout = millisecondsTimeout;
+    }
+
+    /// <summary>
+    /// 默认设置。
+    /// Timeout=5000ms
+    /// </summary>
+    public static InvokeOption OnlySend { get; }
+
+    /// <summary>
+    /// 默认设置。
+    /// Timeout=5000ms
+    /// </summary>
+    public static InvokeOption WaitInvoke { get; }
+
+    /// <summary>
+    /// 默认设置。
+    /// Timeout=5000 ms
+    /// </summary>
+    public static InvokeOption WaitSend { get; }
+
+    /// <summary>
+    /// 调用反馈
+    /// </summary>
+    public FeedbackType FeedbackType { get; set; } = FeedbackType.WaitInvoke;
+
+    /// <summary>
+    /// 调用超时，
+    /// </summary>
+    public int Timeout { get; set; } = 5000;
+
+    /// <summary>
+    /// 可以取消的调用令箭
+    /// </summary>
+    public CancellationToken Token { get; set; } = CancellationToken.None;
 }

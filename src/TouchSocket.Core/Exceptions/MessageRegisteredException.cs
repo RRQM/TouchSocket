@@ -12,20 +12,19 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 消息已注册
+/// </summary>
+[Serializable]
+public class MessageRegisteredException : Exception
 {
     /// <summary>
-    /// 消息已注册
+    ///构造函数
     /// </summary>
-    [Serializable]
-    public class MessageRegisteredException : Exception
+    /// <param name="mes"></param>
+    public MessageRegisteredException(string mes) : base(mes)
     {
-        /// <summary>
-        ///构造函数
-        /// </summary>
-        /// <param name="mes"></param>
-        public MessageRegisteredException(string mes) : base(mes)
-        {
-        }
     }
 }

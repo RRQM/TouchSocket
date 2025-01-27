@@ -12,18 +12,17 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有设置配置的对象接口
+/// </summary>
+public interface ISetupConfigObject : IResolverConfigObject
 {
     /// <summary>
-    /// 具有设置配置的对象接口
+    /// 异步配置设置项
     /// </summary>
-    public interface ISetupConfigObject : IResolverConfigObject
-    {
-        /// <summary>
-        /// 异步配置设置项
-        /// </summary>
-        /// <param name="config">配置对象</param>
-        /// <returns>异步任务</returns>
-        Task SetupAsync(TouchSocketConfig config);
-    }
+    /// <param name="config">配置对象</param>
+    /// <returns>异步任务</returns>
+    Task SetupAsync(TouchSocketConfig config);
 }

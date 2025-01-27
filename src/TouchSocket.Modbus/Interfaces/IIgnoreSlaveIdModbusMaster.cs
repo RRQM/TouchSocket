@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 可以使用忽略SlaveId的限定接口
+/// </summary>
+public interface IIgnoreSlaveIdModbusMaster : IModbusMaster
 {
-    /// <summary>
-    /// 可以使用忽略SlaveId的限定接口
-    /// </summary>
-    public interface IIgnoreSlaveIdModbusMaster : IModbusMaster
-    {
-    }
 }

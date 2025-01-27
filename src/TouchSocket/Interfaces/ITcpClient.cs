@@ -12,39 +12,38 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+
+/// <summary>
+/// 定义了一个接口，该接口继承了多个与TCP客户端相关的接口，用于统一和扩展TCP客户端的功能。
+/// </summary>
+public interface ITcpClient : ITcpSession, ISetupConfigObject, ITcpConnectableClient, IClientSender, IReceiverClient<IReceiverResult>
 {
+    /// <summary>
+    /// 连接事件处理程序，用于处理与 ITcpClient 接口相关的连接事件
+    /// </summary>
+    ConnectedEventHandler<ITcpClient> Connected { get; set; }
 
     /// <summary>
-    /// 定义了一个接口，该接口继承了多个与TCP客户端相关的接口，用于统一和扩展TCP客户端的功能。
+    /// 准备连接的时候
     /// </summary>
-    public interface ITcpClient : ITcpSession, ISetupConfigObject, ITcpConnectableClient, IClientSender, IReceiverClient<IReceiverResult>
-    {
-        /// <summary>
-        /// 连接事件处理程序，用于处理与 ITcpClient 接口相关的连接事件
-        /// </summary>
-        ConnectedEventHandler<ITcpClient> Connected { get; set; }
+    ConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
-        /// <summary>
-        /// 准备连接的时候
-        /// </summary>
-        ConnectingEventHandler<ITcpClient> Connecting { get; set; }
+    /// <summary>
+    /// 断开连接
+    /// </summary>
+    ClosedEventHandler<ITcpClient> Closed { get; set; }
 
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        ClosedEventHandler<ITcpClient> Closed { get; set; }
+    /// <summary>
+    /// 即将断开连接(仅主动断开时有效)。
+    /// <para>
+    /// </para>
+    /// </summary>
+    ClosingEventHandler<ITcpClient> Closing { get; set; }
 
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// </para>
-        /// </summary>
-        ClosingEventHandler<ITcpClient> Closing { get; set; }
-
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        ReceivedEventHandler<ITcpClient> Received { get; set; }
-    }
+    /// <summary>
+    /// 接收到数据
+    /// </summary>
+    ReceivedEventHandler<ITcpClient> Received { get; set; }
 }

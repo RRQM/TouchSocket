@@ -13,30 +13,29 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http客户端
+/// </summary>
+public class HttpClient : HttpClientBase, IHttpClient
 {
-    /// <summary>
-    /// Http客户端
-    /// </summary>
-    public class HttpClient : HttpClientBase, IHttpClient
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
     {
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
-        }
+        return this.TcpConnectAsync(millisecondsTimeout, token);
+    }
 
 
-        /// <inheritdoc/>
-        public Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-        {
-            return this.ProtectedRequestAsync(request, millisecondsTimeout, token);
-        }
+    /// <inheritdoc/>
+    public Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
+    {
+        return this.ProtectedRequestAsync(request, millisecondsTimeout, token);
+    }
 
-        /// <inheritdoc/>
-        public Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-        {
-            return this.ProtectedRequestContentAsync(request, millisecondsTimeout, token);
-        }
+    /// <inheritdoc/>
+    public Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
+    {
+        return this.ProtectedRequestContentAsync(request, millisecondsTimeout, token);
     }
 }

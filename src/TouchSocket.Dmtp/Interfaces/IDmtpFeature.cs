@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// Dmtp功能性组件接口
+/// </summary>
+public interface IDmtpFeature
 {
     /// <summary>
-    /// Dmtp功能性组件接口
+    /// 起始协议
     /// </summary>
-    public interface IDmtpFeature
-    {
-        /// <summary>
-        /// 起始协议
-        /// </summary>
-        ushort StartProtocol { get; set; }
+    ushort StartProtocol { get; set; }
 
-        /// <summary>
-        /// 保留协议长度
-        /// </summary>
-        ushort ReserveProtocolSize { get; }
-    }
+    /// <summary>
+    /// 保留协议长度
+    /// </summary>
+    ushort ReserveProtocolSize { get; }
 }

@@ -12,18 +12,17 @@
 
 using System;
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// PackageBase包结构数据。
-    /// </summary>
-    [Serializable]
-    public abstract class PackageBase : IPackage
-    {
-        /// <inheritdoc/>
-        public abstract void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+namespace TouchSocket.Core;
 
-        /// <inheritdoc/>
-        public abstract void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
-    }
+/// <summary>
+/// PackageBase包结构数据。
+/// </summary>
+[Serializable]
+public abstract class PackageBase : IPackage
+{
+    /// <inheritdoc/>
+    public abstract void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+
+    /// <inheritdoc/>
+    public abstract void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 }

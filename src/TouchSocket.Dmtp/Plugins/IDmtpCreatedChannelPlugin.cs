@@ -13,21 +13,20 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义了一个插件接口，用于在成功创建频道后执行特定操作。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpCreatedChannelPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了一个插件接口，用于在成功创建频道后执行特定操作。
+    /// 在完成握手连接时被调用。
+    /// 此方法允许插件在DMTP通道创建后执行自定义逻辑。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpCreatedChannelPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在完成握手连接时被调用。
-        /// 此方法允许插件在DMTP通道创建后执行自定义逻辑。
-        /// </summary>
-        /// <param name="client">发起创建通道的客户端对象。</param>
-        /// <param name="e">包含创建通道事件相关信息的参数。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e);
-    }
+    /// <param name="client">发起创建通道的客户端对象。</param>
+    /// <param name="e">包含创建通道事件相关信息的参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e);
 }

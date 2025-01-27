@@ -13,43 +13,42 @@
 using System.IO.Ports;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// 串口客户端接口。
+/// </summary>
+public interface ISerialPortClient : ISerialPortSession, IClientSender, IReceiverClient<IReceiverResult>
 {
     /// <summary>
-    /// 串口客户端接口。
+    /// 成功打开串口
     /// </summary>
-    public interface ISerialPortClient : ISerialPortSession, IClientSender, IReceiverClient<IReceiverResult>
-    {
-        /// <summary>
-        /// 成功打开串口
-        /// </summary>
-        ConnectedEventHandler<ISerialPortClient> Connected { get; set; }
+    ConnectedEventHandler<ISerialPortClient> Connected { get; set; }
 
-        /// <summary>
-        /// 准备连接串口的时候
-        /// </summary>
-        ConnectingEventHandler<ISerialPortClient> Connecting { get; set; }
+    /// <summary>
+    /// 准备连接串口的时候
+    /// </summary>
+    ConnectingEventHandler<ISerialPortClient> Connecting { get; set; }
 
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        ClosedEventHandler<ISerialPortClient> Closed { get; set; }
+    /// <summary>
+    /// 断开连接
+    /// </summary>
+    ClosedEventHandler<ISerialPortClient> Closed { get; set; }
 
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// </para>
-        /// </summary>
-        ClosingEventHandler<ISerialPortClient> Closing { get; set; }
+    /// <summary>
+    /// 即将断开连接(仅主动断开时有效)。
+    /// <para>
+    /// </para>
+    /// </summary>
+    ClosingEventHandler<ISerialPortClient> Closing { get; set; }
 
-        /// <summary>
-        /// 主通信器
-        /// </summary>
-        SerialPort MainSerialPort { get; }
+    /// <summary>
+    /// 主通信器
+    /// </summary>
+    SerialPort MainSerialPort { get; }
 
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        ReceivedEventHandler<ISerialPortClient> Received { get; set; }
-    }
+    /// <summary>
+    /// 接收到数据
+    /// </summary>
+    ReceivedEventHandler<ISerialPortClient> Received { get; set; }
 }

@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Resources
+namespace TouchSocket.Resources;
+
+/// <summary>
+/// TouchSocketDmtpResourceExtension
+/// </summary>
+internal static class TouchSocketDmtpStatusExtension
 {
     /// <summary>
-    /// TouchSocketDmtpResourceExtension
+    /// 转为状态字
     /// </summary>
-    internal static class TouchSocketDmtpStatusExtension
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketDmtpStatus ToStatus(this byte value)
     {
-        /// <summary>
-        /// 转为状态字
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketDmtpStatus ToStatus(this byte value)
-        {
-            return (TouchSocketDmtpStatus)value;
-        }
+        return (TouchSocketDmtpStatus)value;
+    }
 
-        /// <summary>
-        /// 转为数值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static byte ToValue(this TouchSocketDmtpStatus value)
-        {
-            return (byte)value;
-        }
+    /// <summary>
+    /// 转为数值
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static byte ToValue(this TouchSocketDmtpStatus value)
+    {
+        return (byte)value;
     }
 }

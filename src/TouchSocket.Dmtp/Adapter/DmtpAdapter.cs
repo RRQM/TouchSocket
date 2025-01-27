@@ -14,56 +14,55 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// DmtpAdapter 类，继承自 CustomFixedHeaderByteBlockDataHandlingAdapter&lt;DmtpMessage&gt;
+/// 该类用于特定地处理 DmtpMessage，通过自定义的固定头部字节块数据处理适配器实现。
+/// </summary>
+public class DmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
 {
+    /// <inheritdoc/>
+    public override bool CanSendRequestInfo => true;
+
+    /// <inheritdoc/>
+    public override bool CanSplicingSend => true;
+
+    /// <inheritdoc/>
+    public override int HeaderLength => 8;
+
     /// <summary>
-    /// DmtpAdapter 类，继承自 CustomFixedHeaderByteBlockDataHandlingAdapter&lt;DmtpMessage&gt;
-    /// 该类用于特定地处理 DmtpMessage，通过自定义的固定头部字节块数据处理适配器实现。
+    /// 最大拼接
     /// </summary>
-    public class DmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
+    public const int MaxSplicing = 1024 * 64;
+
+    /// <inheritdoc/>
+    protected override DmtpMessage GetInstance()
     {
-        /// <inheritdoc/>
-        public override bool CanSendRequestInfo => true;
+        return new DmtpMessage();
+    }
 
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => true;
+    /// <inheritdoc/>
+    protected override void OnReceivedSuccess(DmtpMessage request)
+    {
+        request.SafeDispose();
+    }
 
-        /// <inheritdoc/>
-        public override int HeaderLength => 8;
-
-        /// <summary>
-        /// 最大拼接
-        /// </summary>
-        public const int MaxSplicing = 1024 * 64;
-
-        /// <inheritdoc/>
-        protected override DmtpMessage GetInstance()
+    /// <inheritdoc/>
+    protected override async Task PreviewSendAsync(IRequestInfo requestInfo)
+    {
+        if (requestInfo is not DmtpMessage message)
         {
-            return new DmtpMessage();
+            throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
         }
 
-        /// <inheritdoc/>
-        protected override void OnReceivedSuccess(DmtpMessage request)
+        this.ThrowIfMoreThanMaxPackageSize(message.MaxLength);
+
+        using (var byteBlock = new ByteBlock(message.MaxLength))
         {
-            request.SafeDispose();
-        }
-
-        /// <inheritdoc/>
-        protected override async Task PreviewSendAsync(IRequestInfo requestInfo)
-        {
-            if (requestInfo is not DmtpMessage message)
-            {
-                throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
-            }
-
-            this.ThrowIfMoreThanMaxPackageSize(message.MaxLength);
-
-            using (var byteBlock = new ByteBlock(message.MaxLength))
-            {
-                var block = byteBlock;
-                message.Build(ref block);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            var block = byteBlock;
+            message.Build(ref block);
+            await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

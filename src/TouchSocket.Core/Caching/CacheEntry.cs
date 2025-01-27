@@ -12,56 +12,55 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 缓存实体
+/// </summary>
+public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
 {
     /// <summary>
-    /// 缓存实体
+    /// 初始化缓存项对象。
     /// </summary>
-    public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
+    /// <param name="key">缓存项的键。</param>
+    public CacheEntry(TKey key) : this(key, default)
     {
-        /// <summary>
-        /// 初始化缓存项对象。
-        /// </summary>
-        /// <param name="key">缓存项的键。</param>
-        public CacheEntry(TKey key) : this(key, default)
-        {
-        }
-
-        /// <summary>
-        /// 构造函数：初始化缓存条目。
-        /// </summary>
-        /// <param name="key">缓存条目的键。</param>
-        /// <param name="value">缓存条目的值。</param>
-        public CacheEntry(TKey key, TValue value)
-        {
-            // 初始化更新时间为当前UTC时间。
-            this.UpdateTime = DateTime.UtcNow;
-            // 设置默认缓存持续时间为1分钟。
-            this.Duration = TimeSpan.FromSeconds(60);
-            // 设置缓存条目的键。
-            this.Key = key;
-            // 设置缓存条目的值。
-            this.Value = value;
-        }
-
-        /// <summary>
-        /// 有效区间。如果想长期有效，请使用<see cref="TimeSpan.Zero"/>
-        /// </summary>
-        public TimeSpan Duration { get; set; }
-
-        /// <summary>
-        /// 键
-        /// </summary>
-        public TKey Key { get; set; }
-
-        /// <summary>
-        /// 更新时间
-        /// </summary>
-        public DateTime UpdateTime { get; set; }
-
-        /// <summary>
-        /// 值
-        /// </summary>
-        public TValue Value { get; set; }
     }
+
+    /// <summary>
+    /// 构造函数：初始化缓存条目。
+    /// </summary>
+    /// <param name="key">缓存条目的键。</param>
+    /// <param name="value">缓存条目的值。</param>
+    public CacheEntry(TKey key, TValue value)
+    {
+        // 初始化更新时间为当前UTC时间。
+        this.UpdateTime = DateTime.UtcNow;
+        // 设置默认缓存持续时间为1分钟。
+        this.Duration = TimeSpan.FromSeconds(60);
+        // 设置缓存条目的键。
+        this.Key = key;
+        // 设置缓存条目的值。
+        this.Value = value;
+    }
+
+    /// <summary>
+    /// 有效区间。如果想长期有效，请使用<see cref="TimeSpan.Zero"/>
+    /// </summary>
+    public TimeSpan Duration { get; set; }
+
+    /// <summary>
+    /// 键
+    /// </summary>
+    public TKey Key { get; set; }
+
+    /// <summary>
+    /// 更新时间
+    /// </summary>
+    public DateTime UpdateTime { get; set; }
+
+    /// <summary>
+    /// 值
+    /// </summary>
+    public TValue Value { get; set; }
 }

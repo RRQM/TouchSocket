@@ -15,155 +15,154 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// 基于Http的WebSocket的扩展。
+/// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
+/// </summary>
+[PluginOption(Singleton = true)]
+public sealed class WebSocketFeature : PluginBase, IHttpPlugin
 {
     /// <summary>
-    /// 基于Http的WebSocket的扩展。
-    /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
+    /// 自动响应Close报文
     /// </summary>
-    [PluginOption(Singleton = true)]
-    public sealed class WebSocketFeature : PluginBase, IHttpPlugin
+    public static readonly DependencyProperty<bool> AutoCloseProperty =
+       new("AutoClose", true);
+
+    /// <summary>
+    /// 自动响应Ping报文
+    /// </summary>
+    public static readonly DependencyProperty<bool> AutoPongProperty =
+       new("AutoPong", false);
+
+    private string m_wSUrl = "/ws";
+
+    /// <summary>
+    /// WebSocketFeature
+    /// </summary>
+    public WebSocketFeature()
     {
-        /// <summary>
-        /// 自动响应Close报文
-        /// </summary>
-        public static readonly DependencyProperty<bool> AutoCloseProperty =
-           new("AutoClose", true);
+        this.VerifyConnection = this.ThisVerifyConnection;
+    }
 
-        /// <summary>
-        /// 自动响应Ping报文
-        /// </summary>
-        public static readonly DependencyProperty<bool> AutoPongProperty =
-           new("AutoPong", false);
+    /// <summary>
+    /// 是否默认处理Close报文。
+    /// </summary>
+    public bool AutoClose { get; set; } = true;
 
-        private string m_wSUrl = "/ws";
+    /// <summary>
+    /// 当收到ping报文时，是否自动回应pong。
+    /// </summary>
+    public bool AutoPong { get; set; }
 
-        /// <summary>
-        /// WebSocketFeature
-        /// </summary>
-        public WebSocketFeature()
-        {
-            this.VerifyConnection = this.ThisVerifyConnection;
-        }
+    /// <summary>
+    /// 验证连接
+    /// </summary>
+    public Func<IHttpSessionClient, HttpContext, Task<bool>> VerifyConnection { get; set; }
 
-        /// <summary>
-        /// 是否默认处理Close报文。
-        /// </summary>
-        public bool AutoClose { get; set; } = true;
+    /// <summary>
+    /// 用于WebSocket连接的路径，默认为“/ws”
+    /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
+    /// </summary>
+    public string WSUrl
+    {
+        get => this.m_wSUrl;
+        set => this.m_wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
+    }
 
-        /// <summary>
-        /// 当收到ping报文时，是否自动回应pong。
-        /// </summary>
-        public bool AutoPong { get; set; }
+    /// <summary>
+    /// 不处理Close报文。
+    /// </summary>
+    /// <returns></returns>
+    public WebSocketFeature NoAutoClose()
+    {
+        this.AutoClose = false;
+        return this;
+    }
 
-        /// <summary>
-        /// 验证连接
-        /// </summary>
-        public Func<IHttpSessionClient, HttpContext, Task<bool>> VerifyConnection { get; set; }
-
-        /// <summary>
-        /// 用于WebSocket连接的路径，默认为“/ws”
-        /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
-        /// </summary>
-        public string WSUrl
-        {
-            get => this.m_wSUrl;
-            set => this.m_wSUrl = string.IsNullOrEmpty(value) ? "/" : value;
-        }
-
-        /// <summary>
-        /// 不处理Close报文。
-        /// </summary>
-        /// <returns></returns>
-        public WebSocketFeature NoAutoClose()
-        {
-            this.AutoClose = false;
-            return this;
-        }
-
-        /// <summary>
-        /// 验证连接
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, bool> func)
-        {
-            this.VerifyConnection = async (client, context) =>
-            {
-                await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return func.Invoke(client, context);
-            };
-            return this;
-        }
-
-        /// <summary>
-        /// 验证连接
-        /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> func)
-        {
-            this.VerifyConnection = func;
-            return this;
-        }
-
-        /// <summary>
-        /// 用于WebSocket连接的路径，默认为“/ws”
-        /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
-        /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        public WebSocketFeature SetWSUrl(string url)
-        {
-            this.WSUrl = url;
-            return this;
-        }
-
-        /// <summary>
-        /// 当收到ping报文时，自动回应pong。
-        /// </summary>
-        /// <returns></returns>
-        public WebSocketFeature UseAutoPong()
-        {
-            this.AutoPong = true;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            if (client.Protocol == Protocol.Http)
-            {
-                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    e.Handled = true;
-                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    if (!this.AutoClose)
-                    {
-                        client.SetValue(AutoCloseProperty, false);
-                    }
-                    if (this.AutoPong)
-                    {
-                        client.SetValue(AutoPongProperty, true);
-                    }
-                    return;
-                }
-            }
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-
-        private async Task<bool> ThisVerifyConnection(IHttpSessionClient client, HttpContext context)
+    /// <summary>
+    /// 验证连接
+    /// </summary>
+    /// <param name="func"></param>
+    /// <returns></returns>
+    public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, bool> func)
+    {
+        this.VerifyConnection = async (client, context) =>
         {
             await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (context.Request.Method == HttpMethod.Get)
-            {
-                if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))
-                {
-                    return true;
-                }
-            }
+            return func.Invoke(client, context);
+        };
+        return this;
+    }
 
-            return false;
+    /// <summary>
+    /// 验证连接
+    /// </summary>
+    /// <param name="func"></param>
+    /// <returns></returns>
+    public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> func)
+    {
+        this.VerifyConnection = func;
+        return this;
+    }
+
+    /// <summary>
+    /// 用于WebSocket连接的路径，默认为“/ws”
+    /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
+    /// </summary>
+    /// <param name="url"></param>
+    /// <returns></returns>
+    public WebSocketFeature SetWSUrl(string url)
+    {
+        this.WSUrl = url;
+        return this;
+    }
+
+    /// <summary>
+    /// 当收到ping报文时，自动回应pong。
+    /// </summary>
+    /// <returns></returns>
+    public WebSocketFeature UseAutoPong()
+    {
+        this.AutoPong = true;
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        if (client.Protocol == Protocol.Http)
+        {
+            if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            {
+                e.Handled = true;
+                await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (!this.AutoClose)
+                {
+                    client.SetValue(AutoCloseProperty, false);
+                }
+                if (this.AutoPong)
+                {
+                    client.SetValue(AutoPongProperty, true);
+                }
+                return;
+            }
         }
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    private async Task<bool> ThisVerifyConnection(IHttpSessionClient client, HttpContext context)
+    {
+        await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (context.Request.Method == HttpMethod.Get)
+        {
+            if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

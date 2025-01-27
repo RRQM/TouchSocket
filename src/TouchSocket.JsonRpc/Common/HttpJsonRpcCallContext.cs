@@ -13,16 +13,15 @@
 using TouchSocket.Http;
 using TouchSocket.WebApi;
 
-namespace TouchSocket.JsonRpc
-{
+namespace TouchSocket.JsonRpc;
 
-    internal sealed class HttpJsonRpcCallContext : JsonRpcCallContextBase, IHttpCallContext
+
+internal sealed class HttpJsonRpcCallContext : JsonRpcCallContextBase, IHttpCallContext
+{
+    public HttpJsonRpcCallContext(object caller, HttpContext context)
     {
-        public HttpJsonRpcCallContext(object caller, HttpContext context)
-        {
-            this.Caller = caller;
-            this.HttpContext = context;
-        }
-        public HttpContext HttpContext { get; }
+        this.Caller = caller;
+        this.HttpContext = context;
     }
+    public HttpContext HttpContext { get; }
 }

@@ -14,54 +14,53 @@ using Newtonsoft.Json;
 using System;
 using System.Text;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// Json字节转到对应类
+/// </summary>
+public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<byte[], TState>
 {
     /// <summary>
-    /// Json字节转到对应类
+    /// JsonSettings
     /// </summary>
-    public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<byte[], TState>
+    public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
+
+    /// <inheritdoc/>
+    public int Order { get; set; }
+
+
+    /// <inheritdoc/>
+    public virtual bool TryDeserialize(TState state, in byte[] source, Type targetType, out object target)
     {
-        /// <summary>
-        /// JsonSettings
-        /// </summary>
-        public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
-
-        /// <inheritdoc/>
-        public int Order { get; set; }
-
-
-        /// <inheritdoc/>
-        public virtual bool TryDeserialize(TState state, in byte[] source, Type targetType, out object target)
+        try
         {
-            try
-            {
-                target = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(source), targetType, this.JsonSettings);
-                return true;
-            }
-            catch
-            {
-                target = default;
-                return false;
-            }
+            target = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(source), targetType, this.JsonSettings);
+            return true;
         }
-
-        /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public virtual bool TrySerialize(TState state, in object target, out byte[] source)
+        catch
         {
-            try
-            {
-                source = JsonConvert.SerializeObject(target, this.JsonSettings).ToUTF8Bytes();
-                return true;
-            }
-            catch (Exception)
-            {
-                source = null;
-                return false;
-            }
+            target = default;
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
+    /// <param name="state"></param>
+    /// <param name="target"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    public virtual bool TrySerialize(TState state, in object target, out byte[] source)
+    {
+        try
+        {
+            source = JsonConvert.SerializeObject(target, this.JsonSettings).ToUTF8Bytes();
+            return true;
+        }
+        catch (Exception)
+        {
+            source = null;
+            return false;
         }
     }
 }

@@ -10,16 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+internal class InternalScopedResolver : DisposableObject, IScopedResolver
 {
-    internal class InternalScopedResolver : DisposableObject, IScopedResolver
+    public IResolver Resolver { get; set; }
+
+    public InternalScopedResolver(IResolver resolver)
     {
-        public IResolver Resolver { get; set; }
-
-        public InternalScopedResolver(IResolver resolver)
-        {
-            this.Resolver = resolver;
-        }
+        this.Resolver = resolver;
     }
-
 }

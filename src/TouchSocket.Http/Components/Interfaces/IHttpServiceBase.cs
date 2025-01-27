@@ -12,12 +12,11 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// IHttpServiceBase
+/// </summary>
+public interface IHttpServiceBase : ITcpServiceBase
 {
-    /// <summary>
-    /// IHttpServiceBase
-    /// </summary>
-    public interface IHttpServiceBase : ITcpServiceBase
-    {
-    }
 }

@@ -13,13 +13,12 @@
 using System.Collections.Generic;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
-{
+namespace TouchSocket.Dmtp;
+
 #if AsyncEnumerable
 
-    public partial interface IDmtpChannel : IAsyncEnumerable<ByteBlock>
-    {
-    }
+public partial interface IDmtpChannel : IAsyncEnumerable<ByteBlock>
+{
+}
 
 #endif
-}

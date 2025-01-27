@@ -12,22 +12,21 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// GZip压缩算法的压缩机
+/// </summary>
+
+public sealed partial class GZipDataCompressor : IDataCompressor
 {
-    /// <summary>
-    /// GZip压缩算法的压缩机
-    /// </summary>
-
-    public sealed partial class GZipDataCompressor : IDataCompressor
+    byte[] IDataCompressor.Compress(ArraySegment<byte> data)
     {
-        byte[] IDataCompressor.Compress(ArraySegment<byte> data)
-        {
-            return GZip.Compress(data.Array, data.Offset, data.Count);
-        }
+        return GZip.Compress(data.Array, data.Offset, data.Count);
+    }
 
-        byte[] IDataCompressor.Decompress(ArraySegment<byte> data)
-        {
-            return GZip.Decompress(data.Array, data.Offset, data.Count);
-        }
+    byte[] IDataCompressor.Decompress(ArraySegment<byte> data)
+    {
+        return GZip.Decompress(data.Array, data.Offset, data.Count);
     }
 }

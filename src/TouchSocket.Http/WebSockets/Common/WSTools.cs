@@ -14,180 +14,179 @@ using System;
 using System.Text;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WSTools
+/// </summary>
+internal static class WSTools
 {
     /// <summary>
-    /// WSTools
+    /// 应答。
     /// </summary>
-    internal static class WSTools
+    public const string acceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+    public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
     {
-        /// <summary>
-        /// 应答。
-        /// </summary>
-        public const string acceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+        int payloadLength;
 
-        public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
+        byte[] extLen;
+
+        var length = memory.Length;
+
+        if (length < 126)
         {
-            int payloadLength;
+            payloadLength = length;
+            extLen = new byte[0];
+        }
+        else if (length < 65536)
+        {
+            payloadLength = 126;
+            extLen = TouchSocketBitConverter.BigEndian.GetBytes((ushort)length);
+        }
+        else
+        {
+            payloadLength = 127;
+            extLen = TouchSocketBitConverter.BigEndian.GetBytes((ulong)length);
+        }
 
-            byte[] extLen;
+        var header = dataFrame.FIN ? 1 : 0;
+        header = (header << 1) + (dataFrame.RSV1 ? 1 : 0);
+        header = (header << 1) + (dataFrame.RSV2 ? 1 : 0);
+        header = (header << 1) + (dataFrame.RSV3 ? 1 : 0);
+        header = (header << 4) + (ushort)dataFrame.Opcode;
 
-            var length = memory.Length;
+        header = dataFrame.Mask ? (header << 1) + 1 : (header << 1) + 0;
 
-            if (length < 126)
+        header = (header << 7) + payloadLength;
+
+        byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)header));
+
+        if (payloadLength > 125)
+        {
+            byteBlock.Write(new ReadOnlySpan<byte>(extLen, 0, extLen.Length));
+        }
+
+        if (dataFrame.Mask)
+        {
+            byteBlock.Write(new ReadOnlySpan<byte>(dataFrame.MaskingKey, 0, 4));
+        }
+
+        if (payloadLength > 0)
+        {
+            if (dataFrame.Mask)
             {
-                payloadLength = length;
-                extLen = new byte[0];
-            }
-            else if (length < 65536)
-            {
-                payloadLength = 126;
-                extLen = TouchSocketBitConverter.BigEndian.GetBytes((ushort)length);
+                if (byteBlock.Capacity < byteBlock.Position + length)
+                {
+                    byteBlock.SetCapacity(byteBlock.Position + length, true);
+                }
+                WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, dataFrame.MaskingKey);
+                byteBlock.SetLength(byteBlock.Position + length);
             }
             else
             {
-                payloadLength = 127;
-                extLen = TouchSocketBitConverter.BigEndian.GetBytes((ulong)length);
+                byteBlock.Write(memory.Span);
             }
-
-            var header = dataFrame.FIN ? 1 : 0;
-            header = (header << 1) + (dataFrame.RSV1 ? 1 : 0);
-            header = (header << 1) + (dataFrame.RSV2 ? 1 : 0);
-            header = (header << 1) + (dataFrame.RSV3 ? 1 : 0);
-            header = (header << 4) + (ushort)dataFrame.Opcode;
-
-            header = dataFrame.Mask ? (header << 1) + 1 : (header << 1) + 0;
-
-            header = (header << 7) + payloadLength;
-
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)header));
-
-            if (payloadLength > 125)
-            {
-                byteBlock.Write(new ReadOnlySpan<byte>(extLen, 0, extLen.Length));
-            }
-
-            if (dataFrame.Mask)
-            {
-                byteBlock.Write(new ReadOnlySpan<byte>(dataFrame.MaskingKey, 0, 4));
-            }
-
-            if (payloadLength > 0)
-            {
-                if (dataFrame.Mask)
-                {
-                    if (byteBlock.Capacity < byteBlock.Position + length)
-                    {
-                        byteBlock.SetCapacity(byteBlock.Position + length, true);
-                    }
-                    WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, dataFrame.MaskingKey);
-                    byteBlock.SetLength(byteBlock.Position + length);
-                }
-                else
-                {
-                    byteBlock.Write(memory.Span);
-                }
-            }
-            return true;
         }
+        return true;
+    }
 
-        /// <summary>
-        /// 计算Base64值
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static string CalculateBase64Key(string str)
+    /// <summary>
+    /// 计算Base64值
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string CalculateBase64Key(string str)
+    {
+        return (str + acceptMask).ToSha1(Encoding.UTF8).ToBase64();
+    }
+
+    /// <summary>
+    /// 获取Base64随即字符串。
+    /// </summary>
+    /// <returns></returns>
+    public static string CreateBase64Key()
+    {
+        var src = new byte[16];
+        new Random().NextBytes(src);
+        return Convert.ToBase64String(src);
+    }
+
+    ///// <summary>
+    ///// 掩码运算
+    ///// </summary>
+    ///// <param name="storeBuf"></param>
+    ///// <param name="sOffset"></param>
+    ///// <param name="buffer"></param>
+    ///// <param name="offset"></param>
+    ///// <param name="length"></param>
+    ///// <param name="masks"></param>
+    //public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
+    //{
+    //    for (var i = 0; i < length; i++)
+    //    {
+    //        storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
+    //    }
+    //}
+
+    public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
+    {
+        for (var i = 0; i < memorySpan.Length; i++)
         {
-            return (str + acceptMask).ToSha1(Encoding.UTF8).ToBase64();
+            span[i] = (byte)(memorySpan[i] ^ masks[i % 4]);
         }
+    }
 
-        /// <summary>
-        /// 获取Base64随即字符串。
-        /// </summary>
-        /// <returns></returns>
-        public static string CreateBase64Key()
+    /// <summary>
+    /// 获取WS的请求头
+    /// </summary>
+    /// <param name="httpClientBase"></param>
+    /// <param name="version"></param>
+    /// <param name="base64Key"></param>
+    /// <returns></returns>
+    public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
+    {
+        var request = new HttpRequest();
+        request.SetUrl(httpClientBase.RemoteIPHost.PathAndQuery);
+        request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
+        request.Headers.Add(HttpHeaders.Connection, "upgrade");
+        request.Headers.Add(HttpHeaders.Upgrade, "websocket");
+        request.Headers.Add("Sec-WebSocket-Version", $"{version}");
+        base64Key = CreateBase64Key();
+        request.Headers.Add("Sec-WebSocket-Key", base64Key);
+        request.AsGet();
+        return request;
+    }
+
+    /// <summary>
+    /// 获取响应
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="response"></param>
+    /// <returns></returns>
+    public static bool TryGetResponse(HttpRequest request, HttpResponse response)
+    {
+        var upgrade = request.Headers.Get(HttpHeaders.Upgrade);
+        if (string.IsNullOrEmpty(upgrade))
         {
-            var src = new byte[16];
-            new Random().NextBytes(src);
-            return Convert.ToBase64String(src);
+            return false;
         }
-
-        ///// <summary>
-        ///// 掩码运算
-        ///// </summary>
-        ///// <param name="storeBuf"></param>
-        ///// <param name="sOffset"></param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <param name="masks"></param>
-        //public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
-        //{
-        //    for (var i = 0; i < length; i++)
-        //    {
-        //        storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
-        //    }
-        //}
-
-        public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
+        var connection = request.Headers.Get(HttpHeaders.Connection);
+        if (string.IsNullOrEmpty(connection))
         {
-            for (var i = 0; i < memorySpan.Length; i++)
-            {
-                span[i] = (byte)(memorySpan[i] ^ masks[i % 4]);
-            }
+            return false;
         }
-
-        /// <summary>
-        /// 获取WS的请求头
-        /// </summary>
-        /// <param name="httpClientBase"></param>
-        /// <param name="version"></param>
-        /// <param name="base64Key"></param>
-        /// <returns></returns>
-        public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
+        var secWebSocketKey = request.Headers.Get("sec-websocket-key");
+        if (string.IsNullOrEmpty(secWebSocketKey))
         {
-            var request = new HttpRequest();
-            request.SetUrl(httpClientBase.RemoteIPHost.PathAndQuery);
-            request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
-            request.Headers.Add(HttpHeaders.Connection, "upgrade");
-            request.Headers.Add(HttpHeaders.Upgrade, "websocket");
-            request.Headers.Add("Sec-WebSocket-Version", $"{version}");
-            base64Key = CreateBase64Key();
-            request.Headers.Add("Sec-WebSocket-Key", base64Key);
-            request.AsGet();
-            return request;
+            return false;
         }
 
-        /// <summary>
-        /// 获取响应
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
-        /// <returns></returns>
-        public static bool TryGetResponse(HttpRequest request, HttpResponse response)
-        {
-            var upgrade = request.Headers.Get(HttpHeaders.Upgrade);
-            if (string.IsNullOrEmpty(upgrade))
-            {
-                return false;
-            }
-            var connection = request.Headers.Get(HttpHeaders.Connection);
-            if (string.IsNullOrEmpty(connection))
-            {
-                return false;
-            }
-            var secWebSocketKey = request.Headers.Get("sec-websocket-key");
-            if (string.IsNullOrEmpty(secWebSocketKey))
-            {
-                return false;
-            }
-
-            response.StatusCode = 101;
-            response.StatusMessage = "switching protocols";
-            response.Headers.Add(HttpHeaders.Connection, "upgrade");
-            response.Headers.Add(HttpHeaders.Upgrade, "websocket");
-            response.Headers.Add("sec-websocket-accept", CalculateBase64Key(secWebSocketKey));
-            return true;
-        }
+        response.StatusCode = 101;
+        response.StatusMessage = "switching protocols";
+        response.Headers.Add(HttpHeaders.Connection, "upgrade");
+        response.Headers.Add(HttpHeaders.Upgrade, "websocket");
+        response.Headers.Add("sec-websocket-accept", CalculateBase64Key(secWebSocketKey));
+        return true;
     }
 }

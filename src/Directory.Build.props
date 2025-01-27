@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.12</Version>
+		<Version>3.0.13</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -13,7 +13,7 @@
 		<Authors>若汝棋茗</Authors>
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
-		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300;IDE0130</NoWarn>
+		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300;IDE0130;IDE0057</NoWarn>
 		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
 		<!--<Nullable>enable</Nullable>-->

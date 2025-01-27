@@ -16,85 +16,84 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// RpcStoreExtensions
+/// </summary>
+public static class RpcStoreExtension
 {
     /// <summary>
-    /// RpcStoreExtensions
+    /// DynamicallyAccessed
     /// </summary>
-    public static class RpcStoreExtension
+    public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicProperties;
+
+    /// <summary>
+    /// 注册<see cref="AppDomain"/>已加载程序集的所有Rpc服务
+    /// </summary>
+    /// <returns>返回搜索到的服务数</returns>
+    public static void RegisterAllServer(this RpcStore rpcStore)
     {
-        /// <summary>
-        /// DynamicallyAccessed
-        /// </summary>
-        public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicProperties;
-
-        /// <summary>
-        /// 注册<see cref="AppDomain"/>已加载程序集的所有Rpc服务
-        /// </summary>
-        /// <returns>返回搜索到的服务数</returns>
-        public static void RegisterAllServer(this RpcStore rpcStore)
+        var types = new List<Type>();
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        foreach (var assembly in assemblies)
         {
-            var types = new List<Type>();
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
-            {
-                RegisterAllServer(rpcStore, assembly);
-            }
+            RegisterAllServer(rpcStore, assembly);
         }
+    }
 
-        /// <summary>
-        /// 注册指定程序集的Rpc服务。
-        /// </summary>
-        /// <param name="rpcStore"></param>
-        /// <param name="assembly"></param>
-        public static void RegisterAllServer(this RpcStore rpcStore, Assembly assembly)
+    /// <summary>
+    /// 注册指定程序集的Rpc服务。
+    /// </summary>
+    /// <param name="rpcStore"></param>
+    /// <param name="assembly"></param>
+    public static void RegisterAllServer(this RpcStore rpcStore, Assembly assembly)
+    {
+        foreach (var type in assembly.ExportedTypes.Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray())
         {
-            foreach (var type in assembly.ExportedTypes.Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray())
-            {
-                rpcStore.RegisterServer(type);
-            }
+            rpcStore.RegisterServer(type);
         }
+    }
 
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this RpcStore rpcStore) where T : IRpcServer
-        {
-            rpcStore.RegisterServer(typeof(T));
-        }
+    /// <summary>
+    /// 注册服务
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this RpcStore rpcStore) where T : IRpcServer
+    {
+        rpcStore.RegisterServer(typeof(T));
+    }
 
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="rpcStore"></param>
-        /// <param name="providerType"></param>
-        /// <returns></returns>
-        public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type providerType)
-        {
-            rpcStore.RegisterServer(providerType, providerType);
-        }
+    /// <summary>
+    /// 注册服务
+    /// </summary>
+    /// <param name="rpcStore"></param>
+    /// <param name="providerType"></param>
+    /// <returns></returns>
+    public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type providerType)
+    {
+        rpcStore.RegisterServer(providerType, providerType);
+    }
 
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <typeparam name="TFrom"></typeparam>
-        /// <typeparam name="TTo"></typeparam>
-        /// <returns></returns>
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
-        {
-            rpcStore.RegisterServer(typeof(TFrom), typeof(TTo));
-        }
+    /// <summary>
+    /// 注册服务
+    /// </summary>
+    /// <typeparam name="TFrom"></typeparam>
+    /// <typeparam name="TTo"></typeparam>
+    /// <returns></returns>
+    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
+    {
+        rpcStore.RegisterServer(typeof(TFrom), typeof(TTo));
+    }
 
-        /// <summary>
-        /// 注册为单例服务
-        /// </summary>
-        /// <typeparam name="TFrom"></typeparam>
-        /// <returns></returns>
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom rpcServer) where TFrom : class, IRpcServer
-        {
-            rpcStore.RegisterServer(typeof(TFrom), rpcServer);
-        }
+    /// <summary>
+    /// 注册为单例服务
+    /// </summary>
+    /// <typeparam name="TFrom"></typeparam>
+    /// <returns></returns>
+    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom rpcServer) where TFrom : class, IRpcServer
+    {
+        rpcStore.RegisterServer(typeof(TFrom), rpcServer);
     }
 }

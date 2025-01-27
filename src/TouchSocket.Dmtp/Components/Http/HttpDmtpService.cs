@@ -16,84 +16,83 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// HttpDmtpService 类，继承自<see cref="HttpDmtpService{TClient}"/>，实现<see cref="IHttpDmtpService"/>接口。
+/// 该类提供基于HTTP协议的Dmtp服务，用于处理特定类型的会话客户端。
+/// </summary>
+public class HttpDmtpService : HttpDmtpService<HttpDmtpSessionClient>, IHttpDmtpService
+{
+    /// <inheritdoc/>
+    protected sealed override HttpDmtpSessionClient NewClient()
+    {
+        return new PrivateHttpDmtpSessionClient();
+    }
+
+    private class PrivateHttpDmtpSessionClient : HttpDmtpSessionClient
+    {
+    }
+}
+
+/// <summary>
+/// HttpDmtpService泛型类型
+/// </summary>
+/// <typeparam name="TClient">泛型参数，限定为<see cref="HttpDmtpSessionClient"/>的派生类型</typeparam>
+public abstract partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSessionClient
 {
     /// <summary>
-    /// HttpDmtpService 类，继承自<see cref="HttpDmtpService{TClient}"/>，实现<see cref="IHttpDmtpService"/>接口。
-    /// 该类提供基于HTTP协议的Dmtp服务，用于处理特定类型的会话客户端。
+    /// 连接令箭
     /// </summary>
-    public class HttpDmtpService : HttpDmtpService<HttpDmtpSessionClient>, IHttpDmtpService
-    {
-        /// <inheritdoc/>
-        protected sealed override HttpDmtpSessionClient NewClient()
-        {
-            return new PrivateHttpDmtpSessionClient();
-        }
+    public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
-        private class PrivateHttpDmtpSessionClient : HttpDmtpSessionClient
+    #region 字段
+
+    private bool m_allowRoute;
+    private Func<string, Task<IDmtpActor>> m_findDmtpActor;
+
+    #endregion 字段
+
+    /// <inheritdoc/>
+    protected override void ClientInitialized(TClient client)
+    {
+        base.ClientInitialized(client);
+        client.m_internalOnRpcActorInit = this.PrivateOnRpcActorInit;
+    }
+
+    /// <inheritdoc/>
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        base.LoadConfig(config);
+        var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+        if (dmtpRouteService != null)
         {
+            this.m_allowRoute = true;
+            this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
         }
     }
 
-    /// <summary>
-    /// HttpDmtpService泛型类型
-    /// </summary>
-    /// <typeparam name="TClient">泛型参数，限定为<see cref="HttpDmtpSessionClient"/>的派生类型</typeparam>
-    public abstract partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSessionClient
+    private async Task<IDmtpActor> FindDmtpActor(string id)
     {
-        /// <summary>
-        /// 连接令箭
-        /// </summary>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
-
-        #region 字段
-
-        private bool m_allowRoute;
-        private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-
-        #endregion 字段
-
-        /// <inheritdoc/>
-        protected override void ClientInitialized(TClient client)
+        if (this.m_allowRoute)
         {
-            base.ClientInitialized(client);
-            client.m_internalOnRpcActorInit = this.PrivateOnRpcActorInit;
-        }
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            base.LoadConfig(config);
-            var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
-            if (dmtpRouteService != null)
+            if (this.m_findDmtpActor != null)
             {
-                this.m_allowRoute = true;
-                this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
+                return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
+            return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
         }
-
-        private async Task<IDmtpActor> FindDmtpActor(string id)
+        else
         {
-            if (this.m_allowRoute)
-            {
-                if (this.m_findDmtpActor != null)
-                {
-                    return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
+    }
 
-        private SealedDmtpActor PrivateOnRpcActorInit()
+    private SealedDmtpActor PrivateOnRpcActorInit()
+    {
+        return new SealedDmtpActor(this.m_allowRoute)
         {
-            return new SealedDmtpActor(this.m_allowRoute)
-            {
-                FindDmtpActor = this.FindDmtpActor
-            };
-        }
+            FindDmtpActor = this.FindDmtpActor
+        };
     }
 }

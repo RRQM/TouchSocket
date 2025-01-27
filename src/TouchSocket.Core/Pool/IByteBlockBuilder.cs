@@ -10,25 +10,24 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 定义了字节块构建器的接口，用于从内存池中构建和管理字节块。
+/// </summary>
+public interface IByteBlockBuilder
 {
     /// <summary>
-    /// 定义了字节块构建器的接口，用于从内存池中构建和管理字节块。
+    /// 构建数据时，指示内存池的申请长度。
+    /// <para>
+    /// 建议：该值可以尽可能的设置大一些，这样可以避免内存池扩容。
+    /// </para>
     /// </summary>
-    public interface IByteBlockBuilder
-    {
-        /// <summary>
-        /// 构建数据时，指示内存池的申请长度。
-        /// <para>
-        /// 建议：该值可以尽可能的设置大一些，这样可以避免内存池扩容。
-        /// </para>
-        /// </summary>
-        int MaxLength { get; }
+    int MaxLength { get; }
 
-        /// <summary>
-        /// 构建对象到<see cref="ByteBlock"/>
-        /// </summary>
-        /// <param name="byteBlock">要构建的字节块对象引用。</param>
-        void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
-    }
+    /// <summary>
+    /// 构建对象到<see cref="ByteBlock"/>
+    /// </summary>
+    /// <param name="byteBlock">要构建的字节块对象引用。</param>
+    void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 }

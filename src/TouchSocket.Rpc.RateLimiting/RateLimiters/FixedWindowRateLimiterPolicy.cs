@@ -13,25 +13,24 @@
 using System.Reflection;
 using System.Threading.RateLimiting;
 
-namespace TouchSocket.Rpc.RateLimiting
+namespace TouchSocket.Rpc.RateLimiting;
+
+internal sealed class FixedWindowRateLimiterPolicy : RateLimiterPolicy<MethodInfo>
 {
-    internal sealed class FixedWindowRateLimiterPolicy : RateLimiterPolicy<MethodInfo>
+    private readonly FixedWindowRateLimiterOptions m_options;
+
+    public FixedWindowRateLimiterPolicy(FixedWindowRateLimiterOptions options)
     {
-        private readonly FixedWindowRateLimiterOptions m_options;
+        this.m_options = options;
+    }
 
-        public FixedWindowRateLimiterPolicy(FixedWindowRateLimiterOptions options)
-        {
-            this.m_options = options;
-        }
+    protected override MethodInfo GetPartitionKey(ICallContext callContext)
+    {
+        return callContext.RpcMethod.Info;
+    }
 
-        protected override MethodInfo GetPartitionKey(ICallContext callContext)
-        {
-            return callContext.RpcMethod.Info;
-        }
-
-        protected override RateLimiter NewRateLimiter(MethodInfo method)
-        {
-            return new FixedWindowRateLimiter(this.m_options);
-        }
+    protected override RateLimiter NewRateLimiter(MethodInfo method)
+    {
+        return new FixedWindowRateLimiter(this.m_options);
     }
 }

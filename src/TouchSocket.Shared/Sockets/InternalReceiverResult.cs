@@ -13,42 +13,41 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// ReceiverResult
+/// </summary>
+internal class InternalReceiverResult : IReceiverResult
 {
+    private readonly Action m_disAction;
+
     /// <summary>
     /// ReceiverResult
     /// </summary>
-    internal class InternalReceiverResult : IReceiverResult
+    /// <param name="disAction"></param>
+    public InternalReceiverResult(Action disAction)
     {
-        private readonly Action m_disAction;
+        this.m_disAction = disAction;
+    }
 
-        /// <summary>
-        /// ReceiverResult
-        /// </summary>
-        /// <param name="disAction"></param>
-        public InternalReceiverResult(Action disAction)
-        {
-            this.m_disAction = disAction;
-        }
+    /// <summary>
+    /// 字节块
+    /// </summary>
+    public ByteBlock ByteBlock { get; set; }
 
-        /// <summary>
-        /// 字节块
-        /// </summary>
-        public ByteBlock ByteBlock { get; set; }
+    /// <summary>
+    /// 数据对象
+    /// </summary>
+    public IRequestInfo RequestInfo { get; set; }
 
-        /// <summary>
-        /// 数据对象
-        /// </summary>
-        public IRequestInfo RequestInfo { get; set; }
+    public bool IsCompleted { get; set; }
 
-        public bool IsCompleted { get; set; }
+    public string Message { get; set; }
 
-        public string Message { get; set; }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            this.m_disAction.Invoke();
-        }
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        this.m_disAction.Invoke();
     }
 }

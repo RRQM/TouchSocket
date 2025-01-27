@@ -12,51 +12,50 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 一个简单的委托日志
+/// </summary>
+public class EasyLogger : LoggerBase
 {
+    private readonly Action<LogLevel, object, string, Exception> m_action;
+
     /// <summary>
     /// 一个简单的委托日志
     /// </summary>
-    public class EasyLogger : LoggerBase
+    /// <param name="action">参数依次为：日志类型，触发源，消息，异常</param>
+    public EasyLogger(Action<LogLevel, object, string, Exception> action)
     {
-        private readonly Action<LogLevel, object, string, Exception> m_action;
+        this.m_action = action;
+    }
 
-        /// <summary>
-        /// 一个简单的委托日志
-        /// </summary>
-        /// <param name="action">参数依次为：日志类型，触发源，消息，异常</param>
-        public EasyLogger(Action<LogLevel, object, string, Exception> action)
+    /// <summary>
+    /// 一个简单的委托日志
+    /// </summary>
+    /// <param name="action">参数为日志消息输出。</param>
+    public EasyLogger(Action<string> action)
+    {
+        void localAction(LogLevel logLevel, object source, string message, Exception exception)
         {
-            this.m_action = action;
+            action.Invoke(this.CreateLogString(logLevel, source, message, exception));
         }
+        this.m_action = localAction;
+    }
 
-        /// <summary>
-        /// 一个简单的委托日志
-        /// </summary>
-        /// <param name="action">参数为日志消息输出。</param>
-        public EasyLogger(Action<string> action)
+    /// <inheritdoc/>
+    /// <param name="logLevel"></param>
+    /// <param name="source"></param>
+    /// <param name="message"></param>
+    /// <param name="exception"></param>
+    protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+    {
+        try
         {
-            void localAction(LogLevel logLevel, object source, string message, Exception exception)
-            {
-                action.Invoke(this.CreateLogString(logLevel, source, message, exception));
-            }
-            this.m_action = localAction;
+            this.m_action?.Invoke(logLevel, source, message, exception);
         }
-
-        /// <inheritdoc/>
-        /// <param name="logLevel"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+        catch
         {
-            try
-            {
-                this.m_action?.Invoke(logLevel, source, message, exception);
-            }
-            catch
-            {
-            }
         }
     }
 }

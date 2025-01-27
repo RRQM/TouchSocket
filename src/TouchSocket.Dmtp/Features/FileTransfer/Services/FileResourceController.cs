@@ -18,141 +18,140 @@ using System.Linq;
 using System.Threading;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 文件资源控制器。
+/// </summary>
+public class FileResourceController : DisposableObject, IFileResourceController
 {
+    private readonly Timer m_timer;
     /// <summary>
-    /// 文件资源控制器。
+    /// 获取默认的文件资源控制器实例。
     /// </summary>
-    public class FileResourceController : DisposableObject, IFileResourceController
+    /// <value>一个预定义的<see cref="FileResourceController"/>实例，用于统一处理文件资源。</value>
+    public static FileResourceController Default { get; } = new FileResourceController();
+    /// <summary>
+    /// 文件资源控制器
+    /// </summary>
+    public FileResourceController()
     {
-        private readonly Timer m_timer;
-        /// <summary>
-        /// 获取默认的文件资源控制器实例。
-        /// </summary>
-        /// <value>一个预定义的<see cref="FileResourceController"/>实例，用于统一处理文件资源。</value>
-        public static FileResourceController Default { get; } = new FileResourceController();
-        /// <summary>
-        /// 文件资源控制器
-        /// </summary>
-        public FileResourceController()
+        this.Timeout = TimeSpan.FromSeconds(60);
+        this.m_timer = new Timer((o) =>
         {
-            this.Timeout = TimeSpan.FromSeconds(60);
-            this.m_timer = new Timer((o) =>
+            var ints = new List<int>();
+            foreach (var item in this.FileResourceStore)
             {
-                var ints = new List<int>();
-                foreach (var item in this.FileResourceStore)
+                if (DateTime.UtcNow - item.Value.LastActiveTime > this.Timeout)
                 {
-                    if (DateTime.UtcNow - item.Value.LastActiveTime > this.Timeout)
-                    {
-                        ints.Add(item.Key);
-                    }
+                    ints.Add(item.Key);
                 }
+            }
 
-                foreach (var item in ints)
+            foreach (var item in ints)
+            {
+                if (this.FileResourceStore.TryRemove(item, out var locator))
                 {
-                    if (this.FileResourceStore.TryRemove(item, out var locator))
-                    {
-                        locator.SafeDispose();
-                    }
+                    locator.SafeDispose();
                 }
-            }, null, 1000, 1000);
-        }
+            }
+        }, null, 1000, 1000);
+    }
 
-        /// <inheritdoc/>
-        public ConcurrentDictionary<int, FileResourceLocator> FileResourceStore { get; } = new ConcurrentDictionary<int, FileResourceLocator>();
+    /// <inheritdoc/>
+    public ConcurrentDictionary<int, FileResourceLocator> FileResourceStore { get; } = new ConcurrentDictionary<int, FileResourceLocator>();
 
-        /// <summary>
-        /// 超时时间。默认60秒。
-        /// </summary>
-        public TimeSpan Timeout { get; set; }
+    /// <summary>
+    /// 超时时间。默认60秒。
+    /// </summary>
+    public TimeSpan Timeout { get; set; }
 
-        /// <inheritdoc/>
-        public virtual string GetFullPath(string root, string path)
+    /// <inheritdoc/>
+    public virtual string GetFullPath(string root, string path)
+    {
+        this.ThrowIfDisposed();
+        return path.IsNullOrEmpty() ? string.Empty : Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(root, path));
+    }
+
+    /// <inheritdoc/>
+    public virtual FileResourceLocator LoadFileResourceLocatorForRead(string path, int fileSectionSize)
+    {
+        this.ThrowIfDisposed();
+        var fileResourceInfo = new FileResourceInfo(new FileInfo(path), fileSectionSize);
+        var fileResourceLocator = new FileResourceLocator(fileResourceInfo);
+        this.FileResourceStore.TryAdd(fileResourceInfo.ResourceHandle, fileResourceLocator);
+        return fileResourceLocator;
+    }
+
+    /// <inheritdoc/>
+    public virtual FileResourceLocator LoadFileResourceLocatorForWrite(string savePath, FileResourceInfo fileResourceInfo)
+    {
+        this.ThrowIfDisposed();
+        if (this.FileResourceStore.TryGetValue(fileResourceInfo.ResourceHandle, out var fileResourceLocator))
         {
-            this.ThrowIfDisposed();
-            return path.IsNullOrEmpty() ? string.Empty : Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(root, path));
-        }
-
-        /// <inheritdoc/>
-        public virtual FileResourceLocator LoadFileResourceLocatorForRead(string path, int fileSectionSize)
-        {
-            this.ThrowIfDisposed();
-            var fileResourceInfo = new FileResourceInfo(new FileInfo(path), fileSectionSize);
-            var fileResourceLocator = new FileResourceLocator(fileResourceInfo);
-            this.FileResourceStore.TryAdd(fileResourceInfo.ResourceHandle, fileResourceLocator);
             return fileResourceLocator;
         }
+        fileResourceInfo.ResetResourceHandle(fileResourceInfo.GetHashCode());
+        fileResourceLocator = new FileResourceLocator(fileResourceInfo, savePath);
+        this.FileResourceStore.TryAdd(fileResourceInfo.ResourceHandle, fileResourceLocator);
+        return fileResourceLocator;
+    }
 
-        /// <inheritdoc/>
-        public virtual FileResourceLocator LoadFileResourceLocatorForWrite(string savePath, FileResourceInfo fileResourceInfo)
+    /// <inheritdoc/>
+    public virtual int ReadAllBytes(FileInfo fileInfo, byte[] buffer)
+    {
+        this.ThrowIfDisposed();
+        using (var byteBlock = FilePool.GetReader(fileInfo))
         {
-            this.ThrowIfDisposed();
-            if (this.FileResourceStore.TryGetValue(fileResourceInfo.ResourceHandle, out var fileResourceLocator))
-            {
-                return fileResourceLocator;
-            }
-            fileResourceInfo.ResetResourceHandle(fileResourceInfo.GetHashCode());
-            fileResourceLocator = new FileResourceLocator(fileResourceInfo, savePath);
-            this.FileResourceStore.TryAdd(fileResourceInfo.ResourceHandle, fileResourceLocator);
-            return fileResourceLocator;
+            return byteBlock.Read(buffer);
+        }
+    }
+
+    /// <inheritdoc/>
+    public virtual bool TryGetFileResourceLocator(int resourceHandle, out FileResourceLocator fileResourceLocator)
+    {
+        this.ThrowIfDisposed();
+        return this.FileResourceStore.TryGetValue(resourceHandle, out fileResourceLocator);
+    }
+
+    /// <inheritdoc/>
+    public virtual bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
+    {
+        this.ThrowIfDisposed();
+        if (this.FileResourceStore.TryRemove(resourceHandle, out locator))
+        {
+            locator.SafeDispose();
+            return true;
         }
 
-        /// <inheritdoc/>
-        public virtual int ReadAllBytes(FileInfo fileInfo, byte[] buffer)
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public virtual void WriteAllBytes(string path, byte[] buffer, int offset, int length)
+    {
+        this.ThrowIfDisposed();
+        using (var byteBlock = FilePool.GetWriter(path))
         {
-            this.ThrowIfDisposed();
-            using (var byteBlock = FilePool.GetReader(fileInfo))
-            {
-                return byteBlock.Read(buffer);
-            }
+            byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
         }
+    }
 
-        /// <inheritdoc/>
-        public virtual bool TryGetFileResourceLocator(int resourceHandle, out FileResourceLocator fileResourceLocator)
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            this.ThrowIfDisposed();
-            return this.FileResourceStore.TryGetValue(resourceHandle, out fileResourceLocator);
-        }
-
-        /// <inheritdoc/>
-        public virtual bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
-        {
-            this.ThrowIfDisposed();
-            if (this.FileResourceStore.TryRemove(resourceHandle, out locator))
+            this.m_timer.SafeDispose();
+            foreach (var item in this.FileResourceStore.Keys.ToArray())
             {
-                locator.SafeDispose();
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public virtual void WriteAllBytes(string path, byte[] buffer, int offset, int length)
-        {
-            this.ThrowIfDisposed();
-            using (var byteBlock = FilePool.GetWriter(path))
-            {
-                byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                this.m_timer.SafeDispose();
-                foreach (var item in this.FileResourceStore.Keys.ToArray())
+                if (this.FileResourceStore.TryRemove(item, out var locator))
                 {
-                    if (this.FileResourceStore.TryRemove(item, out var locator))
-                    {
-                        locator.SafeDispose();
-                    }
+                    locator.SafeDispose();
                 }
             }
-
-            base.Dispose(disposing);
         }
+
+        base.Dispose(disposing);
     }
 }

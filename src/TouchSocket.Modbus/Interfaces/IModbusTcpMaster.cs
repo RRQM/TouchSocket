@@ -13,12 +13,11 @@
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于Tcp协议的Modbus主站接口。
+/// </summary>
+public interface IModbusTcpMaster : ISetupConfigObject, IClient, ITcpSession, IIgnoreSlaveIdModbusMaster, ITcpConnectableClient
 {
-    /// <summary>
-    /// 基于Tcp协议的Modbus主站接口。
-    /// </summary>
-    public interface IModbusTcpMaster : ISetupConfigObject, IClient, ITcpSession, IIgnoreSlaveIdModbusMaster, ITcpConnectableClient
-    {
-    }
 }

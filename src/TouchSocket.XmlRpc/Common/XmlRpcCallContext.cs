@@ -14,23 +14,22 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+internal sealed class XmlRpcCallContext : CallContext, IXmlRpcCallContext
 {
-    internal sealed class XmlRpcCallContext : CallContext, IXmlRpcCallContext
+    public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, rpcMethod, resolver)
     {
-        public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, rpcMethod, resolver)
-        {
-            this.HttpContext = httpContext;
-            this.XmlString = xmlString;
-        }
+        this.HttpContext = httpContext;
+        this.XmlString = xmlString;
+    }
 
-        public HttpContext HttpContext { get; }
+    public HttpContext HttpContext { get; }
 
-        public string XmlString { get; }
+    public string XmlString { get; }
 
-        public void SetParameters(object[] ps)
-        {
-            base.Parameters = ps;
-        }
+    public void SetParameters(object[] ps)
+    {
+        base.Parameters = ps;
     }
 }

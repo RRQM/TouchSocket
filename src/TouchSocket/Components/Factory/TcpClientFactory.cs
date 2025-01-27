@@ -14,37 +14,36 @@ using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 适用于Tcp客户端的连接工厂。
+/// </summary>
+/// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
+public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
 {
     /// <summary>
-    /// 适用于Tcp客户端的连接工厂。
+    /// 处理Tcp客户端的释放操作。
     /// </summary>
-    /// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
-    public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
+    /// <param name="client">要释放的Tcp客户端。</param>
+    public override void DisposeClient(TClient client)
     {
-        /// <summary>
-        /// 处理Tcp客户端的释放操作。
-        /// </summary>
-        /// <param name="client">要释放的Tcp客户端。</param>
-        public override void DisposeClient(TClient client)
-        {
-            client.TryShutdown();
-            base.DisposeClient(client);
-        }
+        client.TryShutdown();
+        base.DisposeClient(client);
     }
+}
 
-    /// <summary>
-    /// 适用于基于<see cref="TcpClient"/>的连接工厂。
-    /// </summary>
-    public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
+/// <summary>
+/// 适用于基于<see cref="TcpClient"/>的连接工厂。
+/// </summary>
+public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
+{
+    /// <inheritdoc/>
+    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
     {
-        /// <inheritdoc/>
-        protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
-        {
-            var client = new TcpClient();
-            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return client;
-        }
+        var client = new TcpClient();
+        await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return client;
     }
 }

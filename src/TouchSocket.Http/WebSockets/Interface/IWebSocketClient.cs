@@ -13,36 +13,35 @@
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// 用户终端接口
+/// </summary>
+public interface IWebSocketClient : IClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient, IWebSocket
 {
     /// <summary>
-    /// 用户终端接口
+    /// 当WebSocket断开时触发。
     /// </summary>
-    public interface IWebSocketClient : IClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient, IWebSocket
-    {
-        /// <summary>
-        /// 当WebSocket断开时触发。
-        /// </summary>
-        ClosedEventHandler<IWebSocketClient> Closed { get; set; }
+    ClosedEventHandler<IWebSocketClient> Closed { get; set; }
 
-        /// <summary>
-        /// 当WebSocket收到Close报文时触发。
-        /// </summary>
-        ClosingEventHandler<IWebSocketClient> Closing { get; set; }
+    /// <summary>
+    /// 当WebSocket收到Close报文时触发。
+    /// </summary>
+    ClosingEventHandler<IWebSocketClient> Closing { get; set; }
 
-        /// <summary>
-        /// 表示完成握手后。
-        /// </summary>
-        HttpContextEventHandler<IWebSocketClient> Handshaked { get; set; }
+    /// <summary>
+    /// 表示完成握手后。
+    /// </summary>
+    HttpContextEventHandler<IWebSocketClient> Handshaked { get; set; }
 
-        /// <summary>
-        /// 表示在即将握手连接时。
-        /// </summary>
-        HttpContextEventHandler<IWebSocketClient> Handshaking { get; set; }
+    /// <summary>
+    /// 表示在即将握手连接时。
+    /// </summary>
+    HttpContextEventHandler<IWebSocketClient> Handshaking { get; set; }
 
-        /// <summary>
-        /// 收到WebSocket数据
-        /// </summary>
-        WSDataFrameEventHandler<IWebSocketClient> Received { get; set; }
-    }
+    /// <summary>
+    /// 收到WebSocket数据
+    /// </summary>
+    WSDataFrameEventHandler<IWebSocketClient> Received { get; set; }
 }

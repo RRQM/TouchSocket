@@ -10,78 +10,77 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 内存池
+/// </summary>
+public sealed class BytePool : ArrayPool<byte>
 {
+    static BytePool()
+    {
+        Default = new BytePool();
+    }
+
     /// <summary>
     /// 内存池
     /// </summary>
-    public sealed class BytePool : ArrayPool<byte>
+    public BytePool() : this(1024 * 1024 * 10, 100)
     {
-        static BytePool()
-        {
-            Default = new BytePool();
-        }
+    }
 
-        /// <summary>
-        /// 内存池
-        /// </summary>
-        public BytePool() : this(1024 * 1024 * 10, 100)
-        {
-        }
+    /// <summary>
+    /// 内存池
+    /// </summary>
+    /// <param name="maxArrayLength"></param>
+    /// <param name="maxArraysPerBucket"></param>
+    public BytePool(int maxArrayLength, int maxArraysPerBucket) : base(maxArrayLength, maxArraysPerBucket)
+    {
+        this.AutoZero = false;
+        this.MaxBlockSize = maxArrayLength;
+    }
 
-        /// <summary>
-        /// 内存池
-        /// </summary>
-        /// <param name="maxArrayLength"></param>
-        /// <param name="maxArraysPerBucket"></param>
-        public BytePool(int maxArrayLength, int maxArraysPerBucket) : base(maxArrayLength, maxArraysPerBucket)
-        {
-            this.AutoZero = false;
-            this.MaxBlockSize = maxArrayLength;
-        }
+    /// <summary>
+    /// 默认的内存池实例
+    /// </summary>
+    public static BytePool Default { get; private set; }
 
-        /// <summary>
-        /// 默认的内存池实例
-        /// </summary>
-        public static BytePool Default { get; private set; }
+    /// <summary>
+    /// 设置默认内存池实例。
+    /// </summary>
+    /// <param name="bytePool"></param>
+    public static void SetDefault(BytePool bytePool)
+    {
+        Default = bytePool;
+    }
 
-        /// <summary>
-        /// 设置默认内存池实例。
-        /// </summary>
-        /// <param name="bytePool"></param>
-        public static void SetDefault(BytePool bytePool)
-        {
-            Default = bytePool;
-        }
+    /// <summary>
+    /// 回收内存时，自动归零
+    /// </summary>
+    public bool AutoZero { get; set; }
 
-        /// <summary>
-        /// 回收内存时，自动归零
-        /// </summary>
-        public bool AutoZero { get; set; }
+    /// <summary>
+    /// 单个块最大值
+    /// </summary>
+    public int MaxBlockSize { get; private set; }
 
-        /// <summary>
-        /// 单个块最大值
-        /// </summary>
-        public int MaxBlockSize { get; private set; }
+    /// <summary>
+    /// 获取ByteBlock
+    /// </summary>
+    /// <param name="byteSize">长度</param>
+    /// <returns></returns>
+    public ByteBlock GetByteBlock(int byteSize)
+    {
+        return new ByteBlock(byteSize, this);
+    }
 
-        /// <summary>
-        /// 获取ByteBlock
-        /// </summary>
-        /// <param name="byteSize">长度</param>
-        /// <returns></returns>
-        public ByteBlock GetByteBlock(int byteSize)
-        {
-            return new ByteBlock(byteSize, this);
-        }
-
-        /// <summary>
-        ///  获取ValueByteBlock
-        /// </summary>
-        /// <param name="byteSize"></param>
-        /// <returns></returns>
-        public ValueByteBlock GetValueByteBlock(int byteSize)
-        {
-            return new ValueByteBlock(byteSize, this);
-        }
+    /// <summary>
+    ///  获取ValueByteBlock
+    /// </summary>
+    /// <param name="byteSize"></param>
+    /// <returns></returns>
+    public ValueByteBlock GetValueByteBlock(int byteSize)
+    {
+        return new ValueByteBlock(byteSize, this);
     }
 }

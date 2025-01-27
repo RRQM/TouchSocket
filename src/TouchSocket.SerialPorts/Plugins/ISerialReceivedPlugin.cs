@@ -14,22 +14,21 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
-{
+namespace TouchSocket.SerialPorts;
 
+
+/// <summary>
+/// 定义串行数据接收插件的接口。
+/// 继承自IPlugin接口，特定于串行端口数据接收操作。
+/// </summary>
+[DynamicMethod]
+public interface ISerialReceivedPlugin : IPlugin
+{
     /// <summary>
-    /// 定义串行数据接收插件的接口。
-    /// 继承自IPlugin接口，特定于串行端口数据接收操作。
+    /// 当串行端口接收到数据时触发的异步事件处理方法。
     /// </summary>
-    [DynamicMethod]
-    public interface ISerialReceivedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当串行端口接收到数据时触发的异步事件处理方法。
-        /// </summary>
-        /// <param name="client">触发数据接收事件的串行端口会话对象。</param>
-        /// <param name="e">包含接收数据事件相关信息的事件参数对象。</param>
-        /// <returns>一个Task对象，标识异步操作的完成。</returns>
-        Task OnSerialReceived(ISerialPortSession client, ReceivedDataEventArgs e);
-    }
+    /// <param name="client">触发数据接收事件的串行端口会话对象。</param>
+    /// <param name="e">包含接收数据事件相关信息的事件参数对象。</param>
+    /// <returns>一个Task对象，标识异步操作的完成。</returns>
+    Task OnSerialReceived(ISerialPortSession client, ReceivedDataEventArgs e);
 }

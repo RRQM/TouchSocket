@@ -13,49 +13,48 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 普通Tcp数据处理器，该适配器不对数据做任何处理。
+/// </summary>
+public sealed class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
+    /// <inheritdoc/>
+    public override bool CanSplicingSend => false;
+
+    /// <inheritdoc/>
+    public override bool CanSendRequestInfo => false;
+
     /// <summary>
-    /// 普通Tcp数据处理器，该适配器不对数据做任何处理。
+    /// 当接收到数据时处理数据
     /// </summary>
-    public sealed class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
+    /// <param name="byteBlock">数据流</param>
+    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
+        await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
-        /// <inheritdoc/>
-        public override bool CanSendRequestInfo => false;
+    ///// <summary>
+    ///// <inheritdoc/>
+    ///// </summary>
+    ///// <param name="buffer">数据</param>
+    ///// <param name="offset">偏移</param>
+    ///// <param name="length">长度</param>
+    //protected override void PreviewSend(byte[] buffer, int offset, int length)
+    //{
+    //    this.GoSend(buffer, offset, length);
+    //}
 
-        /// <summary>
-        /// 当接收到数据时处理数据
-        /// </summary>
-        /// <param name="byteBlock">数据流</param>
-        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
-        {
-            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+    /// <inheritdoc/>
+    protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
+    {
+        return this.GoSendAsync(memory);
+    }
 
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="buffer">数据</param>
-        ///// <param name="offset">偏移</param>
-        ///// <param name="length">长度</param>
-        //protected override void PreviewSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.GoSend(buffer, offset, length);
-        //}
-
-        /// <inheritdoc/>
-        protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
-        {
-            return this.GoSendAsync(memory);
-        }
-
-        /// <inheritdoc/>
-        protected override void Reset()
-        {
-            base.Reset();
-        }
+    /// <inheritdoc/>
+    protected override void Reset()
+    {
+        base.Reset();
     }
 }

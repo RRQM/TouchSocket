@@ -12,16 +12,15 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有释放的对象，包含一个<see cref="DisposedValue"/>来标识是否该对象已被释放。
+/// </summary>
+public partial interface IDisposableObject : IDisposable
 {
     /// <summary>
-    /// 具有释放的对象，包含一个<see cref="DisposedValue"/>来标识是否该对象已被释放。
+    /// 标识该对象是否已被释放
     /// </summary>
-    public partial interface IDisposableObject : IDisposable
-    {
-        /// <summary>
-        /// 标识该对象是否已被释放
-        /// </summary>
-        bool DisposedValue { get; }
-    }
+    bool DisposedValue { get; }
 }

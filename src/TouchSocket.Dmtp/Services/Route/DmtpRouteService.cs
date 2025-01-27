@@ -13,14 +13,13 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 路由服务实现。
+/// </summary>
+public class DmtpRouteService : IDmtpRouteService
 {
-    /// <summary>
-    /// 路由服务实现。
-    /// </summary>
-    public class DmtpRouteService : IDmtpRouteService
-    {
-        /// <inheritdoc/>
-        public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
-    }
+    /// <inheritdoc/>
+    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
 }

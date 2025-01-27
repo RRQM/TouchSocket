@@ -13,21 +13,20 @@
 using System.Net;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// UdpDmtp终端接口
+/// </summary>
+public interface IUdpDmtpClient : IDmtpActorObject
 {
     /// <summary>
-    /// UdpDmtp终端接口
+    /// 默认远程终结点。
     /// </summary>
-    public interface IUdpDmtpClient : IDmtpActorObject
-    {
-        /// <summary>
-        /// 默认远程终结点。
-        /// </summary>
-        EndPoint EndPoint { get; }
+    EndPoint EndPoint { get; }
 
-        /// <summary>
-        /// 默认通信的udp终端。
-        /// </summary>
-        UdpSessionBase UdpSession { get; }
-    }
+    /// <summary>
+    /// 默认通信的udp终端。
+    /// </summary>
+    UdpSessionBase UdpSession { get; }
 }

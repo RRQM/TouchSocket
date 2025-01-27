@@ -13,26 +13,25 @@
 using TouchSocket.Core;
 using TouchSocket.Http;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+internal sealed class WebApiJsonSerializerFormatter : JsonStringToClassSerializerFormatter<HttpContext>
 {
-    internal sealed class WebApiJsonSerializerFormatter : JsonStringToClassSerializerFormatter<HttpContext>
+    public override bool TrySerialize(HttpContext state, in object target, out string source)
     {
-        public override bool TrySerialize(HttpContext state, in object target, out string source)
+        switch (state.Request.Accept)
         {
-            switch (state.Request.Accept)
-            {
-                case "application/xml":
-                case "text/xml":
-                    {
-                        source = default;
-                        return false;
-                    }
-                case "application/json":
-                case "text/json":
-                case "text/plain":
-                default:
-                    return base.TrySerialize(state, target, out source);
-            }
+            case "application/xml":
+            case "text/xml":
+                {
+                    source = default;
+                    return false;
+                }
+            case "application/json":
+            case "text/json":
+            case "text/plain":
+            default:
+                return base.TrySerialize(state, target, out source);
         }
     }
 }

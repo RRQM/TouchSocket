@@ -12,19 +12,18 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
-{
-    /// <summary>
-    /// IHttpService
-    /// </summary>
-    public interface IHttpService<TClient> : IHttpServiceBase, ITcpServiceBase<TClient> where TClient : IHttpSessionClient
-    {
-    }
+namespace TouchSocket.Http;
 
-    /// <summary>
-    /// IHttpService
-    /// </summary>
-    public interface IHttpService : IHttpService<HttpSessionClient>
-    {
-    }
+/// <summary>
+/// IHttpService
+/// </summary>
+public interface IHttpService<TClient> : IHttpServiceBase, ITcpServiceBase<TClient> where TClient : IHttpSessionClient
+{
+}
+
+/// <summary>
+/// IHttpService
+/// </summary>
+public interface IHttpService : IHttpService<HttpSessionClient>
+{
 }

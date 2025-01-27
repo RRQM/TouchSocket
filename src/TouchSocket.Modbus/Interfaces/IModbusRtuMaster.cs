@@ -12,12 +12,11 @@
 
 using TouchSocket.SerialPorts;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于串口的Modbus主站接口
+/// </summary>
+public interface IModbusRtuMaster : IModbusMaster, ISerialPortSession
 {
-    /// <summary>
-    /// 基于串口的Modbus主站接口
-    /// </summary>
-    public interface IModbusRtuMaster : IModbusMaster, ISerialPortSession
-    {
-    }
 }

@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义了一个插件接口，该插件在完成与Dmtp的握手连接后需要被调用。
+/// </summary>
+[DynamicMethod]
+public interface IDmtpHandshakedPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了一个插件接口，该插件在完成与Dmtp的握手连接后需要被调用。
+    /// 在完成握手连接时被调用的方法。
     /// </summary>
-    [DynamicMethod]
-    public interface IDmtpHandshakedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在完成握手连接时被调用的方法。
-        /// </summary>
-        /// <param name="client">参与握手的Dmtp客户端对象。</param>
-        /// <param name="e">握手验证事件参数。</param>
-        /// <returns>一个Task对象，表示异步操作的结果。</returns>
-        Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e);
-    }
+    /// <param name="client">参与握手的Dmtp客户端对象。</param>
+    /// <param name="e">握手验证事件参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e);
 }

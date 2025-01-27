@@ -17,493 +17,492 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 高性能序列化器
-    /// </summary>
+namespace TouchSocket.Core;
 
-    public static partial class SerializeConvert
-    {
+/// <summary>
+/// 高性能序列化器
+/// </summary>
+
+public static partial class SerializeConvert
+{
 #pragma warning disable SYSLIB0011 // 微软觉得不安全，不推荐使用
 
-        #region 普通二进制序列化
+    #region 普通二进制序列化
 
-        /// <summary>
-        /// 普通二进制序列化对象
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <returns></returns>
-        public static byte[] BinarySerialize(in object obj)
-        {
-            using (var serializeStream = new MemoryStream())
-            {
-                var bf = new BinaryFormatter();
-                bf.Serialize(serializeStream, obj);
-                return serializeStream.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// 二进制序列化对象至文件
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <param name="path">路径</param>
-        public static void BinarySerializeToFile(in object obj, string path)
-        {
-            using (var serializeStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                var bf = new BinaryFormatter();
-                bf.Serialize(serializeStream, obj);
-                serializeStream.Close();
-            }
-        }
-
-        /// <summary>
-        /// 二进制序列化对象
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="obj"></param>
-        public static void BinarySerialize(Stream stream, in object obj)
+    /// <summary>
+    /// 普通二进制序列化对象
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <returns></returns>
+    public static byte[] BinarySerialize(in object obj)
+    {
+        using (var serializeStream = new MemoryStream())
         {
             var bf = new BinaryFormatter();
-            bf.Serialize(stream, obj);
+            bf.Serialize(serializeStream, obj);
+            return serializeStream.ToArray();
         }
+    }
 
-        #endregion 普通二进制序列化
-
-        #region 普通二进制反序列化
-
-        /// <summary>
-        /// 从Byte[]中反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="binder"></param>
-        /// <returns></returns>
-        public static T BinaryDeserialize<T>(byte[] data, int offset, int length, SerializationBinder binder = null)
+    /// <summary>
+    /// 二进制序列化对象至文件
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <param name="path">路径</param>
+    public static void BinarySerializeToFile(in object obj, string path)
+    {
+        using (var serializeStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
-            using (var DeserializeStream = new MemoryStream(data, offset, length))
-            {
-                DeserializeStream.Position = 0;
-                var bf = new BinaryFormatter();
-                if (binder != null)
-                {
-                    bf.Binder = binder;
-                }
-                return (T)bf.Deserialize(DeserializeStream);
-            }
-        }
-
-        /// <summary>
-        /// 反序列化
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="binder"></param>
-        /// <returns></returns>
-        public static object BinaryDeserialize(byte[] data, int offset, int length, SerializationBinder binder = null)
-        {
-            using (var DeserializeStream = new MemoryStream(data, offset, length))
-            {
-                DeserializeStream.Position = 0;
-                var bf = new BinaryFormatter();
-                if (binder != null)
-                {
-                    bf.Binder = binder;
-                }
-                return bf.Deserialize(DeserializeStream);
-            }
-        }
-
-        /// <summary>
-        /// 从Stream中反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="stream"></param>
-        /// <param name="binder"></param>
-        /// <returns></returns>
-        public static T BinaryDeserialize<T>(Stream stream, SerializationBinder binder = null)
-        {
-            return (T)BinaryDeserialize(stream);
-        }
-
-        /// <summary>
-        /// 从流中反序列化对象。
-        /// </summary>
-        /// <param name="stream">包含序列化对象数据的流。</param>
-        /// <param name="binder">可选的绑定器，用于控制反序列化过程中的类型绑定。</param>
-        /// <returns>反序列化后的对象。</returns>
-        public static object BinaryDeserialize(Stream stream, SerializationBinder binder = null)
-        {
-            // 创建BinaryFormatter实例以进行反序列化操作
             var bf = new BinaryFormatter();
-            // 如果提供了自定义的SerializationBinder，则将其设置给BinaryFormatter
+            bf.Serialize(serializeStream, obj);
+            serializeStream.Close();
+        }
+    }
+
+    /// <summary>
+    /// 二进制序列化对象
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="obj"></param>
+    public static void BinarySerialize(Stream stream, in object obj)
+    {
+        var bf = new BinaryFormatter();
+        bf.Serialize(stream, obj);
+    }
+
+    #endregion 普通二进制序列化
+
+    #region 普通二进制反序列化
+
+    /// <summary>
+    /// 从Byte[]中反序列化
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <param name="offset"></param>
+    /// <param name="length"></param>
+    /// <param name="binder"></param>
+    /// <returns></returns>
+    public static T BinaryDeserialize<T>(byte[] data, int offset, int length, SerializationBinder binder = null)
+    {
+        using (var DeserializeStream = new MemoryStream(data, offset, length))
+        {
+            DeserializeStream.Position = 0;
+            var bf = new BinaryFormatter();
             if (binder != null)
             {
                 bf.Binder = binder;
             }
-            // 从流中反序列化对象并返回
-            return bf.Deserialize(stream);
+            return (T)bf.Deserialize(DeserializeStream);
         }
+    }
 
-        /// <summary>
-        /// 将二进制文件数据反序列化为指定类型对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static T BinaryDeserializeFromFile<T>(string path)
+    /// <summary>
+    /// 反序列化
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="offset"></param>
+    /// <param name="length"></param>
+    /// <param name="binder"></param>
+    /// <returns></returns>
+    public static object BinaryDeserialize(byte[] data, int offset, int length, SerializationBinder binder = null)
+    {
+        using (var DeserializeStream = new MemoryStream(data, offset, length))
         {
-            using (var serializeStream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            DeserializeStream.Position = 0;
+            var bf = new BinaryFormatter();
+            if (binder != null)
             {
-                var bf = new BinaryFormatter();
-                return (T)bf.Deserialize(serializeStream);
+                bf.Binder = binder;
             }
+            return bf.Deserialize(DeserializeStream);
         }
+    }
 
-        /// <summary>
-        /// 将二进制数据反序列化为指定类型对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static T BinaryDeserialize<T>(byte[] data)
+    /// <summary>
+    /// 从Stream中反序列化
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="stream"></param>
+    /// <param name="binder"></param>
+    /// <returns></returns>
+    public static T BinaryDeserialize<T>(Stream stream, SerializationBinder binder = null)
+    {
+        return (T)BinaryDeserialize(stream);
+    }
+
+    /// <summary>
+    /// 从流中反序列化对象。
+    /// </summary>
+    /// <param name="stream">包含序列化对象数据的流。</param>
+    /// <param name="binder">可选的绑定器，用于控制反序列化过程中的类型绑定。</param>
+    /// <returns>反序列化后的对象。</returns>
+    public static object BinaryDeserialize(Stream stream, SerializationBinder binder = null)
+    {
+        // 创建BinaryFormatter实例以进行反序列化操作
+        var bf = new BinaryFormatter();
+        // 如果提供了自定义的SerializationBinder，则将其设置给BinaryFormatter
+        if (binder != null)
         {
-            return BinaryDeserialize<T>(data, 0, data.Length);
+            bf.Binder = binder;
         }
+        // 从流中反序列化对象并返回
+        return bf.Deserialize(stream);
+    }
 
-        /// <summary>
-        /// 从Byte[]中反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <param name="binder"></param>
-        /// <returns></returns>
-        public static T BinaryDeserialize<T>(byte[] data, SerializationBinder binder = null)
+    /// <summary>
+    /// 将二进制文件数据反序列化为指定类型对象
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static T BinaryDeserializeFromFile<T>(string path)
+    {
+        using (var serializeStream = new FileStream(path, FileMode.Open, FileAccess.Read))
         {
-            return BinaryDeserialize<T>(data, 0, data.Length, binder);
+            var bf = new BinaryFormatter();
+            return (T)bf.Deserialize(serializeStream);
         }
+    }
 
-        #endregion 普通二进制反序列化
+    /// <summary>
+    /// 将二进制数据反序列化为指定类型对象
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    public static T BinaryDeserialize<T>(byte[] data)
+    {
+        return BinaryDeserialize<T>(data, 0, data.Length);
+    }
+
+    /// <summary>
+    /// 从Byte[]中反序列化
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <param name="binder"></param>
+    /// <returns></returns>
+    public static T BinaryDeserialize<T>(byte[] data, SerializationBinder binder = null)
+    {
+        return BinaryDeserialize<T>(data, 0, data.Length, binder);
+    }
+
+    #endregion 普通二进制反序列化
 
 #pragma warning restore SYSLIB0011 // 微软觉得不安全，不推荐使用
 
-        //#region Fast二进制序列化
+    //#region Fast二进制序列化
 
-        ///// <summary>
-        ///// Fast二进制序列化对象
-        ///// </summary>
-        ///// <param name="byteBlock"></param>
-        ///// <param name="obj"></param>
-        ///// <returns></returns>
-        //public static void FastBinarySerialize<TByteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock,  in T obj)
-        //    where TByteBlock:IByteBlock
-        //{
-        //    FastBinaryFormatter.Serialize(ref byteBlock, obj);
-        //    byteBlock.SetLength(byteBlock.Length);
-        //}
+    ///// <summary>
+    ///// Fast二进制序列化对象
+    ///// </summary>
+    ///// <param name="byteBlock"></param>
+    ///// <param name="obj"></param>
+    ///// <returns></returns>
+    //public static void FastBinarySerialize<TByteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock,  in T obj)
+    //    where TByteBlock:IByteBlock
+    //{
+    //    FastBinaryFormatter.Serialize(ref byteBlock, obj);
+    //    byteBlock.SetLength(byteBlock.Length);
+    //}
 
-        ///// <summary>
-        ///// Fast二进制序列化对象
-        ///// </summary>
-        ///// <param name="obj"></param>
-        ///// <returns></returns>
-        //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
-        //{
-        //    var byteBlock = new ByteBlock();
-        //    try
-        //    {
-        //        FastBinarySerialize(ref byteBlock, obj);
-        //        return byteBlock.ToArray();
-        //    }
-        //    finally
-        //    {
-        //        byteBlock.Dispose();
-        //    }
-        //}
+    ///// <summary>
+    ///// Fast二进制序列化对象
+    ///// </summary>
+    ///// <param name="obj"></param>
+    ///// <returns></returns>
+    //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
+    //{
+    //    var byteBlock = new ByteBlock();
+    //    try
+    //    {
+    //        FastBinarySerialize(ref byteBlock, obj);
+    //        return byteBlock.ToArray();
+    //    }
+    //    finally
+    //    {
+    //        byteBlock.Dispose();
+    //    }
+    //}
 
-        //#endregion Fast二进制序列化
+    //#endregion Fast二进制序列化
 
-        //#region Fast二进制反序列化
+    //#region Fast二进制反序列化
 
-        ///// <summary>
-        ///// Fast反序列化
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="data"></param>
-        ///// <param name="offset"></param>
-        ///// <returns></returns>
-        //public static T FastBinaryDeserialize<TByteBlock,[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
-        //{
-        //    return (T)FastBinaryFormatter.Deserialize(ref byteBlock, typeof(T));
-        //}
+    ///// <summary>
+    ///// Fast反序列化
+    ///// </summary>
+    ///// <typeparam name="T"></typeparam>
+    ///// <param name="data"></param>
+    ///// <param name="offset"></param>
+    ///// <returns></returns>
+    //public static T FastBinaryDeserialize<TByteBlock,[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+    //{
+    //    return (T)FastBinaryFormatter.Deserialize(ref byteBlock, typeof(T));
+    //}
 
-        ///// <summary>
-        ///// Fast反序列化
-        ///// </summary>
-        ///// <param name="data"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="type"></param>
-        ///// <returns></returns>
-        //public static object FastBinaryDeserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)where TByteBlock:IByteBlock
-        //{
-        //    return FastBinaryFormatter.Deserialize(ref byteBlock, type);
-        //}
-        //#endregion Fast二进制反序列化
+    ///// <summary>
+    ///// Fast反序列化
+    ///// </summary>
+    ///// <param name="data"></param>
+    ///// <param name="offset"></param>
+    ///// <param name="type"></param>
+    ///// <returns></returns>
+    //public static object FastBinaryDeserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)where TByteBlock:IByteBlock
+    //{
+    //    return FastBinaryFormatter.Deserialize(ref byteBlock, type);
+    //}
+    //#endregion Fast二进制反序列化
 
-        #region Xml序列化和反序列化
+    #region Xml序列化和反序列化
 
-        /// <summary>
-        /// Xml序列化数据对象
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <param name="encoding">编码格式</param>
-        /// <returns></returns>
-        public static string XmlSerializeToString(object obj, Encoding encoding)
+    /// <summary>
+    /// Xml序列化数据对象
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <param name="encoding">编码格式</param>
+    /// <returns></returns>
+    public static string XmlSerializeToString(object obj, Encoding encoding)
+    {
+        return encoding.GetString(XmlSerializeToBytes(obj));
+    }
+
+    /// <summary>
+    /// Xml序列化数据对象
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <returns></returns>
+    public static string XmlSerializeToString(object obj)
+    {
+        return XmlSerializeToString(obj, Encoding.UTF8);
+    }
+
+    /// <summary>
+    /// Xml序列化数据对象
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <returns></returns>
+    public static byte[] XmlSerializeToBytes(object obj)
+    {
+        using (var fileStream = new MemoryStream())
         {
-            return encoding.GetString(XmlSerializeToBytes(obj));
+            var xml = new XmlSerializer(obj.GetType());
+            xml.Serialize(fileStream, obj);
+            return fileStream.ToArray();
         }
+    }
 
-        /// <summary>
-        /// Xml序列化数据对象
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <returns></returns>
-        public static string XmlSerializeToString(object obj)
+    /// <summary>
+    /// Xml序列化至文件
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="path"></param>
+    public static void XmlSerializeToFile(object obj, string path)
+    {
+        using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
-            return XmlSerializeToString(obj, Encoding.UTF8);
+            var xml = new XmlSerializer(obj.GetType());
+            xml.Serialize(fileStream, obj);
+            fileStream.Close();
         }
+    }
 
-        /// <summary>
-        /// Xml序列化数据对象
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <returns></returns>
-        public static byte[] XmlSerializeToBytes(object obj)
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <typeparam name="T">反序列化类型</typeparam>
+    /// <param name="dataBytes">数据</param>
+    /// <returns></returns>
+    public static T XmlDeserializeFromBytes<T>(byte[] dataBytes)
+    {
+        var xmlSerializer = new XmlSerializer(typeof(T));
+        using (Stream xmlStream = new MemoryStream(dataBytes))
         {
-            using (var fileStream = new MemoryStream())
-            {
-                var xml = new XmlSerializer(obj.GetType());
-                xml.Serialize(fileStream, obj);
-                return fileStream.ToArray();
-            }
+            return (T)xmlSerializer.Deserialize(xmlStream);
         }
+    }
 
-        /// <summary>
-        /// Xml序列化至文件
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="path"></param>
-        public static void XmlSerializeToFile(object obj, string path)
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <param name="dataBytes"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static object XmlDeserializeFromBytes(byte[] dataBytes, Type type)
+    {
+        var xmlSerializer = new XmlSerializer(type);
+        using (Stream xmlStream = new MemoryStream(dataBytes))
         {
-            using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                var xml = new XmlSerializer(obj.GetType());
-                xml.Serialize(fileStream, obj);
-                fileStream.Close();
-            }
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="dataBytes">数据</param>
-        /// <returns></returns>
-        public static T XmlDeserializeFromBytes<T>(byte[] dataBytes)
-        {
-            var xmlSerializer = new XmlSerializer(typeof(T));
-            using (Stream xmlStream = new MemoryStream(dataBytes))
-            {
-                return (T)xmlSerializer.Deserialize(xmlStream);
-            }
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <param name="dataBytes"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object XmlDeserializeFromBytes(byte[] dataBytes, Type type)
-        {
-            var xmlSerializer = new XmlSerializer(type);
-            using (Stream xmlStream = new MemoryStream(dataBytes))
-            {
-                return xmlSerializer.Deserialize(xmlStream);
-            }
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <param name="xmlStream"></param>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static object XmlDeserializeFromStream(Stream xmlStream, Type targetType)
-        {
-            var xmlSerializer = new XmlSerializer(targetType);
             return xmlSerializer.Deserialize(xmlStream);
         }
+    }
 
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="xmlStream"></param>
-        /// <returns></returns>
-        public static T XmlDeserializeFromStream<T>(Stream xmlStream)
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <param name="xmlStream"></param>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
+    public static object XmlDeserializeFromStream(Stream xmlStream, Type targetType)
+    {
+        var xmlSerializer = new XmlSerializer(targetType);
+        return xmlSerializer.Deserialize(xmlStream);
+    }
+
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="xmlStream"></param>
+    /// <returns></returns>
+    public static T XmlDeserializeFromStream<T>(Stream xmlStream)
+    {
+        var xmlSerializer = new XmlSerializer(typeof(T));
+        return (T)xmlSerializer.Deserialize(xmlStream);
+    }
+
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <param name="xmlString">xml字符串</param>
+    /// <param name="targetType"></param>
+    /// <returns></returns>
+    public static object XmlDeserializeFromString(string xmlString, Type targetType)
+    {
+        return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)), targetType);
+    }
+
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="xmlString"></param>
+    /// <returns></returns>
+    public static T XmlDeserializeFromString<T>(string xmlString)
+    {
+        return (T)XmlDeserializeFromString(xmlString, typeof(T));
+    }
+
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <typeparam name="T">反序列化类型</typeparam>
+    /// <param name="path">文件路径</param>
+    /// <returns></returns>
+    public static T XmlDeserializeFromFile<T>(string path)
+    {
+        using (Stream xmlStream = new FileStream(path, FileMode.Open, FileAccess.Read))
         {
             var xmlSerializer = new XmlSerializer(typeof(T));
             return (T)xmlSerializer.Deserialize(xmlStream);
         }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <param name="xmlString">xml字符串</param>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static object XmlDeserializeFromString(string xmlString, Type targetType)
-        {
-            return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)), targetType);
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="xmlString"></param>
-        /// <returns></returns>
-        public static T XmlDeserializeFromString<T>(string xmlString)
-        {
-            return (T)XmlDeserializeFromString(xmlString, typeof(T));
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="path">文件路径</param>
-        /// <returns></returns>
-        public static T XmlDeserializeFromFile<T>(string path)
-        {
-            using (Stream xmlStream = new FileStream(path, FileMode.Open, FileAccess.Read))
-            {
-                var xmlSerializer = new XmlSerializer(typeof(T));
-                return (T)xmlSerializer.Deserialize(xmlStream);
-            }
-        }
-
-        #endregion Xml序列化和反序列化
-
-        #region Json序列化和反序列化
-
-        /// <summary>
-        /// 转换为Json
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        public static string ToJsonString(this object item)
-        {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(item);
-        }
-
-        /// <summary>
-        /// 从字符串到json
-        /// </summary>
-        /// <param name="json"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object FromJsonString(this string json, Type type)
-        {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
-        }
-
-        /// <summary>
-        /// 从字符串到json
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="json"></param>
-        /// <returns></returns>
-        public static T FromJsonString<T>(this string json)
-        {
-            return (T)FromJsonString(json, typeof(T));
-        }
-
-        /// <summary>
-        /// Json序列化数据对象
-        /// </summary>
-        /// <param name="obj">数据对象</param>
-        /// <returns></returns>
-        public static byte[] JsonSerializeToBytes(object obj)
-        {
-            return ToJsonString(obj).ToUTF8Bytes();
-        }
-
-        /// <summary>
-        /// Json序列化至文件
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="path"></param>
-        public static void JsonSerializeToFile(object obj, string path)
-        {
-            using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                var date = JsonSerializeToBytes(obj);
-                fileStream.Write(date, 0, date.Length);
-                fileStream.Close();
-            }
-        }
-
-        /// <summary>
-        /// Json反序列化
-        /// </summary>
-        /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="dataBytes">数据</param>
-        /// <returns></returns>
-        public static T JsonDeserializeFromBytes<T>(byte[] dataBytes)
-        {
-            return (T)JsonDeserializeFromBytes(dataBytes, typeof(T));
-        }
-
-        /// <summary>
-        /// Xml反序列化
-        /// </summary>
-        /// <param name="dataBytes"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object JsonDeserializeFromBytes(byte[] dataBytes, Type type)
-        {
-            return FromJsonString(Encoding.UTF8.GetString(dataBytes), type);
-        }
-
-        /// <summary>
-        /// Json反序列化
-        /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <param name="json">json字符串</param>
-        /// <returns></returns>
-        public static T JsonDeserializeFromString<T>(string json)
-        {
-            return FromJsonString<T>(json);
-        }
-
-        /// <summary>
-        /// Json反序列化
-        /// </summary>
-        /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="path">文件路径</param>
-        /// <returns></returns>
-        public static T JsonDeserializeFromFile<T>(string path)
-        {
-            return JsonDeserializeFromString<T>(File.ReadAllText(path));
-        }
-
-        #endregion Json序列化和反序列化
     }
+
+    #endregion Xml序列化和反序列化
+
+    #region Json序列化和反序列化
+
+    /// <summary>
+    /// 转换为Json
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    public static string ToJsonString(this object item)
+    {
+        return Newtonsoft.Json.JsonConvert.SerializeObject(item);
+    }
+
+    /// <summary>
+    /// 从字符串到json
+    /// </summary>
+    /// <param name="json"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static object FromJsonString(this string json, Type type)
+    {
+        return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
+    }
+
+    /// <summary>
+    /// 从字符串到json
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    public static T FromJsonString<T>(this string json)
+    {
+        return (T)FromJsonString(json, typeof(T));
+    }
+
+    /// <summary>
+    /// Json序列化数据对象
+    /// </summary>
+    /// <param name="obj">数据对象</param>
+    /// <returns></returns>
+    public static byte[] JsonSerializeToBytes(object obj)
+    {
+        return ToJsonString(obj).ToUTF8Bytes();
+    }
+
+    /// <summary>
+    /// Json序列化至文件
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="path"></param>
+    public static void JsonSerializeToFile(object obj, string path)
+    {
+        using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+        {
+            var date = JsonSerializeToBytes(obj);
+            fileStream.Write(date, 0, date.Length);
+            fileStream.Close();
+        }
+    }
+
+    /// <summary>
+    /// Json反序列化
+    /// </summary>
+    /// <typeparam name="T">反序列化类型</typeparam>
+    /// <param name="dataBytes">数据</param>
+    /// <returns></returns>
+    public static T JsonDeserializeFromBytes<T>(byte[] dataBytes)
+    {
+        return (T)JsonDeserializeFromBytes(dataBytes, typeof(T));
+    }
+
+    /// <summary>
+    /// Xml反序列化
+    /// </summary>
+    /// <param name="dataBytes"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static object JsonDeserializeFromBytes(byte[] dataBytes, Type type)
+    {
+        return FromJsonString(Encoding.UTF8.GetString(dataBytes), type);
+    }
+
+    /// <summary>
+    /// Json反序列化
+    /// </summary>
+    /// <typeparam name="T">类型</typeparam>
+    /// <param name="json">json字符串</param>
+    /// <returns></returns>
+    public static T JsonDeserializeFromString<T>(string json)
+    {
+        return FromJsonString<T>(json);
+    }
+
+    /// <summary>
+    /// Json反序列化
+    /// </summary>
+    /// <typeparam name="T">反序列化类型</typeparam>
+    /// <param name="path">文件路径</param>
+    /// <returns></returns>
+    public static T JsonDeserializeFromFile<T>(string path)
+    {
+        return JsonDeserializeFromString<T>(File.ReadAllText(path));
+    }
+
+    #endregion Json序列化和反序列化
 }

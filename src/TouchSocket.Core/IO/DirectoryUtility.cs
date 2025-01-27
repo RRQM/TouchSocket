@@ -13,54 +13,53 @@
 using System.IO;
 using System.Linq;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// DirectoryUtility
+/// </summary>
+
+public static partial class DirectoryUtility
 {
     /// <summary>
-    /// DirectoryUtility
+    /// 复制文件夹及文件
     /// </summary>
-
-    public static partial class DirectoryUtility
+    /// <param name="sourceFolder">原文件路径</param>
+    /// <param name="destFolder">目标文件路径</param>
+    /// <returns></returns>
+    public static void CopyDirectory(string sourceFolder, string destFolder)
     {
-        /// <summary>
-        /// 复制文件夹及文件
-        /// </summary>
-        /// <param name="sourceFolder">原文件路径</param>
-        /// <param name="destFolder">目标文件路径</param>
-        /// <returns></returns>
-        public static void CopyDirectory(string sourceFolder, string destFolder)
+        //如果目标路径不存在,则创建目标路径
+        if (!Directory.Exists(destFolder))
         {
-            //如果目标路径不存在,则创建目标路径
-            if (!Directory.Exists(destFolder))
-            {
-                Directory.CreateDirectory(destFolder);
-            }
-            //得到原文件根目录下的所有文件
-            var files = Directory.GetFiles(sourceFolder);
-            foreach (var file in files)
-            {
-                var name = Path.GetFileName(file);
-                var dest = Path.Combine(destFolder, name);
-                File.Copy(file, dest);//复制文件
-            }
-            //得到原文件根目录下的所有文件夹
-            var folders = Directory.GetDirectories(sourceFolder);
-            foreach (var folder in folders)
-            {
-                var name = Path.GetFileName(folder);
-                var dest = Path.Combine(destFolder, name);
-                CopyDirectory(folder, dest);//构建目标路径,递归复制文件
-            }
+            Directory.CreateDirectory(destFolder);
         }
+        //得到原文件根目录下的所有文件
+        var files = Directory.GetFiles(sourceFolder);
+        foreach (var file in files)
+        {
+            var name = Path.GetFileName(file);
+            var dest = Path.Combine(destFolder, name);
+            File.Copy(file, dest);//复制文件
+        }
+        //得到原文件根目录下的所有文件夹
+        var folders = Directory.GetDirectories(sourceFolder);
+        foreach (var folder in folders)
+        {
+            var name = Path.GetFileName(folder);
+            var dest = Path.Combine(destFolder, name);
+            CopyDirectory(folder, dest);//构建目标路径,递归复制文件
+        }
+    }
 
-        /// <summary>
-        /// 获取文件夹下的一级文件夹目录名称，不含子文件夹。
-        /// </summary>
-        /// <param name="sourceFolder"></param>
-        public static string[] GetDirectories(string sourceFolder)
-        {
-            return Directory.GetDirectories(sourceFolder)
-                 .Select(s => Path.GetFileName(s))
-                 .ToArray();
-        }
+    /// <summary>
+    /// 获取文件夹下的一级文件夹目录名称，不含子文件夹。
+    /// </summary>
+    /// <param name="sourceFolder"></param>
+    public static string[] GetDirectories(string sourceFolder)
+    {
+        return Directory.GetDirectories(sourceFolder)
+             .Select(s => Path.GetFileName(s))
+             .ToArray();
     }
 }

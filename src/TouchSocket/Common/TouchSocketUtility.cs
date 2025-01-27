@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// TouchSocketUtility
-    /// </summary>
-    public class TouchSocketUtility
-    {
+namespace TouchSocket.Sockets;
 
-    }
+/// <summary>
+/// TouchSocketUtility
+/// </summary>
+public class TouchSocketUtility
+{
+
 }

@@ -12,17 +12,16 @@
 
 using System;
 
-namespace TouchSocket.Core
-{
+namespace TouchSocket.Core;
 
+
+/// <summary>
+/// 定义TouchSocketEventArgs类，继承自EventArgs，用于处理TouchSocket相关的事件
+/// </summary>
+public class TouchSocketEventArgs : EventArgs
+{
     /// <summary>
-    /// 定义TouchSocketEventArgs类，继承自EventArgs，用于处理TouchSocket相关的事件
+    /// 是否已处理
     /// </summary>
-    public class TouchSocketEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 是否已处理
-        /// </summary>
-        public bool Handled { get; set; }
-    }
+    public bool Handled { get; set; }
 }

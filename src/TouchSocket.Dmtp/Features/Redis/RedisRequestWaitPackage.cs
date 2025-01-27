@@ -12,39 +12,38 @@
 
 using System;
 
-namespace TouchSocket.Dmtp.Redis
+namespace TouchSocket.Dmtp.Redis;
+
+internal class RedisRequestWaitPackage : RedisResponseWaitPackage
 {
-    internal class RedisRequestWaitPackage : RedisResponseWaitPackage
+    public string key;
+    public TimeSpan? timeSpan;
+    public RedisPackageType packageType;
+
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        public string key;
-        public TimeSpan? timeSpan;
-        public RedisPackageType packageType;
-
-        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        base.Package(ref byteBlock);
+        byteBlock.WriteString(this.key);
+        byteBlock.WriteByte((byte)this.packageType);
+        if (this.timeSpan.HasValue)
         {
-            base.Package(ref byteBlock);
-            byteBlock.WriteString(this.key);
-            byteBlock.WriteByte((byte)this.packageType);
-            if (this.timeSpan.HasValue)
-            {
-                byteBlock.WriteByte(1);
-                byteBlock.WriteTimeSpan(this.timeSpan.Value);
-            }
-            else
-            {
-                byteBlock.WriteByte(0);
-            }
+            byteBlock.WriteByte(1);
+            byteBlock.WriteTimeSpan(this.timeSpan.Value);
         }
-
-        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        else
         {
-            base.Unpackage(ref byteBlock);
-            this.key = byteBlock.ReadString();
-            this.packageType = (RedisPackageType)byteBlock.ReadByte();
-            if (byteBlock.ReadByte() == 1)
-            {
-                this.timeSpan = byteBlock.ReadTimeSpan();
-            }
+            byteBlock.WriteByte(0);
+        }
+    }
+
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.Unpackage(ref byteBlock);
+        this.key = byteBlock.ReadString();
+        this.packageType = (RedisPackageType)byteBlock.ReadByte();
+        if (byteBlock.ReadByte() == 1)
+        {
+            this.timeSpan = byteBlock.ReadTimeSpan();
         }
     }
 }

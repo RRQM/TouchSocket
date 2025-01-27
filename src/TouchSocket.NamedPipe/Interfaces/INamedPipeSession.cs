@@ -13,16 +13,15 @@
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// 命名管道终端接口
+/// </summary>
+public interface INamedPipeSession : IClient, IResolverConfigObject, IClosableClient, IOnlineClient, INamedPipeStreamClient
 {
     /// <summary>
-    /// 命名管道终端接口
+    /// 数据处理适配器
     /// </summary>
-    public interface INamedPipeSession : IClient, IResolverConfigObject, IClosableClient, IOnlineClient, INamedPipeStreamClient
-    {
-        /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
-    }
+    SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
 }

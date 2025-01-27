@@ -14,22 +14,21 @@ using System.Threading.Tasks;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http服务器终端接口
+/// </summary>
+public interface IHttpSessionClient : IHttpSession, ISessionClient, ITcpListenableClient, IOnlineClient
 {
     /// <summary>
-    /// Http服务器终端接口
+    /// 当该连接是WebSocket时，可获取该对象，否则为null。
     /// </summary>
-    public interface IHttpSessionClient : IHttpSession, ISessionClient, ITcpListenableClient, IOnlineClient
-    {
-        /// <summary>
-        /// 当该连接是WebSocket时，可获取该对象，否则为null。
-        /// </summary>
-        IWebSocket WebSocket { get; }
+    IWebSocket WebSocket { get; }
 
-        /// <summary>
-        /// 转化Protocol协议标识为<see cref="Protocol.WebSocket"/>
-        /// </summary>
-        /// <param name="httpContext">Http上下文</param>
-        Task<bool> SwitchProtocolToWebSocketAsync(HttpContext httpContext);
-    }
+    /// <summary>
+    /// 转化Protocol协议标识为<see cref="Protocol.WebSocket"/>
+    /// </summary>
+    /// <param name="httpContext">Http上下文</param>
+    Task<bool> SwitchProtocolToWebSocketAsync(HttpContext httpContext);
 }

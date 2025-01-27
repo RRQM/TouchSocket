@@ -12,48 +12,47 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+internal enum ChannelDataType : byte
 {
-    internal enum ChannelDataType : byte
+    DataOrder,
+    CompleteOrder,
+    CancelOrder,
+    DisposeOrder,
+    HoldOnOrder,
+    QueueRun,
+    QueuePause
+}
+
+internal class ChannelPackage : MsgRouterPackage
+{
+    public int ChannelId { get; set; }
+    public ByteBlock Data { get; set; }
+    public ChannelDataType DataType { get; set; }
+    public bool RunNow { get; set; }
+
+    public int GetLen()
     {
-        DataOrder,
-        CompleteOrder,
-        CancelOrder,
-        DisposeOrder,
-        HoldOnOrder,
-        QueueRun,
-        QueuePause
+        return this.Data == null ? 1024 : this.Data.Length + 1024;
     }
 
-    internal class ChannelPackage : MsgRouterPackage
+    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
-        public int ChannelId { get; set; }
-        public ByteBlock Data { get; set; }
-        public ChannelDataType DataType { get; set; }
-        public bool RunNow { get; set; }
+        base.PackageBody(ref byteBlock);
+        byteBlock.WriteBoolean(this.RunNow);
+        byteBlock.WriteByte((byte)this.DataType);
+        byteBlock.WriteInt32(this.ChannelId);
 
-        public int GetLen()
-        {
-            return this.Data == null ? 1024 : this.Data.Length + 1024;
-        }
+        byteBlock.WriteByteBlock(this.Data);
+    }
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.PackageBody(ref byteBlock);
-            byteBlock.WriteBoolean(this.RunNow);
-            byteBlock.WriteByte((byte)this.DataType);
-            byteBlock.WriteInt32(this.ChannelId);
-
-            byteBlock.WriteByteBlock(this.Data);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.UnpackageBody(ref byteBlock);
-            this.RunNow = byteBlock.ReadBoolean();
-            this.DataType = (ChannelDataType)byteBlock.ReadByte();
-            this.ChannelId = byteBlock.ReadInt32();
-            this.Data = byteBlock.ReadByteBlock();
-        }
+    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.UnpackageBody(ref byteBlock);
+        this.RunNow = byteBlock.ReadBoolean();
+        this.DataType = (ChannelDataType)byteBlock.ReadByte();
+        this.ChannelId = byteBlock.ReadInt32();
+        this.Data = byteBlock.ReadByteBlock();
     }
 }

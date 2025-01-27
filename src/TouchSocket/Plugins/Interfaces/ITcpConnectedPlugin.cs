@@ -13,21 +13,20 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了ITcpConnectedPlugin接口，它是通过TCP连接的插件应实现的接口。
+/// 这个接口扩展了IPlugin接口，增加了与TCP连接相关的功能和要求。
+/// </summary>
+[DynamicMethod]
+public interface ITcpConnectedPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了ITcpConnectedPlugin接口，它是通过TCP连接的插件应实现的接口。
-    /// 这个接口扩展了IPlugin接口，增加了与TCP连接相关的功能和要求。
+    /// 客户端连接成功后触发
     /// </summary>
-    [DynamicMethod]
-    public interface ITcpConnectedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 客户端连接成功后触发
-        /// </summary>
-        /// <param name="client">建立连接的客户端会话</param>
-        /// <param name="e">连接事件参数</param>
-        /// <returns>一个Task对象，标识异步操作</returns>
-        Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e);
-    }
+    /// <param name="client">建立连接的客户端会话</param>
+    /// <param name="e">连接事件参数</param>
+    /// <returns>一个Task对象，标识异步操作</returns>
+    Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e);
 }

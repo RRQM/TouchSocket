@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 用于表达式树的成员
+/// </summary>
+public abstract class Member
 {
-    /// <summary>
-    /// 用于表达式树的成员
-    /// </summary>
-    public abstract class Member
-    {
-    }
 }

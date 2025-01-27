@@ -13,100 +13,99 @@
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有设置配置的对象
+/// </summary>
+public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObject
 {
-    /// <summary>
-    /// 具有设置配置的对象
-    /// </summary>
-    public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObject
+    private TouchSocketConfig m_config;
+    private IPluginManager m_pluginManager;
+    private IScopedResolver m_scopedResolver;
+
+    /// <inheritdoc/>
+    public override TouchSocketConfig Config => this.m_config;
+
+    /// <inheritdoc/>
+    public override IPluginManager PluginManager => this.m_pluginManager;
+
+    /// <inheritdoc/>
+    public override IResolver Resolver => this.m_scopedResolver.Resolver;
+
+    /// <inheritdoc/>
+    public async Task SetupAsync(TouchSocketConfig config)
     {
-        private TouchSocketConfig m_config;
-        private IPluginManager m_pluginManager;
-        private IScopedResolver m_scopedResolver;
+        this.ThrowIfDisposed();
 
-        /// <inheritdoc/>
-        public override TouchSocketConfig Config => this.m_config;
+        this.ClearConfig();
 
-        /// <inheritdoc/>
-        public override IPluginManager PluginManager => this.m_pluginManager;
+        this.BuildConfig(config);
 
-        /// <inheritdoc/>
-        public override IResolver Resolver => this.m_scopedResolver.Resolver;
+        await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.LoadConfig(config);
+        await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
-        /// <inheritdoc/>
-        public async Task SetupAsync(TouchSocketConfig config)
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            this.ThrowIfDisposed();
-
+            this.m_scopedResolver.SafeDispose();
             this.ClearConfig();
-
-            this.BuildConfig(config);
-
-            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.LoadConfig(config);
-            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+        base.Dispose(disposing);
+    }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
+    /// <summary>
+    /// 加载配置
+    /// </summary>
+    /// <param name="config">要加载的配置对象</param>
+    protected virtual void LoadConfig(TouchSocketConfig config)
+    {
+    }
+
+    private void BuildConfig(TouchSocketConfig config)
+    {
+        this.m_config = config ?? throw new ArgumentNullException(nameof(config));
+
+        if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.ResolverProperty, out var resolver))
         {
-            if (disposing)
+            if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.RegistratorProperty, out var registrator))
             {
-                this.m_scopedResolver.SafeDispose();
-                this.ClearConfig();
+                registrator = new Container();
             }
-            base.Dispose(disposing);
-        }
-
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="config">要加载的配置对象</param>
-        protected virtual void LoadConfig(TouchSocketConfig config)
-        {
-        }
-
-        private void BuildConfig(TouchSocketConfig config)
-        {
-            this.m_config = config ?? throw new ArgumentNullException(nameof(config));
-
-            if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.ResolverProperty, out var resolver))
+            if (!registrator.IsRegistered(typeof(ILog)))
             {
-                if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.RegistratorProperty, out var registrator))
-                {
-                    registrator = new Container();
-                }
-                if (!registrator.IsRegistered(typeof(ILog)))
-                {
-                    registrator.RegisterSingleton<ILog>(new LoggerGroup());
-                }
-
-                if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
-                {
-                    actionContainer.Invoke(registrator);
-                }
-
-                resolver = registrator.BuildResolver();
+                registrator.RegisterSingleton<ILog>(new LoggerGroup());
             }
 
-            this.m_scopedResolver = resolver.CreateScopedResolver();
-
-            var pluginManager = new PluginManager(this.Resolver);
-
-            if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
+            if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
             {
-                actionPluginManager.Invoke(pluginManager);
+                actionContainer.Invoke(registrator);
             }
 
-            this.Logger ??= this.Resolver.Resolve<ILog>();
-
-            this.m_pluginManager = pluginManager;
+            resolver = registrator.BuildResolver();
         }
 
-        private void ClearConfig()
+        this.m_scopedResolver = resolver.CreateScopedResolver();
+
+        var pluginManager = new PluginManager(this.Resolver);
+
+        if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
         {
-            this.m_pluginManager.SafeDispose();
-            this.m_config.SafeDispose();
+            actionPluginManager.Invoke(pluginManager);
         }
+
+        this.Logger ??= this.Resolver.Resolve<ILog>();
+
+        this.m_pluginManager = pluginManager;
+    }
+
+    private void ClearConfig()
+    {
+        this.m_pluginManager.SafeDispose();
+        this.m_config.SafeDispose();
     }
 }

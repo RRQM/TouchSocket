@@ -10,36 +10,35 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// WaitPackage
+/// </summary>
+public class WaitPackage : PackageBase, IWaitResult
 {
-    /// <summary>
-    /// WaitPackage
-    /// </summary>
-    public class WaitPackage : PackageBase, IWaitResult
+    /// <inheritdoc/>
+    public string Message { get; set; }
+
+    /// <inheritdoc/>
+    public int Sign { get; set; }
+
+    /// <inheritdoc/>
+    public byte Status { get; set; }
+
+    /// <inheritdoc/>
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        /// <inheritdoc/>
-        public string Message { get; set; }
+        byteBlock.WriteInt32(this.Sign);
+        byteBlock.WriteByte(this.Status);
+        byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
+    }
 
-        /// <inheritdoc/>
-        public int Sign { get; set; }
-
-        /// <inheritdoc/>
-        public byte Status { get; set; }
-
-        /// <inheritdoc/>
-        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            byteBlock.WriteInt32(this.Sign);
-            byteBlock.WriteByte(this.Status);
-            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
-        }
-
-        /// <inheritdoc/>
-        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            this.Sign = byteBlock.ReadInt32();
-            this.Status = byteBlock.ReadByte();
-            this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
-        }
+    /// <inheritdoc/>
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        this.Sign = byteBlock.ReadInt32();
+        this.Status = byteBlock.ReadByte();
+        this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
     }
 }

@@ -13,70 +13,69 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http客户端数据处理适配器
+/// </summary>
+internal sealed class HttpClientDataHandlingAdapter2 : CustomUnfixedHeaderDataHandlingAdapter<UnfixedHeaderHttpResponse>
 {
-    /// <summary>
-    /// Http客户端数据处理适配器
-    /// </summary>
-    internal sealed class HttpClientDataHandlingAdapter2 : CustomUnfixedHeaderDataHandlingAdapter<UnfixedHeaderHttpResponse>
+    private UnfixedHeaderHttpResponse m_httpResponseRoot;
+
+    /// <inheritdoc/>
+    public override bool CanSplicingSend => false;
+
+    /// <inheritdoc/>
+    public override void OnLoaded(object owner)
     {
-        private UnfixedHeaderHttpResponse m_httpResponseRoot;
-
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
-
-        /// <inheritdoc/>
-        public override void OnLoaded(object owner)
+        if (owner is not HttpClientBase clientBase)
         {
-            if (owner is not HttpClientBase clientBase)
-            {
-                throw new Exception($"此适配器必须适用于{nameof(HttpClientBase)}");
-            }
-            this.m_httpResponseRoot = new UnfixedHeaderHttpResponse(clientBase);
-            base.OnLoaded(owner);
+            throw new Exception($"此适配器必须适用于{nameof(HttpClientBase)}");
         }
-
-        protected override UnfixedHeaderHttpResponse GetInstance()
-        {
-            return this.m_httpResponseRoot;
-        }
-
-        protected override void OnReceivedSuccess(UnfixedHeaderHttpResponse request)
-        {
-            base.OnReceivedSuccess(request);
-            request.ResetHttp();
-        }
+        this.m_httpResponseRoot = new UnfixedHeaderHttpResponse(clientBase);
+        base.OnLoaded(owner);
     }
 
-    internal class UnfixedHeaderHttpResponse : HttpResponse, IUnfixedHeaderRequestInfo
+    protected override UnfixedHeaderHttpResponse GetInstance()
     {
-        private int m_headerLength;
+        return this.m_httpResponseRoot;
+    }
 
-        internal UnfixedHeaderHttpResponse(HttpClientBase httpClientBase) : base(httpClientBase)
+    protected override void OnReceivedSuccess(UnfixedHeaderHttpResponse request)
+    {
+        base.OnReceivedSuccess(request);
+        request.ResetHttp();
+    }
+}
+
+internal class UnfixedHeaderHttpResponse : HttpResponse, IUnfixedHeaderRequestInfo
+{
+    private int m_headerLength;
+
+    internal UnfixedHeaderHttpResponse(HttpClientBase httpClientBase) : base(httpClientBase)
+    {
+    }
+
+    public int BodyLength => (int)this.ContentLength;
+
+    public int HeaderLength => this.m_headerLength;
+
+    public bool OnParsingBody(ReadOnlySpan<byte> body)
+    {
+        this.InternalSetContent(body.ToArray());
+        return true;
+    }
+
+    public bool OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        var startPos = byteBlock.Position;
+
+        if (this.ParsingHeader(ref byteBlock))
         {
-        }
-
-        public int BodyLength => (int)this.ContentLength;
-
-        public int HeaderLength => this.m_headerLength;
-
-        public bool OnParsingBody(ReadOnlySpan<byte> body)
-        {
-            this.InternalSetContent(body.ToArray());
+            this.m_headerLength = byteBlock.Position - startPos;
             return true;
         }
 
-        public bool OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-        {
-            var startPos = byteBlock.Position;
-
-            if (this.ParsingHeader(ref byteBlock))
-            {
-                this.m_headerLength = byteBlock.Position - startPos;
-                return true;
-            }
-
-            return false;
-        }
+        return false;
     }
 }

@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// WebApiConfigExtensions
-    /// </summary>
-    public static class WebApiConfigExtensions
-    {
+namespace TouchSocket.Sockets;
 
-    }
+/// <summary>
+/// WebApiConfigExtensions
+/// </summary>
+public static class WebApiConfigExtensions
+{
+
 }

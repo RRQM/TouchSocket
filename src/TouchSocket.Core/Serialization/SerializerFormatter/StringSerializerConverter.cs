@@ -10,32 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// String类型数据转换器
+/// </summary>
+public class StringSerializerConverter<TState> : TouchSocketSerializerConverter<string, TState>
 {
     /// <summary>
     /// String类型数据转换器
     /// </summary>
-    public class StringSerializerConverter<TState> : TouchSocketSerializerConverter<string, TState>
+    public StringSerializerConverter(params ISerializerFormatter<string, TState>[] converters) : base(converters)
     {
-        /// <summary>
-        /// String类型数据转换器
-        /// </summary>
-        public StringSerializerConverter(params ISerializerFormatter<string, TState>[] converters) : base(converters)
-        {
-        }
     }
+}
 
+/// <summary>
+/// String类型数据转换器
+/// </summary>
+public class StringSerializerConverter : StringSerializerConverter<object>
+{
     /// <summary>
     /// String类型数据转换器
     /// </summary>
-    public class StringSerializerConverter : StringSerializerConverter<object>
+    /// <param name="converters"></param>
+    public StringSerializerConverter(params ISerializerFormatter<string, object>[] converters) : base(converters)
     {
-        /// <summary>
-        /// String类型数据转换器
-        /// </summary>
-        /// <param name="converters"></param>
-        public StringSerializerConverter(params ISerializerFormatter<string, object>[] converters) : base(converters)
-        {
-        }
     }
 }

@@ -12,12 +12,11 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// Tcp数据处理适配器测试
+/// </summary>
+public class TcpDataAdapterTester : SingleStreamDataAdapterTester
 {
-    /// <summary>
-    /// Tcp数据处理适配器测试
-    /// </summary>
-    public class TcpDataAdapterTester : SingleStreamDataAdapterTester
-    {
-    }
 }

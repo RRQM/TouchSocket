@@ -12,20 +12,19 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+internal class CorsService : ICorsService
 {
-    internal class CorsService : ICorsService
+    private readonly Dictionary<string, CorsPolicy> m_corsPolicys;
+
+    public CorsService(CorsOptions corsOptions)
     {
-        private readonly Dictionary<string, CorsPolicy> m_corsPolicys;
+        this.m_corsPolicys = corsOptions.CorsPolicys;
+    }
 
-        public CorsService(CorsOptions corsOptions)
-        {
-            this.m_corsPolicys = corsOptions.CorsPolicys;
-        }
-
-        public CorsPolicy GetPolicy(string name)
-        {
-            return this.m_corsPolicys.TryGetValue(name, out var corsPolicy) ? corsPolicy : null;
-        }
+    public CorsPolicy GetPolicy(string name)
+    {
+        return this.m_corsPolicys.TryGetValue(name, out var corsPolicy) ? corsPolicy : null;
     }
 }

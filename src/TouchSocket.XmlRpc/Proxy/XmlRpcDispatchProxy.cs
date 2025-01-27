@@ -13,24 +13,23 @@
 #if NET6_0_OR_GREATER || NET481_OR_GREATER
 using TouchSocket.Rpc;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+/// <summary>
+/// XmlRpcDispatchProxy
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public abstract class XmlRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
 {
-    /// <summary>
-    /// XmlRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class XmlRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
-    {
 
-    }
+}
 
-    /// <summary>
-    /// XmlRpcDispatchProxy
-    /// </summary>
-    public abstract class XmlRpcDispatchProxy : XmlRpcDispatchProxy<IXmlRpcClient>
-    {
+/// <summary>
+/// XmlRpcDispatchProxy
+/// </summary>
+public abstract class XmlRpcDispatchProxy : XmlRpcDispatchProxy<IXmlRpcClient>
+{
 
-    }
 }
 
 

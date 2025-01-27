@@ -14,91 +14,90 @@ using System;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 数据处理适配器
+/// </summary>
+public abstract class DataHandlingAdapter : DisposableObject
 {
     /// <summary>
-    /// 数据处理适配器
+    /// 是否允许发送<see cref="IRequestInfo"/>对象。
     /// </summary>
-    public abstract class DataHandlingAdapter : DisposableObject
+    public abstract bool CanSendRequestInfo { get; }
+
+    /// <summary>
+    /// 拼接发送
+    /// </summary>
+    public abstract bool CanSplicingSend { get; }
+
+    /// <summary>
+    /// 日志记录器。
+    /// </summary>
+    public ILog Logger { get; set; }
+
+    /// <summary>
+    /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
+    /// </summary>
+    public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
+
+    /// <summary>
+    /// 如果指定的长度超过最大包大小，则抛出异常。
+    /// </summary>
+    /// <param name="length">待检查的长度值。</param>
+    /// <remarks>
+    /// 此方法用于确保传入的数据长度不会超过预设的最大包大小限制，
+    /// 以避免处理过大的数据包导致的性能问题或内存溢出等问题。
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void ThrowIfMoreThanMaxPackageSize(int length)
     {
-        /// <summary>
-        /// 是否允许发送<see cref="IRequestInfo"/>对象。
-        /// </summary>
-        public abstract bool CanSendRequestInfo { get; }
-
-        /// <summary>
-        /// 拼接发送
-        /// </summary>
-        public abstract bool CanSplicingSend { get; }
-
-        /// <summary>
-        /// 日志记录器。
-        /// </summary>
-        public ILog Logger { get; set; }
-
-        /// <summary>
-        /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
-        /// </summary>
-        public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
-
-        /// <summary>
-        /// 如果指定的长度超过最大包大小，则抛出异常。
-        /// </summary>
-        /// <param name="length">待检查的长度值。</param>
-        /// <remarks>
-        /// 此方法用于确保传入的数据长度不会超过预设的最大包大小限制，
-        /// 以避免处理过大的数据包导致的性能问题或内存溢出等问题。
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfMoreThanMaxPackageSize(int length)
+        if (length > this.MaxPackageSize)
         {
-            if (length > this.MaxPackageSize)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(length), length, this.MaxPackageSize);
-            }
+            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(length), length, this.MaxPackageSize);
         }
-
-        /// <summary>
-        /// 适配器所有者
-        /// </summary>
-        public object Owner { get; private set; }
-
-        /// <summary>
-        /// 当适配器在被第一次加载时调用。
-        /// </summary>
-        /// <param name="owner"></param>
-        /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
-        public virtual void OnLoaded(object owner)
-        {
-            if (this.Owner != null)
-            {
-                throw new Exception(TouchSocketCoreResource.AdapterAlreadyUsed);
-            }
-            this.Owner = owner;
-        }
-
-        /// <summary>
-        /// 在解析时发生错误。
-        /// </summary>
-        /// <param name="ex">异常</param>
-        /// <param name="error">错误异常</param>
-        /// <param name="reset">是否调用<see cref="Reset"/></param>
-        /// <param name="log">是否记录日志</param>
-        protected virtual void OnError(Exception ex, string error, bool reset, bool log)
-        {
-            if (reset)
-            {
-                this.Reset();
-            }
-            if (log)
-            {
-                this.Logger?.Exception(this, error, ex);
-            }
-        }
-
-        /// <summary>
-        /// 重置解析器到初始状态，一般在<see cref="OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
-        /// </summary>
-        protected abstract void Reset();
     }
+
+    /// <summary>
+    /// 适配器所有者
+    /// </summary>
+    public object Owner { get; private set; }
+
+    /// <summary>
+    /// 当适配器在被第一次加载时调用。
+    /// </summary>
+    /// <param name="owner"></param>
+    /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
+    public virtual void OnLoaded(object owner)
+    {
+        if (this.Owner != null)
+        {
+            throw new Exception(TouchSocketCoreResource.AdapterAlreadyUsed);
+        }
+        this.Owner = owner;
+    }
+
+    /// <summary>
+    /// 在解析时发生错误。
+    /// </summary>
+    /// <param name="ex">异常</param>
+    /// <param name="error">错误异常</param>
+    /// <param name="reset">是否调用<see cref="Reset"/></param>
+    /// <param name="log">是否记录日志</param>
+    protected virtual void OnError(Exception ex, string error, bool reset, bool log)
+    {
+        if (reset)
+        {
+            this.Reset();
+        }
+        if (log)
+        {
+            this.Logger?.Exception(this, error, ex);
+        }
+    }
+
+    /// <summary>
+    /// 重置解析器到初始状态，一般在<see cref="OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
+    /// </summary>
+    protected abstract void Reset();
 }

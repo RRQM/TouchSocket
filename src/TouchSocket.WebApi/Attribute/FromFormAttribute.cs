@@ -12,14 +12,13 @@
 
 using System;
 
-namespace TouchSocket.WebApi
-{
-    /// <summary>
-    /// 指定参数应使用请求中的表单数据进行绑定。
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    public sealed class FromFormAttribute : WebApiNameAttribute
-    {
+namespace TouchSocket.WebApi;
 
-    }
+/// <summary>
+/// 指定参数应使用请求中的表单数据进行绑定。
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+public sealed class FromFormAttribute : WebApiNameAttribute
+{
+
 }

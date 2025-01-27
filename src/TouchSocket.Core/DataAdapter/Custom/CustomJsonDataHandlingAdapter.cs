@@ -1,183 +1,179 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 表示 JSON 包的类型。
+/// </summary>
+public enum JsonPackageKind
 {
     /// <summary>
-    /// 表示 JSON 包的类型。
+    /// 无类型。
     /// </summary>
-    public enum JsonPackageKind
+    None,
+
+    /// <summary>
+    /// JSON 对象类型。
+    /// </summary>
+    Object,
+
+    /// <summary>
+    /// JSON 数组类型。
+    /// </summary>
+    Array
+}
+
+/// <summary>
+/// 自定义 JSON 数据处理适配器。
+/// </summary>
+/// <typeparam name="TJsonRequestInfo">请求信息类型。</typeparam>
+public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDataHandlingAdapter<TJsonRequestInfo> where TJsonRequestInfo : IRequestInfo
+{
+    private readonly byte[] m_closeBrace;
+
+    private readonly byte[] m_leftSquareBracket;
+
+    private readonly byte[] m_openBrace;
+
+    private readonly byte[] m_rightSquareBracket;
+
+    private int m_endCount = 0;
+
+    private int m_startCount = 0;
+
+    /// <summary>
+    /// 初始化 <see cref="CustomJsonDataHandlingAdapter{TJsonRequestInfo}"/> 类的新实例。
+    /// </summary>
+    /// <param name="encoding">编码格式。</param>
+    public CustomJsonDataHandlingAdapter(Encoding encoding)
     {
-        /// <summary>
-        /// 无类型。
-        /// </summary>
-        None,
-
-        /// <summary>
-        /// JSON 对象类型。
-        /// </summary>
-        Object,
-
-        /// <summary>
-        /// JSON 数组类型。
-        /// </summary>
-        Array
+        this.m_openBrace = encoding.GetBytes("{");
+        this.m_closeBrace = encoding.GetBytes("}");
+        this.m_leftSquareBracket = encoding.GetBytes("[");
+        this.m_rightSquareBracket = encoding.GetBytes("]");
+        this.Encoding = encoding;
     }
 
     /// <summary>
-    /// 自定义 JSON 数据处理适配器。
+    /// 获取编码格式。
     /// </summary>
-    /// <typeparam name="TJsonRequestInfo">请求信息类型。</typeparam>
-    public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDataHandlingAdapter<TJsonRequestInfo> where TJsonRequestInfo : IRequestInfo
+    public Encoding Encoding { get; }
+
+    /// <inheritdoc/>
+    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TJsonRequestInfo request, ref int tempCapacity)
     {
-        private readonly byte[] m_closeBrace;
+        var stringSpan = byteBlock.Span.Slice(byteBlock.Position);
 
-        private readonly byte[] m_leftSquareBracket;
-
-        private readonly byte[] m_openBrace;
-
-        private readonly byte[] m_rightSquareBracket;
-
-        private int m_endCount = 0;
-
-        private int m_startCount = 0;
-
-        /// <summary>
-        /// 初始化 <see cref="CustomJsonDataHandlingAdapter{TJsonRequestInfo}"/> 类的新实例。
-        /// </summary>
-        /// <param name="encoding">编码格式。</param>
-        public CustomJsonDataHandlingAdapter(Encoding encoding)
+        var myEnum = this.GetJsonPackageKind(stringSpan);
+        if (myEnum == JsonPackageKind.None)
         {
-            this.m_openBrace = encoding.GetBytes("{");
-            this.m_closeBrace = encoding.GetBytes("}");
-            this.m_leftSquareBracket = encoding.GetBytes("[");
-            this.m_rightSquareBracket = encoding.GetBytes("]");
-            this.Encoding = encoding;
+            return FilterResult.Cache;
         }
 
-        /// <summary>
-        /// 获取编码格式。
-        /// </summary>
-        public Encoding Encoding { get; }
-
-        /// <inheritdoc/>
-        protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TJsonRequestInfo request, ref int tempCapacity)
+        ReadOnlySpan<byte> startSpan;
+        ReadOnlySpan<byte> endSpan;
+        if (myEnum == JsonPackageKind.Object)
         {
-            var stringSpan = byteBlock.Span.Slice(byteBlock.Position);
+            startSpan = this.m_openBrace;
+            endSpan = this.m_closeBrace;
+        }
+        else
+        {
+            startSpan = this.m_leftSquareBracket;
+            endSpan = this.m_rightSquareBracket;
+        }
 
-            var myEnum = this.GetJsonPackageKind(stringSpan);
-            if (myEnum == JsonPackageKind.None)
+        var index = 0;
+        while (true)
+        {
+            var span = stringSpan.Slice(index);
+            var endIndex = span.IndexOf(endSpan);
+            if (endIndex < 0)
             {
+                this.m_startCount = 0;
+                this.m_endCount = 0;
                 return FilterResult.Cache;
             }
 
-            ReadOnlySpan<byte> startSpan;
-            ReadOnlySpan<byte> endSpan;
-            if (myEnum == JsonPackageKind.Object)
+            var searchSpan = span.Slice(0, endIndex);
+
+            this.m_startCount += GetIndexCount(searchSpan, startSpan);
+            this.m_endCount++;
+
+            index += (endIndex + endSpan.Length);
+
+            if (this.m_startCount == this.m_endCount)
             {
-                startSpan = this.m_openBrace;
-                endSpan = this.m_closeBrace;
+                //var ss = stringSpan.Slice(0, index).ToString(Encoding.UTF8);
+                this.m_startCount = 0;
+                this.m_endCount = 0;
+
+                var memory = byteBlock.Memory.Slice(byteBlock.Position, index);
+                var r = myEnum == JsonPackageKind.Object ? memory.Span.IndexOf(this.m_openBrace) : memory.Span.IndexOf(this.m_leftSquareBracket);
+                var dataMemory = memory.Slice(r);
+                var impurityMemory = memory.Slice(0, r);
+
+                request = this.GetInstance(myEnum, this.Encoding, dataMemory, impurityMemory);
+                byteBlock.Position += index;
+                return FilterResult.Success;
+            }
+        }
+    }
+
+    ///<summary>
+    /// 获取实例。
+    /// </summary>
+    /// <param name="packageKind">包类型。</param>
+    /// <param name="encoding">编码格式。</param>
+    /// <param name="dataMemory">数据内存。</param>
+    /// <param name="impurityMemory">杂质内存。</param>
+    /// <returns>请求信息实例。</returns>
+    protected abstract TJsonRequestInfo GetInstance(JsonPackageKind packageKind, Encoding encoding, ReadOnlyMemory<byte> dataMemory, ReadOnlyMemory<byte> impurityMemory);
+
+    private static int GetIndexCount(ReadOnlySpan<byte> span, ReadOnlySpan<byte> searchSpan)
+    {
+        var count = 0;
+        while (true)
+        {
+            var index = span.IndexOf(searchSpan);
+            if (index < 0)
+            {
+                return count;
+            }
+
+            count++;
+            span = span.Slice(index + searchSpan.Length);
+        }
+    }
+
+    private JsonPackageKind GetJsonPackageKind(ReadOnlySpan<byte> span)
+    {
+        var openBraceIndex = span.IndexOf(this.m_openBrace);
+        var leftSquareBracketIndex = span.IndexOf(this.m_leftSquareBracket);
+
+        if (openBraceIndex < 0)
+        {
+            if (leftSquareBracketIndex < 0)
+            {
+                return JsonPackageKind.None;
+            }
+
+            return JsonPackageKind.Array;
+        }
+        else
+        {
+            if (leftSquareBracketIndex < 0)
+            {
+                return JsonPackageKind.Object;
+            }
+            else if (openBraceIndex < leftSquareBracketIndex)
+            {
+                return JsonPackageKind.Object;
             }
             else
             {
-                startSpan = this.m_leftSquareBracket;
-                endSpan = this.m_rightSquareBracket;
-            }
-
-            var index = 0;
-            while (true)
-            {
-                var span = stringSpan.Slice(index);
-                var endIndex = span.IndexOf(endSpan);
-                if (endIndex < 0)
-                {
-                    this.m_startCount = 0;
-                    this.m_endCount = 0;
-                    return FilterResult.Cache;
-                }
-
-                var searchSpan = span.Slice(0, endIndex);
-
-                this.m_startCount += GetIndexCount(searchSpan, startSpan);
-                this.m_endCount++;
-
-                index += (endIndex + endSpan.Length);
-
-                if (this.m_startCount == this.m_endCount)
-                {
-                    //var ss = stringSpan.Slice(0, index).ToString(Encoding.UTF8);
-                    this.m_startCount = 0;
-                    this.m_endCount = 0;
-
-                    var memory = byteBlock.Memory.Slice(byteBlock.Position, index);
-                    var r = myEnum == JsonPackageKind.Object ? memory.Span.IndexOf(this.m_openBrace) : memory.Span.IndexOf(this.m_leftSquareBracket);
-                    var dataMemory = memory.Slice(r);
-                    var impurityMemory = memory.Slice(0, r);
-
-                    request = this.GetInstance(myEnum, this.Encoding, dataMemory, impurityMemory);
-                    byteBlock.Position += index;
-                    return FilterResult.Success;
-                }
-            }
-        }
-
-        ///<summary>
-        /// 获取实例。
-        /// </summary>
-        /// <param name="packageKind">包类型。</param>
-        /// <param name="encoding">编码格式。</param>
-        /// <param name="dataMemory">数据内存。</param>
-        /// <param name="impurityMemory">杂质内存。</param>
-        /// <returns>请求信息实例。</returns>
-        protected abstract TJsonRequestInfo GetInstance(JsonPackageKind packageKind, Encoding encoding, ReadOnlyMemory<byte> dataMemory, ReadOnlyMemory<byte> impurityMemory);
-
-        private static int GetIndexCount(ReadOnlySpan<byte> span, ReadOnlySpan<byte> searchSpan)
-        {
-            var count = 0;
-            while (true)
-            {
-                var index = span.IndexOf(searchSpan);
-                if (index < 0)
-                {
-                    return count;
-                }
-
-                count++;
-                span = span.Slice(index + searchSpan.Length);
-            }
-        }
-
-        private JsonPackageKind GetJsonPackageKind(ReadOnlySpan<byte> span)
-        {
-            var openBraceIndex = span.IndexOf(this.m_openBrace);
-            var leftSquareBracketIndex = span.IndexOf(this.m_leftSquareBracket);
-
-            if (openBraceIndex < 0)
-            {
-                if (leftSquareBracketIndex < 0)
-                {
-                    return JsonPackageKind.None;
-                }
-
                 return JsonPackageKind.Array;
-            }
-            else
-            {
-                if (leftSquareBracketIndex < 0)
-                {
-                    return JsonPackageKind.Object;
-                }
-                else if (openBraceIndex < leftSquareBracketIndex)
-                {
-                    return JsonPackageKind.Object;
-                }
-                else
-                {
-                    return JsonPackageKind.Array;
-                }
             }
         }
     }

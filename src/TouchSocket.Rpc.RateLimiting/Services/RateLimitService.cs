@@ -12,25 +12,24 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Rpc.RateLimiting
+namespace TouchSocket.Rpc.RateLimiting;
+
+internal class RateLimitService : IRateLimitService
 {
-    internal class RateLimitService : IRateLimitService
+    private readonly Dictionary<string, IRateLimiterPolicy> m_rateLimiterPolicies;
+
+    public RateLimitService(RateLimiterOptions options)
     {
-        private readonly Dictionary<string, IRateLimiterPolicy> m_rateLimiterPolicies;
+        this.m_rateLimiterPolicies = options.RateLimiterPolicies;
+    }
 
-        public RateLimitService(RateLimiterOptions options)
+    public IRateLimiterPolicy GetRateLimiterPolicy(string policyName)
+    {
+        if (this.m_rateLimiterPolicies.TryGetValue(policyName, out var rateLimiter))
         {
-            this.m_rateLimiterPolicies = options.RateLimiterPolicies;
+            return rateLimiter;
         }
 
-        public IRateLimiterPolicy GetRateLimiterPolicy(string policyName)
-        {
-            if (this.m_rateLimiterPolicies.TryGetValue(policyName, out var rateLimiter))
-            {
-                return rateLimiter;
-            }
-
-            return null;
-        }
+        return null;
     }
 }

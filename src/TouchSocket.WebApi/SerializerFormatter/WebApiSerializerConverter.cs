@@ -15,61 +15,60 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 适用于WebApi的序列化器
+/// </summary>
+public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, HttpContext>
 {
-    /// <summary>
-    /// 适用于WebApi的序列化器
-    /// </summary>
-    public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, HttpContext>
+    /// <inheritdoc/>
+    public override string Serialize(HttpContext state, in object target)
     {
-        /// <inheritdoc/>
-        public override string Serialize(HttpContext state, in object target)
+        var accept = state.Request.Accept;
+        if (accept != null && accept.Equals("text/plain"))
         {
-            var accept = state.Request.Accept;
-            if (accept != null && accept.Equals("text/plain"))
+            if (target == null)
             {
-                if (target == null)
-                {
-                    return string.Empty;
-                }
-                if ((target.GetType().IsPrimitive || target.GetType() == typeof(string)))
-                {
-                    return target.ToString();
-                }
+                return string.Empty;
             }
-            return base.Serialize(state, target);
+            if ((target.GetType().IsPrimitive || target.GetType() == typeof(string)))
+            {
+                return target.ToString();
+            }
         }
+        return base.Serialize(state, target);
+    }
 
-        /// <summary>
-        /// 添加Json序列化器
-        /// </summary>
-        /// <param name="settings"></param>
-        public void AddJsonSerializerFormatter(JsonSerializerSettings settings)
-        {
-            this.Add(new WebApiJsonSerializerFormatter() { JsonSettings = settings });
-        }
+    /// <summary>
+    /// 添加Json序列化器
+    /// </summary>
+    /// <param name="settings"></param>
+    public void AddJsonSerializerFormatter(JsonSerializerSettings settings)
+    {
+        this.Add(new WebApiJsonSerializerFormatter() { JsonSettings = settings });
+    }
 
-        /// <summary>
-        /// 添加Xml序列化器
-        /// </summary>
-        public void AddXmlSerializerFormatter()
-        {
-            this.Add(new WebApiXmlSerializerFormatter());
-        }
+    /// <summary>
+    /// 添加Xml序列化器
+    /// </summary>
+    public void AddXmlSerializerFormatter()
+    {
+        this.Add(new WebApiXmlSerializerFormatter());
+    }
 
 #if SystemTextJson
-        /// <summary>
-        /// 添加System.Text.Json序列化器
-        /// </summary>
-        /// <param name="options">配置JsonSerializerOptions的操作</param>
-        public void AddSystemTextJsonSerializerFormatter(Action<System.Text.Json.JsonSerializerOptions> options)
-        {
-            var jsonSerializerOptions = new System.Text.Json.JsonSerializerOptions();
-            jsonSerializerOptions.TypeInfoResolverChain.Add(WebApiSystemTextJsonSerializerContext.Default);
-            options.Invoke(jsonSerializerOptions);
+    /// <summary>
+    /// 添加System.Text.Json序列化器
+    /// </summary>
+    /// <param name="options">配置JsonSerializerOptions的操作</param>
+    public void AddSystemTextJsonSerializerFormatter(Action<System.Text.Json.JsonSerializerOptions> options)
+    {
+        var jsonSerializerOptions = new System.Text.Json.JsonSerializerOptions();
+        jsonSerializerOptions.TypeInfoResolverChain.Add(WebApiSystemTextJsonSerializerContext.Default);
+        options.Invoke(jsonSerializerOptions);
 
-            this.Add(new WebApiSystemTextJsonSerializerFormatter(jsonSerializerOptions));
-        }
-#endif
+        this.Add(new WebApiSystemTextJsonSerializerFormatter(jsonSerializerOptions));
     }
+#endif
 }

@@ -18,26 +18,25 @@ using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+/// <summary>
+/// XmlRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="TClient"></typeparam>
+public abstract class XmlRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
 {
-    /// <summary>
-    /// XmlRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class XmlRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
-    {
 
-    }
+}
 
-    /// <summary>
-    /// XmlRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class XmlRpcRealityProxy<T> : XmlRpcRealityProxy<T, IXmlRpcClient>
-    {
+/// <summary>
+/// XmlRpcRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class XmlRpcRealityProxy<T> : XmlRpcRealityProxy<T, IXmlRpcClient>
+{
 
-    }
 }
 
 #endif

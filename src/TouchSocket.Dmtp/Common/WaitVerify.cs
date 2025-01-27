@@ -12,28 +12,27 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 验证消息
+/// </summary>
+public sealed class WaitVerify : WaitResult
 {
     /// <summary>
-    /// 验证消息
+    /// 令箭
     /// </summary>
-    public sealed class WaitVerify : WaitResult
-    {
-        /// <summary>
-        /// 令箭
-        /// </summary>
-        public string Token { get; set; }
+    public string Token { get; set; }
 
-        //internal volatile bool Handle;
+    //internal volatile bool Handle;
 
-        /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    public Metadata Metadata { get; set; }
 
-        /// <summary>
-        /// Id
-        /// </summary>
-        public string Id { get; set; }
-    }
+    /// <summary>
+    /// Id
+    /// </summary>
+    public string Id { get; set; }
 }

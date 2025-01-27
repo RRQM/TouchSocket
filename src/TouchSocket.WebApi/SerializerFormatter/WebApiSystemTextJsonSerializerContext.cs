@@ -18,12 +18,11 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+[JsonSerializable(typeof(ActionResult))]
+internal partial class WebApiSystemTextJsonSerializerContext : JsonSerializerContext
 {
-    [JsonSerializable(typeof(ActionResult))]
-    internal partial class WebApiSystemTextJsonSerializerContext : JsonSerializerContext
-    {
-    }
 }
 #endif
 

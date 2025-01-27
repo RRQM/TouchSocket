@@ -12,61 +12,60 @@
 
 using System.IO;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+
+/// <summary>
+/// 表示远程文件系统中文件的信息。
+/// 继承自RemoteFileSystemInfo类，提供了关于远程文件或文件夹的详细信息。
+/// </summary>
+public class RemoteFileInfo : RemoteFileSystemInfo
 {
+    /// <summary>
+    /// 初始化一个RemoteFileInfo
+    /// </summary>
+    public RemoteFileInfo()
+    {
+    }
 
     /// <summary>
-    /// 表示远程文件系统中文件的信息。
-    /// 继承自RemoteFileSystemInfo类，提供了关于远程文件或文件夹的详细信息。
+    /// 从FileInfo初始化一个RemoteFileInfo
     /// </summary>
-    public class RemoteFileInfo : RemoteFileSystemInfo
+    /// <param name="fileInfo">用于初始化RemoteFileInfo的FileInfo对象</param>
+    public RemoteFileInfo(FileInfo fileInfo)
     {
-        /// <summary>
-        /// 初始化一个RemoteFileInfo
-        /// </summary>
-        public RemoteFileInfo()
-        {
-        }
+        this.FullName = fileInfo.FullName; // 设置完整路径
+        this.Name = fileInfo.Name; // 设置文件名
+        this.Length = fileInfo.Length; // 设置文件长度
+        this.Attributes = fileInfo.Attributes; // 设置文件属性
+        this.CreationTime = fileInfo.CreationTime; // 设置文件创建时间
+        this.LastWriteTime = fileInfo.LastWriteTime; // 设置文件最后写入时间
+        this.LastAccessTime = fileInfo.LastAccessTime; // 设置文件最后访问时间
+    }
 
-        /// <summary>
-        /// 从FileInfo初始化一个RemoteFileInfo
-        /// </summary>
-        /// <param name="fileInfo">用于初始化RemoteFileInfo的FileInfo对象</param>
-        public RemoteFileInfo(FileInfo fileInfo)
-        {
-            this.FullName = fileInfo.FullName; // 设置完整路径
-            this.Name = fileInfo.Name; // 设置文件名
-            this.Length = fileInfo.Length; // 设置文件长度
-            this.Attributes = fileInfo.Attributes; // 设置文件属性
-            this.CreationTime = fileInfo.CreationTime; // 设置文件创建时间
-            this.LastWriteTime = fileInfo.LastWriteTime; // 设置文件最后写入时间
-            this.LastAccessTime = fileInfo.LastAccessTime; // 设置文件最后访问时间
-        }
+    /// <summary>
+    /// 文件大小
+    /// </summary>
+    public long Length { get; set; }
 
-        /// <summary>
-        /// 文件大小
-        /// </summary>
-        public long Length { get; set; }
+    /// <summary>
+    /// 文件MD5
+    /// </summary>
+    public string MD5 { get; set; }
 
-        /// <summary>
-        /// 文件MD5
-        /// </summary>
-        public string MD5 { get; set; }
+    /// <inheritdoc/>
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.Package(ref byteBlock);
+        byteBlock.WriteString(this.MD5);
+        byteBlock.WriteInt64(this.Length);
+    }
 
-        /// <inheritdoc/>
-        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.Package(ref byteBlock);
-            byteBlock.WriteString(this.MD5);
-            byteBlock.WriteInt64(this.Length);
-        }
-
-        /// <inheritdoc/>
-        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            base.Unpackage(ref byteBlock);
-            this.MD5 = byteBlock.ReadString();
-            this.Length = byteBlock.ReadInt64();
-        }
+    /// <inheritdoc/>
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        base.Unpackage(ref byteBlock);
+        this.MD5 = byteBlock.ReadString();
+        this.Length = byteBlock.ReadInt64();
     }
 }

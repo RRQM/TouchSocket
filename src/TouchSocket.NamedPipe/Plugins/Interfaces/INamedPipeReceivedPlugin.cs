@@ -14,21 +14,20 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
-{
+namespace TouchSocket.NamedPipe;
 
+
+/// <summary>
+/// 定义了一个接口，用于处理命名管道接收到的数据
+/// </summary>
+[DynamicMethod]
+public interface INamedPipeReceivedPlugin : IPlugin
+{
     /// <summary>
-    /// 定义了一个接口，用于处理命名管道接收到的数据
+    /// 在收到数据时触发
     /// </summary>
-    [DynamicMethod]
-    public interface INamedPipeReceivedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在收到数据时触发
-        /// </summary>
-        /// <param name="client">发送数据的命名管道会话</param>
-        /// <param name="e">包含接收到的数据的事件参数</param>
-        /// <returns>一个任务，表示异步操作</returns>
-        Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e);
-    }
+    /// <param name="client">发送数据的命名管道会话</param>
+    /// <param name="e">包含接收到的数据的事件参数</param>
+    /// <returns>一个任务，表示异步操作</returns>
+    Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e);
 }

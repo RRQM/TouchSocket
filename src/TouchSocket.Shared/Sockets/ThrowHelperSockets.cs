@@ -14,20 +14,19 @@ using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Core
-{
-    internal static partial class ThrowHelper
-    {
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowClientNotConnectedException()
-        {
-            throw new ClientNotConnectedException(TouchSocketResource.ClientNotConnected);
-        }
+namespace TouchSocket.Core;
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowClientNotFindException(string id)
-        {
-            throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(id));
-        }
+internal static partial class ThrowHelper
+{
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowClientNotConnectedException()
+    {
+        throw new ClientNotConnectedException(TouchSocketResource.ClientNotConnected);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowClientNotFindException(string id)
+    {
+        throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(id));
     }
 }

@@ -14,61 +14,60 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+internal class JsonRpcWaitResultConverter : JsonConverter
 {
-    internal class JsonRpcWaitResultConverter : JsonConverter
+    public override bool CanConvert(Type objectType)
     {
-        public override bool CanConvert(Type objectType)
+        return objectType == typeof(JsonRpcWaitResult);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        var jsonRpcWaitResult = new JsonRpcWaitResult();
+        var jsonObject = JObject.Load(reader);
+        jsonRpcWaitResult.Jsonrpc = (string)jsonObject["jsonrpc"];
+        jsonRpcWaitResult.Id = (int?)jsonObject["id"];
+        if (jsonObject["error"] != null)
         {
-            return objectType == typeof(JsonRpcWaitResult);
+            jsonRpcWaitResult.ErrorCode = (int)jsonObject["error"]["code"];
+            jsonRpcWaitResult.ErrorMessage = (string)jsonObject["error"]["message"];
+        }
+        if (jsonObject["result"] != null)
+        {
+            jsonRpcWaitResult.Result = jsonObject["result"].ToString();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            var jsonRpcWaitResult = new JsonRpcWaitResult();
-            var jsonObject = JObject.Load(reader);
-            jsonRpcWaitResult.Jsonrpc = (string)jsonObject["jsonrpc"];
-            jsonRpcWaitResult.Id = (int?)jsonObject["id"];
-            if (jsonObject["error"] != null)
-            {
-                jsonRpcWaitResult.ErrorCode = (int)jsonObject["error"]["code"];
-                jsonRpcWaitResult.ErrorMessage = (string)jsonObject["error"]["message"];
-            }
-            if (jsonObject["result"] != null)
-            {
-                jsonRpcWaitResult.Result = jsonObject["result"].ToString();
-            }
+        return jsonRpcWaitResult;
+    }
 
-            return jsonRpcWaitResult;
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        var jsonRpcWaitResult = (JsonRpcWaitResult)value;
+        writer.WriteStartObject();
+        writer.WritePropertyName("jsonrpc");
+        writer.WriteValue(jsonRpcWaitResult.Jsonrpc);
+        writer.WritePropertyName("id");
+        writer.WriteValue(jsonRpcWaitResult.Id);
+        if (jsonRpcWaitResult.ErrorCode == 0)
+        {
+            // 成功
+            writer.WritePropertyName("result");
+            writer.WriteRawValue(jsonRpcWaitResult.Result);
         }
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        else
         {
-            var jsonRpcWaitResult = (JsonRpcWaitResult)value;
+            // 失败
+            writer.WritePropertyName("error");
             writer.WriteStartObject();
-            writer.WritePropertyName("jsonrpc");
-            writer.WriteValue(jsonRpcWaitResult.Jsonrpc);
-            writer.WritePropertyName("id");
-            writer.WriteValue(jsonRpcWaitResult.Id);
-            if (jsonRpcWaitResult.ErrorCode == 0)
-            {
-                // 成功
-                writer.WritePropertyName("result");
-                writer.WriteRawValue(jsonRpcWaitResult.Result);
-            }
-            else
-            {
-                // 失败
-                writer.WritePropertyName("error");
-                writer.WriteStartObject();
-                writer.WritePropertyName("code");
-                writer.WriteValue(jsonRpcWaitResult.ErrorCode);
-                writer.WritePropertyName("message");
-                writer.WriteValue(jsonRpcWaitResult.ErrorMessage);
-                writer.WriteEndObject();
-            }
-
+            writer.WritePropertyName("code");
+            writer.WriteValue(jsonRpcWaitResult.ErrorCode);
+            writer.WritePropertyName("message");
+            writer.WriteValue(jsonRpcWaitResult.ErrorMessage);
             writer.WriteEndObject();
         }
+
+        writer.WriteEndObject();
     }
 }

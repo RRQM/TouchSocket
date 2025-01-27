@@ -12,37 +12,36 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 即将连接事件的参数类，继承自MsgPermitEventArgs。
+/// 用于处理即将连接事件时传递的信息。
+/// </summary>
+public class ConnectingEventArgs : MsgPermitEventArgs
 {
+    private string m_id;
+
     /// <summary>
-    /// 即将连接事件的参数类，继承自MsgPermitEventArgs。
-    /// 用于处理即将连接事件时传递的信息。
+    /// 构造函数
+    /// 初始化IsPermitOperation属性为true，表示默认允许操作。
     /// </summary>
-    public class ConnectingEventArgs : MsgPermitEventArgs
+    public ConnectingEventArgs()
     {
-        private string m_id;
+        this.IsPermitOperation = true;
+    }
 
-        /// <summary>
-        /// 构造函数
-        /// 初始化IsPermitOperation属性为true，表示默认允许操作。
-        /// </summary>
-        public ConnectingEventArgs()
+    /// <summary>
+    /// 客户端Id。该Id的赋值，仅在服务器适用。
+    /// 用于标识唯一的客户端连接。
+    /// </summary>
+    public string Id
+    {
+        get => this.m_id;
+        set
         {
-            this.IsPermitOperation = true;
-        }
-
-        /// <summary>
-        /// 客户端Id。该Id的赋值，仅在服务器适用。
-        /// 用于标识唯一的客户端连接。
-        /// </summary>
-        public string Id
-        {
-            get => this.m_id;
-            set
-            {
-                ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(this.Id));
-                this.m_id = value;
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(this.Id));
+            this.m_id = value;
         }
     }
 }

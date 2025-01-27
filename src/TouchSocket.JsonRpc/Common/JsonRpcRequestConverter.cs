@@ -14,73 +14,72 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+internal class JsonRpcRequestConverter : JsonConverter
 {
-    internal class JsonRpcRequestConverter : JsonConverter
+    public override bool CanConvert(Type objectType)
     {
-        public override bool CanConvert(Type objectType)
+        return objectType == typeof(InternalJsonRpcRequest);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        if (reader.TokenType == JsonToken.Null)
         {
-            return objectType == typeof(InternalJsonRpcRequest);
+            return null;
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        var jsonRpcRequest = new InternalJsonRpcRequest();
+
+        // Load the JObject from the reader
+        var jsonObject = JObject.Load(reader);
+        if (!jsonObject.TryGetValue("jsonrpc", StringComparison.OrdinalIgnoreCase, out var tokenJsonrpc))
         {
-            if (reader.TokenType == JsonToken.Null)
-            {
-                return null;
-            }
+            return default;
+        }
+        // Deserialize properties
+        jsonRpcRequest.Jsonrpc = tokenJsonrpc.Value<string>();
 
-            var jsonRpcRequest = new InternalJsonRpcRequest();
-
-            // Load the JObject from the reader
-            var jsonObject = JObject.Load(reader);
-            if (!jsonObject.TryGetValue("jsonrpc", StringComparison.OrdinalIgnoreCase, out var tokenJsonrpc))
-            {
-                return default;
-            }
-            // Deserialize properties
-            jsonRpcRequest.Jsonrpc = tokenJsonrpc.Value<string>();
-
-            if (!jsonObject.TryGetValue("method", StringComparison.OrdinalIgnoreCase, out var tokenMethod))
-            {
-                return default;
-            }
-            jsonRpcRequest.Method = tokenMethod.Value<string>();
-            if (!jsonObject.TryGetValue("params", StringComparison.OrdinalIgnoreCase, out var tokenParams))
-            {
-                return default;
-            }
-
-            jsonRpcRequest.ParamsObject = tokenParams;
-
-            if (!jsonObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var tokenId))
-            {
-                return default;
-            }
-
-            jsonRpcRequest.Id = tokenId.Value<int?>();
-
-            return jsonRpcRequest;
+        if (!jsonObject.TryGetValue("method", StringComparison.OrdinalIgnoreCase, out var tokenMethod))
+        {
+            return default;
+        }
+        jsonRpcRequest.Method = tokenMethod.Value<string>();
+        if (!jsonObject.TryGetValue("params", StringComparison.OrdinalIgnoreCase, out var tokenParams))
+        {
+            return default;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        jsonRpcRequest.ParamsObject = tokenParams;
+
+        if (!jsonObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var tokenId))
         {
-            var jsonRpcRequest = (InternalJsonRpcRequest)value;
-            writer.WriteStartObject();
-            writer.WritePropertyName("jsonrpc");
-            writer.WriteValue(jsonRpcRequest.Jsonrpc);
-            writer.WritePropertyName("method");
-            writer.WriteValue(jsonRpcRequest.Method);
-            writer.WritePropertyName("params");
-            writer.WriteStartArray();
-            foreach (var item in jsonRpcRequest.ParamsStrings)
-            {
-                writer.WriteRawValue(item);
-            }
-            writer.WriteEndArray();
-            writer.WritePropertyName("id");
-            writer.WriteValue(jsonRpcRequest.Id);
-            writer.WriteEndObject();
+            return default;
         }
+
+        jsonRpcRequest.Id = tokenId.Value<int?>();
+
+        return jsonRpcRequest;
+    }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        var jsonRpcRequest = (InternalJsonRpcRequest)value;
+        writer.WriteStartObject();
+        writer.WritePropertyName("jsonrpc");
+        writer.WriteValue(jsonRpcRequest.Jsonrpc);
+        writer.WritePropertyName("method");
+        writer.WriteValue(jsonRpcRequest.Method);
+        writer.WritePropertyName("params");
+        writer.WriteStartArray();
+        foreach (var item in jsonRpcRequest.ParamsStrings)
+        {
+            writer.WriteRawValue(item);
+        }
+        writer.WriteEndArray();
+        writer.WritePropertyName("id");
+        writer.WriteValue(jsonRpcRequest.Id);
+        writer.WriteEndObject();
     }
 }

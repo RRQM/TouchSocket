@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 序列化类型
+/// </summary>
+public enum SerializationType : byte
 {
     /// <summary>
-    /// 序列化类型
+    /// 内置快速二进制
     /// </summary>
-    public enum SerializationType : byte
-    {
-        /// <summary>
-        /// 内置快速二进制
-        /// </summary>
-        FastBinary,
+    FastBinary,
 
-        /// <summary>
-        /// Json
-        /// </summary>
-        Json,
+    /// <summary>
+    /// Json
+    /// </summary>
+    Json,
 
-        /// <summary>
-        /// 系统二进制。微软认为这是不安全的，所以谨慎使用。
-        /// </summary>
-        SystemBinary,
+    /// <summary>
+    /// 系统二进制。微软认为这是不安全的，所以谨慎使用。
+    /// </summary>
+    SystemBinary,
 
-        /// <summary>
-        /// 使用Xml进行序列化
-        /// </summary>
-        Xml
-    }
+    /// <summary>
+    /// 使用Xml进行序列化
+    /// </summary>
+    Xml
 }

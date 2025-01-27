@@ -13,20 +13,19 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// IWebSocketReceivedPlugin
+/// </summary>
+[DynamicMethod]
+public interface IWebSocketReceivedPlugin : IPlugin
 {
     /// <summary>
-    /// IWebSocketReceivedPlugin
+    /// 当收到WS数据时。
     /// </summary>
-    [DynamicMethod]
-    public interface IWebSocketReceivedPlugin : IPlugin
-    {
-        /// <summary>
-        /// 当收到WS数据时。
-        /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e);
-    }
+    /// <param name="webSocket"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e);
 }

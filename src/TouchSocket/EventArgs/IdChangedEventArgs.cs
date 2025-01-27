@@ -12,33 +12,32 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// Id变更事件参数类，用于插件内部Id发生变化时传递相关信息
+/// </summary>
+public class IdChangedEventArgs : PluginEventArgs
 {
+
     /// <summary>
-    /// Id变更事件参数类，用于插件内部Id发生变化时传递相关信息
+    /// 初始化Id变更事件参数对象
     /// </summary>
-    public class IdChangedEventArgs : PluginEventArgs
+    /// <param name="sourceId">旧Id</param>
+    /// <param name="targetId">新Id</param>
+    public IdChangedEventArgs(string sourceId, string targetId)
     {
-
-        /// <summary>
-        /// 初始化Id变更事件参数对象
-        /// </summary>
-        /// <param name="sourceId">旧Id</param>
-        /// <param name="targetId">新Id</param>
-        public IdChangedEventArgs(string sourceId, string targetId)
-        {
-            this.OldId = sourceId;
-            this.NewId = targetId;
-        }
-
-        /// <summary>
-        /// 旧Id
-        /// </summary>
-        public string OldId { get; private set; }
-
-        /// <summary>
-        /// 新Id
-        /// </summary>
-        public string NewId { get; private set; }
+        this.OldId = sourceId;
+        this.NewId = targetId;
     }
+
+    /// <summary>
+    /// 旧Id
+    /// </summary>
+    public string OldId { get; private set; }
+
+    /// <summary>
+    /// 新Id
+    /// </summary>
+    public string NewId { get; private set; }
 }

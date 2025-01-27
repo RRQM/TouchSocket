@@ -12,12 +12,11 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// WaitPing
+/// </summary>
+public class WaitPing : WaitRouterPackage
 {
-    /// <summary>
-    /// WaitPing
-    /// </summary>
-    public class WaitPing : WaitRouterPackage
-    {
-    }
 }

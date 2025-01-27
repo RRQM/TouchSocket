@@ -10,23 +10,22 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Http
-{
-    /// <summary>
-    /// Http工具
-    /// </summary>
-    public static class HttpTools
-    {
-        private static readonly FileExtensionContentTypeProvider s_provider = new FileExtensionContentTypeProvider();
+namespace TouchSocket.Http;
 
-        /// <summary>
-        /// 从扩展名获取ContentType
-        /// </summary>
-        /// <param name="extension"></param>
-        /// <returns></returns>
-        public static string GetContentTypeFromExtension(string extension)
-        {
-            return s_provider.TryGetContentType(extension, out var result) ? result : "application/octet-stream";
-        }
+/// <summary>
+/// Http工具
+/// </summary>
+public static class HttpTools
+{
+    private static readonly FileExtensionContentTypeProvider s_provider = new FileExtensionContentTypeProvider();
+
+    /// <summary>
+    /// 从扩展名获取ContentType
+    /// </summary>
+    /// <param name="extension"></param>
+    /// <returns></returns>
+    public static string GetContentTypeFromExtension(string extension)
+    {
+        return s_provider.TryGetContentType(extension, out var result) ? result : "application/octet-stream";
     }
 }

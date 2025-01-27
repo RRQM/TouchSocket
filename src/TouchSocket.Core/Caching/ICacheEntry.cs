@@ -12,37 +12,36 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 缓存实体接口
+/// </summary>
+public interface ICacheEntry
 {
     /// <summary>
-    /// 缓存实体接口
+    /// 有效区间。如果想长期有效，请使用<see cref="TimeSpan.Zero"/>
     /// </summary>
-    public interface ICacheEntry
-    {
-        /// <summary>
-        /// 有效区间。如果想长期有效，请使用<see cref="TimeSpan.Zero"/>
-        /// </summary>
-        TimeSpan Duration { get; }
-
-        /// <summary>
-        /// 更新时间
-        /// </summary>
-        DateTime UpdateTime { get; set; }
-    }
+    TimeSpan Duration { get; }
 
     /// <summary>
-    /// 缓存实体接口
+    /// 更新时间
     /// </summary>
-    public interface ICacheEntry<out TKey, TValue> : ICacheEntry
-    {
-        /// <summary>
-        /// 键
-        /// </summary>
-        TKey Key { get; }
+    DateTime UpdateTime { get; set; }
+}
 
-        /// <summary>
-        /// 值
-        /// </summary>
-        TValue Value { get; set; }
-    }
+/// <summary>
+/// 缓存实体接口
+/// </summary>
+public interface ICacheEntry<out TKey, TValue> : ICacheEntry
+{
+    /// <summary>
+    /// 键
+    /// </summary>
+    TKey Key { get; }
+
+    /// <summary>
+    /// 值
+    /// </summary>
+    TValue Value { get; set; }
 }

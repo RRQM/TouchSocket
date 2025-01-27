@@ -10,58 +10,57 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 依赖对象接口
+/// </summary>
+public interface IDependencyObject : IDisposableObject
 {
     /// <summary>
-    /// 依赖对象接口
+    /// 获取依赖注入的值，当没有注入时，会返回默认行为的值。
     /// </summary>
-    public interface IDependencyObject : IDisposableObject
-    {
-        /// <summary>
-        /// 获取依赖注入的值，当没有注入时，会返回默认行为的值。
-        /// </summary>
-        /// <typeparam name="TValue">值的类型</typeparam>
-        /// <param name="dp">依赖属性</param>
-        /// <returns>依赖注入的值</returns>
-        TValue GetValue<TValue>(DependencyProperty<TValue> dp);
+    /// <typeparam name="TValue">值的类型</typeparam>
+    /// <param name="dp">依赖属性</param>
+    /// <returns>依赖注入的值</returns>
+    TValue GetValue<TValue>(DependencyProperty<TValue> dp);
 
-        /// <summary>
-        /// 判断在当前对象中是否有已设置的属性值。
-        /// </summary>
-        /// <param name="dp">依赖属性</param>
-        /// <returns>是否有已设置的值</returns>
-        bool HasValue<TValue>(DependencyProperty<TValue> dp);
+    /// <summary>
+    /// 判断在当前对象中是否有已设置的属性值。
+    /// </summary>
+    /// <param name="dp">依赖属性</param>
+    /// <returns>是否有已设置的值</returns>
+    bool HasValue<TValue>(DependencyProperty<TValue> dp);
 
-        /// <summary>
-        /// 移除属性值。
-        /// </summary>
-        /// <typeparam name="TValue">值的类型</typeparam>
-        /// <param name="dp">依赖属性</param>
-        void RemoveValue<TValue>(DependencyProperty<TValue> dp);
+    /// <summary>
+    /// 移除属性值。
+    /// </summary>
+    /// <typeparam name="TValue">值的类型</typeparam>
+    /// <param name="dp">依赖属性</param>
+    void RemoveValue<TValue>(DependencyProperty<TValue> dp);
 
-        /// <summary>
-        /// 设置依赖注入的值，如果值已经存在，将被覆盖。
-        /// </summary>
-        /// <param name="dp">依赖属性</param>
-        /// <param name="value">要设置的值</param>
-        void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value);
+    /// <summary>
+    /// 设置依赖注入的值，如果值已经存在，将被覆盖。
+    /// </summary>
+    /// <param name="dp">依赖属性</param>
+    /// <param name="value">要设置的值</param>
+    void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value);
 
-        /// <summary>
-        /// 尝试获取依赖注入的值，当没有注入时，会返回<see langword="false"/>。
-        /// </summary>
-        /// <typeparam name="TValue">值的类型</typeparam>
-        /// <param name="dp">依赖属性</param>
-        /// <param name="value">获取到的值</param>
-        /// <returns>是否成功获取到值</returns>
-        bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value);
+    /// <summary>
+    /// 尝试获取依赖注入的值，当没有注入时，会返回<see langword="false"/>。
+    /// </summary>
+    /// <typeparam name="TValue">值的类型</typeparam>
+    /// <param name="dp">依赖属性</param>
+    /// <param name="value">获取到的值</param>
+    /// <returns>是否成功获取到值</returns>
+    bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value);
 
-        /// <summary>
-        /// 尝试重置属性值，如果没有这个值，则返回<see langword="false"/>。
-        /// </summary>
-        /// <typeparam name="TValue">值的类型</typeparam>
-        /// <param name="dp">依赖属性</param>
-        /// <param name="value">被移除的值</param>
-        /// <returns>是否成功重置值</returns>
-        bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value);
-    }
+    /// <summary>
+    /// 尝试重置属性值，如果没有这个值，则返回<see langword="false"/>。
+    /// </summary>
+    /// <typeparam name="TValue">值的类型</typeparam>
+    /// <param name="dp">依赖属性</param>
+    /// <param name="value">被移除的值</param>
+    /// <returns>是否成功重置值</returns>
+    bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value);
 }

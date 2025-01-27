@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 动态构建类型
+/// </summary>
+public enum DynamicBuilderType
 {
     /// <summary>
-    /// 动态构建类型
+    /// 使用IL构建
     /// </summary>
-    public enum DynamicBuilderType
-    {
-        /// <summary>
-        /// 使用IL构建
-        /// </summary>
-        IL,
+    IL,
 
-        /// <summary>
-        /// 使用表达式树
-        /// </summary>
-        Expression,
+    /// <summary>
+    /// 使用表达式树
+    /// </summary>
+    Expression,
 
-        /// <summary>
-        /// 使用反射
-        /// </summary>
-        Reflect,
+    /// <summary>
+    /// 使用反射
+    /// </summary>
+    Reflect,
 
-        /// <summary>
-        /// 使用源生成
-        /// </summary>
-        SourceGenerator
-    }
+    /// <summary>
+    /// 使用源生成
+    /// </summary>
+    SourceGenerator
 }

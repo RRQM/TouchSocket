@@ -13,111 +13,110 @@
 using System.IO;
 using System.Threading;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// FileStorageStream。
+/// </summary>
+public partial class FileStorageStream : Stream
 {
+    private long m_position;
+    private int m_dis = 1;
+
     /// <summary>
-    /// FileStorageStream。
+    /// 构造函数
     /// </summary>
-    public partial class FileStorageStream : Stream
+    /// <param name="fileStorage"></param>
+    public FileStorageStream(FileStorage fileStorage)
     {
-        private long m_position;
-        private int m_dis = 1;
+        this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
+    }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="fileStorage"></param>
-        public FileStorageStream(FileStorage fileStorage)
+    /// <summary>
+    /// 析构函数
+    /// </summary>
+    ~FileStorageStream()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        this.Dispose(disposing: false);
+    }
+
+    /// <inheritdoc/>
+    public override bool CanRead => this.FileStorage.FileStream.CanRead;
+
+    /// <inheritdoc/>
+    public override bool CanSeek => this.FileStorage.FileStream.CanSeek;
+
+    /// <inheritdoc/>
+    public override bool CanWrite => this.FileStorage.FileStream.CanWrite;
+
+    /// <summary>
+    /// 文件存储器
+    /// </summary>
+    public FileStorage FileStorage { get; private set; }
+
+    /// <inheritdoc/>
+    public override long Length => this.FileStorage.FileStream.Length;
+
+    /// <inheritdoc/>
+    public override long Position { get => this.m_position; set => this.m_position = value; }
+
+    /// <inheritdoc/>
+
+    public override void Flush()
+    {
+        this.FileStorage.Flush();
+    }
+
+    /// <inheritdoc/>
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        var r = this.FileStorage.Read(this.m_position, new System.Span<byte>(buffer, offset, count));
+        this.m_position += r;
+        return r;
+    }
+
+    /// <inheritdoc/>
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        switch (origin)
         {
-            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
-        }
+            case SeekOrigin.Begin:
+                this.m_position = offset;
+                break;
 
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~FileStorageStream()
+            case SeekOrigin.Current:
+                this.m_position += offset;
+                break;
+
+            case SeekOrigin.End:
+                this.m_position = this.Length + offset;
+                break;
+        }
+        return this.m_position;
+    }
+
+    /// <inheritdoc/>
+    public override void SetLength(long value)
+    {
+        this.FileStorage.FileStream.SetLength(value);
+    }
+
+    /// <inheritdoc/>
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        this.FileStorage.Write(this.m_position, new System.ReadOnlySpan<byte>(buffer, offset, count));
+        this.m_position += count;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (Interlocked.Decrement(ref this.m_dis) == 0)
         {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
+            FilePool.TryReleaseFile(this.FileStorage.Path);
+            this.FileStorage = null;
         }
-
-        /// <inheritdoc/>
-        public override bool CanRead => this.FileStorage.FileStream.CanRead;
-
-        /// <inheritdoc/>
-        public override bool CanSeek => this.FileStorage.FileStream.CanSeek;
-
-        /// <inheritdoc/>
-        public override bool CanWrite => this.FileStorage.FileStream.CanWrite;
-
-        /// <summary>
-        /// 文件存储器
-        /// </summary>
-        public FileStorage FileStorage { get; private set; }
-
-        /// <inheritdoc/>
-        public override long Length => this.FileStorage.FileStream.Length;
-
-        /// <inheritdoc/>
-        public override long Position { get => this.m_position; set => this.m_position = value; }
-
-        /// <inheritdoc/>
-
-        public override void Flush()
-        {
-            this.FileStorage.Flush();
-        }
-
-        /// <inheritdoc/>
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            var r = this.FileStorage.Read(this.m_position, new System.Span<byte>(buffer, offset, count));
-            this.m_position += r;
-            return r;
-        }
-
-        /// <inheritdoc/>
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    this.m_position = offset;
-                    break;
-
-                case SeekOrigin.Current:
-                    this.m_position += offset;
-                    break;
-
-                case SeekOrigin.End:
-                    this.m_position = this.Length + offset;
-                    break;
-            }
-            return this.m_position;
-        }
-
-        /// <inheritdoc/>
-        public override void SetLength(long value)
-        {
-            this.FileStorage.FileStream.SetLength(value);
-        }
-
-        /// <inheritdoc/>
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            this.FileStorage.Write(this.m_position, new System.ReadOnlySpan<byte>(buffer, offset, count));
-            this.m_position += count;
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (Interlocked.Decrement(ref this.m_dis) == 0)
-            {
-                FilePool.TryReleaseFile(this.FileStorage.Path);
-                this.FileStorage = null;
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

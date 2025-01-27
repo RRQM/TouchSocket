@@ -17,91 +17,90 @@ using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// 基于Tcp协议的TcpJsonRpc客户端
+/// </summary>
+public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 {
-    /// <summary>
-    /// 基于Tcp协议的TcpJsonRpc客户端
-    /// </summary>
-    public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
+    private readonly JsonRpcActor m_jsonRpcActor;
+
+    public TcpJsonRpcClient()
     {
-        private readonly JsonRpcActor m_jsonRpcActor;
-
-        public TcpJsonRpcClient()
+        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+        this.m_jsonRpcActor = new JsonRpcActor()
         {
-            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
-            this.m_jsonRpcActor = new JsonRpcActor()
-            {
-                SendAction = this.SendAction,
-                SerializerConverter = this.SerializerConverter
-            };
+            SendAction = this.SendAction,
+            SerializerConverter = this.SerializerConverter
+        };
+    }
+
+    #region JsonRpcActor
+
+    private Task SendAction(ReadOnlyMemory<byte> memory)
+    {
+        return base.ProtectedSendAsync(memory);
+    }
+
+    #endregion JsonRpcActor
+
+    /// <summary>
+    /// JsonRpc的调用键。
+    /// </summary>
+    public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
+
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return this.TcpConnectAsync(millisecondsTimeout, token);
+    }
+
+    /// <inheritdoc/>
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
+    }
+
+    /// <inheritdoc/>
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        base.LoadConfig(config);
+        this.m_jsonRpcActor.Logger = this.Logger;
+        this.m_jsonRpcActor.Resolver = this.Resolver;
+        var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
+        if (rpcServerProvider is not null)
+        {
+            this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    {
+        var jsonRpcMemory = ReadOnlyMemory<byte>.Empty;
+        if (e.RequestInfo is IJsonRpcRequestInfo requestInfo)
+        {
+            jsonRpcMemory = requestInfo.GetJsonRpcMemory();
+        }
+        else if (e.RequestInfo is JsonPackage jsonPackage)
+        {
+            jsonRpcMemory = jsonPackage.Data;
+        }
+        else if (e.ByteBlock != null)
+        {
+            jsonRpcMemory = e.ByteBlock.Memory;
         }
 
-        #region JsonRpcActor
-
-        private Task SendAction(ReadOnlyMemory<byte> memory)
+        if (jsonRpcMemory.IsEmpty)
         {
-            return base.ProtectedSendAsync(memory);
+            return;
         }
+        var callContext = new TcpJsonRpcCallContext(this);
+        await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        #endregion JsonRpcActor
-
-        /// <summary>
-        /// JsonRpc的调用键。
-        /// </summary>
-        public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
-
-        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
-
-        /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            return this.TcpConnectAsync(millisecondsTimeout, token);
-        }
-
-        /// <inheritdoc/>
-        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
-        }
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            base.LoadConfig(config);
-            this.m_jsonRpcActor.Logger = this.Logger;
-            this.m_jsonRpcActor.Resolver = this.Resolver;
-            var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
-            if (rpcServerProvider is not null)
-            {
-                this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-        {
-            var jsonRpcMemory = ReadOnlyMemory<byte>.Empty;
-            if (e.RequestInfo is IJsonRpcRequestInfo requestInfo)
-            {
-                jsonRpcMemory = requestInfo.GetJsonRpcMemory();
-            }
-            else if (e.RequestInfo is JsonPackage jsonPackage)
-            {
-                jsonRpcMemory = jsonPackage.Data;
-            }
-            else if (e.ByteBlock != null)
-            {
-                jsonRpcMemory = e.ByteBlock.Memory;
-            }
-
-            if (jsonRpcMemory.IsEmpty)
-            {
-                return;
-            }
-            var callContext = new TcpJsonRpcCallContext(this);
-            await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

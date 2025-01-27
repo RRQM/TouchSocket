@@ -13,55 +13,54 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有释放的对象。内部实现了<see cref="GC.SuppressFinalize(object)"/>，但不包括析构函数相关。
+/// </summary>
+public abstract partial class DisposableObject : IDisposableObject
 {
     /// <summary>
-    /// 具有释放的对象。内部实现了<see cref="GC.SuppressFinalize(object)"/>，但不包括析构函数相关。
+    /// 判断是否已释放。
     /// </summary>
-    public abstract partial class DisposableObject : IDisposableObject
+    private volatile bool m_disposedValue;
+
+    /// <inheritdoc/>
+    public bool DisposedValue => this.m_disposedValue;
+
+    /// <summary>
+    /// 判断当前对象是否已经被释放。
+    /// 如果已经被释放，则抛出<see cref="ObjectDisposedException"/>异常。
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">当对象已经被释放时抛出此异常</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void ThrowIfDisposed()
     {
-        /// <summary>
-        /// 判断是否已释放。
-        /// </summary>
-        private volatile bool m_disposedValue;
-
-        /// <inheritdoc/>
-        public bool DisposedValue => this.m_disposedValue;
-
-        /// <summary>
-        /// 判断当前对象是否已经被释放。
-        /// 如果已经被释放，则抛出<see cref="ObjectDisposedException"/>异常。
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">当对象已经被释放时抛出此异常</exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void ThrowIfDisposed()
+        // 检查对象是否已经被释放
+        if (this.m_disposedValue)
         {
-            // 检查对象是否已经被释放
-            if (this.m_disposedValue)
-            {
-                // 如果对象已被释放，抛出ObjectDisposedException异常
-                ThrowHelper.ThrowObjectDisposedException(this);
-            }
+            // 如果对象已被释放，抛出ObjectDisposedException异常
+            ThrowHelper.ThrowObjectDisposedException(this);
         }
+    }
 
 
-        /// <summary>
-        /// 处置资源
-        /// </summary>
-        /// <param name="disposing">一个值，表示是否释放托管资源</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            // 标记当前对象为已处置状态
-            this.m_disposedValue = true;
-        }
+    /// <summary>
+    /// 处置资源
+    /// </summary>
+    /// <param name="disposing">一个值，表示是否释放托管资源</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        // 标记当前对象为已处置状态
+        this.m_disposedValue = true;
+    }
 
-        /// <summary>
-        /// 释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
-        /// </summary>
-        public void Dispose()
-        {
-            this.Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+    /// <summary>
+    /// 释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
+    /// </summary>
+    public void Dispose()
+    {
+        this.Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

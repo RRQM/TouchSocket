@@ -12,23 +12,22 @@
 
 using System.Threading.Tasks;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Dmtp;
+
+/// <summary>
+/// 定义了Actor接口，用于规范Actor的行为。
+/// </summary>
+public interface IActor
 {
     /// <summary>
-    /// 定义了Actor接口，用于规范Actor的行为。
+    /// 包含当前Actor的父容器。
     /// </summary>
-    public interface IActor
-    {
-        /// <summary>
-        /// 包含当前Actor的父容器。
-        /// </summary>
-        IDmtpActor DmtpActor { get; }
+    IDmtpActor DmtpActor { get; }
 
-        /// <summary>
-        /// 处理收到的消息。
-        /// </summary>
-        /// <param name="message">接收到的消息。</param>
-        /// <returns>当满足本协议时，应当返回<see langword="true"/>，其他时候应该返回<see langword="false"/>.</returns>
-        Task<bool> InputReceivedData(DmtpMessage message);
-    }
+    /// <summary>
+    /// 处理收到的消息。
+    /// </summary>
+    /// <param name="message">接收到的消息。</param>
+    /// <returns>当满足本协议时，应当返回<see langword="true"/>，其他时候应该返回<see langword="false"/>.</returns>
+    Task<bool> InputReceivedData(DmtpMessage message);
 }

@@ -16,57 +16,56 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 快速序列化上下文
+/// </summary>
+public abstract class FastSerializerContext
 {
+    private readonly Dictionary<Type, SerializObject> m_instanceCache = new Dictionary<Type, SerializObject>();
+
     /// <summary>
     /// 快速序列化上下文
     /// </summary>
-    public abstract class FastSerializerContext
+    public FastSerializerContext()
     {
-        private readonly Dictionary<Type, SerializObject> m_instanceCache = new Dictionary<Type, SerializObject>();
+        this.AddConverter(typeof(Version), new VersionFastBinaryConverter());
+        this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
+        this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
+        this.AddConverter(typeof(Guid), new GuidFastBinaryConverter());
+        this.AddConverter(typeof(DataTable), new DataTableFastBinaryConverter());
+        this.AddConverter(typeof(DataSet), new DataSetFastBinaryConverter());
+    }
 
-        /// <summary>
-        /// 快速序列化上下文
-        /// </summary>
-        public FastSerializerContext()
-        {
-            this.AddConverter(typeof(Version), new VersionFastBinaryConverter());
-            this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
-            this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
-            this.AddConverter(typeof(Guid), new GuidFastBinaryConverter());
-            this.AddConverter(typeof(DataTable), new DataTableFastBinaryConverter());
-            this.AddConverter(typeof(DataSet), new DataSetFastBinaryConverter());
-        }
+    /// <summary>
+    /// 获取新实例
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public virtual object GetNewInstance(Type type)
+    {
+        return InstanceCreater.Create(type, null);
+    }
 
-        /// <summary>
-        /// 获取新实例
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public virtual object GetNewInstance(Type type)
-        {
-            return InstanceCreater.Create(type, null);
-        }
+    /// <summary>
+    /// 获取序列化对象
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public virtual SerializObject GetSerializeObject(Type type)
+    {
+        return this.m_instanceCache.TryGetValue(type, out var serializObject) ? serializObject : null;
+    }
 
-        /// <summary>
-        /// 获取序列化对象
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public virtual SerializObject GetSerializeObject(Type type)
-        {
-            return this.m_instanceCache.TryGetValue(type, out var serializObject) ? serializObject : null;
-        }
-
-        /// <summary>
-        /// 添加转换器
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="converter"></param>
-        protected void AddConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
-        {
-            var serializObject = new SerializObject(type, converter);
-            this.m_instanceCache.AddOrUpdate(type, serializObject);
-        }
+    /// <summary>
+    /// 添加转换器
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="converter"></param>
+    protected void AddConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
+    {
+        var serializObject = new SerializObject(type, converter);
+        this.m_instanceCache.AddOrUpdate(type, serializObject);
     }
 }

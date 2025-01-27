@@ -13,43 +13,42 @@
 using System;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http代理
+/// </summary>
+[Obsolete("此配置已被弃用，不再支持代理", true)]
+public class HttpProxy
 {
     /// <summary>
-    /// Http代理
+    /// 不带基本验证的代理
     /// </summary>
-    [Obsolete("此配置已被弃用，不再支持代理", true)]
-    public class HttpProxy
+    /// <param name="host"></param>
+    public HttpProxy(IPHost host)
     {
-        /// <summary>
-        /// 不带基本验证的代理
-        /// </summary>
-        /// <param name="host"></param>
-        public HttpProxy(IPHost host)
-        {
-            this.Host = host;
-        }
-
-        /// <summary>
-        /// 带基本验证的代理
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="userName"></param>
-        /// <param name="passWord"></param>
-        public HttpProxy(IPHost host, string userName, string passWord)
-        {
-            this.Host = host;
-            this.Credential = new NetworkCredential(userName, passWord, $"{host.Authority}");
-        }
-
-        /// <summary>
-        /// 验证代理
-        /// </summary>
-        public NetworkCredential Credential { get; set; }
-
-        /// <summary>
-        /// 代理的地址
-        /// </summary>
-        public IPHost Host { get; set; }
+        this.Host = host;
     }
+
+    /// <summary>
+    /// 带基本验证的代理
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="userName"></param>
+    /// <param name="passWord"></param>
+    public HttpProxy(IPHost host, string userName, string passWord)
+    {
+        this.Host = host;
+        this.Credential = new NetworkCredential(userName, passWord, $"{host.Authority}");
+    }
+
+    /// <summary>
+    /// 验证代理
+    /// </summary>
+    public NetworkCredential Credential { get; set; }
+
+    /// <summary>
+    /// 代理的地址
+    /// </summary>
+    public IPHost Host { get; set; }
 }

@@ -16,43 +16,42 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs
 {
-    internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs
+    public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket, EndPoint endPoint)
     {
-        public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket, EndPoint endPoint)
-        {
 #if NET6_0_OR_GREATER
-            this.SetBuffer(Memory<byte>.Empty);
+        this.SetBuffer(Memory<byte>.Empty);
 #else
-            var empty = new byte[0];
-            this.SetBuffer(empty, 0, 0);
+        var empty = new byte[0];
+        this.SetBuffer(empty, 0, 0);
 #endif
-            this.RemoteEndPoint = endPoint;
-            if (socket.ReceiveFromAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        this.RemoteEndPoint = endPoint;
+        if (socket.ReceiveFromAsync(this))
+        {
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
 
-        public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
-        {
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+    }
+
+    public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
+    {
 #if NET6_0_OR_GREATER
-            this.SetBuffer(buffer);
+        this.SetBuffer(buffer);
 #else
-            var segment = buffer.GetArray();
+        var segment = buffer.GetArray();
 
-            this.SetBuffer(segment.Array, segment.Offset, segment.Count);
+        this.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif
-            this.RemoteEndPoint = endPoint;
-            if (socket.ReceiveFromAsync(this))
-            {
-                return new ValueTask<SocketOperationResult>(this, 0);
-            }
-
-            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        this.RemoteEndPoint = endPoint;
+        if (socket.ReceiveFromAsync(this))
+        {
+            return new ValueTask<SocketOperationResult>(this, 0);
         }
+
+        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
     }
 }

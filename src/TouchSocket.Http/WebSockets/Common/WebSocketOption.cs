@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WebSocket配置
+/// </summary>
+public class WebSocketOption
 {
     /// <summary>
-    /// WebSocket配置
+    /// 版本
     /// </summary>
-    public class WebSocketOption
-    {
-        /// <summary>
-        /// 版本
-        /// </summary>
-        public string Version { get; set; } = "13";
-    }
+    public string Version { get; set; } = "13";
 }

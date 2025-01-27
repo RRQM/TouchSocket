@@ -12,42 +12,41 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// 文件资源信息结果类，继承自 ResultBase
+/// </summary>
+public class FileResourceInfoResult : ResultBase
 {
     /// <summary>
-    /// 文件资源信息结果类，继承自 ResultBase
+    /// 创建成功的资源结果
     /// </summary>
-    public class FileResourceInfoResult : ResultBase
+    /// <param name="fileResourceInfo">文件资源信息</param>
+    public FileResourceInfoResult(FileResourceInfo fileResourceInfo) : base(Result.Success)
     {
-        /// <summary>
-        /// 创建成功的资源结果
-        /// </summary>
-        /// <param name="fileResourceInfo">文件资源信息</param>
-        public FileResourceInfoResult(FileResourceInfo fileResourceInfo) : base(Result.Success)
-        {
-            this.FileResourceInfo = fileResourceInfo;
-        }
-
-        /// <summary>
-        /// 创建失败的资源结果
-        /// </summary>
-        /// <param name="result">结果状态</param>
-        public FileResourceInfoResult(Result result) : base(result)
-        {
-        }
-
-        /// <summary>
-        /// 创建失败的资源结果
-        /// </summary>
-        /// <param name="message">错误消息</param>
-        /// <param name="code">结果代码</param>
-        public FileResourceInfoResult(string message, ResultCode code = ResultCode.Error) : base(code, message)
-        {
-        }
-
-        /// <summary>
-        /// 文件资源信息
-        /// </summary>
-        public FileResourceInfo FileResourceInfo { get; private set; }
+        this.FileResourceInfo = fileResourceInfo;
     }
+
+    /// <summary>
+    /// 创建失败的资源结果
+    /// </summary>
+    /// <param name="result">结果状态</param>
+    public FileResourceInfoResult(Result result) : base(result)
+    {
+    }
+
+    /// <summary>
+    /// 创建失败的资源结果
+    /// </summary>
+    /// <param name="message">错误消息</param>
+    /// <param name="code">结果代码</param>
+    public FileResourceInfoResult(string message, ResultCode code = ResultCode.Error) : base(code, message)
+    {
+    }
+
+    /// <summary>
+    /// 文件资源信息
+    /// </summary>
+    public FileResourceInfo FileResourceInfo { get; private set; }
 }

@@ -10,31 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 大小端类型
+/// </summary>
+public enum EndianType
 {
     /// <summary>
-    /// 大小端类型
+    /// 小端模式，即DCBA
     /// </summary>
-    public enum EndianType
-    {
-        /// <summary>
-        /// 小端模式，即DCBA
-        /// </summary>
-        Little,
+    Little,
 
-        /// <summary>
-        /// 大端模式。即ABCD
-        /// </summary>
-        Big,
+    /// <summary>
+    /// 大端模式。即ABCD
+    /// </summary>
+    Big,
 
-        /// <summary>
-        /// 以交换小端格式。即CDAB
-        /// </summary>
-        LittleSwap,
+    /// <summary>
+    /// 以交换小端格式。即CDAB
+    /// </summary>
+    LittleSwap,
 
-        /// <summary>
-        /// 以交换大端，即：BADC
-        /// </summary>
-        BigSwap
-    }
+    /// <summary>
+    /// 以交换大端，即：BADC
+    /// </summary>
+    BigSwap
 }

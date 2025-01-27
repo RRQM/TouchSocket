@@ -12,25 +12,24 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// WS数据事件类
+/// </summary>
+public class WSDataFrameEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// WS数据事件类
+    /// 构造函数
     /// </summary>
-    public class WSDataFrameEventArgs : PluginEventArgs
+    /// <param name="dataFrame"></param>
+    public WSDataFrameEventArgs(WSDataFrame dataFrame)
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="dataFrame"></param>
-        public WSDataFrameEventArgs(WSDataFrame dataFrame)
-        {
-            this.DataFrame = dataFrame;
-        }
-
-        /// <summary>
-        /// WS数据帧。
-        /// </summary>
-        public WSDataFrame DataFrame { get; }
+        this.DataFrame = dataFrame;
     }
+
+    /// <summary>
+    /// WS数据帧。
+    /// </summary>
+    public WSDataFrame DataFrame { get; }
 }

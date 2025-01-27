@@ -12,51 +12,50 @@
 
 using System.IO.Ports;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// 串口配置
+/// </summary>
+public class SerialPortOption
 {
     /// <summary>
-    /// 串口配置
+    /// 波特率
     /// </summary>
-    public class SerialPortOption
+    public int BaudRate { get; set; } = 9600;
+
+    /// <summary>
+    /// 数据位
+    /// </summary>
+    public int DataBits { get; set; } = 8;
+
+    /// <summary>
+    /// 校验位
+    /// </summary>
+    public Parity Parity { get; set; } = Parity.None;
+
+    /// <summary>
+    /// COM
+    /// </summary>
+    public string PortName { get; set; } = "COM1";
+
+    /// <summary>
+    /// 停止位
+    /// </summary>
+    public StopBits StopBits { get; set; } = StopBits.One;
+
+    ///<inheritdoc cref = "SerialPort.Handshake" />
+    public Handshake Handshake { get; set; }
+
+    ///<inheritdoc cref = "SerialPort.DtrEnable" />
+    public bool DtrEnable { get; set; }
+
+    ///<inheritdoc cref = "SerialPort.RtsEnable" />
+    public bool RtsEnable { get; set; }
+
+    /// <inheritdoc/>
+    public override string ToString()
     {
-        /// <summary>
-        /// 波特率
-        /// </summary>
-        public int BaudRate { get; set; } = 9600;
-
-        /// <summary>
-        /// 数据位
-        /// </summary>
-        public int DataBits { get; set; } = 8;
-
-        /// <summary>
-        /// 校验位
-        /// </summary>
-        public Parity Parity { get; set; } = Parity.None;
-
-        /// <summary>
-        /// COM
-        /// </summary>
-        public string PortName { get; set; } = "COM1";
-
-        /// <summary>
-        /// 停止位
-        /// </summary>
-        public StopBits StopBits { get; set; } = StopBits.One;
-
-        ///<inheritdoc cref = "SerialPort.Handshake" />
-        public Handshake Handshake { get; set; }
-
-        ///<inheritdoc cref = "SerialPort.DtrEnable" />
-        public bool DtrEnable { get; set; }
-
-        ///<inheritdoc cref = "SerialPort.RtsEnable" />
-        public bool RtsEnable { get; set; }
-
-        /// <inheritdoc/>
-        public override string ToString()
-        {
-            return $"{this.PortName}[{this.BaudRate},{this.DataBits},{this.StopBits},{this.Parity}]";
-        }
+        return $"{this.PortName}[{this.BaudRate},{this.DataBits},{this.StopBits},{this.Parity}]";
     }
 }

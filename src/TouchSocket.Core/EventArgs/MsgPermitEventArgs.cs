@@ -10,33 +10,32 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+
+/// <summary>
+/// MsgPermitEventArgs 类继承自 PermitEventArgs 类，用于封装消息许可的事件参数
+/// </summary>
+public class MsgPermitEventArgs : PermitEventArgs
 {
+    /// <summary>
+    /// 初始化 MsgPermitEventArgs 类的新实例，包含消息内容
+    /// </summary>
+    /// <param name="mes">要处理的消息</param>
+    public MsgPermitEventArgs(string mes)
+    {
+        this.Message = mes;
+    }
 
     /// <summary>
-    /// MsgPermitEventArgs 类继承自 PermitEventArgs 类，用于封装消息许可的事件参数
+    /// 初始化 MsgPermitEventArgs 类的新实例，不带初始消息内容
     /// </summary>
-    public class MsgPermitEventArgs : PermitEventArgs
+    public MsgPermitEventArgs()
     {
-        /// <summary>
-        /// 初始化 MsgPermitEventArgs 类的新实例，包含消息内容
-        /// </summary>
-        /// <param name="mes">要处理的消息</param>
-        public MsgPermitEventArgs(string mes)
-        {
-            this.Message = mes;
-        }
-
-        /// <summary>
-        /// 初始化 MsgPermitEventArgs 类的新实例，不带初始消息内容
-        /// </summary>
-        public MsgPermitEventArgs()
-        {
-        }
-
-        /// <summary>
-        /// 获取或设置此许可事件关联的消息
-        /// </summary>
-        public string Message { get; set; }
     }
+
+    /// <summary>
+    /// 获取或设置此许可事件关联的消息
+    /// </summary>
+    public string Message { get; set; }
 }

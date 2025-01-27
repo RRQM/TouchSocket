@@ -12,29 +12,28 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp.FileTransfer;
+
+/// <summary>
+/// FileTransferedEventArgs
+/// </summary>
+public class FileTransferredEventArgs : FileTransferringEventArgs
 {
     /// <summary>
     /// FileTransferedEventArgs
     /// </summary>
-    public class FileTransferredEventArgs : FileTransferringEventArgs
+    /// <param name="transferType"></param>
+    /// <param name="result"></param>
+    /// <param name="metadata"></param>
+    /// <param name="fileInfo"></param>
+    public FileTransferredEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo, Result result)
+        : base(transferType, metadata, fileInfo)
     {
-        /// <summary>
-        /// FileTransferedEventArgs
-        /// </summary>
-        /// <param name="transferType"></param>
-        /// <param name="result"></param>
-        /// <param name="metadata"></param>
-        /// <param name="fileInfo"></param>
-        public FileTransferredEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo, Result result)
-            : base(transferType, metadata, fileInfo)
-        {
-            this.Result = result;
-        }
-
-        /// <summary>
-        /// 结果
-        /// </summary>
-        public Result Result { get; private set; }
+        this.Result = result;
     }
+
+    /// <summary>
+    /// 结果
+    /// </summary>
+    public Result Result { get; private set; }
 }

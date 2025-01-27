@@ -12,29 +12,28 @@
 
 using System.IO.Ports;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// SerialPortExtensions
+/// </summary>
+public static class SerialPortExtensions
 {
     /// <summary>
-    /// SerialPortExtensions
+    /// 尝试关闭<see cref="SerialPort"/>。不会抛出异常。
     /// </summary>
-    public static class SerialPortExtensions
+    /// <param name="serialPort"></param>
+    public static void TryClose(this SerialPort serialPort)
     {
-        /// <summary>
-        /// 尝试关闭<see cref="SerialPort"/>。不会抛出异常。
-        /// </summary>
-        /// <param name="serialPort"></param>
-        public static void TryClose(this SerialPort serialPort)
+        try
         {
-            try
+            if (serialPort.IsOpen)
             {
-                if (serialPort.IsOpen)
-                {
-                    serialPort.Close();
-                }
+                serialPort.Close();
             }
-            catch
-            {
-            }
+        }
+        catch
+        {
         }
     }
 }

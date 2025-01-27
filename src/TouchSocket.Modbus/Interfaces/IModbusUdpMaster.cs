@@ -12,12 +12,11 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// 基于Udp协议的Modbus主站接口。
+/// </summary>
+public interface IModbusUdpMaster : IServiceBase, IClient, IIgnoreSlaveIdModbusMaster
 {
-    /// <summary>
-    /// 基于Udp协议的Modbus主站接口。
-    /// </summary>
-    public interface IModbusUdpMaster : IServiceBase, IClient, IIgnoreSlaveIdModbusMaster
-    {
-    }
 }

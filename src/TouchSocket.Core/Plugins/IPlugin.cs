@@ -10,23 +10,22 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 插件接口
+/// </summary>
+public interface IPlugin : IDisposableObject
 {
     /// <summary>
-    /// 插件接口
+    /// 在插件被成功添加在<see cref="IPluginManager"/>时执行。
     /// </summary>
-    public interface IPlugin : IDisposableObject
-    {
-        /// <summary>
-        /// 在插件被成功添加在<see cref="IPluginManager"/>时执行。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        void Loaded(IPluginManager pluginManager);
+    /// <param name="pluginManager"></param>
+    void Loaded(IPluginManager pluginManager);
 
-        /// <summary>
-        /// 在插件被<see cref="IPluginManager.Remove(IPlugin)"/>时执行。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        void Unloaded(IPluginManager pluginManager);
-    }
+    /// <summary>
+    /// 在插件被<see cref="IPluginManager.Remove(IPlugin)"/>时执行。
+    /// </summary>
+    /// <param name="pluginManager"></param>
+    void Unloaded(IPluginManager pluginManager);
 }

@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Sockets
-{
-    /// <summary>
-    /// Tcp端口转发服务器
-    /// </summary>
-    public abstract class NatService<TClient> : TcpServiceBase<TClient>, INatService<TClient>
-        where TClient : NatSessionClient
-    {
+namespace TouchSocket.Sockets;
 
-    }
+/// <summary>
+/// Tcp端口转发服务器
+/// </summary>
+public abstract class NatService<TClient> : TcpServiceBase<TClient>, INatService<TClient>
+    where TClient : NatSessionClient
+{
+
 }

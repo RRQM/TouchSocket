@@ -18,26 +18,25 @@ using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// WebApiRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="TClient"></typeparam>
+public abstract class WebApiRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, WebApiAttribute> where TClient : IWebApiClientBase
 {
-    /// <summary>
-    /// WebApiRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class WebApiRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, WebApiAttribute> where TClient : IWebApiClientBase
-    {
 
-    }
+}
 
-    /// <summary>
-    /// WebApiRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class WebApiRealityProxy<T> : WebApiRealityProxy<T, IWebApiClientBase>
-    {
+/// <summary>
+/// WebApiRealityProxy
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class WebApiRealityProxy<T> : WebApiRealityProxy<T, IWebApiClientBase>
+{
 
-    }
 }
 
 #endif

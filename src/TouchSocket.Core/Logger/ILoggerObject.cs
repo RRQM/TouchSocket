@@ -10,16 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有日志记录器的对象接口
+/// </summary>
+public interface ILoggerObject
 {
     /// <summary>
-    /// 具有日志记录器的对象接口
+    /// 日志记录器
     /// </summary>
-    public interface ILoggerObject
-    {
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        ILog Logger { get; }
-    }
+    ILog Logger { get; }
 }

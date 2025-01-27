@@ -10,25 +10,24 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 包接口规范
+/// </summary>
+public interface IPackage
 {
     /// <summary>
-    /// 包接口规范
+    /// 打包。
+    /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    public interface IPackage
-    {
-        /// <summary>
-        /// 打包。
-        /// <para>重写的话，约定基类方法必须先执行</para>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    /// <param name="byteBlock"></param>
+    void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 
-        /// <summary>
-        /// 解包。
-        /// <para>重写的话，约定基类方法必须先执行</para>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
-    }
+    /// <summary>
+    /// 解包。
+    /// <para>重写的话，约定基类方法必须先执行</para>
+    /// </summary>
+    /// <param name="byteBlock"></param>
+    void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 }

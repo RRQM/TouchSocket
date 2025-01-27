@@ -12,9 +12,8 @@
 
 using System.Collections.Generic;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+internal class InternalMultifileCollection : List<IFormFile>, IMultifileCollection
 {
-    internal class InternalMultifileCollection : List<IFormFile>, IMultifileCollection
-    {
-    }
 }

@@ -13,17 +13,16 @@
 #if NET6_0_OR_GREATER
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// TouchSocketCoreSourceGenerationContext
-    /// </summary>
-    [JsonSourceGenerationOptions(WriteIndented = true)]
-    [JsonSerializable(typeof(Metadata))]
-    internal partial class TouchSocketCoreSourceGenerationContext : JsonSerializerContext
-    {
+namespace TouchSocket.Core;
 
-    }
+/// <summary>
+/// TouchSocketCoreSourceGenerationContext
+/// </summary>
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(Metadata))]
+internal partial class TouchSocketCoreSourceGenerationContext : JsonSerializerContext
+{
+
 }
 
 #endif

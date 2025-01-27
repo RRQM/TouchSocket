@@ -18,221 +18,220 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore;
+
+
+/// <summary>
+/// WebSocketDmtpService 类，继承自 ConnectableService，并实现 IWebSocketDmtpService 接口。
+/// 该类用于处理WebSocket的连接和服务。
+/// </summary>
+public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClient>, IWebSocketDmtpService
 {
+    /// <summary>
+    /// 构造函数，初始化服务器状态为运行中。
+    /// </summary>
+    public WebSocketDmtpService()
+    {
+        this.m_serverState = ServerState.Running;
+    }
+
+    /// <inheritdoc/>
+    public override IEnumerable<string> GetIds()
+    {
+        return this.m_clients.GetIds();
+    }
+
+    /// <inheritdoc/>
+    public override async Task ResetIdAsync(string sourceId, string targetId)
+    {
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
+
+        if (sourceId == targetId)
+        {
+            return;
+        }
+        if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
+        {
+            await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else
+        {
+            throw new ClientNotFindException(TouchSocketAspNetCoreResource.ClientNotFind.GetDescription(sourceId));
+        }
+    }
+
+    /// <inheritdoc/>
+    public override bool ClientExists(string id)
+    {
+        return this.m_clients.ClientExist(id);
+    }
 
     /// <summary>
-    /// WebSocketDmtpService 类，继承自 ConnectableService，并实现 IWebSocketDmtpService 接口。
-    /// 该类用于处理WebSocket的连接和服务。
+    /// 从WebSocket获取新客户端。
     /// </summary>
-    public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClient>, IWebSocketDmtpService
+    /// <param name="context">HTTP上下文对象。</param>
+    /// <returns>异步任务。</returns>
+    public async Task SwitchClientAsync(HttpContext context)
     {
-        /// <summary>
-        /// 构造函数，初始化服务器状态为运行中。
-        /// </summary>
-        public WebSocketDmtpService()
+        if (context.WebSockets.IsWebSocketRequest)
         {
-            this.m_serverState = ServerState.Running;
-        }
-
-        /// <inheritdoc/>
-        public override IEnumerable<string> GetIds()
-        {
-            return this.m_clients.GetIds();
-        }
-
-        /// <inheritdoc/>
-        public override async Task ResetIdAsync(string sourceId, string targetId)
-        {
-            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
-            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
-
-            if (sourceId == targetId)
+            var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var id = this.GetNextNewId();
+            var client = new WebSocketDmtpSessionClient();
+            client.InternalSetId(id);
+            if (!this.m_clients.TryAdd(client))
             {
-                return;
+                // 如果添加失败，抛出异常，提示该Id已经存在。
+                ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(id));
             }
-            if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
-            {
-                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                throw new ClientNotFindException(TouchSocketAspNetCoreResource.ClientNotFind.GetDescription(sourceId));
-            }
+            client.InternalSetService(this);
+            client.InternalSetConfig(this.Config);
+            client.InternalSetContainer(this.Resolver);
+            client.InternalSetPluginManager(this.PluginManager);
+            client.SetDmtpActor(this.CreateDmtpActor(client));
+            await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-
-        /// <inheritdoc/>
-        public override bool ClientExists(string id)
+        else
         {
-            return this.m_clients.ClientExist(id);
+            context.Response.StatusCode = 400;
         }
+    }
 
-        /// <summary>
-        /// 从WebSocket获取新客户端。
-        /// </summary>
-        /// <param name="context">HTTP上下文对象。</param>
-        /// <returns>异步任务。</returns>
-        public async Task SwitchClientAsync(HttpContext context)
+    #region Fields
+
+    /// <summary>
+    /// 客户端集合，用于存储和管理WebSocket客户端。
+    /// </summary>
+    private readonly InternalClientCollection<WebSocketDmtpSessionClient> m_clients = new InternalClientCollection<WebSocketDmtpSessionClient>();
+
+    /// <summary>
+    /// 服务器状态。
+    /// </summary>
+    private readonly ServerState m_serverState;
+
+    #endregion Fields
+
+    #region 属性
+
+    /// <inheritdoc/>
+    public override int Count => this.m_clients.Count;
+
+    /// <inheritdoc/>
+    public override ServerState ServerState => this.m_serverState;
+
+    /// <inheritdoc/>
+    public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
+
+    /// <inheritdoc/>
+    public override IClientCollection<WebSocketDmtpSessionClient> Clients => this.m_clients;
+
+    #endregion 属性
+
+    /// <summary>
+    /// 创建DmtpActor对象。
+    /// </summary>
+    /// <param name="client">关联的WebSocketDmtpSessionClient对象。</param>
+    /// <returns>SealedDmtpActor对象。</returns>
+    private SealedDmtpActor CreateDmtpActor(WebSocketDmtpSessionClient client)
+    {
+        return new SealedDmtpActor(true)
         {
-            if (context.WebSockets.IsWebSocketRequest)
-            {
-                var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                var id = this.GetNextNewId();
-                var client = new WebSocketDmtpSessionClient();
-                client.InternalSetId(id);
-                if (!this.m_clients.TryAdd(client))
-                {
-                    // 如果添加失败，抛出异常，提示该Id已经存在。
-                    ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(id));
-                }
-                client.InternalSetService(this);
-                client.InternalSetConfig(this.Config);
-                client.InternalSetContainer(this.Resolver);
-                client.InternalSetPluginManager(this.PluginManager);
-                client.SetDmtpActor(this.CreateDmtpActor(client));
-                await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                context.Response.StatusCode = 400;
-            }
-        }
+            FindDmtpActor = this.OnServiceFindDmtpActor,
+            Id = client.Id
+        };
+    }
 
-        #region Fields
-
-        /// <summary>
-        /// 客户端集合，用于存储和管理WebSocket客户端。
-        /// </summary>
-        private readonly InternalClientCollection<WebSocketDmtpSessionClient> m_clients = new InternalClientCollection<WebSocketDmtpSessionClient>();
-
-        /// <summary>
-        /// 服务器状态。
-        /// </summary>
-        private readonly ServerState m_serverState;
-
-        #endregion Fields
-
-        #region 属性
-
-        /// <inheritdoc/>
-        public override int Count => this.m_clients.Count;
-
-        /// <inheritdoc/>
-        public override ServerState ServerState => this.m_serverState;
-
-        /// <inheritdoc/>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
-
-        /// <inheritdoc/>
-        public override IClientCollection<WebSocketDmtpSessionClient> Clients => this.m_clients;
-
-        #endregion 属性
-
-        /// <summary>
-        /// 创建DmtpActor对象。
-        /// </summary>
-        /// <param name="client">关联的WebSocketDmtpSessionClient对象。</param>
-        /// <returns>SealedDmtpActor对象。</returns>
-        private SealedDmtpActor CreateDmtpActor(WebSocketDmtpSessionClient client)
+    /// <summary>
+    /// 服务查找DmtpActor的方法。
+    /// </summary>
+    /// <param name="id">DmtpActor的标识符。</param>
+    /// <returns>DmtpActor对象或默认值。</returns>
+    private Task<IDmtpActor> OnServiceFindDmtpActor(string id)
+    {
+        if (this.TryGetClient(id, out var client))
         {
-            return new SealedDmtpActor(true)
-            {
-                FindDmtpActor = this.OnServiceFindDmtpActor,
-                Id = client.Id
-            };
+            return Task.FromResult(client.DmtpActor);
         }
+        return Task.FromResult<IDmtpActor>(default);
+    }
 
-        /// <summary>
-        /// 服务查找DmtpActor的方法。
-        /// </summary>
-        /// <param name="id">DmtpActor的标识符。</param>
-        /// <returns>DmtpActor对象或默认值。</returns>
-        private Task<IDmtpActor> OnServiceFindDmtpActor(string id)
+    #region override
+
+    /// <inheritdoc/>
+    /// <summary>
+    /// 异步清除所有客户端。
+    /// </summary>
+    /// <returns>异步任务。</returns>
+    public override async Task ClearAsync()
+    {
+        foreach (var id in this.GetIds())
         {
             if (this.TryGetClient(id, out var client))
             {
-                return Task.FromResult(client.DmtpActor);
-            }
-            return Task.FromResult<IDmtpActor>(default);
-        }
-
-        #region override
-
-        /// <inheritdoc/>
-        /// <summary>
-        /// 异步清除所有客户端。
-        /// </summary>
-        /// <returns>异步任务。</returns>
-        public override async Task ClearAsync()
-        {
-            foreach (var id in this.GetIds())
-            {
-                if (this.TryGetClient(id, out var client))
-                {
-                    await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    client.SafeDispose();
-                }
+                await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                client.SafeDispose();
             }
         }
-
-        /// <inheritdoc/>
-        /// <summary>
-        /// 异步启动服务。该操作不支持，并抛出异常。
-        /// </summary>
-        /// <returns>异步任务。</returns>
-        /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
-        public override Task StartAsync()
-        {
-            throw new NotSupportedException("此服务的生命周期跟随主Host");
-        }
-
-        /// <inheritdoc/>
-        /// <summary>
-        /// 异步停止服务。该操作不支持，并抛出异常。
-        /// </summary>
-        /// <returns>异步任务。</returns>
-        /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
-        public override Task StopAsync()
-        {
-            throw new NotSupportedException("此服务的生命周期跟随主Host");
-        }
-
-        /// <inheritdoc/>
-        /// <summary>
-        /// 创建新的WebSocketDmtpSessionClient对象。该操作未实现。
-        /// </summary>
-        /// <returns>新的WebSocketDmtpSessionClient对象。</returns>
-        /// <exception cref="NotImplementedException">抛出未实现异常。</exception>
-        protected override WebSocketDmtpSessionClient NewClient()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion override
-
-        #region internal
-
-        /// <summary>
-        /// 尝试添加客户端到集合中。
-        /// </summary>
-        /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
-        /// <returns>如果添加成功返回true，否则返回false。</returns>
-        internal bool TryAdd(WebSocketDmtpSessionClient sessionClient)
-        {
-            return this.m_clients.TryAdd(sessionClient);
-        }
-
-        /// <summary>
-        /// 尝试从集合中移除客户端。
-        /// </summary>
-        /// <param name="id">客户端标识符。</param>
-        /// <param name="sessionClient">移除的WebSocketDmtpSessionClient对象。</param>
-        /// <returns>如果移除成功返回true，否则返回false。</returns>
-        internal bool TryRemove(string id, out WebSocketDmtpSessionClient sessionClient)
-        {
-            return this.m_clients.TryRemoveClient(id, out sessionClient);
-        }
-
-        #endregion internal
     }
+
+    /// <inheritdoc/>
+    /// <summary>
+    /// 异步启动服务。该操作不支持，并抛出异常。
+    /// </summary>
+    /// <returns>异步任务。</returns>
+    /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
+    public override Task StartAsync()
+    {
+        throw new NotSupportedException("此服务的生命周期跟随主Host");
+    }
+
+    /// <inheritdoc/>
+    /// <summary>
+    /// 异步停止服务。该操作不支持，并抛出异常。
+    /// </summary>
+    /// <returns>异步任务。</returns>
+    /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
+    public override Task StopAsync()
+    {
+        throw new NotSupportedException("此服务的生命周期跟随主Host");
+    }
+
+    /// <inheritdoc/>
+    /// <summary>
+    /// 创建新的WebSocketDmtpSessionClient对象。该操作未实现。
+    /// </summary>
+    /// <returns>新的WebSocketDmtpSessionClient对象。</returns>
+    /// <exception cref="NotImplementedException">抛出未实现异常。</exception>
+    protected override WebSocketDmtpSessionClient NewClient()
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion override
+
+    #region internal
+
+    /// <summary>
+    /// 尝试添加客户端到集合中。
+    /// </summary>
+    /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
+    /// <returns>如果添加成功返回true，否则返回false。</returns>
+    internal bool TryAdd(WebSocketDmtpSessionClient sessionClient)
+    {
+        return this.m_clients.TryAdd(sessionClient);
+    }
+
+    /// <summary>
+    /// 尝试从集合中移除客户端。
+    /// </summary>
+    /// <param name="id">客户端标识符。</param>
+    /// <param name="sessionClient">移除的WebSocketDmtpSessionClient对象。</param>
+    /// <returns>如果移除成功返回true，否则返回false。</returns>
+    internal bool TryRemove(string id, out WebSocketDmtpSessionClient sessionClient)
+    {
+        return this.m_clients.TryRemoveClient(id, out sessionClient);
+    }
+
+    #endregion internal
 }

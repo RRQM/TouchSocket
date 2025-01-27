@@ -13,25 +13,24 @@
 using System;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 未连接异常
+/// </summary>
+[Serializable]
+public class ClientNotConnectedException : Exception
 {
     /// <summary>
-    /// 未连接异常
+    /// 初始化未连接异常
     /// </summary>
-    [Serializable]
-    public class ClientNotConnectedException : Exception
-    {
-        /// <summary>
-        /// 初始化未连接异常
-        /// </summary>
-        public ClientNotConnectedException() : this(TouchSocketResource.ClientNotConnected)
-        { }
+    public ClientNotConnectedException() : this(TouchSocketResource.ClientNotConnected)
+    { }
 
-        /// <summary>
-        /// 初始化未连接异常
-        /// </summary>
-        /// <param name="message">异常信息</param>
-        public ClientNotConnectedException(string message) : base(message)
-        { }
-    }
+    /// <summary>
+    /// 初始化未连接异常
+    /// </summary>
+    /// <param name="message">异常信息</param>
+    public ClientNotConnectedException(string message) : base(message)
+    { }
 }

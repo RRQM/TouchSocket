@@ -13,22 +13,21 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 定义了一个接口，用于通过TCP进行接收操作的插件。
+/// 继承自IPlugin接口，表示这是一个插件的一部分，专注于接收TCP数据。
+/// </summary>
+[DynamicMethod]
+public interface ITcpReceivingPlugin : IPlugin
 {
     /// <summary>
-    /// 定义了一个接口，用于通过TCP进行接收操作的插件。
-    /// 继承自IPlugin接口，表示这是一个插件的一部分，专注于接收TCP数据。
+    /// 在刚收到数据时触发，即在适配器之前。
+    /// 该方法主要用于执行接收数据前的预处理操作。
     /// </summary>
-    [DynamicMethod]
-    public interface ITcpReceivingPlugin : IPlugin
-    {
-        /// <summary>
-        /// 在刚收到数据时触发，即在适配器之前。
-        /// 该方法主要用于执行接收数据前的预处理操作。
-        /// </summary>
-        /// <param name="client">发送数据的客户端会话对象。</param>
-        /// <param name="e">包含接收数据事件相关的参数。</param>
-        /// <returns>一个Task对象，代表异步操作的结果。</returns>
-        Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e);
-    }
+    /// <param name="client">发送数据的客户端会话对象。</param>
+    /// <param name="e">包含接收数据事件相关的参数。</param>
+    /// <returns>一个Task对象，代表异步操作的结果。</returns>
+    Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e);
 }

@@ -10,12 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 具有<see cref="IResolver"/>相关成员的配置对象接口
+/// </summary>
+public interface IResolverConfigObject : IConfigObject, IPluginObject, IResolverObject
 {
-    /// <summary>
-    /// 具有<see cref="IResolver"/>相关成员的配置对象接口
-    /// </summary>
-    public interface IResolverConfigObject : IConfigObject, IPluginObject, IResolverObject
-    {
-    }
 }

@@ -12,16 +12,15 @@
 
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// 能够基于Dmtp协议提供Rpc功能的接口
+/// </summary>
+public interface IDmtpRpcActor : IRpcClient, IActor, ITargetRpcClient
 {
     /// <summary>
-    /// 能够基于Dmtp协议提供Rpc功能的接口
+    /// Rpc调度器
     /// </summary>
-    public interface IDmtpRpcActor : IRpcClient, IActor, ITargetRpcClient
-    {
-        /// <summary>
-        /// Rpc调度器
-        /// </summary>
-        IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> Dispatcher { get; }
-    }
+    IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> Dispatcher { get; }
 }

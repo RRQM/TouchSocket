@@ -13,53 +13,52 @@
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// WebSocketConfigExtensions
+/// </summary>
+public static class WebSocketConfigExtension
 {
+    ///// <summary>
+    ///// 构建WebSocketClient类客户端，并连接
+    ///// </summary>
+    ///// <typeparam name="TClient"></typeparam>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static TClient BuildWithWebSocketClient<TClient>(this TouchSocketConfig config) where TClient : IWebSocketClient
+    //{
+    //    var client = Activator.CreateInstance<TClient>();
+    //    client.Setup(config);
+    //    client.Connect();
+    //    return client;
+    //}
+
+    ///// <summary>
+    ///// 构建WebSocketClient类客户端，并连接
+    ///// </summary>
+    ///// <param name="config"></param>
+    ///// <returns></returns>
+    //public static WebSocketClient BuildWithWebSocketClient(this TouchSocketConfig config)
+    //{
+    //    return BuildWithWebSocketClient<WebSocketClient>(config);
+    //}
+
     /// <summary>
-    /// WebSocketConfigExtensions
+    /// WebSocket配置属性
     /// </summary>
-    public static class WebSocketConfigExtension
+    public static readonly DependencyProperty<WebSocketOption> WebSocketOptionProperty =
+       new("WebSocketOption", new WebSocketOption());
+
+    /// <summary>
+    /// 设置WebSocket的相关配置
+    /// </summary>
+    /// <param name="config"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static TouchSocketConfig SetWebSocketOption(this TouchSocketConfig config, WebSocketOption value)
     {
-        ///// <summary>
-        ///// 构建WebSocketClient类客户端，并连接
-        ///// </summary>
-        ///// <typeparam name="TClient"></typeparam>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static TClient BuildWithWebSocketClient<TClient>(this TouchSocketConfig config) where TClient : IWebSocketClient
-        //{
-        //    var client = Activator.CreateInstance<TClient>();
-        //    client.Setup(config);
-        //    client.Connect();
-        //    return client;
-        //}
-
-        ///// <summary>
-        ///// 构建WebSocketClient类客户端，并连接
-        ///// </summary>
-        ///// <param name="config"></param>
-        ///// <returns></returns>
-        //public static WebSocketClient BuildWithWebSocketClient(this TouchSocketConfig config)
-        //{
-        //    return BuildWithWebSocketClient<WebSocketClient>(config);
-        //}
-
-        /// <summary>
-        /// WebSocket配置属性
-        /// </summary>
-        public static readonly DependencyProperty<WebSocketOption> WebSocketOptionProperty =
-           new("WebSocketOption", new WebSocketOption());
-
-        /// <summary>
-        /// 设置WebSocket的相关配置
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetWebSocketOption(this TouchSocketConfig config, WebSocketOption value)
-        {
-            config.SetValue(WebSocketOptionProperty, value);
-            return config;
-        }
+        config.SetValue(WebSocketOptionProperty, value);
+        return config;
     }
 }

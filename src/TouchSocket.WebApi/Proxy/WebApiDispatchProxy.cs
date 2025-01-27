@@ -13,24 +13,23 @@
 #if NET6_0_OR_GREATER || NET481_OR_GREATER
 using TouchSocket.Rpc;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// WebApiDispatchProxy
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public abstract class WebApiDispatchProxy<TClient> : RpcDispatchProxy<TClient, WebApiAttribute> where TClient : IWebApiClientBase
 {
-    /// <summary>
-    /// WebApiDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class WebApiDispatchProxy<TClient> : RpcDispatchProxy<TClient, WebApiAttribute> where TClient : IWebApiClientBase
-    {
 
-    }
+}
 
-    /// <summary>
-    /// WebApiDispatchProxy
-    /// </summary>
-    public abstract class WebApiDispatchProxy : WebApiDispatchProxy<IWebApiClientBase>
-    {
+/// <summary>
+/// WebApiDispatchProxy
+/// </summary>
+public abstract class WebApiDispatchProxy : WebApiDispatchProxy<IWebApiClientBase>
+{
 
-    }
 }
 
 #endif

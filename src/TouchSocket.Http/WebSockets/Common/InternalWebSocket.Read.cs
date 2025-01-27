@@ -16,99 +16,98 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+internal sealed partial class InternalWebSocket : ValueTaskSource<IWebSocketReceiveResult>, IWebSocket
 {
-    internal sealed partial class InternalWebSocket : ValueTaskSource<IWebSocketReceiveResult>, IWebSocket
+    private readonly WebSocketReceiveResult m_receiverResult;
+    private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
+
+    //public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+    //{
+    //    this.ThrowIfNotAllowAsyncRead();
+    //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
+    //}
+
+    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
     {
-        private readonly WebSocketReceiveResult m_receiverResult;
-        private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
-
-        //public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
-        //{
-        //    this.ThrowIfNotAllowAsyncRead();
-        //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
-        //}
-
-        public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
-        {
-            this.ThrowIfNotAllowAsyncRead();
-            return this.m_receiverResult.IsCompleted
-                ? EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult)
-                : this.ValueWaitAsync(token);
-        }
-
-        private void ThrowIfNotAllowAsyncRead()
-        {
-            if (!this.m_allowAsyncRead)
-            {
-                ThrowHelper.ThrowNotSupportedException(TouchSocketHttpResource.NotAllowAsyncRead);
-            }
-        }
-
-        protected override void Scheduler(Action<object> action, object state)
-        {
-            void Run(object o)
-            {
-                action.Invoke(o);
-            }
-            ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-        }
-
-        protected override IWebSocketReceiveResult GetResult()
-        {
-            return this.m_receiverResult;
-        }
-
-        internal Task InputReceiveAsync(WSDataFrame dataFrame)
-        {
-            this.m_receiverResult.DataFrame = dataFrame;
-            base.Complete(false);
-            return this.m_resetEventForComplateRead.WaitOneAsync();
-        }
-
-        public async Task Complete(string msg)
-        {
-            try
-            {
-                this.m_receiverResult.IsCompleted = true;
-                this.m_receiverResult.Message = msg;
-                await this.InputReceiveAsync(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            catch
-            {
-            }
-        }
-
-        private void ComplateRead()
-        {
-            this.m_receiverResult.DataFrame = default;
-            this.m_receiverResult.Message = default;
-            this.m_resetEventForComplateRead.Set();
-        }
-
-        #region Class
-
-        internal sealed class WebSocketReceiveResult : IWebSocketReceiveResult
-        {
-            private readonly Action m_disAction;
-
-            public WebSocketReceiveResult(Action disAction)
-            {
-                this.m_disAction = disAction;
-            }
-
-            public void Dispose()
-            {
-                this.m_disAction.Invoke();
-            }
-
-            public WSDataFrame DataFrame { get; set; }
-
-            public bool IsCompleted { get; set; }
-
-            public string Message { get; set; }
-        }
-
-        #endregion Class
+        this.ThrowIfNotAllowAsyncRead();
+        return this.m_receiverResult.IsCompleted
+            ? EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult)
+            : this.ValueWaitAsync(token);
     }
+
+    private void ThrowIfNotAllowAsyncRead()
+    {
+        if (!this.m_allowAsyncRead)
+        {
+            ThrowHelper.ThrowNotSupportedException(TouchSocketHttpResource.NotAllowAsyncRead);
+        }
+    }
+
+    protected override void Scheduler(Action<object> action, object state)
+    {
+        void Run(object o)
+        {
+            action.Invoke(o);
+        }
+        ThreadPool.UnsafeQueueUserWorkItem(Run, state);
+    }
+
+    protected override IWebSocketReceiveResult GetResult()
+    {
+        return this.m_receiverResult;
+    }
+
+    internal Task InputReceiveAsync(WSDataFrame dataFrame)
+    {
+        this.m_receiverResult.DataFrame = dataFrame;
+        base.Complete(false);
+        return this.m_resetEventForComplateRead.WaitOneAsync();
+    }
+
+    public async Task Complete(string msg)
+    {
+        try
+        {
+            this.m_receiverResult.IsCompleted = true;
+            this.m_receiverResult.Message = msg;
+            await this.InputReceiveAsync(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        catch
+        {
+        }
+    }
+
+    private void ComplateRead()
+    {
+        this.m_receiverResult.DataFrame = default;
+        this.m_receiverResult.Message = default;
+        this.m_resetEventForComplateRead.Set();
+    }
+
+    #region Class
+
+    internal sealed class WebSocketReceiveResult : IWebSocketReceiveResult
+    {
+        private readonly Action m_disAction;
+
+        public WebSocketReceiveResult(Action disAction)
+        {
+            this.m_disAction = disAction;
+        }
+
+        public void Dispose()
+        {
+            this.m_disAction.Invoke();
+        }
+
+        public WSDataFrame DataFrame { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+        public string Message { get; set; }
+    }
+
+    #endregion Class
 }

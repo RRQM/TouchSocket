@@ -12,16 +12,15 @@
 
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// IJsonRpcCallContext
+/// </summary>
+public interface IJsonRpcCallContext : ICallContext
 {
-    /// <summary>
-    /// IJsonRpcCallContext
-    /// </summary>
-    public interface IJsonRpcCallContext : ICallContext
-    {
-        ///// <summary>
-        ///// JsonRpc数据包
-        ///// </summary>
-        //public JsonRpcRequestContext JsonRpcContext { get; }
-    }
+    ///// <summary>
+    ///// JsonRpc数据包
+    ///// </summary>
+    //public JsonRpcRequestContext JsonRpcContext { get; }
 }

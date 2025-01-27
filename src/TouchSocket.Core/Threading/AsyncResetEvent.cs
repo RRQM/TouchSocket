@@ -15,182 +15,181 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 异步AsyncResetEvent
+/// 能够创建一个手动Reset或者自动Reset.
+/// </summary>
+public class AsyncResetEvent : DisposableObject
 {
+    private readonly bool m_autoReset;
+
+    private readonly Lock m_locker = LockFactory.Create();
+
+    private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
+
+    private volatile bool m_eventSet;
+
     /// <summary>
-    /// 异步AsyncResetEvent
-    /// 能够创建一个手动Reset或者自动Reset.
+    /// 创建一个异步AsyncResetEvent
     /// </summary>
-    public class AsyncResetEvent : DisposableObject
+    /// <param name="initialState">是否包含初始信号</param>
+    /// <param name="autoReset">是否自动重置</param>
+    public AsyncResetEvent(bool initialState, bool autoReset)
     {
-        private readonly bool m_autoReset;
+        this.m_eventSet = initialState;
+        this.m_autoReset = autoReset;
+    }
 
-        private readonly Lock m_locker = LockFactory.Create();
+    /// <summary>
+    /// 异步等待设置此事件
+    /// </summary>
+    public Task WaitOneAsync()
+    {
+        return this.WaitOneAsync(CancellationToken.None);
+    }
 
-        private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
-
-        private volatile bool m_eventSet;
-
-        /// <summary>
-        /// 创建一个异步AsyncResetEvent
-        /// </summary>
-        /// <param name="initialState">是否包含初始信号</param>
-        /// <param name="autoReset">是否自动重置</param>
-        public AsyncResetEvent(bool initialState, bool autoReset)
+    /// <summary>
+    ///异步等待指定时间
+    /// </summary>
+    /// <param name="millisecondsTimeout">超时时间</param>
+    public async Task<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
+    {
+        try
         {
-            this.m_eventSet = initialState;
-            this.m_autoReset = autoReset;
-        }
-
-        /// <summary>
-        /// 异步等待设置此事件
-        /// </summary>
-        public Task WaitOneAsync()
-        {
-            return this.WaitOneAsync(CancellationToken.None);
-        }
-
-        /// <summary>
-        ///异步等待指定时间
-        /// </summary>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        public async Task<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
-        {
-            try
+            using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
             {
-                using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
-                {
-                    await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    return true;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 异步等待可取消
-        /// </summary>
-        /// <param name="cancellationToken">可取消令箭</param>
-        public Task WaitOneAsync(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return EasyTask.FromCanceled(cancellationToken);
-            }
-
-            lock (this.m_locker)
-            {
-                if (this.m_eventSet)
-                {
-                    if (this.m_autoReset)
-                    {
-                        this.m_eventSet = false;
-                    }
-
-                    return EasyTask.CompletedTask;
-                }
-                else
-                {
-#if NET45
-                    var completionSource = new TaskCompletionSource<bool>();
-#else
-                    var completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-#endif
-
-                    var registration = cancellationToken.Register(() =>
-                    {
-                        lock (this.m_locker)
-                        {
-#if NET45
-                            completionSource.TrySetCanceled();
-#else
-                            completionSource.TrySetCanceled(cancellationToken);
-#endif
-                        }
-                    }, useSynchronizationContext: false);
-
-                    this.m_waitQueue.Enqueue(completionSource);
-
-                    completionSource.Task.ContinueWith(
-                            (_) => registration.Dispose(),
-                            CancellationToken.None,
-                            TaskContinuationOptions.ExecuteSynchronously,
-                            TaskScheduler.Default
-                            );
-
-                    return completionSource.Task;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 重置
-        /// </summary>
-        public bool Reset()
-        {
-            lock (this.m_locker)
-            {
-                this.m_eventSet = false;
+                await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
         }
-
-        /// <summary>
-        /// 设置信号
-        /// </summary>
-        public bool Set()
+        catch (OperationCanceledException)
         {
-            lock (this.m_locker)
-            {
-                while (this.m_waitQueue.Count > 0)
-                {
-                    var toRelease = this.m_waitQueue.Dequeue();
+            return false;
+        }
+    }
 
-                    if (toRelease.Task.IsCompleted)
-                    {
-                        continue;
-                    }
-
-                    var b = toRelease.TrySetResult(true);
-
-                    if (this.m_autoReset)
-                    {
-                        return b;
-                    }
-                }
-
-                this.m_eventSet = true;
-                return false;
-            }
+    /// <summary>
+    /// 异步等待可取消
+    /// </summary>
+    /// <param name="cancellationToken">可取消令箭</param>
+    public Task WaitOneAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return EasyTask.FromCanceled(cancellationToken);
         }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
+        lock (this.m_locker)
         {
-            if (this.DisposedValue)
+            if (this.m_eventSet)
             {
-                return;
-            }
+                if (this.m_autoReset)
+                {
+                    this.m_eventSet = false;
+                }
 
-            if (disposing)
+                return EasyTask.CompletedTask;
+            }
+            else
             {
-                while (true)
+#if NET45
+                var completionSource = new TaskCompletionSource<bool>();
+#else
+                var completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+#endif
+
+                var registration = cancellationToken.Register(() =>
                 {
                     lock (this.m_locker)
                     {
-                        if (this.m_waitQueue.Count == 0)
-                        {
-                            break;
-                        }
+#if NET45
+                        completionSource.TrySetCanceled();
+#else
+                        completionSource.TrySetCanceled(cancellationToken);
+#endif
                     }
+                }, useSynchronizationContext: false);
 
-                    this.Set();
+                this.m_waitQueue.Enqueue(completionSource);
+
+                completionSource.Task.ContinueWith(
+                        (_) => registration.Dispose(),
+                        CancellationToken.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default
+                        );
+
+                return completionSource.Task;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 重置
+    /// </summary>
+    public bool Reset()
+    {
+        lock (this.m_locker)
+        {
+            this.m_eventSet = false;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// 设置信号
+    /// </summary>
+    public bool Set()
+    {
+        lock (this.m_locker)
+        {
+            while (this.m_waitQueue.Count > 0)
+            {
+                var toRelease = this.m_waitQueue.Dequeue();
+
+                if (toRelease.Task.IsCompleted)
+                {
+                    continue;
+                }
+
+                var b = toRelease.TrySetResult(true);
+
+                if (this.m_autoReset)
+                {
+                    return b;
                 }
             }
-            base.Dispose(disposing);
+
+            this.m_eventSet = true;
+            return false;
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (this.DisposedValue)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            while (true)
+            {
+                lock (this.m_locker)
+                {
+                    if (this.m_waitQueue.Count == 0)
+                    {
+                        break;
+                    }
+                }
+
+                this.Set();
+            }
+        }
+        base.Dispose(disposing);
     }
 }

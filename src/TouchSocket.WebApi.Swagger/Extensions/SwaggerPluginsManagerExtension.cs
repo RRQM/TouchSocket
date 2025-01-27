@@ -12,21 +12,20 @@
 
 using TouchSocket.Core;
 
-namespace TouchSocket.WebApi.Swagger
+namespace TouchSocket.WebApi.Swagger;
+
+/// <summary>
+/// SwaggerPluginManagerExtension
+/// </summary>
+public static class SwaggerPluginManagerExtension
 {
     /// <summary>
-    /// SwaggerPluginManagerExtension
+    /// 使用<see cref="SwaggerPlugin"/>插件。
     /// </summary>
-    public static class SwaggerPluginManagerExtension
+    /// <param name="pluginManager"></param>
+    /// <returns></returns>
+    public static SwaggerPlugin UseSwagger(this IPluginManager pluginManager)
     {
-        /// <summary>
-        /// 使用<see cref="SwaggerPlugin"/>插件。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
-        public static SwaggerPlugin UseSwagger(this IPluginManager pluginManager)
-        {
-            return pluginManager.Add<SwaggerPlugin>();
-        }
+        return pluginManager.Add<SwaggerPlugin>();
     }
 }

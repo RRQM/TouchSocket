@@ -12,22 +12,21 @@
 
 using System;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 插件配置。
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+public sealed class PluginOptionAttribute : Attribute
 {
     /// <summary>
-    /// 插件配置。
+    /// 标识该插件在一个<see cref="IPluginManager"/>中仅仅只会有一个实例。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-    public sealed class PluginOptionAttribute : Attribute
-    {
-        /// <summary>
-        /// 标识该插件在一个<see cref="IPluginManager"/>中仅仅只会有一个实例。
-        /// </summary>
-        public bool Singleton { get; set; }
+    public bool Singleton { get; set; }
 
-        /// <summary>
-        /// 获取或设置一个值，该值指示对象是否从IoC容器中解析。
-        /// </summary>
-        public bool FromIoc { get; set; }
-    }
+    /// <summary>
+    /// 获取或设置一个值，该值指示对象是否从IoC容器中解析。
+    /// </summary>
+    public bool FromIoc { get; set; }
 }

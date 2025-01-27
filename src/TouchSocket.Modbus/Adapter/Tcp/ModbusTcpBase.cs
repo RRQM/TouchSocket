@@ -10,21 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Modbus
+namespace TouchSocket.Modbus;
+
+/// <summary>
+/// ModbusTcpBase
+/// </summary>
+public abstract class ModbusTcpBase : ModbusRequest
 {
     /// <summary>
-    /// ModbusTcpBase
+    /// 事务处理标识符。即序号
     /// </summary>
-    public abstract class ModbusTcpBase : ModbusRequest
-    {
-        /// <summary>
-        /// 事务处理标识符。即序号
-        /// </summary>
-        public ushort TransactionId { get; protected set; }
+    public ushort TransactionId { get; protected set; }
 
-        /// <summary>
-        /// 协议标识符
-        /// </summary>
-        public ushort ProtocolId { get; protected set; }
-    }
+    /// <summary>
+    /// 协议标识符
+    /// </summary>
+    public ushort ProtocolId { get; protected set; }
 }

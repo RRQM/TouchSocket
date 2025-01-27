@@ -16,128 +16,200 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 依赖项对象. 线程安全。
+/// </summary>
+public class DependencyObject : DisposableObject, IDependencyObject
 {
-    /// <summary>
-    /// 依赖项对象. 线程安全。
-    /// </summary>
-    public class DependencyObject : DisposableObject, IDependencyObject
+    private Dictionary<int, object> m_dp;
+    private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private Dictionary<int, object> GetDp()
     {
-        private Dictionary<int, object> m_dp;
-        private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
+        return this.m_dp ??= new Dictionary<int, object>();
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Dictionary<int, object> GetDp()
+    /// <inheritdoc/>
+    public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
+    {
+        if (this.TryGetValue(dp, out var value))
         {
-            return this.m_dp ??= new Dictionary<int, object>();
+            return value;
         }
+        return dp.OnFailedToGetTheValue.Invoke(this);
+    }
 
-        /// <inheritdoc/>
-        public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
+    /// <inheritdoc/>
+    public bool HasValue<TValue>(DependencyProperty<TValue> dp)
+    {
+        var lockTaken = false;
+        try
         {
-            if (this.TryGetValue(dp, out var value))
-            {
-                return value;
-            }
-            return dp.OnFailedToGetTheValue.Invoke(this);
+            this.m_lock.Enter(ref lockTaken);
+            return this.GetDp().ContainsKey(dp.Id);
         }
-
-        /// <inheritdoc/>
-        public bool HasValue<TValue>(DependencyProperty<TValue> dp)
+        finally
         {
-            var lockTaken = false;
-            try
+            if (lockTaken)
             {
-                this.m_lock.Enter(ref lockTaken);
-                return this.GetDp().ContainsKey(dp.Id);
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
+                this.m_lock.Exit(false);
             }
         }
+    }
 
-        /// <inheritdoc/>
-        public void RemoveValue<TValue>(DependencyProperty<TValue> dp)
+    /// <inheritdoc/>
+    public void RemoveValue<TValue>(DependencyProperty<TValue> dp)
+    {
+        var lockTaken = false;
+        try
         {
-            var lockTaken = false;
-            try
+            this.m_lock.Enter(ref lockTaken);
+            this.GetDp().Remove(dp.Id);
+        }
+        finally
+        {
+            if (lockTaken)
             {
-                this.m_lock.Enter(ref lockTaken);
-                this.GetDp().Remove(dp.Id);
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
+                this.m_lock.Exit(false);
             }
         }
+    }
 
-        /// <inheritdoc/>
-        public void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value)
+    /// <inheritdoc/>
+    public void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value)
+    {
+        var lockTaken = false;
+        try
         {
-            var lockTaken = false;
-            try
+            this.m_lock.Enter(ref lockTaken);
+            this.GetDp().AddOrUpdate(dp.Id, value);
+        }
+        finally
+        {
+            if (lockTaken)
             {
-                this.m_lock.Enter(ref lockTaken);
-                this.GetDp().AddOrUpdate(dp.Id, value);
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
+                this.m_lock.Exit(false);
             }
         }
+    }
 
-        /// <inheritdoc/>
-        public bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
+    /// <inheritdoc/>
+    public bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
+    {
+        var lockTaken = false;
+        try
         {
-            var lockTaken = false;
-            try
+            this.m_lock.Enter(ref lockTaken);
+            if (this.GetDp().TryGetValue(dp.Id, out var value1))
             {
-                this.m_lock.Enter(ref lockTaken);
-                if (this.GetDp().TryGetValue(dp.Id, out var value1))
-                {
-                    value = (TValue)value1;
-                    return true;
-                }
-                else
-                {
-                    value = default;
-                    return false;
-                }
+                value = (TValue)value1;
+                return true;
             }
-            finally
+            else
             {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
-        {
-            var lockTaken = false;
-            try
-            {
-                this.m_lock.Enter(ref lockTaken);
-                if (this.GetDp().TryGetValue(dp.Id, out var obj))
-                {
-                    value = (TValue)obj;
-                    return this.GetDp().Remove(dp.Id);
-                }
                 value = default;
                 return false;
             }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
+    {
+        var lockTaken = false;
+        try
+        {
+            this.m_lock.Enter(ref lockTaken);
+            if (this.GetDp().TryGetValue(dp.Id, out var obj))
+            {
+                value = (TValue)obj;
+                return this.GetDp().Remove(dp.Id);
+            }
+            value = default;
+            return false;
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 将当前对象的依赖项克隆到目标对象中
+    /// </summary>
+    /// <param name="dependencyObject">目标对象</param>
+    /// <param name="overwrite">当目标对象中存在相同依赖项时，是或否覆盖</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ObjectDisposedException"></exception>
+    protected void CloneTo(DependencyObject dependencyObject, bool overwrite)
+    {
+        var lockTakenFotThis = false;
+        var lockTakenFotOther = false;
+        try
+        {
+            this.m_lock.Enter(ref lockTakenFotThis);
+            dependencyObject.m_lock.Enter(ref lockTakenFotOther);
+
+            ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject, nameof(dependencyObject));
+
+            ThrowHelper.ThrowObjectDisposedExceptionIf(dependencyObject);
+
+            this.ThrowIfDisposed();
+
+            foreach (var item in this.GetDp())
+            {
+                if (dependencyObject.GetDp().ContainsKey(item.Key))
+                {
+                    if (overwrite)
+                    {
+                        dependencyObject.GetDp().Remove(item.Key);
+                        dependencyObject.GetDp().Add(item.Key, item.Value);
+                    }
+                }
+                else
+                {
+                    dependencyObject.GetDp().Add(item.Key, item.Value);
+                }
+            }
+        }
+        finally
+        {
+            if (lockTakenFotThis)
+            {
+                this.m_lock.Exit(false);
+            }
+
+            if (lockTakenFotOther)
+            {
+                dependencyObject.m_lock.Exit(false);
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            var lockTaken = false;
+            try
+            {
+                this.m_lock.Enter(ref lockTaken);
+                this.m_dp?.Clear();
+            }
             finally
             {
                 if (lockTaken)
@@ -146,79 +218,6 @@ namespace TouchSocket.Core
                 }
             }
         }
-
-        /// <summary>
-        /// 将当前对象的依赖项克隆到目标对象中
-        /// </summary>
-        /// <param name="dependencyObject">目标对象</param>
-        /// <param name="overwrite">当目标对象中存在相同依赖项时，是或否覆盖</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ObjectDisposedException"></exception>
-        protected void CloneTo(DependencyObject dependencyObject, bool overwrite)
-        {
-            var lockTakenFotThis = false;
-            var lockTakenFotOther = false;
-            try
-            {
-                this.m_lock.Enter(ref lockTakenFotThis);
-                dependencyObject.m_lock.Enter(ref lockTakenFotOther);
-
-                ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject, nameof(dependencyObject));
-
-                ThrowHelper.ThrowObjectDisposedExceptionIf(dependencyObject);
-
-                this.ThrowIfDisposed();
-
-                foreach (var item in this.GetDp())
-                {
-                    if (dependencyObject.GetDp().ContainsKey(item.Key))
-                    {
-                        if (overwrite)
-                        {
-                            dependencyObject.GetDp().Remove(item.Key);
-                            dependencyObject.GetDp().Add(item.Key, item.Value);
-                        }
-                    }
-                    else
-                    {
-                        dependencyObject.GetDp().Add(item.Key, item.Value);
-                    }
-                }
-            }
-            finally
-            {
-                if (lockTakenFotThis)
-                {
-                    this.m_lock.Exit(false);
-                }
-
-                if (lockTakenFotOther)
-                {
-                    dependencyObject.m_lock.Exit(false);
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                var lockTaken = false;
-                try
-                {
-                    this.m_lock.Enter(ref lockTaken);
-                    this.m_dp?.Clear();
-                }
-                finally
-                {
-                    if (lockTaken)
-                    {
-                        this.m_lock.Exit(false);
-                    }
-                }
-            }
-            base.Dispose(disposing);
-        }
+        base.Dispose(disposing);
     }
 }

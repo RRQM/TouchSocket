@@ -14,53 +14,52 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// JsonRpcClientExtension
+/// </summary>
+public static class JsonRpcClientExtension
 {
     /// <summary>
-    /// JsonRpcClientExtension
+    /// JsonRpcActorProperty
     /// </summary>
-    public static class JsonRpcClientExtension
-    {
-        /// <summary>
-        /// JsonRpcActorProperty
-        /// </summary>
-        public static readonly DependencyProperty<JsonRpcActor> JsonRpcActorProperty =
-           new("JsonRpcActor", default);
+    public static readonly DependencyProperty<JsonRpcActor> JsonRpcActorProperty =
+       new("JsonRpcActor", default);
 
-        /// <summary>
-        /// 获取基于会话内部的双工JsonRpc端
-        /// </summary>
-        /// <param name="sessionClient"></param>
-        /// <returns></returns>
-        public static IJsonRpcClient GetJsonRpcActionClient(this ISessionClient sessionClient)
+    /// <summary>
+    /// 获取基于会话内部的双工JsonRpc端
+    /// </summary>
+    /// <param name="sessionClient"></param>
+    /// <returns></returns>
+    public static IJsonRpcClient GetJsonRpcActionClient(this ISessionClient sessionClient)
+    {
+        if (sessionClient.TryGetValue(JsonRpcActorProperty, out var actionClient))
         {
-            if (sessionClient.TryGetValue(JsonRpcActorProperty, out var actionClient))
-            {
-                return actionClient;
-            }
-            else
-            {
-                throw new System.Exception("SessionClient必须是Tcp协议，或者完成WebSocket连接");
-            }
+            return actionClient;
         }
+        else
+        {
+            throw new System.Exception("SessionClient必须是Tcp协议，或者完成WebSocket连接");
+        }
+    }
 
 #if SystemTextJson
 
-        /// <summary>
-        /// 使用System.Text.Json进行序列化
-        /// </summary>
-        /// <param name="jsonRpcClient"></param>
-        /// <param name="options"></param>
-        public static TJsonRpcClient UseSystemTextJson<TJsonRpcClient>(this TJsonRpcClient jsonRpcClient, Action<System.Text.Json.JsonSerializerOptions> options)
-            where TJsonRpcClient : IJsonRpcClient
-        {
-            var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-            options.Invoke(serializerOptions);
-            jsonRpcClient.SerializerConverter.Clear();
-            jsonRpcClient.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
+    /// <summary>
+    /// 使用System.Text.Json进行序列化
+    /// </summary>
+    /// <param name="jsonRpcClient"></param>
+    /// <param name="options"></param>
+    public static TJsonRpcClient UseSystemTextJson<TJsonRpcClient>(this TJsonRpcClient jsonRpcClient, Action<System.Text.Json.JsonSerializerOptions> options)
+        where TJsonRpcClient : IJsonRpcClient
+    {
+        var serializerOptions = new System.Text.Json.JsonSerializerOptions();
+        options.Invoke(serializerOptions);
+        jsonRpcClient.SerializerConverter.Clear();
+        jsonRpcClient.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
 
-            return jsonRpcClient;
-        }
-#endif
+        return jsonRpcClient;
     }
+#endif
 }

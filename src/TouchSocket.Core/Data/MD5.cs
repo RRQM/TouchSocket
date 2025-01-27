@@ -13,95 +13,94 @@
 using System.IO;
 using System.Text;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// MD5相关操作类
+/// </summary>
+public static class MD5
 {
     /// <summary>
-    /// MD5相关操作类
+    /// 从字符串获取MD5值
     /// </summary>
-    public static class MD5
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string GetMD5Hash(string str)
     {
-        /// <summary>
-        /// 从字符串获取MD5值
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static string GetMD5Hash(string str)
+        var sb = new StringBuilder();
+        using (var md5 = System.Security.Cryptography.MD5.Create())
         {
-            var sb = new StringBuilder();
-            using (var md5 = System.Security.Cryptography.MD5.Create())
+            var data = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
+            var length = data.Length;
+            for (var i = 0; i < length; i++)
             {
-                var data = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
-                var length = data.Length;
-                for (var i = 0; i < length; i++)
-                {
-                    sb.Append(data[i].ToString("X2"));
-                }
+                sb.Append(data[i].ToString("X2"));
             }
-            return sb.ToString();
         }
+        return sb.ToString();
+    }
 
-        /// <summary>
-        /// 从流中获取MD5值。
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        public static string GetMD5Hash(Stream stream)
+    /// <summary>
+    /// 从流中获取MD5值。
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <returns></returns>
+    public static string GetMD5Hash(Stream stream)
+    {
+        var sb = new StringBuilder();
+        using (var crypto = System.Security.Cryptography.MD5.Create())
         {
-            var sb = new StringBuilder();
-            using (var crypto = System.Security.Cryptography.MD5.Create())
+            var data = crypto.ComputeHash(stream);
+            var length = data.Length;
+            for (var i = 0; i < length; i++)
             {
-                var data = crypto.ComputeHash(stream);
-                var length = data.Length;
-                for (var i = 0; i < length; i++)
-                {
-                    sb.Append(data[i].ToString("X2"));
-                }
+                sb.Append(data[i].ToString("X2"));
             }
-            return sb.ToString();
         }
+        return sb.ToString();
+    }
 
-        /// <summary>
-        /// 从字节获取MD5值
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public static string GetMD5Hash(byte[] buffer, int offset, int length)
+    /// <summary>
+    /// 从字节获取MD5值
+    /// </summary>
+    /// <param name="buffer"></param>
+    /// <param name="offset"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
+    public static string GetMD5Hash(byte[] buffer, int offset, int length)
+    {
+        var sb = new StringBuilder();
+        using (var md5 = System.Security.Cryptography.MD5.Create())
         {
-            var sb = new StringBuilder();
-            using (var md5 = System.Security.Cryptography.MD5.Create())
+            var data = md5.ComputeHash(buffer, offset, length);
+            var count = data.Length;
+            for (var i = 0; i < count; i++)
             {
-                var data = md5.ComputeHash(buffer, offset, length);
-                var count = data.Length;
-                for (var i = 0; i < count; i++)
-                {
-                    sb.Append(data[i].ToString("X2"));
-                }
+                sb.Append(data[i].ToString("X2"));
             }
-            return sb.ToString();
         }
+        return sb.ToString();
+    }
 
-        /// <summary>
-        /// 从字节获取MD5值
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public static string GetMD5Hash(byte[] buffer)
-        {
-            return GetMD5Hash(buffer, 0, buffer.Length);
-        }
+    /// <summary>
+    /// 从字节获取MD5值
+    /// </summary>
+    /// <param name="buffer"></param>
+    /// <returns></returns>
+    public static string GetMD5Hash(byte[] buffer)
+    {
+        return GetMD5Hash(buffer, 0, buffer.Length);
+    }
 
-        /// <summary>
-        /// 验证MD5值。
-        /// </summary>
-        /// <param name="str"></param>
-        /// <param name="hash"></param>
-        /// <returns></returns>
-        public static bool VerifyMD5Hash(string str, string hash)
-        {
-            var hashOfInput = GetMD5Hash(str);
-            return hashOfInput.CompareTo(hash) == 0;
-        }
+    /// <summary>
+    /// 验证MD5值。
+    /// </summary>
+    /// <param name="str"></param>
+    /// <param name="hash"></param>
+    /// <returns></returns>
+    public static bool VerifyMD5Hash(string str, string hash)
+    {
+        var hashOfInput = GetMD5Hash(str);
+        return hashOfInput.CompareTo(hash) == 0;
     }
 }

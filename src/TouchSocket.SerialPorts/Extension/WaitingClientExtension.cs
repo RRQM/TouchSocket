@@ -12,23 +12,22 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.SerialPorts
+namespace TouchSocket.SerialPorts;
+
+/// <summary>
+/// 提供扩展方法以简化创建等待客户端的代码。
+/// </summary>
+public static class WaitingClientExtension
 {
     /// <summary>
-    /// 提供扩展方法以简化创建等待客户端的代码。
+    /// 创建一个等待客户端，用于处理串口通信中的接收操作。
     /// </summary>
-    public static class WaitingClientExtension
+    /// <param name="client">发起请求的串口客户端。</param>
+    /// <param name="waitingOptions">等待选项，配置等待行为。</param>
+    /// <returns>返回一个具备特定等待行为的串口客户端实例。</returns>
+    public static IWaitingClient<ISerialPortClient, IReceiverResult> CreateWaitingClient(this ISerialPortClient client, WaitingOptions waitingOptions)
     {
-        /// <summary>
-        /// 创建一个等待客户端，用于处理串口通信中的接收操作。
-        /// </summary>
-        /// <param name="client">发起请求的串口客户端。</param>
-        /// <param name="waitingOptions">等待选项，配置等待行为。</param>
-        /// <returns>返回一个具备特定等待行为的串口客户端实例。</returns>
-        public static IWaitingClient<ISerialPortClient, IReceiverResult> CreateWaitingClient(this ISerialPortClient client, WaitingOptions waitingOptions)
-        {
-            // 使用给定的等待选项创建一个等待客户端实例
-            return client.CreateWaitingClient<ISerialPortClient, IReceiverResult>(waitingOptions);
-        }
+        // 使用给定的等待选项创建一个等待客户端实例
+        return client.CreateWaitingClient<ISerialPortClient, IReceiverResult>(waitingOptions);
     }
 }

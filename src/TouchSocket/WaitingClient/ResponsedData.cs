@@ -13,38 +13,37 @@
 using System;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+/// <summary>
+/// 响应数据。
+/// </summary>
+public readonly struct ResponsedData
 {
     /// <summary>
-    /// 响应数据。
+    /// 构造函数
     /// </summary>
-    public readonly struct ResponsedData
+    /// <param name="byteBlock">响应的数据</param>
+    /// <param name="requestInfo">请求信息</param>
+    public ResponsedData(ByteBlock byteBlock, IRequestInfo requestInfo)
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="byteBlock">响应的数据</param>
-        /// <param name="requestInfo">请求信息</param>
-        public ResponsedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            this.ByteBlock = byteBlock;
-            this.RequestInfo = requestInfo;
-        }
-
-        /// <summary>
-        /// 数据
-        /// </summary>
-        [Obsolete($"使用此属性可能带来不必要的性能消耗，请使用{nameof(ByteBlock)}代替")]
-        public byte[] Data => this.ByteBlock?.ToArray();
-
-        /// <summary>
-        /// ByteBlock
-        /// </summary>
-        public ByteBlock ByteBlock { get; }
-
-        /// <summary>
-        /// RequestInfo
-        /// </summary>
-        public IRequestInfo RequestInfo { get; }
+        this.ByteBlock = byteBlock;
+        this.RequestInfo = requestInfo;
     }
+
+    /// <summary>
+    /// 数据
+    /// </summary>
+    [Obsolete($"使用此属性可能带来不必要的性能消耗，请使用{nameof(ByteBlock)}代替")]
+    public byte[] Data => this.ByteBlock?.ToArray();
+
+    /// <summary>
+    /// ByteBlock
+    /// </summary>
+    public ByteBlock ByteBlock { get; }
+
+    /// <summary>
+    /// RequestInfo
+    /// </summary>
+    public IRequestInfo RequestInfo { get; }
 }

@@ -12,42 +12,41 @@
 
 using System;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Rpc;
+
+/// <summary>
+/// 代码生成标识
+/// </summary>
+[Flags]
+public enum CodeGeneratorFlag
 {
     /// <summary>
-    /// 代码生成标识
+    /// 生成扩展同步代码
     /// </summary>
-    [Flags]
-    public enum CodeGeneratorFlag
-    {
-        /// <summary>
-        /// 生成扩展同步代码
-        /// </summary>
-        ExtensionSync = 1,
+    ExtensionSync = 1,
 
-        /// <summary>
-        /// 生成扩展异步代码
-        /// </summary>
-        ExtensionAsync = 2,
+    /// <summary>
+    /// 生成扩展异步代码
+    /// </summary>
+    ExtensionAsync = 2,
 
-        /// <summary>
-        /// 生成实例类同步代码（源代码生成无效）
-        /// </summary>
-        InstanceSync = 4,
+    /// <summary>
+    /// 生成实例类同步代码（源代码生成无效）
+    /// </summary>
+    InstanceSync = 4,
 
-        /// <summary>
-        /// 生成实例类异步代码（源代码生成无效）
-        /// </summary>
-        InstanceAsync = 8,
+    /// <summary>
+    /// 生成实例类异步代码（源代码生成无效）
+    /// </summary>
+    InstanceAsync = 8,
 
-        /// <summary>
-        /// 生成接口同步代码
-        /// </summary>
-        InterfaceSync = 16,
+    /// <summary>
+    /// 生成接口同步代码
+    /// </summary>
+    InterfaceSync = 16,
 
-        /// <summary>
-        /// 生成接口异步代码
-        /// </summary>
-        InterfaceAsync = 32
-    }
+    /// <summary>
+    /// 生成接口异步代码
+    /// </summary>
+    InterfaceAsync = 32
 }

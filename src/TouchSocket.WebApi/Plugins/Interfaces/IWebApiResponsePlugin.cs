@@ -13,21 +13,20 @@
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.WebApi
+namespace TouchSocket.WebApi;
+
+/// <summary>
+/// 定义一个接口，用于处理Web API响应后的操作
+/// </summary>
+[DynamicMethod]
+public interface IWebApiResponsePlugin : IPlugin
 {
     /// <summary>
-    /// 定义一个接口，用于处理Web API响应后的操作
+    /// 在收到响应之后执行的操作
+    /// 此方法允许在Web API客户端收到响应后对其进行自定义处理
     /// </summary>
-    [DynamicMethod]
-    public interface IWebApiResponsePlugin : IPlugin
-    {
-        /// <summary>
-        /// 在收到响应之后执行的操作
-        /// 此方法允许在Web API客户端收到响应后对其进行自定义处理
-        /// </summary>
-        /// <param name="client">发出请求的Web API客户端实例</param>
-        /// <param name="e">包含响应信息的事件参数</param>
-        /// <returns>一个任务对象，代表异步操作</returns>
-        Task OnWebApiResponse(IWebApiClientBase client, WebApiEventArgs e);
-    }
+    /// <param name="client">发出请求的Web API客户端实例</param>
+    /// <param name="e">包含响应信息的事件参数</param>
+    /// <returns>一个任务对象，代表异步操作</returns>
+    Task OnWebApiResponse(IWebApiClientBase client, WebApiEventArgs e);
 }

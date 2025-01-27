@@ -14,45 +14,44 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http.WebSockets
+namespace TouchSocket.Http.WebSockets;
+
+/// <summary>
+/// 初始化一个适用于WebSocket的心跳插件
+/// </summary>
+[PluginOption(Singleton = true)]
+public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
 {
-    /// <summary>
-    /// 初始化一个适用于WebSocket的心跳插件
-    /// </summary>
-    [PluginOption(Singleton = true)]
-    public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
+    /// <inheritdoc/>
+    public Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
     {
-        /// <inheritdoc/>
-        public Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        Task.Run(async () =>
         {
-            Task.Run(async () =>
+            var failedCount = 0;
+            while (true)
             {
-                var failedCount = 0;
-                while (true)
+                await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (!client.Online)
                 {
-                    await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    if (!client.Online)
-                    {
-                        return;
-                    }
-
-                    try
-                    {
-                        await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        failedCount = 0;
-                    }
-                    catch
-                    {
-                        failedCount++;
-                    }
-                    if (failedCount > this.MaxFailCount)
-                    {
-                        await client.CloseAsync("自动心跳失败次数达到最大，已断开连接。").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
+                    return;
                 }
-            });
 
-            return e.InvokeNext();
-        }
+                try
+                {
+                    await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    failedCount = 0;
+                }
+                catch
+                {
+                    failedCount++;
+                }
+                if (failedCount > this.MaxFailCount)
+                {
+                    await client.CloseAsync("自动心跳失败次数达到最大，已断开连接。").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+        });
+
+        return e.InvokeNext();
     }
 }

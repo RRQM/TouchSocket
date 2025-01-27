@@ -14,161 +14,160 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Http;
+
+/// <summary>
+/// Http服务器数据处理适配器
+/// </summary>
+public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    /// <summary>
-    /// Http服务器数据处理适配器
-    /// </summary>
-    public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
+    private HttpRequest m_request;
+    private HttpRequest m_requestRoot;
+    private long m_surLen;
+    private Task m_task;
+    private ByteBlock m_tempByteBlock;
+
+    /// <inheritdoc/>
+    public override bool CanSplicingSend => false;
+
+    /// <inheritdoc/>
+    public override void OnLoaded(object owner)
     {
-        private HttpRequest m_request;
-        private HttpRequest m_requestRoot;
-        private long m_surLen;
-        private Task m_task;
-        private ByteBlock m_tempByteBlock;
-
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
-
-        /// <inheritdoc/>
-        public override void OnLoaded(object owner)
+        if (owner is not HttpSessionClient httpSessionClient)
         {
-            if (owner is not HttpSessionClient httpSessionClient)
-            {
-                throw new Exception($"此适配器必须适用于{nameof(IHttpService)}");
-            }
-
-            this.m_requestRoot = new HttpRequest(httpSessionClient);
-            base.OnLoaded(owner);
+            throw new Exception($"此适配器必须适用于{nameof(IHttpService)}");
         }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                //this.m_requestRoot.SafeDispose();
-                this.m_tempByteBlock.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
+        this.m_requestRoot = new HttpRequest(httpSessionClient);
+        base.OnLoaded(owner);
+    }
 
-        /// <inheritdoc/>
-        /// <param name="byteBlock"></param>
-        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            if (this.m_tempByteBlock == null)
+            //this.m_requestRoot.SafeDispose();
+            this.m_tempByteBlock.SafeDispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    /// <inheritdoc/>
+    /// <param name="byteBlock"></param>
+    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    {
+        if (this.m_tempByteBlock == null)
+        {
+            byteBlock.Position = 0;
+            await this.Single(byteBlock, false).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else
+        {
+            this.m_tempByteBlock.Write(byteBlock.Span);
+            var block = this.m_tempByteBlock;
+            this.m_tempByteBlock = null;
+            block.Position = 0;
+            await this.Single(block, true).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+    }
+
+    private void Cache(ByteBlock byteBlock)
+    {
+        if (byteBlock.CanReadLength > 0)
+        {
+            this.m_tempByteBlock = new ByteBlock();
+            this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
+            if (this.m_tempByteBlock.Length > this.MaxPackageSize)
             {
-                byteBlock.Position = 0;
-                await this.Single(byteBlock, false).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                this.m_tempByteBlock.Write(byteBlock.Span);
-                var block = this.m_tempByteBlock;
-                this.m_tempByteBlock = null;
-                block.Position = 0;
-                await this.Single(block, true).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
             }
         }
+    }
 
-        private void Cache(ByteBlock byteBlock)
+    private async Task DestoryRequest()
+    {
+        this.m_request = null;
+        if (this.m_task != null)
         {
-            if (byteBlock.CanReadLength > 0)
+            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_task = null;
+        }
+    }
+
+    private async Task Single(ByteBlock byteBlock, bool dis)
+    {
+        try
+        {
+            while (byteBlock.CanReadLength > 0)
             {
-                this.m_tempByteBlock = new ByteBlock();
-                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
-                if (this.m_tempByteBlock.Length > this.MaxPackageSize)
+                if (this.DisposedValue)
                 {
-                    this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
+                    return;
                 }
-            }
-        }
-
-        private async Task DestoryRequest()
-        {
-            this.m_request = null;
-            if (this.m_task != null)
-            {
-                await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_task = null;
-            }
-        }
-
-        private async Task Single(ByteBlock byteBlock, bool dis)
-        {
-            try
-            {
-                while (byteBlock.CanReadLength > 0)
+                if (this.m_request == null)
                 {
-                    if (this.DisposedValue)
+                    this.m_requestRoot.ResetHttp();
+                    this.m_request = this.m_requestRoot;
+                    if (this.m_request.ParsingHeader(ref byteBlock))
                     {
-                        return;
-                    }
-                    if (this.m_request == null)
-                    {
-                        this.m_requestRoot.ResetHttp();
-                        this.m_request = this.m_requestRoot;
-                        if (this.m_request.ParsingHeader(ref byteBlock))
+                        //byteBlock.Position++;
+                        if (this.m_request.ContentLength > byteBlock.CanReadLength)
                         {
-                            //byteBlock.Position++;
-                            if (this.m_request.ContentLength > byteBlock.CanReadLength)
-                            {
-                                this.m_surLen = this.m_request.ContentLength;
+                            this.m_surLen = this.m_request.ContentLength;
 
-                                this.m_task = this.TaskRunGoReceived(this.m_request);
-                            }
-                            else
-                            {
-                                this.m_request.InternalSetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
-                                await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            }
+                            this.m_task = this.TaskRunGoReceived(this.m_request);
                         }
                         else
                         {
-                            this.Cache(byteBlock);
-                            this.m_request = null;
-                            return;
-                        }
-                    }
-
-                    if (this.m_surLen > 0)
-                    {
-                        if (byteBlock.CanRead)
-                        {
-                            var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-
-                            await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.m_surLen -= len;
-                            byteBlock.Position += len;
-                            if (this.m_surLen == 0)
-                            {
-                                await this.m_request.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            }
+                            this.m_request.InternalSetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
+                            await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                     else
                     {
-                        await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.Cache(byteBlock);
+                        this.m_request = null;
+                        return;
                     }
                 }
-            }
-            finally
-            {
-                if (dis)
+
+                if (this.m_surLen > 0)
                 {
-                    byteBlock.Dispose();
+                    if (byteBlock.CanRead)
+                    {
+                        var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
+
+                        await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_surLen -= len;
+                        byteBlock.Position += len;
+                        if (this.m_surLen == 0)
+                        {
+                            await this.m_request.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                    }
+                }
+                else
+                {
+                    await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }
-
-        private Task TaskRunGoReceived(HttpRequest request)
+        finally
         {
-            var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
-            task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return task;
+            if (dis)
+            {
+                byteBlock.Dispose();
+            }
         }
+    }
+
+    private Task TaskRunGoReceived(HttpRequest request)
+    {
+        var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+        task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return task;
     }
 }

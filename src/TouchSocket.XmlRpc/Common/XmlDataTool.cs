@@ -17,243 +17,242 @@ using System.Xml;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
-namespace TouchSocket.XmlRpc
+namespace TouchSocket.XmlRpc;
+
+internal static class XmlDataTool
 {
-    internal static class XmlDataTool
+    public static object GetValue(XmlNode valueNode, Type type)
     {
-        public static object GetValue(XmlNode valueNode, Type type)
+        if (valueNode == null)
         {
-            if (valueNode == null)
-            {
-                return type.GetDefault();
-            }
-            switch (valueNode.Name)
-            {
-                case "boolean":
+            return type.GetDefault();
+        }
+        switch (valueNode.Name)
+        {
+            case "boolean":
+                {
+                    return bool.Parse(valueNode.InnerText);
+                }
+            case "i4":
+            case "int":
+                {
+                    return int.Parse(valueNode.InnerText);
+                }
+            case "double":
+                {
+                    return double.Parse(valueNode.InnerText);
+                }
+            case "dateTime.iso8601":
+                {
+                    return DateTime.Parse(valueNode.InnerText);
+                }
+            case "base64":
+                {
+                    return valueNode.InnerText;
+                }
+            case "struct":
+                {
+                    var instance = Activator.CreateInstance(type);
+                    foreach (XmlNode memberNode in valueNode.ChildNodes)
                     {
-                        return bool.Parse(valueNode.InnerText);
+                        var name = memberNode.SelectSingleNode("name").InnerText;
+                        var property = type.GetProperty(name);
+                        property.SetValue(instance, GetValue(memberNode.SelectSingleNode("value").FirstChild, property.PropertyType));
                     }
-                case "i4":
-                case "int":
+                    return instance;
+                }
+            case "arrays":
+            case "array":
+                {
+                    if (type.GetElementType() != null)
                     {
-                        return int.Parse(valueNode.InnerText);
-                    }
-                case "double":
-                    {
-                        return double.Parse(valueNode.InnerText);
-                    }
-                case "dateTime.iso8601":
-                    {
-                        return DateTime.Parse(valueNode.InnerText);
-                    }
-                case "base64":
-                    {
-                        return valueNode.InnerText;
-                    }
-                case "struct":
-                    {
-                        var instance = Activator.CreateInstance(type);
-                        foreach (XmlNode memberNode in valueNode.ChildNodes)
-                        {
-                            var name = memberNode.SelectSingleNode("name").InnerText;
-                            var property = type.GetProperty(name);
-                            property.SetValue(instance, GetValue(memberNode.SelectSingleNode("value").FirstChild, property.PropertyType));
-                        }
-                        return instance;
-                    }
-                case "arrays":
-                case "array":
-                    {
-                        if (type.GetElementType() != null)
-                        {
-                            var dataNode = valueNode.SelectSingleNode("data");
-                            var array = Array.CreateInstance(type.GetElementType(), dataNode.ChildNodes.Count);
+                        var dataNode = valueNode.SelectSingleNode("data");
+                        var array = Array.CreateInstance(type.GetElementType(), dataNode.ChildNodes.Count);
 
-                            var index = 0;
-                            foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
-                            {
-                                array.SetValue(GetValue(arrayValueNode.FirstChild, type.GetElementType()), index);
-                                index++;
-                            }
-                            return array;
-                        }
-                        else if (type.GetGenericArguments().Length == 1)
+                        var index = 0;
+                        foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
                         {
-                            var dataNode = valueNode.SelectSingleNode("data");
-                            var array = (IList)Activator.CreateInstance(type);
-
-                            foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
-                            {
-                                array.Add(GetValue(arrayValueNode.FirstChild, type.GetGenericArguments()[0]));
-                            }
-                            return array;
+                            array.SetValue(GetValue(arrayValueNode.FirstChild, type.GetElementType()), index);
+                            index++;
                         }
-                        return type.GetDefault();
+                        return array;
                     }
-                default:
-                case "string":
+                    else if (type.GetGenericArguments().Length == 1)
                     {
-                        return valueNode.InnerText;
+                        var dataNode = valueNode.SelectSingleNode("data");
+                        var array = (IList)Activator.CreateInstance(type);
+
+                        foreach (XmlNode arrayValueNode in dataNode.ChildNodes)
+                        {
+                            array.Add(GetValue(arrayValueNode.FirstChild, type.GetGenericArguments()[0]));
+                        }
+                        return array;
                     }
+                    return type.GetDefault();
+                }
+            default:
+            case "string":
+                {
+                    return valueNode.InnerText;
+                }
+        }
+    }
+
+    public static HttpRequest CreateRequest(HttpClientBase httpClientBase, string method, object[] parameters)
+    {
+        var xml = new XmlDocument();
+
+        var xmlDecl = xml.CreateXmlDeclaration("1.0", string.Empty, string.Empty);
+        xml.AppendChild(xmlDecl);
+
+        var xmlElement = xml.CreateElement("methodCall");
+        xml.AppendChild(xmlElement);
+
+        var methodNameElement = xml.CreateElement("methodName");
+        methodNameElement.InnerText = method;
+        xmlElement.AppendChild(methodNameElement);
+
+        var paramsElement = xml.CreateElement("params");
+        xmlElement.AppendChild(paramsElement);
+
+        if (parameters != null)
+        {
+            foreach (var param in parameters)
+            {
+                var paramElement = xml.CreateElement("param");
+                paramsElement.AppendChild(paramElement);
+
+                var valueElement = xml.CreateElement("value");
+                paramElement.AppendChild(valueElement);
+
+                CreateParam(xml, valueElement, param);
             }
         }
 
-        public static HttpRequest CreateRequest(HttpClientBase httpClientBase, string method, object[] parameters)
+        var request = new HttpRequest();
+        request.FromXML(xml.OuterXml)
+            .InitHeaders()
+            .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)
+            .SetHost(httpClientBase.RemoteIPHost.Host)
+            .AsPost();
+        return request;
+    }
+
+    public static void CreateParam(XmlDocument xml, XmlNode xmlNode, object value)
+    {
+        if (value == null)
         {
-            var xml = new XmlDocument();
-
-            var xmlDecl = xml.CreateXmlDeclaration("1.0", string.Empty, string.Empty);
-            xml.AppendChild(xmlDecl);
-
-            var xmlElement = xml.CreateElement("methodCall");
-            xml.AppendChild(xmlElement);
-
-            var methodNameElement = xml.CreateElement("methodName");
-            methodNameElement.InnerText = method;
-            xmlElement.AppendChild(methodNameElement);
-
-            var paramsElement = xml.CreateElement("params");
-            xmlElement.AppendChild(paramsElement);
-
-            if (parameters != null)
-            {
-                foreach (var param in parameters)
-                {
-                    var paramElement = xml.CreateElement("param");
-                    paramsElement.AppendChild(paramElement);
-
-                    var valueElement = xml.CreateElement("value");
-                    paramElement.AppendChild(valueElement);
-
-                    CreateParam(xml, valueElement, param);
-                }
-            }
-
-            var request = new HttpRequest();
-            request.FromXML(xml.OuterXml)
-                .InitHeaders()
-                .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)
-                .SetHost(httpClientBase.RemoteIPHost.Host)
-                .AsPost();
-            return request;
+            return;
         }
-
-        public static void CreateParam(XmlDocument xml, XmlNode xmlNode, object value)
+        if (value is int)
         {
-            if (value == null)
-            {
-                return;
-            }
-            if (value is int)
-            {
-                var valueElement = xml.CreateElement("i4");
-                valueElement.InnerText = value.ToString();
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (value is bool)
-            {
-                var valueElement = xml.CreateElement("boolean");
-                valueElement.InnerText = (value).ToString();
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (value is double)
-            {
-                var valueElement = xml.CreateElement("double");
-                valueElement.InnerText = ((double)value).ToString();
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (value is string)
-            {
-                var valueElement = xml.CreateElement("string");
-                valueElement.InnerText = value.ToString();
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (value is DateTime)
-            {
-                var valueElement = xml.CreateElement("dateTime.iso8601");
-                valueElement.InnerText = ((DateTime)value).ToString();
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (value is byte[])
-            {
-                var valueElement = xml.CreateElement("base64");
-                var str = Convert.ToBase64String((byte[])value);
-                valueElement.InnerText = str;
-                xmlNode.AppendChild(valueElement);
-            }
-            else if (typeof(IList).IsAssignableFrom(value.GetType()))
-            {
-                var array = (IList)value;
-                XmlElement arrayElement;
+            var valueElement = xml.CreateElement("i4");
+            valueElement.InnerText = value.ToString();
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (value is bool)
+        {
+            var valueElement = xml.CreateElement("boolean");
+            valueElement.InnerText = (value).ToString();
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (value is double)
+        {
+            var valueElement = xml.CreateElement("double");
+            valueElement.InnerText = ((double)value).ToString();
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (value is string)
+        {
+            var valueElement = xml.CreateElement("string");
+            valueElement.InnerText = value.ToString();
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (value is DateTime)
+        {
+            var valueElement = xml.CreateElement("dateTime.iso8601");
+            valueElement.InnerText = ((DateTime)value).ToString();
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (value is byte[])
+        {
+            var valueElement = xml.CreateElement("base64");
+            var str = Convert.ToBase64String((byte[])value);
+            valueElement.InnerText = str;
+            xmlNode.AppendChild(valueElement);
+        }
+        else if (typeof(IList).IsAssignableFrom(value.GetType()))
+        {
+            var array = (IList)value;
+            XmlElement arrayElement;
 
-                arrayElement = xml.CreateElement("array");
+            arrayElement = xml.CreateElement("array");
 
-                xmlNode.AppendChild(arrayElement);
+            xmlNode.AppendChild(arrayElement);
 
-                var dataElememt = xml.CreateElement("data");
-                arrayElement.AppendChild(dataElememt);
+            var dataElememt = xml.CreateElement("data");
+            arrayElement.AppendChild(dataElememt);
 
-                foreach (var item in array)
-                {
-                    var valueElement = xml.CreateElement("value");
-                    dataElememt.AppendChild(valueElement);
-                    CreateParam(xml, valueElement, item);
-                }
-            }
-            else
+            foreach (var item in array)
             {
-                var valueElement = xml.CreateElement("struct");
-                xmlNode.AppendChild(valueElement);
-
-                var propertyInfos = value.GetType().GetProperties();
-                foreach (var propertyInfo in propertyInfos)
-                {
-                    var memberElement = xml.CreateElement("member");
-                    valueElement.AppendChild(memberElement);
-
-                    var nameElement = xml.CreateElement("name");
-                    nameElement.InnerText = propertyInfo.Name;
-                    memberElement.AppendChild(nameElement);
-
-                    var oValueElement = xml.CreateElement("value");
-                    memberElement.AppendChild(oValueElement);
-
-                    var oValue = propertyInfo.GetValue(value);
-                    CreateParam(xml, oValueElement, oValue);
-                }
+                var valueElement = xml.CreateElement("value");
+                dataElememt.AppendChild(valueElement);
+                CreateParam(xml, valueElement, item);
             }
         }
-
-        public static void CreatResponse(HttpResponse httpResponse, object value)
+        else
         {
-            var xml = new XmlDocument();
+            var valueElement = xml.CreateElement("struct");
+            xmlNode.AppendChild(valueElement);
 
-            var xmlDecl = xml.CreateXmlDeclaration("1.0", string.Empty, string.Empty);
-            xml.AppendChild(xmlDecl);
-
-            var xmlElement = xml.CreateElement("methodResponse");
-
-            xml.AppendChild(xmlElement);
-
-            var paramsElement = xml.CreateElement("params");
-            xmlElement.AppendChild(paramsElement);
-
-            var paramElement = xml.CreateElement("param");
-            paramsElement.AppendChild(paramElement);
-
-            var valueElement = xml.CreateElement("value");
-            paramElement.AppendChild(valueElement);
-
-            CreateParam(xml, valueElement, value);
-
-            using (var xmlBlock = new ByteBlock())
+            var propertyInfos = value.GetType().GetProperties();
+            foreach (var propertyInfo in propertyInfos)
             {
-                xml.Save(xmlBlock.AsStream());
+                var memberElement = xml.CreateElement("member");
+                valueElement.AppendChild(memberElement);
 
-                var xmlString = xmlBlock.Span.ToString(Encoding.UTF8);
+                var nameElement = xml.CreateElement("name");
+                nameElement.InnerText = propertyInfo.Name;
+                memberElement.AppendChild(nameElement);
 
-                httpResponse.FromXML(xmlString);
+                var oValueElement = xml.CreateElement("value");
+                memberElement.AppendChild(oValueElement);
+
+                var oValue = propertyInfo.GetValue(value);
+                CreateParam(xml, oValueElement, oValue);
             }
+        }
+    }
+
+    public static void CreatResponse(HttpResponse httpResponse, object value)
+    {
+        var xml = new XmlDocument();
+
+        var xmlDecl = xml.CreateXmlDeclaration("1.0", string.Empty, string.Empty);
+        xml.AppendChild(xmlDecl);
+
+        var xmlElement = xml.CreateElement("methodResponse");
+
+        xml.AppendChild(xmlElement);
+
+        var paramsElement = xml.CreateElement("params");
+        xmlElement.AppendChild(paramsElement);
+
+        var paramElement = xml.CreateElement("param");
+        paramsElement.AppendChild(paramElement);
+
+        var valueElement = xml.CreateElement("value");
+        paramElement.AppendChild(valueElement);
+
+        CreateParam(xml, valueElement, value);
+
+        using (var xmlBlock = new ByteBlock())
+        {
+            xml.Save(xmlBlock.AsStream());
+
+            var xmlString = xmlBlock.Span.ToString(Encoding.UTF8);
+
+            httpResponse.FromXML(xmlString);
         }
     }
 }

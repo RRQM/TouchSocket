@@ -10,17 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 具有<see cref="IResolver"/>相关成员的配置对象
-    /// </summary>
-    public abstract class ResolverConfigObject : ConfigObject, IResolverConfigObject
-    {
-        /// <inheritdoc/>
-        public abstract IPluginManager PluginManager { get; }
+namespace TouchSocket.Core;
 
-        /// <inheritdoc/>
-        public abstract IResolver Resolver { get; }
-    }
+/// <summary>
+/// 具有<see cref="IResolver"/>相关成员的配置对象
+/// </summary>
+public abstract class ResolverConfigObject : ConfigObject, IResolverConfigObject
+{
+    /// <inheritdoc/>
+    public abstract IPluginManager PluginManager { get; }
+
+    /// <inheritdoc/>
+    public abstract IResolver Resolver { get; }
 }

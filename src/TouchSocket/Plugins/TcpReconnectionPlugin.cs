@@ -14,48 +14,47 @@ using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : ITcpClient
 {
-    internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : ITcpClient
+    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+
+    public TcpReconnectionPlugin()
     {
-        public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
-
-        public TcpReconnectionPlugin()
+        this.ActionForCheck = (c, i) =>
         {
-            this.ActionForCheck = (c, i) =>
-            {
-                return Task.FromResult<bool?>(c.Online);
-            };
+            return Task.FromResult<bool?>(c.Online);
+        };
+    }
+
+    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+    {
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (client is not TClient tClient)
+        {
+            return;
         }
 
-        public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+        if (e.Manual)
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
+        }
 
-            if (client is not TClient tClient)
+        _ = Task.Run(async () =>
+        {
+            while (true)
             {
-                return;
-            }
-
-            if (e.Manual)
-            {
-                return;
-            }
-
-            _ = Task.Run(async () =>
-            {
-                while (true)
+                if (this.DisposedValue)
                 {
-                    if (this.DisposedValue)
-                    {
-                        return;
-                    }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        return;
-                    }
+                    return;
                 }
-            });
-        }
+                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    return;
+                }
+            }
+        });
     }
 }

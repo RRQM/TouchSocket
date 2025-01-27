@@ -19,24 +19,23 @@ using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp.Rpc;
+
+/// <summary>
+/// DmtpRpcDispatchProxy
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public abstract class DmtpRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
 {
-    /// <summary>
-    /// DmtpRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class DmtpRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
-    {
 
-    }
+}
 
-    /// <summary>
-    /// DmtpRpcDispatchProxy
-    /// </summary>
-    public abstract class DmtpRpcDispatchProxy : DmtpRpcDispatchProxy<IDmtpRpcActor>
-    {
+/// <summary>
+/// DmtpRpcDispatchProxy
+/// </summary>
+public abstract class DmtpRpcDispatchProxy : DmtpRpcDispatchProxy<IDmtpRpcActor>
+{
 
-    }
 }
 
 

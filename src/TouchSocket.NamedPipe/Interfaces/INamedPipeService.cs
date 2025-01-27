@@ -12,44 +12,43 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.NamedPipe;
+
+/// <summary>
+/// INamedPipeService
+/// </summary>
+/// <typeparam name="TClient"></typeparam>
+public interface INamedPipeService<TClient> : INamedPipeServiceBase<TClient>, IIdSender, IIdRequestInfoSender where TClient : INamedPipeSessionClient
 {
     /// <summary>
-    /// INamedPipeService
+    /// 用户连接完成
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public interface INamedPipeService<TClient> : INamedPipeServiceBase<TClient>, IIdSender, IIdRequestInfoSender where TClient : INamedPipeSessionClient
-    {
-        /// <summary>
-        /// 用户连接完成
-        /// </summary>
-        ConnectedEventHandler<TClient> Connected { get; set; }
-
-        /// <summary>
-        /// 有用户连接的时候
-        /// </summary>
-        ConnectingEventHandler<TClient> Connecting { get; set; }
-
-        /// <summary>
-        /// 有用户断开连接
-        /// </summary>
-        ClosedEventHandler<TClient> Closed { get; set; }
-
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// </summary>
-        ClosingEventHandler<TClient> Closing { get; set; }
-
-        /// <summary>
-        /// 收到数据时
-        /// </summary>
-        ReceivedEventHandler<TClient> Received { get; set; }
-    }
+    ConnectedEventHandler<TClient> Connected { get; set; }
 
     /// <summary>
-    /// INamedPipeService
+    /// 有用户连接的时候
     /// </summary>
-    public interface INamedPipeService : INamedPipeService<NamedPipeSessionClient>
-    {
-    }
+    ConnectingEventHandler<TClient> Connecting { get; set; }
+
+    /// <summary>
+    /// 有用户断开连接
+    /// </summary>
+    ClosedEventHandler<TClient> Closed { get; set; }
+
+    /// <summary>
+    /// 即将断开连接(仅主动断开时有效)。
+    /// </summary>
+    ClosingEventHandler<TClient> Closing { get; set; }
+
+    /// <summary>
+    /// 收到数据时
+    /// </summary>
+    ReceivedEventHandler<TClient> Received { get; set; }
+}
+
+/// <summary>
+/// INamedPipeService
+/// </summary>
+public interface INamedPipeService : INamedPipeService<NamedPipeSessionClient>
+{
 }

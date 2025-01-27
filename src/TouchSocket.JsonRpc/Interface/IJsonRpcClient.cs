@@ -13,16 +13,15 @@
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// IJsonRpcClient
+/// </summary>
+public interface IJsonRpcClient : IRpcClient
 {
     /// <summary>
-    /// IJsonRpcClient
+    /// 获取用于 JSON-RPC 的序列化转换器。
     /// </summary>
-    public interface IJsonRpcClient : IRpcClient
-    {
-        /// <summary>
-        /// 获取用于 JSON-RPC 的序列化转换器。
-        /// </summary>
-        TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; }
-    }
+    TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; }
 }

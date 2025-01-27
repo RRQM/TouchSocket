@@ -13,193 +13,192 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Core;
+
+/// <summary>
+/// 三元组合
+/// </summary>
+/// <typeparam name="TKey1"></typeparam>
+/// <typeparam name="TKey2"></typeparam>
+/// <typeparam name="TValue"></typeparam>
+public readonly struct Ternary<TKey1, TKey2, TValue>
 {
     /// <summary>
     /// 三元组合
     /// </summary>
-    /// <typeparam name="TKey1"></typeparam>
-    /// <typeparam name="TKey2"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public readonly struct Ternary<TKey1, TKey2, TValue>
+    /// <param name="key1"></param>
+    /// <param name="key2"></param>
+    /// <param name="value"></param>
+    public Ternary(TKey1 key1, TKey2 key2, TValue value)
     {
-        /// <summary>
-        /// 三元组合
-        /// </summary>
-        /// <param name="key1"></param>
-        /// <param name="key2"></param>
-        /// <param name="value"></param>
-        public Ternary(TKey1 key1, TKey2 key2, TValue value)
-        {
-            this.Key1 = key1;
-            this.Key2 = key2;
-            this.Value = value;
-        }
-
-        /// <summary>
-        /// 首键
-        /// </summary>
-        public TKey1 Key1 { get; }
-
-        /// <summary>
-        /// 次键
-        /// </summary>
-        public TKey2 Key2 { get; }
-
-        /// <summary>
-        /// 值
-        /// </summary>
-        public TValue Value { get; }
+        this.Key1 = key1;
+        this.Key2 = key2;
+        this.Value = value;
     }
 
     /// <summary>
-    /// 线程安全的双键字典
+    /// 首键
     /// </summary>
-    /// <typeparam name="TKey1"></typeparam>
-    /// <typeparam name="TKey2"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
+    public TKey1 Key1 { get; }
+
+    /// <summary>
+    /// 次键
+    /// </summary>
+    public TKey2 Key2 { get; }
+
+    /// <summary>
+    /// 值
+    /// </summary>
+    public TValue Value { get; }
+}
+
+/// <summary>
+/// 线程安全的双键字典
+/// </summary>
+/// <typeparam name="TKey1"></typeparam>
+/// <typeparam name="TKey2"></typeparam>
+/// <typeparam name="TValue"></typeparam>
+public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
+{
+    private readonly ConcurrentDictionary<TKey1, Ternary<TKey1, TKey2, TValue>> m_key1ToValue =
+        new ConcurrentDictionary<TKey1, Ternary<TKey1, TKey2, TValue>>();
+
+    private readonly ConcurrentDictionary<TKey2, Ternary<TKey1, TKey2, TValue>> m_key2ToValue =
+        new ConcurrentDictionary<TKey2, Ternary<TKey1, TKey2, TValue>>();
+
+    /// <summary>
+    /// 元素数量。
+    /// </summary>
+    public int Count => this.m_key1ToValue.Count;
+
+    /// <summary>
+    /// Key1集合
+    /// </summary>
+    public ICollection<TKey1> Key1s => this.m_key1ToValue.Keys;
+
+    /// <summary>
+    /// Key2集合
+    /// </summary>
+    public ICollection<TKey2> Key2s => this.m_key2ToValue.Keys;
+
+    /// <summary>
+    /// 清空所有元素。
+    /// </summary>
+    public void Clear()
     {
-        private readonly ConcurrentDictionary<TKey1, Ternary<TKey1, TKey2, TValue>> m_key1ToValue =
-            new ConcurrentDictionary<TKey1, Ternary<TKey1, TKey2, TValue>>();
+        this.m_key1ToValue.Clear();
+        this.m_key2ToValue.Clear();
+    }
 
-        private readonly ConcurrentDictionary<TKey2, Ternary<TKey1, TKey2, TValue>> m_key2ToValue =
-            new ConcurrentDictionary<TKey2, Ternary<TKey1, TKey2, TValue>>();
+    /// <summary>
+    /// 是否包含指定键。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool ContainsKey(TKey2 key)
+    {
+        return this.m_key2ToValue.ContainsKey(key);
+    }
 
-        /// <summary>
-        /// 元素数量。
-        /// </summary>
-        public int Count => this.m_key1ToValue.Count;
+    /// <summary>
+    /// 是否包含指定键。
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public bool ContainsKey(TKey1 key)
+    {
+        return this.m_key1ToValue.ContainsKey(key);
+    }
 
-        /// <summary>
-        /// Key1集合
-        /// </summary>
-        public ICollection<TKey1> Key1s => this.m_key1ToValue.Keys;
-
-        /// <summary>
-        /// Key2集合
-        /// </summary>
-        public ICollection<TKey2> Key2s => this.m_key2ToValue.Keys;
-
-        /// <summary>
-        /// 清空所有元素。
-        /// </summary>
-        public void Clear()
+    /// <summary>
+    /// 尝试添加。
+    /// </summary>
+    /// <param name="key1"></param>
+    /// <param name="key2"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryAdd(TKey1 key1, TKey2 key2, TValue value)
+    {
+        var ternary = new Ternary<TKey1, TKey2, TValue>(key1, key2, value);
+        if (this.m_key1ToValue.TryAdd(key1, ternary) && this.m_key2ToValue.TryAdd(key2, ternary))
         {
-            this.m_key1ToValue.Clear();
-            this.m_key2ToValue.Clear();
+            return true;
         }
-
-        /// <summary>
-        /// 是否包含指定键。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool ContainsKey(TKey2 key)
+        else
         {
-            return this.m_key2ToValue.ContainsKey(key);
-        }
-
-        /// <summary>
-        /// 是否包含指定键。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool ContainsKey(TKey1 key)
-        {
-            return this.m_key1ToValue.ContainsKey(key);
-        }
-
-        /// <summary>
-        /// 尝试添加。
-        /// </summary>
-        /// <param name="key1"></param>
-        /// <param name="key2"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryAdd(TKey1 key1, TKey2 key2, TValue value)
-        {
-            var ternary = new Ternary<TKey1, TKey2, TValue>(key1, key2, value);
-            if (this.m_key1ToValue.TryAdd(key1, ternary) && this.m_key2ToValue.TryAdd(key2, ternary))
-            {
-                return true;
-            }
-            else
-            {
-                this.m_key1ToValue.TryRemove(key1, out _);
-                this.m_key2ToValue.TryRemove(key2, out _);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 由首键删除
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryRemove(TKey1 key, out TValue value)
-        {
-            if (this.m_key1ToValue.TryRemove(key, out var ternary))
-            {
-                this.m_key2ToValue.TryRemove(ternary.Key2, out _);
-                value = ternary.Value;
-                return true;
-            }
-            value = default;
+            this.m_key1ToValue.TryRemove(key1, out _);
+            this.m_key2ToValue.TryRemove(key2, out _);
             return false;
         }
+    }
 
-        /// <summary>
-        /// 由次键删除
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryRemove(TKey2 key, out TValue value)
+    /// <summary>
+    /// 由首键删除
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryRemove(TKey1 key, out TValue value)
+    {
+        if (this.m_key1ToValue.TryRemove(key, out var ternary))
         {
-            if (this.m_key2ToValue.TryRemove(key, out var ternary))
-            {
-                this.m_key1ToValue.TryRemove(ternary.Key1, out _);
-                value = ternary.Value;
-                return true;
-            }
-            value = default;
-            return false;
+            this.m_key2ToValue.TryRemove(ternary.Key2, out _);
+            value = ternary.Value;
+            return true;
         }
+        value = default;
+        return false;
+    }
 
-        /// <summary>
-        /// 由首键获取值
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryGetValue(TKey1 key, out TValue value)
+    /// <summary>
+    /// 由次键删除
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryRemove(TKey2 key, out TValue value)
+    {
+        if (this.m_key2ToValue.TryRemove(key, out var ternary))
         {
-            if (this.m_key1ToValue.TryGetValue(key, out var ternary))
-            {
-                value = ternary.Value;
-                return true;
-            }
-            value = default;
-            return false;
+            this.m_key1ToValue.TryRemove(ternary.Key1, out _);
+            value = ternary.Value;
+            return true;
         }
+        value = default;
+        return false;
+    }
 
-        /// <summary>
-        /// 由次键获取值
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryGetValue(TKey2 key, out TValue value)
+    /// <summary>
+    /// 由首键获取值
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryGetValue(TKey1 key, out TValue value)
+    {
+        if (this.m_key1ToValue.TryGetValue(key, out var ternary))
         {
-            if (this.m_key2ToValue.TryGetValue(key, out var ternary))
-            {
-                value = ternary.Value;
-                return true;
-            }
-            value = default;
-            return false;
+            value = ternary.Value;
+            return true;
         }
+        value = default;
+        return false;
+    }
+
+    /// <summary>
+    /// 由次键获取值
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryGetValue(TKey2 key, out TValue value)
+    {
+        if (this.m_key2ToValue.TryGetValue(key, out var ternary))
+        {
+            value = ternary.Value;
+            return true;
+        }
+        value = default;
+        return false;
     }
 }

@@ -14,12 +14,11 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.JsonRpc;
+
+/// <summary>
+/// IHttpJsonRpcClient
+/// </summary>
+public interface IHttpJsonRpcClient : IJsonRpcClient, IHttpSession, ISetupConfigObject, ITcpConnectableClient
 {
-    /// <summary>
-    /// IHttpJsonRpcClient
-    /// </summary>
-    public interface IHttpJsonRpcClient : IJsonRpcClient, IHttpSession, ISetupConfigObject, ITcpConnectableClient
-    {
-    }
 }

@@ -15,81 +15,80 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Sockets;
+
+[DebuggerDisplay("Count={Count}")]
+internal class InternalClientCollection<TClient> : IClientCollection<TClient> where TClient : IIdClient
 {
-    [DebuggerDisplay("Count={Count}")]
-    internal class InternalClientCollection<TClient> : IClientCollection<TClient> where TClient : IIdClient
+    private readonly ConcurrentDictionary<string, TClient> m_clients = new();
+
+    public int Count => this.m_clients.Count;
+
+    public TClient this[string id] => this.m_clients[id];
+
+    public bool ClientExist(string id)
     {
-        private readonly ConcurrentDictionary<string, TClient> m_clients = new();
+        return !string.IsNullOrEmpty(id) && this.m_clients.ContainsKey(id);
+    }
 
-        public int Count => this.m_clients.Count;
+    IEnumerator<TClient> IEnumerable<TClient>.GetEnumerator()
+    {
+        return this.m_clients.Values.GetEnumerator();
+    }
 
-        public TClient this[string id] => this.m_clients[id];
+    public IEnumerator GetEnumerator()
+    {
+        return this.m_clients.Values.GetEnumerator();
+    }
 
-        public bool ClientExist(string id)
+    /// <inheritdoc/>
+    public IEnumerable<string> GetIds()
+    {
+        return this.m_clients.Keys;
+    }
+
+    /// <summary>
+    /// 添加客户端
+    /// </summary>
+    /// <param name="client"></param>
+    /// <returns></returns>
+    public bool TryAdd(TClient client)
+    {
+        return this.m_clients.TryAdd(client.Id, client);
+    }
+
+    /// <inheritdoc/>
+    public bool TryGetClient(string id, out TClient client)
+    {
+        if (string.IsNullOrEmpty(id))
         {
-            return !string.IsNullOrEmpty(id) && this.m_clients.ContainsKey(id);
-        }
-
-        IEnumerator<TClient> IEnumerable<TClient>.GetEnumerator()
-        {
-            return this.m_clients.Values.GetEnumerator();
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return this.m_clients.Values.GetEnumerator();
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<string> GetIds()
-        {
-            return this.m_clients.Keys;
-        }
-
-        /// <summary>
-        /// 添加客户端
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        public bool TryAdd(TClient client)
-        {
-            return this.m_clients.TryAdd(client.Id, client);
-        }
-
-        /// <inheritdoc/>
-        public bool TryGetClient(string id, out TClient client)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                client = default;
-                return false;
-            }
-
-            return this.m_clients.TryGetValue(id, out client);
-        }
-
-        /// <summary>
-        /// 移除对应客户端
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        public bool TryRemoveClient(string id, out TClient client)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                client = default;
-                return false;
-            }
-
-            if (this.m_clients.TryRemove(id, out var newClient))
-            {
-                client = newClient;
-                return true;
-            }
             client = default;
             return false;
         }
+
+        return this.m_clients.TryGetValue(id, out client);
+    }
+
+    /// <summary>
+    /// 移除对应客户端
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="client"></param>
+    /// <returns></returns>
+    public bool TryRemoveClient(string id, out TClient client)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            client = default;
+            return false;
+        }
+
+        if (this.m_clients.TryRemove(id, out var newClient))
+        {
+            client = newClient;
+            return true;
+        }
+        client = default;
+        return false;
     }
 }
