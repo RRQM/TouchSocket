@@ -72,7 +72,7 @@ namespace ConsoleApp2
         }
     }
 
-    [GeneratorRpcServer]
+    
     [MyRpcActionFilter]
     public partial class MyRpcServer : RpcServer
     {
