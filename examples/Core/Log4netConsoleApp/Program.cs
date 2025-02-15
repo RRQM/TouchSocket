@@ -16,97 +16,96 @@ using TouchSocket.Sockets;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
-namespace Log4netConsoleApp
+namespace Log4netConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static async Task Main(string[] args)
     {
-        private static async Task Main(string[] args)
-        {
-            var service = await CreateService();
-            Console.ReadKey();
-        }
-
-        private static async Task<TcpService> CreateService()
-        {
-            var service = new TcpService();
-            service.Received = async (client, e) =>
-            {
-                //从客户端收到信息
-                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-                service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
-
-                await client.SendAsync(mes);//将收到的信息直接返回给发送方
-            };
-
-            await service.SetupAsync(new TouchSocketConfig()//载入配置
-                 .SetListenIPHosts(7789)
-                 .ConfigureContainer(a =>
-                 {
-                     a.AddLogger(logger =>
-                     {
-                         logger.AddConsoleLogger();
-                         logger.AddFileLogger(fileLogger =>
-                         {
-                             fileLogger.MaxSize = 1024 * 1024;
-                             fileLogger.LogLevel = LogLevel.Debug;
-                         });
-
-                         logger.AddLogger(new Mylog4netLogger());//添加Mylog4netLogger日志
-                     });
-                 })
-                 .ConfigurePlugins(a =>
-                 {
-                     //a.Add();//此处可以添加插件
-                 }));
-            await service.StartAsync();//启动
-            service.Logger.Info("服务器成功启动");
-            return service;
-        }
+        var service = await CreateService();
+        Console.ReadKey();
     }
 
-    internal class Mylog4netLogger :LoggerBase
+    private static async Task<TcpService> CreateService()
     {
-        private readonly log4net.ILog m_logger;
-
-        public Mylog4netLogger()
+        var service = new TcpService();
+        service.Received = async (client, e) =>
         {
-            this.m_logger = log4net.LogManager.GetLogger("Test");
-        }
+            //从客户端收到信息
+            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
 
-        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+            await client.SendAsync(mes);//将收到的信息直接返回给发送方
+        };
+
+        await service.SetupAsync(new TouchSocketConfig()//载入配置
+             .SetListenIPHosts(7789)
+             .ConfigureContainer(a =>
+             {
+                 a.AddLogger(logger =>
+                 {
+                     logger.AddConsoleLogger();
+                     logger.AddFileLogger(fileLogger =>
+                     {
+                         fileLogger.MaxSize = 1024 * 1024;
+                         fileLogger.LogLevel = LogLevel.Debug;
+                     });
+
+                     logger.AddLogger(new Mylog4netLogger());//添加Mylog4netLogger日志
+                 });
+             })
+             .ConfigurePlugins(a =>
+             {
+                 //a.Add();//此处可以添加插件
+             }));
+        await service.StartAsync();//启动
+        service.Logger.Info("服务器成功启动");
+        return service;
+    }
+}
+
+internal class Mylog4netLogger : LoggerBase
+{
+    private readonly log4net.ILog m_logger;
+
+    public Mylog4netLogger()
+    {
+        this.m_logger = log4net.LogManager.GetLogger("Test");
+    }
+
+    protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+    {
+        //此处就是实际的日志输出
+
+        switch (logLevel)
         {
-            //此处就是实际的日志输出
+            case LogLevel.Trace:
+                this.m_logger.Debug(message, exception);
+                break;
 
-            switch (logLevel)
-            {
-                case LogLevel.Trace:
-                    this.m_logger.Debug(message, exception);
-                    break;
+            case LogLevel.Debug:
+                this.m_logger.Debug(message, exception);
+                break;
 
-                case LogLevel.Debug:
-                    this.m_logger.Debug(message, exception);
-                    break;
+            case LogLevel.Info:
+                this.m_logger.Info(message, exception);
+                break;
 
-                case LogLevel.Info:
-                    this.m_logger.Info(message, exception);
-                    break;
+            case LogLevel.Warning:
+                this.m_logger.Warn(message, exception);
+                break;
 
-                case LogLevel.Warning:
-                    this.m_logger.Warn(message, exception);
-                    break;
+            case LogLevel.Error:
+                this.m_logger.Error(message, exception);
+                break;
 
-                case LogLevel.Error:
-                    this.m_logger.Error(message, exception);
-                    break;
+            case LogLevel.Critical:
+                this.m_logger.Error(message, exception);
+                break;
 
-                case LogLevel.Critical:
-                    this.m_logger.Error(message, exception);
-                    break;
-
-                case LogLevel.None:
-                default:
-                    break;
-            }
+            case LogLevel.None:
+            default:
+                break;
         }
     }
 }

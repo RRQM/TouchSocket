@@ -10,9 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace RpcClassLibrary.Models
+namespace RpcClassLibrary.Models;
+
+public class RequestBase
 {
-    public class RequestBase
-    {
-    }
 }

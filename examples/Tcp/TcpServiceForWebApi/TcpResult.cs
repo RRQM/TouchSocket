@@ -12,12 +12,11 @@
 
 using TouchSocket.Core;
 
-namespace TcpServiceForWebApi
+namespace TcpServiceForWebApi;
+
+public class TcpResult : ResultBase
 {
-    public class TcpResult : ResultBase
+    public TcpResult(ResultCode resultCode, string message) : base(resultCode, message)
     {
-        public TcpResult(ResultCode resultCode, string message) : base(resultCode, message)
-        {
-        }
     }
 }

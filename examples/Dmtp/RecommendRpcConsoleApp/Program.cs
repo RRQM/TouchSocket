@@ -17,59 +17,58 @@ using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
 using TouchSocket.Sockets;
 
-namespace RecommendRpcConsoleApp
+namespace RecommendRpcConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static async Task Main(string[] args)
     {
-        private static async Task Main(string[] args)
-        {
-            var service = new TcpDmtpService();
-            var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(7789)
-                   .ConfigureContainer(a =>
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(7789)
+               .ConfigureContainer(a =>
+               {
+                   a.AddConsoleLogger();
+                   a.AddFileLogger();
+                   a.AddRpcStore(store =>
                    {
-                       a.AddConsoleLogger();
-                       a.AddFileLogger();
-                       a.AddRpcStore(store =>
-                       {
-                           ////此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
-                           //store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+                       ////此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+                       //store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
 
-                           //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
-                           store.RegisterAllFromRpcImplementationClassLibrary();
-                       });
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc();
-                   })
-                   .SetDmtpOption(new DmtpOption()
-                   {
-                       VerifyToken = "Dmtp"
-                   });//设定连接口令，作用类似账号密码
+                       //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
+                       store.RegisterAllFromRpcImplementationClassLibrary();
+                   });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseDmtpRpc();
+               })
+               .SetDmtpOption(new DmtpOption()
+               {
+                   VerifyToken = "Dmtp"
+               });//设定连接口令，作用类似账号密码
 
-            await service.SetupAsync(config);
-            await service.StartAsync();
+        await service.SetupAsync(config);
+        await service.StartAsync();
 
-            service.Logger.Info($"{service.GetType().Name}已启动");
+        service.Logger.Info($"{service.GetType().Name}已启动");
 
-            var client = new TcpDmtpClient();
-            await client.SetupAsync(new TouchSocketConfig()
-                 .SetRemoteIPHost("127.0.0.1:7789")
-                 .ConfigurePlugins(a =>
-                 {
-                     a.UseDmtpRpc();
-                 })
-                 .SetDmtpOption(new DmtpOption()
-                 {
-                     VerifyToken = "Dmtp"
-                 }));
-            await client.ConnectAsync();
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+             .SetRemoteIPHost("127.0.0.1:7789")
+             .ConfigurePlugins(a =>
+             {
+                 a.UseDmtpRpc();
+             })
+             .SetDmtpOption(new DmtpOption()
+             {
+                 VerifyToken = "Dmtp"
+             }));
+        await client.ConnectAsync();
 
-            //Login即为在RpcClassLibrary中自动生成的项目
-            var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
-            Console.WriteLine(response.Result);
-            Console.ReadKey();
-        }
+        //Login即为在RpcClassLibrary中自动生成的项目
+        var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
+        Console.WriteLine(response.Result);
+        Console.ReadKey();
     }
 }

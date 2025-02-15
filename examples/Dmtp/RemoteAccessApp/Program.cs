@@ -15,75 +15,74 @@ using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.RemoteAccess;
 using TouchSocket.Sockets;
 
-namespace RemoteAccessApp
+namespace RemoteAccessApp;
+
+internal static class Program
 {
-    internal static class Program
+    /// <summary>
+    ///  The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    private static void Main()
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        private static void Main()
-        {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+        // To customize application configuration such as set high DPI settings or default font,
+        // see https://aka.ms/applicationconfiguration.
 
-            try
-            {
-                Enterprise.ForTest();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            var service = GetTcpDmtpService();
-            ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+        try
+        {
+            Enterprise.ForTest();
         }
-
-        private static async Task<TcpDmtpService> GetTcpDmtpService()
+        catch (Exception ex)
         {
-            var service = await new TouchSocketConfig()//����
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .ConfigureContainer(a =>
-                   {
-                       a.AddConsoleLogger();
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRemoteAccess();//��������Զ�̷��ʲ��
-                       a.Add<MyRemoteAccessPlugin>();
-                   })
-                   .SetDmtpOption(new DmtpOption()
-                   {
-                       VerifyToken = "Dmtp"//������֤���
-                   })
-                   .BuildServiceAsync<TcpDmtpService>();//�˴�build�൱��new TcpDmtpService��Ȼ��SetupAsync��Ȼ��StartAsync��
-            service.Logger.Info("�������ɹ�����");
-            return service;
+            Console.WriteLine(ex.Message);
         }
+        var service = GetTcpDmtpService();
+        ApplicationConfiguration.Initialize();
+        Application.Run(new Form1());
+    }
 
-        public class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin
+    private static async Task<TcpDmtpService> GetTcpDmtpService()
+    {
+        var service = await new TouchSocketConfig()//����
+               .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+               .ConfigureContainer(a =>
+               {
+                   a.AddConsoleLogger();
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseDmtpRemoteAccess();//��������Զ�̷��ʲ��
+                   a.Add<MyRemoteAccessPlugin>();
+               })
+               .SetDmtpOption(new DmtpOption()
+               {
+                   VerifyToken = "Dmtp"//������֤���
+               })
+               .BuildServiceAsync<TcpDmtpService>();//�˴�build�൱��new TcpDmtpService��Ȼ��SetupAsync��Ȼ��StartAsync��
+        service.Logger.Info("�������ɹ�����");
+        return service;
+    }
+
+    public class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin
+    {
+        public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)
         {
-            public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)
-            {
-                //Console.WriteLine($"�пͻ�����������Զ�̲���");
-                //Console.WriteLine($"���ͣ�{e.AccessType}��ģʽ��{e.AccessMode}");
-                //Console.WriteLine($"����·����{e.Path}");
-                //Console.WriteLine($"Ŀ��·����{e.TargetPath}");
+            //Console.WriteLine($"�пͻ�����������Զ�̲���");
+            //Console.WriteLine($"���ͣ�{e.AccessType}��ģʽ��{e.AccessMode}");
+            //Console.WriteLine($"����·����{e.Path}");
+            //Console.WriteLine($"Ŀ��·����{e.TargetPath}");
 
-                //Console.WriteLine("������y/n�����Ƿ����������?");
+            //Console.WriteLine("������y/n�����Ƿ����������?");
 
-                //var input = Console.ReadLine();
-                //if (input == "y")
-                //{
-                    e.IsPermitOperation = true;
-                //    return;
-                //}
+            //var input = Console.ReadLine();
+            //if (input == "y")
+            //{
+            e.IsPermitOperation = true;
+            //    return;
+            //}
 
-                //�����ǰ����޷�������ת����һ�����
-                await e.InvokeNext();
-            }
+            //�����ǰ����޷�������ת����һ�����
+            await e.InvokeNext();
         }
     }
 }

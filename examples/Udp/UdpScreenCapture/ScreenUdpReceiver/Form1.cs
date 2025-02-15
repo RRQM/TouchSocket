@@ -16,41 +16,40 @@ using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace ScreenUdpReceiver
+namespace ScreenUdpReceiver;
+
+/// <summary>
+/// 本程序源码由网友“木南白水”提供。
+/// </summary>
+public partial class Form1 : Form
 {
-    /// <summary>
-    /// 本程序源码由网友“木南白水”提供。
-    /// </summary>
-    public partial class Form1 : Form
+    private UdpSession udpSession;
+
+    public Form1()
     {
-        private UdpSession udpSession;
+        this.InitializeComponent();
+    }
 
-        public Form1()
+    private void Form1_Load(object sender, EventArgs e)
+    {
+        try
         {
-            this.InitializeComponent();
+            this.udpSession = new UdpSession();
+
+            this.udpSession.Received = (c, e) =>
+            {
+                this.pictureBox1.Image = Image.FromStream(e.ByteBlock.AsStream(false));
+                return EasyTask.CompletedTask;
+            };
+            this.udpSession.SetupAsync(new TouchSocketConfig()
+           .SetBindIPHost(new IPHost("127.0.0.1:7790"))
+           .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
+            this.udpSession.StartAsync();
         }
-
-        private void Form1_Load(object sender, EventArgs e)
+        catch (Exception ex)
         {
-            try
-            {
-                this.udpSession = new UdpSession();
-
-                this.udpSession.Received = (c, e) =>
-                {
-                    this.pictureBox1.Image = Image.FromStream(e.ByteBlock.AsStream(false));
-                    return EasyTask.CompletedTask;
-                };
-                this.udpSession.SetupAsync(new TouchSocketConfig()
-               .SetBindIPHost(new IPHost("127.0.0.1:7790"))
-               .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
-                this.udpSession.StartAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"错误：{ex.Message},程序将退出");
-                Environment.Exit(0);
-            }
+            MessageBox.Show($"错误：{ex.Message},程序将退出");
+            Environment.Exit(0);
         }
     }
 }

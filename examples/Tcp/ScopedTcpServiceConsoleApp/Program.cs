@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -7,7 +7,7 @@ namespace ScopedTcpServiceConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var service = await CreateService();
 

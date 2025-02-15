@@ -19,110 +19,109 @@ using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
 using TouchSocket.Sockets;
 
-namespace SerializationSelectorConsoleApp
+namespace SerializationSelectorConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static async Task Main(string[] args)
     {
-        private static async Task Main(string[] args)
+        await StartServer();
+
+        var client = await CreateClient();
+
+        InvokeOption invokeOption = new DmtpInvokeOption()
         {
-            await StartServer();
+            FeedbackType = FeedbackType.WaitInvoke,
+            SerializationType = (SerializationType)4,
+            Timeout = 1000 * 10
+        };
 
-            var client = await CreateClient();
+        var msg = client.GetDmtpRpcActor().Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
+        Console.WriteLine("调用成功，结果：" + msg);
+        Console.ReadKey();
+    }
 
-            InvokeOption invokeOption = new DmtpInvokeOption()
-            {
-                FeedbackType = FeedbackType.WaitInvoke,
-                SerializationType = (SerializationType)4,
-                Timeout = 1000 * 10
-            };
+    private static async Task<TcpDmtpClient> CreateClient()
+    {
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+              .SetRemoteIPHost("127.0.0.1:7789")
+              .ConfigurePlugins(a =>
+              {
+                  a.UseDmtpRpc()
+                      .SetSerializationSelector(new MemoryPackSerializationSelector());
 
-            var msg = client.GetDmtpRpcActor().Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
-            Console.WriteLine("调用成功，结果：" + msg);
-            Console.ReadKey();
-        }
+                  //a.UseDmtpRpc()
+                  //    .SetSerializationSelector(new DefaultSerializationSelector()
+                  //    {
+                  //        //仅示例，实际使用时，请赋值有效值
+                  //        FastSerializerContext = default,
+                  //        JsonSerializerSettings = default,
+                  //        SerializationBinder = default,
+                  //    });
+              })
+              .SetDmtpOption(new DmtpOption()
+              {
+                  VerifyToken = "Dmtp"
+              }));
+        await client.ConnectAsync();
+        return client;
+    }
 
-        private static async Task<TcpDmtpClient> CreateClient()
-        {
-            var client = new TcpDmtpClient();
-            await client.SetupAsync(new TouchSocketConfig()
-                  .SetRemoteIPHost("127.0.0.1:7789")
-                  .ConfigurePlugins(a =>
-                  {
-                      a.UseDmtpRpc()
-                          .SetSerializationSelector(new MemoryPackSerializationSelector());
-
-                      //a.UseDmtpRpc()
-                      //    .SetSerializationSelector(new DefaultSerializationSelector()
-                      //    {
-                      //        //仅示例，实际使用时，请赋值有效值
-                      //        FastSerializerContext = default,
-                      //        JsonSerializerSettings = default,
-                      //        SerializationBinder = default,
-                      //    });
-                  })
-                  .SetDmtpOption(new DmtpOption()
-                  {
-                      VerifyToken = "Dmtp"
-                  }));
-            await client.ConnectAsync();
-            return client;
-        }
-
-        private static async Task StartServer()
-        {
-            var service = new TcpDmtpService();
-            var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .ConfigurePlugins(a =>
+    private static async Task StartServer()
+    {
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseDmtpRpc()
+                   .SetSerializationSelector(new MemoryPackSerializationSelector());
+               })
+               .ConfigureContainer(a =>
+               {
+                   a.AddConsoleLogger();
+                   a.AddRpcStore(store =>
                    {
-                       a.UseDmtpRpc()
-                       .SetSerializationSelector(new MemoryPackSerializationSelector());
-                   })
-                   .ConfigureContainer(a =>
-                   {
-                       a.AddConsoleLogger();
-                       a.AddRpcStore(store =>
-                       {
-                           store.RegisterServer<MyRpcServer>();
-                       });
-                   })
-                   .SetDmtpOption(new DmtpOption()
-                   {
-                       VerifyToken = "Dmtp"
+                       store.RegisterServer<MyRpcServer>();
                    });
+               })
+               .SetDmtpOption(new DmtpOption()
+               {
+                   VerifyToken = "Dmtp"
+               });
 
-            await service.SetupAsync(config);
-            await service.StartAsync();
+        await service.SetupAsync(config);
+        await service.StartAsync();
 
-            service.Logger.Info($"{service.GetType().Name}已启动");
-        }
+        service.Logger.Info($"{service.GetType().Name}已启动");
     }
+}
 
-    public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : RpcServer
+{
+    /// <summary>
+    /// 登录
+    /// </summary>
+    /// <param name="loginModel"></param>
+    /// <returns></returns>
+    [Description("登录")]
+    [DmtpRpc]
+    public string Login(LoginModel loginModel)
     {
-        /// <summary>
-        /// 登录
-        /// </summary>
-        /// <param name="loginModel"></param>
-        /// <returns></returns>
-        [Description("登录")]
-        [DmtpRpc]
-        public string Login(LoginModel loginModel)
-        {
-            return $"{loginModel.Account}-{loginModel.Password}";
-        }
+        return $"{loginModel.Account}-{loginModel.Password}";
     }
+}
 
-    [GeneratorRpcProxy(Prefix = "SerializationSelectorConsoleApp.MyRpcServer")]
-    public interface IMyRpcServer
-    {
-        /// <summary>
-        /// 登录
-        /// </summary>
-        /// <param name="loginModel"></param>
-        /// <returns></returns>
-        [Description("登录")]
-        [DmtpRpc]
-        string Login(LoginModel loginModel);
-    }
+[GeneratorRpcProxy(Prefix = "SerializationSelectorConsoleApp.MyRpcServer")]
+public interface IMyRpcServer
+{
+    /// <summary>
+    /// 登录
+    /// </summary>
+    /// <param name="loginModel"></param>
+    /// <returns></returns>
+    [Description("登录")]
+    [DmtpRpc]
+    string Login(LoginModel loginModel);
 }

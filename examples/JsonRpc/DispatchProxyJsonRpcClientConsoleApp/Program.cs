@@ -14,54 +14,53 @@ using TouchSocket.Core;
 using TouchSocket.JsonRpc;
 using TouchSocket.Sockets;
 
-namespace DispatchProxyJsonRpcClientConsoleApp
+namespace DispatchProxyJsonRpcClientConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static void Main(string[] args)
     {
-        private static void Main(string[] args)
-        {
-            var rpc = MyJsonRpcDispatchProxy.Create<IJsonRpcServer, MyJsonRpcDispatchProxy>();
+        var rpc = MyJsonRpcDispatchProxy.Create<IJsonRpcServer, MyJsonRpcDispatchProxy>();
 
-            while (true)
-            {
-                var result = rpc.TestJsonRpc(Console.ReadLine());
-                Console.WriteLine(result);
-            }
+        while (true)
+        {
+            var result = rpc.TestJsonRpc(Console.ReadLine());
+            Console.WriteLine(result);
         }
     }
+}
 
-    /// <summary>
-    /// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
-    /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
-    /// </summary>
-    internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
+/// <summary>
+/// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
+{
+    private readonly IJsonRpcClient m_client;
+
+    public MyJsonRpcDispatchProxy()
     {
-        private readonly IJsonRpcClient m_client;
-
-        public MyJsonRpcDispatchProxy()
-        {
-            this.m_client = CreateJsonRpcClientByTcp().GetFalseAwaitResult();
-        }
-
-        public override IJsonRpcClient GetClient()
-        {
-            return this.m_client;
-        }
-
-        private static async Task<IJsonRpcClient> CreateJsonRpcClientByTcp()
-        {
-            var client = new TcpJsonRpcClient();
-            await client.SetupAsync(new TouchSocketConfig()
-                 .SetRemoteIPHost("127.0.0.1:7705")
-                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
-            await client.ConnectAsync();
-            return client;
-        }
+        this.m_client = CreateJsonRpcClientByTcp().GetFalseAwaitResult();
     }
 
-    internal interface IJsonRpcServer
+    public override IJsonRpcClient GetClient()
     {
-        [JsonRpc(MethodInvoke = true)]
-        string TestJsonRpc(string str);
+        return this.m_client;
     }
+
+    private static async Task<IJsonRpcClient> CreateJsonRpcClientByTcp()
+    {
+        var client = new TcpJsonRpcClient();
+        await client.SetupAsync(new TouchSocketConfig()
+             .SetRemoteIPHost("127.0.0.1:7705")
+             .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
+        await client.ConnectAsync();
+        return client;
+    }
+}
+
+internal interface IJsonRpcServer
+{
+    [JsonRpc(MethodInvoke = true)]
+    string TestJsonRpc(string str);
 }

@@ -10,15 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace RpcClassLibrary.Models
-{
-    public class LoginRequest : RequestBase
-    {
-        public string Account { get; set; }
-        public string Password { get; set; }
-    }
+namespace RpcClassLibrary.Models;
 
-    public class LoginResponse : ResponseBase
-    {
-    }
+public class LoginRequest : RequestBase
+{
+    public string Account { get; set; }
+    public string Password { get; set; }
+}
+
+public class LoginResponse : ResponseBase
+{
 }
