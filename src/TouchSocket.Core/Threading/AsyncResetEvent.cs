@@ -25,7 +25,7 @@ public class AsyncResetEvent : DisposableObject
 {
     private readonly bool m_autoReset;
 
-    private readonly Lock m_locker = LockFactory.Create();
+    private readonly Lock m_locker = new Lock();
 
     private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
 

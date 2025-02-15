@@ -879,4 +879,19 @@ public static class SystemExtension
     }
 #endif
     #endregion
+
+    #region IEnumerable
+    /// <summary>
+    /// 获取安全的枚举器。
+    /// </summary>
+    public static IEnumerable<T> GetSafeEnumerator<T>(this IEnumerable<T> enumerator)
+    {
+        if (enumerator is null)
+        {
+            return [];
+        }
+
+        return enumerator;
+    }
+    #endregion
 }

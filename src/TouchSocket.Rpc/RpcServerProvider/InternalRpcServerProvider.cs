@@ -88,11 +88,13 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
         {
             invokeResult.Status = InvokeStatus.InvocationException;
             invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
+            invokeResult.Exception = ex.InnerException;
         }
         catch (Exception ex)
         {
             invokeResult.Status = InvokeStatus.Exception;
             invokeResult.Message = ex.Message;
+            invokeResult.Exception = ex;
         }
         finally
         {

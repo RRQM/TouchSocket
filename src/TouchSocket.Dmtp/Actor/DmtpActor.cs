@@ -111,7 +111,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
     private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
     private CancellationTokenSource m_cancellationTokenSource;
-    private readonly Lock m_syncRoot = LockFactory.Create();
+    private readonly Lock m_syncRoot = new Lock();
     #endregion
 
     /// <summary>
@@ -195,7 +195,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
                         {
                             this.m_handshakeFinished.Set();
                             //verifyResult.Handle = true;
-                            throw new TokenVerifyException(verifyResult.Message);
+                            throw new TokenVerifyException(verifyResult.Metadata, verifyResult.Message);
                         }
                     }
                 case WaitDataStatus.Overtime:
@@ -427,6 +427,8 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
                         {
                             waitVerify.Id = this.Id;
                             waitVerify.Status = 1;
+                            waitVerify.Metadata = args.Metadata;
+                            waitVerify.Message = args.Message ?? TouchSocketCoreResource.OperationSuccessful;
                             await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.Online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
@@ -436,7 +438,8 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
                         else//不允许连接
                         {
                             waitVerify.Status = 2;
-                            waitVerify.Message ??= "Fail";
+                            waitVerify.Metadata = args.Metadata;
+                            waitVerify.Message = TouchSocketDmtpResource.RemoteRefuse.Format(args.Message);
                             await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             await this.OnClosed(false, args.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }

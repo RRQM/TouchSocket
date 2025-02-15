@@ -58,7 +58,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     private WebSocketDmtpService m_service;
     private HttpContext m_httpContext;
     private string m_id;
-    private readonly Lock m_locker = LockFactory.Create();
+    private readonly Lock m_locker = new Lock();
 
     #endregion 字段
 

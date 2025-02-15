@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -23,7 +24,7 @@ namespace TouchSocket.Core;
 /// </summary>
 public sealed class PluginManager : DisposableObject, IPluginManager
 {
-    private readonly Lock m_locker = LockFactory.Create();
+    private readonly Lock m_locker = new Lock();
     private readonly IScopedResolver m_scopedResolver;
     private Dictionary<Type, PluginInvokeLine> m_pluginMethods = new Dictionary<Type, PluginInvokeLine>();
 

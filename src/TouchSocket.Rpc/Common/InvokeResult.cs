@@ -32,6 +32,17 @@ public sealed class InvokeResult
     /// <summary>
     /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
     /// </summary>
+    /// <param name="ex">异常实例。</param>
+    public InvokeResult(Exception ex)
+    {
+        this.Exception = ex;
+        this.Status = InvokeStatus.Exception;
+        this.Message = ex.Message;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
+    /// </summary>
     public InvokeResult()
     {
     }

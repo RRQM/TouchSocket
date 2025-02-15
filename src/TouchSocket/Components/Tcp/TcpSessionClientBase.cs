@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -50,7 +51,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
     #region 变量
 
-    private readonly Lock m_lockForAbort = LockFactory.Create();
+    private readonly Lock m_lockForAbort = new Lock();
     private Task m_beginReceiveTask;
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_id;

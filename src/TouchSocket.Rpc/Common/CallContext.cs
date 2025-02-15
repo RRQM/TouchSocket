@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc;
 /// </summary>
 public abstract class CallContext : DependencyObject, ICallContext
 {
-    private readonly Lock m_locker = LockFactory.Create();
+    private readonly Lock m_locker = new Lock();
     private bool m_canceled;
     private CancellationTokenSource m_tokenSource;
 

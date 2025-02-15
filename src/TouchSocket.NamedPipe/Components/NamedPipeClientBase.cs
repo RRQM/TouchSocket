@@ -52,7 +52,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     private ValueCounter m_receiveCounter;
     private InternalReceiver m_receiver;
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
-    private readonly Lock m_lockForAbort = LockFactory.Create();
+    private readonly Lock m_lockForAbort = new Lock();
     #endregion 变量
 
     #region 事件

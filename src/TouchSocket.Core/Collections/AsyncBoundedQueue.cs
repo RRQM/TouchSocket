@@ -24,7 +24,7 @@ namespace TouchSocket.Core;
 /// <typeparam name="T">队列中元素的类型。</typeparam>
 public sealed class AsyncBoundedQueue<T> : ValueTaskSource<T>
 {
-    private readonly Lock m_locker = LockFactory.Create();
+    private readonly Lock m_locker = new Lock();
 
     // 使用并发队列来存储元素，支持线程安全的操作。
     private readonly ConcurrentQueue<T> m_queue = new ConcurrentQueue<T>();
