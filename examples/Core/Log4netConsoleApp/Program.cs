@@ -64,7 +64,7 @@ namespace Log4netConsoleApp
         }
     }
 
-    internal class Mylog4netLogger : TouchSocket.Core.ILog
+    internal class Mylog4netLogger :LoggerBase
     {
         private readonly log4net.ILog m_logger;
 
@@ -73,9 +73,7 @@ namespace Log4netConsoleApp
             this.m_logger = log4net.LogManager.GetLogger("Test");
         }
 
-        public LogLevel LogLevel { get; set; }
-
-        public void Log(LogLevel logLevel, object source, string message, Exception exception)
+        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
         {
             //此处就是实际的日志输出
 
