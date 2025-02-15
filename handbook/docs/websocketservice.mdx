@@ -796,13 +796,13 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
 ```csharp showLineNumbers
 var clients = service.Clients;
-foreach (var item in clients)
+foreach (var client in clients)
 {
-    if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
+    if (client.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
     {
-        if (item.Id == "id")//再按指定id发送，或者直接广播发送
+        if (client.Id == "id")//再按指定id发送，或者直接广播发送
         {
-            await item.WebSocket.SendAsync("hello");
+            await client.WebSocket.SendAsync("hello");
         }
     }
 }
@@ -820,8 +820,9 @@ foreach (var item in clients)
 
 ```csharp showLineNumbers
 string[] ids = service.GetIds();
-if (service.TryGetClient(ids[0], out HttpSessionClient SessionClient))
+if (service.TryGetClient(ids[0], out HttpSessionClient sessionClient))
 {
+    await sessionClient.WebSocket.SendAsync("hello");
 }
 ```
 
