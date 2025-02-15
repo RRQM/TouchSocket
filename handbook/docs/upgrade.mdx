@@ -18,6 +18,39 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.14
+
+**更新日期：** 2025.2.15
+
+**更新描述：**
+
+修复升级。区间字符适配器会有不兼容部分，请参阅[区间字符](/docs/upgrade/upgrade-3.0.14)。
+
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>新增</Tag> 所有的`Plugin`接口。均新增快捷扩展方法，简化使用。
+- &nbsp;<Tag>调整</Tag> 使用自定义的`lock`锁对象。以简化使用场景。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `ILog`接口新增`DateTimeFormat`属性。 [#IBLQBX](https://gitee.com/RRQM_Home/TouchSocket/issues/IBLQBX)
+- &nbsp;<Tag>修复</Tag> 自定义区间适配器在未找到开始字符的情况下，也会缓存数据的bug。 [#IBKPXU](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKPXU)
+- &nbsp;<Tag>调整</Tag> 自定义区间适配器的运行逻辑，简化使用方式。 [#IBKPXU](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKPXU)
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>修复</Tag> `IRpcActionFilter.ExecutedAsync`在执行异常时，`Exception`参数一直为空的bug。[#IBK579](https://gitee.com/RRQM_Home/TouchSocket/issues/IBK579)
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>新增</Tag> `TokenVerifyException`异常信息中新增Metadata属性。
+- &nbsp;<Tag>修复</Tag> `TcpDmtpService`中使用`e.IsPermitOperation = false;`拒绝客户端无效的bug。[#IBKO6A](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKO6A)
+
+***
+
 ## v3.0.13
 
 **更新日期：** 2025.1.27
