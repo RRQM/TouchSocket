@@ -12,12 +12,11 @@
 
 using MemoryPack;
 
-namespace SerializationSelectorClassLibrary
+namespace SerializationSelectorClassLibrary;
+
+[MemoryPackable]
+public partial class LoginModel
 {
-    [MemoryPackable]
-    public partial class LoginModel
-    {
-        public string Account { get; set; }
-        public string Password { get; set; }
-    }
+    public string Account { get; set; }
+    public string Password { get; set; }
 }

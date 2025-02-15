@@ -1,56 +1,55 @@
 using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 
-namespace NamedPipeWebApplication
+namespace NamedPipeWebApplication;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Add services to the container.
+
+        builder.Services.AddControllers();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        #region TouchSocketç›¸å…³
+        builder.Services.ConfigureContainer(a =>
         {
-            var builder = WebApplication.CreateBuilder(args);
+            //åœ¨Hosté€šç”¨ä¸»æœºæ¨¡å¼ä¸‹ï¼Œæ‰€æœ‰çš„å®¹å™¨æ³¨å…¥æ—¶éƒ½æ˜¯å…±äº«çš„ï¼Œæ‰€ä»¥å¯ä»¥ç»Ÿä¸€æ³¨å…¥
 
-            // Add services to the container.
+            //ä½¿ç”¨aspçš„æ—¥å¿—è®°å½•
+            a.AddAspNetCoreLogger();
+        });
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            #region TouchSocketÏà¹Ø
-            builder.Services.ConfigureContainer(a =>
-            {
-                //ÔÚHostÍ¨ÓÃÖ÷»úÄ£Ê½ÏÂ£¬ËùÓĞµÄÈİÆ÷×¢ÈëÊ±¶¼ÊÇ¹²ÏíµÄ£¬ËùÒÔ¿ÉÒÔÍ³Ò»×¢Èë
-
-                //Ê¹ÓÃaspµÄÈÕÖ¾¼ÇÂ¼
-                a.AddAspNetCoreLogger();
-            });
-
-            builder.Services.AddServiceHostedService<INamedPipeService, NamedPipeService>(config =>
-            {
-                config.SetPipeName("TouchSocketPipe")//ÉèÖÃÃüÃû¹ÜµÀÃû³Æ
-                      .ConfigurePlugins(a =>
-                      {
-                          //a.Add();//´Ë´¦¿ÉÒÔÌí¼Ó²å¼ş
-                      });
-            });
-            #endregion
+        builder.Services.AddServiceHostedService<INamedPipeService, NamedPipeService>(config =>
+        {
+            config.SetPipeName("TouchSocketPipe")//è®¾ç½®å‘½åç®¡é“åç§°
+                  .ConfigurePlugins(a =>
+                  {
+                      //a.Add();//æ­¤å¤„å¯ä»¥æ·»åŠ æ’ä»¶
+                  });
+        });
+        #endregion
 
 
-            var app = builder.Build();
+        var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseAuthorization();
+
+
+        app.MapControllers();
+
+        app.Run();
     }
 }

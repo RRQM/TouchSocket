@@ -17,103 +17,102 @@ using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace ReverseJsonRpcConsoleApp
+namespace ReverseJsonRpcConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static async Task Main(string[] args)
     {
-        private static async Task Main(string[] args)
-        {
-            var service = await GetService();
-            var client = await GetClient();
+        var service = await GetService();
+        var client = await GetClient();
 
-            Console.ReadKey();
-        }
+        Console.ReadKey();
+    }
 
-        private static async Task<WebSocketJsonRpcClient> GetClient()
-        {
-            var jsonRpcClient = new WebSocketJsonRpcClient();
-            await jsonRpcClient.SetupAsync(new TouchSocketConfig()
-                 .ConfigureContainer(a =>
+    private static async Task<WebSocketJsonRpcClient> GetClient()
+    {
+        var jsonRpcClient = new WebSocketJsonRpcClient();
+        await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+             .ConfigureContainer(a =>
+             {
+                 a.AddRpcStore(store =>
                  {
-                     a.AddRpcStore(store =>
-                     {
-                         store.RegisterServer<ReverseJsonRpcServer>();
-                     });
-                 })
-                 .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
-            await jsonRpcClient.ConnectAsync();
+                     store.RegisterServer<ReverseJsonRpcServer>();
+                 });
+             })
+             .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
+        await jsonRpcClient.ConnectAsync();
 
-            return jsonRpcClient;
-        }
-
-        private static async Task<HttpService> GetService()
-        {
-            var service = new HttpService();
-
-            await service.SetupAsync(new TouchSocketConfig()
-                  .SetListenIPHosts(7707)
-                  .ConfigureContainer(a =>
-                  {
-                      a.AddRpcStore(store =>
-                      {
-                      });
-                  })
-                  .ConfigurePlugins(a =>
-                  {
-                      a.UseWebSocket()
-                      .SetWSUrl("/ws");
-
-                      a.UseWebSocketJsonRpc()
-                      .SetAllowJsonRpc((socketClient, context) =>
-                      {
-                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                          //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
-                          return true;
-                      });
-
-                      a.Add<MyPluginClass>();
-                  }));
-            await service.StartAsync();
-            return service;
-        }
+        return jsonRpcClient;
     }
 
-    internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+    private static async Task<HttpService> GetService()
     {
-        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
-        {
-            try
-            {
-                //获取JsonRpcActionClient，用于执行反向Rpc
-                var jsonRpcClient = ((IHttpSessionClient)client.Client).GetJsonRpcActionClient();
+        var service = new HttpService();
 
-                var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
-                Console.WriteLine($"反向调用成功，结果={result}");
+        await service.SetupAsync(new TouchSocketConfig()
+              .SetListenIPHosts(7707)
+              .ConfigureContainer(a =>
+              {
+                  a.AddRpcStore(store =>
+                  {
+                  });
+              })
+              .ConfigurePlugins(a =>
+              {
+                  a.UseWebSocket()
+                  .SetWSUrl("/ws");
 
-                //Stopwatch stopwatch = Stopwatch.StartNew();
-                //for (int i = 0; i < 10000; i++)
-                //{
-                //    //调用Rpc，此处可以使用代理
-                //    var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
-                //}
-                //stopwatch.Stop();
-                //Console.WriteLine(stopwatch.Elapsed);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+                  a.UseWebSocketJsonRpc()
+                  .SetAllowJsonRpc((socketClient, context) =>
+                  {
+                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                      //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+                      return true;
+                  });
 
-            await e.InvokeNext();
-        }
+                  a.Add<MyPluginClass>();
+              }));
+        await service.StartAsync();
+        return service;
     }
+}
 
-    public partial class ReverseJsonRpcServer : RpcServer
+internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+{
+    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
     {
-        [JsonRpc(MethodInvoke = true)]
-        public int Add(int a, int b)
+        try
         {
-            return a + b;
+            //获取JsonRpcActionClient，用于执行反向Rpc
+            var jsonRpcClient = ((IHttpSessionClient)client.Client).GetJsonRpcActionClient();
+
+            var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
+            Console.WriteLine($"反向调用成功，结果={result}");
+
+            //Stopwatch stopwatch = Stopwatch.StartNew();
+            //for (int i = 0; i < 10000; i++)
+            //{
+            //    //调用Rpc，此处可以使用代理
+            //    var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
+            //}
+            //stopwatch.Stop();
+            //Console.WriteLine(stopwatch.Elapsed);
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        await e.InvokeNext();
+    }
+}
+
+public partial class ReverseJsonRpcServer : RpcServer
+{
+    [JsonRpc(MethodInvoke = true)]
+    public int Add(int a, int b)
+    {
+        return a + b;
     }
 }

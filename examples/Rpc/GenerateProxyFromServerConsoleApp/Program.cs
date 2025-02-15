@@ -12,41 +12,40 @@
 
 using TouchSocket.Rpc;
 
-namespace GenerateProxyFromServerConsoleApp
+namespace GenerateProxyFromServerConsoleApp;
+
+internal class Program
 {
-    internal class Program
+    private static void Main(string[] args)
     {
-        private static void Main(string[] args)
-        {
-            var rpcStore = new RpcStore(new TouchSocket.Core.Container());
+        var rpcStore = new RpcStore(new TouchSocket.Core.Container());
 
-            rpcStore.RegisterServer<MyRpcClass>();
-        }
+        rpcStore.RegisterServer<MyRpcClass>();
+    }
+}
+
+internal partial class MyRpcClass : RpcServer
+{
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+
+internal class MyRpcAttribute : RpcAttribute
+{
+    public MyRpcAttribute()
+    {
+        this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;
     }
 
-    internal partial class MyRpcClass : RpcServer
+    public override Type[] GetGenericConstraintTypes()
     {
-        public int Add(int a, int b)
-        {
-            return a + b;
-        }
+        return new Type[] { typeof(IRpcClient) };
     }
 
-    internal class MyRpcAttribute : RpcAttribute
+    public override string GetDescription(RpcMethod methodInstance)
     {
-        public MyRpcAttribute()
-        {
-            this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;
-        }
-
-        public override Type[] GetGenericConstraintTypes()
-        {
-            return new Type[] { typeof(IRpcClient) };
-        }
-
-        public override string GetDescription(RpcMethod methodInstance)
-        {
-            return base.GetDescription(methodInstance);
-        }
+        return base.GetDescription(methodInstance);
     }
 }

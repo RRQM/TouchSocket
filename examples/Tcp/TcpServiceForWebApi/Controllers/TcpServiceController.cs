@@ -18,73 +18,72 @@ using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TcpServiceForWebApi.Controllers
+namespace TcpServiceForWebApi.Controllers;
+
+[ApiController]
+[Route("[controller]/[action]")]
+public class TcpServiceController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]/[action]")]
-    public class TcpServiceController : ControllerBase
+    private readonly ILogger<TcpServiceController> _logger;
+    private readonly ITcpService m_tcpService;
+
+    public TcpServiceController(ILogger<TcpServiceController> logger, ITcpService tcpService)
     {
-        private readonly ILogger<TcpServiceController> _logger;
-        private readonly ITcpService m_tcpService;
+        this._logger = logger;
+        this.m_tcpService = tcpService;
+    }
 
-        public TcpServiceController(ILogger<TcpServiceController> logger, ITcpService tcpService)
-        {
-            this._logger = logger;
-            this.m_tcpService = tcpService;
-        }
+    [HttpGet]
+    public IEnumerable<string> GetAllIds()
+    {
+        return this.m_tcpService.GetIds();
+    }
 
-        [HttpGet]
-        public IEnumerable<string> GetAllIds()
+    [HttpGet]
+    public ActionResult<TcpResult> SendMsgTo(string id, string msg)
+    {
+        try
         {
-            return this.m_tcpService.GetIds();
-        }
-
-        [HttpGet]
-        public ActionResult<TcpResult> SendMsgTo(string id, string msg)
-        {
-            try
+            if (this.m_tcpService.Clients.TryGetClient(id, out var client))
             {
-                if (this.m_tcpService.Clients.TryGetClient(id, out var client))
-                {
-                    client.Send(msg);
-                    return new TcpResult(ResultCode.Success, "success");
-                }
-                else
-                {
-                    return new TcpResult(ResultCode.Error, "没有这个ID");
-                }
+                client.Send(msg);
+                return new TcpResult(ResultCode.Success, "success");
             }
-            catch (Exception ex)
+            else
             {
-                return new TcpResult(ResultCode.Error, ex.Message);
+                return new TcpResult(ResultCode.Error, "没有这个ID");
             }
         }
-
-        [HttpGet]
-        public ActionResult<Result> SendMsgThenWait(string id, string msg)
+        catch (Exception ex)
         {
-            try
+            return new TcpResult(ResultCode.Error, ex.Message);
+        }
+    }
+
+    [HttpGet]
+    public ActionResult<Result> SendMsgThenWait(string id, string msg)
+    {
+        try
+        {
+            if (this.m_tcpService.Clients.TryGetClient(id, out var client))
             {
-                if (this.m_tcpService.Clients.TryGetClient(id, out var client))
+                var result = client.CreateWaitingClient(new WaitingOptions()
                 {
-                    var result = client.CreateWaitingClient(new WaitingOptions()
+                    FilterFunc = data =>
                     {
-                        FilterFunc = data =>
-                        {
-                            return true;//此处可以筛选返回数据。
-                        }
-                    }).SendThenReturn(Encoding.UTF8.GetBytes(msg));
-                    return new Result(ResultCode.Success, Encoding.UTF8.GetString(result));
-                }
-                else
-                {
-                    return new Result(ResultCode.Error, "没有这个ID");
-                }
+                        return true;//此处可以筛选返回数据。
+                    }
+                }).SendThenReturn(Encoding.UTF8.GetBytes(msg));
+                return new Result(ResultCode.Success, Encoding.UTF8.GetString(result));
             }
-            catch (Exception ex)
+            else
             {
-                return new Result(ResultCode.Error, ex.Message);
+                return new Result(ResultCode.Error, "没有这个ID");
             }
+        }
+        catch (Exception ex)
+        {
+            return new Result(ResultCode.Error, ex.Message);
         }
     }
 }

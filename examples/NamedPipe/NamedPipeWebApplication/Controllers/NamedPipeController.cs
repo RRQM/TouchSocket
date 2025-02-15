@@ -4,68 +4,67 @@ using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
-namespace NamedPipeWebApplication.Controllers
+namespace NamedPipeWebApplication.Controllers;
+
+[ApiController]
+[Route("[controller]/[Action]")]
+public class NamedPipeController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]/[Action]")]
-    public class NamedPipeController : ControllerBase
+
+    private readonly ILogger<NamedPipeController> _logger;
+    private readonly INamedPipeService m_namedPipeService;
+
+    public NamedPipeController(ILogger<NamedPipeController> logger, INamedPipeService namedPipeService)
     {
+        this._logger = logger;
+        this.m_namedPipeService = namedPipeService;
+    }
 
-        private readonly ILogger<NamedPipeController> _logger;
-        private readonly INamedPipeService m_namedPipeService;
+    [HttpGet]
+    public IEnumerable<string> GetIds()
+    {
+        return this.m_namedPipeService.GetIds();
+    }
 
-        public NamedPipeController(ILogger<NamedPipeController> logger, INamedPipeService namedPipeService)
+    [HttpPost]
+    public async Task<string> SendMsgThenWait(string id, string msg)
+    {
+        if (!this.m_namedPipeService.TryGetClient(id, out var namedPipeSessionClient))
         {
-            _logger = logger;
-            this.m_namedPipeService = namedPipeService;
+            return "Idæ— æ•ˆ";
         }
 
-        [HttpGet]
-        public IEnumerable<string> GetIds()
+        //å‘é€æ•°æ®
+        await namedPipeSessionClient.SendAsync(msg);
+        this._logger.LogInformation("å‘é€æˆåŠŸ");
+
+        //ä¸‹åˆ—é€»è¾‘ä¸»è¦æ˜¯å®ç°åœ¨å½“å‰ä»£ç ä¸Šä¸‹æ–‡ä¸­ï¼Œç›´æ¥ç­‰å“åº”æ•°æ®
+        //è¯¦ç»†ä½¿ç”¨è¯·çœ‹ https://touchsocket.net/docs/current/namedpipeservice
+
+        using (var receiver = namedPipeSessionClient.CreateReceiver())
         {
-            return m_namedPipeService.GetIds();
-        }
-
-        [HttpPost]
-        public async Task<string> SendMsgThenWait(string id, string msg)
-        {
-            if (!m_namedPipeService.TryGetClient(id, out var namedPipeSessionClient))
+            //è®¾å®šè¶…æ—¶æ—¶é—´ä¸º10ç§’
+            using (var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             {
-                return "IdÎŞĞ§";
-            }
-
-            //·¢ËÍÊı¾İ
-            await namedPipeSessionClient.SendAsync(msg);
-            this._logger.LogInformation("·¢ËÍ³É¹¦");
-
-            //ÏÂÁĞÂß¼­Ö÷ÒªÊÇÊµÏÖÔÚµ±Ç°´úÂëÉÏÏÂÎÄÖĞ£¬Ö±½ÓµÈÏìÓ¦Êı¾İ
-            //ÏêÏ¸Ê¹ÓÃÇë¿´ https://touchsocket.net/docs/current/namedpipeservice
-
-            using (var  receiver=namedPipeSessionClient.CreateReceiver())
-            {
-                //Éè¶¨³¬Ê±Ê±¼äÎª10Ãë
-                using (var tokenSource=new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
                 {
-                    using (var receiverResult =await receiver.ReadAsync(tokenSource.Token))
+                    //æ”¶åˆ°çš„æ•°æ®ï¼Œæ­¤å¤„çš„æ•°æ®ä¼šæ ¹æ®é€‚é…å™¨æŠ•é€’ä¸åŒçš„æ•°æ®ã€‚
+                    var byteBlock = receiverResult.ByteBlock;
+                    var requestInfo = receiverResult.RequestInfo;
+
+                    if (receiverResult.IsCompleted)
                     {
-                        //ÊÕµ½µÄÊı¾İ£¬´Ë´¦µÄÊı¾İ»á¸ù¾İÊÊÅäÆ÷Í¶µİ²»Í¬µÄÊı¾İ¡£
-                        var byteBlock = receiverResult.ByteBlock;
-                        var requestInfo = receiverResult.RequestInfo;
-
-                        if (receiverResult.IsCompleted)
-                        {
-                            //¶Ï¿ªÁ¬½ÓÁË
-                            this._logger.LogInformation($"¶Ï¿ªĞÅÏ¢£º{receiverResult.Message}");
-                            return "ÒÑ¶Ï¿ª";
-                        }
-                        var str = byteBlock.Span.ToString(Encoding.UTF8);
-                        this._logger.LogInformation(str);
-
-                        return str;
+                        //æ–­å¼€è¿æ¥äº†
+                        this._logger.LogInformation($"æ–­å¼€ä¿¡æ¯ï¼š{receiverResult.Message}");
+                        return "å·²æ–­å¼€";
                     }
+                    var str = byteBlock.Span.ToString(Encoding.UTF8);
+                    this._logger.LogInformation(str);
+
+                    return str;
                 }
-                
             }
+
         }
     }
 }

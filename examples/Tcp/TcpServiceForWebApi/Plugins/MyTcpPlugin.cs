@@ -15,21 +15,20 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TcpServiceForWebApi.Plugins
+namespace TcpServiceForWebApi.Plugins;
+
+public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin
 {
-    public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin
+    private readonly ILogger<MyTcpPlugin> m_logger;
+
+    public MyTcpPlugin(ILogger<MyTcpPlugin> logger)
     {
-        private ILogger<MyTcpPlugin> m_logger;
+        this.m_logger = logger;
+    }
 
-        public MyTcpPlugin(ILogger<MyTcpPlugin> logger)
-        {
-            this.m_logger = logger;
-        }
-
-        public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
-        {
-            this.m_logger.LogInformation("客户端连接");
-            await e.InvokeNext();
-        }
+    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
+    {
+        this.m_logger.LogInformation("客户端连接");
+        await e.InvokeNext();
     }
 }

@@ -12,10 +12,9 @@
 
 using TouchSocket.Core;
 
-namespace RpcClassLibrary.Models
+namespace RpcClassLibrary.Models;
+
+public class ResponseBase
 {
-    public class ResponseBase
-    {
-        public Result Result { get; set; }
-    }
+    public Result Result { get; set; }
 }
