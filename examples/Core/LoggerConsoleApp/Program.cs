@@ -56,6 +56,7 @@ namespace LoggerConsoleApp
     class MyLogger : ILog
     {
         public LogLevel LogLevel { get; set; } = LogLevel.Debug;
+        public string DateTimeFormat { get; set; }
 
         public void Log(LogLevel logLevel, object source, string message, Exception exception)
         {

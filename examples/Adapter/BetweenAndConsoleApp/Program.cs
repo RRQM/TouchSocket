@@ -85,7 +85,7 @@ namespace BetweenAndConsoleApp
     /// <summary>
     /// 以**12##12##，Min=5为例。
     /// </summary>
-    class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
+    class MyBetweenAndRequestInfo : IRequestInfo
     {
         public MyBetweenAndRequestInfo()
         {
@@ -98,21 +98,6 @@ namespace BetweenAndConsoleApp
         }
 
         public byte[] Body { get; private set; }
-
-        public void OnParsingBody(ReadOnlySpan<byte> body)
-        {
-            this.Body = body.ToArray();
-        }
-
-        public bool OnParsingEndCode(ReadOnlySpan<byte> endCode)
-        {
-            return true;//该返回值决定，是否执行Receive
-        }
-
-        public bool OnParsingStartCode(ReadOnlySpan<byte> startCode)
-        {
-            return true;
-        }
     }
 
     class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
@@ -132,9 +117,9 @@ namespace BetweenAndConsoleApp
 
         public override byte[] EndCode => m_endCode;
 
-        protected override MyBetweenAndRequestInfo GetInstance()
+        protected override MyBetweenAndRequestInfo GetInstance(ReadOnlySpan<byte> body)
         {
-            return new MyBetweenAndRequestInfo();
+            return new MyBetweenAndRequestInfo(body.ToArray());
         }
     }
 
