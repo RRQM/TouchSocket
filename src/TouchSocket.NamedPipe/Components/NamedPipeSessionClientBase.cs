@@ -31,7 +31,7 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
 {
     #region 字段
 
-    private readonly Lock m_lockForAbort = LockFactory.Create();
+    private readonly Lock m_lockForAbort = new Lock();
     private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
     private TouchSocketConfig m_config;
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;

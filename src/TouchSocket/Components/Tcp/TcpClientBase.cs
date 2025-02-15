@@ -38,7 +38,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #region 变量
 
-    private readonly Lock m_lockForAbort = LockFactory.Create();
+    private readonly Lock m_lockForAbort = new Lock();
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private readonly TcpCore m_tcpCore = new TcpCore();
     private Task m_beginReceiveTask;

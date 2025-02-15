@@ -24,8 +24,6 @@ public sealed class WaitVerify : WaitResult
     /// </summary>
     public string Token { get; set; }
 
-    //internal volatile bool Handle;
-
     /// <summary>
     /// 元数据
     /// </summary>

@@ -28,12 +28,6 @@ public interface ILog
     /// <summary>
     /// 获取或设置日期时间格式
     /// </summary>
-    /// <remarks>
-    /// 这个属性用于定义如何格式化或解析字符串中的日期和时间
-    /// 默认格式为 "yyyy-MM-dd HH:mm:ss ffff"，其中 "yyyy" 代表年份，
-    /// "MM" 代表月份，"dd" 代表日期，"HH" 代表小时，
-    /// "mm" 代表分钟，"ss" 代表秒，"ffff" 代表毫秒
-    /// </remarks>
     string DateTimeFormat { get; set; }
 
     /// <summary>

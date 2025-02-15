@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.13</Version>
+		<Version>3.0.14</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -20,7 +20,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="dotnetCampus.LatestCSharpFeatures" Version="12.0.0" PrivateAssets="all" />
+		<PackageReference Include="dotnetCampus.LatestCSharpFeatures" Version="12.0.1" PrivateAssets="all" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(MSBuildProjectName.StartsWith(`TouchSocketPro`))'">
@@ -83,13 +83,13 @@
 		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
 	</Target>
 
-	<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
-		<PackageReference Include="Backport.System.Threading.Lock" Version="3.0.3">
+	<!--<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
+		<PackageReference Include="Backport.System.Threading.Lock" Version="3.1.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>analyzers</IncludeAssets>
 		</PackageReference>
 		<Using Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="System.Threading.Lock" />
 		<Using Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="Backport.System.Threading.Lock" />
 		<Using Alias="LockFactory" Include="Backport.System.Threading.LockFactory" />
-	</ItemGroup>
+	</ItemGroup>-->
 </Project>

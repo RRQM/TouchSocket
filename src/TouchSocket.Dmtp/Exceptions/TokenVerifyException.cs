@@ -11,31 +11,28 @@
 //------------------------------------------------------------------------------
 
 using System;
+using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 
 /// <summary>
-/// Token验证异常
+/// 表示在令牌验证过程中发生的异常。
 /// </summary>
 [Serializable]
-public class TokenVerifyException : Exception
+public sealed class TokenVerifyException : Exception
 {
     /// <summary>
-    /// 构造函数
+    /// 获取与此异常关联的元数据。
     /// </summary>
-    public TokenVerifyException()
-    { }
+    public Metadata Metadata { get; }
 
     /// <summary>
-    /// 构造函数
+    /// 初始化 <see cref="TokenVerifyException"/> 类的新实例。
     /// </summary>
-    /// <param name="message">异常信息</param>
-    public TokenVerifyException(string message) : base(message) { }
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="message">异常信息</param>
-    /// <param name="inner">内部异常</param>
-    public TokenVerifyException(string message, System.Exception inner) : base(message, inner) { }
+    /// <param name="metadata">与异常关联的元数据。</param>
+    /// <param name="message">描述错误的消息。</param>
+    public TokenVerifyException(Metadata metadata, string message) : base(message)
+    {
+        Metadata = metadata;
+    }
 }

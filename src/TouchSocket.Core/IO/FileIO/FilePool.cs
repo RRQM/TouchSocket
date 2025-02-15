@@ -26,7 +26,7 @@ namespace TouchSocket.Core;
 
 public static partial class FilePool
 {
-    private static readonly Lock s_locker = LockFactory.Create();
+    private static readonly Lock s_locker = new Lock();
 
     private static readonly ConcurrentDictionary<string, FileStorage> m_pathStorage = new ConcurrentDictionary<string, FileStorage>();
 

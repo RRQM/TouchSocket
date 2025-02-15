@@ -25,4 +25,3 @@ internal partial class WebApiSystemTextJsonSerializerContext : JsonSerializerCon
 {
 }
 #endif
-

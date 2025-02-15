@@ -17,7 +17,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 区间数据包处理适配器，支持以任意字符、字节数组起始与结尾的数据包。
 /// </summary>
-public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo> : CustomDataHandlingAdapter<TBetweenAndRequestInfo> where TBetweenAndRequestInfo : IBetweenAndRequestInfo
+public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo> : CustomDataHandlingAdapter<TBetweenAndRequestInfo> where TBetweenAndRequestInfo : IRequestInfo
 {
     /// <summary>
     /// 起始字符，不可以为null，可以为0长度
@@ -47,108 +47,50 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     /// <returns></returns>
     protected override FilterResult Filter<T>(ref T byteBlock, bool beCached, ref TBetweenAndRequestInfo request, ref int tempCapacity)
     {
-        if (beCached)
+        ReadOnlySpan<byte> startCode = this.StartCode ?? ReadOnlySpan<byte>.Empty;
+        ReadOnlySpan<byte> endCode = this.EndCode ?? ReadOnlySpan<byte>.Empty;
+        // 检查终止字符是否为空
+        if (endCode.IsEmpty)
         {
-            var len = 0;
-            var pos = byteBlock.Position;
-            while (true)
-            {
-                var indexEnd = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.EndCode);
-                if (indexEnd == -1)
-                {
-                    byteBlock.Position = pos;
-                    return FilterResult.Cache;
-                }
-                else
-                {
-                    len += indexEnd;
-                    byteBlock.Position += indexEnd;
-                    if (len >= this.MinSize)
-                    {
-                        break;
-                    }
-
-                    len += this.EndCode.Length;
-                    byteBlock.Position += this.EndCode.Length;
-                }
-
-            }
-
-            //byteBlock.Position = pos;
-            request.OnParsingBody(byteBlock.Span.Slice(pos, len));
-            byteBlock.Position = len + pos;
-
-            if (request.OnParsingEndCode(byteBlock.Span.Slice(byteBlock.Position, this.EndCode.Length)))
-            {
-                byteBlock.Position += this.EndCode.Length;
-                return FilterResult.Success;
-            }
-            else
-            {
-                byteBlock.Position += this.EndCode.Length;
-                return FilterResult.GoOn;
-            }
+            ThrowHelper.ThrowException("区间字符适配器的终止字符不能为空");
         }
-        else
+        // 获取可读取的字节范围
+        var canReadSpan = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength);
+        // 查找起始码的索引
+        var startCodeIndex = canReadSpan.IndexOf(startCode);
+        if (startCodeIndex < 0)
         {
-            var indexStart = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.StartCode);
-            if (indexStart == -1)
+            // 未找到起始码，缓存所有数据
+            return FilterResult.Cache;
+        }
+        // 从起始码之后的位置开始查找
+        var searchSpan = canReadSpan.Slice(startCodeIndex + startCode.Length);
+        var currentSearchOffset = 0;
+        while (true)
+        {
+            // 查找终止码的索引
+            var endCodeIndex = searchSpan.IndexOf(endCode);
+            if (endCodeIndex < 0)
             {
+                // 未找到终止码，缓存所有数据
                 return FilterResult.Cache;
             }
-
-            var requestInfo = this.GetInstance();
-
-            if (requestInfo.OnParsingStartCode(byteBlock.Span.Slice(byteBlock.Position, this.StartCode.Length)))
+            // 计算区间长度
+            var bodyLength = endCodeIndex + currentSearchOffset;
+            if (bodyLength >= this.MinSize)
             {
-                byteBlock.Position += this.StartCode.Length;
-            }
-            else
-            {
-                byteBlock.Position += 1;
-                return FilterResult.GoOn;
-            }
-
-            request = requestInfo;
-
-            var len = 0;
-            var pos = byteBlock.Position;
-            while (true)
-            {
-                var indexEnd = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.EndCode);
-                if (indexEnd == -1)
-                {
-                    byteBlock.Position = pos;
-                    return FilterResult.Cache;
-                }
-                else
-                {
-                    len += indexEnd;
-                    byteBlock.Position += indexEnd;
-
-                    if (len >= this.MinSize)
-                    {
-                        break;
-                    }
-
-                    len += this.EndCode.Length;
-                    byteBlock.Position += this.EndCode.Length;
-                }
-            }
-
-            //byteBlock.Position = pos;
-            request.OnParsingBody(byteBlock.Span.Slice(pos, len));
-            byteBlock.Position = len + pos;
-
-            if (request.OnParsingEndCode(byteBlock.Span.Slice(byteBlock.Position, this.EndCode.Length)))
-            {
-                byteBlock.Position += this.EndCode.Length;
+                // 区间长度满足要求，提取数据
+                var body = canReadSpan.Slice(startCodeIndex + startCode.Length, bodyLength);
+                request = this.GetInstance(body);
+                // 更新字节块的位置
+                byteBlock.Position += startCodeIndex + startCode.Length + bodyLength + endCode.Length;
                 return FilterResult.Success;
             }
             else
             {
-                byteBlock.Position += 1;
-                return FilterResult.GoOn;
+                // 区间长度不满足要求，继续从当前终止码之后查找
+                currentSearchOffset += endCodeIndex + endCode.Length;
+                searchSpan = searchSpan.Slice(endCodeIndex + endCode.Length);
             }
         }
     }
@@ -156,13 +98,15 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     /// <summary>
     /// 获取泛型实例。
     /// </summary>
-    /// <returns></returns>
-    protected abstract TBetweenAndRequestInfo GetInstance();
+    /// <param name="body">数据体</param>
+    /// <returns>泛型实例</returns>
+    protected abstract TBetweenAndRequestInfo GetInstance(ReadOnlySpan<byte> body);
 }
 
 /// <summary>
 /// 区间类型的适配器数据模型接口。
 /// </summary>
+[Obsolete("此接口已被弃用，请使用IRequestInfo代替约束。具体数据会在CustomBetweenAndDataHandlingAdapter.GetInstance(ReadOnlySpan<byte> body)直接投递。",true)]
 public interface IBetweenAndRequestInfo : IRequestInfo
 {
     /// <summary>

@@ -33,7 +33,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
         this.m_memory = memory;
     }
 
-
+    /// <summary>
+    /// 获取封装的只读内存。
+    /// </summary>
     public ReadOnlyMemory<byte> Memory => this.m_memory;
 
     /// <inheritdoc/>

@@ -14,13 +14,38 @@ using TouchSocket.Core;
 
 namespace TouchSocket.JsonRpc;
 
+/// <summary>
+/// 表示一个等待结果的JsonRpc类。
+/// </summary>
 public class JsonRpcWaitResult : JsonRpcBase, IWaitResult
 {
+    /// <summary>
+    /// 获取或设置错误代码。
+    /// </summary>
     public int ErrorCode { get; set; }
+
+    /// <summary>
+    /// 获取或设置错误消息。
+    /// </summary>
     public string ErrorMessage { get; set; }
+
+    /// <summary>
+    /// 获取或设置消息。
+    /// </summary>
     public string Message { get; set; }
+
+    /// <summary>
+    /// 获取或设置结果。
+    /// </summary>
     public string Result { get; set; }
+
+    /// <summary>
+    /// 获取或设置标识。
+    /// </summary>
     public int Sign { get => this.Id ?? -1; set => this.Id = value; }
 
+    /// <summary>
+    /// 获取或设置状态。
+    /// </summary>
     public byte Status { get; set; }
 }

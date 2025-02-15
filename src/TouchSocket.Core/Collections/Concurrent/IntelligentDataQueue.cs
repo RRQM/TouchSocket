@@ -98,7 +98,7 @@ public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
 {
     private long m_actualSize;
     private long m_maxSize;
-    private readonly Lock m_lock = LockFactory.Create();
+    private readonly Lock m_lock = new Lock();
     /// <summary>
     /// 智能数据安全队列
     /// </summary>

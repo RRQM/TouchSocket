@@ -43,7 +43,7 @@ public abstract class LoggerBase : ILog
     protected abstract void WriteLog(LogLevel logLevel, object source, string message, Exception exception);
 
     /// <summary>
-    /// 获取或设置日期时间格式
+    /// <inheritdoc/>
     /// </summary>
     /// <remarks>
     /// 这个属性用于定义如何格式化或解析字符串中的日期和时间
