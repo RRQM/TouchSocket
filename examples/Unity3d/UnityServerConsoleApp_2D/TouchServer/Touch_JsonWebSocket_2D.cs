@@ -14,7 +14,7 @@ namespace UnityServerConsoleApp_2D.TouchServer;
 /// </summary>
 public class Touch_JsonWebSocket_2D : BaseTouchServer
 {
-    private readonly JsonHttpService dmtpService = new JsonHttpService();
+    private readonly JsonHttpService m_dmtpService = new JsonHttpService();
     public async Task StartService(int port)
     {
         var config = new TouchSocketConfig()//配置
@@ -48,11 +48,11 @@ public class Touch_JsonWebSocket_2D : BaseTouchServer
 
             });
 
-        await this.dmtpService.SetupAsync(config);
-        await this.dmtpService.StartAsync();
+        await this.m_dmtpService.SetupAsync(config);
+        await this.m_dmtpService.StartAsync();
 
 
-        this.dmtpService.Logger.Info($"TCP_JsonWebSocket已启动，监听端口：{port}");
+        this.m_dmtpService.Logger.Info($"TCP_JsonWebSocket已启动，监听端口：{port}");
     }
 }
 /// <summary>
@@ -60,19 +60,19 @@ public class Touch_JsonWebSocket_2D : BaseTouchServer
 /// </summary>
 internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlugin, IWebSocketClosedPlugin
 {
-    private readonly ILog Log;
+    private readonly ILog m_log;
     public Touch_JsonWebSocket_Log_Plguin(ILog Log)
     {
-        this.Log = Log;
+        this.m_log = Log;
 
     }
-    private static int ID;
+    private static int s_iD;
     public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
     {
         webSocket.Client.Logger.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已断开");
         if (webSocket.Client is JsonHttpSessionClient client)
         {
-            this.Log.Info("在线用户" + client.Service.Count);
+            this.m_log.Info("在线用户" + client.Service.Count);
 
             foreach (JsonHttpSessionClient clientItem in client.Service.GetClients())
             {
@@ -92,8 +92,8 @@ internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshaked
 
         if (webSocket.Client is JsonHttpSessionClient client)
         {
-            this.Log.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已连接");
-            client.ID = ++ID;
+            this.m_log.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已连接");
+            client.ID = ++s_iD;
             _ = Task.Run(async () =>
             {
                 foreach (JsonHttpSessionClient clientItem in client.Service.GetClients())
@@ -108,7 +108,7 @@ internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshaked
                 }
                 await client.GetJsonRpcActionClient().PlayerLoginAsync(client.ID);
             });
-            this.Log.Info("在线用户" + client.Service.Count);
+            this.m_log.Info("在线用户" + client.Service.Count);
         }
         await e.InvokeNext();
     }

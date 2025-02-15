@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Numerics;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
@@ -32,22 +33,22 @@ internal class UnityRpcStore : RpcServer
 
     [Description("单位移动")]
     [JsonRpc(MethodInvoke = true, MethodName = "JsonRpc_{0}")]
-    public void UnitMovement(ICallContext callContext, Vector3 vector3)
+    public async Task UnitMovement(ICallContext callContext, Vector3 vector3)
     {
         if (callContext.Caller is JsonHttpSessionClient jsonsession)
         {
             jsonsession.Postion = vector3;
             foreach (JsonHttpSessionClient clientItem in jsonsession.Service.GetClients())
             {
-
                 //通知除开玩家的其他所有客户端
                 if (jsonsession != clientItem)
                 {
-                    clientItem.GetJsonRpcActionClient().UpdatePositionAsync(jsonsession.ID, jsonsession.Postion, ToTimestamp(DateTime.Now));
+                   await clientItem.GetJsonRpcActionClient().UpdatePositionAsync(jsonsession.ID, jsonsession.Postion, ToTimestamp(DateTime.Now));
                 }
 
             }
 
+            m_logger.Info($"玩家{jsonsession.ID}移动到{vector3}");
         }
     }
 
