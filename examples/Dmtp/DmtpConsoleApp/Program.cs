@@ -33,13 +33,7 @@ namespace DmtpConsoleApp
             await action.RunCommandLineAsync();
         }
 
-        async Task Test()
-        {
-            
-        }
-
-
-
+      
         private static void Action_OnException(Exception obj)
         {
             Console.WriteLine(obj.Message);

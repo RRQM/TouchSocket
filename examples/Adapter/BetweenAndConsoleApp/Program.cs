@@ -82,16 +82,8 @@ namespace BetweenAndConsoleApp
         }
     }
 
-    /// <summary>
-    /// 以**12##12##，Min=5为例。
-    /// </summary>
     class MyBetweenAndRequestInfo : IRequestInfo
     {
-        public MyBetweenAndRequestInfo()
-        {
-
-        }
-
         public MyBetweenAndRequestInfo(byte[] body)
         {
             this.Body = body;
