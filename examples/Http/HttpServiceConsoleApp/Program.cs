@@ -220,6 +220,16 @@ public class MyHttpPlug4 : PluginBase, IHttpPlugin
                         stringBuilder.Append($"文件名={file.FileName}\t");
                         stringBuilder.Append($"数据长度={file.Length}");
                         client.Logger.Info(stringBuilder.ToString());
+
+                        //文件数据
+                        var data = file.Data;
+
+                        //开始保存数据到磁盘
+                        using (var fileStream = File.OpenWrite(file.Name))
+                        {
+                            await fileStream.WriteAsync(data);
+                            await fileStream.FlushAsync();
+                        }
                     }
 
                     await e.Context.Response
