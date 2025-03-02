@@ -23,7 +23,7 @@ public interface IDmtpRpcCallContext : ICallContext
     /// <summary>
     /// 序列化类型
     /// </summary>
-    public SerializationType SerializationType { get; }
+    SerializationType SerializationType { get; }
 
     /// <summary>
     /// 调用元数据

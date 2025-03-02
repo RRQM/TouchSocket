@@ -76,8 +76,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             using (var stream = assembly.GetManifestResourceStream(item))
             {
-                var bytes = new byte[stream.Length];
-                stream.Read(bytes, 0, bytes.Length);
+                var bytes = stream.ReadAllToByteArray();
                 var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
                 var name = item.Replace("TouchSocket.WebApi.Swagger.api.", string.Empty);
                 if (name == "openapi.json")

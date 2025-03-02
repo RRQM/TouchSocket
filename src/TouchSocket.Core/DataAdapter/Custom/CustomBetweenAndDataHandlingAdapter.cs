@@ -47,8 +47,8 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     /// <returns></returns>
     protected override FilterResult Filter<T>(ref T byteBlock, bool beCached, ref TBetweenAndRequestInfo request, ref int tempCapacity)
     {
-        ReadOnlySpan<byte> startCode = this.StartCode ?? ReadOnlySpan<byte>.Empty;
-        ReadOnlySpan<byte> endCode = this.EndCode ?? ReadOnlySpan<byte>.Empty;
+        var startCode = this.StartCode ?? ReadOnlySpan<byte>.Empty;
+        var endCode = this.EndCode ?? ReadOnlySpan<byte>.Empty;
         // 检查终止字符是否为空
         if (endCode.IsEmpty)
         {
@@ -106,7 +106,7 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
 /// <summary>
 /// 区间类型的适配器数据模型接口。
 /// </summary>
-[Obsolete("此接口已被弃用，请使用IRequestInfo代替约束。具体数据会在CustomBetweenAndDataHandlingAdapter.GetInstance(ReadOnlySpan<byte> body)直接投递。",true)]
+[Obsolete("此接口已被弃用，请使用IRequestInfo代替约束。具体数据会在CustomBetweenAndDataHandlingAdapter.GetInstance(ReadOnlySpan<byte> body)直接投递。", true)]
 public interface IBetweenAndRequestInfo : IRequestInfo
 {
     /// <summary>

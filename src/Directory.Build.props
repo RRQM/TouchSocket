@@ -1,11 +1,11 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.14</Version>
+		<Version>3.0.15</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<Company>若汝棋茗</Company>
-		<Copyright>Copyright © 2024 若汝棋茗</Copyright>
+		<Copyright>Copyright © 2025 若汝棋茗</Copyright>
 		<PackageProjectUrl>https://touchsocket.net/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/RRQM/TouchSocket</RepositoryUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -92,4 +92,12 @@
 		<Using Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="Backport.System.Threading.Lock" />
 		<Using Alias="LockFactory" Include="Backport.System.Threading.LockFactory" />
 	</ItemGroup>-->
+
+	<PropertyGroup Condition="'$(IsSourceGenerator)'!='True'">
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
+		<None Include="Readme.md" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+
 </Project>

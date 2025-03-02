@@ -154,7 +154,7 @@ public sealed class WebApiAttribute : RpcAttribute
         return codeString.ToString();
     }
 
-    private string GetParameterToString(RpcParameter parameter)
+    private static string GetParameterToString(RpcParameter parameter)
     {
         if (parameter.ParameterInfo.ParameterType.IsValueType)
         {
@@ -167,7 +167,7 @@ public sealed class WebApiAttribute : RpcAttribute
     private string GetFromHeaderString(RpcMethod rpcMethod, IEnumerable<WebApiParameterInfo> webApiParameterInfos)
     {
         var parameterInfos = webApiParameterInfos.Where(a => a.IsFromHeader);
-        var list = parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{this.GetParameterToString(a.Parameter)})").ToList();
+        var list = parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{GetParameterToString(a.Parameter)})").ToList();
 
         if (rpcMethod.HasReturn && rpcMethod.ReturnType == typeof(string))
         {
@@ -179,7 +179,7 @@ public sealed class WebApiAttribute : RpcAttribute
             var codeString = new StringBuilder();
             codeString.Append("new KeyValuePair<string, string>[] {");
             codeString.Append(string.Join(",", list));
-            codeString.Append("}");
+            codeString.Append('}');
             return codeString.ToString();
         }
         return "null";
@@ -195,8 +195,8 @@ public sealed class WebApiAttribute : RpcAttribute
 
         var codeString = new StringBuilder();
         codeString.Append("new KeyValuePair<string, string>[] {");
-        codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromFormName}\",{this.GetParameterToString(a.Parameter)})")));
-        codeString.Append("}");
+        codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromFormName}\",{GetParameterToString(a.Parameter)})")));
+        codeString.Append('}');
 
         return codeString.ToString();
     }
@@ -233,8 +233,8 @@ public sealed class WebApiAttribute : RpcAttribute
 
         var codeString = new StringBuilder();
         codeString.Append("new KeyValuePair<string, string>[] {");
-        codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromQueryName ?? a.Parameter.Name}\",{this.GetParameterToString(a.Parameter)})")));
-        codeString.Append("}");
+        codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromQueryName ?? a.Parameter.Name}\",{GetParameterToString(a.Parameter)})")));
+        codeString.Append('}');
 
         return codeString.ToString();
     }
