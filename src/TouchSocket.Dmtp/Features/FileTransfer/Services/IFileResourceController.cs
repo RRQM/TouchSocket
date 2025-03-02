@@ -50,7 +50,7 @@ public interface IFileResourceController : IDisposable
     /// <param name="resourceHandle">资源句柄，标识需要释放的文件资源定位器</param>
     /// <param name="locator">输出参数，返回被释放的文件资源定位器</param>
     /// <returns>如果成功释放文件资源定位器，则返回true；否则返回false</returns>
-    public bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator);
+    bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator);
 
     /// <summary>
     /// 通过文件句柄，获取资源定位器。

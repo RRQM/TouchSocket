@@ -20,12 +20,15 @@ using TouchSocket.Sockets;
 namespace TouchSocket.JsonRpc;
 
 /// <summary>
-/// 基于Tcp协议的TcpJsonRpc客户端
+/// 表示一个TCP JsonRpc客户端。
 /// </summary>
 public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 {
     private readonly JsonRpcActor m_jsonRpcActor;
 
+    /// <summary>
+    /// 初始化 <see cref="TcpJsonRpcClient"/> 类的新实例。
+    /// </summary>
     public TcpJsonRpcClient()
     {
         this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
@@ -46,10 +49,11 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     #endregion JsonRpcActor
 
     /// <summary>
-    /// JsonRpc的调用键。
+    /// 获取JsonRpc的调用键。
     /// </summary>
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
+    /// <inheritdoc/>
     public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 
     /// <inheritdoc/>

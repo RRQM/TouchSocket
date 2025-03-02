@@ -33,6 +33,6 @@ public sealed class TokenVerifyException : Exception
     /// <param name="message">描述错误的消息。</param>
     public TokenVerifyException(Metadata metadata, string message) : base(message)
     {
-        Metadata = metadata;
+        this.Metadata = metadata;
     }
 }

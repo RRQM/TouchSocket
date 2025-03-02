@@ -33,12 +33,12 @@ public interface IFormFile
     /// <summary>
     /// 实际的数据
     /// </summary>
-    public ReadOnlyMemory<byte> Data { get; }
+    ReadOnlyMemory<byte> Data { get; }
 
     /// <summary>
     /// 数据对
     /// </summary>
-    public NameValueCollection DataPair { get; }
+    NameValueCollection DataPair { get; }
 
     /// <summary>
     /// 获取file name

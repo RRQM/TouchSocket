@@ -12,8 +12,18 @@
 
 namespace TouchSocket.JsonRpc;
 
+/// <summary>
+/// 表示 JSON-RPC 消息的基类。
+/// </summary>
 public class JsonRpcBase
 {
+    /// <summary>
+    /// 获取或设置 JSON-RPC 消息的标识符。
+    /// </summary>
     public int? Id { get; set; }
+
+    /// <summary>
+    /// 获取或设置 JSON-RPC 版本。
+    /// </summary>
     public string Jsonrpc { get; set; } = "2.0";
 }

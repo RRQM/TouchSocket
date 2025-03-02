@@ -22,6 +22,7 @@ public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
 {
     private IScopedResolver m_scopedResolver;
 
+    /// <inheritdoc/>
     public int? JsonRpcId { get; protected set; }
 
     ///// <summary>

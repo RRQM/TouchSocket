@@ -48,7 +48,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, byte[]>, IActor
     /// <exception cref="ArgumentNullException">如果键或值为null，则抛出该异常。</exception>
     /// <exception cref="TimeoutException">如果异步操作超时，则抛出该异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出该异常。</exception>
-    public Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000);
+    Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000);
 
     /// <summary>
     /// 异步获取缓存的键值对。
@@ -59,7 +59,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, byte[]>, IActor
     /// <exception cref="ArgumentNullException">如果 <paramref name="key"/> 为空或为 null，则抛出此异常。</exception>
     /// <exception cref="TimeoutException">如果获取操作超时，则抛出此异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出此异常。</exception>
-    public Task<TValue> GetAsync<TValue>(string key);
+    Task<TValue> GetAsync<TValue>(string key);
 
     /// <summary>
     /// 设置缓存值
@@ -73,5 +73,5 @@ public interface IDmtpRedisActor : ICacheAsync<string, byte[]>, IActor
     /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    public Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000);
+    Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000);
 }

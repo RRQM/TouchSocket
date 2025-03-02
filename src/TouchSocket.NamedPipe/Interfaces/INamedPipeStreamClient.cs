@@ -22,5 +22,5 @@ public interface INamedPipeStreamClient
     /// <summary>
     /// 用于通讯的管道流。
     /// </summary>
-    public PipeStream PipeStream { get; }
+    PipeStream PipeStream { get; }
 }

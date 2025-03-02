@@ -30,7 +30,7 @@ public interface IClientCollection<TClient> : IEnumerable<TClient> where TClient
     /// </summary>
     /// <param name="id">客户端的唯一标识符</param>
     /// <returns>对应的客户端对象，如果找不到则返回null</returns>
-    public TClient this[string id] { get; }
+    TClient this[string id] { get; }
 
     /// <summary>
     /// 获取集合中所有客户端的唯一标识符(Id)
