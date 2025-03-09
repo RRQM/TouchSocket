@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.SerialPorts" Version="3.0.15" />
+    <PackageReference Include="TouchSocket.SerialPorts" Version="3.0.16" />
   </ItemGroup>
 
 </Project>
