@@ -878,21 +878,7 @@ public static class SystemExtension
         }
     }
 #endif
-    #endregion
 
-    #region IEnumerable
-    /// <summary>
-    /// 获取安全的枚举器。
-    /// </summary>
-    public static IEnumerable<T> GetSafeEnumerator<T>(this IEnumerable<T> enumerator)
-    {
-        if (enumerator is null)
-        {
-            return [];
-        }
-
-        return enumerator;
-    }
     /// <summary>
     /// 读取流中的所有字节并返回字节数组。
     /// </summary>
@@ -930,6 +916,21 @@ public static class SystemExtension
             }
             return memoryStream.ToArray();
         }
+    }
+    #endregion
+
+    #region IEnumerable
+    /// <summary>
+    /// 获取安全的枚举器。
+    /// </summary>
+    public static IEnumerable<T> GetSafeEnumerator<T>(this IEnumerable<T> enumerator)
+    {
+        if (enumerator is null)
+        {
+            return [];
+        }
+
+        return enumerator;
     }
     #endregion
 }

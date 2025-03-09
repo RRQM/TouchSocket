@@ -58,6 +58,7 @@ internal sealed class TcpCore : DisposableObject
     private readonly SemaphoreSlim m_semaphoreSlimForMax = new SemaphoreSlim(BatchSize);
     private ExceptionDispatchInfo m_exceptionDispatchInfo;
     private short m_version;
+    private bool m_noDelay;
     private readonly SocketOperationResult m_result = new SocketOperationResult();
     #endregion 字段
 
@@ -114,6 +115,8 @@ internal sealed class TcpCore : DisposableObject
     /// 发送缓存池,运行时的值会根据流速自动调整
     /// </summary>
     public int SendBufferSize => Math.Min(Math.Max(this.m_sendBufferSize, this.MinBufferSize), this.MaxBufferSize);
+
+    public bool NoDelay => m_noDelay;
 
     /// <summary>
     /// 发送计数器
@@ -214,17 +217,15 @@ internal sealed class TcpCore : DisposableObject
     /// <param name="socket"></param>
     public void Reset(Socket socket)
     {
-        if (socket is null)
-        {
-            throw new ArgumentNullException(nameof(socket));
-        }
+        ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
 
         if (!socket.Connected)
         {
-            throw new Exception(TouchSocketResource.SocketHaveToConnected);
+            ThrowHelper.ThrowException(TouchSocketResource.SocketHaveToConnected);
         }
         this.Reset();
         this.m_socket = socket;
+        this.m_noDelay = socket.NoDelay;
     }
 
     /// <summary>
@@ -261,7 +262,8 @@ internal sealed class TcpCore : DisposableObject
         await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            if (memory.Length < MaxMemoryLength)
+            // 如果内存长度小于最大长度，且不是无延迟模式
+            if (memory.Length < MaxMemoryLength&&!this.NoDelay)
             {
                 var dispatchInfo = this.m_exceptionDispatchInfo;
                 dispatchInfo?.Throw();

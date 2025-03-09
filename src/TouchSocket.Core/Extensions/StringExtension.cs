@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -44,13 +45,20 @@ public static class StringExtension
     /// <returns>转换后的标识符字符串。</returns>
     public static string MakeIdentifier(string input)
     {
-        // 替换非法字符
-        var result = Regex.Replace(input, "[^a-zA-Z0-9_]", "_");
+        if (string.IsNullOrEmpty(input))
+        {
+            return string.Empty;
+        }
+
+        // 替换非法字符，允许 Unicode 字母、数字和下划线
+        var result = Regex.Replace(input, @"[^\p{L}\p{N}_]", "_");
+
         // 如果结果以数字开头，则添加前缀 _
-        if (char.IsDigit(result[0]))
+        if (char.IsDigit(result.First()))
         {
             result = "_" + result;
         }
+
         return result;
     }
 
