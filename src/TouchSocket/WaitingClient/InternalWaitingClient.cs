@@ -17,7 +17,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
-internal sealed class InternalWaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult>
+internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<TClient, TResult>
     where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
     where TResult : IReceiverResult
 {

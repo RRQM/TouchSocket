@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets;
 /// </summary>
 /// <typeparam name="TClient">客户端类型参数，该客户端既是一个接收者，也是一个发送者。</typeparam>
 /// <typeparam name="TResult">结果类型参数，表示接收者客户端处理操作后返回的结果。</typeparam>
-public interface IWaitingClient<TClient, TResult> : IDisposableObject
+public interface IWaitingClient<TClient, TResult>
     where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
     where TResult : IReceiverResult
 {

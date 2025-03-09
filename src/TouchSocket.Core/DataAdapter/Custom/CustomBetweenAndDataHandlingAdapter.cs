@@ -77,6 +77,7 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
             }
             // 计算区间长度
             var bodyLength = endCodeIndex + currentSearchOffset;
+            this.ThrowIfMoreThanMaxPackageSize(bodyLength);
             if (bodyLength >= this.MinSize)
             {
                 // 区间长度满足要求，提取数据
