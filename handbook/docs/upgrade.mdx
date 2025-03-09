@@ -18,6 +18,29 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.16
+
+**更新日期：** 2025.3.9
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>修复</Tag> 自定义适配器在接收数据时，不验证`MaxPackageSize`的`bug`。
+- &nbsp;<Tag>修复</Tag> `MakeIdentifier`在获取方法名称时，不显示中文等其他字符的`bug`[#IBQQHY](https://gitee.com/RRQM_Home/TouchSocket/issues/IBQQHY)。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> 当配置`NoDelay`时，`TcpCore`发送时仍然会把数据放入发送队列，可能会产生细微延迟 [#IBR1I2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBR1I2)。
+- &nbsp;<Tag>调整</Tag> `IWaitingClient`实现了无效的`Dispose`方法，目前已取消。
+
+***
+
 
 ## v3.0.15
 
