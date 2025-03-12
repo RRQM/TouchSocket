@@ -10,22 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
+using System.Net;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// 定义了一个UDP接收插件接口，该接口继承自IPlugin。
+/// UdpReceiveingEventArgs 类，继承自 ByteBlockEventArgs 类
+/// 用于封装 UDP 接收到的数据及相关信息
 /// </summary>
-[DynamicMethod]
-public interface IUdpReceivingPlugin : IPlugin
+public class UdpReceiveingEventArgs : ByteBlockEventArgs
 {
     /// <summary>
-    /// 在收到数据时触发
+    /// 构造函数
+    /// 初始化 UdpReceivedDataEventArgs 对象
     /// </summary>
-    /// <param name="client">发送数据的客户端会话</param>
-    /// <param name="e">包含接收数据的信息的事件参数</param>
-    /// <returns>一个等待完成的异步任务</returns>
-    Task OnUdpReceiving(IUdpSessionBase client, UdpReceiveingEventArgs e);
+    /// <param name="endPoint">接收数据的终结点</param>
+    /// <param name="byteBlock">接收到的数据块</param>
+    public UdpReceiveingEventArgs(EndPoint endPoint, ByteBlock byteBlock) : base(byteBlock)
+    {
+        this.EndPoint = endPoint;
+    }
+
+    /// <summary>
+    /// 接收终结点
+    /// 表示数据是从哪个终结点接收的
+    /// </summary>
+    public EndPoint EndPoint { get; }
 }
