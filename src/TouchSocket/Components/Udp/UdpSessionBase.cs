@@ -416,7 +416,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
             this.m_lastReceivedTime = DateTime.UtcNow;
 
-            if (await this.OnUdpReceiving(new ByteBlockEventArgs(byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 return;
             }
@@ -445,9 +445,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// 如果返回<see langword="true"/>，则表示数据已被当前处理者完全处理，且不会再向下传递至其他处理者或消费者。
     /// 返回<see langword="false"/>表示当前处理者未处理数据，数据可能会被传递给下一个处理者或消费者。
     /// </returns>
-    protected virtual ValueTask<bool> OnUdpReceiving(ByteBlockEventArgs e)
+    protected virtual ValueTask<bool> OnUdpReceiving(UdpReceiveingEventArgs e)
     {
-        return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
+        return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this,  e);
     }
 
     private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
