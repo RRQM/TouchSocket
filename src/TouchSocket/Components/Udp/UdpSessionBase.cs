@@ -447,7 +447,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </returns>
     protected virtual ValueTask<bool> OnUdpReceiving(UdpReceiveingEventArgs e)
     {
-        return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this,  e);
+        return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
     }
 
     private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
