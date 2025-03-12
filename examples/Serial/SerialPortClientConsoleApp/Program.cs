@@ -40,7 +40,7 @@ internal class Program
                  PortName = "COM1",//COM
                  StopBits = System.IO.Ports.StopBits.One//停止位
              })
-             .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter())
+             .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter(){ CacheTimeout = TimeSpan.FromMilliseconds(100)})
              .ConfigurePlugins(a =>
              {
                  a.Add<MyPlugin>();
@@ -98,6 +98,7 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
+        
         await e.InvokeNext();
     }
 }
