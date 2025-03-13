@@ -148,13 +148,13 @@ public static partial class HttpExtensions
         }
         // 分割ContentType字符串，以";"为分隔符
         var strs = httpBase.ContentType.Split(';');
-        // 如果分割后的长度为2，表示存在boundary信息
+        // 如果分割后的长度为2，表示可能存在boundary信息
         if (strs.Length == 2)
         {
             // 进一步分割第二个部分，以"="为分隔符
             strs = strs[1].Split('=');
-            // 如果分割后的长度为2，表示成功获取到boundary信息
-            if (strs.Length == 2)
+            // 如果分割后的长度为2，并且前半段的字符串为"boundary"，则表明确实存在boundary信息
+            if (strs.Length == 2 && strs[0].Trim().ToLower() == "boundary")
             {
                 // 移除boundary中的双引号并返回
                 return strs[1].Replace("\"", string.Empty).Trim();
