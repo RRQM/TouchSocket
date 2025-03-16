@@ -36,8 +36,8 @@ title: 常用插件
     .SetTick(TimeSpan.FromSeconds(60))
     .SetOnClose((c,t) => 
     {
-        c.TryShutdown();
-        c.SafeClose("超时无数据");
+        await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+        await c.SafeCloseAsync("超时无数据");
     });
 })
 ```
