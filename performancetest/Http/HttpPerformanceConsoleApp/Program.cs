@@ -1,4 +1,4 @@
-﻿using FastEndpoints;
+using FastEndpoints;
 using HttpPerformanceConsoleApp.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;

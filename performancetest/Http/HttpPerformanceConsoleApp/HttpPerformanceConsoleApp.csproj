@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -14,32 +14,32 @@
 	<ItemGroup>
 	  <PackageReference Include="FastEndpoints" Version="5.35.0" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	  <PackageReference Include="TouchSocket.Hosting" Version="3.0.16" />
-	  <PackageReference Include="TouchSocket.WebApi" Version="3.0.16" />
-	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="3.0.16" />
+	  <PackageReference Include="TouchSocket.Hosting" Version="3.0.18" />
+	  <PackageReference Include="TouchSocket.WebApi" Version="3.0.18" />
+	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="3.0.18" />
 	</ItemGroup>
 
 	<!--<ItemGroup>
 	  <Reference Include="TouchSocket">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Core">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.Core.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Dmtp">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.Dmtp.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Dmtp.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Hosting">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.Hosting.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Hosting.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Http">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.Http.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Http.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Rpc">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.Rpc.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Rpc.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.WebApi">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Release\net6.0\TouchSocket.WebApi.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.WebApi.dll</HintPath>
 	  </Reference>
 	</ItemGroup>-->
 </Project>
