@@ -49,10 +49,10 @@ internal class Program
                  a.UseCheckClear()
                  .SetCheckClearType(CheckClearType.All)
                  .SetTick(TimeSpan.FromSeconds(60))
-                 .SetOnClose((c, t) =>
+                 .SetOnClose(async (c, t) =>
                  {
-                     c.TryShutdown();
-                     c.SafeClose("超时无数据");
+                     await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+                     await c.SafeCloseAsync("超时无数据");
                  });
 
                  a.Add<ClosePlugin>();
