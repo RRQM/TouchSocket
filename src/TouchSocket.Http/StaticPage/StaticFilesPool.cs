@@ -42,7 +42,7 @@ public class StaticFilesPool : DisposableObject
             foreach (var item in FolderEntry)
             {
                 this.RemoveFolder(item.Path);
-                this.AddFolder(item.Path);
+                this.AddFolder(item.Path, item.Prefix,item.Filter,item.Timespan);
             }
         });
     }

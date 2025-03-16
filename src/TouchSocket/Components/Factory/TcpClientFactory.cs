@@ -28,7 +28,7 @@ public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClie
     /// <param name="client">要释放的Tcp客户端。</param>
     public override void DisposeClient(TClient client)
     {
-        client.TryShutdown();
+        client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
         base.DisposeClient(client);
     }
 }

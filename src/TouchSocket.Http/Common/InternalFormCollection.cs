@@ -76,9 +76,9 @@ internal class InternalFormCollection : Dictionary<string, string>, IFormCollect
     {
     }
 
-    public InternalFormCollection(ReadOnlyMemory<byte> context)
+    public InternalFormCollection(ReadOnlyMemory<byte> context, Encoding encoding)
     {
-        var row = context.Span.ToString(Encoding.UTF8);
+        var row = context.Span.ToString(encoding);
         if (string.IsNullOrEmpty(row))
         {
             return;

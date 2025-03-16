@@ -303,7 +303,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             await Task.Delay(this.VerifyTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (!this.Online)
             {
-                this.TryShutdown();
+                await this.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
                 await base.CloseAsync("握手验证超时").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         });
