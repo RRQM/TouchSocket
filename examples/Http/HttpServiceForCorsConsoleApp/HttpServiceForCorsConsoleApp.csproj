@@ -1,14 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="3.0.17" />
+		<PackageReference Include="TouchSocket.Http" Version="3.0.18" />
 	</ItemGroup>
-	
+
+	<!--<ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Core">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Http">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Http.dll</HintPath>
+    </Reference>
+  </ItemGroup>-->
 </Project>

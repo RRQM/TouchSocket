@@ -74,6 +74,8 @@ public partial class Form1 : Form
 
                     var bytes = await waitingClient.SendThenReturnAsync("hello");
                 });
+
+                await Task.CompletedTask;
             };
 
             await this.m_tcpClient.SetupAsync(new TouchSocketConfig()
