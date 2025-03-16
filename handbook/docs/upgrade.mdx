@@ -18,6 +18,29 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.18
+
+**更新日期：** 2025.3.16
+
+**更新描述：**
+
+兼容性修复升级。少量代码调整，详见&nbsp;<Tag>调整</Tag>
+
+
+**更新详情：**
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TryShutdown`的关闭机制没有考虑异步发送队列的情况。[#IBTKMP](https://gitee.com/RRQM_Home/TouchSocket/issues/IBTKMP)
+- &nbsp;<Tag>调整</Tag> `TryShutdown`方法改为`ShutdownAsync`。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `HttpExtensions`中`GetBoundary`实现存在问题。[#IBT3RO](https://gitee.com/RRQM_Home/TouchSocket/issues/IBT3RO)
+- &nbsp;<Tag>修复</Tag> 静态页面插件在重新载入时prefix参数丢失问题。[#IBTP38](https://gitee.com/RRQM_Home/TouchSocket/issues/IBTP38)
+
+***
+
 
 ## v3.0.17
 
