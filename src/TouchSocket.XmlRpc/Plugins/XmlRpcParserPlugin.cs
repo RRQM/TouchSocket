@@ -153,7 +153,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     if (!e.Context.Request.KeepAlive)
                     {
-                        client.TryShutdown(SocketShutdown.Both);
+                        await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 finally

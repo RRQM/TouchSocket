@@ -227,6 +227,23 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #endregion 断开操作
 
+    /// <inheritdoc/>
+    public async Task ShutdownAsync(SocketShutdown how)
+    {
+        if (!this.m_online)
+        {
+            return;
+        }
+
+        var tcpCore = this.m_tcpCore;
+        if (tcpCore == null)
+        {
+            return;
+        }
+
+        await tcpCore.ShutdownAsync(how).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
     /// <summary>
     /// 中止连接。
     /// </summary>

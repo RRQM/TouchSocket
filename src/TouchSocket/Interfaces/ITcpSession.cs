@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
@@ -20,7 +21,6 @@ namespace TouchSocket.Sockets;
 /// 该接口的目的是为TCP会话提供一组标准的方法和属性，以实现TCP会话的创建、管理和关闭等功能。
 /// </summary>
 public interface ITcpSession : IClient, IResolverConfigObject, IOnlineClient, IClosableClient
-
 {
     /// <summary>
     /// 数据处理适配器
@@ -46,4 +46,11 @@ public interface ITcpSession : IClient, IResolverConfigObject, IOnlineClient, IC
     /// 使用Ssl加密
     /// </summary>
     bool UseSsl { get; }
+
+    /// <summary>
+    /// 异步关闭TCP会话。此操作相比于<see cref="IClosableClient.CloseAsync(string)"/>,会等待缓存中的数据发送完成后再关闭会话。
+    /// </summary>
+    /// <param name="how">指定如何关闭套接字。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    Task ShutdownAsync(SocketShutdown how);
 }

@@ -78,6 +78,7 @@ public static class ClientExtension
     /// <param name="client">要关闭的客户端对象</param>
     /// <param name="how">关闭的方式，默认值为SocketShutdown.Both，即读写都关闭</param>
     /// <returns>操作是否成功</returns>
+    [Obsolete("此操作已被弃用，请使用ShutdownAsync代替",true)]
     public static bool TryShutdown<TClient>(this TClient client, SocketShutdown how = SocketShutdown.Both) where TClient : class, ITcpSession
     {
         // 检查客户端对象是否为null或默认值

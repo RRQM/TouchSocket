@@ -76,10 +76,10 @@ internal sealed partial class InternalWebSocket : IWebSocket
                 await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
-        this.m_httpClientBase.TryShutdown();
+        await this.m_httpClientBase.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
         await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        this.m_httpSocketClient.TryShutdown();
+        await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
         await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 

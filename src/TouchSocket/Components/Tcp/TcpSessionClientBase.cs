@@ -62,8 +62,11 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     private IPluginManager m_pluginManager;
     private int m_port;
     private InternalReceiver m_receiver;
+
     //private IResolver m_resolver;
     private Action<TcpCore> m_returnTcpCore;
+
+    private IScopedResolver m_scopedResolver;
     private ITcpServiceBase m_service;
     private string m_serviceIP;
     private int m_servicePort;
@@ -71,13 +74,13 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
     private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
-    private IScopedResolver m_scopedResolver;
+
     #endregion 变量
 
     #region 属性
 
     /// <inheritdoc/>
-    public sealed override TouchSocketConfig Config => this.Service?.Config;
+    public override sealed TouchSocketConfig Config => this.Service?.Config;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -470,6 +473,23 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public virtual Task ResetIdAsync(string newId)
     {
         return this.ProtectedResetIdAsync(newId);
+    }
+
+    /// <inheritdoc/>
+    public async Task ShutdownAsync(SocketShutdown how)
+    {
+        if (!this.m_online)
+        {
+            return;
+        }
+
+        var tcpCore = this.m_tcpCore;
+        if (tcpCore == null)
+        {
+            return;
+        }
+
+        await tcpCore.ShutdownAsync(how).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

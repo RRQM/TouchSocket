@@ -32,11 +32,18 @@ internal class FolderEntry : HashSet<string>
 
     public string Path => this.m_path;
 
+    public string Prefix => this.m_prefix;
+
+    public string Filter { get; }
+
+    public TimeSpan Timespan => this.m_timespan;
+
     public FolderEntry(StaticFilesPool staticFileCachePool, string prefix, string path, string filter, TimeSpan timespan)
     {
         this.m_staticFileCachePool = staticFileCachePool;
         this.m_prefix = prefix;
         this.m_path = path;
+        this.Filter = filter;
         this.m_timespan = timespan;
         this.m_watcher = new FileSystemWatcher(path, filter);
 

@@ -75,7 +75,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         {
             if (!client.StandBy)
             {
-                client.TryShutdown();
+                client.ShutdownAsync( System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
                 client.SafeDispose();
             }
 

@@ -27,19 +27,7 @@ public static partial class HttpExtensions
 {
     #region HttpBase
 
-    /// <summary>
-    /// 同步获取一次性内容。
-    /// </summary>
-    /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
-    /// <param name="httpBase"></param>
-    /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
-    public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase, CancellationToken cancellationToken = default)
-    {
-        // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
-        // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-        return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).GetFalseAwaitResult();
-    }
-
+    public const string Multipart_Form_Data = "multipart/form-data";
 
     /// <summary>
     /// 添加Header参数
@@ -65,6 +53,99 @@ public static partial class HttpExtensions
     {
         request.Headers.Add(key, value);
         return request;
+    }
+
+    /// <summary>
+    /// 获取Body的字符串
+    /// </summary>
+    /// <param name="httpBase"></param>
+    /// <returns></returns>
+    [Obsolete("该方法已被弃用，请使用GetBodyAsync异步方法代替")]
+    public static string GetBody(this HttpBase httpBase)
+    {
+        return GetBodyAsync(httpBase).GetFalseAwaitResult();
+    }
+
+    /// <summary>
+    /// 异步获取 HTTP 请求的主体内容。
+    /// </summary>
+    /// <param name="httpBase">HttpBase 实例，用于发起 HTTP 请求。</param>
+    /// <param name="encoding">编码格式</param>
+    /// <param name="token">可取消令箭</param>
+    /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
+    public static async Task<string> GetBodyAsync(this HttpBase httpBase,Encoding encoding, CancellationToken token=default)
+    {
+        // 异步获取 HTTP 响应的内容作为字节数组
+        var bytes = await httpBase.GetContentAsync(token);
+        // 如果字节数组为空，则返回 null，否则使用 UTF-8 编码将字节数组转换为字符串并返回
+        return bytes.IsEmpty ? null : bytes.Span.ToString(encoding);
+    }
+
+    /// <summary>
+    /// 异步获取utf8编码的 HTTP 请求的主体内容。
+    /// </summary>
+    /// <param name="httpBase">HttpBase 实例，用于发起 HTTP 请求。</param>
+    /// <param name="token">可取消令箭</param>
+    /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
+    public static Task<string> GetBodyAsync(this HttpBase httpBase, CancellationToken token = default)
+    {
+       return GetBodyAsync(httpBase, Encoding.UTF8, token);
+    }
+
+    /// <summary>
+    /// 当数据类型为multipart/form-data时，获取boundary
+    /// </summary>
+    /// <param name="httpBase"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public static string GetBoundary(this HttpBase httpBase)
+    {
+        // 检查ContentType是否为空，如果为空则直接返回空字符串
+
+        var contentType = httpBase.ContentType;
+
+        if (contentType.IsNullOrEmpty())
+        {
+            return string.Empty;
+        }
+        // 分割ContentType字符串，以";"为分隔符
+        var strs = contentType.Split(';');
+
+        if (strs.Length != 2)
+        {
+            return string.Empty;
+        }
+
+        var firstType = strs[0].Trim();
+        if (!firstType.Equals(Multipart_Form_Data, StringComparison.OrdinalIgnoreCase))
+        {
+            // 如果不是multipart/form-data类型，则直接返回空字符串
+            return string.Empty;
+        }
+
+        // 进一步分割第二个部分，以"="为分隔符
+        strs = strs[1].Split('=');
+        // 如果分割后的长度为2，表示成功获取到boundary信息
+        if (strs.Length == 2)
+        {
+            // 移除boundary中的双引号并返回
+            return strs[1].Replace("\"", string.Empty).Trim();
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// 同步获取一次性内容。
+    /// </summary>
+    /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
+    /// <param name="httpBase"></param>
+    /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
+    [Obsolete("该方法已被弃用，请使用GetContentAsync异步方法")]
+    public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase, CancellationToken cancellationToken = default)
+    {
+        // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
+        // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
+        return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).GetFalseAwaitResult();
     }
 
     #region 设置内容
@@ -109,60 +190,6 @@ public static partial class HttpExtensions
     }
 
     #endregion 设置内容
-
-    /// <summary>
-    /// 获取Body的字符串
-    /// </summary>
-    /// <param name="httpBase"></param>
-    /// <returns></returns>
-    public static string GetBody(this HttpBase httpBase)
-    {
-        return GetBodyAsync(httpBase).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 异步获取 HTTP 请求的主体内容。
-    /// </summary>
-    /// <param name="httpBase">HttpBase 实例，用于发起 HTTP 请求。</param>
-    /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
-    public static async Task<string> GetBodyAsync(this HttpBase httpBase)
-    {
-        // 异步获取 HTTP 响应的内容作为字节数组
-        var bytes = await httpBase.GetContentAsync(CancellationToken.None);
-        // 如果字节数组为空，则返回 null，否则使用 UTF-8 编码将字节数组转换为字符串并返回
-        return bytes.IsEmpty ? null : bytes.Span.ToString(Encoding.UTF8);
-    }
-
-    /// <summary>
-    /// 当数据类型为multipart/form-data时，获取boundary
-    /// </summary>
-    /// <param name="httpBase"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    public static string GetBoundary(this HttpBase httpBase)
-    {
-        // 检查ContentType是否为空，如果为空则直接返回空字符串
-        if (httpBase.ContentType.IsNullOrEmpty())
-        {
-            return string.Empty;
-        }
-        // 分割ContentType字符串，以";"为分隔符
-        var strs = httpBase.ContentType.Split(';');
-        // 如果分割后的长度为2，表示可能存在boundary信息
-        if (strs.Length == 2)
-        {
-            // 进一步分割第二个部分，以"="为分隔符
-            strs = strs[1].Split('=');
-            // 如果分割后的长度为2，并且前半段的字符串为"boundary"，则表明确实存在boundary信息
-            if (strs.Length == 2 && strs[0].Trim().ToLower() == "boundary")
-            {
-                // 移除boundary中的双引号并返回
-                return strs[1].Replace("\"", string.Empty).Trim();
-            }
-        }
-        // 如果没有成功获取到boundary信息，返回空字符串
-        return string.Empty;
-    }
 
     /// <summary>
     /// 为HttpBase类型对象设置内容。
@@ -225,6 +252,7 @@ public static partial class HttpExtensions
     #endregion HttpBase
 
     #region HttpRequest
+
     /// <summary>
     /// 添加Query参数
     /// </summary>
@@ -238,21 +266,6 @@ public static partial class HttpExtensions
         request.Query.Add(key, value);
         // 返回修改后的请求对象
         return request;
-    }
-
-    /// <summary>
-    /// 将一个键值对集合按照application/x-www-form-urlencoded格式设置到HttpRequest的内容中
-    /// </summary>
-    /// <param name="request">待设置内容的HttpRequest对象</param>
-    /// <param name="nameValueCollection">包含键值对的集合，将被转换为查询字符串格式</param>
-    /// <typeparam name="TRequest">HttpRequest的类型，使用泛型以支持所有HttpRequest的子类</typeparam>
-    public static void SetFormUrlEncodedContent<TRequest>(this TRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
-        where TRequest : HttpRequest
-    {
-        // 将键值对集合转换为查询字符串格式，并设置为请求的内容
-        request.SetContent(string.Join("&", nameValueCollection.Select(a => $"{a.Key}={a.Value}")));
-        // 设置请求的内容类型为application/x-www-form-urlencoded
-        request.ContentType = "application/x-www-form-urlencoded";
     }
 
     /// <summary>
@@ -270,9 +283,10 @@ public static partial class HttpExtensions
 
         if (boundaryString.IsNullOrEmpty())
         {
-            if (request.ContentType == @"application/x-www-form-urlencoded")
+            var contentType = request.ContentType;
+            if (CheckFormBody(contentType, out var encoding))
             {
-                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), encoding);
             }
             return new InternalFormCollection();
         }
@@ -282,6 +296,54 @@ public static partial class HttpExtensions
 
             return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), boundary);
         }
+    }
+
+    private static bool CheckFormBody(string contentType, out Encoding encoding)
+    {
+        // 初始化编码为默认的 UTF-8
+        encoding = Encoding.UTF8;
+
+        // 若 contentType 为空，直接返回 false
+        if (string.IsNullOrEmpty(contentType))
+        {
+            return false;
+        }
+
+        // 检查 contentType 是否以 "application/x-www-form-urlencoded" 开头
+        if (!contentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // 查找 charset 参数的起始位置
+        int charsetIndex = contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
+        if (charsetIndex >= 0)
+        {
+            // 定位到 charset 参数值的起始位置
+            charsetIndex += "charset=".Length;
+            // 查找 charset 参数值的结束位置
+            int endIndex = contentType.IndexOf(';', charsetIndex);
+            if (endIndex < 0)
+            {
+                // 如果没有后续的分号，说明到字符串末尾都是 charset 值
+                endIndex = contentType.Length;
+            }
+            // 提取 charset 参数的值
+            var charsetValue = contentType.Substring(charsetIndex, endIndex - charsetIndex).Trim();
+
+            try
+            {
+                // 根据提取的 charset 值获取对应的编码
+                encoding = Encoding.GetEncoding(charsetValue);
+            }
+            catch (ArgumentException)
+            {
+                // 如果提取的 charset 值无效，使用默认的 UTF-8 编码
+                encoding = Encoding.UTF8;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -316,6 +378,21 @@ public static partial class HttpExtensions
         // 设置用户代理头，标识使用的Http库
         request.Headers.Add(HttpHeaders.UserAgent, "TouchSocket.Http");
         return request;
+    }
+
+    /// <summary>
+    /// 将一个键值对集合按照application/x-www-form-urlencoded格式设置到HttpRequest的内容中
+    /// </summary>
+    /// <param name="request">待设置内容的HttpRequest对象</param>
+    /// <param name="nameValueCollection">包含键值对的集合，将被转换为查询字符串格式</param>
+    /// <typeparam name="TRequest">HttpRequest的类型，使用泛型以支持所有HttpRequest的子类</typeparam>
+    public static void SetFormUrlEncodedContent<TRequest>(this TRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+        where TRequest : HttpRequest
+    {
+        // 将键值对集合转换为查询字符串格式，并设置为请求的内容
+        request.SetContent(string.Join("&", nameValueCollection.Select(a => $"{a.Key}={a.Value}")));
+        // 设置请求的内容类型为application/x-www-form-urlencoded
+        request.ContentType = "application/x-www-form-urlencoded";
     }
 
     /// <summary>
@@ -550,6 +627,23 @@ public static partial class HttpExtensions
         return response;
     }
 
+    ///<summary>
+    /// 设置重定向响应。
+    /// <para>
+    /// 默认状态码为302，状态信息为"Found"。如果需要自定义状态码和状态信息，请使用<see cref="SetStatus{TResponse}(TResponse, int, string)"/>方法。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
+    /// <param name="response">响应对象，用于设置重定向。</param>
+    /// <param name="url">重定向的目标URL。</param>
+    /// <returns>返回设置了重定向的响应对象。</returns>
+    public static TResponse SetRedirect<TResponse>(this TResponse response, string url) where TResponse : HttpResponse
+    {
+        response.Headers.Add(HttpHeaders.Location, url);
+        response.SetStatus(302, "Found");
+        return response;
+    }
+
     /// <summary>
     /// 设置状态，并且附带时间戳。
     /// </summary>
@@ -592,22 +686,5 @@ public static partial class HttpExtensions
         return response;
     }
 
-
-    ///<summary>
-    /// 设置重定向响应。
-    /// <para>
-    /// 默认状态码为302，状态信息为"Found"。如果需要自定义状态码和状态信息，请使用<see cref="SetStatus{TResponse}(TResponse, int, string)"/>方法。
-    /// </para>
-    /// </summary>
-    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
-    /// <param name="response">响应对象，用于设置重定向。</param>
-    /// <param name="url">重定向的目标URL。</param>
-    /// <returns>返回设置了重定向的响应对象。</returns>
-    public static TResponse SetRedirect<TResponse>(this TResponse response, string url) where TResponse : HttpResponse
-    {
-        response.Headers.Add(HttpHeaders.Location, url);
-        response.SetStatus(302, "Found");
-        return response;
-    }
     #endregion HttpResponse
 }

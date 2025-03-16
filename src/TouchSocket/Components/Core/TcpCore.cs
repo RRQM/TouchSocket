@@ -116,7 +116,7 @@ internal sealed class TcpCore : DisposableObject
     /// </summary>
     public int SendBufferSize => Math.Min(Math.Max(this.m_sendBufferSize, this.MinBufferSize), this.MaxBufferSize);
 
-    public bool NoDelay => m_noDelay;
+    public bool NoDelay => this.m_noDelay;
 
     /// <summary>
     /// 发送计数器
@@ -138,6 +138,24 @@ internal sealed class TcpCore : DisposableObject
     /// </summary>
     public bool UseSsl => this.m_useSsl;
 
+    public async Task ShutdownAsync(SocketShutdown how)
+    {
+        //主要等待发送队列任务完成
+        await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_socket.Shutdown(how);
+        }
+        catch
+        {
+            // ignored
+        }
+        finally
+        {
+            this.m_semaphoreForSend.Release();
+        }
+    }
 
     /// <summary>
     /// 以Ssl服务器模式授权
@@ -263,7 +281,7 @@ internal sealed class TcpCore : DisposableObject
         try
         {
             // 如果内存长度小于最大长度，且不是无延迟模式
-            if (memory.Length < MaxMemoryLength&&!this.NoDelay)
+            if (memory.Length < MaxMemoryLength && !this.NoDelay)
             {
                 var dispatchInfo = this.m_exceptionDispatchInfo;
                 dispatchInfo?.Throw();
