@@ -544,6 +544,7 @@ internal class Program
 
                                     if (dataType == WSDataType.Text)
                                     {
+                                        this.m_logger.Info($"{dataType}|{data.Span.ToString(Encoding.UTF8)}");
                                         //按文本处理
                                     }
                                     else if (dataType == WSDataType.Binary)
