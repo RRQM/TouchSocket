@@ -29,6 +29,11 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     #region 属性
 
     /// <summary>
+    /// 获取字节池。
+    /// </summary>
+    BytePool BytePool { get; }
+
+    /// <summary>
     /// 获取是否可以读取。
     /// </summary>
     bool CanRead { get; }
@@ -87,11 +92,6 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// 获取是否正在使用。
     /// </summary>
     bool Using { get; }
-
-    /// <summary>
-    /// 获取字节池。
-    /// </summary>
-    BytePool BytePool { get; }
 
     /// <summary>
     /// 获取或设置指定索引处的字节。
@@ -419,6 +419,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// </summary>
     /// <param name="value">要写入的GUID，使用in修饰符确保参数只读且不复制。</param>
     void WriteGuid(in Guid value);
+
     #endregion Guid
 
     #region TimeSpan
@@ -489,6 +490,21 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     #region UInt64
 
     /// <summary>
+    /// 读取一个指定类型的值。
+    /// </summary>
+    /// <typeparam name="T">要读取的值的类型。</typeparam>
+    /// <returns>读取到的值。</returns>
+    T ReadT<T>() where T : unmanaged;
+
+    /// <summary>
+    /// 按指定的字节序读取一个值。
+    /// </summary>
+    /// <typeparam name="T">要读取的值的类型。</typeparam>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>读取到的值。</returns>
+    T ReadT<T>(EndianType endianType) where T : unmanaged;
+
+    /// <summary>
     /// 读取一个无符号64位整数。
     /// </summary>
     /// <returns>读取到的无符号64位整数。</returns>
@@ -500,6 +516,21 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <param name="endianType">指定的字节序。</param>
     /// <returns>读取到的无符号64位整数。</returns>
     ulong ReadUInt64(EndianType endianType);
+
+    /// <summary>
+    /// 将当前对象转换为一系列值。
+    /// </summary>
+    /// <typeparam name="T">值的类型。</typeparam>
+    /// <returns>一系列值的集合。</returns>
+    IEnumerable<T> ToTs<T>() where T : unmanaged;
+
+    /// <summary>
+    /// 按指定的字节序将当前对象转换为一系列值。
+    /// </summary>
+    /// <typeparam name="T">值的类型。</typeparam>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>一系列值的集合。</returns>
+    IEnumerable<T> ToTs<T>(EndianType endianType) where T : unmanaged;
 
     /// <summary>
     /// 将输入流中的数据全部转换为无符号64位整数的集合。
@@ -515,6 +546,21 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     IEnumerable<ulong> ToUInt64s(EndianType endianType);
 
     /// <summary>
+    /// 写入一个值。
+    /// </summary>
+    /// <typeparam name="T">要写入的值的类型。</typeparam>
+    /// <param name="value">要写入的值。</param>
+    void WriteT<T>(T value) where T : unmanaged;
+
+    /// <summary>
+    /// 按指定的字节序写入一个值。
+    /// </summary>
+    /// <typeparam name="T">要写入的值的类型。</typeparam>
+    /// <param name="value">要写入的值。</param>
+    /// <param name="endianType">指定的字节序类型。</param>
+    void WriteT<T>(T value, EndianType endianType) where T : unmanaged;
+
+    /// <summary>
     /// 写入一个无符号64位整数。
     /// </summary>
     /// <param name="value">要写入的无符号64位整数值。</param>
@@ -526,25 +572,8 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <param name="value">要写入的无符号64位整数值。</param>
     /// <param name="endianType">指定的字节序。</param>
     void WriteUInt64(ulong value, EndianType endianType);
+
     #endregion UInt64
-
-    #region T
-
-
-    T ReadT<T>() where T : unmanaged;
-
-
-    T ReadT<T>(EndianType endianType) where T : unmanaged;
-
-
-    IEnumerable<T> ToTs<T>() where T : unmanaged;
-
-    IEnumerable<T> ToTs<T>(EndianType endianType) where T : unmanaged;
-
-    void WriteT<T>(T value) where T : unmanaged;
-
-    void WriteT<T>(T value, EndianType endianType) where T : unmanaged;
-    #endregion T
 
     #region Seek
 
@@ -571,7 +600,14 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// 将流定位到起始位置。
     /// </summary>
     void SeekToStart();
+
     #endregion Seek
+
+    /// <summary>
+    /// 扩展当前对象的大小。
+    /// </summary>
+    /// <param name="size">要扩展的大小。</param>
+    void ExtendSize(int size);
 
     /// <summary>
     /// 将指定长度的数据读取到只读字节跨度中。
@@ -626,6 +662,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <param name="length">转换的字符数量。</param>
     /// <returns>从指定位置开始，并在指定长度内的当前实例的字符串表示。</returns>
     string ToString(int offset, int length);
+
     #endregion ToString
 
     #region DateTime
@@ -690,6 +727,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <param name="value">要写入的双精度浮点数。</param>
     /// <param name="endianType">指定的字节序。</param>
     void WriteDouble(double value, EndianType endianType);
+
     #endregion Double
 
     #region Int32
@@ -805,7 +843,8 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <param name="value">字符串</param>
     /// <param name="encoding">编码</param>
     void WriteNormalString(string value, Encoding encoding);
-    #endregion
+
+    #endregion NormalString
 
     #region UInt16
 
@@ -913,10 +952,5 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <returns>返回写入操作的结果，成功返回0，否则返回-1。</returns>
     int WriteVarUInt32(uint value);
 
-    #endregion
-    /// <summary>
-    /// 扩展当前对象的大小。
-    /// </summary>
-    /// <param name="size">要扩展的大小。</param>
-    void ExtendSize(int size);
+    #endregion VarUInt32
 }

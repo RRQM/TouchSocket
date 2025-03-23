@@ -36,7 +36,7 @@ public static partial class HttpExtensions
     /// <exception cref="Exception"></exception>
     /// <exception cref="Exception"></exception>
     /// <returns></returns>
-    public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
+    public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
         var filePath = fileInfo.FullName;
         using (var streamReader = File.OpenRead(filePath))
@@ -167,9 +167,9 @@ public static partial class HttpExtensions
     /// <exception cref="Exception"></exception>
     /// <exception cref="Exception"></exception>
     /// <returns></returns>
-    public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
+    public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
-        await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip);
+        await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
 }

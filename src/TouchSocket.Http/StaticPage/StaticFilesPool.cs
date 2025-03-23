@@ -37,9 +37,9 @@ public class StaticFilesPool : DisposableObject
     {
         this.m_timer = new SingleTimer(1000, () =>
         {
-            var FolderEntry = this.m_foldersByKey.Values.Where(a => a.Changed);
+            var folderEntry = this.m_foldersByKey.Values.Where(a => a.Changed);
 
-            foreach (var item in FolderEntry)
+            foreach (var item in folderEntry)
             {
                 this.RemoveFolder(item.Path);
                 this.AddFolder(item.Path, item.Prefix,item.Filter,item.Timespan);
@@ -371,17 +371,20 @@ public class StaticFilesPool : DisposableObject
 
                 var key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
 
-                if (this.InternalAddFile(item, key, timeout))
+                if (!this.InternalAddFile(item, key, timeout))
                 {
-                    using (new WriteLock(this.m_lockSlim))
-                    {
-                        folderEntry.Add(key);
-                    }
+                    continue;
+                }
+
+                using (new WriteLock(this.m_lockSlim))
+                {
+                    folderEntry.Add(key);
                 }
             }
         }
-        catch (Exception)
+        catch
         {
+            // ignored
         }
     }
 }

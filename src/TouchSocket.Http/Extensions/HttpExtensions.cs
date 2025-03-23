@@ -26,8 +26,10 @@ namespace TouchSocket.Http;
 public static partial class HttpExtensions
 {
     #region HttpBase
-
-    public const string Multipart_Form_Data = "multipart/form-data";
+    /// <summary>  
+    /// 表示 multipart/form-data 内容类型的常量字符串。  
+    /// </summary>  
+    public const string MultipartFormData = "multipart/form-data";
 
     /// <summary>
     /// 添加Header参数
@@ -117,7 +119,7 @@ public static partial class HttpExtensions
         }
 
         var firstType = strs[0].Trim();
-        if (!firstType.Equals(Multipart_Form_Data, StringComparison.OrdinalIgnoreCase))
+        if (!firstType.Equals(MultipartFormData, StringComparison.OrdinalIgnoreCase))
         {
             // 如果不是multipart/form-data类型，则直接返回空字符串
             return string.Empty;
@@ -145,7 +147,7 @@ public static partial class HttpExtensions
     {
         // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
         // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-        return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).GetFalseAwaitResult();
+        return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), cancellationToken).GetFalseAwaitResult();
     }
 
     #region 设置内容
@@ -182,22 +184,28 @@ public static partial class HttpExtensions
     /// <param name="request"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static T FromXML<T>(this T request, string value) where T : HttpBase
+    public static T FromXml<T>(this T request, string value) where T : HttpBase
     {
         request.SetContent(Encoding.UTF8.GetBytes(value));
         request.Headers.Add(HttpHeaders.ContentType, "application/xml;charset=UTF-8");
         return request;
     }
 
+    [Obsolete("由于方法名称不符合规范，该方法已被弃用，请使用FromXml代替")]
+    public static T FromXML<T>(this T request, string value) where T : HttpBase
+    {
+        return FromXml(request,value);
+    }
+
     #endregion 设置内容
 
-    /// <summary>
-    /// 为HttpBase类型对象设置内容。
-    /// </summary>
-    /// <typeparam name="T">泛型参数T，表示HttpBase类型或其派生类型。</typeparam>
-    /// <param name="httpBase">需要设置内容的HttpBase类型对象。</param>
-    /// <param name="content">要设置的内容，类型为HttpContent。</param>
-    /// <returns>返回设置内容后的HttpBase对象。</returns>
+        /// <summary>
+        /// 为HttpBase类型对象设置内容。
+        /// </summary>
+        /// <typeparam name="T">泛型参数T，表示HttpBase类型或其派生类型。</typeparam>
+        /// <param name="httpBase">需要设置内容的HttpBase类型对象。</param>
+        /// <param name="content">要设置的内容，类型为HttpContent。</param>
+        /// <returns>返回设置内容后的HttpBase对象。</returns>
     public static T SetContent<T>(this T httpBase, HttpContent content) where T : HttpBase
     {
         // 将传入的内容设置到HttpBase对象中

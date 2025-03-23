@@ -144,6 +144,11 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpHandshakingPlugin, 
         return this;
     }
 
+    /// <summary>
+    /// 配置默认的序列化选择器。
+    /// </summary>
+    /// <param name="selector">用于配置默认序列化选择器的操作。</param>
+    /// <returns>返回当前的 <see cref="DmtpRpcFeature"/> 实例，以支持链式调用。</returns>
     public DmtpRpcFeature ConfigureDefaultSerializationSelector(Action<DefaultSerializationSelector> selector)
     {
         var serializationSelector = new DefaultSerializationSelector();
