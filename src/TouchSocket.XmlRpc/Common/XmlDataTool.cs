@@ -130,7 +130,7 @@ internal static class XmlDataTool
         }
 
         var request = new HttpRequest();
-        request.FromXML(xml.OuterXml)
+        request.FromXml(xml.OuterXml)
             .InitHeaders()
             .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)
             .SetHost(httpClientBase.RemoteIPHost.Host)
@@ -252,7 +252,7 @@ internal static class XmlDataTool
 
             var xmlString = xmlBlock.Span.ToString(Encoding.UTF8);
 
-            httpResponse.FromXML(xmlString);
+            httpResponse.FromXml(xmlString);
         }
     }
 }

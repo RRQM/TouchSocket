@@ -21,6 +21,14 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public static class WebSocketClientExtension
 {
+    /// <summary>
+    /// 异步发送数据帧。
+    /// </summary>
+    /// <param name="webSocket">WebSocket客户端实例。</param>
+    /// <param name="memory">要发送的二进制数据。</param>
+    /// <param name="dataType">数据类型。</param>
+    /// <param name="endOfMessage">是否为消息的结束帧。</param>
+    /// <returns>表示异步操作的任务。</returns>
     public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true)
     {
         using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })

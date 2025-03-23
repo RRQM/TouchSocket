@@ -211,7 +211,7 @@ public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
                 }
                 else
                 {
-                    response.SetGzipContent(data);
+                    response.SetContent(data);
                 }
             }
             if (this.ResponseAction != null)

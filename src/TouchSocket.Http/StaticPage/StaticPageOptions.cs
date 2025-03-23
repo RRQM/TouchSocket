@@ -31,39 +31,28 @@ public class StaticPageOptions
         // 设置导航动作，用于处理静态页面的访问逻辑
         this.SetNavigateAction(request =>
         {
-            var relativeURL = request.RelativeURL;
-            var url = relativeURL;
+            var relativeUrl = request.RelativeURL;
+            var url = relativeUrl;
 
             if (this.m_filesPool.ContainsEntry(url))
             {
                 return url;
             }
 
-            if (relativeURL.EndsWith("/"))
+            if (relativeUrl.EndsWith("/"))
             {
-                url = relativeURL + "index.html";
-                if (this.m_filesPool.ContainsEntry(url))
-                {
-                    return url;
-                }
+                url = relativeUrl + "index.html";
             }
-            else if (relativeURL.EndsWith("index"))
+            else if (relativeUrl.EndsWith("index"))
             {
-                url = relativeURL + ".html";
-                if (this.m_filesPool.ContainsEntry(url))
-                {
-                    return url;
-                }
+                url = relativeUrl + ".html";
             }
             else
             {
-                url = relativeURL + "/index.html";
-                if (this.m_filesPool.ContainsEntry(url))
-                {
-                    return url;
-                }
+                url = relativeUrl + "/index.html";
             }
-            return relativeURL;
+
+            return this.m_filesPool.ContainsEntry(url) ? url : relativeUrl;
         });
     }
 
@@ -128,7 +117,7 @@ public class StaticPageOptions
     {
         // 将导航行为设置为一个异步操作，该操作接收一个HttpRequest并返回一个Task<string>类型的结果
         // 这里使用了Lambda表达式来简化代码，并提高可读性
-        this.NavigateAction = (request) => { return Task.FromResult(func(request)); };
+        this.NavigateAction = (request) => Task.FromResult(func(request));
     }
 
     /// <summary>
