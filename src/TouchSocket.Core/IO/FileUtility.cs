@@ -270,7 +270,7 @@ public static partial class FileUtility
     /// <returns></returns>
     public static string PathFormat(string pathString)
     {
-        return pathString.Replace('\\', Path.PathSeparator);
+        return pathString.Replace('\\', Path.DirectorySeparatorChar);
     }
 
 
