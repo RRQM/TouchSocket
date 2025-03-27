@@ -11,8 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -41,11 +43,13 @@ internal class Program
                   a.Add<MyHttpPlug1>();
                   a.Add<MyHttpPlug2>();
                   a.Add<MyHttpPlug3>();
-                  a.Add<MyHttpPlug4>();
-                  a.Add<MyUploadBigFileHttpPlug>();
+                  a.Add<MyHttpPlugin4>();
+                  a.Add<MyUploadBigFileHttpPlugin>();
                   a.Add<MyBigWriteHttpPlug>();
                   a.Add<MyCustomDownloadHttpPlug>();
                   a.Add<TestFormPlugin>();
+                  a.Add<MyDelayResponsePlugin>();
+                  a.Add<MyDelayResponsePlugin2>();
 
                   a.UseHttpStaticPage()
                   .SetNavigateAction(request =>
@@ -122,7 +126,7 @@ public class MyBigWriteHttpPlug : PluginBase, IHttpPlugin
     }
 }
 
-public class MyUploadBigFileHttpPlug : PluginBase, IHttpPlugin
+public class MyUploadBigFileHttpPlugin : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
@@ -162,7 +166,7 @@ public class MyUploadBigFileHttpPlug : PluginBase, IHttpPlugin
     }
 }
 
-public class MyHttpPlug4 : PluginBase, IHttpPlugin
+public class MyHttpPlugin4 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
@@ -424,5 +428,116 @@ public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
             //    .AnswerAsync();
         }
 
+    }
+}
+
+class MyDelayResponsePlugin : PluginBase, IHttpPlugin
+{
+    private ConcurrentQueue<TaskCompletionSource<string>> m_queue = new();
+
+    public MyDelayResponsePlugin()
+    {
+        Task.Factory.StartNew(HandleQueue, TaskCreationOptions.LongRunning);
+    }
+
+    private async Task HandleQueue()
+    {
+        while (true)
+        {
+            //模拟延迟
+            await Task.Delay(3000);
+
+            //处理队列
+            while (m_queue.TryDequeue(out var tcs))
+            {
+                //返回结果
+                tcs.SetResult(Guid.NewGuid().ToString());
+            }
+        }
+    }
+
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var request = e.Context.Request;//http请求体
+        var response = e.Context.Response;//http响应体
+        if (request.UrlEquals("/delay"))
+        {
+            var tcs = new TaskCompletionSource<string>();
+            m_queue.Enqueue(tcs);
+            var result = await tcs.Task;
+
+            await response
+                .SetStatus(200, "success")
+                .FromText(result)
+                .AnswerAsync();
+        }
+        await e.InvokeNext();
+    }
+}
+
+class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
+{
+    ConcurrentQueue<MyTaskCompletionSource> m_queue = new();
+
+    public MyDelayResponsePlugin2()
+    {
+        Task.Factory.StartNew(HandleQueue, TaskCreationOptions.LongRunning);
+    }
+
+    private async Task HandleQueue()
+    {
+        while (true)
+        {
+            //模拟延迟
+            await Task.Delay(3000);
+
+            //处理队列
+            while (m_queue.TryDequeue(out var tcs))
+            {
+                //返回结果
+
+                var client = tcs.Client;
+                var response = tcs.Context.Response;
+
+                response.SetStatus(200, "success");
+                response.IsChunk = true;
+
+                for (int i = 0; i < 5; i++)
+                {
+                    await response.WriteAsync(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()+"\r\n"));
+                    await Task.Delay(1000);
+                }
+
+                await response.CompleteChunkAsync();
+
+                tcs.SetResult(true);
+            }
+        }
+    }
+
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var request = e.Context.Request;//http请求体
+        var response = e.Context.Response;//http响应体
+        if (request.UrlEquals("/delay2"))
+        {
+            var tcs = new MyTaskCompletionSource(client, e.Context);
+            m_queue.Enqueue(tcs);
+            var result = await tcs.Task;
+            //不做任何处理
+        }
+        await e.InvokeNext();
+    }
+
+    class MyTaskCompletionSource : TaskCompletionSource<bool>
+    {
+        public MyTaskCompletionSource(IHttpSessionClient client, HttpContext context)
+        {
+            this.Client = client;
+            this.Context = context;
+        }
+
+        public IHttpSessionClient Client { get; }
+        public HttpContext Context { get; }
     }
 }
