@@ -27,11 +27,7 @@ await service.SetupAsync(new TouchSocketConfig()
    {
        a.UseCheckClear();
 
-       a.UseWebApi()
-       .ConfigureRpcStore(store =>
-       {
-           store.RegisterServer<ApiServer>();//注册服务
-       });
+       a.UseWebApi();
 
        a.UseSwagger()//使用Swagger页面
         .UseLaunchBrowser();//启动浏览器
