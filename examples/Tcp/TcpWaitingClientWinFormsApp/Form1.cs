@@ -24,10 +24,10 @@ public partial class Form1 : Form
         this.Load += this.Form1_Load;
     }
 
-    private TcpService tcpService;
+    private TcpService m_tcpService;
     private async void Form1_Load(object? sender, EventArgs e)
     {
-        this.tcpService = await CreateService();
+        this.m_tcpService = await CreateService();
 
         this.UpdateServiceButtonUI();
     }
@@ -104,7 +104,7 @@ public partial class Form1 : Form
             var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions());
 
             this.cts = new CancellationTokenSource(5000);
-            var bytes = await waitingClient.SendThenReturnAsync(this.textBox2.Text.ToUTF8Bytes(), this.cts.Token);
+            var bytes = await waitingClient.SendThenReturnAsync(this.textBox2.Text.ToUtf8Bytes(), this.cts.Token);
             if (bytes != null)
             {
                 MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes)}");
@@ -149,7 +149,7 @@ public partial class Form1 : Form
             });
 
             this.cts = new CancellationTokenSource(500000);
-            var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUTF8Bytes(), this.cts.Token);
+            var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
 
             if (bytes != null)
             {
@@ -175,14 +175,14 @@ public partial class Form1 : Form
 
     private void button4_Click(object sender, EventArgs e)
     {
-        this.tcpService?.Dispose();
-        this.tcpService = default;
+        this.m_tcpService?.Dispose();
+        this.m_tcpService = default;
         this.UpdateServiceButtonUI();
     }
 
     private void UpdateServiceButtonUI()
     {
-        if (this.tcpService == null)
+        if (this.m_tcpService == null)
         {
             this.button4.Text = "启动服务";
         }
