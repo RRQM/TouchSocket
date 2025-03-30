@@ -102,6 +102,49 @@ public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 }
 ```
 
+### 2.3 通过IRpcCallContextAccessor服务获取
+
+不管在单例，还是瞬态的Rpc服务，都可以通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
+
+首先，需要在容器中注册`IRpcCallContextAccessor`服务。
+
+```csharp {3} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcCallContextAccessor();
+});
+```
+
+然后，在Rpc服务中，通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
+
+```csharp {5,7,16} showLineNumbers
+public partial class MyRpcServer : RpcServer
+{
+    private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
+
+    public MyRpcServer(IRpcCallContextAccessor rpcCallContextAccessor)
+    {
+        this.m_rpcCallContextAccessor = rpcCallContextAccessor;
+    }
+
+    [Description("测试从CallContextAccessor中获取当前关联的CallContext")]
+    [DmtpRpc]
+    public async Task TestGetCallContextFromCallContextAccessor()
+    {
+        //通过CallContextAccessor获取当前关联的CallContext
+        //此处即使m_rpcCallContextAccessor与当前RpcServer均为单例，也能获取到正确的CallContext
+        var callContext = this.m_rpcCallContextAccessor.CallContext;
+        await Task.CompletedTask;
+    }
+}
+```
+
+:::tip 提示
+
+该方式是通过`AsyncLocal`的方式实现的，所以，即使把`IRpcCallContextAccessor`保存到静态变量中，也能正常获取到正确的`CallContext`。但前提是，获取流程在调用上下文生命周期内，否则，可能会获取到错误的`CallContext`。
+
+:::  
+
 ## 三、取消任务
 
 一般的，Rpc在执行时，如遇到异常，或主动操作，会自动取消任务。所以我们在调用上下文`ICallContext`接口中也规范了取消任务的方法。
