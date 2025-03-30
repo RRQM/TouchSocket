@@ -8,7 +8,7 @@ import LikeButton from '@site/src/components/LikeButton.js';
 export default function MDXContent({ children }: Props): JSX.Element {
   return <MDXProvider components={MDXComponents}>
     {children}
-    {/* <GiscusCard/> */}
+    <GiscusCard />
     <LikeButton />
   </MDXProvider>;
 }
