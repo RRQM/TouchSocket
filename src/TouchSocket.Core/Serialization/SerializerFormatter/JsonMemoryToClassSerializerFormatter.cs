@@ -51,7 +51,7 @@ public class JsonMemoryToClassSerializerFormatter<TState> : ISerializerFormatter
     {
         try
         {
-            source = JsonConvert.SerializeObject(target, this.JsonSettings).ToUTF8Bytes();
+            source = JsonConvert.SerializeObject(target, this.JsonSettings).ToUtf8Bytes();
             return true;
         }
         catch (Exception)

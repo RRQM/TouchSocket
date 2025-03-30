@@ -22,7 +22,7 @@ public abstract class ScopedRpcServer<TCallContext> : RpcServer, IScopedRpcServe
     /// <summary>
     /// 调用上下文。
     /// </summary>
-    protected TCallContext CallContext => (((IScopedRpcServer)this).CallContext is TCallContext Transient) ? Transient : default;
+    protected TCallContext CallContext => (((IScopedRpcServer)this).CallContext is TCallContext transient) ? transient : default;
 }
 
 /// <summary>

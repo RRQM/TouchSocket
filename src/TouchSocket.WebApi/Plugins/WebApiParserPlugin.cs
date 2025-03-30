@@ -119,7 +119,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
     private static object PrimitiveParse(string source, Type targetType)
     {
-        if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.stringType)
+        if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.StringType)
         {
             StringExtension.TryParseToType(source, targetType, out var target);
 

@@ -764,7 +764,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
 #if SystemTextJson
         var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSokcetDmtpSourceGenerationContext.Default);
 #else
-        var bytes = JsonConvert.SerializeObject(obj).ToUTF8Bytes();
+        var bytes = JsonConvert.SerializeObject(obj).ToUtf8Bytes();
 #endif
 
         return this.SendAsync(protocol, bytes);

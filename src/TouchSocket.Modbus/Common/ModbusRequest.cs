@@ -96,7 +96,7 @@ public class ModbusRequest : IModbusRequest
     public ushort ReadQuantity { get; set; }
 
     /// <summary>
-    /// 设置<see cref="Data"/>的值为一个bool。
+    /// 设置<see cref="Data"/>的值为一个 bool。
     /// </summary>
     /// <param name="value">要设置的布尔值。</param>
     public void SetValue(bool value)
@@ -117,34 +117,34 @@ public class ModbusRequest : IModbusRequest
     }
 
     /// <summary>
-    /// 设置<see cref="Data"/>的值为short。
+    /// 设置<see cref="Data"/>的值为 short。
     /// </summary>
     /// <param name="value">要设置的值</param>
     public void SetValue(short value)
     {
-        // 将传入的short类型值转换为字节数组，并根据BigEndian规则进行存储
+        // 将传入的 short类型值转换为字节数组，并根据BigEndian规则进行存储
         this.Data = TouchSocketBitConverter.BigEndian.GetBytes(value);
     }
 
     /// <summary>
-    /// 设置<see cref="Data"/>的值为ushort。
+    /// 设置<see cref="Data"/>的值为 ushort。
     /// </summary>
     /// <param name="value">要设置的值</param>
     public void SetValue(ushort value)
     {
-        // 将传入的ushort值转换为字节数组，并根据BigEndian规则进行存储
+        // 将传入的 ushort值转换为字节数组，并根据BigEndian规则进行存储
         this.Data = TouchSocketBitConverter.BigEndian.GetBytes(value);
     }
 
     /// <summary>
-    /// 设置<see cref="Data"/>的值为bool数组，同时设置<see cref="Quantity"/>的数量（即数组长度）。
+    /// 设置<see cref="Data"/>的值为 bool数组，同时设置<see cref="Quantity"/>的数量（即数组长度）。
     /// </summary>
-    /// <param name="values">要设置的bool数组</param>
+    /// <param name="values">要设置的 bool数组</param>
     public void SetValue(bool[] values)
     {
-        // 将bool数组转换为字节，并赋值给Data属性
-        this.Data = TouchSocketBitConverter.Default.GetBytes(values);
-        // 设置Quantity属性为数组的长度，以记录bool值的数量
+        // 将 bool数组转换为字节，并赋值给Data属性
+        this.Data = TouchSocketBitConverter.BigEndian.GetBytes(values);
+        // 设置Quantity属性为数组的长度，以记录 bool值的数量
         this.Quantity = (ushort)values.Length;
     }
 }

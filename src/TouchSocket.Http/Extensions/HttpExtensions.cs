@@ -294,13 +294,16 @@ public static partial class HttpExtensions
             var contentType = request.ContentType;
             if (CheckFormBody(contentType, out var encoding))
             {
-                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), encoding);
+                return new InternalFormCollection(
+                    await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), encoding);
             }
+
             return new InternalFormCollection();
+
         }
         else
         {
-            var boundary = $"--{boundaryString}".ToUTF8Bytes();
+            var boundary = $"--{boundaryString}".ToUtf8Bytes();
 
             return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), boundary);
         }
@@ -324,31 +327,33 @@ public static partial class HttpExtensions
         }
 
         // 查找 charset 参数的起始位置
-        int charsetIndex = contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
-        if (charsetIndex >= 0)
+        var charsetIndex = contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
+        if (charsetIndex < 0)
         {
-            // 定位到 charset 参数值的起始位置
-            charsetIndex += "charset=".Length;
-            // 查找 charset 参数值的结束位置
-            int endIndex = contentType.IndexOf(';', charsetIndex);
-            if (endIndex < 0)
-            {
-                // 如果没有后续的分号，说明到字符串末尾都是 charset 值
-                endIndex = contentType.Length;
-            }
-            // 提取 charset 参数的值
-            var charsetValue = contentType.Substring(charsetIndex, endIndex - charsetIndex).Trim();
+            return true;
+        }
 
-            try
-            {
-                // 根据提取的 charset 值获取对应的编码
-                encoding = Encoding.GetEncoding(charsetValue);
-            }
-            catch (ArgumentException)
-            {
-                // 如果提取的 charset 值无效，使用默认的 UTF-8 编码
-                encoding = Encoding.UTF8;
-            }
+        // 定位到 charset 参数值的起始位置
+        charsetIndex += "charset=".Length;
+        // 查找 charset 参数值的结束位置
+        var endIndex = contentType.IndexOf(';', charsetIndex);
+        if (endIndex < 0)
+        {
+            // 如果没有后续的分号，说明到字符串末尾都是 charset 值
+            endIndex = contentType.Length;
+        }
+        // 提取 charset 参数的值
+        var charsetValue = contentType.Substring(charsetIndex, endIndex - charsetIndex).Trim();
+
+        try
+        {
+            // 根据提取的 charset 值获取对应的编码
+            encoding = Encoding.GetEncoding(charsetValue);
+        }
+        catch (ArgumentException)
+        {
+            // 如果提取的 charset 值无效，使用默认的 UTF-8 编码
+            encoding = Encoding.UTF8;
         }
 
         return true;
@@ -397,8 +402,12 @@ public static partial class HttpExtensions
     public static void SetFormUrlEncodedContent<TRequest>(this TRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
         where TRequest : HttpRequest
     {
-        // 将键值对集合转换为查询字符串格式，并设置为请求的内容
-        request.SetContent(string.Join("&", nameValueCollection.Select(a => $"{a.Key}={a.Value}")));
+        var encodedPairs = nameValueCollection.Select(p =>
+            $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value ?? "")}"
+                .Replace("%20", "+"));  // 手动处理空格为+
+
+        request.SetContent(string.Join("&", encodedPairs));
+
         // 设置请求的内容类型为application/x-www-form-urlencoded
         request.ContentType = "application/x-www-form-urlencoded";
     }
@@ -688,8 +697,21 @@ public static partial class HttpExtensions
     /// <returns>设置后的HTTP响应对象</returns>
     public static TResponse UrlNotFind<TResponse>(this TResponse response) where TResponse : HttpResponse
     {
-        response.SetContent("<html><body><h1>404 -Not Found</h1></body></html>");
+        response.FromHtml("<html><body><h1>404 -Not Found</h1></body></html>");
         response.SetStatus(404, "Not Found");
+        return response;
+    }
+
+    /// <summary>
+    /// 设置HTML内容。
+    /// </summary>
+    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
+    /// <param name="response">响应对象，用于设置HTML内容。</param>
+    /// <param name="htmlString">HTML字符串，表示要设置的内容。</param>
+    /// <returns>返回设置了HTML内容的响应对象。</returns>
+    public static TResponse FromHtml<TResponse>(this TResponse response, string htmlString) where TResponse : HttpResponse
+    {
+        response.SetContent(htmlString, Encoding.UTF8);
         response.ContentType = "text/html;charset=utf-8";
         return response;
     }

@@ -98,15 +98,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="NotAllowAsyncRead" xml:space="preserve">
-    <value>当AllowAsyncRead为false时，不支持该操作。</value>
-    <comment>当AllowAsyncRead为false时，不支持该操作。</comment>
+    <value>When AllowAsynchronous Read is false, this operation is not supported.</value>
   </data>
   <data name="RefuseWebSocketConnection" xml:space="preserve">
-    <value>主动拒绝WebSocket连接，信息：{0}</value>
-    <comment>主动拒绝WebSocket连接，信息：{0}</comment>
+    <value>Proactively reject WebSocket connection, information: {0}</value>
   </data>
   <data name="WebSocketConnectionProtocolIsIncorrect" xml:space="preserve">
-    <value>WebSocket连接协议不正确，这可能并不是一个WebSocket连接。</value>
-    <comment>WebSocket连接协议不正确，这可能并不是一个WebSocket连接。</comment>
+    <value>The WebSocket connection protocol is incorrect, this may not be a WebSocket connection.</value>
   </data>
 </root>

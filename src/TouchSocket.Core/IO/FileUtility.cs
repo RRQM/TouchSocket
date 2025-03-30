@@ -24,27 +24,15 @@ namespace TouchSocket.Core;
 public static partial class FileUtility
 {
     /// <summary>
-    /// 获取不重复文件名。
-    /// <para>例如：New.txt已存在时，会返回New(1).txt</para>
+    /// 删除路径文件
     /// </summary>
-    /// <param name="fileName"></param>
-    /// <returns></returns>
-    public static string GetDuplicateFileName(string fileName)
+    /// <param name="path"></param>
+    public static void Delete(string path)
     {
-        if (!File.Exists(fileName))
+        if (File.Exists(path))
         {
-            return fileName;
-        }
-
-        var index = 0;
-        while (true)
-        {
-            index++;
-            var newPath = Path.Combine(Path.GetDirectoryName(fileName), $"{Path.GetFileNameWithoutExtension(fileName)}({index}){Path.GetExtension(fileName)}");
-            if (!File.Exists(newPath))
-            {
-                return newPath;
-            }
+            File.SetAttributes(path, FileAttributes.Normal);
+            File.Delete(path);
         }
     }
 
@@ -74,85 +62,27 @@ public static partial class FileUtility
     }
 
     /// <summary>
-    /// 转化为文件大小的字符串，类似10B，10Kb，10Mb，10Gb。
+    /// 获取不重复文件名。
+    /// <para>例如：New.txt已存在时，会返回New(1).txt</para>
     /// </summary>
-    /// <param name="length"></param>
+    /// <param name="fileName"></param>
     /// <returns></returns>
-    public static string ToFileLengthString(long length)
+    public static string GetDuplicateFileName(string fileName)
     {
-        return length < 1024
-            ? $"{length}B"
-            : length < 1024 * 1024
-                ? $"{(length / 1024.0).ToString("0.00")}Kb"
-                : length < 1024 * 1024 * 1024
-                                ? $"{(length / (1024.0 * 1024)).ToString("0.00")}Mb"
-                                : $"{(length / (1024.0 * 1024 * 1024)).ToString("0.00")}Gb";
-    }
-
-    /// <summary>
-    /// 获取文件MD5
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    public static string GetFileMD5(string path)
-    {
-        using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        if (!File.Exists(fileName))
         {
-            return GetStreamMD5(fileStream);
+            return fileName;
         }
-    }
 
-    /// <summary>
-    /// 获取流MD5
-    /// </summary>
-    /// <param name="fileStream"></param>
-    /// <returns></returns>
-    public static string GetStreamMD5(Stream fileStream)
-    {
-        using (HashAlgorithm hash = System.Security.Cryptography.MD5.Create())
+        var index = 0;
+        while (true)
         {
-            return GetStreamHash(fileStream, hash);
-        }
-    }
-
-    /// <summary>
-    /// 获得文件Hash值
-    /// </summary>
-    /// <param name="filePath">文件路径</param>
-    /// <returns></returns>
-    public static string GetFileHash256(string filePath)
-    {
-        try
-        {
-            HashAlgorithm hash = SHA256.Create();
-            using (var fileStream = File.OpenRead(filePath))
+            index++;
+            var newPath = Path.Combine(Path.GetDirectoryName(fileName), $"{Path.GetFileNameWithoutExtension(fileName)}({index}){Path.GetExtension(fileName)}");
+            if (!File.Exists(newPath))
             {
-                var HashValue = hash.ComputeHash(fileStream);
-                return BitConverter.ToString(HashValue).Replace("-", "");
+                return newPath;
             }
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// 获得流Hash值
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <returns></returns>
-    public static string GetStreamHash256(Stream stream)
-    {
-        try
-        {
-            HashAlgorithm hash = SHA256.Create();
-            var HashValue = hash.ComputeHash(stream);
-            return BitConverter.ToString(HashValue).Replace("-", "");
-        }
-        catch
-        {
-            return null;
         }
     }
 
@@ -168,8 +98,8 @@ public static partial class FileUtility
         {
             using (var fileStream = File.OpenRead(filePath))
             {
-                var HashValue = hash.ComputeHash(fileStream);
-                return BitConverter.ToString(HashValue).Replace("-", "");
+                var hashValue = hash.ComputeHash(fileStream);
+                return BitConverter.ToString(hashValue).Replace("-", "");
             }
         }
         catch
@@ -179,21 +109,37 @@ public static partial class FileUtility
     }
 
     /// <summary>
-    /// 获得流Hash值
+    /// 获得文件Hash值
     /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="hash"></param>
+    /// <param name="filePath">文件路径</param>
     /// <returns></returns>
-    public static string GetStreamHash(Stream stream, HashAlgorithm hash)
+    public static string GetFileHash256(string filePath)
     {
         try
         {
-            var HashValue = hash.ComputeHash(stream);
-            return BitConverter.ToString(HashValue).Replace("-", "");
+            HashAlgorithm hash = SHA256.Create();
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                var hashValue = hash.ComputeHash(fileStream);
+                return BitConverter.ToString(hashValue).Replace("-", "");
+            }
         }
         catch
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// 获取文件MD5
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static string GetFileMd5(string path)
+    {
+        using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        {
+            return GetStreamMd5(fileStream);
         }
     }
 
@@ -248,31 +194,55 @@ public static partial class FileUtility
     }
 
     /// <summary>
-    /// 删除路径文件
+    /// 获得流Hash值
     /// </summary>
-    /// <param name="path"></param>
-    public static void Delete(string path)
+    /// <param name="stream"></param>
+    /// <param name="hash"></param>
+    /// <returns></returns>
+    public static string GetStreamHash(Stream stream, HashAlgorithm hash)
     {
-        if (File.Exists(path))
+        try
         {
-            File.SetAttributes(path, FileAttributes.Normal);
-            File.Delete(path);
+            var hashValue = hash.ComputeHash(stream);
+            return BitConverter.ToString(hashValue).Replace("-", "");
+        }
+        catch
+        {
+            return null;
         }
     }
 
     /// <summary>
-    /// 路径格式化。
+    /// 获得流Hash值
     /// </summary>
-    /// <remarks>
-    /// 此操作会把路径中的所有反斜杠替换为正斜杠。例如：C:\\a.txt替换为C:/a.txt
-    /// </remarks>
-    /// <param name="pathString"></param>
+    /// <param name="stream"></param>
     /// <returns></returns>
-    public static string PathFormat(string pathString)
+    public static string GetStreamHash256(Stream stream)
     {
-        return pathString.Replace('\\', Path.DirectorySeparatorChar);
+        try
+        {
+            HashAlgorithm hash = SHA256.Create();
+            var hashValue = hash.ComputeHash(stream);
+            return BitConverter.ToString(hashValue).Replace("-", "");
+        }
+        catch
+        {
+            return null;
+        }
     }
 
+    /// <summary>
+    /// 获取流MD5
+    /// </summary>
+    /// <param name="fileStream"></param>
+    /// <returns></returns>
+    public static string GetStreamMd5(Stream fileStream)
+    {
+        using (HashAlgorithm hash = System.Security.Cryptography.MD5.Create())
+        {
+            return GetStreamHash(fileStream, hash);
+        }
+    }
 
     /// <summary>
     /// 判断该路径是否为文件夹
@@ -290,9 +260,57 @@ public static partial class FileUtility
         }
         catch (Exception)
         {
-
         }
         return false;
     }
 
+    /// <summary>
+    /// 路径格式化。
+    /// </summary>
+    /// <remarks>
+    /// 此操作会把路径中的所有反斜杠替换为正斜杠。例如：C:\\a.txt替换为C:/a.txt
+    /// </remarks>
+    /// <param name="pathString"></param>
+    /// <returns></returns>
+    public static string PathFormat(string pathString)
+    {
+        return pathString.Replace('\\', Path.AltDirectorySeparatorChar);
+        //return pathString.Replace('\\', Path.PathSeparator);
+    }
+
+    /// <summary>
+    /// 转化为文件大小的字符串，类似10B，10Kb，10Mb，10Gb。
+    /// </summary>
+    /// <param name="length"></param>
+    /// <returns></returns>
+    public static string ToFileLengthString(long length)
+    {
+        const decimal kb = 1024;
+        const decimal mb = 1024 * kb;
+        const decimal gb = 1024 * mb;
+        const decimal tb = 1024 * gb;
+        const decimal pb = 1024 * tb;
+
+        if (length < kb)
+        {
+            return $"{length}B";
+        }
+        if (length < mb)
+        {
+            return $"{(length / kb):F2}Kb";
+        }
+        if (length < gb)
+        {
+            return $"{(length / mb):F2}Mb";
+        }
+        if (length < tb)
+        {
+            return $"{(length / gb):F2}Gb";
+        }
+        if (length < pb)
+        {
+            return $"{(length / tb):F2}Tb";
+        }
+        return $"{(length / pb):F2}Pb";
+    }
 }

@@ -74,7 +74,7 @@ public sealed class SerializObject
                         break;
                     }
                     genericType = genericType.BaseType;
-                    if (genericType == TouchSocketCoreUtility.objType)
+                    if (genericType == TouchSocketCoreUtility.ObjType)
                     {
                         break;
                     }
@@ -93,7 +93,7 @@ public sealed class SerializObject
                         break;
                     }
                     genericType = genericType.BaseType;
-                    if (genericType == TouchSocketCoreUtility.objType)
+                    if (genericType == TouchSocketCoreUtility.ObjType)
                     {
                         break;
                     }

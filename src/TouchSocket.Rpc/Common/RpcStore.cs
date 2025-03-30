@@ -58,11 +58,11 @@ public sealed class RpcStore
     /// 本地获取代理
     /// </summary>
     /// <param name="namespace"></param>
-    /// <param name="attrbuteTypes"></param>
+    /// <param name="attributeTypes"></param>
     /// <returns></returns>
-    public string GetProxyCodes(string @namespace, params Type[] attrbuteTypes)
+    public string GetProxyCodes(string @namespace, params Type[] attributeTypes)
     {
-        var cellCodes = this.GetProxyInfo(attrbuteTypes);
+        var cellCodes = this.GetProxyInfo(attributeTypes);
         return CodeGenerator.ConvertToCode(@namespace, cellCodes);
     }
 
@@ -81,17 +81,17 @@ public sealed class RpcStore
     /// <summary>
     /// 从本地获取代理
     /// </summary>
-    /// <param name="attrbuteType"></param>
+    /// <param name="attributeType"></param>
     /// <returns></returns>
-    public ServerCellCode[] GetProxyInfo(Type[] attrbuteType)
+    public ServerCellCode[] GetProxyInfo(Type[] attributeType)
     {
         var codes = new List<ServerCellCode>();
 
-        foreach (var attrbute in attrbuteType)
+        foreach (var attribute in attributeType)
         {
             foreach (var item in this.m_serverTypes.Keys)
             {
-                var serverCellCode = CodeGenerator.Generator(item, attrbute);
+                var serverCellCode = CodeGenerator.Generator(item, attribute);
                 codes.Add(serverCellCode);
             }
         }

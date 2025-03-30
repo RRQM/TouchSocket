@@ -84,7 +84,7 @@ public static class ReflectionExtension
         var att = propertyInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
         return att != null || propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.
           GetGenericTypeDefinition().Equals
-          (TouchSocketCoreUtility.nullableType);
+          (TouchSocketCoreUtility.NullableType);
     }
 
     #endregion ParameterInfo
@@ -116,7 +116,7 @@ public static class ReflectionExtension
     {
         var att = fieldInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
         return att != null || fieldInfo.FieldType.IsGenericType && fieldInfo.FieldType.GetGenericTypeDefinition().Equals
-          (TouchSocketCoreUtility.nullableType);
+          (TouchSocketCoreUtility.NullableType);
     }
 
     /// <summary>

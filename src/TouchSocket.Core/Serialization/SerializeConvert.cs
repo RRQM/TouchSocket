@@ -442,7 +442,7 @@ public static partial class SerializeConvert
     /// <returns></returns>
     public static byte[] JsonSerializeToBytes(object obj)
     {
-        return ToJsonString(obj).ToUTF8Bytes();
+        return ToJsonString(obj).ToUtf8Bytes();
     }
 
     /// <summary>

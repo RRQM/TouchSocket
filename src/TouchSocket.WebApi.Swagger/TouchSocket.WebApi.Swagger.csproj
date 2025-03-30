@@ -9,31 +9,11 @@
 		<Title>TouchSocket.WebApi.Swagger</Title>
 	</PropertyGroup>
   <ItemGroup>
-    <None Remove="api\favicon-16x16.png" />
-    <None Remove="api\favicon-32x32.png" />
-    <None Remove="api\index.html" />
-    <None Remove="api\oauth2-redirect.html" />
-    <None Remove="api\openapi.json" />
-    <None Remove="api\swagger-ui-bundle.js" />
-    <None Remove="api\swagger-ui-es-bundle-core.js" />
-    <None Remove="api\swagger-ui-es-bundle.js" />
-    <None Remove="api\swagger-ui-standalone-preset.js" />
-    <None Remove="api\swagger-ui.css" />
-    <None Remove="api\swagger-ui.js" />
+    <None Remove="api\*.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="api\favicon-16x16.png" />
-    <EmbeddedResource Include="api\favicon-32x32.png" />
-    <EmbeddedResource Include="api\index.html" />
-    <EmbeddedResource Include="api\oauth2-redirect.html" />
-    <EmbeddedResource Include="api\openapi.json" />
-    <EmbeddedResource Include="api\swagger-ui-bundle.js" />
-    <EmbeddedResource Include="api\swagger-ui-es-bundle-core.js" />
-    <EmbeddedResource Include="api\swagger-ui-es-bundle.js" />
-    <EmbeddedResource Include="api\swagger-ui-standalone-preset.js" />
-    <EmbeddedResource Include="api\swagger-ui.css" />
-    <EmbeddedResource Include="api\swagger-ui.js" />
+    <EmbeddedResource Include="api\*.*" />
   </ItemGroup>
 
   <ItemGroup>

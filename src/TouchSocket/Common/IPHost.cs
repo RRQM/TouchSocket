@@ -102,7 +102,7 @@ public class IPHost : Uri
     private static int GetPortFromUrl(string url)
     {
 #if NETFRAMEWORK
-        //解决mono下的问题
+        //解决 Mono 下的问题
         //https://gitee.com/RRQM_Home/TouchSocket/issues/IBAG51
         var span = new ReadOnlySpan<char>(url.ToArray());
 #else
@@ -203,6 +203,6 @@ public class IPHost : Uri
 
     private static string VerifyUri(string uriString)
     {
-        return TouchSocketCoreUtility.IsURL(uriString) ? uriString : $"tcp://{uriString}";
+        return TouchSocketCoreUtility.IsUrl(uriString) ? uriString : $"tcp://{uriString}";
     }
 }

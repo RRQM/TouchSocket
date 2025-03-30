@@ -99,7 +99,7 @@ public static partial class Mapper
             return default;
         }
         var sourceType = source.GetType();
-        if (sourceType.IsPrimitive || sourceType.IsEnum || sourceType == TouchSocketCoreUtility.stringType)
+        if (sourceType.IsPrimitive || sourceType.IsEnum || sourceType == TouchSocketCoreUtility.StringType)
         {
             return source;
         }
