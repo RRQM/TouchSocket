@@ -23,9 +23,9 @@ TouchSocket is Net (including C #, VB An integrated socket network communication
 
 	<ItemGroup>
 	  <Compile Update="Resources\TouchSocketResource.Designer.cs">
-	    <DependentUpon>TouchSocketResource.resx</DependentUpon>
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketResource.resx</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 

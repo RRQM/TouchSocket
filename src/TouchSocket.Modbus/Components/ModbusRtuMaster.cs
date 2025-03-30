@@ -30,7 +30,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     {
         this.Protocol = TouchSocketModbusUtility.ModbusRtu;
     }
-
+    private ModbusRequest m_modbusRequest;
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
     {
@@ -38,6 +38,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
 
         try
         {
+            this.m_modbusRequest = request;
             var modbusRequest = new ModbusRtuRequest(request);
             var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
             try
@@ -54,13 +55,15 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            var response = this.m_waitData.WaitResult;
+            var response = this.m_waitDataAsync.WaitResult;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+
             response.Request = request;
             return response;
         }
         finally
         {
+            this.m_modbusRequest = default;
             this.m_semaphoreSlimForRequest.Release();
         }
     }
@@ -75,7 +78,6 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
     private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
 
     #endregion 字段
@@ -85,14 +87,33 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     {
         if (e.RequestInfo is ModbusRtuResponse response)
         {
-            this.SetRun(response);
+            var result = this.SetRun(this.m_modbusRequest, response);
+            if (result)
+            {
+                this.m_waitDataAsync.Set(response);
+            }
         }
         await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private void SetRun(ModbusRtuResponse response)
+
+    /// <summary>
+    /// 验证Modbus请求和响应是否匹配
+    /// </summary>
+    /// <param name="modbusRequest">Modbus请求</param>
+    /// <param name="response">Modbus响应</param>
+    /// <returns>如果请求和响应匹配则返回true，否则返回false</returns>
+    protected virtual bool SetRun(IModbusRequest modbusRequest, IModbusResponse response)
     {
-        this.m_waitData.Set(response);
-        this.m_waitDataAsync.Set(response);
+        if (modbusRequest.SlaveId != response.SlaveId)
+        {
+            return false;
+        }
+
+        if (modbusRequest.FunctionCode != response.FunctionCode)
+        {
+            return false;
+        }
+        return true;
     }
 }

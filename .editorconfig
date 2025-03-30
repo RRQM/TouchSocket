@@ -271,6 +271,7 @@ dotnet_naming_style.常量.required_suffix =
 dotnet_naming_style.常量.word_separator = 
 dotnet_naming_style.常量.capitalization = pascal_case
 csharp_prefer_static_anonymous_function = true:suggestion
+
 [*.{cs,vb}]
 end_of_line = crlf
 dotnet_style_qualification_for_field = true:suggestion
@@ -281,3 +282,11 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
 tab_width = 4
 indent_size = 4
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
+spelling_languages = en-us,zh-cn
+spelling_checkable_types = identifiers,comments
+spelling_exclusion_path = exclusion.dic
+spelling_use_default_exclusion_dictionary = false
+
+[*.cs]
+# Add file header
+file_header_template =------------------------------------------------------------------------------\n此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有\n源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权\nCSDN博客：https://blog.csdn.net/qq_40374647\n哔哩哔哩视频：https://space.bilibili.com/94253567\nGitee源代码仓库：https://gitee.com/RRQM_Home\nGithub源代码仓库：https://github.com/RRQM\nAPI首页：https://touchsocket.net/\n交流QQ群：234762506\n感谢您的下载和使用\n------------------------------------------------------------------------------

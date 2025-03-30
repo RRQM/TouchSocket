@@ -41,10 +41,10 @@ internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
         }
 
         ModbusErrorCode errorCode;
-
-        var bodyLength = 0;
         byte[] data;
         ushort startingAddress;
+
+        int bodyLength;
         if (isError)
         {
             errorCode = (ModbusErrorCode)byteBlock.ReadByte();

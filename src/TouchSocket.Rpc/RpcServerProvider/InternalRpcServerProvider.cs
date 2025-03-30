@@ -30,6 +30,11 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
 
     public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, InvokeResult invokeResult)
     {
+        var rpcCallContextAccessor=callContext.Resolver.Resolve<IRpcCallContextAccessor>();
+        if (rpcCallContextAccessor is not null)
+        {
+            rpcCallContextAccessor.CallContext = callContext;
+        }
         var ps = callContext.Parameters;
         var rpcMethod = callContext.RpcMethod;
         if (rpcMethod is null)
@@ -102,6 +107,11 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             {
                 invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
                     .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+
+            if (rpcCallContextAccessor is not null)
+            {
+                rpcCallContextAccessor.CallContext = default;
             }
         }
 

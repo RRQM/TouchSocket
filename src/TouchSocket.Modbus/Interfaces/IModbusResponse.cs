@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -17,6 +19,11 @@ namespace TouchSocket.Modbus;
 /// </summary>
 public interface IModbusResponse
 {
+    /// <summary>
+    /// 站点号
+    /// </summary>
+    public byte SlaveId { get; }
+
     /// <summary>
     /// 数据
     /// </summary>

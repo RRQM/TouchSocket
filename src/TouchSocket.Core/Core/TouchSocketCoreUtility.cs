@@ -23,26 +23,26 @@ namespace TouchSocket.Core;
 public class TouchSocketCoreUtility
 {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
-    public static readonly Type stringType = typeof(string);
-    public static readonly Type byteType = typeof(byte);
-    public static readonly Type sbyteType = typeof(sbyte);
-    public static readonly Type shortType = typeof(short);
-    public static readonly Type objType = typeof(object);
-    public static readonly Type ushortType = typeof(ushort);
-    public static readonly Type intType = typeof(int);
-    public static readonly Type uintType = typeof(uint);
-    public static readonly Type boolType = typeof(bool);
-    public static readonly Type charType = typeof(char);
-    public static readonly Type longType = typeof(long);
-    public static readonly Type ulongType = typeof(ulong);
-    public static readonly Type floatType = typeof(float);
-    public static readonly Type doubleType = typeof(double);
-    public static readonly Type decimalType = typeof(decimal);
-    public static readonly Type dateTimeType = typeof(DateTime);
-    public static readonly Type bytesType = typeof(byte[]);
-    public static readonly Type dicType = typeof(IDictionary);
-    public static readonly Type arrayType = typeof(Array);
-    public static readonly Type nullableType = typeof(Nullable<>);
+    public static readonly Type StringType = typeof(string);
+    public static readonly Type ByteType = typeof(byte);
+    public static readonly Type SbyteType = typeof(sbyte);
+    public static readonly Type ShortType = typeof(short);
+    public static readonly Type ObjType = typeof(object);
+    public static readonly Type UshortType = typeof(ushort);
+    public static readonly Type IntType = typeof(int);
+    public static readonly Type UintType = typeof(uint);
+    public static readonly Type BoolType = typeof(bool);
+    public static readonly Type CharType = typeof(char);
+    public static readonly Type LongType = typeof(long);
+    public static readonly Type UlongType = typeof(ulong);
+    public static readonly Type FloatType = typeof(float);
+    public static readonly Type DoubleType = typeof(double);
+    public static readonly Type DecimalType = typeof(decimal);
+    public static readonly Type DateTimeType = typeof(DateTime);
+    public static readonly Type BytesType = typeof(byte[]);
+    public static readonly Type DicType = typeof(IDictionary);
+    public static readonly Type ArrayType = typeof(Array);
+    public static readonly Type NullableType = typeof(Nullable<>);
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
 
     /// <summary>
@@ -82,7 +82,7 @@ public class TouchSocketCoreUtility
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    public static bool IsURL(string input)
+    public static bool IsUrl(string input)
     {
         var pattern = @"^[a-zA-Z]+://(\w+(-\w+)*)(\.(\w+(-\w+)*))*(\?\S*)?$?";
         var regex = new Regex(pattern);
@@ -98,15 +98,15 @@ public class TouchSocketCoreUtility
     {
         try
         {
-            var IPs = input.Split('.');
+            var iPs = input.Split('.');
             var regex = new Regex(@"^\d+$");
-            for (var i = 0; i < IPs.Length; i++)
+            for (var i = 0; i < iPs.Length; i++)
             {
-                if (!regex.IsMatch(IPs[i]))
+                if (!regex.IsMatch(iPs[i]))
                 {
                     return false;
                 }
-                if (Convert.ToUInt16(IPs[i]) > 255)
+                if (Convert.ToUInt16(iPs[i]) > 255)
                 {
                     return false;
                 }
@@ -124,7 +124,7 @@ public class TouchSocketCoreUtility
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    public static bool IsIPV6(string input)
+    public static bool IsIpv6(string input)
     {
         var temp = input;
         var strs = temp.Split(':');
@@ -132,7 +132,7 @@ public class TouchSocketCoreUtility
         {
             return false;
         }
-        var count = StringExtension.HitStringCount(input, "::");
+        var count = input.HitStringCount("::");
         string pattern;
         if (count > 1)
         {

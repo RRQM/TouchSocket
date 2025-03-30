@@ -12,6 +12,7 @@
 
 using System;
 using TouchSocket.Core;
+using static System.Collections.Specialized.BitVector32;
 
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
@@ -22,7 +23,7 @@ namespace TouchSocket.Rpc;
 /// <summary>
 /// ContainerExtension
 /// </summary>
-public static class RpcContainerExtension
+public static partial class RpcContainerExtension
 {
     /// <summary>
     /// 向容器中添加<see cref="RpcStore"/>。

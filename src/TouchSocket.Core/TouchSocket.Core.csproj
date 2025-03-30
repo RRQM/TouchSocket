@@ -58,11 +58,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Resources\TouchSocketCoreResource.Designer.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>TouchSocketCoreResource.resx</DependentUpon>
-		</Compile>
+	  <Compile Update="Resources\TouchSocketCoreResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketCoreResource.resx</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>

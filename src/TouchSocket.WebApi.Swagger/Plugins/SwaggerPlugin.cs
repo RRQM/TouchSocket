@@ -265,7 +265,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         openApiRoot.Components = this.GetComponents(schemaTypeList);
 
         var jsonSetting = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-        return JsonConvert.SerializeObject(openApiRoot, Formatting.Indented, jsonSetting).ToUTF8Bytes();
+        return JsonConvert.SerializeObject(openApiRoot, Formatting.Indented, jsonSetting).ToUtf8Bytes();
     }
 
     private void BuildHttpMethod(string url, HttpMethod httpMethod, RpcMethod rpcMethod, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)

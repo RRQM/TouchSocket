@@ -76,6 +76,30 @@ internal class InternalFormCollection : Dictionary<string, string>, IFormCollect
     {
     }
 
+    //public InternalFormCollection(ReadOnlyMemory<byte> context, Encoding encoding)
+    //{
+    //    var row = context.Span.ToString(encoding);
+    //    if (string.IsNullOrEmpty(row))
+    //    {
+    //        return;
+    //    }
+
+    //    var kvs = row.Split('&');
+    //    if (kvs == null || kvs.Length == 0)
+    //    {
+    //        return;
+    //    }
+
+    //    foreach (var item in kvs)
+    //    {
+    //        var kv = item.SplitFirst('=');
+    //        if (kv.Length == 2)
+    //        {
+    //            this.AddOrUpdate(kv[0], kv[1]);
+    //        }
+    //    }
+    //}
+
     public InternalFormCollection(ReadOnlyMemory<byte> context, Encoding encoding)
     {
         var row = context.Span.ToString(encoding);
@@ -85,17 +109,23 @@ internal class InternalFormCollection : Dictionary<string, string>, IFormCollect
         }
 
         var kvs = row.Split('&');
-        if (kvs == null || kvs.Length == 0)
-        {
-            return;
-        }
-
         foreach (var item in kvs)
         {
+            if (string.IsNullOrEmpty(item))
+            {
+                continue;
+            }
+
             var kv = item.SplitFirst('=');
+            var key = Uri.UnescapeDataString(kv[0].Replace("+", StringExtension.DefaultSpaceString));
             if (kv.Length == 2)
             {
-                this.AddOrUpdate(kv[0], kv[1]);
+                var value = Uri.UnescapeDataString(kv[1].Replace("+", StringExtension.DefaultSpaceString));
+                this.AddOrUpdate(key, value);
+            }
+            else if (kv.Length == 1)
+            {
+                this.AddOrUpdate(key, string.Empty);
             }
         }
     }

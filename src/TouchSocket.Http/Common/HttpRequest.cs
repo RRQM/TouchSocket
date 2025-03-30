@@ -387,7 +387,7 @@ public class HttpRequest : HttpBase
 
     private static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        byteBlock.Write(" "u8);
+        byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
     }
 
     private static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock

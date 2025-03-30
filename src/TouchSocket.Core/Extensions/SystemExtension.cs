@@ -510,7 +510,7 @@ public static class SystemExtension
     /// <returns><see cref="bool"/></returns>
     public static bool IsDictionary(this Type type)
     {
-        return TouchSocketCoreUtility.dicType.IsAssignableFrom(type);
+        return TouchSocketCoreUtility.DicType.IsAssignableFrom(type);
     }
 
     /// <summary>
@@ -573,7 +573,7 @@ public static class SystemExtension
     {
         return (type.IsGenericType && type.
           GetGenericTypeDefinition().Equals
-          (TouchSocketCoreUtility.nullableType));
+          (TouchSocketCoreUtility.NullableType));
     }
 
     /// <summary>

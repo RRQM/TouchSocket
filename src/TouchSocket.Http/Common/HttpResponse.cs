@@ -347,7 +347,7 @@ public class HttpResponse : HttpBase
         var msg = string.Empty;
         for (var i = 2; i < first.Length; i++)
         {
-            msg += first[i] + " ";
+            msg += first[i] + StringExtension.DefaultSpaceString;
         }
         this.StatusMessage = msg;
 
