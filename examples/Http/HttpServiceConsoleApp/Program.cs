@@ -26,7 +26,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        //如果需要创建https，则需要证书文件，此处提供一个测试证书文件
+        //如果需要创建 https，则需要证书文件，此处提供一个测试证书文件
         //证书在Ssl证书相关/证书生成.zip  解压获取。
         //然后放在运行目录。
         //最后客户端需要先安装证书。
@@ -65,7 +65,7 @@ internal class Program
 
                   //default插件应该最后添加，其作用是
                   //1、为找不到的路由返回404
-                  //2、处理header为Option的探视跨域请求。
+                  //2、处理 header 为Option的探视跨域请求。
                   a.UseDefaultHttpServicePlugin();
               }));
         await service.StartAsync();
