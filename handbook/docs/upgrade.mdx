@@ -18,6 +18,42 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.20
+
+**更新日期：** 2025.3.30
+
+**更新描述：**
+
+兼容性修复升级。部分方法名大小写调整。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>调整</Tag> `TouchSocketCoreUtility`类中的所有静态字段大小写调整。
+- &nbsp;<Tag>调整</Tag> `StringExtension`类中的多个方法名大小写调整（此处调用时可能是扩展方法调用的，所以需要注意）。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `HttpClient`在请求`application/x-www-form-urlencoded`时，内部未进行编码的bug。[#IBVPAD](https://gitee.com/RRQM_Home/TouchSocket/issues/IBVPAD)
+- &nbsp;<Tag>新增</Tag> `HttpResponse`新增`FromHtml`扩展方法，用于直接返回`Html`页面。
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>新增</Tag> `IRpcCallContextAccessor`服务，可以在异步调用流中，通过服务直接获取到执行`Rpc`的`CallContext`。
+
+#### TouchSocket.WebApi.Swagger
+
+- &nbsp;<Tag>更新</Tag> `Swagger`页面版本为`v5.20.2`，以支持一键复制url等功能。 [#IBX933](https://gitee.com/RRQM_Home/TouchSocket/issues/IBX933)
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>优化</Tag> `Modbus rtu`在响应数据时的严谨性，基本排除了站号，功能码不一致时仍然返回的错误情况。 [#github-issue 54](https://github.com/RRQM/TouchSocket/issues/54)
+
+***
+
+
 ## v3.0.19
 
 **更新日期：** 2025.3.23
