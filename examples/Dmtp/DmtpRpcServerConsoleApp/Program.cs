@@ -30,6 +30,8 @@ internal class Program
                .SetListenIPHosts(7789)
                .ConfigureContainer(a =>
                {
+                   a.AddRpcCallContextAccessor();
+
                    a.AddDmtpRouteService();
                    a.AddConsoleLogger();
 
@@ -77,10 +79,12 @@ internal class Program
 public partial class MyRpcServer : RpcServer
 {
     private readonly ILog m_logger;
+    private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
 
-    public MyRpcServer(ILog logger)
+    public MyRpcServer(ILog logger,IRpcCallContextAccessor rpcCallContextAccessor)
     {
         this.m_logger = logger;
+        this.m_rpcCallContextAccessor = rpcCallContextAccessor;
     }
 
     /// <summary>
@@ -172,6 +176,16 @@ public partial class MyRpcServer : RpcServer
         }
 
         return -1;
+    }
+
+    [Description("测试从CallContextAccessor中获取当前关联的CallContext")]
+    [DmtpRpc]
+    public async Task TestGetCallContextFromCallContextAccessor()
+    {
+        //通过CallContextAccessor获取当前关联的CallContext
+        //此处即使m_rpcCallContextAccessor与当前RpcServer均为单例，也能获取到正确的CallContext
+        var callContext = this.m_rpcCallContextAccessor.CallContext;
+        await Task.CompletedTask;
     }
 }
 

@@ -31,6 +31,7 @@ internal class Program
         consoleAction.Add("3", "测试客户端请求，服务器响应大量流数据", RunRpcPullChannel);
         consoleAction.Add("4", "测试客户端推送大量流数据", RunRpcPushChannel);
         consoleAction.Add("5", "测试取消调用", RunInvokeCancellationToken);
+        consoleAction.Add("6", "测试从CallContextAccessor中获取当前关联的CallContext", RunInvokeGetCallContextFromCallContextAccessor);
 
         consoleAction.ShowAll();
 
@@ -40,6 +41,22 @@ internal class Program
     private static void ConsoleAction_OnException(Exception obj)
     {
         ConsoleLogger.Default.Exception(obj);
+    }
+
+    private static async Task RunInvokeGetCallContextFromCallContextAccessor()
+    {
+        var client = await GetTcpDmtpClient();
+
+        try
+        {
+            await client.GetDmtpRpcActor().TestGetCallContextFromCallContextAccessorAsync();
+            Console.WriteLine("success");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
     }
 
     private static async Task RunInvokeCancellationToken()
