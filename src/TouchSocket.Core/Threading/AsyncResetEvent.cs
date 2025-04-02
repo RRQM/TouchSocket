@@ -83,6 +83,9 @@ public class AsyncResetEvent : DisposableObject
 
         lock (this.m_locker)
         {
+            if (DisposedValue)
+                return EasyTask.CompletedTask;
+
             if (this.m_eventSet)
             {
                 if (this.m_autoReset)
@@ -189,6 +192,7 @@ public class AsyncResetEvent : DisposableObject
 
                 this.Set();
             }
+
         }
         base.Dispose(disposing);
     }
