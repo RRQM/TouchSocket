@@ -27,7 +27,7 @@ public class AsyncResetEvent : DisposableObject
 
     private readonly Lock m_locker = new Lock();
 
-    private Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
+    private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
 
     private volatile bool m_eventSet;
 
@@ -193,8 +193,6 @@ public class AsyncResetEvent : DisposableObject
                 this.Set();
             }
 
-            m_waitQueue.Clear();
-            m_waitQueue = null;
         }
         base.Dispose(disposing);
     }
