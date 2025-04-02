@@ -60,6 +60,9 @@ internal sealed class TcpCore : DisposableObject
     private short m_version;
     private bool m_noDelay;
     private readonly SocketOperationResult m_result = new SocketOperationResult();
+
+    private CancellationTokenSource m_cancellationTokenSource=new();
+    private CancellationToken m_cancellationToken;
     #endregion 字段
 
     /// <summary>
@@ -78,7 +81,7 @@ internal sealed class TcpCore : DisposableObject
             Period = TimeSpan.FromSeconds(1),
             OnPeriod = this.OnSendPeriod
         };
-
+        m_cancellationToken=m_cancellationTokenSource.Token;
         this.m_sendTask = Task.Run(this.TaskSend);
         this.m_sendTask.FireAndForget();
     }
@@ -102,7 +105,8 @@ internal sealed class TcpCore : DisposableObject
             this.m_asyncResetEventForTask.SafeDispose();
             this.m_asyncResetEventForSend.SafeDispose();
             this.m_semaphoreSlimForMax.SafeDispose();
-
+            this.m_cancellationTokenSource.Cancel();
+            this.m_cancellationTokenSource.SafeDispose();
         }
     }
 
@@ -331,7 +335,7 @@ internal sealed class TcpCore : DisposableObject
     {
         var valuesToProcess = new SendSegment[BatchSize];
 
-        while (!DisposedValue)
+        while (!m_cancellationToken.IsCancellationRequested)
         {
             // 重置计数器和数组内容
             var count = 0;
@@ -346,7 +350,7 @@ internal sealed class TcpCore : DisposableObject
                 this.m_semaphoreSlimForMax.Release();
             }
 
-            if(DisposedValue)
+            if(m_cancellationToken.IsCancellationRequested)
             {
                 return;
             }
@@ -389,7 +393,7 @@ internal sealed class TcpCore : DisposableObject
                 //Debug.WriteLine("Pause");
                 // 队列为空，设置事件并等待
                 this.m_asyncResetEventForSend.Set();
-                await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_asyncResetEventForTask.WaitOneAsync(m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }
@@ -400,19 +404,19 @@ internal sealed class TcpCore : DisposableObject
 #if NET6_0_OR_GREATER
         if (this.UseSsl)
         {
-            await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SslStream.WriteAsync(memory, m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 #else
         if (this.m_useSsl)
         {
             var segment = memory.GetArray();
-            await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 #endif
         else
         {
             var offset = 0;
-            while (length > 0)
+            while (length > 0 && !m_cancellationToken.IsCancellationRequested)
             {
                 var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.SocketError != null)
