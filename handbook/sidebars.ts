@@ -595,12 +595,12 @@ module.exports =
     },
     {
       "type": "category",
-      "label": "22、SocketIO",
+      "label": "22、Mqtt组件",
       "items": [
         {
           "type": "doc",
-          "label": "22.1 SocketIo客户端",
-          "id": "socketioclient"
+          "label": "22.1 Mqtt客户端",
+          "id": "mqttclient"
         }
       ]
     }
