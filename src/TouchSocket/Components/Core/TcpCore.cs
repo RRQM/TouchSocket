@@ -93,12 +93,17 @@ internal sealed class TcpCore : DisposableObject
 
     protected override void Dispose(bool disposing)
     {
+        base.Dispose(disposing);
         if (disposing)
         {
             this.m_socketReceiver.SafeDispose();
             this.m_socketSender.SafeDispose();
+            this.m_semaphoreForSend.SafeDispose();
+            this.m_asyncResetEventForTask.SafeDispose();
+            this.m_asyncResetEventForSend.SafeDispose();
+            this.m_semaphoreSlimForMax.SafeDispose();
+
         }
-        base.Dispose(disposing);
     }
 
     /// <summary>
@@ -326,7 +331,7 @@ internal sealed class TcpCore : DisposableObject
     {
         var valuesToProcess = new SendSegment[BatchSize];
 
-        while (true)
+        while (!DisposedValue)
         {
             // 重置计数器和数组内容
             var count = 0;
@@ -339,6 +344,11 @@ internal sealed class TcpCore : DisposableObject
                     valuesToProcess[count++] = value;
                 }
                 this.m_semaphoreSlimForMax.Release();
+            }
+
+            if(DisposedValue)
+            {
+                return;
             }
 
             // 如果有元素需要处理，并且没有异常
