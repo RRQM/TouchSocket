@@ -9,15 +9,17 @@ internal class Program
     {
         var touch_UDP = new Touch_UDP();
         var touch_TCP = new Touch_TCP();
-        var touch_Dmtp = new Touch_HttpDmtp();
+        var touch_HttpDmtp = new Touch_HttpDmtp();
+        var touch_TcpDmtp = new Touch_TcpDmtp();
         var touch_WebSocket = new Touch_WebSocket();
         var touch_JsonWeb = new Touch_JsonWebSocket();
 
         await touch_TCP.StartService(7789);
-        await touch_Dmtp.StartService(7790);
+        await touch_HttpDmtp.StartService(7790);
         await touch_UDP.StartService(7791);
         await touch_WebSocket.StartService(7792);
         await touch_JsonWeb.StartService(7793);
+        await touch_TcpDmtp.StartService(7794);
 
         Console.ReadKey();
 
