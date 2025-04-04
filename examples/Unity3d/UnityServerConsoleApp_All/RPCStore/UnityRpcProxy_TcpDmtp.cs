@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
-namespace UnityRpcProxy_HttpDmtp
+namespace UnityRpcProxy_TcpDmtp
 {
 public interface IUnityRpcStore:TouchSocket.Rpc.IRemoteServer
 {

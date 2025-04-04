@@ -8,11 +8,11 @@ using UnityRpcProxy;
 namespace UnityServerConsoleApp_All.TouchServer;
 
 /// <summary>
-/// HTTP_Dmtp 网络服务
+/// Tcp_Dmtp 网络服务
 /// </summary>
-public class Touch_HttpDmtp : BaseTouchServer
+public class Touch_TcpDmtp : BaseTouchServer
 {
-    private readonly HttpDmtpService dmtpService = new HttpDmtpService();
+    private readonly TcpDmtpService dmtpService = new TcpDmtpService();
     public async Task StartService(int port)
     {
         var config = new TouchSocketConfig()//配置
@@ -27,8 +27,8 @@ public class Touch_HttpDmtp : BaseTouchServer
                  {
                      store.RegisterServer<UnityRpcStore>();
 #if DEBUG
-                     var code = store.GetProxyCodes("UnityRpcProxy_HttpDmtp", typeof(DmtpRpcAttribute));
-                     File.WriteAllText("../../../RPCStore/UnityRpcProxy_HttpDmtp.cs", code);
+                     var code = store.GetProxyCodes("UnityRpcProxy_TcpDmtp", typeof(DmtpRpcAttribute));
+                     File.WriteAllText("../../../RPCStore/UnityRpcProxy_TcpDmtp.cs", code);
 #endif
                  });
              })
@@ -49,7 +49,7 @@ public class Touch_HttpDmtp : BaseTouchServer
         await this.dmtpService.StartAsync();
 
 
-        this.dmtpService.Logger.Info($"HttpDmtp已启动，监听端口：{port}");
+        this.dmtpService.Logger.Info($"TcpDmtp已启动，监听端口：{port}");
     }
 
     /// <summary>
@@ -59,9 +59,9 @@ public class Touch_HttpDmtp : BaseTouchServer
     {
         public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
-            if (client is HttpDmtpSessionClient clientSession)
+            if (client is TcpDmtpSessionClient clientSession)
             {
-                clientSession.Logger.Info($"HTTP_DMTP:客户端{clientSession.IP}已断开");
+                clientSession.Logger.Info($"Tcp_DMTP:客户端{clientSession.IP}已断开");
                 clientSession.StopReverseRPC();
             }
             await e.InvokeNext();
@@ -97,9 +97,9 @@ public class Touch_HttpDmtp : BaseTouchServer
 
         public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            if (client is HttpDmtpSessionClient clientSession)
+            if (client is TcpDmtpSessionClient clientSession)
             {
-                clientSession.Logger.Info($"HTTP_DMTP:客户端{clientSession.IP}已连接");
+                clientSession.Logger.Info($"Tcp_DMTP:客户端{clientSession.IP}已连接");
                 //有新的客户端连接后，调用执行RandomNumber函数
                 clientSession.StartReverseRPC();
 
@@ -112,20 +112,20 @@ public class Touch_HttpDmtp : BaseTouchServer
     }
 
     /// <summary>
-    /// 自定义HttpDmtpService
+    /// 自定义TcpDmtpService
     /// </summary>
-    internal class HttpDmtpService : TouchSocket.Dmtp.HttpDmtpService<HttpDmtpSessionClient>
+    internal class TcpDmtpService : TouchSocket.Dmtp.TcpDmtpService<TcpDmtpSessionClient>
     {
-        protected override HttpDmtpSessionClient NewClient()
+        protected override TcpDmtpSessionClient NewClient()
         {
-            return new HttpDmtpSessionClient();
+            return new TcpDmtpSessionClient();
         }
     }
 
     /// <summary>
-    /// 自定义HttpDmtpSessionClient
+    /// 自定义TcpDmtpSessionClient
     /// </summary>
-    internal class HttpDmtpSessionClient : TouchSocket.Dmtp.HttpDmtpSessionClient
+    internal class TcpDmtpSessionClient : TouchSocket.Dmtp.TcpDmtpSessionClient
     {
 
         private Timer timer;
