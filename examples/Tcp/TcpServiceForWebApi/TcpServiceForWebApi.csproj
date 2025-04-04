@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
     <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.20" />
     <PackageReference Include="TouchSocket.Rpc" Version="3.0.20" />
     <PackageReference Include="TouchSocket.WebApi" Version="3.0.20" />
