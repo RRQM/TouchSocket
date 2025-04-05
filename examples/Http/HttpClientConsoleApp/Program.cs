@@ -183,7 +183,13 @@ internal class BigDataHttpContent : HttpContent
 
     protected override void OnBuildingHeader(IHttpHeader header)
     {
-        header.Add(HttpHeaders.ContentLength, (this.count * this.bufferLength).ToString());
+        //header.Add(HttpHeaders.ContentLength, (this.count * this.bufferLength).ToString());
+    }
+
+    protected override bool TryComputeLength(out long length)
+    {
+        length = this.count * this.bufferLength;
+        return true;
     }
 
     protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
