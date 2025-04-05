@@ -337,6 +337,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpFlowStressTestingConsole
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpStressTestingConsoleApp", "Tcp\TcpStressTestingConsoleApp\TcpStressTestingConsoleApp.csproj", "{C08154AB-6178-6AB9-C15B-85CA873B790E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotDynamicMethodConsoleApp", "Core\AotDynamicMethodConsoleApp\AotDynamicMethodConsoleApp.csproj", "{F9EC1E7C-C609-4F12-A736-47B52885F428}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -775,6 +777,10 @@ Global
 		{C08154AB-6178-6AB9-C15B-85CA873B790E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C08154AB-6178-6AB9-C15B-85CA873B790E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C08154AB-6178-6AB9-C15B-85CA873B790E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -922,6 +928,7 @@ Global
 		{4B9B2F38-A698-0E64-E672-36A1BD422F30} = {C01AF93B-0105-46EE-AAEF-7B2944AEA94D}
 		{6D38341E-8947-3E47-50FB-1EBC7E1C5295} = {C01AF93B-0105-46EE-AAEF-7B2944AEA94D}
 		{C08154AB-6178-6AB9-C15B-85CA873B790E} = {C01AF93B-0105-46EE-AAEF-7B2944AEA94D}
+		{F9EC1E7C-C609-4F12-A736-47B52885F428} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
