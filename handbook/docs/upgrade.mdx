@@ -18,6 +18,41 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.21
+
+**更新日期：** 2025.4.5
+
+**更新描述：**
+
+兼容性修复升级。http组件性能优化。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `ReadOnlySpan<byte>`的`Trim`方法。
+- &nbsp;<Tag>新增</Tag> `Method`新增支持类型的直接构造函数方法。
+- &nbsp;<Tag>新增</Tag> `AsyncResetEvent`新增已释放判断。
+- &nbsp;<Tag>修复</Tag> `DynamicMethod`在ref、out等参数时，无法使用源生成调用的bug。
+- &nbsp;<Tag>调整</Tag> `FlowOperator`的在构造函数使用最大值初始化`MaxSpeed`。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TcpCore`在特点情况下不释放资源的bug。[PR](https://gitee.com/RRQM_Home/TouchSocket/pulls/65)
+- &nbsp;<Tag>调整</Tag> `ShutdownAsync`调整返回值，由`Task`改为`Task<Result>`。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpContent`新增`TryComputeLength`的抽象方法。
+- &nbsp;<Tag>新增</Tag> `HttpResponse`的`FromFileAsync`扩展新增传输限速、进度功能。[#IBYGC7](https://gitee.com/RRQM_Home/TouchSocket/issues/IBYGC7)
+- &nbsp;<Tag>优化</Tag> 整个`Http`组件性能优化。
+- &nbsp;<Tag>调整</Tag> `HttpHeaders`由枚举改为静态类。（此操作不影响现有代码）
+
+
+***
+
+
 ## v3.0.20
 
 **更新日期：** 2025.3.30
