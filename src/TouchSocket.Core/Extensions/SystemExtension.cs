@@ -745,6 +745,33 @@ public static class SystemExtension
         return encoding.GetString(span.ToArray());
 #endif
     }
+
+    /// <summary>
+    /// 手动实现字节 Span 的 Trim，支持空格(0x20)和水平制表符(0x09)
+    /// </summary>
+    public static ReadOnlySpan<byte> Trim(this ReadOnlySpan<byte> span)
+    {
+        // 查找第一个非空白字符的位置
+        var start = 0;
+        while (start < span.Length && IsWhitespace(span[start]))
+        {
+            start++;
+        }
+
+        // 查找最后一个非空白字符的位置
+        var end = span.Length - 1;
+        while (end >= start && IsWhitespace(span[end]))
+        {
+            end--;
+        }
+
+        return span.Slice(start, end - start + 1);
+    }
+
+    /// <summary>
+    /// 检查字节是否为 HTTP 规范允许的空白字符（空格或制表符）
+    /// </summary>
+    private static bool IsWhitespace(byte b) => b == 0x20 || b == 0x09;
     #endregion
 
     #region DateTime

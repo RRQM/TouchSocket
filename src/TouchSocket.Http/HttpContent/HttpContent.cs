@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
@@ -25,11 +26,26 @@ namespace TouchSocket.Http;
 public abstract class HttpContent
 {
     /// <summary>
+    /// 内部方法，用于构建HTTP响应的内容
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现IByteBlock接口的类型</typeparam>
+    /// <param name="byteBlock">字节块的引用</param>
+    /// <returns>返回一个布尔值，表示构建内容是否成功</returns>
+    internal bool InternalBuildingContent<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        return this.OnBuildingContent(ref byteBlock);
+    }
+
+    /// <summary>
     /// 内部方法，用于构建HTTP头
     /// </summary>
     /// <param name="header">HTTP头的接口实现</param>
     internal void InternalBuildingHeader(IHttpHeader header)
     {
+        if (this.TryComputeLength(out var length))
+        {
+            header.TryAdd(HttpHeaders.ContentLength,length.ToString());
+        }
         this.OnBuildingHeader(header);
     }
 
@@ -45,23 +61,6 @@ public abstract class HttpContent
     }
 
     /// <summary>
-    /// 内部方法，用于构建HTTP响应的内容
-    /// </summary>
-    /// <typeparam name="TByteBlock">实现IByteBlock接口的类型</typeparam>
-    /// <param name="byteBlock">字节块的引用</param>
-    /// <returns>返回一个布尔值，表示构建内容是否成功</returns>
-    internal bool InternalBuildingContent<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        return this.OnBuildingContent(ref byteBlock);
-    }
-
-    /// <summary>
-    /// 抽象方法，由子类实现，用于构建HTTP头
-    /// </summary>
-    /// <param name="header">HTTP头的接口实现</param>
-    protected abstract void OnBuildingHeader(IHttpHeader header);
-
-    /// <summary>
     /// 抽象方法，由子类实现，用于构建HTTP响应的内容
     /// </summary>
     /// <typeparam name="TByteBlock">实现IByteBlock接口的类型</typeparam>
@@ -70,12 +69,27 @@ public abstract class HttpContent
     protected abstract bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 
     /// <summary>
+    /// 抽象方法，由子类实现，用于构建HTTP头
+    /// </summary>
+    /// <param name="header">HTTP头的接口实现</param>
+    protected abstract void OnBuildingHeader(IHttpHeader header);
+
+    /// <summary>
+    /// 尝试计算内容的长度。
+    /// </summary>
+    /// <param name="length">输出参数，表示内容的长度。</param>
+    /// <returns>如果成功计算长度，则返回 true；否则返回 false。</returns>
+    protected abstract bool TryComputeLength(out long length);
+
+    /// <summary>
     /// 抽象方法，由子类实现，用于写入HTTP响应内容
     /// </summary>
     /// <param name="writeFunc">一个函数，用于处理字节块的写入操作</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
     protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token);
+
+    #region implicit
 
     /// <summary>
     /// 将字符串内容隐式转换为HttpContent对象，使用UTF-8编码。
@@ -116,4 +130,6 @@ public abstract class HttpContent
     {
         return new StreamHttpContent(content);
     }
+
+    #endregion implicit
 }

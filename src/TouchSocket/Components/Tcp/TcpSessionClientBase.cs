@@ -476,20 +476,20 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     }
 
     /// <inheritdoc/>
-    public async Task ShutdownAsync(SocketShutdown how)
+    public async Task<Result> ShutdownAsync(SocketShutdown how)
     {
         if (!this.m_online)
         {
-            return;
+            return Result.FromFail(TouchSocketResource.ClientNotConnected);
         }
 
         var tcpCore = this.m_tcpCore;
         if (tcpCore == null)
         {
-            return;
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(tcpCore)));
         }
 
-        await tcpCore.ShutdownAsync(how).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await tcpCore.ShutdownAsync(how).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

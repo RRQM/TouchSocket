@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -98,6 +99,18 @@ public class Method
         {
             this.DynamicBuilderType = DynamicBuilderType.Reflect;
         }
+    }
+
+    /// <summary>
+    /// 初始化一个动态调用方法
+    /// </summary>
+    /// <param name="targetType">目标类型</param>
+    /// <param name="methodName">目标方法</param>
+    /// <param name="dynamicBuilderType">指定构建的类型</param>
+    public Method([DynamicallyAccessedMembersAttribute( DynamicallyAccessedMemberTypes.PublicMethods)] Type targetType,string methodName, DynamicBuilderType? dynamicBuilderType = default)
+        :this(targetType.GetMethod(methodName),dynamicBuilderType)
+    {
+
     }
     private bool CreateInvokeFromIL()
     {

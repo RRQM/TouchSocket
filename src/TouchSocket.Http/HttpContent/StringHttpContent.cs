@@ -28,8 +28,42 @@ public class StringHttpContent : ReadonlyMemoryHttpContent
     /// </summary>
     /// <param name="content">要包含的字符串内容。</param>
     /// <param name="encoding">用于将字符串内容编码为字节数组的编码方式。</param>
-    public StringHttpContent(string content, Encoding encoding) : base(encoding.GetBytes(content))
+    /// <param name="contentType">内容类型</param>
+    public StringHttpContent(string content, Encoding encoding, string contentType = default) : base(encoding.GetBytes(content), contentType)
     {
         // 构造函数将字符串内容和编码方式作为参数，将字符串内容转换为字节数组后传递给基类。
+    }
+
+    public static StringHttpContent FromJson(string json, Encoding encoding)
+    {
+        return new StringHttpContent(json, encoding, $"application/json;charset={encoding.BodyName}");
+    }
+    public static StringHttpContent FromJson(string json)
+    {
+        return new StringHttpContent(json, Encoding.UTF8, $"application/json;charset=UTF-8");
+    }
+    public static StringHttpContent FromXml(string xml, Encoding encoding)
+    {
+        return new StringHttpContent(xml, encoding, $"application/xml;charset={encoding.BodyName}");
+    }
+    public static StringHttpContent FromXml(string xml)
+    {
+        return new StringHttpContent(xml, Encoding.UTF8, $"application/xml;charset=UTF-8");
+    }
+    public static StringHttpContent FromHtml(string html, Encoding encoding)
+    {
+        return new StringHttpContent(html, encoding, $"text/html;charset={encoding.BodyName}");
+    }
+    public static StringHttpContent FromHtml(string html)
+    {
+        return new StringHttpContent(html, Encoding.UTF8, $"text/html;charset=UTF-8");
+    }
+    public static StringHttpContent FromText(string text, Encoding encoding)
+    {
+        return new StringHttpContent(text, encoding, $"text/plain;charset={encoding.BodyName}");
+    }
+    public static StringHttpContent FromText(string text)
+    {
+        return new StringHttpContent(text, Encoding.UTF8, $"text/plain;charset=UTF-8");
     }
 }

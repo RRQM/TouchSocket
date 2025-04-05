@@ -61,6 +61,7 @@ public class HttpResponse : HttpBase
     }
 
     #region 属性
+
     /// <summary>
     /// 是否分块
     /// </summary>
@@ -75,6 +76,9 @@ public class HttpResponse : HttpBase
     /// 是否重定向
     /// </summary>
     public bool IsRedirect => this.StatusCode == 301 || this.StatusCode == 302;
+
+    /// <inheritdoc/>
+    public override bool IsServer => this.m_isServer;
 
     /// <summary>
     /// 是否已经响应数据。
@@ -91,9 +95,6 @@ public class HttpResponse : HttpBase
     /// </summary>
     public string StatusMessage { get; set; } = "Success";
 
-    /// <inheritdoc/>
-    public override bool IsServer => this.m_isServer;
-
     #endregion 属性
 
     /// <summary>
@@ -105,23 +106,21 @@ public class HttpResponse : HttpBase
         this.ThrowIfResponsed();
 
         var content = this.Content;
-        if (content == null)
+
+        var byteBlock = new ByteBlock();
+        try
         {
-            using (var byteBlock = new ByteBlock())
+            if (content == null)
             {
-                this.BuildHeader(byteBlock);
+                this.BuildHeader(ref byteBlock);
 
                 // 异步发送请求
                 await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-        }
-        else
-        {
-            content.InternalBuildingHeader(this.Headers);
-            var byteBlock = new ByteBlock();
-            try
+            else
             {
-                this.BuildHeader(byteBlock);
+                content.InternalBuildingHeader(this.Headers);
+                this.BuildHeader(ref byteBlock);
 
                 var result = content.InternalBuildingContent(ref byteBlock);
 
@@ -133,16 +132,14 @@ public class HttpResponse : HttpBase
                     await content.InternalWriteContent(this.InternalSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+
+            this.Responsed = true;
         }
-
-        this.Responsed = true;
+        finally
+        {
+            byteBlock.Dispose();
+        }
     }
-
-
 
     /// <summary>
     /// 当传输模式是Chunk时，用于结束传输。
@@ -158,13 +155,27 @@ public class HttpResponse : HttpBase
         this.m_canWrite = false;
         if (this.IsChunk)
         {
-            using (var byteBlock = new ByteBlock())
+            var byteBlock = new ValueByteBlock(1024);
+            try
             {
-                byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
-                byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
+                TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
+                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+
                 await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.Responsed = true;
             }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+            //using (var byteBlock = new ByteBlock())
+            //{
+            //    byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
+            //    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
+            //    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            //    this.Responsed = true;
+            //}
         }
     }
 
@@ -219,7 +230,6 @@ public class HttpResponse : HttpBase
             }
             finally
             {
-
             }
         }
         else
@@ -269,10 +279,15 @@ public class HttpResponse : HttpBase
 
         if (!this.m_sentHeader)
         {
-            using (var byteBlock = new ByteBlock())
+            var byteBlock = new ValueByteBlock(1024);
+            try
             {
-                this.BuildHeader(byteBlock);
+                this.BuildHeader(ref byteBlock);
                 await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
             this.m_sentHeader = true;
         }
@@ -281,20 +296,34 @@ public class HttpResponse : HttpBase
 
         if (this.IsChunk)
         {
-            using (var byteBlock = new ByteBlock(count + 1024))
+            var byteBlock = new ValueByteBlock(count + 1024);
+            try
             {
-                byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
+                TouchSocketHttpUtility.AppendHex(ref byteBlock, count);
+                TouchSocketHttpUtility.AppendRn(ref byteBlock);
                 byteBlock.Write(memory.Span);
-                byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
+                TouchSocketHttpUtility.AppendRn(ref byteBlock);
                 await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_sentLength += count;
             }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+            //using ()
+            //{
+            //    byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
+            //    byteBlock.Write(memory.Span);
+            //    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
+            //    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            //    this.m_sentLength += count;
+            //}
         }
         else
         {
             if (this.m_sentLength + count <= this.ContentLength)
             {
-                await this.InternalSendAsync(memory);
+                await this.InternalSendAsync(memory).ConfigureAwait(false);
                 this.m_sentLength += count;
                 if (this.m_sentLength == this.ContentLength)
                 {
@@ -358,33 +387,57 @@ public class HttpResponse : HttpBase
         }
     }
 
-    private void BuildContent(ByteBlock byteBlock)
+    private void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        if (this.ContentLength > 0)
-        {
-            byteBlock.Write(this.m_content.Span);
-        }
-    }
-
-
-    private void BuildHeader(ByteBlock byteBlock)
-    {
-        var stringBuilder = new StringBuilder();
-        stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
+        TouchSocketHttpUtility.AppendHTTP(ref byteBlock);
+        TouchSocketHttpUtility.AppendSlash(ref byteBlock);
+        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.ProtocolVersion);
+        TouchSocketHttpUtility.AppendSpace(ref byteBlock);
+        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.StatusCode.ToString());
+        TouchSocketHttpUtility.AppendSpace(ref byteBlock);
+        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.StatusMessage);
+        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+        //stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
 
         if (this.IsChunk)
         {
             this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
         }
-        foreach (var headerKey in this.Headers.Keys)
+
+        foreach (var header in this.Headers)
         {
-            stringBuilder.Append($"{headerKey}: ");
-            stringBuilder.Append(this.Headers[headerKey] + "\r\n");
+            TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, header.Key);
+            TouchSocketHttpUtility.AppendColon(ref byteBlock);
+            TouchSocketHttpUtility.AppendSpace(ref byteBlock);
+            TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, header.Value);
+            TouchSocketHttpUtility.AppendRn(ref byteBlock);
+            //stringBuilder.Append($"{header}: ");
+            //stringBuilder.Append(this.Headers[header] + "\r\n");
         }
 
-        stringBuilder.Append("\r\n");
-        byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+        //stringBuilder.Append("\r\n");
+        //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
+
+    //private void BuildHeader(ByteBlock byteBlock)
+    //{
+    //    var stringBuilder = new StringBuilder();
+    //    stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
+
+    //    if (this.IsChunk)
+    //    {
+    //        this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+    //    }
+    //    foreach (var headerKey in this.Headers.Keys)
+    //    {
+    //        stringBuilder.Append($"{headerKey}: ");
+    //        stringBuilder.Append(this.Headers[headerKey] + "\r\n");
+    //    }
+
+    //    stringBuilder.Append("\r\n");
+    //    byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+    //}
 
     private Task InternalSendAsync(ReadOnlyMemory<byte> memory)
     {

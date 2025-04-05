@@ -52,5 +52,5 @@ public interface ITcpSession : IClient, IResolverConfigObject, IOnlineClient, IC
     /// </summary>
     /// <param name="how">指定如何关闭套接字。</param>
     /// <returns>表示异步操作的任务。</returns>
-    Task ShutdownAsync(SocketShutdown how);
+    Task<Result> ShutdownAsync(SocketShutdown how);
 }
