@@ -159,8 +159,13 @@ module.exports =
         },
         {
           "type": "doc",
+          "id": "dynamicmethod",
+          "label": "6.14 动态方法调用"
+        },
+        {
+          "type": "doc",
           "id": "othercore",
-          "label": "6.14 其他相关功能类"
+          "label": "6.15 其他相关功能类"
         }
       ]
     },
