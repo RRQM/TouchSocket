@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,9 +27,10 @@ namespace TouchSocket.Http;
 public static partial class HttpExtensions
 {
     #region HttpBase
-    /// <summary>  
-    /// 表示 multipart/form-data 内容类型的常量字符串。  
-    /// </summary>  
+
+    /// <summary>
+    /// 表示 multipart/form-data 内容类型的常量字符串。
+    /// </summary>
     public const string MultipartFormData = "multipart/form-data";
 
     /// <summary>
@@ -39,19 +41,6 @@ public static partial class HttpExtensions
     /// <param name="value"></param>
     /// <returns></returns>
     public static TRequest AddHeader<TRequest>(this TRequest request, string key, string value) where TRequest : HttpBase
-    {
-        request.Headers.Add(key, value);
-        return request;
-    }
-
-    /// <summary>
-    /// 添加Header参数
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TRequest AddHeader<TRequest>(this TRequest request, HttpHeaders key, string value) where TRequest : HttpBase
     {
         request.Headers.Add(key, value);
         return request;
@@ -75,7 +64,7 @@ public static partial class HttpExtensions
     /// <param name="encoding">编码格式</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
-    public static async Task<string> GetBodyAsync(this HttpBase httpBase,Encoding encoding, CancellationToken token=default)
+    public static async Task<string> GetBodyAsync(this HttpBase httpBase, Encoding encoding, CancellationToken token = default)
     {
         // 异步获取 HTTP 响应的内容作为字节数组
         var bytes = await httpBase.GetContentAsync(token);
@@ -91,7 +80,7 @@ public static partial class HttpExtensions
     /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
     public static Task<string> GetBodyAsync(this HttpBase httpBase, CancellationToken token = default)
     {
-       return GetBodyAsync(httpBase, Encoding.UTF8, token);
+        return GetBodyAsync(httpBase, Encoding.UTF8, token);
     }
 
     /// <summary>
@@ -160,8 +149,7 @@ public static partial class HttpExtensions
     /// <returns></returns>
     public static T FromJson<T>(this T request, string value) where T : HttpBase
     {
-        request.SetContent(Encoding.UTF8.GetBytes(value));
-        request.Headers.Add(HttpHeaders.ContentType, "application/json;charset=UTF-8");
+        request.SetContent(StringHttpContent.FromJson(value));
         return request;
     }
 
@@ -173,8 +161,7 @@ public static partial class HttpExtensions
     /// <returns></returns>
     public static T FromText<T>(this T request, string value) where T : HttpBase
     {
-        request.SetContent(Encoding.UTF8.GetBytes(value));
-        request.Headers.Add(HttpHeaders.ContentType, "text/plain;charset=UTF-8");
+        request.SetContent(StringHttpContent.FromText(value));
         return request;
     }
 
@@ -186,26 +173,32 @@ public static partial class HttpExtensions
     /// <returns></returns>
     public static T FromXml<T>(this T request, string value) where T : HttpBase
     {
-        request.SetContent(Encoding.UTF8.GetBytes(value));
-        request.Headers.Add(HttpHeaders.ContentType, "application/xml;charset=UTF-8");
+        request.SetContent(StringHttpContent.FromXml(value));
         return request;
     }
 
+    /// <summary>
+    /// 从Xml格式
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="request"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
     [Obsolete("由于方法名称不符合规范，该方法已被弃用，请使用FromXml代替")]
     public static T FromXML<T>(this T request, string value) where T : HttpBase
     {
-        return FromXml(request,value);
+        return FromXml(request, value);
     }
 
     #endregion 设置内容
 
-        /// <summary>
-        /// 为HttpBase类型对象设置内容。
-        /// </summary>
-        /// <typeparam name="T">泛型参数T，表示HttpBase类型或其派生类型。</typeparam>
-        /// <param name="httpBase">需要设置内容的HttpBase类型对象。</param>
-        /// <param name="content">要设置的内容，类型为HttpContent。</param>
-        /// <returns>返回设置内容后的HttpBase对象。</returns>
+    /// <summary>
+    /// 为HttpBase类型对象设置内容。
+    /// </summary>
+    /// <typeparam name="T">泛型参数T，表示HttpBase类型或其派生类型。</typeparam>
+    /// <param name="httpBase">需要设置内容的HttpBase类型对象。</param>
+    /// <param name="content">要设置的内容，类型为HttpContent。</param>
+    /// <returns>返回设置内容后的HttpBase对象。</returns>
     public static T SetContent<T>(this T httpBase, HttpContent content) where T : HttpBase
     {
         // 将传入的内容设置到HttpBase对象中
@@ -224,7 +217,7 @@ public static partial class HttpExtensions
     public static T SetContent<T>(this T httpBase, string content, Encoding encoding = null) where T : HttpBase
     {
         // 将内容转换为字节数组，并调用SetContent方法进行设置
-        httpBase.SetContent(Encoding.UTF8.GetBytes(content));
+        httpBase.SetContent((encoding ?? Encoding.UTF8).GetBytes(content));
         // 返回处理后的HttpBase对象
         return httpBase;
     }
@@ -299,7 +292,6 @@ public static partial class HttpExtensions
             }
 
             return new InternalFormCollection();
-
         }
         else
         {
@@ -307,56 +299,6 @@ public static partial class HttpExtensions
 
             return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), boundary);
         }
-    }
-
-    private static bool CheckFormBody(string contentType, out Encoding encoding)
-    {
-        // 初始化编码为默认的 UTF-8
-        encoding = Encoding.UTF8;
-
-        // 若 contentType 为空，直接返回 false
-        if (string.IsNullOrEmpty(contentType))
-        {
-            return false;
-        }
-
-        // 检查 contentType 是否以 "application/x-www-form-urlencoded" 开头
-        if (!contentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        // 查找 charset 参数的起始位置
-        var charsetIndex = contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
-        if (charsetIndex < 0)
-        {
-            return true;
-        }
-
-        // 定位到 charset 参数值的起始位置
-        charsetIndex += "charset=".Length;
-        // 查找 charset 参数值的结束位置
-        var endIndex = contentType.IndexOf(';', charsetIndex);
-        if (endIndex < 0)
-        {
-            // 如果没有后续的分号，说明到字符串末尾都是 charset 值
-            endIndex = contentType.Length;
-        }
-        // 提取 charset 参数的值
-        var charsetValue = contentType.Substring(charsetIndex, endIndex - charsetIndex).Trim();
-
-        try
-        {
-            // 根据提取的 charset 值获取对应的编码
-            encoding = Encoding.GetEncoding(charsetValue);
-        }
-        catch (ArgumentException)
-        {
-            // 如果提取的 charset 值无效，使用默认的 UTF-8 编码
-            encoding = Encoding.UTF8;
-        }
-
-        return true;
     }
 
     /// <summary>
@@ -433,8 +375,57 @@ public static partial class HttpExtensions
     public static bool UrlEquals<TRequest>(this TRequest request, string url) where TRequest : HttpRequest
     {
         // 检查两个URL是否都不为null，并且在文化无关的大小写不敏感的情况下是否相等
-        return !string.IsNullOrEmpty(request.RelativeURL) && !string.IsNullOrEmpty(url)
-&& request.RelativeURL.Equals(url, StringComparison.CurrentCultureIgnoreCase);
+        return !string.IsNullOrEmpty(request.RelativeURL) && !string.IsNullOrEmpty(url)&& request.RelativeURL.Equals(url, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool CheckFormBody(string contentType, out Encoding encoding)
+    {
+        // 初始化编码为默认的 UTF-8
+        encoding = Encoding.UTF8;
+
+        // 若 contentType 为空，直接返回 false
+        if (string.IsNullOrEmpty(contentType))
+        {
+            return false;
+        }
+
+        // 检查 contentType 是否以 "application/x-www-form-urlencoded" 开头
+        if (!contentType.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // 查找 charset 参数的起始位置
+        var charsetIndex = contentType.IndexOf("charset=", StringComparison.OrdinalIgnoreCase);
+        if (charsetIndex < 0)
+        {
+            return true;
+        }
+
+        // 定位到 charset 参数值的起始位置
+        charsetIndex += "charset=".Length;
+        // 查找 charset 参数值的结束位置
+        var endIndex = contentType.IndexOf(';', charsetIndex);
+        if (endIndex < 0)
+        {
+            // 如果没有后续的分号，说明到字符串末尾都是 charset 值
+            endIndex = contentType.Length;
+        }
+        // 提取 charset 参数的值
+        var charsetValue = contentType.Substring(charsetIndex, endIndex - charsetIndex).Trim();
+
+        try
+        {
+            // 根据提取的 charset 值获取对应的编码
+            encoding = Encoding.GetEncoding(charsetValue);
+        }
+        catch (ArgumentException)
+        {
+            // 如果提取的 charset 值无效，使用默认的 UTF-8 编码
+            encoding = Encoding.UTF8;
+        }
+
+        return true;
     }
 
     #region 设置函数
@@ -580,7 +571,7 @@ public static partial class HttpExtensions
     public static bool IsUpgrade<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         // 比较请求头中的连接类型是否为升级类型，忽略大小写
-        return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade.GetDescription(), StringComparison.OrdinalIgnoreCase);
+        return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion 判断属性
@@ -588,6 +579,24 @@ public static partial class HttpExtensions
     #endregion HttpRequest
 
     #region HttpResponse
+
+    /// <summary>
+    /// 表示 HTTP 头部的服务器信息。
+    /// </summary>
+    public static readonly string HttpHeadersServer = $"TouchSocket.Http {HttpBase.ServerVersion}";
+
+    /// <summary>
+    /// 设置HTML内容。
+    /// </summary>
+    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
+    /// <param name="response">响应对象，用于设置HTML内容。</param>
+    /// <param name="htmlString">HTML字符串，表示要设置的内容。</param>
+    /// <returns>返回设置了HTML内容的响应对象。</returns>
+    public static TResponse FromHtml<TResponse>(this TResponse response, string htmlString) where TResponse : HttpResponse
+    {
+        response.SetContent(StringHttpContent.FromHtml(htmlString));
+        return response;
+    }
 
     /// <summary>
     /// 判断返回的状态码是否为成功。
@@ -672,7 +681,7 @@ public static partial class HttpExtensions
     {
         response.StatusCode = status; // 设置HTTP状态码
         response.StatusMessage = msg; // 设置状态描述信息
-        response.Headers.Add(HttpHeaders.Server, $"TouchSocket.Http {HttpBase.ServerVersion}"); // 添加服务器版本信息到Header
+        response.Headers.Add(HttpHeaders.Server, HttpHeadersServer); // 添加服务器版本信息到Header
         response.Headers.Add(HttpHeaders.Date, DateTime.UtcNow.ToGMTString()); // 添加GMT时间到Header
         return response; // 返回修改后的HttpResponse对象
     }
@@ -699,20 +708,6 @@ public static partial class HttpExtensions
     {
         response.FromHtml("<html><body><h1>404 -Not Found</h1></body></html>");
         response.SetStatus(404, "Not Found");
-        return response;
-    }
-
-    /// <summary>
-    /// 设置HTML内容。
-    /// </summary>
-    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse。</typeparam>
-    /// <param name="response">响应对象，用于设置HTML内容。</param>
-    /// <param name="htmlString">HTML字符串，表示要设置的内容。</param>
-    /// <returns>返回设置了HTML内容的响应对象。</returns>
-    public static TResponse FromHtml<TResponse>(this TResponse response, string htmlString) where TResponse : HttpResponse
-    {
-        response.SetContent(htmlString, Encoding.UTF8);
-        response.ContentType = "text/html;charset=utf-8";
         return response;
     }
 

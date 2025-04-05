@@ -11,15 +11,21 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Text;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http;
-
 
 /// <summary>
 /// TouchSocketHttp辅助工具类
 /// </summary>
 public static class TouchSocketHttpUtility
 {
+    /// <summary>
+    /// 非缓存上限
+    /// </summary>
+    public const int NoCacheMaxSize = 1024 * 1024;
+
     /// <summary>
     /// 获取一个只读的字节序列，表示回车换行(CRLF)。
     /// </summary>
@@ -28,8 +34,56 @@ public static class TouchSocketHttpUtility
     /// </value>
     public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
 
-    /// <summary>
-    /// 非缓存上限
-    /// </summary>
-    public const int NoCacheMaxSize = 1024 * 1024;
+    #region ByteBlock Append
+
+    public static void AppendAnd<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("&"u8);
+    }
+
+    public static void AppendColon<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write(":"u8);
+    }
+
+    public static void AppendEqual<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("="u8);
+    }
+
+    public static void AppendHTTP<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("HTTP"u8);
+    }
+
+    public static void AppendQuestionMark<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("?"u8);
+    }
+
+    public static void AppendRn<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("\r\n"u8);
+    }
+
+    public static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write("/"u8);
+    }
+
+    public static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
+    }
+    
+    public static void AppendUtf8String<TByteBlock>(ref TByteBlock byteBlock,string value) where TByteBlock : IByteBlock
+    {
+        byteBlock.WriteNormalString(value,Encoding.UTF8);
+    }
+
+    public static void AppendHex<TByteBlock>(ref TByteBlock byteBlock, int value) where TByteBlock : IByteBlock
+    {
+        AppendUtf8String(ref byteBlock,$"{value:X}");
+    }
+    #endregion ByteBlock Append
 }

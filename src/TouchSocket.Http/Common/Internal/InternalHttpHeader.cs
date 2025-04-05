@@ -40,19 +40,6 @@ internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHead
         }
     }
 
-    public string this[HttpHeaders headers]
-    {
-        get
-        {
-            return this.TryGetValue(headers.GetDescription(), out var value) ? value : null;
-        }
-
-        set
-        {
-            this.AddOrUpdate(headers.GetDescription(), value);
-        }
-    }
-
     public new void Add(string key, string value)
     {
         if (key == null)
@@ -62,18 +49,8 @@ internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHead
         this.AddOrUpdate(key, value);
     }
 
-    public void Add(HttpHeaders key, string value)
-    {
-        this.AddOrUpdate(key.GetDescription(), value);
-    }
-
     public string Get(string key)
     {
         return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
-    }
-
-    public string Get(HttpHeaders key)
-    {
-        return this.TryGetValue(key.GetDescription(), out var value) ? value : null;
     }
 }

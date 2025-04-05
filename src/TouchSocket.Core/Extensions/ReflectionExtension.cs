@@ -44,7 +44,7 @@ public static class ReflectionExtension
     private static string GenerateKey(string methodName, Type[] parameterTypes)
     {
         // 将参数类型名称转换为合法的标识符
-        var parameterTypeNames = string.Join("_", parameterTypes.Select(t => StringExtension.MakeIdentifier(t.Name)));
+        var parameterTypeNames = string.Join("_", parameterTypes.Select(t => StringExtension.MakeIdentifier(t.GetRefOutType().Name)));
         return $"{StringExtension.MakeIdentifier(methodName)}_{parameterTypeNames}";
     }
 

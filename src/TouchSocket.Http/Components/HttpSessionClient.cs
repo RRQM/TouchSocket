@@ -63,12 +63,9 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     /// </summary>
     protected virtual async Task OnReceivedHttpRequest(HttpContext httpContext)
     {
-        if (this.PluginManager.GetPluginCount(typeof(IHttpPlugin)) > 0)
-        {
-            var e = new HttpContextEventArgs(httpContext);
+        var e = new HttpContextEventArgs(httpContext);
 
-            await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+        await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

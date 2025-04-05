@@ -45,8 +45,6 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-    private static readonly byte[] s_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
-
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
     private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
 
@@ -170,13 +168,13 @@ public abstract class HttpBase : IRequestInfo
 
     internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(s_rnrnCode);
+        var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(StringExtension.Default_RNRN_Utf8Span);
         if (index > 0)
         {
-            var headerLength = index - byteBlock.Position;
+            var headerLength = index - byteBlock.Position + 2;
             this.ReadHeaders(byteBlock.Span.Slice(byteBlock.Position, headerLength));
             byteBlock.Position += headerLength;
-            byteBlock.Position += 4;
+            byteBlock.Position += 2;
             return true;
         }
         else
@@ -199,37 +197,119 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     protected abstract void LoadHeaderProperties();
 
-    private void GetRequestHeaders(string[] rows)
-    {
-        this.m_headers.Clear();
-        if (rows == null || rows.Length <= 0)
-        {
-            return;
-        }
+    //private void GetRequestHeaders(string[] rows)
+    //{
+    //    this.m_headers.Clear();
+    //    if (rows == null || rows.Length <= 0)
+    //    {
+    //        return;
+    //    }
 
-        foreach (var item in rows)
-        {
-            var kv = item.SplitFirst(':');
-            if (kv.Length == 2)
-            {
-                var key = kv[0].ToLower();
-                this.m_headers.Add(key, kv[1]);
-            }
-        }
-    }
+    //    foreach (var item in rows)
+    //    {
+    //        var kv = item.SplitFirst(':');
+    //        if (kv.Length == 2)
+    //        {
+    //            var key = kv[0].ToLower();
+    //            this.m_headers.Add(key, kv[1]);
+    //        }
+    //    }
+    //}
 
     private void ReadHeaders(ReadOnlySpan<byte> span)
     {
-        var data = span.ToString(Encoding.UTF8);
-        var rows = Regex.Split(data, "\r\n");
+        //string ss=span.ToString(Encoding.UTF8);
+        this.m_headers.Clear();
 
-        //Request URL & Method & Version
-        this.RequestLine = rows[0];
+        // 解析请求行（首个有效行）
+        var lineEnd = span.IndexOf("\r\n"u8);
+        if (lineEnd == -1) // 没有完整请求行
+        {
+            this.RequestLine = span.ToString(Encoding.UTF8);
+            return;
+        }
 
-        //Request Headers
-        this.GetRequestHeaders(rows);
+        // 提取请求行
+        var requestLineSpan = span.Slice(0, lineEnd);
+        this.RequestLine = requestLineSpan.ToString(Encoding.UTF8);
+
+        // 跳过请求行及CRLF（+2）
+        var remaining = span.Slice(lineEnd + 2);
+
+        // 解析headers
+        while (true)
+        {
+            // 查找当前行结尾
+            var headerEnd = remaining.IndexOf("\r\n"u8);
+            if (headerEnd == -1)
+            {
+                break;
+            }
+
+            // 空行表示headers结束
+            if (headerEnd == 0)
+            {
+                remaining = remaining.Slice(2); // 跳过空行的CRLF
+                break;
+            }
+
+            // 提取单行header
+            var lineSpan = remaining.Slice(0, headerEnd);
+            this.ParseHeaderLine(lineSpan);
+
+            // 移动到下一行
+            remaining = remaining.Slice(headerEnd + 2);
+        }
+
         this.LoadHeaderProperties();
     }
+
+    private void ParseHeaderLine(ReadOnlySpan<byte> line)
+    {
+        var colonIndex = line.IndexOf((byte)':');
+        if (colonIndex <= 0)
+        {
+            return; // 无效格式
+        }
+
+        // 分割键值
+        var keySpan = line.Slice(0, colonIndex).Trim();
+        var valueSpan = line.Slice(colonIndex + 1).Trim();
+
+        if (!keySpan.IsEmpty && !valueSpan.IsEmpty)
+        {
+            string key = keySpan.ToString(Encoding.UTF8).ToLower();
+            string value = valueSpan.ToString(Encoding.UTF8);
+            this.m_headers[key] = value;
+        }
+    }
+
+    //private void ReadHeaders(ReadOnlySpan<byte> span)
+    //{
+    //    var data = span.ToString(Encoding.UTF8);
+    //    var rows = Regex.Split(data, "\r\n");
+
+    //    //Request URL & Method & Version
+    //    this.RequestLine = rows[0];
+
+    //    this.m_headers.Clear();
+    //    if (rows == null || rows.Length <= 0)
+    //    {
+    //        return;
+    //    }
+
+    //    foreach (var item in rows)
+    //    {
+    //        var kv = item.SplitFirst(':');
+    //        if (kv.Length == 2)
+    //        {
+    //            var key = kv[0].ToLower();
+    //            this.m_headers.Add(key, kv[1]);
+    //        }
+    //    }
+
+    //    this.LoadHeaderProperties();
+    //}
 
     #region Content
 

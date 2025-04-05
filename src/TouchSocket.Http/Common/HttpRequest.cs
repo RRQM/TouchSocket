@@ -302,16 +302,16 @@ public class HttpRequest : HttpBase
         //}
 
         byteBlock.WriteNormalString(this.Method.ToString(), Encoding.UTF8);//Get
-        AppendSpace(ref byteBlock);//空格
-        byteBlock.WriteNormalString(this.RelativeURL, Encoding.UTF8);//URL
+        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
+        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.RelativeURL);
         if (this.m_query.Count > 0)
         {
-            AppendQuestionMark(ref byteBlock);
+            TouchSocketHttpUtility.AppendQuestionMark(ref byteBlock);
             var i = 0;
             foreach (var item in this.m_query.Keys)
             {
                 byteBlock.WriteNormalString(item, Encoding.UTF8);
-                AppendEqual(ref byteBlock);
+                TouchSocketHttpUtility.AppendEqual(ref byteBlock);
                 var value = this.m_query[item];
                 if (value.HasValue())
                 {
@@ -320,26 +320,26 @@ public class HttpRequest : HttpBase
 
                 if (++i < this.m_query.Count)
                 {
-                    AppendAnd(ref byteBlock);
+                    TouchSocketHttpUtility.AppendAnd(ref byteBlock);
                 }
             }
         }
-        AppendSpace(ref byteBlock);//空格
-        AppendHTTP(ref byteBlock);//HTTP
-        AppendSlash(ref byteBlock);//斜杠
+        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
+        TouchSocketHttpUtility.AppendHTTP(ref byteBlock);//HTTP
+        TouchSocketHttpUtility.AppendSlash(ref byteBlock);//斜杠
         byteBlock.WriteNormalString(this.ProtocolVersion, Encoding.UTF8);//1.1
-        AppendRn(ref byteBlock);//换行
+        TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
 
         foreach (var headerKey in this.Headers.Keys)
         {
             byteBlock.WriteNormalString(headerKey, Encoding.UTF8);//key
-            AppendColon(ref byteBlock);//冒号
-            AppendSpace(ref byteBlock);//空格
+            TouchSocketHttpUtility.AppendColon(ref byteBlock);//冒号
+            TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
             byteBlock.WriteNormalString(this.Headers[headerKey], Encoding.UTF8);//value
-            AppendRn(ref byteBlock);//换行
+            TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
         }
 
-        AppendRn(ref byteBlock);
+        TouchSocketHttpUtility.AppendRn(ref byteBlock);
 
         //if (string.IsNullOrEmpty(url))
         //{
@@ -360,47 +360,7 @@ public class HttpRequest : HttpBase
         //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    private static void AppendColon<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write(":"u8);
-    }
-
-    private static void AppendHTTP<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("HTTP"u8);
-    }
-
-    private static void AppendAnd<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("&"u8);
-    }
-
-    private static void AppendEqual<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("="u8);
-    }
-
-    private static void AppendRn<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("\r\n"u8);
-    }
-
-    private static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
-    }
-
-    private static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("/"u8);
-    }
-
-    private static void AppendQuestionMark<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write("?"u8);
-    }
-
-
+    
     private void ParseUrl()
     {
         if (this.URL.Contains('?'))

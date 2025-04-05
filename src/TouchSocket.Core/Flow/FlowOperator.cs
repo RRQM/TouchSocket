@@ -35,6 +35,11 @@ public abstract class FlowOperator
 
     private long m_speedTemp;
 
+    public FlowOperator()
+    {
+        this.MaxSpeed = long.MaxValue;
+    }
+
     /// <summary>
     /// 已完成长度
     /// </summary>

@@ -20,10 +20,14 @@ namespace TouchSocket.Http;
 /// </summary>
 public class HttpFlowOperator : FlowOperator
 {
-    internal Result SetResult(Result result)
+    /// <summary>
+    /// 分块大小，默认64KB。
+    /// </summary>
+    public int BlockSize { get; set; } = 1024 * 64;
+
+    internal void AddCompletedLength(long flow)
     {
-        this.Result = result;
-        return result;
+        this.completedLength += flow;
     }
 
     internal Task AddFlowAsync(int flow)
@@ -31,13 +35,14 @@ public class HttpFlowOperator : FlowOperator
         return this.ProtectedAddFlowAsync(flow);
     }
 
-    internal void AddCompletedLength(long flow)
-    {
-        this.completedLength += flow;
-    }
-
     internal void SetLength(long len)
     {
         this.Length = len;
+    }
+
+    internal Result SetResult(Result result)
+    {
+        this.Result = result;
+        return result;
     }
 }

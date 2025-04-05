@@ -37,6 +37,16 @@ public static class StringExtension
     public static ReadOnlySpan<byte> DefaultSpaceUtf8Span => " "u8;
 
     /// <summary>
+    /// 默认的rn字符串的UTF-8表示。
+    /// </summary>
+    public static ReadOnlySpan<byte> Default_RN_Utf8Span => "\r\n"u8;
+
+    /// <summary>
+    /// 默认的rnrn字符串的UTF-8表示。
+    /// </summary>
+    public static ReadOnlySpan<byte> Default_RNRN_Utf8Span => "\r\n\r\n"u8;
+
+    /// <summary>
     /// 从Base64转到数组。
     /// </summary>
     /// <param name="value"></param>

@@ -23,8 +23,6 @@ namespace TouchSocket.Http;
 /// </summary>
 public class StreamHttpContent : HttpContent
 {
-    private readonly int m_bufferLength;
-
     private readonly HttpFlowOperator m_flowOperator;
     private readonly Stream m_stream;
 
@@ -44,13 +42,28 @@ public class StreamHttpContent : HttpContent
     /// <param name="flowOperator">用于控制流操作的HttpFlowOperator实例。</param>
     /// <param name="bufferLength">读取数据时使用的缓冲区长度，默认为64KB。</param>
     public StreamHttpContent(Stream stream, HttpFlowOperator flowOperator, int bufferLength = 1024 * 64)
+        : this(stream, flowOperator)
+    {
+        flowOperator.BlockSize = bufferLength;
+    }
+
+    /// <summary>
+    /// 初始化StreamHttpContent类的新实例。
+    /// </summary>
+    /// <param name="stream">要包装的流。</param>
+    /// <param name="flowOperator">用于控制流操作的HttpFlowOperator实例。</param>
+    public StreamHttpContent(Stream stream, HttpFlowOperator flowOperator)
     {
         // 将提供的流分配给内部变量m_stream
         this.m_stream = stream;
         this.m_flowOperator = flowOperator;
-        // 将提供的缓冲区长度分配给内部变量m_bufferLength
-        this.m_bufferLength = bufferLength;
+        this.IsChunk = !this.TryComputeLength(out _);
     }
+
+    /// <summary>
+    /// 使用Chunk
+    /// </summary>
+    public bool IsChunk { get; set; }
 
     /// <inheritdoc/>
     protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
@@ -61,31 +74,94 @@ public class StreamHttpContent : HttpContent
     /// <inheritdoc/>
     protected override void OnBuildingHeader(IHttpHeader header)
     {
-        header.Add(HttpHeaders.ContentLength, this.m_stream.Length.ToString());
+        if (this.IsChunk)
+        {
+            header.Add(HttpHeaders.TransferEncoding, "chunked");
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override bool TryComputeLength(out long length)
+    {
+        try
+        {
+            length = this.m_stream.Length - this.m_stream.Position;
+            return true;
+        }
+        catch
+        {
+            length = 0;
+            return false;
+        }
     }
 
     /// <inheritdoc/>
     protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
     {
         // 创建一个缓冲区，用于存储读取的数据
-        var bytes = BytePool.Default.Rent(this.m_bufferLength);
+
+        var blockSize = this.m_flowOperator.BlockSize;
+        var bytes = BytePool.Default.Rent(blockSize);
         var memory = new Memory<byte>(bytes);
 
-        this.m_flowOperator.SetLength(this.GetLength());
-        this.m_flowOperator.AddCompletedLength(this.GetPosition());
+        if (this.TryComputeLength(out var length))
+        {
+            this.m_flowOperator.SetLength(length);
+        }
+
+        //this.m_flowOperator.AddCompletedLength(this.GetPosition());
 
         try
         {
-            while (true)
+            if (this.IsChunk)
             {
-                var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (r == 0)
+                var byteBlock = new ByteBlock(blockSize + 1024);
+                try
                 {
-                    break;
-                }
-                await writeFunc.Invoke(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    while (true)
+                    {
+                        var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        if (r == 0)
+                        {
+                            break;
+                        }
 
-                await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        byteBlock.Reset();
+
+                        var target = memory.Slice(0, r);
+                        TouchSocketHttpUtility.AppendHex(ref byteBlock, r);
+                        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                        byteBlock.Write(target.Span);
+                        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                        await writeFunc.Invoke(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+
+                    byteBlock.Reset();
+                    // 发送结束标记
+                    TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
+                    TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                    TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                    await writeFunc.Invoke(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+            else
+            {
+                while (true)
+                {
+                    var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    if (r == 0)
+                    {
+                        break;
+                    }
+                    await writeFunc.Invoke(memory.Slice(0, r)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                    await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
             }
 
             this.m_flowOperator.SetResult(Result.Success);
@@ -99,31 +175,5 @@ public class StreamHttpContent : HttpContent
         {
             BytePool.Default.Return(bytes);
         }
-    }
-
-    private long GetLength()
-    {
-        try
-        {
-            return this.m_stream.Length;
-        }
-        catch
-        {
-        }
-
-        return 0;
-    }
-
-    private long GetPosition()
-    {
-        try
-        {
-            return this.m_stream.Position;
-        }
-        catch
-        {
-        }
-
-        return 0;
     }
 }

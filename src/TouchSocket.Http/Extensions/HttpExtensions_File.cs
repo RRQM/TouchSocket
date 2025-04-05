@@ -29,45 +29,37 @@ public static partial class HttpExtensions
     /// <param name="response">响应</param>
     /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
     /// <param name="fileInfo">文件信息</param>
+    /// <param name="flowOperator">流速控制</param>
     /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-    /// <param name="maxSpeed">最大速度。</param>
-    /// <param name="bufferLen">读取长度。</param>
     /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
     /// <exception cref="Exception"></exception>
     /// <exception cref="Exception"></exception>
     /// <returns></returns>
-    public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
+    public static async Task<Result> FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpFlowOperator flowOperator, HttpRequest request = default, string fileName = null, bool autoGzip = true)
     {
-        var filePath = fileInfo.FullName;
-        using (var streamReader = File.OpenRead(filePath))
+        try
         {
-            response.SetContentTypeByExtension(Path.GetExtension(filePath));
-            if (fileName.HasValue())
+            var bufferLen = flowOperator.BlockSize;
+
+            var filePath = fileInfo.FullName;
+            using (var streamReader = File.OpenRead(filePath))
             {
-                var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
-            }
-
-            response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
-
-            autoGzip = autoGzip && request.IsAcceptGzip();
-
-            HttpRange httpRange;
-            var range = request?.Headers.Get(HttpHeaders.Range);
-            if (string.IsNullOrEmpty(range))
-            {
-                response.SetStatus();
-                if (!autoGzip)
+                response.SetContentTypeByExtension(Path.GetExtension(filePath));
+                if (fileName.HasValue())
                 {
-                    response.ContentLength = fileInfo.Length;
+                    var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
+                    response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
                 }
-                httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
-            }
-            else
-            {
-                httpRange = HttpRange.GetRange(range, fileInfo.Length);
-                if (httpRange == null)
+
+                response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
+
+                autoGzip = autoGzip && request.IsAcceptGzip();
+
+                HttpRange httpRange;
+                var range = request?.Headers.Get(HttpHeaders.Range);
+                if (string.IsNullOrEmpty(range))
                 {
+                    response.SetStatus();
                     if (!autoGzip)
                     {
                         response.ContentLength = fileInfo.Length;
@@ -76,80 +68,111 @@ public static partial class HttpExtensions
                 }
                 else
                 {
-                    if (!autoGzip)
+                    httpRange = HttpRange.GetRange(range, fileInfo.Length);
+                    if (httpRange == null)
                     {
-                        response.ContentLength = httpRange.Length;
+                        if (!autoGzip)
+                        {
+                            response.ContentLength = fileInfo.Length;
+                        }
+                        httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
                     }
-                    response.SetStatus(206, "Partial Content");
-                    response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, fileInfo.Length));
+                    else
+                    {
+                        if (!autoGzip)
+                        {
+                            response.ContentLength = httpRange.Length;
+                        }
+                        response.SetStatus(206, "Partial Content");
+                        response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, fileInfo.Length));
+                    }
                 }
-            }
 
-            streamReader.Position = httpRange.Start;
-            var flowGate = new FlowGate
-            {
-                Maximum = maxSpeed
-            };
+                streamReader.Position = httpRange.Start;
 
-            if (autoGzip)
-            {
-                response.IsChunk = true;
-                response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
-            }
-
-            var buffer = BytePool.Default.Rent(bufferLen);
-            try
-            {
                 if (autoGzip)
                 {
-                    using (var responseStream = response.CreateWriteStream())
-                    {
-                        using (var gzip = new GZipStream(responseStream, CompressionMode.Compress, true))
-                        {
-                            while (true)
-                            {
-                                var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                if (r == 0)
-                                {
-                                    gzip.Close();
-                                    await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                    break;
-                                }
-
-                                await flowGate.AddCheckWaitAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                                await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            }
-                        }
-                    }
+                    response.IsChunk = true;
+                    response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
                 }
                 else
                 {
-                    var surLen = httpRange.Length;
-                    while (surLen > 0)
+                    flowOperator.AddCompletedLength(httpRange.Start);
+                    flowOperator.SetLength(fileInfo.Length);
+                }
+
+                var buffer = BytePool.Default.Rent(bufferLen);
+                try
+                {
+                    if (autoGzip)
                     {
-                        var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        if (r == 0)
+                        using (var responseStream = response.CreateWriteStream())
                         {
-                            break;
+                            using (var gzip = new GZipStream(responseStream, CompressionMode.Compress, true))
+                            {
+                                while (true)
+                                {
+                                    var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    if (r == 0)
+                                    {
+                                        gzip.Close();
+                                        await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                        break;
+                                    }
+
+                                    await flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                                    await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var surLen = httpRange.Length;
+                        while (surLen > 0)
+                        {
+                            var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            if (r == 0)
+                            {
+                                break;
+                            }
+
+                            await flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            surLen -= r;
                         }
 
-                        await flowGate.AddCheckWaitAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                        await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        surLen -= r;
-                    }
-
-                    if (response.IsChunk)
-                    {
-                        await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        if (response.IsChunk)
+                        {
+                            await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
                     }
                 }
+                finally
+                {
+                    BytePool.Default.Return(buffer);
+                }
             }
-            finally
-            {
-                BytePool.Default.Return(buffer);
-            }
+
+            return flowOperator.SetResult(Result.Success);
+        }
+        catch (Exception ex)
+        {
+            return flowOperator.SetResult(Result.FromException(ex));
+        }
+    }
+
+    public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
+    {
+        HttpFlowOperator flowOperator = new HttpFlowOperator();
+        flowOperator.BlockSize = bufferLen;
+        flowOperator.MaxSpeed = maxSpeed;
+        var result = await FromFileAsync(response, fileInfo, flowOperator, request, fileName, autoGzip).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (!result.IsSuccess)
+        {
+            throw new Exception(result.Message);
         }
     }
 

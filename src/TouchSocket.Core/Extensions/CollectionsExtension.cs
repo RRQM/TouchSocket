@@ -59,7 +59,7 @@ public static class CollectionsExtension
         return count;
     }
 
-#if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NET45_OR_GREATER || NETSTANDARD2_0
 
     /// <summary>
     /// 尝试向字典中添加键值对。
@@ -70,7 +70,7 @@ public static class CollectionsExtension
     /// <param name="key">要添加的键。</param>
     /// <param name="value">要添加的值。</param>
     /// <returns>如果添加成功则返回true，否则返回false。</returns>
-    public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
         // 如果字典中已经包含此键，则不添加，并返回false
         if (dictionary.ContainsKey(key))

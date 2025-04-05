@@ -85,7 +85,7 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
         }
     }
 
-    private async Task DestoryRequest()
+    private async Task DestroyRequest()
     {
         this.m_request = null;
         if (this.m_task != null)
@@ -120,9 +120,13 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                         }
                         else
                         {
-                            this.m_request.InternalSetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
+                            var contentLength = (int)this.m_request.ContentLength;
+                            var content = byteBlock.Memory.Slice(byteBlock.Position, contentLength);
+                            byteBlock.Position += contentLength;
+                           
+                            this.m_request.InternalSetContent(content);
                             await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                     else
@@ -145,13 +149,13 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                         if (this.m_surLen == 0)
                         {
                             await this.m_request.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                 }
                 else
                 {
-                    await this.DestoryRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }

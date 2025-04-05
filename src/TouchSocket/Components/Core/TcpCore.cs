@@ -60,8 +60,7 @@ internal sealed class TcpCore : DisposableObject
     private short m_version;
     private bool m_noDelay;
     private readonly SocketOperationResult m_result = new SocketOperationResult();
-
-    private CancellationTokenSource m_cancellationTokenSource=new();
+    private readonly CancellationTokenSource m_cancellationTokenSource = new();
     private CancellationToken m_cancellationToken;
     #endregion 字段
 
@@ -81,7 +80,7 @@ internal sealed class TcpCore : DisposableObject
             Period = TimeSpan.FromSeconds(1),
             OnPeriod = this.OnSendPeriod
         };
-        m_cancellationToken=m_cancellationTokenSource.Token;
+        this.m_cancellationToken = this.m_cancellationTokenSource.Token;
         this.m_sendTask = Task.Run(this.TaskSend);
         this.m_sendTask.FireAndForget();
     }
@@ -147,7 +146,7 @@ internal sealed class TcpCore : DisposableObject
     /// </summary>
     public bool UseSsl => this.m_useSsl;
 
-    public async Task ShutdownAsync(SocketShutdown how)
+    public async Task<Result> ShutdownAsync(SocketShutdown how)
     {
         //主要等待发送队列任务完成
         await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -155,10 +154,12 @@ internal sealed class TcpCore : DisposableObject
         {
             await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_socket.Shutdown(how);
+
+            return Result.Success;
         }
-        catch
+        catch(Exception ex)
         {
-            // ignored
+            return Result.FromException(ex);
         }
         finally
         {
@@ -214,7 +215,7 @@ internal sealed class TcpCore : DisposableObject
         this.m_useSsl = true;
     }
 
-    public async ValueTask<SocketOperationResult> ReadAsync(Memory<byte> memory)
+    public async Task<SocketOperationResult> ReadAsync(Memory<byte> memory)
     {
         if (this.m_useSsl)
         {
@@ -404,7 +405,7 @@ internal sealed class TcpCore : DisposableObject
 #if NET6_0_OR_GREATER
         if (this.UseSsl)
         {
-            await this.SslStream.WriteAsync(memory, m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SslStream.WriteAsync(memory, this.m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 #else
         if (this.m_useSsl)
@@ -416,7 +417,7 @@ internal sealed class TcpCore : DisposableObject
         else
         {
             var offset = 0;
-            while (length > 0 && !m_cancellationToken.IsCancellationRequested)
+            while (length > 0 && !this.m_cancellationToken.IsCancellationRequested)
             {
                 var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.SocketError != null)
