@@ -44,9 +44,14 @@ public abstract class HttpContent
     {
         if (this.TryComputeLength(out var length))
         {
-            header.TryAdd(HttpHeaders.ContentLength,length.ToString());
+            header.TryAdd(HttpHeaders.ContentLength, length.ToString());
         }
         this.OnBuildingHeader(header);
+    }
+
+    internal bool InternalTryComputeLength(out long length)
+    {
+        return this.TryComputeLength(out length);
     }
 
     /// <summary>
@@ -98,7 +103,7 @@ public abstract class HttpContent
     /// <returns>一个新的StringHttpContent对象。</returns>
     public static implicit operator HttpContent(string content)
     {
-        return new StringHttpContent(content, Encoding.UTF8);
+        return StringHttpContent.FromText(content);
     }
 
     /// <summary>

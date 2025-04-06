@@ -255,6 +255,19 @@ public static partial class HttpExtensions
     #region HttpRequest
 
     /// <summary>
+    /// 设置Url，可带参数
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="url">要设置的URL地址</param>
+    /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
+    public static TRequest SetUrl<TRequest>(this TRequest request, string url)
+        where TRequest : HttpRequest
+    {
+        request.URL = url;
+        return request;
+    }
+
+    /// <summary>
     /// 添加Query参数
     /// </summary>
     /// <param name="request">请求对象</param>

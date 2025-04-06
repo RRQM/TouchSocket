@@ -75,15 +75,88 @@ public static class TouchSocketHttpUtility
     {
         byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
     }
-    
-    public static void AppendUtf8String<TByteBlock>(ref TByteBlock byteBlock,string value) where TByteBlock : IByteBlock
+
+    public static void AppendUtf8String<TByteBlock>(ref TByteBlock byteBlock, string value) where TByteBlock : IByteBlock
     {
-        byteBlock.WriteNormalString(value,Encoding.UTF8);
+        byteBlock.WriteNormalString(value, Encoding.UTF8);
     }
 
     public static void AppendHex<TByteBlock>(ref TByteBlock byteBlock, int value) where TByteBlock : IByteBlock
     {
-        AppendUtf8String(ref byteBlock,$"{value:X}");
+        AppendUtf8String(ref byteBlock, $"{value:X}");
     }
     #endregion ByteBlock Append
+
+    public static string UnescapeDataString(ReadOnlySpan<byte> urlSpan)
+    {
+#if NET9_0_OR_GREATER
+        // 直接处理字节的URL解码
+        Span<char> charBuffer = stackalloc char[urlSpan.Length];
+        int charCount = Encoding.UTF8.GetChars(urlSpan, charBuffer);
+        return Uri.UnescapeDataString(charBuffer.Slice(0, charCount));
+#else
+        return Uri.UnescapeDataString(urlSpan.ToString(Encoding.UTF8));
+#endif
+
+    }
+
+    public static string UnescapeDataString(ReadOnlySpan<char> urlSpan)
+    {
+#if NET9_0_OR_GREATER
+        return Uri.UnescapeDataString(urlSpan);
+#else
+        return Uri.UnescapeDataString(urlSpan.ToString());
+#endif
+
+    }
+
+    public static bool IsWhitespace(byte b) => b == ' ' || b == '\t';
+
+
+    public static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
+    {
+        for (int i = start; i < span.Length; i++)
+        {
+            if (TouchSocketHttpUtility.IsWhitespace(span[i]))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int SkipSpaces(ReadOnlySpan<byte> span, int start)
+    {
+        while (start < span.Length && TouchSocketHttpUtility.IsWhitespace(span[start]))
+        {
+            start++;
+        }
+
+        return start;
+    }
+
+    internal static void ProcessKeyValuePair(ReadOnlySpan<char> kvSpan, InternalHttpParams parameters)
+    {
+        var eqIndex = kvSpan.IndexOf('=');
+        ReadOnlySpan<char> keySpan, valueSpan;
+
+        if (eqIndex >= 0)
+        {
+            keySpan = kvSpan.Slice(0, eqIndex);
+            valueSpan = kvSpan.Slice(eqIndex + 1);
+        }
+        else
+        {
+            // 处理没有值的键
+            keySpan = kvSpan;
+            valueSpan = [];
+        }
+
+        if (!keySpan.IsEmpty)
+        {
+            var key = TouchSocketHttpUtility.UnescapeDataString(keySpan);
+            var value = TouchSocketHttpUtility.UnescapeDataString(valueSpan);
+            parameters.AddOrUpdate(key, value);
+        }
+    }
 }

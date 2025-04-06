@@ -151,10 +151,10 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public string ProtocolVersion { get; set; } = "1.1";
 
-    /// <summary>
-    /// 请求行
-    /// </summary>
-    public string RequestLine { get; private set; }
+    ///// <summary>
+    ///// 请求行
+    ///// </summary>
+    //public string RequestLine { get; private set; }
 
     internal Task CompleteInput()
     {
@@ -187,15 +187,15 @@ public abstract class HttpBase : IRequestInfo
     {
         this.m_headers.Clear();
         this.ContentCompleted = null;
-        this.RequestLine = default;
+        //this.RequestLine = default;
 
         this.m_httpBlockSegment.InternalReset();
     }
 
-    /// <summary>
-    /// 读取信息
-    /// </summary>
-    protected abstract void LoadHeaderProperties();
+    ///// <summary>
+    ///// 读取信息
+    ///// </summary>
+    //protected abstract void LoadHeaderProperties();
 
     //private void GetRequestHeaders(string[] rows)
     //{
@@ -216,6 +216,8 @@ public abstract class HttpBase : IRequestInfo
     //    }
     //}
 
+    protected abstract void ReadRequestLine(ReadOnlySpan<byte> requestLineSpan);
+
     private void ReadHeaders(ReadOnlySpan<byte> span)
     {
         //string ss=span.ToString(Encoding.UTF8);
@@ -225,13 +227,13 @@ public abstract class HttpBase : IRequestInfo
         var lineEnd = span.IndexOf("\r\n"u8);
         if (lineEnd == -1) // 没有完整请求行
         {
-            this.RequestLine = span.ToString(Encoding.UTF8);
-            return;
+            throw new ArgumentException("Invalid HTTP header format.");
         }
 
         // 提取请求行
         var requestLineSpan = span.Slice(0, lineEnd);
-        this.RequestLine = requestLineSpan.ToString(Encoding.UTF8);
+        ReadRequestLine(requestLineSpan);
+        //this.RequestLine = requestLineSpan.ToString(Encoding.UTF8);
 
         // 跳过请求行及CRLF（+2）
         var remaining = span.Slice(lineEnd + 2);
@@ -261,7 +263,7 @@ public abstract class HttpBase : IRequestInfo
             remaining = remaining.Slice(headerEnd + 2);
         }
 
-        this.LoadHeaderProperties();
+        //this.LoadHeaderProperties();
     }
 
     private void ParseHeaderLine(ReadOnlySpan<byte> line)
@@ -418,7 +420,7 @@ public abstract class HttpBase : IRequestInfo
             return base.Complete(string.Empty);
         }
 
-        internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+        internal Task InternalInputAsync(in ReadOnlyMemory<byte> memory)
         {
             return base.InputAsync(memory);
         }

@@ -65,7 +65,25 @@ public class HttpResponse : HttpBase
     /// <summary>
     /// 是否分块
     /// </summary>
-    public bool IsChunk { get; set; }
+    public bool IsChunk
+    {
+        get
+        {
+            var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
+            return "chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            if (value)
+            {
+                this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+            }
+            else
+            {
+                this.Headers.Remove(HttpHeaders.TransferEncoding);
+            }
+        }
+    }
 
     /// <summary>
     /// 是否代理权限验证。
@@ -106,18 +124,28 @@ public class HttpResponse : HttpBase
         this.ThrowIfResponsed();
 
         var content = this.Content;
-
-        var byteBlock = new ByteBlock();
-        try
+        if (content == null)
         {
-            if (content == null)
+            var byteBlock = new ValueByteBlock(1024);
+            try
             {
+                //没有内容时，需要设置内容长度为0
+                this.ContentLength = 0;
                 this.BuildHeader(ref byteBlock);
 
                 // 异步发送请求
                 await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            else
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+        else
+        {
+            content.InternalTryComputeLength(out var contentLength);
+            var byteBlock = new ValueByteBlock((int)Math.Min(contentLength + 1024, 1024 * 64));
+            try
             {
                 content.InternalBuildingHeader(this.Headers);
                 this.BuildHeader(ref byteBlock);
@@ -132,13 +160,13 @@ public class HttpResponse : HttpBase
                     await content.InternalWriteContent(this.InternalSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
 
-            this.Responsed = true;
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
+        this.Responsed = true;
     }
 
     /// <summary>
@@ -356,35 +384,108 @@ public class HttpResponse : HttpBase
     }
 
     /// <inheritdoc/>
-    protected override void LoadHeaderProperties()
+    protected override void ReadRequestLine(ReadOnlySpan<byte> responseLineSpan)
     {
-        var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
-        if (first.Length > 0)
+        var index = 0;
+
+        // 1. 解析 (HTTP/1.1)
+        var firstSpace = TouchSocketHttpUtility.FindNextWhitespace(responseLineSpan, index);
+        if (firstSpace == -1)
         {
-            var ps = first[0].Split('/');
-            if (ps.Length == 2)
+            return;
+        }
+
+        this.ParseProtocol(responseLineSpan.Slice(0, firstSpace));
+        index = firstSpace + 1;
+
+        // 2. 解析 Status Code
+        var secondSpace = TouchSocketHttpUtility.FindNextWhitespace(responseLineSpan, index);
+        if (secondSpace == -1)
+        {
+            this.ParseStatusCode(responseLineSpan.Slice(index));
+            return;
+        }
+
+        this.ParseStatusCode(responseLineSpan.Slice(index, secondSpace - index));
+        index = secondSpace + 1;
+
+        // 3. 解析 Status Message (可能包含空格)
+        if (index < responseLineSpan.Length)
+        {
+            this.StatusMessage = responseLineSpan.Slice(index).ToString(Encoding.UTF8);
+        }
+    }
+
+    //private static bool TryParseStatusCode(ReadOnlySpan<byte> span, out int code)
+    //{
+    //    code = 0;
+    //    if (span.Length != 3)
+    //    {
+    //        return false;
+    //    }
+
+    //    for (var i = 0; i < 3; i++)
+    //    {
+    //        if (span[i] < (byte)'0' || span[i] > (byte)'9')
+    //        {
+    //            return false;
+    //        }
+    //    }
+
+    //    code = 100 * (span[0] - '0') + 10 * (span[1] - '0') + (span[2] - '0');
+    //    return true;
+    //}
+
+    private static bool TryParseStatusCode(ReadOnlySpan<byte> span, out int code)
+    {
+        code = 0;
+        if (span.IsEmpty)
+        {
+            return false;
+        }
+
+        // 处理符号
+        var sign = 1;
+        var index = 0;
+        if (span[0] == (byte)'-' || span[0] == (byte)'+')
+        {
+            sign = span[0] == (byte)'-' ? -1 : 1;
+            index++;
+            // 符号后必须至少有一个数字
+            if (index >= span.Length)
             {
-                this.Protocols = new Protocol(ps[0]);
-                this.ProtocolVersion = ps[1];
+                return false;
             }
         }
-        if (first.Length > 1)
-        {
-            _ = int.TryParse(first[1], out var code);
-            this.StatusCode = code;
-        }
-        var msg = string.Empty;
-        for (var i = 2; i < first.Length; i++)
-        {
-            msg += first[i] + StringExtension.DefaultSpaceString;
-        }
-        this.StatusMessage = msg;
 
-        var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
-        if ("chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase))
+        // 检查剩余字符是否均为数字
+        for (var i = index; i < span.Length; i++)
         {
-            this.IsChunk = true;
+            if (span[i] < (byte)'0' || span[i] > (byte)'9')
+            {
+                return false;
+            }
         }
+
+        // 用 long 累加避免中间溢出
+        long result = 0;
+        for (var i = index; i < span.Length; i++)
+        {
+            result = result * 10 + (span[i] - '0');
+            // 提前检查是否已超出 int 范围
+            if (sign == 1 && result > int.MaxValue)
+            {
+                return false;
+            }
+            if (sign == -1 && result > -(long)int.MinValue)
+            {
+                return false;
+            }
+        }
+
+        // 应用符号并转换到 int
+        code = (int)(sign * result);
+        return true;
     }
 
     private void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
@@ -399,10 +500,10 @@ public class HttpResponse : HttpBase
         TouchSocketHttpUtility.AppendRn(ref byteBlock);
         //stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
 
-        if (this.IsChunk)
-        {
-            this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
-        }
+        //if (this.IsChunk)
+        //{
+        //    this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+        //}
 
         foreach (var header in this.Headers)
         {
@@ -420,28 +521,27 @@ public class HttpResponse : HttpBase
         //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    //private void BuildHeader(ByteBlock byteBlock)
-    //{
-    //    var stringBuilder = new StringBuilder();
-    //    stringBuilder.Append($"HTTP/{this.ProtocolVersion} {this.StatusCode} {this.StatusMessage}\r\n");
-
-    //    if (this.IsChunk)
-    //    {
-    //        this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
-    //    }
-    //    foreach (var headerKey in this.Headers.Keys)
-    //    {
-    //        stringBuilder.Append($"{headerKey}: ");
-    //        stringBuilder.Append(this.Headers[headerKey] + "\r\n");
-    //    }
-
-    //    stringBuilder.Append("\r\n");
-    //    byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
-    //}
-
     private Task InternalSendAsync(ReadOnlyMemory<byte> memory)
     {
         return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory) : this.m_httpClientBase.InternalSendAsync(memory);
+    }
+
+    private void ParseProtocol(ReadOnlySpan<byte> protocolSpan)
+    {
+        var slashIndex = protocolSpan.IndexOf((byte)'/');
+        if (slashIndex > 0 && slashIndex < protocolSpan.Length - 1)
+        {
+            this.Protocols = new Protocol(protocolSpan.Slice(0, slashIndex).ToString(Encoding.UTF8));
+            this.ProtocolVersion = protocolSpan.Slice(slashIndex + 1).ToString(Encoding.UTF8);
+        }
+    }
+
+    private void ParseStatusCode(ReadOnlySpan<byte> codeSpan)
+    {
+        if (TryParseStatusCode(codeSpan, out var code))
+        {
+            this.StatusCode = code;
+        }
     }
 
     private void ThrowIfResponsed()

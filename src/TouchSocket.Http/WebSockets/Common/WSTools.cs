@@ -147,7 +147,7 @@ internal static class WSTools
     public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
     {
         var request = new HttpRequest();
-        request.SetUrl(httpClientBase.RemoteIPHost.PathAndQuery);
+        request.URL=(httpClientBase.RemoteIPHost.PathAndQuery);
         request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
         request.Headers.Add(HttpHeaders.Connection, "upgrade");
         request.Headers.Add(HttpHeaders.Upgrade, "websocket");

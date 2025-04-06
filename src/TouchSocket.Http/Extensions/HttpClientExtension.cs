@@ -41,7 +41,7 @@ public static class HttpClientExtension
         request.InitHeaders();
         request.SetHost(httpClient.RemoteIPHost.Host);
         // 设置请求URL
-        request.SetUrl(url);
+        request.URL=(url);
 
         // 使用指定的超时时间和取消令牌发起HTTP请求
         using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
@@ -135,7 +135,7 @@ public static class HttpClientExtension
         // 创建并初始化HttpRequest对象，用于封装HTTP请求的相关信息和操作
         var request = new HttpRequest();
         request.InitHeaders(); // 初始化请求头
-        request.SetUrl(url); // 设置请求的URL
+        request.URL = (url); // 设置请求的URL
         request.SetHost(httpClient.RemoteIPHost.Host);
         // 调用重载的GetFileAsync方法，传入封装好的请求对象
         return GetFileAsync(httpClient, request, stream, millisecondsTimeout, token);
@@ -154,7 +154,7 @@ public static class HttpClientExtension
         // 创建并初始化HttpRequest对象，用于封装HTTP请求的相关信息和操作
         var request = new HttpRequest();
         request.InitHeaders(); // 初始化请求头
-        request.SetUrl(url); // 设置请求的URL
+        request.URL = (url); // 设置请求的URL
         request.SetHost(httpClient.RemoteIPHost.Host);
         // 调用重载的GetFileAsync方法，传入封装好的请求对象
         return GetFileAsync(httpClient, request, stream, flowOperator);
@@ -183,7 +183,7 @@ public static class HttpClientExtension
             request.InitHeaders();
             request.SetContent(new StreamHttpContent(stream));
             request.AddHeader("FileName", fileInfo.Name);
-            request.SetUrl(url);
+            request.URL = (url);
             request.SetHost(client.RemoteIPHost.Host);
             request.AsPost();
 

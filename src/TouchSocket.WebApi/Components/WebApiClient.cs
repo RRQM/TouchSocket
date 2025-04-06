@@ -56,7 +56,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
         }
 
         var request = new HttpRequest();
-        request.SetUrl(invokeKey);
+        request.URL = (invokeKey);
         switch (webApiRequest.Method)
         {
             case HttpMethodType.Get:

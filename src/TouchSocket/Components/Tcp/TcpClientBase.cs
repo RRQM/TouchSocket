@@ -487,8 +487,11 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
     }
 
+    /// <summary>
+    ///  如果TCP客户端未连接，则抛出异常。
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ThrowIfClientNotConnected()
+    protected void ThrowIfTcpClientNotConnected()
     {
         if (this.m_online)
         {
@@ -518,7 +521,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         // 检查当前实例是否已被弃用
         this.ThrowIfDisposed();
         // 检查客户端是否已连接
-        this.ThrowIfClientNotConnected();
+        this.ThrowIfTcpClientNotConnected();
         // 调用OnTcpSending事件处理程序进行预发送处理
         await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         // 通过TCP核心发送数据
