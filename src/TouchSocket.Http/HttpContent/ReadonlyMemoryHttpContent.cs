@@ -14,6 +14,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
@@ -70,7 +71,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
         }
         else
         {
-            header.Add(HttpHeaders.ContentType, "application/octet-stream");
+            header.TryAdd(HttpHeaders.ContentType, "application/octet-stream");
         }
     }
 

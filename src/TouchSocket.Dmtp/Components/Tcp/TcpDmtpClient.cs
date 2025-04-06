@@ -142,6 +142,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
     private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
     {
+        this.ThrowIfTcpClientNotConnected();
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);

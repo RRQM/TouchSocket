@@ -130,11 +130,11 @@ internal static class XmlDataTool
         }
 
         var request = new HttpRequest();
-        request.FromXml(xml.OuterXml)
-            .InitHeaders()
-            .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)
-            .SetHost(httpClientBase.RemoteIPHost.Host)
-            .AsPost();
+        request.FromXml(xml.OuterXml);
+        request.InitHeaders();
+        request.URL = (httpClientBase.RemoteIPHost.PathAndQuery);
+        request.SetHost(httpClientBase.RemoteIPHost.Host);
+        request.AsPost();
         return request;
     }
 

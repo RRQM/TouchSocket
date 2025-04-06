@@ -50,7 +50,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
         var request = new HttpRequest();
         request.Method = HttpMethod.Post;
-        request.SetUrl(this.RemoteIPHost.PathAndQuery);
+        request.URL = (this.RemoteIPHost.PathAndQuery);
         request.SetContent(memory);
 
         using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))

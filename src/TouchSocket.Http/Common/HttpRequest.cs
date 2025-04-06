@@ -30,6 +30,8 @@ public class HttpRequest : HttpBase
     private readonly bool m_isServer;
     private readonly InternalHttpParams m_query = new InternalHttpParams();
     private ReadOnlyMemory<byte> m_contentMemory;
+    private string m_relativeURL = "/";
+    private string m_url = "/";
 
     /// <summary>
     /// HttpRequest类的构造函数。
@@ -74,6 +76,9 @@ public class HttpRequest : HttpBase
         }
     }
 
+    /// <inheritdoc/>
+    public override bool IsServer => this.m_isServer;
+
     /// <summary>
     /// HTTP请求方式。
     /// </summary>
@@ -87,20 +92,26 @@ public class HttpRequest : HttpBase
     /// <summary>
     /// 相对路径（不含参数）
     /// </summary>
-    public string RelativeURL { get; private set; } = "/";
+    public string RelativeURL { get => m_relativeURL; }
 
     /// <summary>
     /// Url全地址，包含参数
     /// </summary>
-    public string URL { get; private set; } = "/";
-
-    /// <inheritdoc/>
-    public override bool IsServer => this.m_isServer;
+    public string URL
+    {
+        get => m_url;
+        set
+        {
+            // 确保URL以斜杠开始，如果不是，则添加斜杠
+            this.m_url = value.StartsWith("/") ? value : $"/{value}";
+            // 解析设置后的URL，以进行进一步的操作
+            this.ParseUrl(this.m_url.AsSpan());
+        }
+    }
 
     /// <inheritdoc/>
     public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
-
         if (!this.ContentCompleted.HasValue)
         {
             if (!this.IsServer)
@@ -177,14 +188,6 @@ public class HttpRequest : HttpBase
         return blockResult;
     }
 
-    /// <inheritdoc/>
-    internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
-    {
-        this.m_contentMemory = content;
-        this.ContentLength = content.Length;
-        this.ContentCompleted = true;
-    }
-
     /// <summary>
     /// 设置代理Host
     /// </summary>
@@ -198,109 +201,8 @@ public class HttpRequest : HttpBase
         return this;
     }
 
-    /// <summary>
-    /// 设置Url，可带参数
-    /// </summary>
-    /// <param name="url">要设置的URL地址</param>
-    /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
-    public HttpRequest SetUrl(string url)
-    {
-        // 确保URL以斜杠开始，如果不是，则添加斜杠
-        this.URL = url.StartsWith("/") ? url : $"/{url}";
-        // 解析设置后的URL，以进行进一步的操作
-        this.ParseUrl();
-        // 返回当前实例，支持链式调用
-        return this;
-    }
-
-    /// <inheritdoc/>
-    internal override void ResetHttp()
-    {
-        base.ResetHttp();
-        this.m_contentMemory = null;
-        //this.m_sentHeader = false;
-        this.RelativeURL = "/";
-        this.URL = "/";
-        //this.m_sentLength = 0;
-        this.m_query.Clear();
-    }
-
-    /// <inheritdoc/>
-    protected override void LoadHeaderProperties()
-    {
-        var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
-        if (first.Length > 0)
-        {
-            this.Method = new HttpMethod(first[0].Trim());
-        }
-
-        if (first.Length > 1)
-        {
-            this.SetUrl(Uri.UnescapeDataString(first[1]));
-        }
-        if (first.Length > 2)
-        {
-            var ps = first[2].Split('/');
-            if (ps.Length == 2)
-            {
-                this.Protocols = new Protocol(ps[0]);
-                this.ProtocolVersion = ps[1];
-            }
-        }
-    }
-
-    private static void GetParameters(string row, in InternalHttpParams pairs)
-    {
-        if (string.IsNullOrEmpty(row))
-        {
-            return;
-        }
-
-        var kvs = row.Split('&');
-        if (kvs == null || kvs.Length == 0)
-        {
-            return;
-        }
-
-        foreach (var item in kvs)
-        {
-            var kv = item.SplitFirst('=');
-            if (kv.Length == 2)
-            {
-                pairs.AddOrUpdate(kv[0], kv[1]);
-            }
-        }
-    }
-
     internal void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        //var stringBuilder = new StringBuilder();
-
-        //string url = null;
-        //if (!string.IsNullOrEmpty(this.RelativeURL))
-        //{
-        //    if (this.m_query.Count == 0)
-        //    {
-        //        url = this.RelativeURL;
-        //    }
-        //    else
-        //    {
-        //        var urlBuilder = new StringBuilder();
-        //        urlBuilder.Append(this.RelativeURL);
-        //        urlBuilder.Append('?');
-        //        var i = 0;
-        //        foreach (var item in this.m_query.Keys)
-        //        {
-        //            urlBuilder.Append($"{item}={Uri.EscapeDataString(this.m_query[item])}");
-        //            if (++i < this.m_query.Count)
-        //            {
-        //                urlBuilder.Append('&');
-        //            }
-        //        }
-        //        url = urlBuilder.ToString();
-        //    }
-        //}
-
         byteBlock.WriteNormalString(this.Method.ToString(), Encoding.UTF8);//Get
         TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
         TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.RelativeURL);
@@ -340,45 +242,107 @@ public class HttpRequest : HttpBase
         }
 
         TouchSocketHttpUtility.AppendRn(ref byteBlock);
-
-        //if (string.IsNullOrEmpty(url))
-        //{
-        //    stringBuilder.Append($"{this.Method} / HTTP/{this.ProtocolVersion}\r\n");
-        //}
-        //else
-        //{
-        //    stringBuilder.Append($"{this.Method} {url} HTTP/{this.ProtocolVersion}\r\n");
-        //}
-
-        //foreach (var headerKey in this.Headers.Keys)
-        //{
-        //    stringBuilder.Append($"{headerKey}: ");
-        //    stringBuilder.Append(this.Headers[headerKey] + "\r\n");
-        //}
-
-        //stringBuilder.Append("\r\n");
-        //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    
-    private void ParseUrl()
+    /// <inheritdoc/>
+    internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
     {
-        if (this.URL.Contains('?'))
+        this.m_contentMemory = content;
+        this.ContentLength = content.Length;
+        this.ContentCompleted = true;
+    }
+
+    /// <inheritdoc/>
+    internal override void ResetHttp()
+    {
+        base.ResetHttp();
+        this.m_contentMemory = null;
+        //this.m_sentHeader = false;
+        this.m_relativeURL = "/";
+        this.m_url = "/";
+        //this.m_sentLength = 0;
+        this.m_query.Clear();
+    }
+
+    /// <inheritdoc/>
+    protected override void ReadRequestLine(ReadOnlySpan<byte> requestLineSpan)
+    {
+        var start = 0;
+
+        // 解析 HTTP Method (GET/POST)
+        var methodEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
+        if (methodEnd == -1)
         {
-            var urls = this.URL.Split('?');
-            if (urls.Length > 0)
+            throw new Exception("Invalid HTTP request line: " + requestLineSpan.ToString(Encoding.UTF8));
+        }
+
+        this.Method = new HttpMethod(requestLineSpan.Slice(start, methodEnd - start).ToString(Encoding.UTF8));
+        start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, methodEnd + 1);
+
+        // 解析 URL
+        int urlEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
+        if (urlEnd == -1)
+        {
+            this.URL = TouchSocketHttpUtility.UnescapeDataString(requestLineSpan.Slice(start));
+            return; // No protocol version
+        }
+
+        this.URL = TouchSocketHttpUtility.UnescapeDataString(requestLineSpan.Slice(start, urlEnd - start));
+        start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, urlEnd + 1);
+
+        // 解析 Protocol (HTTP/1.1)
+        ReadOnlySpan<byte> protocolSpan = requestLineSpan.Slice(start);
+        int slashIndex = protocolSpan.IndexOf((byte)'/');
+        if (slashIndex > 0 && slashIndex < protocolSpan.Length - 1)
+        {
+            this.Protocols = new Protocol(protocolSpan.Slice(0, slashIndex).ToString(Encoding.UTF8));
+            this.ProtocolVersion = protocolSpan.Slice(slashIndex + 1).ToString(Encoding.UTF8);
+        }
+    }
+
+    private static void GetParameters(ReadOnlySpan<char> querySpan, InternalHttpParams parameters)
+    {
+        while (!querySpan.IsEmpty)
+        {
+            // 查找下一个键值对
+            var ampIndex = querySpan.IndexOf('&');
+            var kvSpan = ampIndex >= 0 ? querySpan.Slice(0, ampIndex) : querySpan;
+
+            // 处理有效的非空对
+            if (!kvSpan.IsEmpty)
             {
-                this.RelativeURL = urls[0];
+                TouchSocketHttpUtility.ProcessKeyValuePair(kvSpan, parameters);
             }
-            if (urls.Length > 1)
+
+            // 如果没有更多配对，则退出循环
+            if (ampIndex < 0)
             {
-                this.m_query.Clear();
-                GetParameters(urls[1], this.m_query);
+                break;
             }
+
+            // 移动到下一对（跳过“&”）
+            querySpan = querySpan.Slice(ampIndex + 1);
+        }
+    }
+
+    private void ParseUrl(ReadOnlySpan<char> url)
+    {
+        var queryIndex = url.IndexOf('?');
+        if (queryIndex >= 0)
+        {
+            // 提取相对URL和查询部分
+            this.m_relativeURL = url.Slice(0, queryIndex).ToString();
+            var querySpan = url.Slice(queryIndex + 1);
+
+            // 清除现有查询参数并解析新参数
+            this.m_query.Clear();
+            GetParameters(querySpan, this.m_query);
         }
         else
         {
-            this.RelativeURL = this.URL;
+            //清除所有现有参数
+            this.m_relativeURL = url.ToString();
+            m_query.Clear();
         }
     }
 }
