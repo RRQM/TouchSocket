@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.21" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.23" />
   </ItemGroup>
 
 </Project>

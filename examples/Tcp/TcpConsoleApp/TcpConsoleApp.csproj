@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="3.0.21" />
+    <PackageReference Include="TouchSocket" Version="3.0.23" />
   </ItemGroup>
 
 </Project>
