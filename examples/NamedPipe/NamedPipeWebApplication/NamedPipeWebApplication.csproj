@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
-    <PackageReference Include="TouchSocket.Hosting" Version="3.0.21" />
-    <PackageReference Include="TouchSocket.NamedPipe" Version="3.0.21" />
+    <PackageReference Include="TouchSocket.Hosting" Version="3.0.23" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="3.0.23" />
   </ItemGroup>
 
   <!--<ItemGroup>
