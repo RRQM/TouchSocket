@@ -18,39 +18,29 @@ namespace TouchSocket.Http;
 
 internal sealed class InternalHttpParams : Dictionary<string, string>, IHttpParams
 {
-    public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
-    {
-    }
-
     public new string this[string key]
     {
         get
         {
-            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
+            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            return this.TryGetValue(key, out var value) ? value : null;
         }
-
         set
         {
-            if (key == null)
-            {
-                return;
-            }
-
-            this.AddOrUpdate(key, value);
+            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            base[key] = value;
         }
     }
 
     public new void Add(string key, string value)
     {
-        if (key == null)
-        {
-            return;
-        }
-        this.AddOrUpdate(key, value);
+        ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+        base[key] = value; // 直接覆盖，避免二次查找
     }
 
     public string Get(string key)
     {
-        return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
+        ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+        return this.TryGetValue(key, out var value) ? value : null;
     }
 }
