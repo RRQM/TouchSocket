@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.23</Version>
+		<TouchSocketVersion>3.0.24</TouchSocketVersion>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -16,9 +16,17 @@
 		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300;IDE0130;IDE0057</NoWarn>
 		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
+		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Packages</PackageOutputPath>
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<Version>$(TouchSocketVersion)</Version>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<Version>$(TouchSocketVersion).Debug</Version>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.15.0">
 			<PrivateAssets>all</PrivateAssets>
@@ -43,7 +51,6 @@
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>True</SignAssembly>
-		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Release</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -82,7 +89,11 @@
 	</PropertyGroup>
 
 
-	<Target Name="CopyNuGetPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+	<!--<Target Name="CopyNuGetPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
+	</Target>-->
+
+	<Target Name="CopyNuGetPackage" AfterTargets="Pack">
 		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
 	</Target>
 
