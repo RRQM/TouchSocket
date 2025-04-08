@@ -22,7 +22,7 @@ namespace TouchSocket.SerialPorts;
 /// <summary>
 /// Serial核心
 /// </summary>
-internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationResult>
+internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationResult>
 {
     ManualResetValueTaskSourceCore<SerialOperationResult> m_core = new ManualResetValueTaskSourceCore<SerialOperationResult>();
     private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
@@ -36,6 +36,12 @@ internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationRes
     private int m_sendBufferSize = 1024 * 10;
 
     private ValueCounter m_sendCounter;
+
+    private CancellationTokenSource m_cancellationTokenSource = new();
+
+    private CancellationToken m_cancellationToken;
+
+    private readonly SemaphoreSlim _receiveLock = new(0, 1);
 
     /// <summary>
     /// Serial核心
@@ -56,6 +62,8 @@ internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationRes
 
         this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
         this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
+
+        this.m_cancellationToken = this.m_cancellationTokenSource.Token;
     }
 
     /// <summary>
@@ -95,6 +103,9 @@ internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationRes
         this.m_core.Reset();
         this.SetBuffer(byteBlock);
 
+        if (_receiveLock.CurrentCount == 0)
+            _receiveLock.Release();
+
         return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
     }
 
@@ -125,9 +136,12 @@ internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationRes
             try
             {
                 // 取消未完成的任务源
-                this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
+                m_cancellationTokenSource.Cancel();
+                m_cancellationTokenSource.Dispose();
+                this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
                 this.m_serialPort.Close();
                 this.m_serialPort.Dispose();
+                this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
             }
             catch
             {
@@ -166,6 +180,11 @@ internal class SerialCore :DisposableObject, IValueTaskSource<SerialOperationRes
 
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
+        if (m_cancellationToken.IsCancellationRequested)
+            return;
+
+        _receiveLock.Wait(m_cancellationToken);
+
         var eventType = e.EventType;
 
         try
