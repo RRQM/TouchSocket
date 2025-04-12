@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<TouchSocketVersion>3.0.24</TouchSocketVersion>
+		<TouchSocketVersion>3.0.25</TouchSocketVersion>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -24,7 +24,7 @@
 		<Version>$(TouchSocketVersion)</Version>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<Version>$(TouchSocketVersion).Debug</Version>
+		<Version>$(TouchSocketVersion)-Debug</Version>
 	</PropertyGroup>
 	
 	<ItemGroup>
