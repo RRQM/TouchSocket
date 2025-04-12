@@ -5,13 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.23" />
-    <PackageReference Include="TouchSocket.Rpc" Version="3.0.23" />
-    <PackageReference Include="TouchSocket.WebApi" Version="3.0.23" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.23" />
-    <PackageReference Include="TouchSocketPro" Version="3.0.23" />
-    <PackageReference Include="TouchSocketPro.AspNetCore" Version="3.0.23" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.23" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.25" />
+    <PackageReference Include="TouchSocket.Rpc" Version="3.0.25" />
+    <PackageReference Include="TouchSocket.WebApi" Version="3.0.25" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.25" />
+    <PackageReference Include="TouchSocketPro" Version="3.0.25" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="3.0.25" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.25" />
   </ItemGroup>
 </Project>
