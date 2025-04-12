@@ -24,10 +24,14 @@ namespace TouchSocket.SerialPorts;
 /// </summary>
 internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationResult>
 {
-    ManualResetValueTaskSourceCore<SerialOperationResult> m_core = new ManualResetValueTaskSourceCore<SerialOperationResult>();
+    private readonly SemaphoreSlim m_receiveLock = new(0, 1);
     private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
     private readonly SerialPort m_serialPort;
     private ByteBlock m_byteBlock;
+    private CancellationToken m_cancellationToken;
+    private readonly CancellationTokenSource m_cancellationTokenSource = new();
+    private ManualResetValueTaskSourceCore<SerialOperationResult> m_core = new ManualResetValueTaskSourceCore<SerialOperationResult>();
+
     //private SerialData m_eventType;
     private int m_receiveBufferSize = 1024 * 10;
 
@@ -36,12 +40,6 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
     private int m_sendBufferSize = 1024 * 10;
 
     private ValueCounter m_sendCounter;
-
-    private CancellationTokenSource m_cancellationTokenSource = new();
-
-    private CancellationToken m_cancellationToken;
-
-    private readonly SemaphoreSlim _receiveLock = new(0, 1);
 
     /// <summary>
     /// Serial核心
@@ -98,13 +96,28 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     public SerialPort SerialPort => this.m_serialPort;
 
+    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short token)
+    {
+        return this.m_core.GetResult(token);
+    }
+
+    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short token)
+    {
+        return this.m_core.GetStatus(token);
+    }
+
+    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+    {
+        this.m_core.OnCompleted(continuation, state, token, flags);
+    }
+
     public ValueTask<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
     {
         this.m_core.Reset();
         this.SetBuffer(byteBlock);
 
-        if (_receiveLock.CurrentCount == 0)
-            _receiveLock.Release();
+        if (m_receiveLock.CurrentCount == 0)
+            m_receiveLock.Release();
 
         return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
     }
@@ -180,47 +193,38 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        if (m_cancellationToken.IsCancellationRequested)
+        if (this.m_cancellationToken.IsCancellationRequested)
+        {
             return;
-
-        _receiveLock.Wait(m_cancellationToken);
-
-        var eventType = e.EventType;
-
-        try
-        {
-            var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
-            var bytes = this.m_byteBlock.Memory.GetArray();
-            var r = this.m_serialPort.Read(bytes.Array, 0, length);
-            this.m_receiveCounter.Increment(r);
-            var serialOperationResult = new SerialOperationResult(r, eventType);
-            this.m_core.SetResult(serialOperationResult);
         }
-        catch (Exception ex)
+
+        while (this.m_serialPort.BytesToRead > 0)
         {
-            // 设置任务源的异常
-            m_core.SetException(ex);
+            try
+            {
+                this.m_receiveLock.Wait(this.m_cancellationToken);
+
+                var eventType = e.EventType;
+
+                var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
+                var bytes = this.m_byteBlock.Memory.GetArray();
+                var r = this.m_serialPort.Read(bytes.Array, 0, length);
+                this.m_receiveCounter.Increment(r);
+                var serialOperationResult = new SerialOperationResult(r, eventType);
+                this.m_core.SetResult(serialOperationResult);
+            }
+            catch (Exception ex)
+            {
+                // 设置任务源的异常
+                this.m_core.SetException(ex);
+                break;
+            }
         }
     }
 
     private void SetBuffer(ByteBlock byteBlock)
     {
         this.m_byteBlock = byteBlock;
-    }
-
-    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short token)
-    {
-        return this.m_core.GetStatus(token);
-    }
-
-    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-    {
-        this.m_core.OnCompleted(continuation, state, token, flags);
-    }
-
-    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short token)
-    {
-        return this.m_core.GetResult(token);
     }
 }
 
