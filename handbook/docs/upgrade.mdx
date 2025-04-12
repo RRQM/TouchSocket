@@ -18,6 +18,28 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+
+## v3.0.25
+
+**更新日期：** 2025.4.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.SerialPort
+
+- &nbsp;<Tag>修复</Tag> 接收数据时，如果业务出现延迟，则会导致接收失败的异常bug。 [#IBZHN2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBZHN2)
+
+***
+
+<details>
+<summary>v3.0</summary>
+<div>
+
 ## v3.0.21(3)(4)
 
 **更新日期：** 2025.4.6
@@ -629,6 +651,13 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ***
 
+</div>
+</details>
+
+<details>
+<summary>v2.1</summary>
+<div>
+
 ## v2.1.10
 
 **更新日期：** 2024.10.25
@@ -826,8 +855,13 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ***
 
+</div>
+</details>
 
-:::
+
+<details>
+<summary>v2.0</summary>
+<div>
 
 ## v2.0.18
 
@@ -1157,6 +1191,13 @@ import Highlight from '@site/src/components/Highlight.js';
 ---
 
 
+</div>
+</details>
+
+<details>
+<summary>v1.3</summary>
+<div>
+
 ## v1.3
 
 更新日期：2023.3.1
@@ -1168,6 +1209,13 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>修复</Tag> TcpClient在UseReconnect插件时，Disconnect事件不触发bug。
   - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
 ---
+
+</div>
+</details>
+
+<details>
+<summary>v1.2</summary>
+<div>
 
 ## v1.2
 
@@ -1190,6 +1238,13 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>调整</Tag> 将BytePool由静态调整为实例，且由其Default实例作为默认。
 ---
 
+</div>
+</details>
+
+<details>
+<summary>v1.1</summary>
+<div>
+
 ## v1.1
 
 更新日期：2023.1.13
@@ -1204,6 +1259,13 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
   - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
 ---
+
+</div>
+</details>
+
+<details>
+<summary>v1.0</summary>
+<div>
 
 ## v1.0.0
 
@@ -1250,6 +1312,12 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ---
 
+</div>
+</details>
+
+<details>
+<summary>v0</summary>
+<div>
 
 ## 版本号: 0.7.0
 更新日期：2022.9.21
@@ -1484,3 +1552,8 @@ RpcStore使用变更
 如果是仅有一个Rpc解析器，那么可以直接删除RpcStore的声明，从而使用对应的**解析器实例**，直接注册服务。然后可以通过其属性RpcStore，获取到具体的RpcStore实例。
 
 如果是有多个解析器，那么，首先可以使用任意一个解析器的RpcStore属性实例，作为主RpcStore，然后添加其他解析器。当然也可以直接new RpcStore，然后统一管理解析器。其中构造函数中的Container容器，可以直接new Container()，但是更建议使用和解析器相同的容器，这样注入的服务会变得全局可用。
+
+
+</div>
+</details>
+
