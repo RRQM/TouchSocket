@@ -1,0 +1,57 @@
+---
+id: rpcdispatcher
+title: Rpc执行调度器
+---
+
+## 一、说明
+
+Rpc执行调度器（`RpcDispatcher`）是`TouchSocket.Rpc`框架中的核心组件之一，用于实现远程过程调用（`Rpc`）的服务执行方式。
+
+目前，内置了`ConcurrencyDispatcher`、`QueueRpcDispatcher`、`ImmediateRpcDispatcher`三种调度器，分别用于实现不同场景下的服务执行方式。
+
+## 二、调度器说明
+
+`RpcDispatcher`是直接应用于`Rpc Caller`的。所以它在被调用方可能是以多个实例的形式存在。
+
+例如`DmtpRpc`，对于服务端而言，如果有多个`Rpc`客户端连接，那么每个连接都会拥有一个`RpcDispatcher`实例。
+
+### 2.1 并发调度器（ConcurrencyDispatcher）
+
+并发调度器（`ConcurrencyDispatcher`）是在收到`Rpc`请求后，直接使用线程池（`Task.Run`）直接执行`Rpc`。所以它是完全并发的。
+
+### 2.2 队列调度器（QueueRpcDispatcher）
+
+队列调度器（`QueueRpcDispatcher`）是在收到`Rpc`请求后，先将请求放入队列中，再通过线程（`Task.Run`）执行Rpc。所以它在当前实例中（可以简单理解为一个连接）是有顺序的。
+
+
+### 2.3 立即调度器（ImmediateRpcDispatcher）
+
+立即调度器（`ImmediateRpcDispatcher`）是在收到`Rpc`请求后，使用`Rpc`接收线程，直接执行`Rpc`。所以它的同步性是依赖接收线程的。
+
+## 三、使用
+
+`Rpc`调度器并非强制要求，具体还得看`Rpc`框架本身支不支持多样的调度方式。
+
+例如，`DmtpRpc`框架就支持所有调度方式，但是对于WebApi框架，它只支持`ImmediateRpcDispatcher`。
+
+所以实际使用还得看具体框架的支持情况。
+
+## 四、可重入性
+
+可重入性也表示的是在一个`Caller`的`Rpc`调用中的并发性。不过可以使用`[Reenterable]`特性来控制方法、服务级别的并发。
+
+可重入性会受调度器的完全影响。如果调度器本身不支持可重入性，那么它将不能支持可重入性。
+
+例如，对于并发调度器（`ConcurrencyDispatcher`），它默认支持可重入性。
+
+但是对于有的`Rpc`方法，我们希望仅这个方法不支持可重入性，那么我们可以使用`[Reenterable]`特性来控制。
+
+```csharp {3} showLineNumbers
+interface IMyRpcServer : IRpcServer
+{
+    [Reenterable(false)]
+    [DmtpRpc(MethodInvoke = true)]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    Task Output(int value);
+}
+```
+
