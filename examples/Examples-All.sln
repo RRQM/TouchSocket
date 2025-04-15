@@ -339,6 +339,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpStressTestingConsoleApp"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AotDynamicMethodConsoleApp", "Core\AotDynamicMethodConsoleApp\AotDynamicMethodConsoleApp.csproj", "{F9EC1E7C-C609-4F12-A736-47B52885F428}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcDispatcherConsoleApp", "Rpc\RpcDispatcherConsoleApp\RpcDispatcherConsoleApp.csproj", "{EE4D59CB-3126-4660-8661-8150D43F65EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -781,6 +783,10 @@ Global
 		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9EC1E7C-C609-4F12-A736-47B52885F428}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE4D59CB-3126-4660-8661-8150D43F65EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE4D59CB-3126-4660-8661-8150D43F65EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE4D59CB-3126-4660-8661-8150D43F65EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE4D59CB-3126-4660-8661-8150D43F65EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -929,6 +935,7 @@ Global
 		{6D38341E-8947-3E47-50FB-1EBC7E1C5295} = {C01AF93B-0105-46EE-AAEF-7B2944AEA94D}
 		{C08154AB-6178-6AB9-C15B-85CA873B790E} = {C01AF93B-0105-46EE-AAEF-7B2944AEA94D}
 		{F9EC1E7C-C609-4F12-A736-47B52885F428} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
+		{EE4D59CB-3126-4660-8661-8150D43F65EF} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

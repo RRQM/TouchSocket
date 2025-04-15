@@ -481,6 +481,11 @@ module.exports =
           "type": "doc",
           "id": "rpcratelimiting",
           "label": "15.6 Rpc访问速率限制"
+        },
+        {
+          "type": "doc",
+          "id": "rpcdispatcher",
+          "label": "15.7 Rpc执行调度器"
         }
       ]
     },
