@@ -76,11 +76,17 @@ internal sealed partial class InternalWebSocket : IWebSocket
                 await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
-        await this.m_httpClientBase.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-        await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-        await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        
+        if (this.m_isServer)
+        {
+            await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+            await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else
+        {
+            await this.m_httpClientBase.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+            await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
     }
 
     public async Task PingAsync()
