@@ -313,6 +313,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                 {
                     var openApiParameter = this.GetParameter(parameter.ParameterInfo);
                     openApiParameter.In = "query";
+                    openApiParameter.Description = parameter.ParameterDesc;
                     this.AddSchemaType(parameter.Type, schemaTypeList);
                     openApiParameters.Add(openApiParameter);
                 }

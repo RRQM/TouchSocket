@@ -21,6 +21,9 @@ internal class OpenApiParameter
 
     [JsonProperty("in")]
     public string In { get; set; }
+    
+    [JsonProperty("description")]
+    public string Description { get; set; }
 
     [JsonProperty("schema")]
     public OpenApiSchema Schema { get; set; }
