@@ -30,4 +30,7 @@ internal class OpenApiProperty
 
     [JsonProperty("items")]
     public OpenApiProperty Items { get; set; }
+    
+    [JsonProperty("description")]
+    public string Description { get; set; }
 }
