@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<TouchSocketVersion>3.0.25</TouchSocketVersion>
+		<TouchSocketVersion>3.0.26</TouchSocketVersion>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
