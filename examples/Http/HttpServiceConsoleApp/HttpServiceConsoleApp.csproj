@@ -21,7 +21,7 @@
   </ItemGroup>-->
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Http" Version="3.0.25" />
+    <PackageReference Include="TouchSocket.Http" Version="3.0.26" />
   </ItemGroup>
 
   <ItemGroup>
