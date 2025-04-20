@@ -19,6 +19,31 @@ import Highlight from '@site/src/components/Highlight.js';
 :::
 
 
+## v3.0.26
+
+**更新日期：** 2025.4.20
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>修复</Tag> `RpcActionFilterAttribute`在`RpcImplementation`程序集中使用时无效bug。 [#IC0IB0](https://gitee.com/RRQM_Home/TouchSocket/issues/IC0IB0)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `WebSocket`服务端`WebSocket`使用`AsyncClose()`主动关闭连接时引发`NullReferenceException`异常。 [#IC1FZ8](https://gitee.com/RRQM_Home/TouchSocket/issues/IC1FZ8)
+
+***
+
+<details>
+<summary>v3.0</summary>
+<div>
+
 ## v3.0.25
 
 **更新日期：** 2025.4.12
@@ -35,10 +60,6 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> 接收数据时，如果业务出现延迟，则会导致接收失败的异常bug。 [#IBZHN2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBZHN2)
 
 ***
-
-<details>
-<summary>v3.0</summary>
-<div>
 
 ## v3.0.21(3)(4)
 
