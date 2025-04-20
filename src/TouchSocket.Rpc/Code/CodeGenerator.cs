@@ -421,6 +421,25 @@ public static class CodeGenerator
         }
     }
 
+    public static MethodInfo GetToMethodInfo(MethodInfo method, Type serverFromType, Type serverToType)
+    {
+        if (serverFromType == serverToType)
+        {
+            return method;
+        }
+
+        var map = serverToType.GetInterfaceMap(serverFromType);
+        for (int i = 0; i < map.InterfaceMethods.Length; i++)
+        {
+            if (map.InterfaceMethods[i] == method)
+            {
+                var targetMethod = map.TargetMethods[i];
+                return targetMethod;
+            }
+        }
+        throw new RpcException($"未找到{serverFromType}的映射方法。");
+    }
+
     /// <summary>
     /// 从类型获取函数实例
     /// </summary>

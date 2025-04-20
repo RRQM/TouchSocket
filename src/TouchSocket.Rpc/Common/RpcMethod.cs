@@ -49,20 +49,20 @@ public sealed class RpcMethod : Method
 
         this.Parameters = method.GetParameters().Select(a => new RpcParameter(a)).ToArray();
 
-        var fromMethodInfos = new Dictionary<string, MethodInfo>();
-        CodeGenerator.GetMethodInfos(this.ServerFromType, ref fromMethodInfos);
+        //var fromMethodInfos = new Dictionary<string, MethodInfo>();
+        //CodeGenerator.GetMethodInfos(this.ServerFromType, ref fromMethodInfos);
 
-        var toMethodInfos = new Dictionary<string, MethodInfo>();
-        CodeGenerator.GetMethodInfos(this.ServerToType, ref toMethodInfos);
+        //var toMethodInfos = new Dictionary<string, MethodInfo>();
+        //CodeGenerator.GetMethodInfos(this.ServerToType, ref toMethodInfos);
 
         var attributes = method.GetCustomAttributes<RpcAttribute>();
         if (attributes.Any())
         {
-            if (!toMethodInfos.TryGetValue(CodeGenerator.GetMethodId(method), out var toMethod))
-            {
-                throw new InvalidOperationException($"没有找到方法{method.Name}的实现");
-            }
-            this.ToMethodInfo = toMethod;
+            //if (!toMethodInfos.TryGetValue(CodeGenerator.GetMethodId(method), out var toMethod))
+            //{
+            //    throw new InvalidOperationException($"没有找到方法{method.Name}的实现");
+            //}
+            this.ToMethodInfo = CodeGenerator.GetToMethodInfo(method, serverFromType, serverToType);
 
             this.ParameterNames = this.Parameters.Select(a => a.Name).ToArray();
             this.ParameterTypes = this.Parameters.Select(a => a.Type).ToArray();

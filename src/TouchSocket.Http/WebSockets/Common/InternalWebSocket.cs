@@ -76,7 +76,6 @@ internal sealed partial class InternalWebSocket : IWebSocket
                 await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
-        
         if (this.m_isServer)
         {
             await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
