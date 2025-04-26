@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -30,5 +31,5 @@ public interface IHttpSessionClient : IHttpSession, ISessionClient, ITcpListenab
     /// 转化Protocol协议标识为<see cref="Protocol.WebSocket"/>
     /// </summary>
     /// <param name="httpContext">Http上下文</param>
-    Task<bool> SwitchProtocolToWebSocketAsync(HttpContext httpContext);
+    Task<Result> SwitchProtocolToWebSocketAsync(HttpContext httpContext);
 }

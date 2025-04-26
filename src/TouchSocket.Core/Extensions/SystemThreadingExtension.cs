@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -220,5 +221,90 @@ public static class SystemThreadingExtension
         task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
     }
 
-    #endregion Task
+    /// <summary>
+    /// 如果给定的 <see cref="CancellationToken"/> 被取消，则取消 <see cref="TaskCompletionSource{TResult}.Task"/>。
+    /// </summary>
+    /// <typeparam name="T">成功完成的 <see cref="Task{TResult}"/> 返回的值的类型。</typeparam>
+    /// <param name="taskCompletionSource">要取消的 <see cref="TaskCompletionSource{TResult}"/>。</param>
+    /// <param name="cancellationToken">用于取消的 <see cref="CancellationToken"/>。</param>
+    public static void AttachCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken)
+    {
+        if (taskCompletionSource == null)
+        {
+            throw new ArgumentNullException(nameof(taskCompletionSource));
+        }
+
+        if (cancellationToken.CanBeCanceled && !taskCompletionSource.Task.IsCompleted)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                taskCompletionSource.TrySetCanceled();
+            }
+            else
+            {
+                var tuple = new CancelableTaskCompletionSource<T>(taskCompletionSource, cancellationToken);
+                tuple.CancellationTokenRegistration = cancellationToken.Register(
+                    s =>
+                    {
+                        var t = (CancelableTaskCompletionSource<T>)s!;
+                        if (t.TaskCompletionSource.TrySetCanceled())
+                        {
+                        }
+                    },
+                    tuple,
+                    useSynchronizationContext: false);
+
+                taskCompletionSource.Task.ContinueWith(
+                    (_, s) =>
+                    {
+                        var t = (CancelableTaskCompletionSource<T>)s!;
+                        if (t.ContinuationScheduled || !t.OnOwnerThread)
+                        {
+                            t.CancellationTokenRegistration.Dispose();
+                        }
+                        else if (!t.CancellationToken.IsCancellationRequested)
+                        {
+                            ThreadPool.QueueUserWorkItem(
+                                s2 =>
+                                {
+                                    try
+                                    {
+                                        var t2 = (CancelableTaskCompletionSource<T>)s2!;
+                                        t2.CancellationTokenRegistration.Dispose();
+                                    }
+                                    catch
+                                    {
+                                    }
+                                },
+                                s);
+                        }
+                    },
+                    tuple,
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+                tuple.ContinuationScheduled = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 表示一个可取消的 TaskCompletionSource。
+    /// </summary>
+    /// <typeparam name="T">成功完成的 <see cref="Task{TResult}"/> 返回的值的类型。</typeparam>
+    private class CancelableTaskCompletionSource<T>
+    {
+        public TaskCompletionSource<T> TaskCompletionSource { get; }
+        public CancellationToken CancellationToken { get; }
+        public CancellationTokenRegistration CancellationTokenRegistration { get; set; }
+        public bool ContinuationScheduled { get; set; }
+        public bool OnOwnerThread => Thread.CurrentThread.IsThreadPoolThread;
+
+        public CancelableTaskCompletionSource(TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken)
+        {
+            TaskCompletionSource = taskCompletionSource;
+            CancellationToken = cancellationToken;
+        }
+    }
+    #endregion
 }

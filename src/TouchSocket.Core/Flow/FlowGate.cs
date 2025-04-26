@@ -41,7 +41,7 @@ public class FlowGate : Counter
         {
             if (this.m_count > this.Maximum)
             {
-                var time = (DateTime.UtcNow - this.LastIncrement);
+                var time = (DateTimeOffset.UtcNow - this.LastIncrement);
                 var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
                 waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
                 Thread.Sleep(waitTime);
@@ -67,7 +67,7 @@ public class FlowGate : Counter
             if (this.m_count > this.Maximum)
             {
                 // 计算自上次增加以来的时间差
-                var time = (DateTime.UtcNow - this.LastIncrement);
+                var time = (DateTimeOffset.UtcNow - this.LastIncrement);
                 // 计算还需要等待的时间，确保等待时间不为负
                 var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
                 // 将等待时间小于0的情况调整为0

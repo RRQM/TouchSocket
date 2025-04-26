@@ -28,7 +28,7 @@ public class Counter
     /// <summary>
     /// 最后一次递增时间
     /// </summary>
-    protected DateTime m_lastIncrement;
+    protected DateTimeOffset m_lastIncrement;
 
     /// <summary>
     /// 周期内的累计计数值。
@@ -38,7 +38,7 @@ public class Counter
     /// <summary>
     /// 最后一次递增时间
     /// </summary>
-    public DateTime LastIncrement => this.m_lastIncrement;
+    public DateTimeOffset LastIncrement => this.m_lastIncrement;
 
     /// <summary>
     /// 当达到一个周期时触发。
@@ -61,7 +61,7 @@ public class Counter
         bool isPeriod;
 
         // 获取当前时间
-        var dateTime = DateTime.UtcNow;
+        var dateTime = DateTimeOffset.UtcNow;
 
         // 检查自上次递增以来是否超过了设定的周期时间
         if (dateTime - this.LastIncrement > this.Period)

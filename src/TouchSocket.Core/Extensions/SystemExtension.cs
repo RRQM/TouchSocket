@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Buffers;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -792,6 +793,17 @@ public static class SystemExtension
     }
 
     /// <summary>
+    /// 将DateTimeOffset对象转换为GMT格式的字符串。
+    /// </summary>
+    /// <param name="dt">要转换的DateTime对象。</param>
+    /// <returns>转换后的GMT格式字符串。</returns>
+    public static string ToGMTString(this DateTimeOffset dt)
+    {
+        // 使用"r"格式字符串和InvariantCulture确保GMT格式的正确性
+        return dt.ToString("r", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
     /// 将DateTime对象转换为自1970年1月1日以来的毫秒数的32位无符号整数表示。
     /// </summary>
     /// <param name="time">要转换的DateTime对象。</param>
@@ -825,12 +837,16 @@ public static class SystemExtension
     /// <param name="memory">要读取数据到的内存区域。</param>
     /// <param name="cancellationToken">用于取消操作的令牌。</param>
     /// <returns>读取到的数据长度。</returns>
-    public static Task<int> ReadAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken)
+    public static async Task<int> ReadAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken)
     {
+        if (memory.IsEmpty)
+        {
+            return 0;
+        }
         // 获取内存区域对应的数组
         var bytes = memory.GetArray();
         // 调用异步方法读取数据到指定的数组区域
-        return stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count);
+        return await stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -841,10 +857,14 @@ public static class SystemExtension
     /// <returns>读取到的数据长度。</returns>
     public static int Read(this Stream stream, Span<byte> span)
     {
+        if (span.IsEmpty)
+        {
+            return 0;
+        }
         // 获取字节跨度的长度
         var len = span.Length;
         // 从字节池中租用一个缓冲区
-        var buffer = BytePool.Default.Rent(len);
+        var buffer = ArrayPool<byte>.Shared.Rent(len);
         try
         {
             // 从流中读取数据到缓冲区
@@ -857,7 +877,7 @@ public static class SystemExtension
         finally
         {
             // 将缓冲区归还到字节池
-            BytePool.Default.Return(buffer);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
@@ -870,7 +890,7 @@ public static class SystemExtension
     /// <remarks>
     /// 此方法利用内存块的 GetArray 方法获取数组段信息，然后使用现有的 WriteAsync 方法异步地将内容写入流中，提高了写入操作的效率和灵活性。
     /// </remarks>
-    public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static async Task WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var segment = memory.GetArray();
         await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token);
@@ -886,10 +906,14 @@ public static class SystemExtension
     /// </remarks>
     public static void Write(this Stream stream, ReadOnlySpan<byte> span)
     {
+        if (span.IsEmpty)
+        {
+            return;
+        }
         // 获取字节跨度的长度
         var len = span.Length;
         // 从字节池中租用一个缓冲区
-        var buffer = BytePool.Default.Rent(len);
+        var buffer = ArrayPool<byte>.Shared.Rent(len);
         try
         {
             // 将字节跨度的内容复制到租用的缓冲区中
@@ -901,7 +925,7 @@ public static class SystemExtension
         finally
         {
             // 将使用完的缓冲区归还到字节池，以便其他操作重用
-            BytePool.Default.Return(buffer);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 #endif

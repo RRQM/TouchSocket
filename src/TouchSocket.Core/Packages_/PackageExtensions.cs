@@ -26,7 +26,7 @@ public static class PackageExtensions
     public static byte[] PackageAsBytes<TPackage>(this TPackage package) where TPackage : IPackage
     {
         // 创建一个字节块对象，用于存储序列化的字节数据
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         try
         {
             // 调用IPackage接口的Package方法，将实例序列化到字节块中

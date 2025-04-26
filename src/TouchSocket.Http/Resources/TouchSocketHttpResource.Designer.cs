@@ -70,11 +70,29 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Protocol is incorrect. 的本地化字符串。
+        /// </summary>
+        public static string ProtocolIsIncorrect {
+            get {
+                return ResourceManager.GetString("ProtocolIsIncorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Proactively reject WebSocket connection, information: {0} 的本地化字符串。
         /// </summary>
         public static string RefuseWebSocketConnection {
             get {
                 return ResourceManager.GetString("RefuseWebSocketConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The current HTTP request has been responded to and cannot be processed again. 的本地化字符串。
+        /// </summary>
+        public static string RequestHasBeenResponded {
+            get {
+                return ResourceManager.GetString("RequestHasBeenResponded", resourceCulture);
             }
         }
         

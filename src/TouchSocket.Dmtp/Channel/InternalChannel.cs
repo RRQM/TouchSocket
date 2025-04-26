@@ -28,13 +28,13 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
     private readonly ConcurrentQueue<ChannelPackage> m_dataQueue;
     private readonly FlowGate m_flowGate;
     private ByteBlock m_currentData;
-    private DateTime m_lastOperationTime;
+    private DateTimeOffset m_lastOperationTime;
     private long m_maxSpeed;
 
     public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
     {
         this.m_actor = client;
-        this.m_lastOperationTime = DateTime.UtcNow;
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
         this.TargetId = targetId;
         this.Status = ChannelStatus.Default;
         this.m_dataQueue = new ConcurrentQueue<ChannelPackage>();
@@ -66,7 +66,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
 
     public string LastOperationMes { get; private set; }
 
-    public DateTime LastOperationTime { get => this.m_lastOperationTime; }
+    public DateTimeOffset LastOperationTime => this.m_lastOperationTime;
 
     public long MaxSpeed
     {
@@ -113,7 +113,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
                 TargetId = this.TargetId
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_lastOperationTime = DateTime.UtcNow;
+            this.m_lastOperationTime = DateTimeOffset.UtcNow;
         }
         catch
         {
@@ -138,7 +138,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
             TargetId = this.TargetId
         };
         await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_lastOperationTime = DateTime.UtcNow;
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
     }
 
     public async Task HoldOnAsync(string operationMes = null)
@@ -157,7 +157,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
             TargetId = this.TargetId
         };
         await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_lastOperationTime = DateTime.UtcNow;
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
     }
 
     protected override void Dispose(bool disposing)
@@ -181,7 +181,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
                 TargetId = this.TargetId
             };
             this.m_actor.SendChannelPackageAsync(channelPackage).GetFalseAwaitResult();
-            this.m_lastOperationTime = DateTime.UtcNow;
+            this.m_lastOperationTime = DateTimeOffset.UtcNow;
         }
         catch
         {
@@ -331,13 +331,13 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
         using (channelPackage.Data)
         {
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_lastOperationTime = DateTime.UtcNow;
+            this.m_lastOperationTime = DateTimeOffset.UtcNow;
         }
     }
 
     internal void ReceivedData(ChannelPackage channelPackage)
     {
-        this.m_lastOperationTime = DateTime.UtcNow;
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
         if (channelPackage.RunNow)
         {
             switch (channelPackage.DataType)
@@ -435,14 +435,14 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
     private bool Wait()
     {
         var spinWait = new SpinWait();
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         while (true)
         {
-            if (this.m_dataQueue.Count > 0)
+            if (!this.m_dataQueue.IsEmpty)
             {
                 return true;
             }
-            if (DateTime.UtcNow - now > this.Timeout)
+            if (DateTimeOffset.UtcNow - now > this.Timeout)
             {
                 return false;
             }
@@ -452,14 +452,14 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
 
     private async Task<bool> WaitAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         while (true)
         {
-            if (this.m_dataQueue.Count > 0)
+            if (!this.m_dataQueue.IsEmpty) // Replaced Count with IsEmpty  
             {
                 return true;
             }
-            if (DateTime.UtcNow - now > this.Timeout)
+            if (DateTimeOffset.UtcNow - now > this.Timeout)
             {
                 return false;
             }

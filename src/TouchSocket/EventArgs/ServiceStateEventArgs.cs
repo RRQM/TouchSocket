@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 服务器状态事件参数
 /// </summary>
-public class ServiceStateEventArgs : MsgPermitEventArgs
+public class ServiceStateEventArgs : MsgEventArgs
 {
     /// <summary>
     /// 初始化服务器状态事件参数类

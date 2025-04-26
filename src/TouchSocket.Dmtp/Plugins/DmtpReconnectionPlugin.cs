@@ -33,7 +33,7 @@ internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ID
             return false;
         }
 
-        if (DateTime.UtcNow - client.GetLastActiveTime() < this.Tick)
+        if (DateTimeOffset.UtcNow - client.GetLastActiveTime() < this.Tick)
         {
             return null;
         }

@@ -98,7 +98,7 @@ public readonly struct Result<T> : IResult<T>
     {
         if (value is null)
         {
-            return new Result<T>(ResultCode.Fail, "value is null.");
+            return new Result<T>(ResultCode.Failure, "value is null.");
         }
         return new Result<T>(value);
     }

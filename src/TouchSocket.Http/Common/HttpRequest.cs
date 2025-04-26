@@ -168,15 +168,15 @@ public class HttpRequest : HttpBase
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken = default)
+    public override async ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (this.ContentLength == 0)
         {
-            return InternalBlockResult.Completed;
+            return HttpReadOnlyMemoryBlockResult.Completed;
         }
         if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
         {
-            return new InternalBlockResult(this.m_contentMemory, true);
+            return HttpReadOnlyMemoryBlockResult.FromResult(this.m_contentMemory);
         }
 
         var blockResult = await base.ReadAsync(cancellationToken);

@@ -15,103 +15,136 @@ using System;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// <inheritdoc/>
+/// 日志扩展方法
 /// </summary>
 public static class LoggerExtensions
 {
-    #region LoggerGroup日志
+    #region LoggerGroup 日志
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出中断日志
+    /// 在指定类型的日志记录器中记录严重级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Critical<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Critical, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出调试日志
+    /// 在指定类型的日志记录器中记录严重级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Critical<TLog>(this ILog logger, object source, string msg) where TLog : ILog
+    {
+        logger.Log<TLog>(LogLevel.Critical, source, msg, null);
+    }
+
+    /// <summary>
+    /// 在指定类型的日志记录器中记录调试级别日志
+    /// </summary>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Debug<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Debug, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出错误日志
+    /// 在指定类型的日志记录器中记录调试级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Debug<TLog>(this ILog logger, object source, string msg) where TLog : ILog
+    {
+        logger.Log<TLog>(LogLevel.Debug, source, msg, null);
+    }
+
+    /// <summary>
+    /// 在指定类型的日志记录器中记录错误级别日志
+    /// </summary>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Error<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Error, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出错误日志
+    /// 在指定类型的日志记录器中记录错误级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Error<TLog>(this ILog logger, object source, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Error, source, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出异常日志
+    /// 在指定类型的日志记录器中记录异常日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="ex"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="ex">异常实例</param>
     public static void Exception<TLog>(this ILog logger, Exception ex) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Error, null, ex.Message, ex);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出异常日志
+    /// 在指定类型的日志记录器中记录异常日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="ex"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="ex">异常实例</param>
     public static void Exception<TLog>(this ILog logger, object source, Exception ex) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Error, source, ex.Message, ex);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出消息日志
+    /// 在指定类型的日志记录器中记录信息级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Info<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Info, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出消息日志
+    /// 在指定类型的日志记录器中记录信息级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Info<TLog>(this ILog logger, object source, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Info, source, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出日志
+    /// 在指定类型的日志记录器中记录日志
     /// </summary>
-    /// <param name="logLevel"></param>
-    /// <param name="source"></param>
-    /// <param name="message"></param>
-    /// <param name="exception"></param>
-    /// <param name="logger"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="logLevel">日志级别</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="message">日志消息</param>
+    /// <param name="exception">异常实例</param>
     public static void Log<TLog>(this ILog logger, LogLevel logLevel, object source, string message, Exception exception) where TLog : ILog
     {
         if (logger is LoggerGroup loggerGroup)
@@ -121,165 +154,225 @@ public static class LoggerExtensions
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出详细日志
+    /// 在指定类型的日志记录器中记录跟踪级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Trace<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Trace, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出警示日志
+    /// 在指定类型的日志记录器中记录跟踪级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Trace<TLog>(this ILog logger, object source, string msg) where TLog : ILog
+    {
+        logger.Log<TLog>(LogLevel.Trace, source, msg, null);
+    }
+
+    /// <summary>
+    /// 在指定类型的日志记录器中记录警告级别日志
+    /// </summary>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Warning<TLog>(this ILog logger, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Warning, null, msg, null);
     }
 
     /// <summary>
-    /// 指定在<see cref="LoggerGroup"/>中的特定日志类型中输出警示日志
+    /// 在指定类型的日志记录器中记录警告级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <typeparam name="TLog">日志记录器类型</typeparam>
+    /// <param name="logger">日志组实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Warning<TLog>(this ILog logger, object source, string msg) where TLog : ILog
     {
         logger.Log<TLog>(LogLevel.Warning, source, msg, null);
     }
 
-    #endregion LoggerGroup日志
+    #endregion
 
-    #region 日志
+    #region 普通日志
 
     /// <summary>
-    /// 输出中断日志
+    /// 记录严重级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Critical(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Critical, null, msg, null);
     }
 
     /// <summary>
-    /// 输出调试日志
+    /// 记录严重级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Critical(this ILog logger, object source, string msg)
+    {
+        logger.Log(LogLevel.Critical, source, msg, null);
+    }
+
+    /// <summary>
+    /// 记录调试级别日志
+    /// </summary>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Debug(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Debug, null, msg, null);
     }
 
     /// <summary>
-    /// 输出错误日志
+    /// 记录调试级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Debug(this ILog logger, object source, string msg)
+    {
+        logger.Log(LogLevel.Debug, source, msg, null);
+    }
+
+
+    /// <summary>
+    /// 记录调试级别日志
+    /// </summary>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="ex">由异常来的日志消息</param>
+    public static void Debug(this ILog logger, object source, Exception ex)
+    {
+        logger.Log(LogLevel.Debug, source, ex.Message, ex);
+    }
+
+    /// <summary>
+    /// 记录错误级别日志
+    /// </summary>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Error(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Error, null, msg, null);
     }
 
     /// <summary>
-    /// 输出错误日志
+    /// 记录错误级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Error(this ILog logger, object source, string msg)
     {
         logger.Log(LogLevel.Error, source, msg, null);
     }
 
     /// <summary>
-    /// 输出异常日志
+    /// 记录异常日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="ex"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="ex">异常实例</param>
     public static void Exception(this ILog logger, Exception ex)
     {
         logger.Log(LogLevel.Error, null, ex.Message, ex);
     }
 
     /// <summary>
-    /// 输出异常日志
+    /// 记录异常日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="ex"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="ex">异常实例</param>
     public static void Exception(this ILog logger, object source, Exception ex)
     {
         logger.Log(LogLevel.Error, source, ex.Message, ex);
     }
 
     /// <summary>
-    /// 输出异常日志
+    /// 记录异常日志（包含自定义消息）
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
-    /// <param name="ex"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">自定义消息</param>
+    /// <param name="ex">异常实例</param>
     public static void Exception(this ILog logger, object source, string msg, Exception ex)
     {
         logger.Log(LogLevel.Error, source, msg, ex);
     }
 
     /// <summary>
-    /// 输出消息日志
+    /// 记录信息级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Info(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Info, null, msg, null);
     }
 
     /// <summary>
-    /// 输出消息日志
+    /// 记录信息级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Info(this ILog logger, object source, string msg)
     {
         logger.Log(LogLevel.Info, source, msg, null);
     }
 
     /// <summary>
-    /// 输出详细日志
+    /// 记录跟踪级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Trace(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Trace, null, msg, null);
     }
 
     /// <summary>
-    /// 输出警示日志
+    /// 记录跟踪级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
+    public static void Trace(this ILog logger, object source, string msg)
+    {
+        logger.Log(LogLevel.Trace, source, msg, null);
+    }
+
+    /// <summary>
+    /// 记录警告级别日志
+    /// </summary>
+    /// <param name="logger">日志实例</param>
+    /// <param name="msg">日志消息</param>
     public static void Warning(this ILog logger, string msg)
     {
         logger.Log(LogLevel.Warning, null, msg, null);
     }
 
     /// <summary>
-    /// 输出警示日志
+    /// 记录警告级别日志
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="source"></param>
-    /// <param name="msg"></param>
+    /// <param name="logger">日志实例</param>
+    /// <param name="source">日志来源</param>
+    /// <param name="msg">日志消息</param>
     public static void Warning(this ILog logger, object source, string msg)
     {
         logger.Log(LogLevel.Warning, source, msg, null);
     }
 
-    #endregion 日志
+    #endregion
 }

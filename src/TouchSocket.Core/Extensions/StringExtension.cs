@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,11 +33,6 @@ public static class StringExtension
     public const string DefaultSpaceString = " ";
 
     /// <summary>
-    /// 默认的空格字符串的UTF-8表示。
-    /// </summary>
-    public static ReadOnlySpan<byte> DefaultSpaceUtf8Span => " "u8;
-
-    /// <summary>
     /// 默认的rn字符串的UTF-8表示。
     /// </summary>
     public static ReadOnlySpan<byte> Default_RN_Utf8Span => "\r\n"u8;
@@ -45,6 +41,11 @@ public static class StringExtension
     /// 默认的rnrn字符串的UTF-8表示。
     /// </summary>
     public static ReadOnlySpan<byte> Default_RNRN_Utf8Span => "\r\n\r\n"u8;
+
+    /// <summary>
+    /// 默认的空格字符串的UTF-8表示。
+    /// </summary>
+    public static ReadOnlySpan<byte> DefaultSpaceUtf8Span => " "u8;
 
     /// <summary>
     /// 从Base64转到数组。
@@ -176,6 +177,7 @@ public static class StringExtension
     /// <param name="value"></param>
     /// <param name="destinationType">目标类型必须为基础类型</param>
     /// <returns></returns>
+    /// <exception cref="NotSupportedException">类型转换失败</exception>
     public static object ParseToType(this string value, Type destinationType)
     {
         if (TryParseToType(value, destinationType, out var returnValue))
@@ -183,6 +185,23 @@ public static class StringExtension
             return returnValue;
         }
         ThrowHelper.ThrowNotSupportedException(TouchSocketCoreResource.StringParseToTypeFail.Format(value, destinationType));
+        return default;
+    }
+
+    /// <summary>
+    /// 将字符串解析为指定的类型。
+    /// </summary>
+    /// <typeparam name="T">目标类型。</typeparam>
+    /// <param name="value">要解析的字符串。</param>
+    /// <returns>解析后的目标类型对象。</returns>
+    /// <exception cref="NotSupportedException">类型转换失败</exception>
+    public static T ParseToType<T>(this string value)
+    {
+        if (TryParseToType<T>(value,  out var returnValue))
+        {
+            return returnValue;
+        }
+        ThrowHelper.ThrowNotSupportedException(TouchSocketCoreResource.StringParseToTypeFail.Format(value, typeof(T)));
         return default;
     }
 
@@ -410,5 +429,173 @@ public static class StringExtension
                 returnValue = default;
                 return false;
         }
+    }
+
+   
+    ///<summary>
+    /// 尝试将字符串解析为指定的类型。
+    /// </summary>
+    /// <typeparam name="T">目标类型。</typeparam>
+    /// <param name="value">要解析的字符串。</param>
+    /// <param name="returnValue">解析后的值，输出参数。</param>
+    /// <returns>如果解析成功返回 true，否则返回 false。</returns>
+    public static bool TryParseToType<T>(string value, out T returnValue)
+    {
+        // 处理空或全空格字符串
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            returnValue = default;
+            return true;
+        }
+
+        var type = typeof(T);
+
+        // 处理枚举类型
+        if (type.IsEnum)
+        {
+#if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+            bool success = Enum.TryParse(type, value, out object enumResult);
+            if (success)
+            {
+                returnValue = (T)enumResult;
+                return true;
+            }
+#else
+            try
+            {
+                var enumResult = Enum.Parse(type, value);
+                returnValue = (T)enumResult;
+                return true;
+            }
+            catch
+            {
+            }
+#endif
+            returnValue = default;
+            return false;
+        }
+
+        // 根据 TypeCode 处理基础类型
+        switch (Type.GetTypeCode(type))
+        {
+            case TypeCode.Boolean:
+                if (bool.TryParse(value, out bool boolResult))
+                {
+                    returnValue = Unsafe.As<bool, T>(ref boolResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Char:
+                if (char.TryParse(value, out char charResult))
+                {
+                    returnValue = Unsafe.As<char, T>(ref charResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.SByte:
+                if (sbyte.TryParse(value, out sbyte sbyteResult))
+                {
+                    returnValue = Unsafe.As<sbyte, T>(ref sbyteResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Byte:
+                if (byte.TryParse(value, out byte byteResult))
+                {
+                    returnValue = Unsafe.As<byte, T>(ref byteResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Int16:
+                if (short.TryParse(value, out short shortResult))
+                {
+                    returnValue = Unsafe.As<short, T>(ref shortResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.UInt16:
+                if (ushort.TryParse(value, out ushort ushortResult))
+                {
+                    returnValue = Unsafe.As<ushort, T>(ref ushortResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Int32:
+                if (int.TryParse(value, out int intResult))
+                {
+                    returnValue = Unsafe.As<int, T>(ref intResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.UInt32:
+                if (uint.TryParse(value, out uint uintResult))
+                {
+                    returnValue = Unsafe.As<uint, T>(ref uintResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Int64:
+                if (long.TryParse(value, out long longResult))
+                {
+                    returnValue = Unsafe.As<long, T>(ref longResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.UInt64:
+                if (ulong.TryParse(value, out var ulongResult))
+                {
+                    returnValue = Unsafe.As<ulong, T>(ref ulongResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Single:
+                if (float.TryParse(value, out var floatResult))
+                {
+                    returnValue = Unsafe.As<float, T>(ref floatResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Double:
+                if (double.TryParse(value, out var doubleResult))
+                {
+                    returnValue = Unsafe.As<double, T>(ref doubleResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.Decimal:
+                if (decimal.TryParse(value, out var decimalResult))
+                {
+                    returnValue = Unsafe.As<decimal, T>(ref decimalResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.DateTime:
+                if (DateTime.TryParse(value, out var dateResult))
+                {
+                    returnValue = Unsafe.As<DateTime, T>(ref dateResult);
+                    return true;
+                }
+                break;
+
+            case TypeCode.String:
+                returnValue = Unsafe.As<string, T>(ref value);
+                return true;
+        }
+
+        returnValue = default;
+        return false;
     }
 }

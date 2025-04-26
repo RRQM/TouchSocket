@@ -37,7 +37,7 @@ public class FileResourceLocator : DisposableObject
         this.FileAccess = FileAccess.Read;
         this.FileStorage = FilePool.GetFileStorageForRead(fileResourceInfo.FileInfo.FullName);
         this.LocatorPath = fileResourceInfo.FileInfo.FullName;
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public class FileResourceLocator : DisposableObject
         this.FileResourceInfo = fileResourceInfo;
         this.FileAccess = FileAccess.Write;
         this.FileStorage = FilePool.GetFileStorageForWrite(this.LocatorPath + ExtensionName);
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public class FileResourceLocator : DisposableObject
     /// <summary>
     /// 最后活动时间
     /// </summary>
-    public DateTime LastActiveTime { get; private set; }
+    public DateTimeOffset LastActiveTime { get; private set; }
 
     /// <summary>
     /// 定位器指向的实际文件的全名称。
@@ -96,7 +96,7 @@ public class FileResourceLocator : DisposableObject
     public FileSection GetDefaultOrFailFileSection()
     {
         // 更新最后活跃时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         // 如果文件访问模式为读取，则返回默认值
         if (this.FileAccess == FileAccess.Read)
         {
@@ -116,7 +116,7 @@ public class FileResourceLocator : DisposableObject
     public FileSection[] GetUnfinishedFileSection()
     {
         // 更新最后活跃时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         // 根据文件访问模式决定返回值
         // 如果是读取模式，则返回空数组
         // 否则，返回所有未完成状态的文件片段集合
@@ -134,7 +134,7 @@ public class FileResourceLocator : DisposableObject
     public int ReadBytes(long pos, Span<byte> span)
     {
         // 更新最后一次活动时间，用于跟踪访问时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         // 调用底层文件存储系统的读取方法，读取字节并返回读取的字节数
         return this.FileStorage.Read(pos, span);
     }
@@ -149,7 +149,7 @@ public class FileResourceLocator : DisposableObject
         try
         {
             // 更新上次活跃时间，用于跟踪文件访问器的使用情况。
-            this.LastActiveTime = DateTime.UtcNow;
+            this.LastActiveTime = DateTimeOffset.UtcNow;
             // 检查文件访问权限，确保是读权限。
             if (this.FileAccess != FileAccess.Read)
             {
@@ -199,7 +199,7 @@ public class FileResourceLocator : DisposableObject
     public void ReloadFileResourceInfo(FileResourceInfo fileResourceInfo)
     {
         // 更新资源的最后活跃时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         // 检查新旧资源路径是否一致，如果不一致则抛出异常
         if (fileResourceInfo.FileInfo.FullName != this.FileResourceInfo.FileInfo.FullName)
         {
@@ -217,7 +217,7 @@ public class FileResourceLocator : DisposableObject
     public Result TryFinished()
     {
         // 更新最后一次活跃时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
 
         // 如果是读取模式，则直接返回成功
         if (this.FileAccess == FileAccess.Read)
@@ -230,13 +230,13 @@ public class FileResourceLocator : DisposableObject
             // 检查是否有未完成的文件块
             if (this.GetUnfinishedFileSection().Length > 0)
             {
-                return new Result(ResultCode.Fail, "还有文件块没有完成。");
+                return new Result(ResultCode.Failure, "还有文件块没有完成。");
             }
 
             // 确保文件长度一致
             if (this.FileStorage.Length != this.FileResourceInfo.FileInfo.Length)
             {
-                return new Result(ResultCode.Fail, "文件长度不一致。");
+                return new Result(ResultCode.Failure, "文件长度不一致。");
             }
 
             // 尝试释放文件，最多尝试10次
@@ -277,7 +277,7 @@ public class FileResourceLocator : DisposableObject
     public Result WriteFileSection(FileSection fileSection, ArraySegment<byte> value)
     {
         // 更新最后一次活动时间，用于跟踪文件操作的时间点
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
 
         // 检查当前文件访问模式是否为写，确保操作的正确性
         if (this.FileAccess != FileAccess.Write)
@@ -330,7 +330,7 @@ public class FileResourceLocator : DisposableObject
     public Result WriteFileSection(FileSectionResult fileSectionResult)
     {
         // 更新最后一次活跃时间，用于跟踪最近的访问时间
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
 
         // 检查文件访问权限是否为写，如果是读-only，则返回错误结果
         if (this.FileAccess != FileAccess.Write)

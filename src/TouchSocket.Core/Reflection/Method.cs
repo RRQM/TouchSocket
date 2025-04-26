@@ -107,11 +107,13 @@ public class Method
     /// <param name="targetType">目标类型</param>
     /// <param name="methodName">目标方法</param>
     /// <param name="dynamicBuilderType">指定构建的类型</param>
-    public Method([DynamicallyAccessedMembersAttribute( DynamicallyAccessedMemberTypes.PublicMethods)] Type targetType,string methodName, DynamicBuilderType? dynamicBuilderType = default)
+    public Method([DynamicallyAccessedMembers( DynamicallyAccessedMemberTypes.PublicMethods)] Type targetType,string methodName, DynamicBuilderType? dynamicBuilderType = default)
         :this(targetType.GetMethod(methodName),dynamicBuilderType)
     {
 
     }
+
+
     private bool CreateInvokeFromIL()
     {
         if (this.m_invoker != null)
@@ -391,18 +393,31 @@ public class Method
         for (var i = 0; i < paramTypes.Length; i++)
         {
             if (ps[i].ParameterType.IsByRef)
+            {
                 il.Emit(OpCodes.Ldloca_S, locals[i]);
+            }
             else
+            {
                 il.Emit(OpCodes.Ldloc, locals[i]);
+            }
         }
         if (methodInfo.IsStatic)
+        {
             il.EmitCall(OpCodes.Call, methodInfo, null);
+        }
         else
+        {
             il.EmitCall(OpCodes.Callvirt, methodInfo, null);
+        }
+
         if (methodInfo.ReturnType == typeof(void))
+        {
             il.Emit(OpCodes.Ldnull);
+        }
         else
+        {
             EmitBoxIfNeeded(il, methodInfo.ReturnType);
+        }
 
         for (var i = 0; i < paramTypes.Length; i++)
         {
@@ -412,14 +427,17 @@ public class Method
                 EmitFastInt(il, i);
                 il.Emit(OpCodes.Ldloc, locals[i]);
                 if (locals[i].LocalType.IsValueType)
+                {
                     il.Emit(OpCodes.Box, locals[i].LocalType);
+                }
+
                 il.Emit(OpCodes.Stelem_Ref);
             }
         }
 
         il.Emit(OpCodes.Ret);
-        var invoder = (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
-        return invoder;
+        var invoker= (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
+        return invoker;
     }
 
     /// <summary>

@@ -184,4 +184,16 @@
   <data name="PluginIsNull" xml:space="preserve">
     <value>Plugin '{0}' is null, it may be missing registration information in the container.</value>
   </data>
+  <data name="InvalidAfterCompleted" xml:space="preserve">
+    <value>Invalid after Completed.</value>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>QueueEmpty。</value>
+  </data>
+  <data name="AssertTrueFail" xml:space="preserve">
+    <value>The assertion that the value of '{0}' is true failed, but the actual value is' {1} '.</value>
+  </data>
+  <data name="AssertFalseFail" xml:space="preserve">
+    <value>The assertion that the value of '{0}' is false failed, but the actual value is' {1} '.</value>
+  </data>
 </root>

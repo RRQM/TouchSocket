@@ -16,6 +16,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Buffers;
 
 namespace TouchSocket.Core;
 
@@ -27,7 +28,7 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
 {
     private static ValueByteBlock s_empty = new ValueByteBlock();
     private byte[] m_buffer;
-    private BytePool m_bytePool;
+    private ArrayPool<byte> m_bytePool;
     private int m_dis;
     private bool m_holding;
     private int m_length;
@@ -42,8 +43,8 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
     /// <param name="byteSize">要从字节池租用的字节数。</param>
     public ValueByteBlock(int byteSize)
     {
-        this.m_bytePool = BytePool.Default;
-        this.m_buffer = BytePool.Default.Rent(byteSize);
+        this.m_bytePool = ArrayPool<byte>.Shared;
+        this.m_buffer = this.m_bytePool.Rent(byteSize);
     }
 
     /// <summary>
@@ -51,7 +52,7 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
     /// </summary>
     /// <param name="byteSize">要从字节池租用的字节数。</param>
     /// <param name="bytePool">用于租用字节的 BytePool 实例。</param>
-    public ValueByteBlock(int byteSize, BytePool bytePool)
+    public ValueByteBlock(int byteSize, ArrayPool<byte> bytePool)
     {
         this.m_bytePool = bytePool;
         this.m_buffer = bytePool.Rent(byteSize);
@@ -86,7 +87,7 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
     public static ValueByteBlock Empty => s_empty;
 
     /// <inheritdoc/>
-    public readonly BytePool BytePool => this.m_bytePool;
+    public readonly ArrayPool<byte> BytePool => this.m_bytePool;
 
     /// <inheritdoc/>
     public bool CanRead => this.Using && this.CanReadLength > 0;
@@ -229,7 +230,7 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
         bool canReturn;
         if (this.m_bytePool == null)
         {
-            this.m_bytePool = BytePool.Default;
+            this.m_bytePool = ArrayPool<byte>.Shared;
             canReturn = false;
         }
         else

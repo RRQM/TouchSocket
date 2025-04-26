@@ -13,6 +13,7 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
@@ -21,14 +22,14 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
 {
+    private Task m_beginReconnectTask;
     private bool m_polling;
     private TimeSpan m_tick = TimeSpan.FromSeconds(1);
-    private Task m_beginReconnectTask;
 
     /// <summary>
     /// 重连插件
     /// </summary>
-    public ReconnectionPlugin()
+    protected ReconnectionPlugin()
     {
         this.ActionForConnect = async (c) =>
         {
@@ -58,6 +59,14 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// 检验时间间隔
     /// </summary>
     public TimeSpan Tick => this.m_tick;
+
+    /// <inheritdoc/>
+    public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+    {
+        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender);
+
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
     /// <summary>
     /// 设置一个周期性执行的委托，用于检查客户端状态。
@@ -99,6 +108,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         // 返回当前实例，支持链式调用
         return this;
     }
+
     /// <summary>
     /// 设置连接动作
     /// </summary>
@@ -176,7 +186,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                 {
                     if (printLog)
                     {
-                        client.Logger?.Exception(ex);
+                        client.Logger?.Exception(this, ex);
                     }
                     await Task.Delay(sleepTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
@@ -215,7 +225,17 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         return this;
     }
 
-    private async Task BeginReconnect(object sender)
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_beginReconnectTask.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    private async Task BeginReconnect(IConfigObject sender)
     {
         if (!this.m_polling)
         {
@@ -227,56 +247,53 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
             return;
         }
 
+        client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingBegin.Format(this.Tick));
+
         var failCount = 0;
 
-        while (true)
+        try
         {
-            if (this.DisposedValue)
+            while (true)
             {
-                return;
-            }
-            await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            try
-            {
-                var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (b == null)
+                if (this.DisposedValue)
                 {
-                    continue;
+                    client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingWillEnd);
+                    return;
                 }
-                else if (b == false)
+                await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                try
                 {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    if (b == null)
+                    {
+                        continue;
+                    }
+                    else if (b == false)
+                    {
+                        if (await this.ActionForConnect.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        {
+                            failCount = 0;
+                        }
+                    }
+                    else
                     {
                         failCount = 0;
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    failCount = 0;
+                    client.Logger?.Exception(this,ex);
                 }
             }
-            catch
-            {
-            }
         }
-    }
-
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
+        catch (Exception ex)
         {
-            this.m_beginReconnectTask.Dispose();
+            client.Logger?.Exception(this,ex);
         }
-        base.Dispose(disposing);
-    }
+        finally
+        {
+            client.Logger?.Debug(this, TouchSocketResource.PollingEnd);
+        }
 
-    /// <inheritdoc/>
-    public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
-    {
-        this.m_beginReconnectTask = Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
-
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

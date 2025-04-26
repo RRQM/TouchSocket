@@ -13,6 +13,7 @@
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -192,7 +193,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     /// </summary>
     /// <returns>异步任务。</returns>
     /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
-    public override Task StopAsync()
+    public override Task<Result> StopAsync(CancellationToken token=default)
     {
         throw new NotSupportedException("此服务的生命周期跟随主Host");
     }

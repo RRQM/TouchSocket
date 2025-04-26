@@ -137,7 +137,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
                 }
                 catch (Exception ex)
                 {
-                    this.Logger?.Exception(ex);
+                    this.Logger?.Exception(this, ex);
                 }
             }
 
@@ -150,7 +150,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
                 }
                 catch (Exception ex)
                 {
-                    this.Logger?.Exception(ex);
+                    this.Logger?.Exception(this, ex);
                 }
             }
         }
@@ -187,7 +187,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             }
             catch (Exception ex)
             {
-                this.Logger?.Exception(ex);
+                this.Logger?.Debug(this,ex);
             }
         }
 
@@ -200,7 +200,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             }
             catch (Exception ex)
             {
-                this.Logger?.Exception(ex);
+                this.Logger?.Debug(this,ex);
             }
         }
     }

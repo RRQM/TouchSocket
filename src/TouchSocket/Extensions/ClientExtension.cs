@@ -17,6 +17,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
@@ -53,7 +54,7 @@ public static class ClientExtension
     /// <typeparam name="TClient">泛型参数，表示客户端类型，必须实现<see cref="IClient"/>接口。</typeparam>
     /// <param name="client">泛型参数实例，表示具体的客户端对象。</param>
     /// <returns>返回最后活动时间，即<see cref="IClient.LastReceivedTime"/>与<see cref="IClient.LastSentTime"/>中较近的时间。</returns>
-    public static DateTime GetLastActiveTime<TClient>(this TClient client) where TClient : IClient
+    public static DateTimeOffset GetLastActiveTime<TClient>(this TClient client) where TClient : IClient
     {
         // 比较最后一次发送时间和最后一次接收时间，返回较近的时间作为最后活动时间。
         return client.LastSentTime > client.LastReceivedTime ? client.LastSentTime : client.LastReceivedTime;
@@ -78,7 +79,7 @@ public static class ClientExtension
     /// <param name="client">要关闭的客户端对象</param>
     /// <param name="how">关闭的方式，默认值为SocketShutdown.Both，即读写都关闭</param>
     /// <returns>操作是否成功</returns>
-    [Obsolete("此操作已被弃用，请使用ShutdownAsync代替",true)]
+    [Obsolete("此操作已被弃用，请使用ShutdownAsync代替", true)]
     public static bool TryShutdown<TClient>(this TClient client, SocketShutdown how = SocketShutdown.Both) where TClient : class, ITcpSession
     {
         // 检查客户端对象是否为null或默认值
@@ -119,9 +120,13 @@ public static class ClientExtension
     /// <typeparam name="TClient">客户端类型，必须实现IClosableClient接口。</typeparam>
     /// <param name="client">要关闭的客户端实例。</param>
     /// <returns>一个Task对象，表示异步操作的结果。</returns>
-    public static Task CloseAsync<TClient>(this TClient client) where TClient : IClosableClient
+    public static async Task<Result> CloseAsync<TClient>(this TClient client) where TClient : IClosableClient
     {
-        return client.CloseAsync(string.Empty);
+        if (client is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(client)));
+        }
+        return await client.CloseAsync(string.Empty).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -130,6 +135,7 @@ public static class ClientExtension
     /// <typeparam name="TClient">要关闭的客户端类型，必须实现IClosableClient接口。</typeparam>
     /// <param name="client">要关闭的客户端实例。</param>
     /// <param name="msg">关闭时传递的消息。</param>
+    [Obsolete("此操作已被弃用，请直接使用CloseAsync代替", true)]
     public static async Task SafeCloseAsync<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
         // 尝试关闭客户端，如果客户端为null，则不执行任何操作。
@@ -160,6 +166,7 @@ public static class ClientExtension
     /// 此方法提供了一种安全关闭客户端的方式，确保在关闭过程中不会因为异常而中断。
     /// 它是异步的，允许在不阻塞当前线程的情况下完成关闭操作。
     /// </remarks>
+    [Obsolete("此操作已被弃用，请直接使用CloseAsync代替", true)]
     public static Task SafeCloseAsync<TClient>(this TClient client) where TClient : IClosableClient
     {
         // 调用带有自定义名称参数的SafeCloseAsync方法，这里使用方法名作为操作标识。
@@ -174,42 +181,43 @@ public static class ClientExtension
     /// 同步关闭客户端
     /// </summary>
     /// <remarks>
-    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
+    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
     /// </remarks>
     /// <typeparam name="TClient">要操作的客户端类型，必须实现<see cref="IClosableClient"/>接口</typeparam>
     /// <param name="client">要关闭的客户端实例</param>
-    public static void Close<TClient>(this TClient client) where TClient : IClosableClient
+    public static Result Close<TClient>(this TClient client) where TClient : IClosableClient
     {
         // 调用CloseAsync方法并立即返回，不等待异步操作完成。这样做是为了提供一个同步的关闭方式，
         // 但这种做法可能导致调用线程在客户端实际关闭之前就继续执行了，这可能不是期望的行为。
         // 这里选择不使用await是为了明确表示这个操作是故意设计为同步的，尽管这可能不是一个最佳实践。
-        client.CloseAsync(string.Empty).GetFalseAwaitResult();
+        return client.CloseAsync(string.Empty).GetFalseAwaitResult();
     }
 
     /// <summary>
     /// 同步关闭客户端
     /// </summary>
     /// <remarks>
-    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
+    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
     /// </remarks>
     /// <typeparam name="TClient">要操作的客户端类型，必须实现<see cref="IClosableClient"/>接口。</typeparam>
     /// <param name="client">要关闭的客户端实例。</param>
     /// <param name="msg">关闭客户端时发送的消息。</param>
-    public static void Close<TClient>(this TClient client, string msg) where TClient : IClosableClient
+    public static Result Close<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
         // 使用GetFalseAwaitResult方法使异步操作同步执行，这里无需额外注释。
-        client.CloseAsync(msg).GetFalseAwaitResult();
+        return client.CloseAsync(msg).GetFalseAwaitResult();
     }
 
     /// <summary>
     /// 安全性关闭。不会抛出异常。
     /// </summary>
     /// <remarks>
-    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
+    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
     /// </remarks>
     /// <typeparam name="TClient">要操作的客户端类型，必须实现<see cref="IClosableClient"/>接口。</typeparam>
     /// <param name="client">要关闭的客户端实例。</param>
     /// <param name="msg">关闭时传递的消息。</param>
+    [Obsolete("此操作已被弃用，请直接使用Close代替", true)]
     public static void SafeClose<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
         // 尝试关闭客户端，如果客户端为null，则不执行任何操作。
@@ -235,10 +243,11 @@ public static class ClientExtension
     /// 安全性关闭。不会抛出异常。
     /// </summary>
     /// <remarks>
-    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
+    /// 请注意，该同步方法由<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>异步转同步而来。所以请谨慎使用。建议直接使用异步。
     /// </remarks>
     /// <typeparam name="TClient">要关闭的客户端类型，必须实现<see cref="IClosableClient"/>接口。</typeparam>
     /// <param name="client">要进行安全关闭的客户端实例。</param>
+    [Obsolete("此操作已被弃用，请直接使用Close代替", true)]
     public static void SafeClose<TClient>(this TClient client) where TClient : IClosableClient
     {
         // 调用重载的SafeClose方法，传递客户端实例和该方法的名称。

@@ -63,7 +63,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     public bool TryParseRequest<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
     {
         // 检查缓存是否超时，如果超时则清除缓存。
-        if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.Reset();
         }
@@ -173,7 +173,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     /// <param name="byteBlock"></param>
     protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.Reset();
         }
@@ -252,7 +252,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                 // 更新缓存时间。
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
                 request = default;
                 return filterResult;
@@ -262,7 +262,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                 // 对于继续或默认的过滤结果，更新缓存时间。
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
                 request = default;
                 return filterResult;
@@ -314,14 +314,14 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                     }
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.UtcNow;
+                        this.LastCacheTime = DateTimeOffset.UtcNow;
                     }
                     return;
 
                 case FilterResult.GoOn:
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.UtcNow;
+                        this.LastCacheTime = DateTimeOffset.UtcNow;
                     }
                     break;
             }

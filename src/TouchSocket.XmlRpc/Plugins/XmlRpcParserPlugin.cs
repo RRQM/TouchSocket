@@ -131,7 +131,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     var httpResponse = e.Context.Response;
 
-                    var byteBlock = new ByteBlock();
+                    var byteBlock = new ByteBlock(1024*64);
 
                     if (invokeResult.Status == InvokeStatus.Success)
                     {

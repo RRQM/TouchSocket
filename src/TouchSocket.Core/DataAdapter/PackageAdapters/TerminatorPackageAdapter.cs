@@ -77,7 +77,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
     /// <param name="byteBlock"></param>
     protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.Reset();
         }
@@ -104,7 +104,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
         }
@@ -129,7 +129,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, cacheLength - startIndex));
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
         }

@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -38,7 +39,7 @@ public class MemberAccessor<T> : MemberAccessor
 public class MemberAccessor : IMemberAccessor
 {
     private Func<object, string, object> m_getValueDelegate;
-    private Dictionary<string, FieldInfo> m_dicFieldInfes;
+    private Dictionary<string, FieldInfo> m_dicFieldInfos;
     private Dictionary<string, PropertyInfo> m_dicProperties;
     private Action<object, string, object> m_setValueDelegate;
 
@@ -49,14 +50,14 @@ public class MemberAccessor : IMemberAccessor
     public MemberAccessor(Type type)
     {
         this.Type = type;
-        this.OnGetFieldInfes = (t) => { return t.GetFields(); };
+        this.OnGetFieldInfos = (t) => { return t.GetFields(); };
         this.OnGetProperties = (t) => { return t.GetProperties(); };
     }
 
     /// <summary>
     /// 获取字段
     /// </summary>
-    public Func<Type, FieldInfo[]> OnGetFieldInfes { get; set; }
+    public Func<Type, FieldInfo[]> OnGetFieldInfos { get; set; }
 
     /// <summary>
     /// 获取属性
@@ -75,7 +76,7 @@ public class MemberAccessor : IMemberAccessor
     {
         if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
         {
-            this.m_dicFieldInfes = this.OnGetFieldInfes.Invoke(this.Type).ToDictionary(a => a.Name);
+            this.m_dicFieldInfos = this.OnGetFieldInfos.Invoke(this.Type).ToDictionary(a => a.Name);
             this.m_dicProperties = this.OnGetProperties.Invoke(this.Type).ToDictionary(a => a.Name);
         }
 
@@ -95,13 +96,14 @@ public class MemberAccessor : IMemberAccessor
         this.m_setValueDelegate(instance, memberName, newValue);
     }
 
+    
     private Func<object, string, object> GenerateGetValue()
     {
         if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
         {
             return (obj, key) =>
             {
-                return this.m_dicFieldInfes.TryGetValue(key, out var value1)
+                return this.m_dicFieldInfos.TryGetValue(key, out var value1)
                     ? value1.GetValue(obj)
                     : this.m_dicProperties.TryGetValue(key, out var value2) ? value2.GetValue(obj) : default;
             };
@@ -112,7 +114,7 @@ public class MemberAccessor : IMemberAccessor
         var nameHash = Expression.Variable(typeof(int), "nameHash");
         var calHash = Expression.Assign(nameHash, Expression.Call(memberName, typeof(object).GetMethod("GetHashCode")));
         var cases = new List<SwitchCase>();
-        foreach (var propertyInfo in this.OnGetFieldInfes.Invoke(this.Type))
+        foreach (var propertyInfo in this.OnGetFieldInfos.Invoke(this.Type))
         {
             try
             {
@@ -154,7 +156,7 @@ public class MemberAccessor : IMemberAccessor
         {
             return (obj, key, value) =>
             {
-                if (this.m_dicFieldInfes.TryGetValue(key, out var value1))
+                if (this.m_dicFieldInfos.TryGetValue(key, out var value1))
                 {
                     value1.SetValue(obj, value);
                 }
@@ -171,7 +173,7 @@ public class MemberAccessor : IMemberAccessor
         var nameHash = Expression.Variable(typeof(int), "nameHash");
         var calHash = Expression.Assign(nameHash, Expression.Call(memberName, typeof(object).GetMethod("GetHashCode")));
         var cases = new List<SwitchCase>();
-        foreach (var propertyInfo in this.OnGetFieldInfes.Invoke(this.Type))
+        foreach (var propertyInfo in this.OnGetFieldInfos.Invoke(this.Type))
         {
             var property = Expression.Field(Expression.Convert(instance, this.Type), propertyInfo.Name);
             var setValue = Expression.Assign(property, Expression.Convert(newValue, propertyInfo.FieldType));

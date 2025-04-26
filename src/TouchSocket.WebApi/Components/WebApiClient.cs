@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
+using System.Collections.Generic;
 
 namespace TouchSocket.WebApi;
 
@@ -79,14 +80,14 @@ public class WebApiClient : HttpClientBase, IWebApiClient
         {
             foreach (var item in webApiRequest.Headers)
             {
-                request.Headers.Add(item.Key, item.Value);
+                request.Headers.TryAdd(item.Key, item.Value);
             }
         }
         if (webApiRequest.Querys != null)
         {
             foreach (var item in webApiRequest.Querys)
             {
-                request.Query.Add(item.Key, item.Value);
+                request.Query.TryAdd(item.Key, item.Value);
             }
         }
         request.SetHost(this.RemoteIPHost.Host);

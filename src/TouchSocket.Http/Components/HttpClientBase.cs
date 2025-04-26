@@ -114,7 +114,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         var content = request.Content;
         if (content == null)
         {
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ValueByteBlock(1024);
             try
             {
                 request.BuildHeader(ref byteBlock);
@@ -128,8 +128,9 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         }
         else
         {
+            content.InternalTryComputeLength(out var contentLength);
+            var byteBlock = new ValueByteBlock((int)Math.Min(contentLength + 1024, 1024 * 64));
             content.InternalBuildingHeader(request.Headers);
-            var byteBlock = new ByteBlock();
             try
             {
                 request.BuildHeader(ref byteBlock);
@@ -201,19 +202,19 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     #region override
 
     /// <inheritdoc/>
-    protected override Task OnTcpConnecting(ConnectingEventArgs e)
+    protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         this.Protocol = Protocol.Http;
         this.m_dataHandlingAdapter = new HttpClientDataHandlingAdapter();
         this.SetAdapter(this.m_dataHandlingAdapter);
-        return EasyTask.CompletedTask;
+        await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override Task OnTcpClosed(ClosedEventArgs e)
+    protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
         this.m_waitResponseDataAsync.Cancel();
-        return EasyTask.CompletedTask;
+        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

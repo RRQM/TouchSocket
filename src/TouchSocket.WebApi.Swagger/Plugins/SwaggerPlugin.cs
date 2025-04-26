@@ -14,7 +14,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -88,7 +87,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                     }
                     catch (Exception ex)
                     {
-                        this.m_logger.Exception(ex);
+                        this.m_logger?.Debug(this, ex);
                     }
                 }
                 var key = prefix == "/" ? $"/{name}" : $"{prefix}/{name}";
@@ -197,7 +196,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         }
         catch (Exception ex)
         {
-            this.m_logger.Exception(ex);
+            this.m_logger?.Debug(this, ex);
         }
     }
 
@@ -314,7 +313,6 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                 {
                     var openApiParameter = this.GetParameter(parameter.ParameterInfo);
                     openApiParameter.In = "query";
-                    openApiParameter.Description = parameter.ParameterDesc;
                     this.AddSchemaType(parameter.Type, schemaTypeList);
                     openApiParameters.Add(openApiParameter);
                 }
@@ -351,10 +349,12 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         openApiPathValue.Responses.Add("200", openApiResponse);
     }
 
-    private OpenApiProperty CreateProperty(Type type, string description = "")
+    private OpenApiProperty CreateProperty(Type type, string description)
     {
         var openApiProperty = new OpenApiProperty();
         var dataTypes = this.ParseDataTypes(type);
+        openApiProperty.Description = description;
+
         switch (dataTypes)
         {
             case OpenApiDataTypes.String:
@@ -380,7 +380,9 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             case OpenApiDataTypes.Array:
                 {
                     openApiProperty.Type = dataTypes;
-                    openApiProperty.Items = this.CreateProperty(type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0], description);
+
+                    var elementType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+                    openApiProperty.Items = this.CreateProperty(elementType, elementType.GetDescription());
                 }
                 break;
 
@@ -400,7 +402,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         }
 
         openApiProperty.Format = this.GetSchemaFormat(type);
-        openApiProperty.Description = description;
+
         return openApiProperty;
     }
 
@@ -486,8 +488,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             var properties = new Dictionary<string, OpenApiProperty>();
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                var description = propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, description));
+                properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
             }
             schema.Properties = properties.Count == 0 ? default : properties;
             components.Schemas.TryAdd(this.GetSchemaName(type), schema);
@@ -509,6 +510,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
     {
         var openApiParameter = new OpenApiParameter();
         openApiParameter.Name = parameterInfo.Name;
+        openApiParameter.Description = parameterInfo.GetDescription();
 
         var openApiSchema = this.CreateSchema(parameterInfo.ParameterType);
 

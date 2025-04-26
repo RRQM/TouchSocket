@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -24,8 +25,8 @@ namespace TouchSocket.Dmtp;
 /// </summary>
 public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessionClient
 {
-    internal Func<DmtpActor> m_internalOnRpcActorInit;
-    private DmtpActor m_dmtpActor;
+    internal Func<SealedDmtpActor> m_internalOnRpcActorInit;
+    private SealedDmtpActor m_dmtpActor;
 
     /// <inheritdoc/>
     public IDmtpActor DmtpActor => this.m_dmtpActor;
@@ -46,14 +47,14 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region 断开
 
     /// <inheritdoc/>
-    public override async Task CloseAsync(string msg)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         if (this.m_dmtpActor != null)
         {
-            await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
-        await base.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
@@ -92,12 +93,11 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private void SetRpcActor(DmtpActor actor)
+    private void SetRpcActor(SealedDmtpActor actor)
     {
         actor.Id = this.Id;
         actor.IdChanged = this.OnDmtpIdChanged;
         actor.OutputSendAsync = this.ThisDmtpActorOutputSendAsync;
-        //actor.OutputSend = this.ThisDmtpActorOutputSend;
         actor.Client = this;
         actor.Closing = this.OnDmtpActorClose;
         actor.Routing = this.OnDmtpActorRouting;
@@ -242,7 +242,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// <para>
     /// 该触发条件有2种：
     /// <list type="number">
-    /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
     /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
     /// </list>
     /// </para>

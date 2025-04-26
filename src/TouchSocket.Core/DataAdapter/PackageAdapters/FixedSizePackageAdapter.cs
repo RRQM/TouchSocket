@@ -58,7 +58,7 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
     /// <param name="byteBlock"></param>
     protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.Reset();
         }
@@ -91,7 +91,7 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_surPlusLength -= r;
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
         }
@@ -191,7 +191,7 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index, r - index));
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
             index += this.FixedSize;

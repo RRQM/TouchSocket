@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets;
 /// 检查清理连接插件。服务器与客户端均适用。
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IClient, IClosableClient
+public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IDependencyClient, IClosableClient
 {
     private static readonly DependencyProperty<bool> s_checkClearProperty =
         new("CheckClear", false);
@@ -35,17 +35,18 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
     {
         this.OnClose = async (client, type) =>
         {
-            if (this.CheckClearType == CheckClearType.OnlyReceive)
+            switch (this.CheckClearType)
             {
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else if (this.CheckClearType == CheckClearType.OnlySend)
-            {
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                case CheckClearType.OnlyReceive:
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
+                case CheckClearType.OnlySend:
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
+                case CheckClearType.All:
+                default:
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
             }
         };
         this.m_logger = logger;
@@ -70,7 +71,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
-        _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
+        _ = EasyTask.Run(this.Polling, sender);
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -161,7 +162,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
 
                 if (this.CheckClearType == CheckClearType.OnlyReceive)
                 {
-                    if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
+                    if (DateTimeOffset.UtcNow - client.LastReceivedTime > this.Tick)
                     {
                         await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return;
@@ -169,7 +170,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
                 }
                 else if (this.CheckClearType == CheckClearType.OnlySend)
                 {
-                    if (DateTime.UtcNow - client.LastSentTime > this.Tick)
+                    if (DateTimeOffset.UtcNow - client.LastSentTime > this.Tick)
                     {
                         await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return;
@@ -177,7 +178,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
                 }
                 else
                 {
-                    if (DateTime.UtcNow - client.GetLastActiveTime() > this.Tick)
+                    if (DateTimeOffset.UtcNow - client.GetLastActiveTime() > this.Tick)
                     {
                         await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return;
@@ -205,7 +206,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
     {
         try
         {
-            this.m_logger.Debug($"{this.GetType()} begin polling");
+            this.m_logger.Debug(this,$"{this.GetType()} begin polling");
             while (true)
             {
                 if (this.DisposedValue)
@@ -229,17 +230,17 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
                 }
                 catch (Exception ex)
                 {
-                    this.m_logger.Debug(ex.Message);
+                    this.m_logger.Debug(this,ex.Message);
                 }
             }
         }
         catch (Exception ex)
         {
-            this.m_logger.Debug(ex.Message);
+            this.m_logger.Debug(this,ex.Message);
         }
         finally
         {
-            this.m_logger.Debug($"{this.GetType()} end polling");
+            this.m_logger.Debug(this,$"{this.GetType()} end polling");
         }
     }
 }

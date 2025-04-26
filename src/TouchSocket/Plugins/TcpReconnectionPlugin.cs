@@ -22,10 +22,7 @@ internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClien
 
     public TcpReconnectionPlugin()
     {
-        this.ActionForCheck = (c, i) =>
-        {
-            return Task.FromResult<bool?>(c.Online);
-        };
+        this.ActionForCheck = (c, i) => Task.FromResult<bool?>(c.Online);
     }
 
     public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)

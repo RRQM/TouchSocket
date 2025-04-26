@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -101,7 +102,7 @@ public class StreamHttpContent : HttpContent
         // 创建一个缓冲区，用于存储读取的数据
 
         var blockSize = this.m_flowOperator.BlockSize;
-        var bytes = BytePool.Default.Rent(blockSize);
+        var bytes = ArrayPool<byte>.Shared.Rent(blockSize);
         var memory = new Memory<byte>(bytes);
 
         if (this.TryComputeLength(out var length))
@@ -173,7 +174,7 @@ public class StreamHttpContent : HttpContent
         }
         finally
         {
-            BytePool.Default.Return(bytes);
+            ArrayPool<byte>.Shared.Return(bytes);
         }
     }
 }

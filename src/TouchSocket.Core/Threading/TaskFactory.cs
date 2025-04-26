@@ -26,7 +26,7 @@
 //            {
 //           return func.Invoke(obj);
 //            }
-//            Task.Factory.StartNew(func,status);
+//            EasyTask.Run(func,status);
 //        }
 //    }
 //}

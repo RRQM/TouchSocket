@@ -12,8 +12,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace TouchSocket.Core;
 
@@ -87,6 +89,16 @@ public static class ReflectionExtension
           (TouchSocketCoreUtility.NullableType);
     }
 
+    /// <summary>
+    /// 获取参数的描述信息。
+    /// </summary>
+    /// <param name="parameterInfo">参数信息。</param>
+    /// <returns>返回描述信息，如果没有描述信息则返回默认值。</returns>
+    public static string GetDescription(this ParameterInfo parameterInfo)
+    {
+        return parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? default;
+    }
+
     #endregion ParameterInfo
 
     #region MemberInfo
@@ -101,6 +113,16 @@ public static class ReflectionExtension
         return (IEnumerable<string>)DynamicMethodMemberAccessor.Default.GetValue(memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")), "TransformNames");
 
         //return ((dynamic)memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+    }
+
+    /// <summary>
+    /// 获取参数的描述信息。
+    /// </summary>
+    /// <param name="memberInfo">参数信息。</param>
+    /// <returns>返回描述信息，如果没有描述信息则返回默认值。</returns>
+    public static string GetDescription(this MemberInfo memberInfo)
+    {
+        return memberInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? default;
     }
 
     #endregion MemberInfo

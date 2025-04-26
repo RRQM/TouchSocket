@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,28 +23,40 @@ namespace TouchSocket.Core;
 /// </summary>
 public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 {
-    private readonly ConcurrentQueue<byte[]> m_bytes = new ConcurrentQueue<byte[]>();
-    private long m_count;
+    private readonly ConcurrentQueue<ValueByteBlock> m_bytes = new ConcurrentQueue<ValueByteBlock>();
+    private long m_fireCount;
+    private int m_dataCount;
 
     /// <inheritdoc/>
     protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
     {
-        this.m_bytes.Enqueue(byteBlock.ToArray());
-        Interlocked.Increment(ref this.m_count);
-        Task.Run(this.DelayGo);
+        var dataLength = byteBlock.Length;
+        var valueByteBlock = new ValueByteBlock(dataLength);
+        valueByteBlock.Write(byteBlock.Span);
+        this.m_bytes.Enqueue(valueByteBlock);
+        Interlocked.Increment(ref this.m_fireCount);
+        Interlocked.Add(ref this.m_dataCount, dataLength);
+
+        this.ThrowIfMoreThanMaxPackageSize(this.m_dataCount);
+
+        _ =EasyTask.SafeRun(this.DelayGo);
         return EasyTask.CompletedTask;
     }
 
     private async Task DelayGo()
     {
         await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (Interlocked.Decrement(ref this.m_count) == 0)
+        if (Interlocked.Decrement(ref this.m_fireCount) == 0)
         {
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(this.m_dataCount))
             {
-                while (this.m_bytes.TryDequeue(out var bytes))
+                while (this.m_bytes.TryDequeue(out var valueByteBlock))
                 {
-                    byteBlock.Write(bytes);
+                    using (valueByteBlock)
+                    {
+                        byteBlock.Write(valueByteBlock.Span);
+                        Interlocked.Add(ref this.m_dataCount, -valueByteBlock.Length);
+                    }
                 }
 
                 byteBlock.SeekToStart();

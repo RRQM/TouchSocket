@@ -88,8 +88,18 @@ public partial class TcpClientBase
             this.SetSocket(socket);
             // 进行身份验证
             await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            this.m_tokenSourceForReceive = new CancellationTokenSource();
+
+            // 确保上次接收任务已经结束
+            var receiveTask = this.m_receiveTask;
+            if (receiveTask != null)
+            {
+                await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+
             // 触发连接成功的事件
-            _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
+            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
         }
         finally
         {
@@ -139,8 +149,18 @@ public partial class TcpClientBase
             this.SetSocket(socket);
             // 进行身份验证
             await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            this.m_tokenSourceForReceive = new CancellationTokenSource();
+
+            // 确保上次接收任务已经结束
+            var receiveTask = this.m_receiveTask;
+            if (receiveTask != null)
+            {
+                await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+
             // 启动新任务，处理连接后的操作
-            _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
+            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(),this.m_tokenSourceForReceive.Token);
         }
         finally
         {

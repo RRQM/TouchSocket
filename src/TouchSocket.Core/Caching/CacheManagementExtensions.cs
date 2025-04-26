@@ -85,7 +85,7 @@ public static class CacheManagementExtensions
             if (update)
             {
                 // 如果设置了更新时间戳，则更新缓存项的时间戳为当前时间。
-                cacheEntry.UpdateTime = DateTime.UtcNow;
+                cacheEntry.UpdateTime = DateTimeOffset.UtcNow;
             }
             value = cacheEntry.Value;
             return true;
@@ -93,7 +93,7 @@ public static class CacheManagementExtensions
         else
         {
             // 如果当前时间与上次更新时间的差值大于等于缓存项的持续时间，表示缓存项已过期。
-            if (DateTime.UtcNow - cacheEntry.UpdateTime > cacheEntry.Duration)
+            if (DateTimeOffset.UtcNow - cacheEntry.UpdateTime > cacheEntry.Duration)
             {
                 // 从缓存中移除过期的缓存项。
                 cacheClient.RemoveCache(key);
@@ -105,7 +105,7 @@ public static class CacheManagementExtensions
                 if (update)
                 {
                     // 如果设置了更新时间戳，则更新缓存项的时间戳为当前时间。
-                    cacheEntry.UpdateTime = DateTime.UtcNow;
+                    cacheEntry.UpdateTime = DateTimeOffset.UtcNow;
                 }
                 value = cacheEntry.Value;
                 return true;

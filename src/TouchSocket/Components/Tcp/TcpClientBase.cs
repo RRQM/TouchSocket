@@ -41,13 +41,14 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     private readonly Lock m_lockForAbort = new Lock();
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private readonly TcpCore m_tcpCore = new TcpCore();
-    private Task m_beginReceiveTask;
+    private Task m_receiveTask;
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_iP;
     private Socket m_mainSocket;
     private volatile bool m_online;
     private int m_port;
     private InternalReceiver m_receiver;
+    private CancellationTokenSource m_tokenSourceForReceive;
 
     #endregion 变量
 
@@ -105,24 +106,19 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateOnTcpClosed(object obj)
+    private async Task PrivateOnTcpClosed((Task receiveTask, ClosedEventArgs e, InternalReceiver receiver) tuple)
     {
-        try
-        {
-            await this.m_beginReceiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = tuple.receiveTask;
+        var e = tuple.e;
+        var receiver = tuple.receiver;
 
-            var e = (ClosedEventArgs)obj;
+        await EasyTask.SafeWaitAsync(receiveTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            var receiver = this.m_receiver;
-            if (receiver != null)
-            {
-                await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            await this.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
+        if (receiver != null)
         {
+            await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+        await this.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -130,18 +126,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         return this.OnTcpClosing(e);
     }
 
-    private async Task PrivateOnTcpConnected(object o)
+    private async Task PrivateOnTcpConnected(ConnectedEventArgs e, CancellationToken token)
     {
-        try
-        {
-            this.m_beginReceiveTask = Task.Run(this.BeginReceive);
-
-            this.m_beginReceiveTask.FireAndForget();
-            await this.OnTcpConnected((ConnectedEventArgs)o).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
+        this.m_receiveTask = EasyTask.SafeRun(this.BeginReceive, token);
+        await this.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private async Task PrivateOnTcpConnecting(ConnectingEventArgs e)
@@ -171,10 +159,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_tcpCore.ReceiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_tcpCore.ReceiveCounter.LastIncrement;
 
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_tcpCore.SendCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_tcpCore.SendCounter.LastIncrement;
 
     /// <inheritdoc/>
     public Socket MainSocket => this.m_mainSocket;
@@ -188,7 +176,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 远程IPHost
+    /// </summary>
     public IPHost RemoteIPHost => this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
 
     /// <inheritdoc/>
@@ -199,17 +189,26 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     #region 断开操作
 
     /// <inheritdoc/>
-    public virtual async Task CloseAsync(string msg)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_online)
+        try
         {
-            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            lock (this.m_lockForAbort)
+            if (this.m_online)
             {
-                //https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A
-                this.MainSocket.TryClose();
-                this.Abort(true, msg);
+                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                lock (this.m_lockForAbort)
+                {
+                    //https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A
+                    this.MainSocket.TryClose();
+                    this.Abort(true, msg);
+                }
             }
+
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
         }
     }
 
@@ -266,9 +265,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 var adapter = this.m_dataHandlingAdapter;
                 this.m_dataHandlingAdapter = default;
                 adapter.SafeDispose();
-
+                this.CancelReceive();
                 // 启动一个新任务来处理连接关闭事件
-                _ = Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                _ = EasyTask.SafeRun(this.PrivateOnTcpClosed, (this.m_receiveTask, new ClosedEventArgs(manual, msg),this.m_receiver));
             }
         }
     }
@@ -337,16 +336,26 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private Task AuthenticateAsync()
+    private async Task AuthenticateAsync()
     {
-        if (this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) is ClientSslOption sslOption)
+        if (this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
         {
-            return this.m_tcpCore.AuthenticateAsync(sslOption);
+            await this.m_tcpCore.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        return EasyTask.CompletedTask;
     }
 
-    private async Task BeginReceive()
+    private void CancelReceive()
+    {
+        var tokenSourceForReceive = this.m_tokenSourceForReceive;
+        if (tokenSourceForReceive != null)
+        {
+            tokenSourceForReceive.Cancel();
+            tokenSourceForReceive.Dispose();
+        }
+        this.m_tokenSourceForReceive = null;
+    }
+
+    private async Task BeginReceive(CancellationToken token)
     {
         var byteBlock = new ByteBlock(this.m_tcpCore.ReceiveBufferSize);
         while (true)
@@ -355,7 +364,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             {
                 var result = await this.m_tcpCore.ReadAsync(byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                if (this.DisposedValue)
+                if (this.DisposedValue || token.IsCancellationRequested)
                 {
                     byteBlock.Dispose();
                     return;
@@ -382,7 +391,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                     }
                     catch (Exception ex)
                     {
-                        this.Logger?.Exception(ex);
+                        this.Logger?.Exception(this, ex);
                     }
                     finally
                     {
@@ -478,15 +487,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #region Throw
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ThrowIfCannotSendRequestInfo()
-    {
-        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
-        {
-            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
-        }
-    }
-
     /// <summary>
     ///  如果TCP客户端未连接，则抛出异常。
     /// </summary>
@@ -499,6 +499,15 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
 
         ThrowHelper.ThrowClientNotConnectedException();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ThrowIfCannotSendRequestInfo()
+    {
+        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
+        {
+            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
+        }
     }
 
     #endregion Throw

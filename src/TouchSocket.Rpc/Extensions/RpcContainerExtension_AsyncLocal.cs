@@ -19,9 +19,18 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
+/// <summary>
+/// 提供扩展方法以注册和管理RPC调用上下文访问器。
+/// </summary>
 public static partial class RpcContainerExtension
 {
     #region RpcCallContextAccessor
+    /// <summary>
+    /// 将指定类型的RPC调用上下文访问器注册为单例。
+    /// </summary>
+    /// <typeparam name="TRpcCallContextAccessor">实现 <see cref="IRpcCallContextAccessor"/> 的类型。</typeparam>
+    /// <param name="registrator">用于注册依赖项的 <see cref="IRegistrator"/> 实例。</param>
+    /// <returns>返回 <see cref="IRegistrator"/> 实例以支持链式调用。</returns>
     public static IRegistrator AddRpcCallContextAccessor<TRpcCallContextAccessor>(this IRegistrator registrator)
        where TRpcCallContextAccessor : class, IRpcCallContextAccessor
     {
@@ -29,13 +38,16 @@ public static partial class RpcContainerExtension
         return registrator;
     }
 
+    /// <summary>
+    /// 将默认的RPC调用上下文访问器注册为单例。
+    /// </summary>
+    /// <param name="registrator">用于注册依赖项的 <see cref="IRegistrator"/> 实例。</param>
+    /// <returns>返回 <see cref="IRegistrator"/> 实例以支持链式调用。</returns>
     public static IRegistrator AddRpcCallContextAccessor(this IRegistrator registrator)
     {
         return AddRpcCallContextAccessor<RpcCallContextAccessor>(registrator);
     }
     #endregion
-
-
 }
 
 #endif

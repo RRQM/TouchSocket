@@ -198,10 +198,16 @@ public static class TouchSocketConfigExtension
     public static readonly DependencyProperty<IPHost> RemoteIPHostProperty = new("RemoteIPHost", null);
 
     /// <summary>
-    /// Ssl配置，为Null时则不启用
+    /// ClientSslOption配置，为Null时则不启用
     /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
     /// </summary>
-    public static readonly DependencyProperty<SslOption> SslOptionProperty = new("SslOption", null);
+    public static readonly DependencyProperty<ClientSslOption> ClientSslOptionProperty = new("ClientSslOption", null);
+
+    /// <summary>
+    /// ServiceSslOption配置，为Null时则不启用
+    /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
+    /// </summary>
+    public static readonly DependencyProperty<ServiceSslOption> ServiceSslOptionProperty = new("ServiceSslOption", null);
 
     /// <summary>
     /// 固定端口绑定。
@@ -225,7 +231,7 @@ public static class TouchSocketConfigExtension
     /// <returns></returns>
     public static TouchSocketConfig SetClientSslOption(this TouchSocketConfig config, ClientSslOption value)
     {
-        config.SetValue(SslOptionProperty, value);
+        config.SetValue(ClientSslOptionProperty, value);
         return config;
     }
 
@@ -387,7 +393,7 @@ public static class TouchSocketConfigExtension
     /// <returns></returns>
     public static TouchSocketConfig SetServiceSslOption(this TouchSocketConfig config, ServiceSslOption value)
     {
-        config.SetValue(SslOptionProperty, value);
+        config.SetValue(ServiceSslOptionProperty, value);
         return config;
     }
 

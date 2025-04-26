@@ -40,11 +40,11 @@ public static class DmtpFileTransferActorExtension
 
     #region DependencyProperty
 
-    /// <summary>
-    /// DmtpFileTransferActor
-    /// </summary>
-    public static readonly DependencyProperty<IDmtpFileTransferActor> DmtpFileTransferActorProperty =
-        new("DmtpFileTransferActor", default);
+    ///// <summary>
+    ///// DmtpFileTransferActor
+    ///// </summary>
+    //public static readonly DependencyProperty<IDmtpFileTransferActor> DmtpFileTransferActorProperty =
+    //    new("DmtpFileTransferActor", default);
 
     #endregion DependencyProperty
 
@@ -55,19 +55,7 @@ public static class DmtpFileTransferActorExtension
     /// <returns>返回一个<see cref="IDmtpFileTransferActor"/>实例。</returns>
     public static IDmtpFileTransferActor GetDmtpFileTransferActor(this IDmtpActor dmtpActor)
     {
-        // 通过DmtpFileTransferActorProperty属性从dmtpActor中获取IDmtpFileTransferActor实例
-        return dmtpActor.GetValue(DmtpFileTransferActorProperty);
-    }
-
-    /// <summary>
-    /// 向<see cref="DmtpActor"/>中设置<see cref="DmtpFileTransferActor"/>
-    /// </summary>
-    /// <param name="dmtpActor">要设置<see cref="DmtpFileTransferActor"/>的<see cref="IDmtpActor"/>对象</param>
-    /// <param name="dmtpRpcActor">要设置的<see cref="DmtpFileTransferActor"/>实例</param>
-    internal static void SetDmtpFileTransferActor(this IDmtpActor dmtpActor, DmtpFileTransferActor dmtpRpcActor)
-    {
-        // 使用DependencyProperty进行设置，确保可以在WPF等框架中作为属性绑定使用
-        dmtpActor.SetValue(DmtpFileTransferActorProperty, dmtpRpcActor);
+        return dmtpActor.GetActor<DmtpFileTransferActor>();
     }
 
     /// <summary>
@@ -78,19 +66,9 @@ public static class DmtpFileTransferActorExtension
     /// <exception cref="ArgumentNullException">如果内部演员对象为空，则抛出此异常</exception>
     public static IDmtpFileTransferActor GetDmtpFileTransferActor(this IDmtpActorObject client)
     {
-        // 从client中获取Dmtp文件传输演员
         var actor = client.DmtpActor.GetDmtpFileTransferActor();
-        // 检查获取的演员是否为空
-        if (actor is null)
-        {
-            // 如果为空，则抛出ArgumentNullException异常
-            throw new ArgumentNullException(nameof(actor), TouchSocketDmtpResource.DmtpFileTransferActorNull);
-        }
-        else
-        {
-            // 返回获取的演员对象
-            return actor;
-        }
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor,nameof(actor), TouchSocketDmtpResource.DmtpFileTransferActorNull);
+        return actor;
     }
 
     #region Id文件传输

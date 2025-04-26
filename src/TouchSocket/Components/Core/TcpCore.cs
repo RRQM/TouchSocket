@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -298,7 +299,7 @@ internal sealed class TcpCore : DisposableObject
 
                 await this.m_semaphoreSlimForMax.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                var sendSegment = BytePool.Default.Rent(memory.Length);
+                var sendSegment = ArrayPool<byte>.Shared.Rent(memory.Length);
                 //if (!this.m_stores.TryPop(out var sendSegment))
                 //{
                 //    sendSegment = new SendSegment()
@@ -370,7 +371,7 @@ internal sealed class TcpCore : DisposableObject
 
                             byteBlock.Write(new ReadOnlySpan<byte>(value.Date, 0, value.Length));
 
-                            BytePool.Default.Return(value.Date);
+                            ArrayPool<byte>.Shared.Return(value.Date);
                             //value.Dispose();
                         }
 

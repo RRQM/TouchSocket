@@ -13,6 +13,7 @@
 using System;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -27,64 +28,81 @@ internal sealed partial class InternalWebSocket : IWebSocket
     private bool m_allowAsyncRead;
     private bool m_isCont;
 
-    public InternalWebSocket(HttpClientBase httpClientBase)
+    public InternalWebSocket(HttpClientBase httpClientBase) : base(true)
     {
         this.m_isServer = false;
         this.m_httpClientBase = httpClientBase;
-        this.m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
     }
 
-    public InternalWebSocket(HttpSessionClient httpSocketClient)
+    public InternalWebSocket(HttpSessionClient httpSocketClient) : base(true)
     {
         this.m_isServer = true;
         this.m_httpSocketClient = httpSocketClient;
-        this.m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
     }
 
     public bool AllowAsyncRead { get => this.m_allowAsyncRead; set => this.m_allowAsyncRead = value; }
-
     public IHttpSession Client => this.m_isServer ? this.m_httpSocketClient : this.m_httpClientBase;
     public WebSocketCloseStatus CloseStatus { get; set; }
+    public bool IsClient => !this.m_isServer;
+    public DateTimeOffset LastReceivedTime => Client.LastReceivedTime;
+    public DateTimeOffset LastSentTime => Client.LastSentTime;
+    public ILog Logger => this.Client.Logger;
     public bool Online { get; set; }
+    public Protocol Protocol => Protocol.WebSocket;
     public IResolver Resolver => this.m_isServer ? this.m_httpSocketClient.Resolver : this.m_httpClientBase.Resolver;
     public string Version { get; set; }
 
-    public Task CloseAsync(string msg)
+    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        return this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg);
+        try
+        {
+            return await this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, token);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 
-    public async Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)
+    public async Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default)
     {
         if (!this.Online)
         {
-            return;
+            return Result.Success;
         }
 
         this.CloseStatus = closeStatus;
 
-        using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close })
+        try
         {
-            using (var byteBlock = new ByteBlock())
+            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close })
             {
-                byteBlock.WriteUInt16((ushort)closeStatus, EndianType.Big);
-                if (statusDescription.HasValue())
+                using (var byteBlock = new ByteBlock(1024))
                 {
-                    byteBlock.WriteNormalString(statusDescription, Encoding.UTF8);
+                    byteBlock.WriteUInt16((ushort)closeStatus, EndianType.Big);
+                    if (statusDescription.HasValue())
+                    {
+                        byteBlock.WriteNormalString(statusDescription, Encoding.UTF8);
+                    }
+                    frame.PayloadData = byteBlock;
+                    await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
-                frame.PayloadData = byteBlock;
-                await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
+            if (this.m_isServer)
+            {
+                await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+                await this.m_httpSocketClient.CloseAsync(statusDescription, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            else
+            {
+                await this.m_httpClientBase.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
+                await this.m_httpClientBase.CloseAsync(statusDescription, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            return Result.Success;
         }
-        if (this.m_isServer)
+        catch (Exception ex)
         {
-            await this.m_httpSocketClient.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-            await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            await this.m_httpClientBase.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-            await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.FromException(ex);
         }
     }
 

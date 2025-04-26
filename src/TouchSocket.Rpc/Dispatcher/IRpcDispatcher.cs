@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -20,7 +21,7 @@ namespace TouchSocket.Rpc;
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为的类型，必须是类类型。</typeparam>
 /// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现ICallContext接口。</typeparam>
-public interface IRpcDispatcher<TRpcActor, TCallContext>
+public interface IRpcDispatcher<TRpcActor, TCallContext>:IDisposableObject
     where TRpcActor : class
     where TCallContext : class, ICallContext
 {

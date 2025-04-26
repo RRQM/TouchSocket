@@ -21,7 +21,7 @@ namespace TouchSocket.Rpc;
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为的类型，必须是IDependencyObject的子类。</typeparam>
 /// <typeparam name="TCallContext">调用上下文的类型，必须是ICallContext的子类。</typeparam>
-public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> : IRpcDispatcher<TRpcActor, TCallContext>
+public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> :DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext
 {
@@ -40,8 +40,8 @@ public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> : IRpcDispatcher<
             return func(callContext);
         }
 
-        // 否则，使用Task.Factory.StartNew在新的线程上执行RPC方法，以支持并发调用
-        _ = Task.Factory.StartNew(func, callContext);
+        // 否则，使用EasyTask.Run在新的线程上执行RPC方法，以支持并发调用
+        _ = EasyTask.SafeRun(func, callContext);
 
         return EasyTask.CompletedTask;
     }

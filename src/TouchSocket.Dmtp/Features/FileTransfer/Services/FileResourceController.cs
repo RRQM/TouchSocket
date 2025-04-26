@@ -42,7 +42,7 @@ public class FileResourceController : DisposableObject, IFileResourceController
             var ints = new List<int>();
             foreach (var item in this.FileResourceStore)
             {
-                if (DateTime.UtcNow - item.Value.LastActiveTime > this.Timeout)
+                if (DateTimeOffset.UtcNow - item.Value.LastActiveTime > this.Timeout)
                 {
                     ints.Add(item.Key);
                 }

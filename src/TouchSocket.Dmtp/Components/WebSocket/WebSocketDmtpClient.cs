@@ -12,9 +12,11 @@
 
 using System;
 using System.Net.WebSockets;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -23,50 +25,33 @@ namespace TouchSocket.Dmtp;
 /// WebSocketDmtpClient 类，继承自 SetupConfigObject 并实现了 IWebSocketDmtpClient 接口。
 /// 该类负责 WebSocket 客户端的配置和管理，提供与 Dmtp 协议相关的功能。
 /// </summary>
-public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
+public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 {
     /// <summary>
     /// 初始化WebSocketDmtpClient类的新实例。
     /// </summary>
     public WebSocketDmtpClient()
     {
-        // 初始化接收消息计数器，用于统计每秒接收的消息数量。
-        this.m_receiveCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1), // 设置统计周期为1秒。
-            OnPeriod = this.OnReceivePeriod // 每隔一个周期调用OnReceivePeriod方法处理接收统计逻辑。
-        };
-        // 初始化发送消息计数器，用于统计每秒发送的消息数量。
-        this.m_sentCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1), // 设置统计周期为1秒。
-            OnPeriod = this.OnSendPeriod // 每隔一个周期调用OnSendPeriod方法处理发送统计逻辑。
-        };
+        this.Protocol = DmtpUtility.DmtpProtocol;
     }
 
     #region 字段
 
-    private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
-    private ClientWebSocket m_client;
+    private readonly SemaphoreSlim m_connectionSemaphore = new SemaphoreSlim(1, 1);
+    private bool m_allowRoute;
     private SealedDmtpActor m_dmtpActor;
     private DmtpAdapter m_dmtpAdapter;
-    private bool m_allowRoute;
     private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-    private int m_receiveBufferSize = 1024 * 10;
-    private ValueCounter m_receiveCounter;
-    private int m_sendBufferSize = 1024 * 10;
-    private ValueCounter m_sentCounter;
-    private Task m_receiveTask;
-    private bool m_online;
+    private CancellationTokenSource m_tokenSourceForReceive;
 
     #endregion 字段
 
     #region 连接
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
     {
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_connectionSemaphore.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (this.Online)
@@ -74,41 +59,35 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
                 return;
             }
 
-            if (this.m_client == null || this.m_client.State != WebSocketState.Open)
+            if (!base.Online)
             {
-                this.m_client.SafeDispose();
-                this.m_client = new ClientWebSocket();
-                await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
-                {
-                    //OutputSend = this.OnDmtpActorSend,
-                    OutputSendAsync = this.OnDmtpActorSendAsync,
-                    Routing = this.OnDmtpActorRouting,
-                    Handshaking = this.OnDmtpActorHandshaking,
-                    Handshaked = this.OnDmtpActorHandshaked,
-                    Closing = this.OnDmtpActorClose,
-                    Logger = this.Logger,
-                    Client = this,
-                    FindDmtpActor = this.m_findDmtpActor,
-                    CreatedChannel = this.OnDmtpActorCreateChannel
-                };
-
-                this.m_dmtpAdapter = new DmtpAdapter();
-                this.m_dmtpAdapter.Config(this.Config);
-
-                this.m_receiveTask = Task.Factory.StartNew(this.BeginReceive).Unwrap();
-                this.m_receiveTask.FireAndForget();
+                await base.ConnectAsync(millisecondsTimeout, token);
             }
+
+            this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
+            {
+                OutputSendAsync = this.OnDmtpActorSendAsync,
+                Routing = this.OnDmtpActorRouting,
+                Handshaking = this.OnDmtpActorHandshaking,
+                Handshaked = this.OnDmtpActorHandshaked,
+                Closing = this.OnDmtpActorClose,
+                Logger = this.Logger,
+                Client = this,
+                FindDmtpActor = this.m_findDmtpActor,
+                CreatedChannel = this.OnDmtpActorCreateChannel
+            };
+
+            this.m_dmtpAdapter = new DmtpAdapter();
+            this.m_dmtpAdapter.Config(this.Config);
+            this.m_tokenSourceForReceive = new CancellationTokenSource();
 
             var option = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
 
             await this.m_dmtpActor.HandshakeAsync(option.VerifyToken, option.Id, millisecondsTimeout, option.Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_online = true;
         }
         finally
         {
-            this.m_semaphoreForConnect.Release();
+            this.m_connectionSemaphore.Release();
         }
     }
 
@@ -124,38 +103,33 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
+    public override bool Online => base.Online && this.m_dmtpActor != null && this.m_dmtpActor.Online;
 
+    
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_sentCounter.LastIncrement;
-
-    /// <inheritdoc/>
-    public bool Online => this.m_online;
-
-    /// <inheritdoc/>
-    public Protocol Protocol { get; protected set; } = DmtpUtility.DmtpProtocol;
-
-    /// <inheritdoc/>
-    public IPHost RemoteIPHost { get; private set; }
-
-    /// <summary>
-    /// 发送<see cref="IDmtpActor"/>关闭消息。
-    /// </summary>
-    /// <param name="msg">关闭消息的内容</param>
-    /// <returns>异步操作的任务</returns>
-    public async Task CloseAsync(string msg)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_dmtpActor != null)
+        try
         {
-            // 向IDmtpActor对象发送关闭消息
-            await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        if (this.m_client != null)
+            var dmtpActor = this.m_dmtpActor;
+            if (dmtpActor != null)
+            {
+                // 向IDmtpActor对象发送关闭消息
+                await dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                // 关闭IDmtpActor对象
+                await dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+
+            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            return Result.Success;
+        }
+        catch (Exception ex)
         {
-            await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.FromException(ex);
         }
     }
 
@@ -183,7 +157,6 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
     /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
-        this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
         var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
         if (dmtpRouteService != null)
         {
@@ -192,109 +165,44 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
         }
     }
 
-    private void Abort(bool manual, string msg)
+    /// <inheritdoc/>
+    protected override async Task OnReceived(WebSocketReceiveResult result, ByteBlock byteBlock)
     {
-        lock (this.m_semaphoreForConnect)
-        {
-            if (this.m_online)
-            {
-                this.m_online = false;
-                this.m_client.SafeDispose();
-                this.m_dmtpActor.SafeDispose();
-                _ = Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
-            }
-        }
-    }
-
-    private async Task BeginReceive()
-    {
-        var byteBlock = new ByteBlock(this.m_receiveBufferSize);
         try
         {
-            while (true)
+            //处理数据
+            while (byteBlock.CanRead)
             {
-                try
+                if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
                 {
-#if NET6_0_OR_GREATER
-                    var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-#else
-                    var segment = byteBlock.TotalMemory.GetArray();
-
-                    var result = await this.m_client.ReceiveAsync(segment, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-#endif
-
-                    if (result.Count == 0)
+                    using (message)
                     {
-                        break;
-                    }
-                    byteBlock.SetLength(result.Count);
-                    this.m_receiveCounter.Increment(result.Count);
-
-                    //处理数据
-                    while (byteBlock.CanRead)
-                    {
-                        if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
+                        if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            using (message)
-                            {
-                                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                                {
-                                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.Logger?.Exception(ex);
-                    break;
-                }
-                finally
-                {
-                    if (byteBlock.Holding || byteBlock.DisposedValue)
-                    {
-                        byteBlock.Dispose();//释放上个内存
-                        byteBlock = new ByteBlock(this.m_receiveBufferSize);
-                    }
-                    else
-                    {
-                        byteBlock.Reset();
-                        if (this.m_receiveBufferSize > byteBlock.Capacity)
-                        {
-                            byteBlock.SetCapacity(this.m_receiveBufferSize);
+                            await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                 }
             }
-
-            this.Abort(false, "远程终端主动关闭");
         }
         catch (Exception ex)
         {
-            this.Abort(false, ex.Message);
+            this.Logger?.Debug(this, ex);
         }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    private void OnReceivePeriod(long value)
-    {
-        this.m_receiveBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
-    }
-
-    private void OnSendPeriod(long value)
-    {
-        this.m_sendBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
     }
 
     #region 内部委托绑定
 
+    /// <inheritdoc/>
+    protected override Task OnWebSocketClosed(ClosedEventArgs e)
+    {
+        return this.PrivateOnDmtpClosed(e);
+    }
+
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
         await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
         this.Abort(false, msg);
     }
 
@@ -320,28 +228,27 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
 
     private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
     {
-        await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        this.m_sentCounter.Increment(memory.Length);
+        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 内部委托绑定
 
     #region 事件触发
 
-    private async Task PrivateOnDmtpClosed(object obj)
+    /// <summary>
+    /// 当创建通道时触发的事件处理程序
+    /// </summary>
+    /// <param name="e">包含通道创建信息的事件参数</param>
+    protected virtual async Task OnCreateChannel(CreateChannelEventArgs e)
     {
-        try
+        // 如果事件已经被处理，则直接返回
+        if (e.Handled)
         {
-            var e = (ClosedEventArgs)obj;
-            await this.m_receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
         }
-        catch
-        {
 
-        }
+        // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件处理通道创建事件
+        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -358,12 +265,13 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
         // 异步触发插件管理器中的 IDmtpClosedPlugin 接口的事件，并传递相关参数
         await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
+
     /// <summary>
     /// 当Dmtp即将被关闭时触发。
     /// <para>
     /// 该触发条件有2种：
     /// <list type="number">
-    /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
     /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
     /// </list>
     /// </para>
@@ -379,22 +287,6 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
         }
         // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
         await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 当创建通道时触发的事件处理程序
-    /// </summary>
-    /// <param name="e">包含通道创建信息的事件参数</param>
-    protected virtual async Task OnCreateChannel(CreateChannelEventArgs e)
-    {
-        // 如果事件已经被处理，则直接返回
-        if (e.Handled)
-        {
-            return;
-        }
-
-        // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件处理通道创建事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -426,6 +318,7 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
         // 触发握手过程的插件事件
         await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
+
     /// <summary>
     /// 当需要转发路由包时
     /// </summary>
@@ -440,5 +333,11 @@ public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
         // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包
         await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
+
+    private async Task PrivateOnDmtpClosed(ClosedEventArgs e)
+    {
+        await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
     #endregion 事件触发
 }

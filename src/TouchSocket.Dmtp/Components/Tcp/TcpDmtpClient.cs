@@ -58,8 +58,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
+    /// <param name="token"></param>
     /// <returns>异步任务</returns>
-    public override async Task CloseAsync(string msg)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         // 检查是否已初始化IDmtpActor对象
         if (this.m_dmtpActor != null)
@@ -67,11 +68,11 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             // 向IDmtpActor对象发送关闭消息
             await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的CloseAsync方法完成后续关闭操作
-        await base.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 断开
@@ -201,7 +202,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <para>
     /// 该触发条件有2种：
     /// <list type="number">
-    /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
     /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
     /// </list>
     /// </para>

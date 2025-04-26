@@ -50,7 +50,7 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
     public ushort StartProtocol { get; set; }
 
     /// <inheritdoc/>
-    public Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var dmtpRedisActor = new DmtpRedisActor(client.DmtpActor)
         {
@@ -59,9 +59,9 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
         };
 
         dmtpRedisActor.SetProtocolFlags(this.StartProtocol);
-        client.DmtpActor.SetDmtpRedisActor(dmtpRedisActor);
+        client.DmtpActor.AddActor<DmtpRedisActor>(dmtpRedisActor);
 
-        return e.InvokeNext();
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

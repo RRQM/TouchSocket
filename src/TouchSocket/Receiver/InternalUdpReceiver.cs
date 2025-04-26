@@ -20,47 +20,45 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// Receiver
 /// </summary>
-internal sealed class InternalUdpReceiver : ValueTaskSource<IUdpReceiverResult>, IReceiver<IUdpReceiverResult>
+internal sealed class InternalUdpReceiver : BlockSegment<IUdpReceiverResult>, IReceiver<IUdpReceiverResult>
 {
     #region 字段
 
     private readonly IReceiverClient<IUdpReceiverResult> m_client;
     private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
     private ByteBlock m_byteBlock;
-    private IRequestInfo m_requestInfo;
+    private ByteBlock m_cacheByteBlock;
     private bool m_cacheMode;
     private int m_maxCacheSize = 1024 * 64;
-    private ByteBlock m_cacheByteBlock;
-    private readonly UdpReceiverResult m_receiverResult;
+    private UdpReceiverResult m_receiverResult;
+    private IRequestInfo m_requestInfo;
 
     #endregion 字段
-
-    public bool CacheMode { get => this.m_cacheMode; set => this.m_cacheMode = value; }
-
-    public int MaxCacheSize { get => this.m_maxCacheSize; set => this.m_maxCacheSize = value; }
 
     /// <summary>
     /// Receiver
     /// </summary>
     /// <param name="client"></param>
-    public InternalUdpReceiver(IReceiverClient<IUdpReceiverResult> client)
+    public InternalUdpReceiver(IReceiverClient<IUdpReceiverResult> client):base(true)
     {
         this.m_client = client;
-        this.m_receiverResult = new UdpReceiverResult(this.ComplateRead);
     }
 
-    ///// <inheritdoc/>
-    //public Task<IUdpReceiverResult> ReadAsync(CancellationToken token)
-    //{
-    //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IUdpReceiverResult>(this.m_receiverResult) : base.WaitAsync(token);
-    //}
+    public bool CacheMode { get => this.m_cacheMode; set => this.m_cacheMode = value; }
 
-    /// <inheritdoc/>
-    public ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken token)
+    public int MaxCacheSize { get => this.m_maxCacheSize; set => this.m_maxCacheSize = value; }
+   
+    public async Task Complete(string msg)
     {
-        return this.m_receiverResult.IsCompleted
-            ? EasyValueTask.FromResult<IUdpReceiverResult>(this.m_receiverResult)
-            : base.ValueWaitAsync(token);
+        try
+        {
+            this.m_receiverResult.IsCompleted = true;
+            this.m_receiverResult.Message = msg;
+            await this.InputReceive(default, default, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        catch
+        {
+        }
     }
 
     /// <inheritdoc/>
@@ -105,22 +103,49 @@ internal sealed class InternalUdpReceiver : ValueTaskSource<IUdpReceiverResult>,
         }
 
         this.m_receiverResult.EndPoint = remoteEndPoint;
-
-        this.Complete(false);
-        await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (this.m_cacheMode)
+        {
+            this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
+            this.m_receiverResult.RequestInfo = this.m_requestInfo;
+        }
+        else
+        {
+            this.m_receiverResult.ByteBlock = this.m_byteBlock;
+            this.m_receiverResult.RequestInfo = this.m_requestInfo;
+        }
+        await base.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    public async Task Complete(string msg)
+    /// <inheritdoc/>
+    public ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken token)
     {
-        try
+        if (this.m_receiverResult.IsCompleted)
         {
-            this.m_receiverResult.IsCompleted = true;
-            this.m_receiverResult.Message = msg;
-            await this.InputReceive(default, default, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return EasyValueTask.FromResult<IUdpReceiverResult>(this.m_receiverResult);
         }
-        catch
+        else
         {
+            return base.ProtectedReadAsync(token);
         }
+    }
+
+    protected override void CompleteRead()
+    {
+        if (this.m_cacheMode && this.m_cacheByteBlock.CanReadLength > this.m_maxCacheSize)
+        {
+            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.m_cacheByteBlock.CanReadLength), this.m_cacheByteBlock.CanReadLength, this.m_maxCacheSize);
+        }
+        this.m_byteBlock = default;
+        this.m_requestInfo = default;
+        this.m_receiverResult.RequestInfo = default;
+        this.m_receiverResult.ByteBlock = default;
+        base.CompleteRead();
+    }
+
+    protected override IUdpReceiverResult CreateResult(Action actionForDispose)
+    {
+        this.m_receiverResult = new UdpReceiverResult(actionForDispose);
+        return this.m_receiverResult;
     }
 
     /// <inheritdoc/>
@@ -140,42 +165,5 @@ internal sealed class InternalUdpReceiver : ValueTaskSource<IUdpReceiverResult>,
         this.m_byteBlock = null;
         this.m_requestInfo = null;
         base.Dispose(disposing);
-    }
-
-    private void ComplateRead()
-    {
-        if (this.m_cacheMode && this.m_cacheByteBlock.CanReadLength > this.m_maxCacheSize)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.m_cacheByteBlock.CanReadLength), this.m_cacheByteBlock.CanReadLength, this.m_maxCacheSize);
-        }
-        this.m_byteBlock = default;
-        this.m_requestInfo = default;
-        this.m_receiverResult.RequestInfo = default;
-        this.m_receiverResult.ByteBlock = default;
-        this.m_resetEventForComplateRead.Set();
-    }
-
-    protected override void Scheduler(Action<object> action, object state)
-    {
-        void Run(object o)
-        {
-            action.Invoke(o);
-        }
-        ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-    }
-
-    protected override IUdpReceiverResult GetResult()
-    {
-        if (this.m_cacheMode)
-        {
-            this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
-            this.m_receiverResult.RequestInfo = this.m_requestInfo;
-        }
-        else
-        {
-            this.m_receiverResult.ByteBlock = this.m_byteBlock;
-            this.m_receiverResult.RequestInfo = this.m_requestInfo;
-        }
-        return this.m_receiverResult;
     }
 }

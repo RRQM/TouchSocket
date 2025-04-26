@@ -36,16 +36,12 @@ public abstract class HttpBase : IRequestInfo
     public const int MaxCacheSize = 1024 * 1024 * 100;
 
     /// <summary>
-    /// 获取或设置HTTP内容。
-    /// </summary>
-    public virtual HttpContent Content { get; set; }
-
-    /// <summary>
     /// 服务器版本
     /// </summary>
     public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
+
     private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
 
     /// <summary>
@@ -58,11 +54,6 @@ public abstract class HttpBase : IRequestInfo
     }
 
     /// <summary>
-    /// 是否在Server端工作
-    /// </summary>
-    public abstract bool IsServer { get; }
-
-    /// <summary>
     /// 允许编码
     /// </summary>
     public string AcceptEncoding
@@ -70,6 +61,11 @@ public abstract class HttpBase : IRequestInfo
         get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
         set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
     }
+
+    /// <summary>
+    /// 获取或设置HTTP内容。
+    /// </summary>
+    public virtual HttpContent Content { get; set; }
 
     /// <summary>
     /// 内容填充完成
@@ -102,6 +98,11 @@ public abstract class HttpBase : IRequestInfo
     /// 请求头集合
     /// </summary>
     public IHttpHeader Headers => this.m_headers;
+
+    /// <summary>
+    /// 是否在Server端工作
+    /// </summary>
+    public abstract bool IsServer { get; }
 
     /// <summary>
     /// 保持连接。
@@ -158,7 +159,7 @@ public abstract class HttpBase : IRequestInfo
 
     internal Task CompleteInput()
     {
-        return this.m_httpBlockSegment.InternalComplete();
+        return this.m_httpBlockSegment.InternalComplete(string.Empty);
     }
 
     internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
@@ -192,31 +193,31 @@ public abstract class HttpBase : IRequestInfo
         this.m_httpBlockSegment.InternalReset();
     }
 
-    ///// <summary>
-    ///// 读取信息
-    ///// </summary>
-    //protected abstract void LoadHeaderProperties();
-
-    //private void GetRequestHeaders(string[] rows)
-    //{
-    //    this.m_headers.Clear();
-    //    if (rows == null || rows.Length <= 0)
-    //    {
-    //        return;
-    //    }
-
-    //    foreach (var item in rows)
-    //    {
-    //        var kv = item.SplitFirst(':');
-    //        if (kv.Length == 2)
-    //        {
-    //            var key = kv[0].ToLower();
-    //            this.m_headers.Add(key, kv[1]);
-    //        }
-    //    }
-    //}
-
+    /// <summary>
+    /// 读取请求行。
+    /// </summary>
+    /// <param name="requestLineSpan">包含请求行的只读字节跨度。</param>
     protected abstract void ReadRequestLine(ReadOnlySpan<byte> requestLineSpan);
+
+    private void ParseHeaderLine(ReadOnlySpan<byte> line)
+    {
+        var colonIndex = line.IndexOf((byte)':');
+        if (colonIndex <= 0)
+        {
+            return; // 无效格式
+        }
+
+        // 分割键值
+        var keySpan = line.Slice(0, colonIndex).Trim();
+        var valueSpan = line.Slice(colonIndex + 1).Trim();
+
+        if (!keySpan.IsEmpty && !valueSpan.IsEmpty)
+        {
+            string key = keySpan.ToString(Encoding.UTF8).ToLower();
+            string value = valueSpan.ToString(Encoding.UTF8);
+            this.m_headers[key] = value;
+        }
+    }
 
     private void ReadHeaders(ReadOnlySpan<byte> span)
     {
@@ -266,55 +267,7 @@ public abstract class HttpBase : IRequestInfo
         //this.LoadHeaderProperties();
     }
 
-    private void ParseHeaderLine(ReadOnlySpan<byte> line)
-    {
-        var colonIndex = line.IndexOf((byte)':');
-        if (colonIndex <= 0)
-        {
-            return; // 无效格式
-        }
-
-        // 分割键值
-        var keySpan = line.Slice(0, colonIndex).Trim();
-        var valueSpan = line.Slice(colonIndex + 1).Trim();
-
-        if (!keySpan.IsEmpty && !valueSpan.IsEmpty)
-        {
-            string key = keySpan.ToString(Encoding.UTF8).ToLower();
-            string value = valueSpan.ToString(Encoding.UTF8);
-            this.m_headers[key] = value;
-        }
-    }
-
-    //private void ReadHeaders(ReadOnlySpan<byte> span)
-    //{
-    //    var data = span.ToString(Encoding.UTF8);
-    //    var rows = Regex.Split(data, "\r\n");
-
-    //    //Request URL & Method & Version
-    //    this.RequestLine = rows[0];
-
-    //    this.m_headers.Clear();
-    //    if (rows == null || rows.Length <= 0)
-    //    {
-    //        return;
-    //    }
-
-    //    foreach (var item in rows)
-    //    {
-    //        var kv = item.SplitFirst(':');
-    //        if (kv.Length == 2)
-    //        {
-    //            var key = kv[0].ToLower();
-    //            this.m_headers.Add(key, kv[1]);
-    //        }
-    //    }
-
-    //    this.LoadHeaderProperties();
-    //}
-
     #region Content
-
 
     /// <summary>
     /// 获取一次性内容。
@@ -333,8 +286,8 @@ public abstract class HttpBase : IRequestInfo
     /// 异步读取HTTP块段的内容。
     /// </summary>
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
-    /// <returns>返回一个<see cref="IBlockResult{T}"/>，表示异步读取操作的结果。</returns>
-    public virtual ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken)
+    /// <returns>返回一个<see cref="IReadOnlyMemoryBlockResult"/>，表示异步读取操作的结果。</returns>
+    public virtual ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
     {
         // 调用m_httpBlockSegment的InternalValueWaitAsync方法，等待HTTP块段的内部值。
         return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
@@ -365,7 +318,6 @@ public abstract class HttpBase : IRequestInfo
             }
         }
     }
-
 
     /// <summary>
     /// 异步读取并复制流数据
@@ -410,31 +362,4 @@ public abstract class HttpBase : IRequestInfo
     }
 
     #endregion Read
-
-    #region Class
-
-    private class HttpBlockSegment : BlockSegment<byte>
-    {
-        internal Task InternalComplete()
-        {
-            return base.Complete(string.Empty);
-        }
-
-        internal Task InternalInputAsync(in ReadOnlyMemory<byte> memory)
-        {
-            return base.InputAsync(memory);
-        }
-
-        internal void InternalReset()
-        {
-            base.Reset();
-        }
-
-        internal ValueTask<IBlockResult<byte>> InternalValueWaitAsync(CancellationToken cancellationToken)
-        {
-            return base.ValueWaitAsync(cancellationToken);
-        }
-    }
-
-    #endregion Class
 }

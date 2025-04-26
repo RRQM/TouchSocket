@@ -13,27 +13,8 @@
 namespace TouchSocket.Rpc;
 
 /// <summary>
-/// TransientRpcServer
+/// Rpc范围类
 /// </summary>
-public abstract class TransientRpcServer<TCallContext> : RpcServer, ITransientRpcServer where TCallContext : ICallContext
+public abstract class SingletonRpcServer : IRpcServer
 {
-    ICallContext ITransientRpcServer.CallContext { get; set; }
-
-    /// <summary>
-    /// 调用上下文。
-    /// </summary>
-    protected TCallContext CallContext => (((ITransientRpcServer)this).CallContext is TCallContext Transient) ? Transient : default;
-}
-
-/// <summary>
-/// TransientRpcServer
-/// </summary>
-public abstract class TransientRpcServer : RpcServer, ITransientRpcServer
-{
-    ICallContext ITransientRpcServer.CallContext { get; set; }
-
-    /// <summary>
-    /// 调用上下文。
-    /// </summary>
-    protected ICallContext CallContext => ((ITransientRpcServer)this).CallContext;
 }

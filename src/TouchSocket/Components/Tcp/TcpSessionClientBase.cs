@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets;
 /// <seealso cref="IClient"/>
 /// <seealso cref="IIdClient"/>
 [DebuggerDisplay("Id={Id},IP={IP},Port={Port}")]
-public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, ITcpListenableClient, IClient, IIdClient
+public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, ITcpListenableClient, IIdClient
 {
     /// <summary>
     /// TcpSessionClientBase 类的构造函数。
@@ -68,7 +68,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
     private IScopedResolver m_scopedResolver;
     private ITcpServiceBase m_service;
-    private string m_serviceIP;
+    private string m_serviceIp;
     private int m_servicePort;
     private TcpCore m_tcpCore;
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
@@ -95,10 +95,10 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public bool IsClient => false;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_tcpCore.ReceiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_tcpCore.ReceiveCounter.LastIncrement;
 
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_tcpCore.SendCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_tcpCore.SendCounter.LastIncrement;
 
     /// <inheritdoc/>
     public TcpListenOption ListenOption => this.m_listenOption;
@@ -125,7 +125,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public ITcpServiceBase Service => this.m_service;
 
     /// <inheritdoc/>
-    public string ServiceIP => this.m_serviceIP;
+    public string ServiceIP => this.m_serviceIp;
 
     /// <inheritdoc/>
     public int ServicePort => this.m_servicePort;
@@ -213,7 +213,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         this.m_mainSocket = socket;
         this.m_iP = socket.RemoteEndPoint.GetIP();
         this.m_port = socket.RemoteEndPoint.GetPort();
-        this.m_serviceIP = socket.LocalEndPoint.GetIP();
+        this.m_serviceIp = socket.LocalEndPoint.GetIP();
         this.m_servicePort = socket.LocalEndPoint.GetPort();
 
         //tcpCore.OnReceived = this.HandleReceived;
@@ -269,7 +269,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
                 // 安全地释放数据处理适配器资源
                 this.m_dataHandlingAdapter.SafeDispose();
                 // 启动一个新的任务，用于处理TCP关闭事件
-                _ = Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                _ = EasyTask.Run(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
             }
         }
     }
@@ -310,7 +310,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
                     }
                     catch (Exception ex)
                     {
-                        this.Logger?.Exception(ex);
+                        this.Logger?.Exception(this, ex);
                     }
                     finally
                     {
@@ -442,6 +442,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         }
         catch
         {
+            // ignored
         }
         finally
         {
@@ -455,10 +456,15 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     #endregion 事件&委托
 
     /// <inheritdoc/>
-    public virtual async Task CloseAsync(string msg)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_online)
+        try
         {
+            if (!this.m_online)
+            {
+                return Result.Success;
+            }
+
             await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             lock (this.m_lockForAbort)
             {
@@ -466,6 +472,12 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
                 this.MainSocket.TryClose();
                 this.Abort(true, msg);
             }
+
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+          return Result.FromException(ex);
         }
     }
 

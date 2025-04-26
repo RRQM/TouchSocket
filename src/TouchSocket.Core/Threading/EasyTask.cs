@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// EasyTask 类简化了对异步任务的处理，提供了简便的静态方法来创建和操作任务。
 /// </summary>
-public static class EasyTask
+public static partial class EasyTask
 {
     /// <summary>
     /// EasyTask 类的静态构造函数，在类加载时初始化 CompletedTask 属性。

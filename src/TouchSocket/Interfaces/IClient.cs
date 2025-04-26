@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 终端接口
 /// </summary>
-public interface IClient : IDependencyObject, ILoggerObject
+public interface IClient : ILoggerObject,IDisposableObject
 {
     /// <summary>
     /// 终端协议
@@ -28,12 +28,12 @@ public interface IClient : IDependencyObject, ILoggerObject
     /// <summary>
     /// 最后一次接收到数据的时间
     /// </summary>
-    DateTime LastReceivedTime { get; }
+    DateTimeOffset LastReceivedTime { get; }
 
     /// <summary>
     /// 最后一次发送数据的时间
     /// </summary>
-    DateTime LastSentTime { get; }
+    DateTimeOffset LastSentTime { get; }
 
     /// <summary>
     /// 表示是否为客户端终端。当为<see langword="true"/>时，表示是客户端。否则为服务器通讯终端。

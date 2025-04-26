@@ -109,4 +109,10 @@
     <value>WebSocket连接协议不正确，这可能并不是一个WebSocket连接。</value>
     <comment>WebSocket连接协议不正确，这可能并不是一个WebSocket连接。</comment>
   </data>
+  <data name="RequestHasBeenResponded" xml:space="preserve">
+    <value>当前Http请求已被响应，无法重复处理。</value>
+  </data>
+  <data name="ProtocolIsIncorrect" xml:space="preserve">
+    <value>协议不正确。</value>
+  </data>
 </root>

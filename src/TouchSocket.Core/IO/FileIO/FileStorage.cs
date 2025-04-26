@@ -41,14 +41,14 @@ public partial class FileStorage
 
     private FileStorage()
     {
-        this.AccessTime = DateTime.UtcNow;
+        this.AccessTime = DateTimeOffset.UtcNow;
         this.AccessTimeout = TimeSpan.FromSeconds(60);
     }
 
     /// <summary>
     /// 最后访问时间。
     /// </summary>
-    public DateTime AccessTime { get; private set; }
+    public DateTimeOffset AccessTime { get; private set; }
 
     /// <summary>
     /// 访问超时时间。默认60s
@@ -91,7 +91,7 @@ public partial class FileStorage
     /// </summary>
     public void Flush()
     {
-        this.AccessTime = DateTime.UtcNow;
+        this.AccessTime = DateTimeOffset.UtcNow;
         this.FileStream.Flush();
     }
 
@@ -106,7 +106,7 @@ public partial class FileStorage
     public int Read(long startPos, Span<byte> span)
     {
         // 更新访问时间，用于跟踪文件的最近访问时间。
-        this.AccessTime = DateTime.UtcNow;
+        this.AccessTime = DateTimeOffset.UtcNow;
         // 使用写锁保护共享资源，确保读操作的线程安全性。
         using (var writeLock = new WriteLock(this.m_lockSlim))
         {
@@ -147,7 +147,7 @@ public partial class FileStorage
     public void Write(long startPos, ReadOnlySpan<byte> span)
     {
         // 更新文件的访问时间。
-        this.AccessTime = DateTime.UtcNow;
+        this.AccessTime = DateTimeOffset.UtcNow;
 
         // 使用写锁确保线程安全。
         using (var writeLock = new WriteLock(this.m_lockSlim))

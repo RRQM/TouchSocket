@@ -141,7 +141,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
         }
         catch (Exception ex)
         {
-            this.m_logger?.Exception(ex);
+            this.m_logger?.Exception(this, ex);
             throw;
         }
     }

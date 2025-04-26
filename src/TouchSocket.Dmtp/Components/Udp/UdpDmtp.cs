@@ -42,7 +42,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
             this.m_udpDmtpClients.RemoveWhen((kv) =>
             {
                 // 如果客户端最后一次活跃时间距现在超过1分钟，则认为该客户端不活跃
-                if (DateTime.UtcNow - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
+                if (DateTimeOffset.UtcNow - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
                 {
                     return true;
                 }

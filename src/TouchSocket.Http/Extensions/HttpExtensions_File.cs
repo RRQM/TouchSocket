@@ -11,11 +11,13 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
@@ -48,10 +50,10 @@ public static partial class HttpExtensions
                 if (fileName.HasValue())
                 {
                     var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                    response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+                    response.Headers.TryAdd(HttpHeaders.ContentDisposition, contentDisposition);
                 }
 
-                response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
+                response.Headers.TryAdd(HttpHeaders.AcceptRanges, "bytes");
 
                 autoGzip = autoGzip && request.IsAcceptGzip();
 
@@ -101,7 +103,7 @@ public static partial class HttpExtensions
                     flowOperator.SetLength(fileInfo.Length);
                 }
 
-                var buffer = BytePool.Default.Rent(bufferLen);
+                var buffer = ArrayPool<byte>.Shared.Rent(bufferLen);
                 try
                 {
                     if (autoGzip)
@@ -152,7 +154,7 @@ public static partial class HttpExtensions
                 }
                 finally
                 {
-                    BytePool.Default.Return(buffer);
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
 
@@ -164,11 +166,24 @@ public static partial class HttpExtensions
         }
     }
 
+
+    ///<summary>
+    /// 从文件响应。
+    /// <para>当response支持持续写入时，会直接回复响应。并阻塞执行，直到完成。所以在执行该方法之前，请确保已设置完成所有状态字</para>
+    /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
+    /// </summary>
+    /// <param name="response">响应</param>
+    /// <param name="fileInfo">文件信息</param>
+    /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
+    /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
+    /// <param name="maxSpeed">最大速度。</param>
+    /// <param name="bufferLen">读取长度。</param>
+    /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用GZip</param>
+    /// <exception cref="Exception"></exception>
+    /// <returns>异步任务</returns>
     public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
-        HttpFlowOperator flowOperator = new HttpFlowOperator();
-        flowOperator.BlockSize = bufferLen;
-        flowOperator.MaxSpeed = maxSpeed;
+        var flowOperator = new HttpFlowOperator { BlockSize = bufferLen, MaxSpeed = maxSpeed };
         var result = await FromFileAsync(response, fileInfo, flowOperator, request, fileName, autoGzip).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         if (!result.IsSuccess)
         {

@@ -63,7 +63,7 @@ public class SnowflakeIdGenerator
         // 设置工作机器ID
         s_workerId = workerId;
         // 设置时间戳基准值，这是Snowflake算法中用到的一个重要参数
-        this.m_twepoch = DateTime.UtcNow.Ticks - 10000;
+        this.m_twepoch = DateTimeOffset.UtcNow.Ticks - 10000;
     }
 
     /// <summary>

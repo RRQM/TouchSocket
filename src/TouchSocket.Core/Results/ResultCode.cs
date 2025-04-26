@@ -18,19 +18,9 @@ namespace TouchSocket.Core;
 public enum ResultCode : byte
 {
     /// <summary>
-    /// 默认
+    /// 默认，表示没有特定的结果状态
     /// </summary>
-    Default,
-
-    /// <summary>
-    /// 错误
-    /// </summary>
-    Error,
-
-    /// <summary>
-    /// 异常
-    /// </summary>
-    Exception,
+    Default = 0,
 
     /// <summary>
     /// 成功
@@ -38,9 +28,19 @@ public enum ResultCode : byte
     Success,
 
     /// <summary>
-    /// 失败
+    /// 错误，程度较重的错误，但不影响系统的运行
     /// </summary>
-    Fail,
+    Error,
+
+    /// <summary>
+    /// 异常，程度较重的错误，可能是由于系统异常或其他不可恢复的原因导致的
+    /// </summary>
+    Exception,
+
+    /// <summary>
+    /// 失败，程度较轻的错误，可能是由于参数错误或其他可恢复的原因导致的
+    /// </summary>
+    Failure,
 
     /// <summary>
     /// 操作超时
@@ -50,5 +50,11 @@ public enum ResultCode : byte
     /// <summary>
     /// 操作取消
     /// </summary>
-    Canceled
+    Canceled,
+
+    /// <summary>
+    /// 操作对象已被释放
+    /// </summary>
+    Disposed,
+
 }

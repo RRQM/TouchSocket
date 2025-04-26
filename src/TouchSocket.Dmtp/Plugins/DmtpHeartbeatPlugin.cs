@@ -26,7 +26,7 @@ public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
     /// <inheritdoc/>
     public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
-        _ = Task.Factory.StartNew(async () =>
+        _ = EasyTask.Run(async () =>
         {
             var failedCount = 0;
             while (true)
@@ -40,7 +40,7 @@ public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
                 {
                     return;
                 }
-                if (DateTime.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
+                if (DateTimeOffset.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
                 {
                     continue;
                 }
@@ -58,7 +58,7 @@ public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
                     }
                 }
             }
-        }, TaskCreationOptions.LongRunning);
+        });
 
         await e.InvokeNext();
     }

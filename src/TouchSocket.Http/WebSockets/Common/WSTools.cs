@@ -13,6 +13,7 @@
 using System;
 using System.Text;
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http.WebSockets;
 
@@ -24,7 +25,7 @@ internal static class WSTools
     /// <summary>
     /// 应答。
     /// </summary>
-    public const string acceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    public const string AcceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
     {
@@ -98,7 +99,7 @@ internal static class WSTools
     /// <returns></returns>
     public static string CalculateBase64Key(string str)
     {
-        return (str + acceptMask).ToSha1(Encoding.UTF8).ToBase64();
+        return (str + AcceptMask).ToSha1(Encoding.UTF8).ToBase64();
     }
 
     /// <summary>
@@ -112,23 +113,7 @@ internal static class WSTools
         return Convert.ToBase64String(src);
     }
 
-    ///// <summary>
-    ///// 掩码运算
-    ///// </summary>
-    ///// <param name="storeBuf"></param>
-    ///// <param name="sOffset"></param>
-    ///// <param name="buffer"></param>
-    ///// <param name="offset"></param>
-    ///// <param name="length"></param>
-    ///// <param name="masks"></param>
-    //public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
-    //{
-    //    for (var i = 0; i < length; i++)
-    //    {
-    //        storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
-    //    }
-    //}
-
+   
     public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
     {
         for (var i = 0; i < memorySpan.Length; i++)
@@ -148,12 +133,12 @@ internal static class WSTools
     {
         var request = new HttpRequest();
         request.URL=(httpClientBase.RemoteIPHost.PathAndQuery);
-        request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
-        request.Headers.Add(HttpHeaders.Connection, "upgrade");
-        request.Headers.Add(HttpHeaders.Upgrade, "websocket");
-        request.Headers.Add("Sec-WebSocket-Version", $"{version}");
+        request.Headers.TryAdd(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
+        request.Headers.TryAdd(HttpHeaders.Connection, "upgrade");
+        request.Headers.TryAdd(HttpHeaders.Upgrade, "websocket");
+        request.Headers.TryAdd("Sec-WebSocket-Version", $"{version}");
         base64Key = CreateBase64Key();
-        request.Headers.Add("Sec-WebSocket-Key", base64Key);
+        request.Headers.TryAdd("Sec-WebSocket-Key", base64Key);
         request.AsGet();
         return request;
     }
@@ -184,9 +169,9 @@ internal static class WSTools
 
         response.StatusCode = 101;
         response.StatusMessage = "switching protocols";
-        response.Headers.Add(HttpHeaders.Connection, "upgrade");
-        response.Headers.Add(HttpHeaders.Upgrade, "websocket");
-        response.Headers.Add("sec-websocket-accept", CalculateBase64Key(secWebSocketKey));
+        response.Headers.TryAdd(HttpHeaders.Connection, "upgrade");
+        response.Headers.TryAdd(HttpHeaders.Upgrade, "websocket");
+        response.Headers.TryAdd("sec-websocket-accept", CalculateBase64Key(secWebSocketKey));
         return true;
     }
 }

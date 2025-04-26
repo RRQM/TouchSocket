@@ -159,7 +159,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
             {
                 if (block == null)
                 {
-                    block = BytePool.Default.GetByteBlock(this.m_bufferLength);
+                    block = new ByteBlock(this.m_bufferLength);
                     byteBlocks.Add(block);
                 }
                 var surLen = this.m_bufferLength - block.Position;
@@ -204,7 +204,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
 
     private ByteBlock Write(QueueDataBytes transferByte, ref int offset)
     {
-        var block = BytePool.Default.GetByteBlock(this.m_bufferLength);
+        var block = new ByteBlock(this.m_bufferLength);
         var len = Math.Min(transferByte.Length - offset, this.m_bufferLength);
         block.Write(new ReadOnlySpan<byte>(transferByte.Buffer, offset, len));
         offset += len;

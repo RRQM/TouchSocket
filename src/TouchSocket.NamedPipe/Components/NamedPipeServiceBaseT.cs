@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -54,16 +55,12 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     /// <inheritdoc/>
     public void AddListen(NamedPipeListenOption option)
     {
-        if (option is null)
-        {
-            throw new ArgumentNullException(nameof(option));
-        }
-
+        ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
         this.ThrowIfDisposed();
 
         var networkMonitor = new NamedPipeMonitor(option);
 
-        _ = Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
+        _ = EasyTask.Run(this.ThreadBegin, networkMonitor);
         this.m_monitors.Add(networkMonitor);
     }
 
@@ -89,10 +86,8 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     /// <inheritdoc/>
     public bool RemoveListen(NamedPipeMonitor monitor)
     {
-        if (monitor is null)
-        {
-            throw new ArgumentNullException(nameof(monitor));
-        }
+        this.ThrowIfDisposed();
+        ThrowHelper.ThrowArgumentNullExceptionIf(monitor, nameof(monitor));
 
         if (this.m_monitors.Remove(monitor))
         {
@@ -104,15 +99,9 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     /// <inheritdoc/>
     public override async Task ResetIdAsync(string sourceId, string targetId)
     {
-        if (string.IsNullOrEmpty(sourceId))
-        {
-            throw new ArgumentException($"“{nameof(sourceId)}”不能为 null 或空。", nameof(sourceId));
-        }
-
-        if (string.IsNullOrEmpty(targetId))
-        {
-            throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-        }
+        this.ThrowIfDisposed();
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
 
         if (sourceId == targetId)
         {
@@ -200,10 +189,25 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     }
 
     /// <inheritdoc/>
-    public override async Task StopAsync()
+    public override async Task<Result> StopAsync(CancellationToken token = default)
     {
-        await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        throw new NotImplementedException();
+        try
+        {
+            await this.ClearAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_serverState = ServerState.Stopped;
+            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            this.m_serverState = ServerState.Exception;
+            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.FromException(ex);
+        }
+        finally
+        {
+            this.m_monitors.Clear();
+        }
     }
 
     private void BeginListen(List<NamedPipeListenOption> optionList)
@@ -253,9 +257,8 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         }
     }
 
-    private async Task ThreadBegin(object obj)
+    private async Task ThreadBegin(NamedPipeMonitor monitor)
     {
-        var monitor = (NamedPipeMonitor)obj;
         var option = monitor.Option;
         while (true)
         {
@@ -273,7 +276,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             }
             catch (Exception ex)
             {
-                this.Logger?.Exception(ex);
+                this.Logger?.Debug(this, ex);
             }
         }
     }

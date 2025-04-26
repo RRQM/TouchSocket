@@ -27,7 +27,7 @@ public interface ICacheEntry
     /// <summary>
     /// 更新时间
     /// </summary>
-    DateTime UpdateTime { get; set; }
+    DateTimeOffset UpdateTime { get; set; }
 }
 
 /// <summary>
