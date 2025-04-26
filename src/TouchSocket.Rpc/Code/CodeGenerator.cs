@@ -421,6 +421,14 @@ public static class CodeGenerator
         }
     }
 
+    /// <summary>
+    /// 获取映射到目标类型的方法信息。
+    /// </summary>
+    /// <param name="method">源方法信息。</param>
+    /// <param name="serverFromType">源服务类型。</param>
+    /// <param name="serverToType">目标服务类型。</param>
+    /// <returns>映射到目标类型的方法信息。</returns>
+    /// <exception cref="RpcException">如果未找到映射方法，则抛出异常。</exception>
     public static MethodInfo GetToMethodInfo(MethodInfo method, Type serverFromType, Type serverToType)
     {
         if (serverFromType == serverToType)
@@ -429,7 +437,7 @@ public static class CodeGenerator
         }
 
         var map = serverToType.GetInterfaceMap(serverFromType);
-        for (int i = 0; i < map.InterfaceMethods.Length; i++)
+        for (var i = 0; i < map.InterfaceMethods.Length; i++)
         {
             if (map.InterfaceMethods[i] == method)
             {
@@ -437,7 +445,7 @@ public static class CodeGenerator
                 return targetMethod;
             }
         }
-        throw new RpcException($"未找到{serverFromType}的映射方法。");
+        throw new RpcException($"未找到{serverFromType}映射的{method}方法。");
     }
 
     /// <summary>

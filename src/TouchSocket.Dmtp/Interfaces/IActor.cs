@@ -11,13 +11,14 @@
 //------------------------------------------------------------------------------
 
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 定义了Actor接口，用于规范Actor的行为。
 /// </summary>
-public interface IActor
+public interface IActor:IDisposableObject
 {
     /// <summary>
     /// 包含当前Actor的父容器。

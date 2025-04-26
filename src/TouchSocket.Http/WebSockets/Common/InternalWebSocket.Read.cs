@@ -13,30 +13,46 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Sources;
 using TouchSocket.Core;
 using TouchSocket.Resources;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
 
-internal sealed partial class InternalWebSocket : ValueTaskSource<IWebSocketReceiveResult>, IWebSocket
+internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceiveResult>, IWebSocket
 {
-    private readonly WebSocketReceiveResult m_receiverResult;
-    private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
+    WebSocketReceiveBlockResult m_blockResult;
 
-    //public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
-    //{
-    //    this.ThrowIfNotAllowAsyncRead();
-    //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
-    //}
+    public async Task Complete(string msg)
+    {
+        try
+        {
+            this.m_blockResult.IsCompleted = true;
+            this.m_blockResult.Message = msg;
+            await this.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        catch
+        {
+        }
+    }
 
     public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
     {
         this.ThrowIfNotAllowAsyncRead();
-        return this.m_receiverResult.IsCompleted
-            ? EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult)
-            : this.ValueWaitAsync(token);
+        return base.ProtectedReadAsync(token);
+    }
+    internal async Task InputReceiveAsync(WSDataFrame dataFrame)
+    {
+        m_blockResult.DataFrame = dataFrame;
+        await base.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
+    protected override IWebSocketReceiveResult CreateResult(Action actionForDispose)
+    {
+        m_blockResult = new WebSocketReceiveBlockResult(actionForDispose);
+        return m_blockResult;
+    }
     private void ThrowIfNotAllowAsyncRead()
     {
         if (!this.m_allowAsyncRead)
@@ -44,70 +60,32 @@ internal sealed partial class InternalWebSocket : ValueTaskSource<IWebSocketRece
             ThrowHelper.ThrowNotSupportedException(TouchSocketHttpResource.NotAllowAsyncRead);
         }
     }
-
-    protected override void Scheduler(Action<object> action, object state)
-    {
-        void Run(object o)
-        {
-            action.Invoke(o);
-        }
-        ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-    }
-
-    protected override IWebSocketReceiveResult GetResult()
-    {
-        return this.m_receiverResult;
-    }
-
-    internal Task InputReceiveAsync(WSDataFrame dataFrame)
-    {
-        this.m_receiverResult.DataFrame = dataFrame;
-        base.Complete(false);
-        return this.m_resetEventForComplateRead.WaitOneAsync();
-    }
-
-    public async Task Complete(string msg)
-    {
-        try
-        {
-            this.m_receiverResult.IsCompleted = true;
-            this.m_receiverResult.Message = msg;
-            await this.InputReceiveAsync(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
-    }
-
-    private void ComplateRead()
-    {
-        this.m_receiverResult.DataFrame = default;
-        this.m_receiverResult.Message = default;
-        this.m_resetEventForComplateRead.Set();
-    }
-
     #region Class
-
-    internal sealed class WebSocketReceiveResult : IWebSocketReceiveResult
+    sealed class WebSocketReceiveBlockResult : IWebSocketReceiveResult
     {
-        private readonly Action m_disAction;
+        private readonly Action m_actionForDispose;
 
-        public WebSocketReceiveResult(Action disAction)
+        public WebSocketReceiveBlockResult(Action actionForDispose)
         {
-            this.m_disAction = disAction;
+            this.m_actionForDispose = actionForDispose;
         }
-
-        public void Dispose()
-        {
-            this.m_disAction.Invoke();
-        }
-
         public WSDataFrame DataFrame { get; set; }
 
+        /// <summary>
+        /// 获取表示内存处理是否完成的布尔值。
+        /// </summary>
         public bool IsCompleted { get; set; }
 
+        /// <summary>
+        /// 获取处理结果的消息。
+        /// </summary>
         public string Message { get; set; }
-    }
 
-    #endregion Class
+        void IDisposable.Dispose()
+        {
+            m_actionForDispose.Invoke();
+        }
+    }
+    #endregion
 }
+

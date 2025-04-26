@@ -175,10 +175,10 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_serialCore.ReceiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_serialCore.ReceiveCounter.LastIncrement;
 
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_serialCore.SendCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_serialCore.SendCounter.LastIncrement;
 
     /// <inheritdoc/>
     public bool Online => this.m_online && this.m_serialCore != null && this.m_serialCore.SerialPort.IsOpen;
@@ -197,12 +197,21 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     #region 断开操作
 
     /// <inheritdoc/>
-    public virtual async Task CloseAsync(string msg)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_online)
+        try
         {
-            await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.Abort(true, msg);
+            if (this.m_online)
+            {
+                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.Abort(true, msg);
+            }
+
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
         }
     }
 
@@ -246,10 +255,10 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
             this.m_serialCore = serialCore;
 
-            this.m_taskReceive = Task.Factory.StartNew(this.BeginReceive).Unwrap();
+            this.m_taskReceive = EasyTask.Run(this.BeginReceive);
             this.m_taskReceive.FireAndForget();
 
-            _ = Task.Factory.StartNew(this.PrivateOnSerialConnected, new ConnectedEventArgs());
+            _ = EasyTask.Run(this.PrivateOnSerialConnected, new ConnectedEventArgs());
         }
         finally
         {
@@ -282,7 +291,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
                 this.m_dataHandlingAdapter = default;
 
                 // 启动一个新的任务，用于处理串口关闭事件
-                _ = Task.Factory.StartNew(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
+                _ = EasyTask.Run(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
             }
         }
     }

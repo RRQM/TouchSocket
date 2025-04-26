@@ -15,7 +15,7 @@ namespace TouchSocket.Rpc;
 /// <summary>
 /// ScopedRpcServer
 /// </summary>
-public abstract class ScopedRpcServer<TCallContext> : RpcServer, IScopedRpcServer where TCallContext : ICallContext
+public abstract class ScopedRpcServer<TCallContext> :IScopedRpcServer where TCallContext : ICallContext
 {
     ICallContext IScopedRpcServer.CallContext { get; set; }
 
@@ -28,7 +28,7 @@ public abstract class ScopedRpcServer<TCallContext> : RpcServer, IScopedRpcServe
 /// <summary>
 /// ScopedRpcServer
 /// </summary>
-public abstract class ScopedRpcServer : RpcServer, IScopedRpcServer
+public abstract class ScopedRpcServer : IScopedRpcServer
 {
     ICallContext IScopedRpcServer.CallContext { get; set; }
 

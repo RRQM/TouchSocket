@@ -59,7 +59,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 最后缓存的时间
     /// </summary>
-    protected DateTime LastCacheTime { get; set; }
+    protected DateTimeOffset LastCacheTime { get; set; }
 
     /// <summary>
     /// 收到数据的切入点，该方法由框架自动调用。
@@ -186,6 +186,6 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     protected override void Reset()
     {
-        this.LastCacheTime = DateTime.UtcNow;
+        this.LastCacheTime = DateTimeOffset.UtcNow;
     }
 }

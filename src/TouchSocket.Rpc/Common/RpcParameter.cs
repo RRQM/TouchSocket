@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.ComponentModel;
 using System.Reflection;
 using TouchSocket.Core;
 
@@ -38,11 +37,6 @@ public class RpcParameter
     /// </summary>
     public ParameterInfo ParameterInfo { get; }
 
-    /// <summary>
-    /// 参数描述
-    /// </summary>
-    public string ParameterDesc => this.ParameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-    
     /// <summary>
     /// 参数名称
     /// </summary>

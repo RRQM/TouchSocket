@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// <summary>
 /// 能够基于Dmtp协议提供文件传输功能
 /// </summary>
-public class DmtpFileTransferActor : IDmtpFileTransferActor
+internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransferActor
 {
     /// <summary>
     /// 创建一个<see cref="DmtpFileTransferActor"/>
@@ -108,7 +109,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 {
                     //fileTransferRouterPackage.UnpackageBody(byteBlock);
 
-                    _ = Task.Factory.StartNew(this.RequestPullFileResourceInfo, fileTransferRouterPackage);
+                    _ = EasyTask.Run(this.RequestPullFileResourceInfo, fileTransferRouterPackage);
                 }
             }
             catch (Exception ex)
@@ -171,7 +172,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 {
                     waitFileSection.UnpackageBody(ref byteBlock);
                     await this.RequestPullFileSection(waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    //Task.Factory.StartNew(this.RequestPullFileSection, waitFileSection);
+                    //EasyTask.Run(this.RequestPullFileSection, waitFileSection);
                 }
             }
             catch (Exception ex)
@@ -303,7 +304,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 {
                     waitFileSection.UnpackageBody(ref byteBlock);
                     //this.RequestPushFileSection(waitFileSection);
-                    //Task.Factory.StartNew(this.RequestPushFileSection, waitFileSection);
+                    //EasyTask.Run(this.RequestPushFileSection, waitFileSection);
                     await this.RequestPushFileSection(waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
@@ -364,7 +365,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 else
                 {
                     waitFinishedPackage.UnpackageBody(ref byteBlock);
-                    _ = Task.Factory.StartNew(this.RequestFinishedFileResourceInfo, waitFinishedPackage);
+                    _ = EasyTask.Run(this.RequestFinishedFileResourceInfo, waitFinishedPackage);
                 }
             }
             catch (Exception ex)
@@ -433,7 +434,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 else
                 {
                     waitSmallFilePackage.UnpackageBody(ref byteBlock);
-                    _ = Task.Factory.StartNew(this.RequestPullSmallFile, waitSmallFilePackage);
+                    _ = EasyTask.Run(this.RequestPullSmallFile, waitSmallFilePackage);
                 }
             }
             catch (Exception ex)
@@ -783,7 +784,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFinishedPackage);
 
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         try
         {
             var block = byteBlock;
@@ -810,7 +811,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                                 }
                             case TouchSocketDmtpStatus.HasUnFinished:
                                 {
-                                    return new FinishedResult(ResultCode.Fail, TouchSocketDmtpStatus.HasUnFinished.GetDescription(), waitFile.ResourceHandle);
+                                    return new FinishedResult(ResultCode.Failure, TouchSocketDmtpStatus.HasUnFinished.GetDescription(), waitFile.ResourceHandle);
                                 }
                             default:
                                 {
@@ -853,7 +854,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileResource);
 
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         try
         {
             var block = byteBlock;
@@ -921,7 +922,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileSection);
 
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         try
         {
             var block = byteBlock;
@@ -969,7 +970,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 case WaitDataStatus.Disposed:
                 default:
                     {
-                        return new FileSectionResult(ResultCode.Fail, default, fileSection);
+                        return new FileSectionResult(ResultCode.Failure, default, fileSection);
                     }
             }
         }
@@ -999,7 +1000,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileResource);
 
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         try
         {
             var block = byteBlock;
@@ -1169,7 +1170,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                         else
                         {
                             waitFinishedPackage.Status = TouchSocketDmtpStatus.ResourceHandleNotFind.ToValue();
-                            resultThis = new Result(ResultCode.Fail, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
+                            resultThis = new Result(ResultCode.Failure, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
                         }
                     }
                     else
@@ -1198,20 +1199,20 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                             {
                                 waitFinishedPackage.Status = TouchSocketDmtpStatus.HasUnFinished.ToValue();
 
-                                resultThis = new Result(ResultCode.Fail, TouchSocketDmtpStatus.HasUnFinished.GetDescription(sections.Length));
+                                resultThis = new Result(ResultCode.Failure, TouchSocketDmtpStatus.HasUnFinished.GetDescription(sections.Length));
                             }
                         }
                         else
                         {
                             waitFinishedPackage.Status = TouchSocketDmtpStatus.ResourceHandleNotFind.ToValue();
-                            resultThis = new Result(ResultCode.Fail, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
+                            resultThis = new Result(ResultCode.Failure, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
                         }
                     }
                 }
                 else
                 {
                     waitFinishedPackage.Status = TouchSocketDmtpStatus.ResourceHandleNotFind.ToValue();
-                    resultThis = new Result(ResultCode.Fail, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
+                    resultThis = new Result(ResultCode.Failure, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFinishedPackage.ResourceHandle));
                 }
             }
             catch (Exception ex)
@@ -1231,7 +1232,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
             await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
 
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 waitFinishedPackage.SwitchId();
                 var block = byteBlock;
@@ -1241,7 +1242,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
         }
         catch (Exception ex)
         {
-            this.DmtpActor.Logger?.Exception(ex);
+            this.DmtpActor.Logger?.Debug(this, ex);
         }
     }
 
@@ -1296,7 +1297,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 waitFileResource.Message = ex.Message;
                 waitFileResource.Status = TouchSocketDmtpStatus.Exception.ToValue();
             }
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 waitFileResource.SwitchId();
                 var block = byteBlock;
@@ -1420,7 +1421,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 waitFileResource.Status = TouchSocketDmtpStatus.Exception.ToValue();
                 waitFileResource.Message = ex.Message;
             }
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 waitFileResource.SwitchId();
                 var block = byteBlock;
@@ -1479,7 +1480,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
             waitFileSection.Value.SafeDispose();
             waitFileSection.Value = default;
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 waitFileSection.SwitchId();
                 var block = byteBlock;
@@ -1567,7 +1568,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         try
         {
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
@@ -1645,8 +1646,8 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitSmallFilePackage);
 
-        var byteBlock = new ByteBlock();
-        var buffer = BytePool.Default.Rent((int)fileInfo.Length);
+        var byteBlock = new ByteBlock(1024*64);
+        var buffer = ArrayPool<byte>.Shared.Rent((int)fileInfo.Length);
         try
         {
             var r = this.FileController.ReadAllBytes(fileInfo, buffer);
@@ -1706,7 +1707,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
         {
             this.DmtpActor.WaitHandlePool.Destroy(waitData);
             byteBlock.Dispose();
-            BytePool.Default.Return(buffer);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
@@ -1717,7 +1718,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
         //4.不存在
         //5.读取文件长度异常
 
-        var buffer = BytePool.Default.Rent(this.MaxSmallFileLength);
+        var buffer = ArrayPool<byte>.Shared.Rent(this.MaxSmallFileLength);
         try
         {
             var waitSmallFilePackage = (WaitSmallFilePackage)o;
@@ -1779,7 +1780,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
                 waitSmallFilePackage.Message = ex.Message;
             }
 
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 waitSmallFilePackage.SwitchId();
                 var block = byteBlock;
@@ -1796,11 +1797,11 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
         }
         catch (Exception ex)
         {
-            this.DmtpActor.Logger?.Exception(ex);
+            this.DmtpActor.Logger?.Debug(this, ex);
         }
         finally
         {
-            BytePool.Default.Return(buffer);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
@@ -1845,7 +1846,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
             waitSmallFilePackage.FileInfo = default;
             waitSmallFilePackage.Data = default;
             waitSmallFilePackage.SwitchId();
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
@@ -1861,7 +1862,7 @@ public class DmtpFileTransferActor : IDmtpFileTransferActor
         }
         catch (Exception ex)
         {
-            this.DmtpActor.Logger?.Exception(ex);
+            this.DmtpActor.Logger?.Debug(this, ex);
         }
     }
 

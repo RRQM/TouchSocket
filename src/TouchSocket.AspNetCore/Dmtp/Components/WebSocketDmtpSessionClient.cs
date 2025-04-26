@@ -59,7 +59,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     private HttpContext m_httpContext;
     private string m_id;
     private readonly Lock m_locker = new Lock();
-
+    private CancellationTokenSource m_tokenSourceForReceive;
     #endregion 字段
 
     /// <inheritdoc/>
@@ -81,10 +81,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     public bool Online => this.DmtpActor.Online;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_sentCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_sentCounter.LastIncrement;
 
     /// <inheritdoc/>
     public override IPluginManager PluginManager => this.m_pluginManager;
@@ -105,26 +105,31 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
     /// <inheritdoc/>
-    public async Task CloseAsync(string msg)
+    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_dmtpActor != null)
+        try
         {
-            await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (this.m_dmtpActor != null)
+            {
+                await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            if (this.m_client != null)
+            {
+                await this.m_client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            this.Abort(true, msg);
+            return Result.Success;
         }
-        if (this.m_client != null)
+        catch (Exception ex)
         {
-            await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.FromException(ex);
         }
     }
 
     /// <inheritdoc/>
     public async Task ResetIdAsync(string newId)
     {
-        if (string.IsNullOrEmpty(newId))
-        {
-            throw new ArgumentException($"“{nameof(newId)}”不能为 null 或空。", nameof(newId));
-        }
-
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(newId, nameof(newId));
         if (this.m_id == newId)
         {
             return;
@@ -182,23 +187,36 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         this.m_dmtpActor = actor;
     }
 
-    internal async Task Start(WebSocket webSocket, HttpContext context)
+    internal async Task Start(WebSocket client, HttpContext context)
     {
-        this.m_client = webSocket;
+        var tokenSourceForReceive = new CancellationTokenSource();
+        this.m_tokenSourceForReceive = tokenSourceForReceive;
+        var token = tokenSourceForReceive.Token;
+
+        this.m_client = client;
         this.m_httpContext = context;
+        string msg = string.Empty;
         try
         {
             while (true)
             {
                 using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                 {
-                    var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    if (client.State!= WebSocketState.Open)
+                    {
+                        msg = TouchSocketResource.ClientNotConnected;
+                        break;
+                    }
+                    var result = await client.ReceiveAsync(byteBlock.TotalMemory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         try
                         {
-                            await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            if (!token.IsCancellationRequested)
+                            {
+                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            }
                         }
                         catch
                         {
@@ -215,12 +233,14 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
                     await this.m_dmtpAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
-
-            this.Abort(false, TouchSocketResource.RemoteDisconnects);
         }
         catch (Exception ex)
         {
-            this.Abort(false, ex.Message);
+            msg = ex.Message;
+        }
+        finally
+        {
+            this.Abort(false, msg);
         }
     }
 
@@ -273,6 +293,17 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         }
     }
 
+    private void CancelReceive()
+    {
+        var tokenSourceForReceive = this.m_tokenSourceForReceive;
+        if (tokenSourceForReceive != null)
+        {
+            tokenSourceForReceive.Cancel();
+            tokenSourceForReceive.Dispose();
+        }
+        this.m_tokenSourceForReceive = null;
+    }
+
     private void Abort(bool manual, string msg)
     {
         lock (this.m_locker)
@@ -285,7 +316,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             base.Dispose(true);
             this.m_client.SafeDispose();
             this.DmtpActor.SafeDispose();
-
+            this.CancelReceive();
             if (this.m_service.TryRemove(this.m_id, out _))
             {
                 //if (this.PluginManager.Enable)

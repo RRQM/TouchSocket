@@ -21,20 +21,25 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
+		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
+		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
@@ -51,10 +56,6 @@
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="System.Memory" Version="4.5.5" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<RdXmlFile Include="rd.xml" />
 	</ItemGroup>
 
 	<ItemGroup>

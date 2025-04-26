@@ -90,6 +90,16 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }
 
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            m_jsonRpcActor.SafeDispose();
+        }
+        base.Dispose(disposing);
+    }
+
     /// <summary>
     /// 加载配置。
     /// </summary>

@@ -166,4 +166,7 @@
   <data name="LengthErrorWhenRead" xml:space="preserve">
     <value>Error reading file length.</value>
   </data>
+  <data name="ActorAlreadyExists" xml:space="preserve">
+    <value>An Actor of type "{0}" already exists.</value>
+  </data>
 </root>

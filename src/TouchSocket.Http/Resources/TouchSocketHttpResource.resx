@@ -106,4 +106,10 @@
   <data name="WebSocketConnectionProtocolIsIncorrect" xml:space="preserve">
     <value>The WebSocket connection protocol is incorrect, this may not be a WebSocket connection.</value>
   </data>
+  <data name="RequestHasBeenResponded" xml:space="preserve">
+    <value>The current HTTP request has been responded to and cannot be processed again.</value>
+  </data>
+  <data name="ProtocolIsIncorrect" xml:space="preserve">
+    <value>Protocol is incorrect.</value>
+  </data>
 </root>

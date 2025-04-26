@@ -77,7 +77,7 @@ public abstract class ConnectableService : ServiceBase, IConnectableService
         catch (Exception ex)
         {
             // 如果调用过程中发生异常，记录异常信息。
-            this.Logger?.Exception(ex);
+            this.Logger?.Exception(this,ex);
         }
         // 如果调用内部方法失败，则使用此方法作为回退，返回一个默认的新标识符。
         return this.GetDefaultNewId();

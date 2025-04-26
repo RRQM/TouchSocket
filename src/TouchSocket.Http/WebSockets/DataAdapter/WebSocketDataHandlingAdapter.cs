@@ -72,7 +72,7 @@ public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapt
         {
             if (length < 12)
             {
-                this.m_tempByteBlock ??= new ByteBlock();
+                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
                 this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                 offset = index;
                 return FilterResult.GoOn;
@@ -87,7 +87,7 @@ public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapt
         {
             if (length < (offset - index) + 4)
             {
-                this.m_tempByteBlock ??= new ByteBlock();
+                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
                 this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                 offset = index;
                 return FilterResult.GoOn;
@@ -102,16 +102,16 @@ public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapt
         var byteBlock = new ByteBlock(payloadLength);
         dataFrame.PayloadData = byteBlock;
 
-        var surlen = length - (offset - index);
-        if (payloadLength <= surlen)
+        var surLen = length - (offset - index);
+        if (payloadLength <= surLen)
         {
             byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
             offset += payloadLength;
         }
         else
         {
-            byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surlen));
-            offset += surlen;
+            byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surLen));
+            offset += surLen;
         }
 
         return FilterResult.Success;
@@ -201,7 +201,7 @@ public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapt
         {
             if (length - offset < 2)
             {
-                this.m_tempByteBlock ??= new ByteBlock();
+                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
                 this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                 return;
             }
@@ -210,7 +210,7 @@ public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapt
             {
                 case FilterResult.Cache:
                     {
-                        this.m_tempByteBlock ??= new ByteBlock();
+                        this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
                         this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                         return;
                     }

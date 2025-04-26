@@ -28,11 +28,11 @@ public static class DmtpRpcActorExtension
 {
     #region DependencyProperty
 
-    /// <summary>
-    /// DmtpRpcActor
-    /// </summary>
-    public static readonly DependencyProperty<IDmtpRpcActor> DmtpRpcActorProperty =
-        new("DmtpRpcActor", default);
+    ///// <summary>
+    ///// DmtpRpcActor
+    ///// </summary>
+    //public static readonly DependencyProperty<IDmtpRpcActor> DmtpRpcActorProperty =
+    //    new("DmtpRpcActor", default);
 
     #endregion DependencyProperty
 
@@ -55,8 +55,7 @@ public static class DmtpRpcActorExtension
     /// <returns>返回获取到的<see cref="IDmtpRpcActor"/></returns>
     public static IDmtpRpcActor GetDmtpRpcActor(this IDmtpActor dmtpActor)
     {
-        // 调用GetValue方法从dmtpActor中获取DmtpRpcActorProperty属性值
-        return dmtpActor.GetValue(DmtpRpcActorProperty);
+        return dmtpActor.GetActor<DmtpRpcActor>();
     }
 
     /// <summary>
@@ -67,15 +66,9 @@ public static class DmtpRpcActorExtension
     /// <exception cref="ArgumentNullException">如果<see cref="IDmtpRpcActor"/>对象为null，则抛出此异常。</exception>
     public static IDmtpRpcActor GetDmtpRpcActor(this IDmtpActorObject client)
     {
-        // 从client的DmtpActor属性中获取DmtpRpcActor对象。
-        var dmtpRpcActor = client.DmtpActor.GetDmtpRpcActor();
-        // 如果获取的DmtpRpcActor对象为null，则抛出ArgumentNullException异常。
-        if (dmtpRpcActor is null)
-        {
-            throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
-        }
-        // 返回获取到的DmtpRpcActor对象。
-        return dmtpRpcActor;
+        var actor = client.DmtpActor.GetDmtpRpcActor();
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
+        return actor;
     }
 
     /// <summary>
@@ -86,26 +79,11 @@ public static class DmtpRpcActorExtension
     /// <exception cref="ArgumentNullException">当无法从<paramref name="client"/>中获取到DmtpRpcActor时抛出。</exception>
     public static TDmtpRpcActor GetDmtpRpcActor<TDmtpRpcActor>(this IDmtpActorObject client) where TDmtpRpcActor : IDmtpRpcActor
     {
-        // 从client中尝试获取DmtpRpcActor实例
-        var dmtpRpcActor = client.DmtpActor.GetDmtpRpcActor();
-        // 如果获取失败，则抛出ArgumentNullException异常，提示DmtpRpcActor参数为空
-        if (dmtpRpcActor is null)
-        {
-            throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
-        }
-        // 将获取到的DmtpRpcActor实例转换为TDmtpRpcActor类型并返回
-        return (TDmtpRpcActor)dmtpRpcActor;
+        var actor = client.DmtpActor.GetDmtpRpcActor();
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
+        return (TDmtpRpcActor)actor;
     }
-    /// <summary>
-    /// 向<see cref="DmtpActor"/>中设置<see cref="IDmtpRpcActor"/>
-    /// </summary>
-    /// <param name="dmtpActor">要设置的<see cref="IDmtpRpcActor"/>所在的<see cref="DmtpActor"/></param>
-    /// <param name="dmtpRpcActor">要设置的<see cref="IDmtpRpcActor"/>实例</param>
-    internal static void SetDmtpRpcActor(this IDmtpActor dmtpActor, IDmtpRpcActor dmtpRpcActor)
-    {
-        // 使用反射机制将dmtpRpcActor设置到dmtpActor中
-        dmtpActor.SetValue(DmtpRpcActorProperty, dmtpRpcActor);
-    }
+    
 
     #region 插件扩展
 

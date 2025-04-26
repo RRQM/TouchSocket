@@ -67,7 +67,7 @@ public static partial class HttpExtensions
     public static async Task<string> GetBodyAsync(this HttpBase httpBase, Encoding encoding, CancellationToken token = default)
     {
         // 异步获取 HTTP 响应的内容作为字节数组
-        var bytes = await httpBase.GetContentAsync(token);
+        var bytes = await httpBase.GetContentAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         // 如果字节数组为空，则返回 null，否则使用 UTF-8 编码将字节数组转换为字符串并返回
         return bytes.IsEmpty ? null : bytes.Span.ToString(encoding);
     }
@@ -340,11 +340,11 @@ public static partial class HttpExtensions
     public static TRequest InitHeaders<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         // 添加保持连接的头，以支持持久连接
-        request.Headers.Add(HttpHeaders.Connection, "keep-alive");
+        request.Headers.TryAdd(HttpHeaders.Connection, "keep-alive");
         // 添加禁止缓存的头，确保请求最新
-        request.Headers.Add(HttpHeaders.Pragma, "no-cache");
+        request.Headers.TryAdd(HttpHeaders.Pragma, "no-cache");
         // 设置用户代理头，标识使用的Http库
-        request.Headers.Add(HttpHeaders.UserAgent, "TouchSocket.Http");
+        request.Headers.TryAdd(HttpHeaders.UserAgent, "TouchSocket.Http");
         return request;
     }
 
@@ -375,7 +375,7 @@ public static partial class HttpExtensions
     /// <returns>返回修改后的HttpRequest对象</returns>
     public static TRequest SetHost<TRequest>(this TRequest request, string host) where TRequest : HttpRequest
     {
-        request.Headers.Add(HttpHeaders.Host, host);
+        request.Headers.TryAdd(HttpHeaders.Host, host);
         return request;
     }
 
@@ -596,7 +596,7 @@ public static partial class HttpExtensions
     /// <summary>
     /// 表示 HTTP 头部的服务器信息。
     /// </summary>
-    public static readonly string HttpHeadersServer = $"TouchSocket.Http {HttpBase.ServerVersion}";
+    public static readonly string HttpHeadersServer = $"TouchSocket.Http";
 
     /// <summary>
     /// 设置HTML内容。
@@ -646,7 +646,7 @@ public static partial class HttpExtensions
     {
         // 根据文件名设置Content-Disposition头部，以指定文件下载时的处理方式和文件名
         var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName);
-        response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+        response.Headers.TryAdd(HttpHeaders.ContentDisposition, contentDisposition);
         return response;
     }
 
@@ -662,7 +662,7 @@ public static partial class HttpExtensions
         // 设置HttpResponse的内容为Gzip压缩内容
         response.SetContent(gzipContent);
         // 在HttpResponse的头信息中添加ContentEncoding为gzip，标识内容已经被gzip压缩
-        response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
+        response.Headers.TryAdd(HttpHeaders.ContentEncoding, "gzip");
         return response;
     }
 
@@ -678,7 +678,7 @@ public static partial class HttpExtensions
     /// <returns>返回设置了重定向的响应对象。</returns>
     public static TResponse SetRedirect<TResponse>(this TResponse response, string url) where TResponse : HttpResponse
     {
-        response.Headers.Add(HttpHeaders.Location, url);
+        response.Headers.TryAdd(HttpHeaders.Location, url);
         response.SetStatus(302, "Found");
         return response;
     }
@@ -694,8 +694,8 @@ public static partial class HttpExtensions
     {
         response.StatusCode = status; // 设置HTTP状态码
         response.StatusMessage = msg; // 设置状态描述信息
-        response.Headers.Add(HttpHeaders.Server, HttpHeadersServer); // 添加服务器版本信息到Header
-        response.Headers.Add(HttpHeaders.Date, DateTime.UtcNow.ToGMTString()); // 添加GMT时间到Header
+        response.Headers.TryAdd(HttpHeaders.Server, HttpHeadersServer); // 添加服务器版本信息到Header
+        response.Headers.TryAdd(HttpHeaders.Date, DateTimeOffset.UtcNow.ToGMTString()); // 添加GMT时间到Header
         return response; // 返回修改后的HttpResponse对象
     }
 

@@ -1,6 +1,9 @@
 ﻿<Project>
+
+	<Import Project="$../../../TouchSocketVersion.props" />
+
 	<PropertyGroup>
-		<TouchSocketVersion>3.0.26</TouchSocketVersion>
+		<Version>$(TouchSocketVersion)</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -20,13 +23,7 @@
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<Version>$(TouchSocketVersion)</Version>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<Version>$(TouchSocketVersion)-Debug</Version>
-	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.15.0">
 			<PrivateAssets>all</PrivateAssets>
@@ -96,16 +93,6 @@
 	<Target Name="CopyNuGetPackage" AfterTargets="Pack">
 		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
 	</Target>
-
-	<!--<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
-		<PackageReference Include="Backport.System.Threading.Lock" Version="3.1.4">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>analyzers</IncludeAssets>
-		</PackageReference>
-		<Using Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="System.Threading.Lock" />
-		<Using Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="Backport.System.Threading.Lock" />
-		<Using Alias="LockFactory" Include="Backport.System.Threading.LockFactory" />
-	</ItemGroup>-->
 
 	<PropertyGroup Condition="'$(IsSourceGenerator)'!='True'">
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>

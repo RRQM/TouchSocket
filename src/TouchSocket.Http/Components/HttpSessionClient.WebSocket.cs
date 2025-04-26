@@ -153,15 +153,21 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     #endregion 事件
 
     /// <inheritdoc/>
-    public async Task<bool> SwitchProtocolToWebSocketAsync(HttpContext httpContext)
+    public async Task<Result> SwitchProtocolToWebSocketAsync(HttpContext httpContext)
     {
         if (this.m_webSocket is not null)
         {
-            return true;
+            return Result.Success;
         }
-        if (this.Protocol == Protocol.Http)
+        if (this.Protocol != Protocol.Http)
         {
-            if (WSTools.TryGetResponse(httpContext.Request, httpContext.Response))
+            return Result.FromFail(TouchSocketHttpResource.ProtocolIsIncorrect);
+        }
+
+        var response = httpContext.Response;
+        try
+        {
+            if (WSTools.TryGetResponse(httpContext.Request, response))
             {
                 var e = new HttpContextEventArgs(this.m_httpContext)
                 {
@@ -172,33 +178,42 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
                 await this.PrivateWebSocketHandshaking(webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                if (this.m_httpContext.Response.Responsed)
+                if (response.Responsed)
                 {
-                    return false;
+                    return Result.FromFail(TouchSocketHttpResource.RequestHasBeenResponded);
                 }
 
                 if (e.IsPermitOperation)
                 {
                     this.InitWebSocket(webSocket);
 
-                    await this.m_httpContext.Response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                    _ = this.PrivateWebSocketHandshaked(webSocket, new HttpContextEventArgs(httpContext));
-                    return true;
+                    _ = EasyTask.SafeRun(this.PrivateWebSocketHandshaked, webSocket, new HttpContextEventArgs(httpContext));
+
+                    return Result.Success;
                 }
                 else
                 {
-                    this.m_httpContext.Response.SetStatus(403, "Forbidden");
-                    await this.m_httpContext.Response.AnswerAsync();
-                    await this.CloseAsync(TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    response.SetStatus(403, "Forbidden");
+                    await response.AnswerAsync();
+
+                    var msg = TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message);
+                    await this.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return Result.FromFail(msg);
                 }
             }
             else
             {
                 await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return Result.FromFail(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect);
             }
         }
-        return false;
+        catch (System.Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+        
     }
 
     private void InitWebSocket(InternalWebSocket webSocket)

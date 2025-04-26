@@ -23,12 +23,12 @@ namespace TouchSocket.Hosting.Sockets.HostService;
 
 internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IServiceBase
 {
-    private ILogger<ServiceHost<TService>> m_logger;
+    private ILogger<TService> m_logger;
 
     protected override void OnSetResolver(IResolver resolver)
     {
         base.OnSetResolver(resolver);
-        this.m_logger = resolver.GetService<ILogger<ServiceHost<TService>>>();
+        this.m_logger = resolver.GetService<ILogger<TService>>();
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)

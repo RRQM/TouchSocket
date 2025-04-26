@@ -37,7 +37,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
             var list = new List<TKey>();
             foreach (var item in this.m_pairs)
             {
-                if (DateTime.UtcNow - item.Value.UpdateTime > item.Value.Duration)
+                if (DateTimeOffset.UtcNow - item.Value.UpdateTime > item.Value.Duration)
                 {
                     list.Add(item.Key);
                 }
@@ -90,7 +90,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
             }
             else
             {
-                if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
+                if (DateTimeOffset.UtcNow - cache.UpdateTime > cache.Duration)
                 {
                     this.OnRemove(key, out _);
                     return false;
@@ -121,7 +121,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
             }
             else
             {
-                if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
+                if (DateTimeOffset.UtcNow - cache.UpdateTime > cache.Duration)
                 {
                     this.OnRemove(key, out _);
                     return default;

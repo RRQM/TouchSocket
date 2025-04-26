@@ -142,9 +142,9 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     public WebSocketCloseStatus CloseStatus => this.WebSocket.CloseStatus;
 
     /// <inheritdoc/>
-    public Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)
+    public Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription,CancellationToken token=default)
     {
-        return this.WebSocket.CloseAsync(closeStatus, statusDescription);
+        return this.WebSocket.CloseAsync(closeStatus, statusDescription,token);
     }
 
     /// <inheritdoc/>

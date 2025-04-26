@@ -23,7 +23,7 @@ namespace TouchSocket.JsonRpc;
 /// <summary>
 /// 表示一个JsonRpcActor类，用于处理JsonRpc请求和响应。
 /// </summary>
-public sealed class JsonRpcActor : IJsonRpcClient
+public sealed class JsonRpcActor :DisposableObject, IJsonRpcClient
 {
     private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
     private readonly JsonRpcWaitResultConverter m_jsonRpcWaitResultConverter = new JsonRpcWaitResultConverter();
@@ -126,7 +126,7 @@ public sealed class JsonRpcActor : IJsonRpcClient
         }
         catch (Exception ex)
         {
-            this.Logger?.Debug(ex.Message);
+            this.Logger?.Debug(this,ex.Message);
         }
     }
 
@@ -416,7 +416,7 @@ public sealed class JsonRpcActor : IJsonRpcClient
         }
         catch (Exception ex)
         {
-            this.Logger?.Debug(ex.Message);
+            this.Logger?.Debug(this, ex.Message);
         }
     }
 
@@ -462,7 +462,7 @@ public sealed class JsonRpcActor : IJsonRpcClient
         }
         catch (Exception ex)
         {
-            this.Logger?.Debug(ex.Message);
+            this.Logger?.Debug(this, ex.Message);
         }
         finally
         {
@@ -488,6 +488,16 @@ public sealed class JsonRpcActor : IJsonRpcClient
     }
 
     #endregion Class
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.RpcDispatcher.SafeDispose();
+        }
+        base.Dispose(disposing);
+    }
 
     /// <summary>
     /// 尝试解析请求。

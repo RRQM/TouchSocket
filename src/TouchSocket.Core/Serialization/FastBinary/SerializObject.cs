@@ -107,7 +107,7 @@ public sealed class SerializObject
                 this.InstanceType = InstanceType.Class;
                 this.MemberAccessor = new MemberAccessor(type)
                 {
-                    OnGetFieldInfes = GetFieldInfos,
+                    OnGetFieldInfos = GetFieldInfos,
                     OnGetProperties = GetProperties
                 };
                 this.MemberAccessor.Build();

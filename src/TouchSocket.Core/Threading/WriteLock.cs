@@ -16,32 +16,6 @@ using System.Threading;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 读取锁
-/// </summary>
-public readonly struct ReadLock : IDisposable
-{
-    private readonly ReaderWriterLockSlim m_locks;
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="locks"></param>
-    public ReadLock(ReaderWriterLockSlim locks)
-    {
-        this.m_locks = locks;
-        this.m_locks.EnterReadLock();
-    }
-
-    /// <summary>
-    /// 释放
-    /// </summary>
-    public void Dispose()
-    {
-        this.m_locks.ExitReadLock();
-    }
-}
-
-/// <summary>
 /// 写入锁
 /// </summary>
 public readonly struct WriteLock : IDisposable

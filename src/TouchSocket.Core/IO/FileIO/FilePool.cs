@@ -285,7 +285,7 @@ public static partial class FilePool
         var keys = new List<string>();
         foreach (var item in m_pathStorage)
         {
-            if (DateTime.UtcNow - item.Value.AccessTime > item.Value.AccessTimeout)
+            if (DateTimeOffset.UtcNow - item.Value.AccessTime > item.Value.AccessTimeout)
             {
                 keys.Add(item.Key);
             }

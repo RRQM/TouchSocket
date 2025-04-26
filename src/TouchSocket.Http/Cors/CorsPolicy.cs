@@ -11,21 +11,23 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
+
 /// <summary>
-/// CorsResult
+/// 表示跨域资源共享（CORS）策略。
 /// </summary>
 public class CorsPolicy
 {
     /// <summary>
-    /// CorsResult
+    /// 初始化 <see cref="CorsPolicy"/> 类的新实例。
     /// </summary>
-    /// <param name="credentials"></param>
-    /// <param name="headers"></param>
-    /// <param name="methods"></param>
-    /// <param name="origin"></param>
+    /// <param name="credentials">是否允许客户端携带验证信息。</param>
+    /// <param name="headers">允许的请求头。</param>
+    /// <param name="methods">允许跨域的方法。</param>
+    /// <param name="origin">允许跨域的域名。</param>
     public CorsPolicy(bool credentials, string headers, string methods, string origin)
     {
         this.Credentials = credentials;
@@ -35,49 +37,49 @@ public class CorsPolicy
     }
 
     /// <summary>
-    /// 允许客户端携带验证信息
+    /// 获取一个值，该值指示是否允许客户端携带验证信息。
     /// </summary>
     public bool Credentials { get; }
 
     /// <summary>
-    /// 请求头
+    /// 获取允许的请求头。
     /// </summary>
     public string Headers { get; }
 
     /// <summary>
-    /// 允许跨域的方法。
+    /// 获取允许跨域的方法。
     /// </summary>
     public string Methods { get; }
 
     /// <summary>
-    /// 允许跨域的域名
+    /// 获取允许跨域的域名。
     /// </summary>
     public string Origin { get; }
 
     /// <summary>
-    /// 应用跨域策略
+    /// 应用跨域策略到指定的 HTTP 上下文。
     /// </summary>
-    /// <param name="context"></param>
+    /// <param name="context">HTTP 上下文。</param>
     public void Apply(HttpContext context)
     {
         if (this.Origin.HasValue())
         {
-            context.Response.Headers.Add("Access-Control-Allow-Origin", this.Origin);
+            context.Response.Headers.TryAdd("Access-Control-Allow-Origin", this.Origin);
         }
 
         if (this.Credentials)
         {
-            context.Response.Headers.Add("Access-Control-Allow-Credentials", this.Credentials.ToString().ToLower());
+            context.Response.Headers.TryAdd("Access-Control-Allow-Credentials", this.Credentials.ToString().ToLower());
         }
 
         if (this.Headers.HasValue())
         {
-            context.Response.Headers.Add("Access-Control-Allow-Headers", this.Headers);
+            context.Response.Headers.TryAdd("Access-Control-Allow-Headers", this.Headers);
         }
 
         if (this.Methods.HasValue())
         {
-            context.Response.Headers.Add("Access-Control-Allow-Methods", this.Methods);
+            context.Response.Headers.TryAdd("Access-Control-Allow-Methods", this.Methods);
         }
     }
 }

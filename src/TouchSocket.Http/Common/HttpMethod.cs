@@ -57,6 +57,12 @@ public readonly record struct HttpMethod
     }
 
     /// <summary>
+    /// 由字符串向<see cref="HttpMethod"/>转换
+    /// </summary>
+    /// <param name="value"></param>
+    public static implicit operator HttpMethod(string value) => new(value);
+
+    /// <summary>
     /// 转换为字符串
     /// </summary>
     /// <returns></returns>

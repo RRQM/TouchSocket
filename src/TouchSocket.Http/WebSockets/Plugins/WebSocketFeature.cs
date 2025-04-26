@@ -28,13 +28,13 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
     /// 自动响应Close报文
     /// </summary>
     public static readonly DependencyProperty<bool> AutoCloseProperty =
-       new("AutoClose", true);
+       new(nameof(AutoClose), true);
 
     /// <summary>
     /// 自动响应Ping报文
     /// </summary>
     public static readonly DependencyProperty<bool> AutoPongProperty =
-       new("AutoPong", false);
+       new(nameof(AutoPong), false);
 
     private string m_wSUrl = "/ws";
 
@@ -137,7 +137,14 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
             if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 e.Handled = true;
-                await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+               var result= await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                if (!result.IsSuccess)
+                {
+                    client.Logger?.Debug(this,result.Message);
+                    return;
+                }
+
                 if (!this.AutoClose)
                 {
                     client.SetValue(AutoCloseProperty, false);

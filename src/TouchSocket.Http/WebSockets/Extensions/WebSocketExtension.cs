@@ -52,7 +52,7 @@ public static class WebSocketExtension
                 }
 
                 var dataFrame = receiveResult.DataFrame;
-                var data = receiveResult.DataFrame.PayloadData;
+                var data = dataFrame.PayloadData;
 
                 switch (dataFrame.Opcode)
                 {
@@ -144,7 +144,7 @@ public static class WebSocketExtension
                 }
 
                 var dataFrame = receiveResult.DataFrame;
-                var data = receiveResult.DataFrame.PayloadData;
+                var data = dataFrame.PayloadData;
 
                 switch (dataFrame.Opcode)
                 {
@@ -212,7 +212,7 @@ public static class WebSocketExtension
                 }
 
                 var dataFrame = receiveResult.DataFrame;
-                var data = receiveResult.DataFrame.PayloadData;
+                var data = dataFrame.PayloadData;
 
                 switch (dataFrame.Opcode)
                 {

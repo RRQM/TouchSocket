@@ -189,4 +189,7 @@
     <value>读取文件长度错误。</value>
     <comment>读取文件长度错误。</comment>
   </data>
+  <data name="ActorAlreadyExists" xml:space="preserve">
+    <value>已经存在类型为{0}的Actor。</value>
+  </data>
 </root>

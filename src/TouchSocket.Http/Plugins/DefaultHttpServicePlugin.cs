@@ -12,6 +12,7 @@
 
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
@@ -32,16 +33,16 @@ public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
         if (e.Context.Request.IsMethod("OPTIONS"))
         {
             response.SetStatus(204, "No Content");
-            response.Headers.Add("Access-Control-Allow-Origin", "*");
-            response.Headers.Add("Access-Control-Allow-Headers", "*");
-            response.Headers.Add("Allow", "OPTIONS, GET, POST");
-            response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+            response.Headers.TryAdd("Access-Control-Allow-Origin", "*");
+            response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
+            response.Headers.TryAdd("Allow", "OPTIONS, GET, POST");
+            response.Headers.TryAdd("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 
-            await response.AnswerAsync();
+            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
-            await response.UrlNotFind().AnswerAsync();
+            await response.UrlNotFind().AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

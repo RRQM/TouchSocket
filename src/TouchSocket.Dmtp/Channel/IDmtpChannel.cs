@@ -80,7 +80,7 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     /// <summary>
     /// 获取上次操作的时间。
     /// </summary>
-    DateTime LastOperationTime { get; }
+    DateTimeOffset LastOperationTime { get; }
 
     /// <summary>
     /// 异步取消操作

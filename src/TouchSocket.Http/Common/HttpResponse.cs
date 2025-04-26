@@ -33,7 +33,7 @@ public class HttpResponse : HttpBase
     private readonly HttpSessionClient m_httpSessionClient;
     private readonly bool m_isServer;
     private bool m_canWrite;
-    private ReadOnlyMemory<byte> m_content;
+    private ReadOnlyMemory<byte> m_contentMemory;
     private bool m_sentHeader;
     private long m_sentLength;
 
@@ -197,13 +197,6 @@ public class HttpResponse : HttpBase
             {
                 byteBlock.Dispose();
             }
-            //using (var byteBlock = new ByteBlock())
-            //{
-            //    byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
-            //    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-            //    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            //    this.Responsed = true;
-            //}
         }
     }
 
@@ -215,8 +208,8 @@ public class HttpResponse : HttpBase
         {
             if (!this.IsChunk && this.ContentLength == 0)
             {
-                this.m_content = ReadOnlyMemory<byte>.Empty;
-                return this.m_content;
+                this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
+                return this.m_contentMemory;
             }
 
             if (!this.IsChunk && this.ContentLength > MaxCacheSize)
@@ -246,15 +239,15 @@ public class HttpResponse : HttpBase
                         }
                     }
                     this.ContentCompleted = true;
-                    this.m_content = memoryStream.ToArray();
-                    return this.m_content;
+                    this.m_contentMemory = memoryStream.ToArray();
+                    return this.m_contentMemory;
                 }
             }
             catch
             {
                 this.ContentCompleted = false;
-                this.m_content = null;
-                return this.m_content;
+                this.m_contentMemory = null;
+                return this.m_contentMemory;
             }
             finally
             {
@@ -262,24 +255,24 @@ public class HttpResponse : HttpBase
         }
         else
         {
-            return this.ContentCompleted == true ? this.m_content : default;
+            return this.ContentCompleted == true ? this.m_contentMemory : default;
         }
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken = default)
+    public override async ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (this.ContentLength == 0 && !this.IsChunk)
         {
-            return InternalBlockResult.Completed;
+            return HttpReadOnlyMemoryBlockResult.Completed;
         }
 
         if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
         {
-            return new InternalBlockResult(this.m_content, true);
+            return HttpReadOnlyMemoryBlockResult.FromResult(this.m_contentMemory);
         }
         var blockResult = await base.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (blockResult == InternalBlockResult.Completed)
+        if (blockResult.IsCompleted)
         {
             this.ContentCompleted = true;
         }
@@ -289,7 +282,7 @@ public class HttpResponse : HttpBase
     /// <inheritdoc/>
     internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
     {
-        this.m_content = content;
+        this.m_contentMemory = content;
         this.ContentLength = content.Length;
         this.ContentCompleted = true;
     }
@@ -351,7 +344,7 @@ public class HttpResponse : HttpBase
         {
             if (this.m_sentLength + count <= this.ContentLength)
             {
-                await this.InternalSendAsync(memory).ConfigureAwait(false);
+                await this.InternalSendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_sentLength += count;
                 if (this.m_sentLength == this.ContentLength)
                 {

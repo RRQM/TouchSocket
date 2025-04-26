@@ -10,7 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -23,5 +25,6 @@ public interface IClosableClient
     /// 关闭客户端。
     /// </summary>
     /// <param name="msg">关闭时的提示信息。</param>
-    Task CloseAsync(string msg);
+    /// <param name="token">可取消令箭</param>
+    Task<Result> CloseAsync(string msg, CancellationToken token = default);
 }

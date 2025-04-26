@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets;
 /// 定义了一个接口，用于标识和处理服务器停止时的插件行为。
 /// </summary>
 [DynamicMethod]
-public interface IServerStopedPlugin : IPlugin
+public interface IServerStoppedPlugin : IPlugin
 {
     /// <summary>
     /// 当服务器调用<see cref="IServiceBase.StopAsync"/>或者<see cref="IDisposable.Dispose"/>时
@@ -29,5 +29,5 @@ public interface IServerStopedPlugin : IPlugin
     /// <param name="sender">发送停止或释放操作的服务对象</param>
     /// <param name="e">包含停止或释放操作相关信息的事件参数</param>
     /// <returns>一个Task对象，表示异步操作的完成</returns>
-    Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e);
+    Task OnServerStopped(IServiceBase sender, ServiceStateEventArgs e);
 }

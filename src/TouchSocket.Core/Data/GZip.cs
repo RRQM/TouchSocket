@@ -12,6 +12,7 @@
 
 using System.IO;
 using System.IO.Compression;
+using System.Buffers;
 
 namespace TouchSocket.Core;
 
@@ -87,7 +88,7 @@ public static partial class GZip
     {
         using (var gZipStream = new GZipStream(new MemoryStream(data, offset, length), CompressionMode.Decompress))
         {
-            var bytes = BytePool.Default.Rent(1024 * 64);
+            var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
             try
             {
                 int r;
@@ -99,7 +100,7 @@ public static partial class GZip
             }
             finally
             {
-                BytePool.Default.Return(bytes);
+                ArrayPool<byte>.Shared.Return(bytes);
             }
         }
     }

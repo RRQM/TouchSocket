@@ -23,57 +23,63 @@ namespace TouchSocket.Rpc;
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为者的类型，必须是类类型。</typeparam>
 /// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现ICallContext接口。</typeparam>
-public class QueueRpcDispatcher<TRpcActor, TCallContext> : IRpcDispatcher<TRpcActor, TCallContext>
+public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext
 {
+    
+    /// <summary>
+    /// 初始化<see cref="QueueRpcDispatcher{TRpcActor, TCallContext}"/>类的新实例。
+    /// </summary>
+    public QueueRpcDispatcher()
+    {
+        _ = EasyTask.SafeRun(this.RpcTrigger);
+    }
+
+    private readonly CancellationTokenSource m_cancellationTokenSource = new CancellationTokenSource();
 
     /// <inheritdoc/>
     public bool Reenterable => false;
 
-    private readonly ConcurrentQueue<InvokeContext> m_queue = new ConcurrentQueue<InvokeContext>();
-    private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+    private readonly AsyncQueue<InvokeContext> m_queue = new();
 
     /// <inheritdoc/>
-    public async Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func)
+    public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func)
     {
         this.m_queue.Enqueue(new InvokeContext(callContext, func));
-        await Task.Factory.StartNew(this.RpcTrigger).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return EasyTask.CompletedTask;
     }
 
     private async Task RpcTrigger()
     {
-        await this.m_semaphore.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        try
+        while (true)
         {
-            while (true)
+            if (this.m_cancellationTokenSource.IsCancellationRequested)
             {
-                if (this.m_queue.TryDequeue(out var invokeContext))
-                {
-                    var callContext = invokeContext.IDmtpRpcCallContext;
-                    var func = invokeContext.Func;
-                    try
-                    {
-                        await func(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
-                    catch
-                    {
-                    }
-                }
-                else
-                {
-                    break;
-                }
+                return;
+            }
+            var invokeContext = await this.m_queue.DequeueAsync(this.m_cancellationTokenSource.Token);
+            var callContext = invokeContext.IDmtpRpcCallContext;
+            var func = invokeContext.Func;
+            try
+            {
+                await func(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            catch
+            {
             }
         }
-        catch
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
+            this.m_cancellationTokenSource.Cancel();
+            this.m_cancellationTokenSource.SafeDispose();
         }
-        finally
-        {
-            this.m_semaphore.Release();
-        }
+        base.Dispose(disposing);
     }
 
     private readonly struct InvokeContext

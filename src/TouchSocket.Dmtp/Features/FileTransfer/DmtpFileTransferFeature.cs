@@ -64,7 +64,7 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin
             MaxSmallFileLength = this.MaxSmallFileLength
         };
         dmtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
-        client.DmtpActor.SetDmtpFileTransferActor(dmtpFileTransferActor);
+        client.DmtpActor.AddActor<DmtpFileTransferActor>(dmtpFileTransferActor);
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 

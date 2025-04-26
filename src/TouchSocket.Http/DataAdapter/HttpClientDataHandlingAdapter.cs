@@ -89,7 +89,7 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
     {
         if (byteBlock.CanReadLength > 0)
         {
-            this.m_tempByteBlock = new ByteBlock();
+            this.m_tempByteBlock = new ByteBlock(1024 * 64);
             this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
             if (this.m_tempByteBlock.Length > this.MaxPackageSize)
             {

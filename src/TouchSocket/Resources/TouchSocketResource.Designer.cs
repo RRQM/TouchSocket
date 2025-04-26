@@ -124,6 +124,33 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Start polling based reconnection, with an interval of {0}. 的本地化字符串。
+        /// </summary>
+        public static string PollingBegin {
+            get {
+                return ResourceManager.GetString("PollingBegin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Polling reconnection has ended 的本地化字符串。
+        /// </summary>
+        public static string PollingEnd {
+            get {
+                return ResourceManager.GetString("PollingEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Polling style reconnection is about to exit, reason: reconnection plugin has been disposed 的本地化字符串。
+        /// </summary>
+        public static string PollingWillEnd {
+            get {
+                return ResourceManager.GetString("PollingWillEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The remote terminal actively disconnects. 的本地化字符串。
         /// </summary>
         public static string RemoteDisconnects {

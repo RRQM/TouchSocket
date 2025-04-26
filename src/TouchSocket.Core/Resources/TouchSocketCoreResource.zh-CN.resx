@@ -233,4 +233,16 @@
     <value>插件‘{0}’为null，它可能在容器中缺少注册信息。</value>
     <comment>插件‘{0}’为null，它可能在容器中缺少注册信息。</comment>
   </data>
+  <data name="InvalidAfterCompleted" xml:space="preserve">
+    <value>完成后无效。</value>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>队列为空。</value>
+  </data>
+  <data name="AssertTrueFail" xml:space="preserve">
+    <value>断言”{0}“的值为true失败，实际值为”{1}“。</value>
+  </data>
+  <data name="AssertFalseFail" xml:space="preserve">
+    <value>断言”{0}“的值为false失败，实际值为”{1}“。</value>
+  </data>
 </root>

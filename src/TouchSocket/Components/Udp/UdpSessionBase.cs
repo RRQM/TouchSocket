@@ -34,8 +34,8 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     private ServerState m_serverState;
     private InternalUdpReceiver m_receiver;
     private UdpDataHandlingAdapter m_dataHandlingAdapter;
-    private DateTime m_lastReceivedTime;
-    private DateTime m_lastSendTime;
+    private DateTimeOffset m_lastReceivedTime;
+    private DateTimeOffset m_lastSendTime;
     private UdpNetworkMonitor m_monitor;
     private readonly List<Task> m_receiveTasks = new List<Task>();
     private readonly SemaphoreSlim m_semaphoreSlimForReceiver = new SemaphoreSlim(1, 1);
@@ -62,10 +62,10 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime => this.m_lastReceivedTime;
+    public DateTimeOffset LastReceivedTime => this.m_lastReceivedTime;
 
     /// <inheritdoc/>
-    public DateTime LastSentTime => this.m_lastSendTime;
+    public DateTimeOffset LastSentTime => this.m_lastSendTime;
 
     /// <summary>
     /// 数据处理适配器
@@ -97,17 +97,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <exception cref="ArgumentNullException">如果multicastAddr为null，则引发异常。</exception>
     public void DropMulticastGroup(IPAddress multicastAddr)
     {
-        // 检查当前对象是否已被处置
-        if (this.DisposedValue)
-        {
-            throw new ObjectDisposedException(this.GetType().FullName);
-        }
+        this.ThrowIfDisposed();
 
-        // 检查组播地址是否为空
-        if (multicastAddr is null)
-        {
-            throw new ArgumentNullException(nameof(multicastAddr));
-        }
+        ThrowHelper.ThrowArgumentNullExceptionIf(multicastAddr, nameof(multicastAddr));
 
         // 根据Socket的地址族类型，执行相应的退出组播组操作
         if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
@@ -133,16 +125,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <exception cref="ObjectDisposedException">如果当前对象已被处置，则抛出此异常。</exception>
     public void JoinMulticastGroup(IPAddress multicastAddr)
     {
-        // 检查组播地址是否为空
-        if (multicastAddr is null)
-        {
-            throw new ArgumentNullException(nameof(multicastAddr));
-        }
-        // 检查当前对象是否已被处置
-        if (this.DisposedValue)
-        {
-            throw new ObjectDisposedException(this.GetType().FullName);
-        }
+        this.ThrowIfDisposed();
+
+        ThrowHelper.ThrowArgumentNullExceptionIf(multicastAddr, nameof(multicastAddr));
 
         // 根据不同的地址族设置组播成员资格
         if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
@@ -207,19 +192,28 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    public override async Task StopAsync()
+    public override async Task<Result> StopAsync(CancellationToken token=default)
     {
-        this.m_monitor?.Socket.Dispose();
-        this.m_monitor = null;
-        this.m_serverState = ServerState.Stopped;
-        await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_receiveTasks.Clear();
-
-        if (this.m_receiver != null)
+        try
         {
-            await this.m_receiver.Complete(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_monitor?.Socket.Dispose();
+            this.m_monitor = null;
+            this.m_serverState = ServerState.Stopped;
+            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_receiveTasks.Clear();
+
+            if (this.m_receiver != null)
+            {
+                await this.m_receiver.Complete(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            return Result.Success;
         }
-        await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 
     /// <inheritdoc/>
@@ -386,18 +380,18 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                         }
                         else if (result.SocketError != null)
                         {
-                            this.Logger?.Error(this, result.SocketError.Message);
+                            this.Logger?.Debug(this, result.SocketError.Message);
                             return;
                         }
                         else
                         {
-                            this.Logger?.Error(this, TouchSocketCoreResource.UnknownError);
+                            this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
                             return;
                         }
                     }
                     catch (Exception ex)
                     {
-                        this.Logger?.Exception(ex);
+                        this.Logger?.Exception(this, ex);
                         return;
                     }
                 }
@@ -414,7 +408,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                 return;
             }
 
-            this.m_lastReceivedTime = DateTime.UtcNow;
+            this.m_lastReceivedTime = DateTimeOffset.UtcNow;
 
             if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
@@ -432,7 +426,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         }
         catch (Exception ex)
         {
-            this.Logger?.Exception(ex);
+            this.Logger?.Exception(this, ex);
         }
     }
 
@@ -602,7 +596,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         this.ThrowIfCannotSend();
         await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
-        this.m_lastSendTime = DateTime.UtcNow;
+        this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
 #else
 
@@ -639,7 +633,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             this.Monitor.Socket.SendTo(array, 0, array.Length, SocketFlags.None, endPoint);
         }
         // 更新最后一次发送时间。
-        this.m_lastSendTime = DateTime.UtcNow;
+        this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
 
 #endif

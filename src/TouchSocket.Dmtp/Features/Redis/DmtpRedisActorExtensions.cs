@@ -21,11 +21,11 @@ namespace TouchSocket.Dmtp.Redis;
 /// </summary>
 public static class DmtpRedisActorExtensions
 {
-    /// <summary>
-    /// 获取或设置RedisActor的注入键。
-    /// </summary>
-    public static readonly DependencyProperty<IDmtpRedisActor> DmtpRedisActorProperty =
-        new("DmtpRedisActor", null);
+    ///// <summary>
+    ///// 获取或设置RedisActor的注入键。
+    ///// </summary>
+    //public static readonly DependencyProperty<IDmtpRedisActor> DmtpRedisActorProperty =
+    //    new("DmtpRedisActor", null);
 
     /// <summary>
     /// 获取<see cref="IDmtpRedisActor"/>
@@ -35,10 +35,9 @@ public static class DmtpRedisActorExtensions
     /// <exception cref="Exception">当<see cref="IDmtpRedisActor"/>为null时抛出<see cref="ArgumentException"/></exception>
     public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActorObject client)
     {
-        // 从client的DmtpActor属性中获取存储的IDmtpRedisActor实例
-        var redisClient = client.DmtpActor.GetValue(DmtpRedisActorProperty);
-        // 如果redisClient为null，则抛出ArgumentException，提示RedisActor未设置
-        return redisClient ?? throw new ArgumentException(TouchSocketDmtpResource.RedisActorNull);
+        var actor = client.DmtpActor.GetDmtpRedisActor();
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.RedisActorNull);
+        return actor;
     }
 
     /// <summary>
@@ -48,13 +47,7 @@ public static class DmtpRedisActorExtensions
     /// <returns>返回从<see cref="DmtpActor"/>中获取的<see cref="IDmtpRedisActor"/>实例</returns>
     public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor dmtpActor)
     {
-        // 调用GetValue方法从dmtpActor中获取DmtpRedisActorProperty属性值
-        return dmtpActor.GetValue(DmtpRedisActorProperty);
-    }
-
-    internal static void SetDmtpRedisActor(this IDmtpActor dmtpActor, DmtpRedisActor redisClient)
-    {
-        dmtpActor.SetValue(DmtpRedisActorProperty, redisClient);
+         return dmtpActor.GetActor<DmtpRedisActor>();
     }
 
     /// <summary>

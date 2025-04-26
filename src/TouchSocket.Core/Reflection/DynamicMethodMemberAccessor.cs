@@ -63,7 +63,7 @@ public class DynamicMethodMemberAccessor : IMemberAccessor
             var memberAccessor = new MemberAccessor(instance.GetType());
             if (this.OnGetFieldInfes != null)
             {
-                memberAccessor.OnGetFieldInfes = this.OnGetFieldInfes;
+                memberAccessor.OnGetFieldInfos = this.OnGetFieldInfes;
             }
 
             if (this.OnGetProperties != null)

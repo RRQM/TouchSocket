@@ -173,4 +173,13 @@
     <value>超时无数据交互，主动断开连接。</value>
     <comment>超时无数据交互，主动断开连接。</comment>
   </data>
+  <data name="PollingBegin" xml:space="preserve">
+    <value>开始基于轮询的重新连接，间隔为{0}。</value>
+  </data>
+  <data name="PollingWillEnd" xml:space="preserve">
+    <value>轮询式重新连接即将退出，原因：重新连接插件已被释放</value>
+  </data>
+  <data name="PollingEnd" xml:space="preserve">
+    <value>轮询重新连接已结束</value>
+  </data>
 </root>

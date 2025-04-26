@@ -10,7 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -36,25 +39,17 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     where TWaitDataAsync : IWaitDataAsync<T>, new()
     where T : IWaitHandle
 {
-    private readonly ConcurrentDictionary<int, TWaitData> m_waitDic;
-    private readonly ConcurrentDictionary<int, TWaitDataAsync> m_waitDicAsync;
-    private readonly ConcurrentQueue<TWaitData> m_waitQueue;
-    private readonly ConcurrentQueue<TWaitDataAsync> m_waitQueueAsync;
+    /// <summary>
+    /// 不要设为readonly
+    /// </summary>
+    private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
+    private readonly Dictionary<int, TWaitData> m_waitDic = new();
+    private readonly Dictionary<int, TWaitDataAsync> m_waitDicAsync = new();
+    private readonly Queue<TWaitData> m_waitQueue = new();
+    private readonly Queue<TWaitDataAsync> m_waitQueueAsync = new();
     private int m_currentSign;
     private int m_maxSign = int.MaxValue;
-    private int m_minSign = int.MinValue;
-
-    /// <summary>
-    /// 初始化等待句柄池。
-    /// <see cref="WaitHandlePool{T}"/>"/>
-    /// </summary>
-    public WaitHandlePool()
-    {
-        this.m_waitDic = new ConcurrentDictionary<int, TWaitData>();
-        this.m_waitDicAsync = new ConcurrentDictionary<int, TWaitDataAsync>();
-        this.m_waitQueue = new ConcurrentQueue<TWaitData>();
-        this.m_waitQueueAsync = new ConcurrentQueue<TWaitDataAsync>();
-    }
+    private int m_minSign = 0;
 
     /// <inheritdoc/>
     public int MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
@@ -65,60 +60,111 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     /// <inheritdoc/>
     public void CancelAll()
     {
-        foreach (var item in this.m_waitDic.Values)
+        var lockTaken = false;
+        try
         {
-            item.Cancel();
+            this.m_lock.Enter(ref lockTaken);
+            foreach (var item in this.m_waitDic.Values)
+            {
+                item.Cancel();
+            }
+            foreach (var item in this.m_waitDicAsync.Values)
+            {
+                item.Cancel();
+            }
         }
-        foreach (var item in this.m_waitDicAsync.Values)
+        finally
         {
-            item.Cancel();
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
     }
 
     /// <inheritdoc/>
     public void Destroy(TWaitData waitData)
     {
-        if (waitData.WaitResult == null)
+        var lockTaken = false;
+        try
         {
-            return;
-        }
-        if (this.m_waitDic.TryRemove(waitData.WaitResult.Sign, out var wait))
-        {
-            if (wait.DisposedValue)
+            this.m_lock.Enter(ref lockTaken);
+            if (waitData.WaitResult == null)
             {
                 return;
             }
+            if (this.m_waitDic.Remove(waitData.WaitResult.Sign))
+            {
+                if (waitData.DisposedValue)
+                {
+                    return;
+                }
 
-            wait.Reset();
-            this.m_waitQueue.Enqueue(wait);
+                waitData.Reset();
+                this.m_waitQueue.Enqueue(waitData);
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
     }
 
     /// <inheritdoc/>
     public void Destroy(TWaitDataAsync waitData)
     {
-        if (waitData.WaitResult == null)
+        var lockTaken = false;
+        try
         {
-            return;
-        }
-        if (this.m_waitDicAsync.TryRemove(waitData.WaitResult.Sign, out var wait))
-        {
-            if (wait.DisposedValue)
+            this.m_lock.Enter(ref lockTaken);
+
+            if (waitData.WaitResult == null)
             {
                 return;
             }
+            if (this.m_waitDicAsync.Remove(waitData.WaitResult.Sign))
+            {
+                if (waitData.DisposedValue)
+                {
+                    return;
+                }
 
-            wait.Reset();
-            this.m_waitQueueAsync.Enqueue(wait);
+                waitData.Reset();
+                this.m_waitQueueAsync.Enqueue(waitData);
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
     }
 
     /// <inheritdoc/>
     public TWaitData GetWaitData(T result, bool autoSign = true)
     {
-        // 尝试从同步等待队列中取出一个等待数据对象
-        if (this.m_waitQueue.TryDequeue(out var waitData))
+        var lockTaken = false;
+        try
         {
+            this.m_lock.Enter(ref lockTaken);
+            if (this.m_waitQueue.TryDequeue(out var waitData))
+            {
+                if (autoSign)
+                {
+                    result.Sign = this.GetSign();
+                }
+                waitData.SetResult(result);
+                this.m_waitDic.Add(result.Sign, waitData);
+                return waitData;
+            }
+
+            // 如果队列中没有可取出的等待数据对象，则新建一个
+            waitData = new TWaitData();
             // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
@@ -127,56 +173,80 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             // 设置等待数据对象的结果
             waitData.SetResult(result);
             // 将结果对象的签名和等待数据对象添加到字典中
-            this.m_waitDic.TryAdd(result.Sign, waitData);
+            this.m_waitDic.Add(result.Sign, waitData);
             return waitData;
         }
-
-        // 如果队列中没有可取出的等待数据对象，则新建一个
-        waitData = new TWaitData();
-        // 如果自动签名开启，则为结果对象设置签名
-        if (autoSign)
+        finally
         {
-            result.Sign = this.GetSign();
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
-        // 设置等待数据对象的结果
-        waitData.SetResult(result);
-        // 将结果对象的签名和等待数据对象添加到字典中
-        this.m_waitDic.TryAdd(result.Sign, waitData);
-        return waitData;
     }
 
     /// <inheritdoc/>
     public TWaitData GetWaitData(out int sign)
     {
-        // 尝试从同步等待队列中取出一个等待数据对象
-        if (this.m_waitQueue.TryDequeue(out var waitData))
+        var lockTaken = false;
+        try
         {
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从同步等待队列中取出一个等待数据对象
+            if (this.m_waitQueue.TryDequeue(out var waitData))
+            {
+                // 生成签名
+                sign = this.GetSign();
+                // 设置等待数据对象的默认结果
+                waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
+                this.m_waitDic.Add(sign, waitData);
+                return waitData;
+            }
+
+            // 如果队列中没有可取出的等待数据对象，则新建一个
+            waitData = new TWaitData();
             // 生成签名
             sign = this.GetSign();
             // 设置等待数据对象的默认结果
             waitData.SetResult(default);
             // 将签名和等待数据对象添加到字典中
-            this.m_waitDic.TryAdd(sign, waitData);
+            this.m_waitDic.Add(sign, waitData);
             return waitData;
         }
-
-        // 如果队列中没有可取出的等待数据对象，则新建一个
-        waitData = new TWaitData();
-        // 生成签名
-        sign = this.GetSign();
-        // 设置等待数据对象的默认结果
-        waitData.SetResult(default);
-        // 将签名和等待数据对象添加到字典中
-        this.m_waitDic.TryAdd(sign, waitData);
-        return waitData;
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
     public TWaitDataAsync GetWaitDataAsync(T result, bool autoSign = true)
     {
-        // 尝试从异步等待队列中取出一个等待数据对象
-        if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+        var lockTaken = false;
+        try
         {
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从异步等待队列中取出一个等待数据对象
+            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+            {
+                // 如果自动签名开启，则为结果对象设置签名
+                if (autoSign)
+                {
+                    result.Sign = this.GetSign();
+                }
+                // 设置等待数据对象的结果
+                waitData.SetResult(result);
+                // 将结果对象的签名和等待数据对象添加到字典中
+                this.m_waitDicAsync.Add(result.Sign, waitData);
+                return waitData;
+            }
+
+            // 如果队列中没有可取出的等待数据对象，则新建一个
+            waitData = new TWaitDataAsync();
             // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
@@ -185,119 +255,185 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             // 设置等待数据对象的结果
             waitData.SetResult(result);
             // 将结果对象的签名和等待数据对象添加到字典中
-            this.m_waitDicAsync.TryAdd(result.Sign, waitData);
+            this.m_waitDicAsync.Add(result.Sign, waitData);
             return waitData;
         }
-
-        // 如果队列中没有可取出的等待数据对象，则新建一个
-        waitData = new TWaitDataAsync();
-        // 如果自动签名开启，则为结果对象设置签名
-        if (autoSign)
+        finally
         {
-            result.Sign = this.GetSign();
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
-        // 设置等待数据对象的结果
-        waitData.SetResult(result);
-        // 将结果对象的签名和等待数据对象添加到字典中
-        this.m_waitDicAsync.TryAdd(result.Sign, waitData);
-        return waitData;
     }
 
     /// <inheritdoc/>
     public TWaitDataAsync GetWaitDataAsync(out int sign)
     {
-        // 尝试从异步等待队列中取出一个等待数据对象
-        if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+        var lockTaken = false;
+        try
         {
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从异步等待队列中取出一个等待数据对象
+            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+            {
+                // 生成签名
+                sign = this.GetSign();
+                // 设置等待数据对象的默认结果
+                waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
+                this.m_waitDicAsync.Add(sign, waitData);
+                return waitData;
+            }
+
+            // 如果队列中没有可取出的等待数据对象，则新建一个
+            waitData = new TWaitDataAsync();
             // 生成签名
             sign = this.GetSign();
             // 设置等待数据对象的默认结果
             waitData.SetResult(default);
             // 将签名和等待数据对象添加到字典中
-            this.m_waitDicAsync.TryAdd(sign, waitData);
+            this.m_waitDicAsync.Add(sign, waitData);
             return waitData;
         }
-
-        // 如果队列中没有可取出的等待数据对象，则新建一个
-        waitData = new TWaitDataAsync();
-        // 生成签名
-        sign = this.GetSign();
-        // 设置等待数据对象的默认结果
-        waitData.SetResult(default);
-        // 将签名和等待数据对象添加到字典中
-        this.m_waitDicAsync.TryAdd(sign, waitData);
-        return waitData;
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
     public bool SetRun(int sign)
     {
-        // 尝试从异步等待数据字典中获取并设置等待数据
-        if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
+        var lockTaken = false;
+        try
         {
-            waitDataAsync.Set();
-            return true;
-        }
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从异步等待数据字典中获取并设置等待数据
+            if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
+            {
+                waitDataAsync.Set();
+                return true;
+            }
 
-        // 尝试从同步等待数据字典中获取并设置等待数据
-        if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set();
+                return true;
+            }
+
+            return false;
+        }
+        finally
         {
-            waitData.Set();
-            return true;
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
-
-        return false;
     }
 
     /// <inheritdoc/>
     public bool SetRun(int sign, T waitResult)
     {
-        // 尝试从异步等待数据字典中获取并设置等待数据
-        if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
+        var lockTaken = false;
+        try
         {
-            waitDataAsync.Set(waitResult);
-            return true;
-        }
-        // 尝试从同步等待数据字典中获取并设置等待数据
-        if (this.m_waitDic.TryGetValue(sign, out var waitData))
-        {
-            waitData.Set(waitResult);
-            return true;
-        }
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从异步等待数据字典中获取并设置等待数据
+            if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
+            {
+                waitDataAsync.Set(waitResult);
+                return true;
+            }
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
 
-        return false;
+            return false;
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
     public bool SetRun(T waitResult)
     {
-        // 尝试从异步等待数据字典中获取并设置等待数据
-        if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
+        var lockTaken = false;
+        try
         {
-            waitDataAsync.Set(waitResult);
-            return true;
-        }
+            this.m_lock.Enter(ref lockTaken);
+            // 尝试从异步等待数据字典中获取并设置等待数据
+            if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
+            {
+                waitDataAsync.Set(waitResult);
+                return true;
+            }
 
-        // 尝试从同步等待数据字典中获取并设置等待数据
-        if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
+
+            return false;
+        }
+        finally
         {
-            waitData.Set(waitResult);
-            return true;
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
         }
-
-        return false;
     }
 
     /// <inheritdoc/>
     public bool TryGetData(int sign, out TWaitData waitData)
     {
-        return this.m_waitDic.TryGetValue(sign, out waitData);
+        var lockTaken = false;
+        try
+        {
+            this.m_lock.Enter(ref lockTaken);
+            return this.m_waitDic.TryGetValue(sign, out waitData);
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
     public bool TryGetDataAsync(int sign, out TWaitDataAsync waitDataAsync)
     {
-        return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
+        var lockTaken = false;
+        try
+        {
+            this.m_lock.Enter(ref lockTaken);
+            return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                this.m_lock.Exit(false);
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -305,17 +441,29 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     {
         if (disposing)
         {
-            foreach (var item in this.m_waitDic.Values)
+            var lockTaken = false;
+            try
             {
-                item.SafeDispose();
-            }
-            foreach (var item in this.m_waitQueue)
-            {
-                item.SafeDispose();
-            }
-            this.m_waitDic.Clear();
+                this.m_lock.Enter(ref lockTaken);
+                foreach (var item in this.m_waitDic.Values)
+                {
+                    item.SafeDispose();
+                }
+                foreach (var item in this.m_waitQueue)
+                {
+                    item.SafeDispose();
+                }
+                this.m_waitDic.Clear();
 
-            this.m_waitQueue.Clear();
+                this.m_waitQueue.Clear();
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         base.Dispose(disposing);
@@ -324,7 +472,11 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetSign()
     {
-        Interlocked.CompareExchange(ref this.m_currentSign, 0, this.m_maxSign);
-        return Interlocked.Increment(ref this.m_currentSign);
+        var sign = this.m_currentSign++;
+        if (this.m_currentSign >= this.m_maxSign)
+        {
+            this.m_currentSign = this.m_minSign;
+        }
+        return sign;
     }
 }

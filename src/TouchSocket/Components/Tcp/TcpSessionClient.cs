@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets;
 ///
 /// 继承此类的子类通常需要实现或重写一些方法和属性，以适应特定的业务逻辑和数据处理需求。
 /// </summary>
-[DebuggerDisplay("Id={Id},IPAdress={IP}:{Port}")]
+[DebuggerDisplay("Id={Id},IPAddress={IP}:{Port}")]
 public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
 {
     #region 变量

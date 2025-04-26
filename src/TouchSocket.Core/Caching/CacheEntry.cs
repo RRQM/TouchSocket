@@ -35,7 +35,7 @@ public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
     public CacheEntry(TKey key, TValue value)
     {
         // 初始化更新时间为当前UTC时间。
-        this.UpdateTime = DateTime.UtcNow;
+        this.UpdateTime = DateTimeOffset.UtcNow;
         // 设置默认缓存持续时间为1分钟。
         this.Duration = TimeSpan.FromSeconds(60);
         // 设置缓存条目的键。
@@ -57,7 +57,7 @@ public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
     /// <summary>
     /// 更新时间
     /// </summary>
-    public DateTime UpdateTime { get; set; }
+    public DateTimeOffset UpdateTime { get; set; }
 
     /// <summary>
     /// 值

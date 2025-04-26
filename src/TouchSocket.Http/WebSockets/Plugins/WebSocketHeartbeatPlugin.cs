@@ -23,9 +23,9 @@ namespace TouchSocket.Http.WebSockets;
 public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
 {
     /// <inheritdoc/>
-    public Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
     {
-        Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             var failedCount = 0;
             while (true)
@@ -52,6 +52,6 @@ public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlu
             }
         });
 
-        return e.InvokeNext();
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

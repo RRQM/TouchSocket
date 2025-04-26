@@ -34,60 +34,109 @@ public static class TouchSocketHttpUtility
     /// </value>
     public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
 
-    #region ByteBlock Append
-
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 "&amp;" 符号。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendAnd<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("&"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 ":" 符号。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendColon<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write(":"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 "=" 符号。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendEqual<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("="u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 "HTTP" 字符串。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendHTTP<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("HTTP"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 "?" 符号。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendQuestionMark<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("?"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加回车换行符 "\r\n"。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendRn<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("\r\n"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加 "/" 符号。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write("/"u8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加空格符。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
     public static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
         byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加指定的 UTF-8 编码字符串。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
+    /// <param name="value">要追加的字符串。</param>
     public static void AppendUtf8String<TByteBlock>(ref TByteBlock byteBlock, string value) where TByteBlock : IByteBlock
     {
         byteBlock.WriteNormalString(value, Encoding.UTF8);
     }
 
+    /// <summary>
+    /// 在 <see cref="IByteBlock"/> 中追加指定整数的十六进制表示。
+    /// </summary>
+    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="byteBlock">字节块实例。</param>
+    /// <param name="value">要追加的整数值。</param>
     public static void AppendHex<TByteBlock>(ref TByteBlock byteBlock, int value) where TByteBlock : IByteBlock
     {
         AppendUtf8String(ref byteBlock, $"{value:X}");
     }
-    #endregion ByteBlock Append
 
-    public static string UnescapeDataString(ReadOnlySpan<byte> urlSpan)
+    internal static string UnescapeDataString(ReadOnlySpan<byte> urlSpan)
     {
 #if NET9_0_OR_GREATER
         // 直接处理字节的URL解码
@@ -100,7 +149,7 @@ public static class TouchSocketHttpUtility
 
     }
 
-    public static string UnescapeDataString(ReadOnlySpan<char> urlSpan)
+    internal static string UnescapeDataString(ReadOnlySpan<char> urlSpan)
     {
 #if NET9_0_OR_GREATER
         return Uri.UnescapeDataString(urlSpan);
@@ -110,10 +159,10 @@ public static class TouchSocketHttpUtility
 
     }
 
-    public static bool IsWhitespace(byte b) => b == ' ' || b == '\t';
+    internal static bool IsWhitespace(byte b) => b == ' ' || b == '\t';
 
 
-    public static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
+    internal static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
     {
         for (int i = start; i < span.Length; i++)
         {
@@ -125,7 +174,7 @@ public static class TouchSocketHttpUtility
         return -1;
     }
 
-    public static int SkipSpaces(ReadOnlySpan<byte> span, int start)
+    internal static int SkipSpaces(ReadOnlySpan<byte> span, int start)
     {
         while (start < span.Length && TouchSocketHttpUtility.IsWhitespace(span[start]))
         {

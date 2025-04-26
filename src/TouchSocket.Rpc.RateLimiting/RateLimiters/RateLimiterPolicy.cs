@@ -79,7 +79,7 @@ public abstract class RateLimiterPolicy<TPartitionKey> : IRateLimiterPolicy
         var rateLimiterClass = this.m_rateLimiters.GetOrAdd(partitionKey, this.GetRateLimiterClass);
 
         // 更新限流器类的最后访问时间
-        rateLimiterClass.DateTime = DateTime.UtcNow;
+        rateLimiterClass.DateTime = DateTimeOffset.UtcNow;
 
         // 增加值计数器，用于跟踪限流器的使用次数
         this.m_valueCounter.Increment();
@@ -106,7 +106,7 @@ public abstract class RateLimiterPolicy<TPartitionKey> : IRateLimiterPolicy
         return new RateLimiterClass()
         {
             RateLimiter = this.NewRateLimiter(partitionKey),
-            DateTime = DateTime.UtcNow
+            DateTime = DateTimeOffset.UtcNow
         };
     }
 
@@ -114,7 +114,7 @@ public abstract class RateLimiterPolicy<TPartitionKey> : IRateLimiterPolicy
     {
         this.m_rateLimiters.RemoveWhen((p) =>
         {
-            if (DateTime.UtcNow - p.Value.DateTime > this.m_maxLifetime)
+            if (DateTimeOffset.UtcNow - p.Value.DateTime > this.m_maxLifetime)
             {
                 return true;
             }
@@ -126,7 +126,7 @@ public abstract class RateLimiterPolicy<TPartitionKey> : IRateLimiterPolicy
 
     private class RateLimiterClass
     {
-        public DateTime DateTime { get; set; }
+        public DateTimeOffset DateTime { get; set; }
         public RateLimiter RateLimiter { get; set; }
     }
 

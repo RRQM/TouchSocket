@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -30,5 +31,5 @@ public abstract class ServiceBase : SetupConfigObject, IServiceBase
     public abstract Task StartAsync();
 
     /// <inheritdoc/>
-    public abstract Task StopAsync();
+    public abstract Task<Result> StopAsync(CancellationToken token = default);
 }

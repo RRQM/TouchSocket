@@ -10,12 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Buffers;
+
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 内存池
 /// </summary>
-public sealed class BytePool : ArrayPool<byte>
+[Obsolete("此类已被弃用，请使用ArrayPool<byte>代替",true)]
+public sealed class BytePool
 {
     static BytePool()
     {
@@ -34,7 +38,7 @@ public sealed class BytePool : ArrayPool<byte>
     /// </summary>
     /// <param name="maxArrayLength"></param>
     /// <param name="maxArraysPerBucket"></param>
-    public BytePool(int maxArrayLength, int maxArraysPerBucket) : base(maxArrayLength, maxArraysPerBucket)
+    public BytePool(int maxArrayLength, int maxArraysPerBucket)
     {
         this.AutoZero = false;
         this.MaxBlockSize = maxArrayLength;
@@ -71,7 +75,7 @@ public sealed class BytePool : ArrayPool<byte>
     /// <returns></returns>
     public ByteBlock GetByteBlock(int byteSize)
     {
-        return new ByteBlock(byteSize, this);
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -81,6 +85,6 @@ public sealed class BytePool : ArrayPool<byte>
     /// <returns></returns>
     public ValueByteBlock GetValueByteBlock(int byteSize)
     {
-        return new ValueByteBlock(byteSize, this);
+        throw new NotImplementedException();
     }
 }

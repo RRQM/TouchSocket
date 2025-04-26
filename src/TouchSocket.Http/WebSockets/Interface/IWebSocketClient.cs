@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 用户终端接口
 /// </summary>
-public interface IWebSocketClient : IClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient, IWebSocket
+public interface IWebSocketClient : IDependencyClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient, IWebSocket
 {
     /// <summary>
     /// 当WebSocket断开时触发。

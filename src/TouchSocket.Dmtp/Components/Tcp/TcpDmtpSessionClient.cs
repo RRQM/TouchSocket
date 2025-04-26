@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -133,7 +134,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <para>
     /// 该触发条件有2种：
     /// <list type="number">
-    /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
     /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
     /// </list>
     /// </para>
@@ -204,18 +205,19 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
+    /// <param name="token"></param>
     /// <returns>异步任务</returns>
-    public override async Task CloseAsync(string msg)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         // 检查是否已初始化IDmtpActor接口
         if (this.m_dmtpActor != null)
         {
             // 如果已初始化，则调用IDmtpActor的CloseAsync方法发送关闭消息
-            await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的CloseAsync方法发送关闭消息
-        await base.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

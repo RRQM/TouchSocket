@@ -13,6 +13,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace TouchSocket.Dmtp;
 /// <summary>
 /// 提供Dmtp协议的最基础功能件
 /// </summary>
-public abstract class DmtpActor : DependencyObject, IDmtpActor
+public abstract class DmtpActor : DisposableObject, IDmtpActor
 {
     #region 委托
 
@@ -94,7 +95,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     public bool IsReliable { get; }
 
     /// <inheritdoc/>
-    public DateTime LastActiveTime { get; protected set; }
+    public DateTimeOffset LastActiveTime { get; protected set; }
 
     /// <inheritdoc/>
     public ILog Logger { get; set; }
@@ -112,6 +113,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
     private CancellationTokenSource m_cancellationTokenSource;
     private readonly Lock m_syncRoot = new Lock();
+    private Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
     #endregion
 
     /// <summary>
@@ -123,7 +125,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     {
         this.WaitHandlePool = new WaitHandlePool<IWaitResult>();
         this.AllowRoute = allowRoute;
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         this.IsReliable = isReliable;
     }
 
@@ -180,12 +182,12 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
                         {
                             this.Id = verifyResult.Id;
                             this.Online = true;
-                            _ = Task.Factory.StartNew(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
+                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
                             {
                                 Id = verifyResult.Id,
                                 Metadata = verifyResult.Metadata,
                                 Token = verifyResult.Token,
-                            }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            });
 
                             this.m_cancellationTokenSource = new CancellationTokenSource();
                             this.m_handshakeFinished.Set();
@@ -230,6 +232,13 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
             this.Online = false;
             this.WaitHandlePool.CancelAll();
             this.m_cancellationTokenSource?.Cancel();
+
+            foreach (var item in this.m_actors)
+            {
+                item.Value.SafeDispose();
+            }
+
+            this.m_actors.Clear();
         }
 
         if (manual || this.Closing == null)
@@ -295,15 +304,9 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
-    private async Task PrivateOnHandshaked(object obj)
+    private async Task PrivateOnHandshaked(DmtpVerifyEventArgs e)
     {
-        try
-        {
-            await this.OnHandshaked((DmtpVerifyEventArgs)obj);
-        }
-        catch
-        {
-        }
+        await this.OnHandshaked(e);
     }
 
     private async Task PrivateOnCreatedChannel(object obj)
@@ -394,7 +397,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     /// <returns></returns>
     public virtual async Task<bool> InputReceivedData(DmtpMessage message)
     {
-        this.LastActiveTime = DateTime.UtcNow;
+        this.LastActiveTime = DateTimeOffset.UtcNow;
         var byteBlock = message.BodyByteBlock;
         switch (message.ProtocolFlags)
         {
@@ -433,7 +436,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
                             this.Online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                             this.m_cancellationTokenSource = new CancellationTokenSource();
-                            _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, args);
                         }
                         else//不允许连接
                         {
@@ -783,7 +786,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     /// <inheritdoc/>
     public virtual async Task SendPackageAsync(ushort protocol, IPackage package)
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             var block = byteBlock;
             package.Package(ref block);
@@ -874,6 +877,33 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
         }
     }
 
+    #region Actor
+    /// <inheritdoc/>
+    public void AddActor<TActor>(TActor actor) where TActor : class, IActor
+    {
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
+        var type = typeof(TActor);
+
+        if (this.m_actors.ContainsKey(type))
+        {
+            ThrowHelper.ThrowException(TouchSocketDmtpResource.ActorAlreadyExists.Format(type));
+        }
+        this.m_actors.Add(type, actor);
+    }
+
+    /// <inheritdoc/>
+    public TActor GetActor<TActor>() where TActor : class, IActor
+    {
+        var type = typeof(TActor);
+        if (this.m_actors.TryGetValue(type, out var actor))
+        {
+            return (TActor)actor;
+        }
+        return default;
+    }
+
+    #endregion
+
     #region 断开
 
     /// <inheritdoc/>
@@ -906,26 +936,38 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
     }
 
     /// <inheritdoc/>
-    public async Task CloseAsync(string msg)
+    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        await this.OnClosed(true, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.OnClosed(true, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex.Message);
+        }
     }
 
-    /// <inheritdoc/>
-    public async Task<bool> SendCloseAsync(string msg)
+    /// <summary>
+    /// 异步发送关闭消息
+    /// </summary>
+    /// <param name="msg"></param>
+    /// <returns></returns>
+    public async Task<Result> SendCloseAsync(string msg)
     {
         if (!this.Online)
         {
-            return false;
+            return Result.FromFail(TouchSocketResource.ClientNotConnected);
         }
         try
         {
             await this.SendStringAsync(0, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return true;
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
+            return Result.FromException(ex);
         }
     }
 
@@ -945,14 +987,8 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
 
             await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        //var transferBytes = new ArraySegment<byte>[]
-        //{
-        //    new ArraySegment<byte>(DmtpMessage.Head),
-        //    new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
-        //    new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
-        //    new ArraySegment<byte>(buffer,offset,length)
-        //};
-        this.LastActiveTime = DateTime.UtcNow;
+
+        this.LastActiveTime = DateTimeOffset.UtcNow;
     }
 
     #endregion 协议异步发送
@@ -1070,7 +1106,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
             }
         }
 
-        var byteBlock = new ByteBlock();
+        var byteBlock = new ByteBlock(1024*64);
         var waitCreateChannel = new WaitCreateChannelPackage()
         {
             Random = random,
@@ -1151,7 +1187,7 @@ public abstract class DmtpActor : DependencyObject, IDmtpActor
             channel.SetId(id);
             if (this.m_userChannels.TryAdd(id, channel))
             {
-                _ = Task.Factory.StartNew(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
+                _ = EasyTask.SafeRun(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
                 return true;
             }
             else

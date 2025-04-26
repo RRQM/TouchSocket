@@ -220,4 +220,27 @@ public static class CollectionsExtension
         return values;
     }
     #endregion
+
+    #region System.Collections.Generic Queue
+
+#if !(NET6_0_OR_GREATER||NETSTANDARD2_1_OR_GREATER)
+    /// <summary>
+    /// 尝试从队列中移除并返回位于开头的对象。
+    /// </summary>
+    /// <typeparam name="T">队列中元素的类型。</typeparam>
+    /// <param name="queue">要操作的队列。</param>
+    /// <param name="result">如果移除成功，则包含移除的对象；否则为默认值。</param>
+    /// <returns>如果成功移除并返回了对象，则为 true；否则为 false。</returns>
+    public static bool TryDequeue<T>(this Queue<T> queue, out T result)
+    {
+        if (queue.Count > 0)
+        {
+            result = queue.Dequeue();
+            return true;
+        }
+        result = default(T);
+        return false;
+    }
+#endif
+    #endregion
 }

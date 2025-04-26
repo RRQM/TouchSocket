@@ -79,6 +79,24 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The assertion that the value of &apos;{0}&apos; is false failed, but the actual value is&apos; {1} &apos;. 的本地化字符串。
+        /// </summary>
+        public static string AssertFalseFail {
+            get {
+                return ResourceManager.GetString("AssertFalseFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The assertion that the value of &apos;{0}&apos; is true failed, but the actual value is&apos; {1} &apos;. 的本地化字符串。
+        /// </summary>
+        public static string AssertTrueFail {
+            get {
+                return ResourceManager.GetString("AssertTrueFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The current byteBlock does not allow reading. 的本地化字符串。
         /// </summary>
         public static string BlockReaderNotAllowReading {
@@ -138,6 +156,15 @@ namespace TouchSocket.Resources {
         public static string FileReadOnly {
             get {
                 return ResourceManager.GetString("FileReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Invalid after Completed. 的本地化字符串。
+        /// </summary>
+        public static string InvalidAfterCompleted {
+            get {
+                return ResourceManager.GetString("InvalidAfterCompleted", resourceCulture);
             }
         }
         
@@ -228,6 +255,15 @@ namespace TouchSocket.Resources {
         public static string PluginIsNull {
             get {
                 return ResourceManager.GetString("PluginIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 QueueEmpty。 的本地化字符串。
+        /// </summary>
+        public static string QueueEmpty {
+            get {
+                return ResourceManager.GetString("QueueEmpty", resourceCulture);
             }
         }
         

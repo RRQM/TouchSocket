@@ -21,7 +21,7 @@ namespace TouchSocket.Dmtp;
 /// <summary>
 /// 提供Dmtp协议的最基础功能件
 /// </summary>
-public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient, IIdClient
+public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient, IIdClient
 {
     #region 属性
 
@@ -36,6 +36,11 @@ public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient,
     IDmtpActorObject Client { get; }
 
     /// <summary>
+    /// 关闭标记
+    /// </summary>
+    CancellationToken ClosedToken { get; }
+
+    /// <summary>
     /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
     /// </summary>
     bool IsReliable { get; }
@@ -43,7 +48,7 @@ public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient,
     /// <summary>
     /// 最后一次活动时间。
     /// </summary>
-    DateTime LastActiveTime { get; }
+    DateTimeOffset LastActiveTime { get; }
 
     /// <summary>
     /// 日志
@@ -54,11 +59,6 @@ public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient,
     /// 等待返回池
     /// </summary>
     WaitHandlePool<IWaitResult> WaitHandlePool { get; }
-
-    /// <summary>
-    /// 关闭标记
-    /// </summary>
-    CancellationToken ClosedToken { get; }
 
     #endregion 属性
 
@@ -114,6 +114,20 @@ public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient,
     #endregion IDmtpChannel
 
     #region 方法
+
+    /// <summary>
+    /// 添加一个实现了 <see cref="IActor"/> 接口的 Actor 实例。
+    /// </summary>
+    /// <typeparam name="TActor">Actor 的具体类型，必须实现 <see cref="IActor"/> 接口。</typeparam>
+    /// <param name="actor">要添加的 Actor 实例。</param>
+    void AddActor<TActor>(TActor actor) where TActor : class, IActor;
+
+    /// <summary>
+    /// 获取指定类型的 Actor 实例。
+    /// </summary>
+    /// <typeparam name="TActor">Actor 的具体类型，必须实现 <see cref="IActor"/> 接口。</typeparam>
+    /// <returns>返回指定类型的 Actor 实例。</returns>
+    TActor GetActor<TActor>() where TActor : class, IActor;
 
     /// <summary>
     /// 向当前对点发送一个Ping报文，并且等待回应。

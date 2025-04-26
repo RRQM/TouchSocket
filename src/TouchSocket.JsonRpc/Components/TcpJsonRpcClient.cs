@@ -69,6 +69,16 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     }
 
     /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_jsonRpcActor.SafeDispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
         base.LoadConfig(config);

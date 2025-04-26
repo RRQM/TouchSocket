@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -22,6 +23,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 高性能序列化器
 /// </summary>
+
 
 public static partial class SerializeConvert
 {
@@ -83,6 +85,7 @@ public static partial class SerializeConvert
     /// <param name="length"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
+    
     public static T BinaryDeserialize<T>(byte[] data, int offset, int length, SerializationBinder binder = null)
     {
         using (var DeserializeStream = new MemoryStream(data, offset, length))
@@ -214,7 +217,7 @@ public static partial class SerializeConvert
     ///// <returns></returns>
     //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
     //{
-    //    var byteBlock = new ByteBlock();
+    //    var byteBlock = new ByteBlock(1024*64);
     //    try
     //    {
     //        FastBinarySerialize(ref byteBlock, obj);

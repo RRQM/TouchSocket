@@ -19,6 +19,6 @@ namespace TouchSocket.Dmtp;
 /// 定义了IDmtpClient接口，它继承了多个与DMTP客户端行为相关的接口。
 /// 这些接口共同定义了客户端在系统中的行为和职责，包括但不限于客户端的连接、配置、状态管理等。
 /// </summary>
-public interface IDmtpClient : IDmtpActorObject, IClient, IClosableClient, ISetupConfigObject, IConnectableClient, IIdClient, IOnlineClient
+public interface IDmtpClient : IDmtpActorObject, IDependencyClient, IClosableClient, ISetupConfigObject, IConnectableClient, IIdClient, IOnlineClient
 {
 }

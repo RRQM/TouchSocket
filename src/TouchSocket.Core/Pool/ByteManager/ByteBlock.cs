@@ -16,6 +16,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Buffers;
 
 namespace TouchSocket.Core;
 
@@ -26,7 +27,7 @@ namespace TouchSocket.Core;
 public sealed partial class ByteBlock : DisposableObject, IByteBlock
 {
     private byte[] m_buffer;
-    private BytePool m_bytePool;
+    private ArrayPool<byte> m_bytePool;
     private int m_dis;
     private bool m_holding;
     private int m_length;
@@ -53,13 +54,13 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
     /// <summary>
     /// 无参数构造函数，初始化一个具有默认大小的 ByteBlock 对象。
     /// </summary>
-    /// <param name="byteSize">ByteBlock 的初始大小，默认为 64KB。</param>
-    public ByteBlock(int byteSize = 1024 * 64)
+    /// <param name="byteSize">ByteBlock 的初始大小。</param>
+    public ByteBlock(int byteSize)
     {
         // 使用默认字节池初始化。
-        this.m_bytePool = BytePool.Default;
+        this.m_bytePool = ArrayPool<byte>.Shared;
         // 从字节池租用指定大小的字节数组。
-        this.m_buffer = BytePool.Default.Rent(byteSize);
+        this.m_buffer = this.m_bytePool.Rent(byteSize);
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
     /// </summary>
     /// <param name="byteSize">ByteBlock 的初始大小。</param>
     /// <param name="bytePool">用于 ByteBlock 的 BytePool 实例。</param>
-    public ByteBlock(int byteSize, BytePool bytePool)
+    public ByteBlock(int byteSize, ArrayPool<byte> bytePool)
     {
         // 确保字节池不为空。
         this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool, nameof(bytePool));
@@ -161,7 +162,7 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
     public bool IsStruct => false;
 
     /// <inheritdoc/>
-    public BytePool BytePool { get => this.m_bytePool; }
+    public ArrayPool<byte> BytePool => this.m_bytePool;
 
     /// <inheritdoc/>
     public byte this[int index]
@@ -239,7 +240,7 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
         bool canReturn;
         if (this.m_bytePool == null)
         {
-            this.m_bytePool = BytePool.Default;
+            this.m_bytePool = ArrayPool<byte>.Shared;
             canReturn = false;
         }
         else

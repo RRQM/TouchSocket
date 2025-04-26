@@ -36,7 +36,7 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
         this.m_cacheByteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
         if (this.UpdateCacheTimeWhenRev)
         {
-            this.LastCacheTime = DateTime.UtcNow;
+            this.LastCacheTime = DateTimeOffset.UtcNow;
         }
     }
 
@@ -61,7 +61,7 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
             buffer = null;
             return false;
         }
-        if (DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.m_cacheByteBlock.SafeDispose();
             this.m_cacheByteBlock = null;
@@ -86,7 +86,7 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
             byteBlock = null;
             return false;
         }
-        if (DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.m_cacheByteBlock.SafeDispose();
             this.m_cacheByteBlock = null;

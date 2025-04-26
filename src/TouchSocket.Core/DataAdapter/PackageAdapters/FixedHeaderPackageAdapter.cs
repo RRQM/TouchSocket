@@ -55,7 +55,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
         var buffer = array.Array;
         var r = byteBlock.Length;
 
-        if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.Reset();
         }
@@ -90,7 +90,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_surPlusLength -= r;
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
         }
@@ -274,7 +274,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
                 Array.Copy(dataBuffer, index, this.m_agreementTempBytes, 0, this.m_agreementTempBytes.Length);
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
                 return;
             }
@@ -312,7 +312,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
                 this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + (byte)this.FixedHeaderType, recedSurPlusLength));
                 if (this.UpdateCacheTimeWhenRev)
                 {
-                    this.LastCacheTime = DateTime.UtcNow;
+                    this.LastCacheTime = DateTimeOffset.UtcNow;
                 }
             }
             index += (length + (byte)this.FixedHeaderType);

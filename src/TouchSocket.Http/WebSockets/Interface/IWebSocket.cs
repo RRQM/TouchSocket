@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 定义WebSocket服务的接口，继承自IDisposable, IOnlineClient, IClosableClient接口。
 /// </summary>
-public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject
+public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject,IClient
 {
     /// <summary>
     /// 允许异步Read读取
@@ -49,8 +49,9 @@ public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IReso
     /// </summary>
     /// <param name="closeStatus">关闭状态。</param>
     /// <param name="statusDescription">状态描述。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务对象，表示异步操作的结果。</returns>
-    Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription);
+    Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default);
 
     /// <summary>
     /// 异步发送Ping请求。

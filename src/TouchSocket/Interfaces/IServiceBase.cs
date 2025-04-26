@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -34,14 +35,14 @@ public interface IServiceBase : ISetupConfigObject
     /// <summary>
     /// 异步启动
     /// </summary>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="Exception"></exception>
+    /// <exception cref="Exception">可能启动时遇到的异常</exception>
     Task StartAsync();
 
+   
     /// <summary>
-    /// 异步停止
+    /// 异步停止服务器
     /// </summary>
-    /// <exception cref="Exception"></exception>
-    Task StopAsync();
+    /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
+    /// <returns>表示操作结果的 <see cref="Task{Result}"/>。</returns>
+    Task<Result> StopAsync(CancellationToken token = default);
 }

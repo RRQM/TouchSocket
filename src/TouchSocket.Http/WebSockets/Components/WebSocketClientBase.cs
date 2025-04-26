@@ -70,7 +70,7 @@ public abstract class WebSocketClientBase : HttpClientBase
 
                 this.InitWebSocket();
 
-                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
+                _ = EasyTask.Run(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
             }
         }
         finally

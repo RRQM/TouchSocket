@@ -61,6 +61,15 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 An Actor of type &quot;{0}&quot; already exists. 的本地化字符串。
+        /// </summary>
+        public static string ActorAlreadyExists {
+            get {
+                return ResourceManager.GetString("ActorAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The channel with ID {0} already exists. 的本地化字符串。
         /// </summary>
         public static string ChannelExisted {

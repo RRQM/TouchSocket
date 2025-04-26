@@ -139,4 +139,13 @@
   <data name="TimedoutWithoutAll" xml:space="preserve">
     <value>No data interaction due to timeout, actively disconnect.</value>
   </data>
+  <data name="PollingBegin" xml:space="preserve">
+    <value>Start polling based reconnection, with an interval of {0}.</value>
+  </data>
+  <data name="PollingWillEnd" xml:space="preserve">
+    <value>Polling style reconnection is about to exit, reason: reconnection plugin has been disposed</value>
+  </data>
+  <data name="PollingEnd" xml:space="preserve">
+    <value>Polling reconnection has ended</value>
+  </data>
 </root>

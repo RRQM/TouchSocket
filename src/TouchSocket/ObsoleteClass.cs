@@ -79,3 +79,12 @@ public interface ITcpDisconnectingPlugin : ITcpDisconnectingPlugin<object>
 public class DisconnectEventArgs
 {
 }
+
+/// <summary>
+/// DisconnectEventArgs
+/// </summary>
+[Obsolete($"此接口因为拼写错误，请使用{nameof(IServerStoppedPlugin)}代替", true)]
+public interface IServerStopedPlugin
+{
+
+}

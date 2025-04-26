@@ -31,9 +31,14 @@ public record struct Result : IResult
     public static readonly Result Default = new Result(ResultCode.Default, TouchSocketCoreResource.Default);
 
     /// <summary>
+    /// 操作对象已被释放
+    /// </summary>
+    public static readonly Result Disposed = new Result(ResultCode.Disposed, TouchSocketCoreResource.ObjectDisposed);
+
+    /// <summary>
     /// 未知失败
     /// </summary>
-    public static readonly Result UnknownFail = new Result(ResultCode.Fail, TouchSocketCoreResource.UnknownError);
+    public static readonly Result UnknownFail = new Result(ResultCode.Failure, TouchSocketCoreResource.UnknownError);
 
     /// <summary>
     /// 超时
@@ -72,8 +77,16 @@ public record struct Result : IResult
     /// <param name="exception">异常对象，用于提取错误信息</param>
     public Result(Exception exception)
     {
-        this.ResultCode = ResultCode.Exception; // 设置结果代码为异常
-        this.Message = exception.Message; // 设置结果消息为异常的详细信息
+        if (typeof(OperationCanceledException) == exception.GetType())
+        {
+            this.ResultCode = ResultCode.Canceled;
+            this.Message = exception.Message;
+        }
+        else
+        {
+            this.ResultCode = ResultCode.Exception; // 设置结果代码为异常
+            this.Message = exception.Message; // 设置结果消息为异常的详细信息
+        }
     }
 
     /// <summary>
@@ -133,17 +146,17 @@ public record struct Result : IResult
     public static Result FromException(Exception ex)
     {
         // 返回一个新的Result实例，包含异常错误代码和异常消息
-        return new Result(ResultCode.Exception, ex.Message);
+        return new Result(ex);
     }
 
     /// <summary>
-    /// 创建来自<see cref="ResultCode.Fail"/>的<see cref="Result"/>
+    /// 创建来自<see cref="ResultCode.Failure"/>的<see cref="Result"/>
     /// </summary>
     /// <param name="msg">关联的消息</param>
     /// <returns>创建的Result对象</returns>
     public static Result FromFail(string msg)
     {
-        return new Result(ResultCode.Fail, msg);
+        return new Result(ResultCode.Failure, msg);
     }
 
     /// <summary>

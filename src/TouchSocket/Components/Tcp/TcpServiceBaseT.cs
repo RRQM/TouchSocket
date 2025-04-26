@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -163,7 +164,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                     var option = new TcpListenOption
                     {
                         IpHost = item,
-                        ServiceSslOption = this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) as ServiceSslOption,
+                        ServiceSslOption = this.Config.GetValue(TouchSocketConfigExtension.ServiceSslOptionProperty),
                         ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
                         NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
                         Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
@@ -207,22 +208,30 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task StopAsync()
+    public override async Task<Result> StopAsync(CancellationToken token = default)
     {
         this.ThrowIfDisposed();
 
-        var serverState = this.m_serverState;
-
-        //调整这行语句顺序，修复Stop时可能会抛出异常的bug
-        //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
-        this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
-        //无条件释放
-        await this.ReleaseAll().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        if (serverState == ServerState.Running)
+        try
         {
-            //当且仅当服务器的状态是Running时才触发ServerStoped
-            await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var serverState = this.m_serverState;
+
+            //调整这行语句顺序，修复Stop时可能会抛出异常的bug
+            //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
+            this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
+                                                     //无条件释放
+            await this.ReleaseAllAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            if (serverState == ServerState.Running)
+            {
+                //当且仅当服务器的状态是Running时才触发ServerStoped
+                await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
         }
     }
 
@@ -250,7 +259,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     protected virtual void OnAuthenticatingError(Exception ex)
     {
         // 尝试记录异常信息，如果Logger为空则不会记录
-        this.Logger?.Exception(ex);
+        this.Logger?.Debug(this, ex);
     }
 
     /// <summary>
@@ -312,7 +321,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             if (this.Count < this.MaxCount)
             {
                 //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                _ = Task.Factory.StartNew(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                _ = EasyTask.Run(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
             }
             else
             {
@@ -336,7 +345,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             {
                 if (this.m_serverState == ServerState.Running)
                 {
-                    this.Logger?.Exception(ex);
+                    this.Logger?.Debug(this, ex);
                 }
                 e.SafeDispose();
                 return;
@@ -425,11 +434,11 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         catch (Exception ex)
         {
             socket.SafeDispose();
-            this.Logger?.Exception(ex);
+            this.Logger?.Exception(this,ex);
         }
     }
 
-    private async Task ReleaseAll()
+    private async Task ReleaseAllAsync()
     {
         foreach (var item in this.m_monitors)
         {

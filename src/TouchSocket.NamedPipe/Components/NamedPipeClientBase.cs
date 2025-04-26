@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
@@ -46,7 +47,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     private readonly SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
     private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
     private volatile bool m_online;
-    private Task<Task> receiveTask;
+    private Task m_receiveTask;
     private NamedPipeClientStream m_pipeStream;
     private int m_receiveBufferSize = 1024 * 10;
     private ValueCounter m_receiveCounter;
@@ -93,23 +94,13 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateOnNamedPipeConnected(object o)
+    private async Task PrivateOnNamedPipeConnected(ConnectedEventArgs e)
     {
-        try
-        {
-            var e = (ConnectedEventArgs)o;
-            await this.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
-
+        await this.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateOnNamedPipeConnecting(object obj)
+    private async Task PrivateOnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        var e = (ConnectingEventArgs)obj;
-
         await this.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         if (this.m_dataHandlingAdapter == null)
         {
@@ -121,24 +112,15 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         }
     }
 
-    private async Task PrivateOnNamedPipeClosed(object o)
+    private async Task PrivateOnNamedPipeClosed((ClosedEventArgs e, Task receiveTask, InternalReceiver receiver) value)
     {
-        try
+        await value.receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (value.receiver != null)
         {
-            var e = (ClosedEventArgs)o;
-
-            await this.receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var receiver = this.m_receiver;
-            if (receiver != null)
-            {
-                await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-
-            await this.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await value.receiver.Complete(value.e.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        catch
-        {
-        }
+
+        await this.OnNamedPipeClosed(value.e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private async Task PrivateOnNamedPipeClosing(ClosingEventArgs e)
@@ -154,10 +136,10 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTime LastReceivedTime { get; private set; }
+    public DateTimeOffset LastReceivedTime { get; private set; }
 
     /// <inheritdoc/>
-    public DateTime LastSentTime { get; private set; }
+    public DateTimeOffset LastSentTime { get; private set; }
 
     /// <inheritdoc/>
     public PipeStream PipeStream => this.m_pipeStream;
@@ -192,7 +174,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
                 this.m_dataHandlingAdapter.SafeDispose();
                 this.m_dataHandlingAdapter = default;
 
-                _ = Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
+                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeClosed, (new ClosedEventArgs(manual, msg),this.m_receiveTask,this.m_receiver));
             }
         }
     }
@@ -215,17 +197,25 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     }
 
     /// <inheritdoc/>
-    public virtual async Task CloseAsync(string msg)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
-        if (this.m_online)
+        try
         {
-            await this.PrivateOnNamedPipeClosing(new ClosedEventArgs(true, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            lock (this.m_lockForAbort)
+            if (this.m_online)
             {
-                this.m_pipeStream.Close();
-                this.Abort(true, msg);
+                await this.PrivateOnNamedPipeClosing(new ClosedEventArgs(true, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                lock (this.m_lockForAbort)
+                {
+                    this.m_pipeStream.Close();
+                    this.Abort(true, msg);
+                }
             }
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
         }
     }
 
@@ -251,15 +241,11 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
             {
                 return;
             }
-            if (this.DisposedValue)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
-            }
-            if (this.Config == null)
-            {
-                throw new ArgumentNullException(nameof(this.Config), "配置文件不能为空。");
-            }
-            var pipeName = this.Config.GetValue(NamedPipeConfigExtension.PipeNameProperty) ?? throw new ArgumentNullException("PipeName", "命名管道连接参数不能为空。");
+            this.ThrowIfDisposed();
+            this.ThrowIfConfigIsNull();
+
+            var pipeName = this.Config.GetValue(NamedPipeConfigExtension.PipeNameProperty);
+            ThrowHelper.ThrowArgumentNullExceptionIf(pipeName, nameof(pipeName));
 
             var serverName = this.Config.GetValue(NamedPipeConfigExtension.PipeServerNameProperty);
             this.m_pipeStream.SafeDispose();
@@ -277,11 +263,12 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
             {
                 this.m_pipeStream = namedPipe;
                 this.m_online = true;
-                this.receiveTask = Task.Factory.StartNew(this.BeginReceive, TaskCreationOptions.LongRunning);
-                _ = Task.Factory.StartNew(this.PrivateOnNamedPipeConnected, new ConnectedEventArgs());
+                this.m_receiveTask = EasyTask.Run(this.BeginReceive);
+                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeConnected, new ConnectedEventArgs());
                 return;
             }
-            throw new Exception("未知异常");
+
+            ThrowHelper.ThrowException(TouchSocketCoreResource.UnknownError);
         }
         finally
         {
@@ -349,12 +336,8 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
 
-        // 如果传入的适配器为空，则抛出参数为空的异常
-        if (adapter is null)
-        {
-            throw new ArgumentNullException(nameof(adapter));
-        }
-
+        ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
+        
         // 如果当前实例已有配置，则将配置应用到新适配器上
         if (this.Config != null)
         {
@@ -495,7 +478,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         {
             await this.m_semaphoreSlimForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.LastSentTime = DateTime.UtcNow;
+            this.LastSentTime = DateTimeOffset.UtcNow;
         }
         finally
         {

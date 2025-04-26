@@ -31,7 +31,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <summary>
     /// 获取字节池。
     /// </summary>
-    BytePool BytePool { get; }
+    ArrayPool<byte> BytePool { get; }
 
     /// <summary>
     /// 获取是否可以读取。

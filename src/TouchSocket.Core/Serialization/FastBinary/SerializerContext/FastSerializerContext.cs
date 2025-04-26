@@ -34,8 +34,8 @@ public abstract class FastSerializerContext
         this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
         this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
         this.AddConverter(typeof(Guid), new GuidFastBinaryConverter());
-        this.AddConverter(typeof(DataTable), new DataTableFastBinaryConverter());
-        this.AddConverter(typeof(DataSet), new DataSetFastBinaryConverter());
+        //this.AddConverter(typeof(DataTable), new DataTableFastBinaryConverter());
+        //this.AddConverter(typeof(DataSet), new DataSetFastBinaryConverter());
     }
 
     /// <summary>
