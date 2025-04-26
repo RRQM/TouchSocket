@@ -1,0 +1,127 @@
+---
+id: dmtprouterpackage
+title: 路由包传输
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Dmtp <br/>
+程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp)
+
+## 一、说明 <Tag>Pro</Tag>
+
+路由包传输模式是，手动版的Rpc，能够实现发送、然后同步等待响应式的通讯。但是与Rpc区别的是，路由包是自己把握数据序列化，可以完全使用内存池。极大的降低内存消耗。
+
+包模式的应用场景，就是中小型二进制数据的传输。例如：传输100张照片，每张大约5Mb的。
+
+用协议直接Send，怕对方没正确处理保存。没法拿到处理回执。
+
+用Rpc，发送得序列化，解析得反序列化，而且5Mb数据也用不了内存池。内存会抖动的厉害。
+
+用Rpc+Channel，又显得麻烦。
+
+所以用路由包传输模式。高效，简单。
+
+## 二、使用
+
+路由包传输模式是由DmtpRouterPackageFeature功能插件提供的，所以需要添加`UseDmtpRouterPackage`。
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseDmtpRouterPackage();//添加路由包功能插件
+})
+```
+
+其次，要完成路由包传输，就得自己定义请求包和响应包。此处简单定义两个包用于测试。具体关于包的打包、解包详细操作可以看[包序列化](./ipackage.mdx)
+
+```csharp showLineNumbers
+/// <summary>
+/// 定义请求包
+/// </summary>
+class MyRequestPackage : DmtpRouterPackage
+{
+    /// <summary>
+    /// 包尺寸大小。此值并非需要精准数值，只需要估计数据即可。其作用为申请内存池。所以数据应当大小合适。
+    /// </summary>
+    public override int PackageSize => 1024 * 1024;
+
+    /// <summary>
+    /// 自定义一个内存属性。
+    /// </summary>
+    public ByteBlock ByteBlock { get; set; }
+
+    public override void PackageBody(ByteBlock byteBlock)
+    {
+        base.PackageBody(byteBlock);
+        byteBlock.WriteByteBlock(this.ByteBlock);
+    }
+
+    public override void UnpackageBody(ByteBlock byteBlock)
+    {
+        base.UnpackageBody(byteBlock);
+        this.ByteBlock = byteBlock.ReadByteBlock();
+    }
+}
+
+/// <summary>
+/// 定义响应包
+/// </summary>
+class MyResponsePackage : DmtpRouterPackage
+{
+    /// <summary>
+    /// 包尺寸大小。此值并非需要精准数值，只需要估计数据即可。其作用为申请内存池。所以数据应当大小合适。
+    /// </summary>
+    public override int PackageSize => 1024;
+}
+```
+
+【请求端】
+
+```csharp showLineNumbers
+using (ByteBlock byteBlock = new ByteBlock(1024*512))
+{
+    byteBlock.SetLength(byteBlock.Capacity);//此处模拟一个大数据块
+    MyRequestPackage requestPackage = new MyRequestPackage()
+    {
+        ByteBlock = byteBlock,
+        Metadata = new Metadata() { { "a", "a" } }
+    };
+    var response = client.GetDmtpRouterPackageActor().Request<MyResponsePackage>(requestPackage);
+
+    //client.Logger.Info(response.Message);
+}
+```
+
+【响应端】
+
+响应端除了`UseDmtpRouterPackage`之外，还需要添加一个插件，实现`IDmtpRouterPackagePlugin`功能，主要在里面实现响应的动作。
+
+```csharp showLineNumbers 
+class MyPlugin : PluginBase, IDmtpRouterPackagePlugin
+{
+    private readonly ILog m_logger;
+
+    public MyPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+    public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
+    {
+        //m_logger.Info($"收到包请求");
+        await e.ResponseAsync(new MyResponsePackage()
+        {
+            Message = "Success"
+        });
+        //m_logger.Info($"已响应包请求");
+
+        //一般在当前插件无法处理时调用下一插件。此处则不应该调用
+        //await e.InvokeNext();
+    }
+}
+```
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/RouterPackageConsoleApp)

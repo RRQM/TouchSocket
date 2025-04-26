@@ -1,0 +1,228 @@
+---
+id: xmlrpc
+title: 产品及架构介绍
+---
+
+### 定义
+
+命名空间：TouchSocket.XmlRpc <br/>
+程序集：[TouchSocket.XmlRpc.dll](https://www.nuget.org/packages/TouchSocket.XmlRpc)
+
+## 一、说明
+
+XmlRpc是**通用**的工作在**Internet**上的RPC。一个[XML-RPC](https://baike.baidu.com/item/XML-RPC/0) 消息就是一个请求体为xml的**http-post**请求，被调用的方法在服务器端执行并将执行结果以xml格式编码后返回。这与**编程语言无关**，与**操作系统无关**。在此处封装了**前后端**，使其使用更加方便、高效。
+
+
+## 二、特点：
+
+- **异常反馈** 。
+- 支持自定义类型。
+- 支持类型嵌套。
+- 支持Web等调用。
+
+## 三、创建服务
+
+### 3.1 定义服务
+
+在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记。
+
+```csharp showLineNumbers
+public partial class XmlServer : RpcServer
+{
+    [XmlRpc(MethodInvoke = true)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+
+    [XmlRpc(MethodInvoke = true)]
+    public int TestClass(MyClass myClass)
+    {
+        return myClass.A + myClass.B;
+    }
+}
+
+public class MyClass
+{
+    public int A { get; set; }
+    public int B { get; set; }
+}
+
+```
+
+### 3.2 启动服务
+
+更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
+
+```csharp showLineNumbers
+var service = new HttpService();
+
+await service.SetupAsync(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+        a.AddRpcStore(store =>
+        {
+            store.RegisterServer<XmlServer>();
+
+            //下列为生成客户端的代理代码
+            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(XmlRpcAttribute) }));
+            ConsoleLogger.Default.Info("成功生成代理");
+
+        });
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseXmlRpc()
+        .SetXmlRpcUrl("/xmlRpc");
+    })
+    .SetListenIPHosts(7789));
+await service.StartAsync();
+
+service.Logger.Info("服务器已启动");
+```
+
+## 四、客户端调用
+
+### 4.1 直接调用
+
+因为XmlRpc是一套已经约定俗成的通讯协议。所以可以通过常规方法直接调用。
+
+【Http访问】
+
+使用Post方式，url=http://127.0.0.1:7789/xmlRpc
+
+然后使用XmlRpc的规范传参。
+
+```xml
+<?xml version="1.0"?>
+<methodCall>
+    <methodName>Sum</methodName>
+    <params>
+        <param>
+            <value>
+                <i4>10</i4>
+            </value>
+        </param>
+        <param>
+            <value>
+                <i4>20</i4>
+            </value>
+        </param>
+    </params>
+</methodCall>
+```
+
+### 4.2 使用客户端调用
+
+使用客户端调用，则是使用RPC的范式进行调用，使用比较简单。
+
+```csharp showLineNumbers
+private static async Task Main(string[] args)
+{
+    var client =await GetXmlRpcClientAsync();
+
+    //直接调用
+    var result1 = client.InvokeT<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+    Console.WriteLine($"直接调用，返回结果:{result1}");
+
+    var result2 = client.Sum(10, 20);//此Sum方法是服务端生成的代理。
+    Console.WriteLine($"代理调用，返回结果:{result2}");
+
+    Console.ReadKey();
+}
+
+private static async Task<XmlRpcClient> GetXmlRpcClientAsync()
+{
+    var jsonRpcClient = new XmlRpcClient();
+    await jsonRpcClient.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
+    Console.WriteLine("连接成功");
+    return jsonRpcClient;
+}
+```
+
+### 4.3 生成代理调用
+
+在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
+
+```csharp {6-7}
+a.AddRpcStore(store =>
+{
+    store.RegisterServer<XmlServer>();
+
+#if DEBUG
+    File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(XmlRpcAttribute) }));
+    ConsoleLogger.Default.Info("成功生成代理");
+#endif
+});
+```
+
+然后把生成的.cs文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
+
+```csharp showLineNumbers
+var sum3 = client.Sum(10,20);
+```
+
+### 4.4 使用DispatchProxy代理调用
+
+使用DispatchProxy代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./rpcgenerateproxy.mdx)
+
+首先，需要声明一个基类，用于通讯基础。
+
+```csharp showLineNumbers
+/// <summary>
+/// 新建一个类，继承XmlRpcDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+internal class MyXmlRpcDispatchProxy : XmlRpcDispatchProxy
+{
+    private readonly IXmlRpcClient m_client;
+
+    public MyXmlRpcDispatchProxy()
+    {
+        this.m_client = GetXmlRpcClientAsync().GetFalseAwaitResult();
+    }
+
+    public override IXmlRpcClient GetClient()
+    {
+        return this.m_client;
+    }
+
+    private static async Task<XmlRpcClient> GetXmlRpcClientAsync()
+    {
+        var jsonRpcClient = new XmlRpcClient();
+        await jsonRpcClient.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
+        Console.WriteLine("连接成功");
+        return jsonRpcClient;
+    }
+}
+```
+
+然后按照服务，定义一个相同的代理接口。
+
+```csharp showLineNumbers
+interface IXmlRpcServer
+{
+    [XmlRpc(MethodInvoke = true)]
+    int Sum(int a, int b);
+}
+```
+
+最后生成代理，并按照接口调用。
+
+```csharp {1}
+var rpc = MyXmlRpcDispatchProxy.Create<IXmlRpcServer, MyXmlRpcDispatchProxy>();
+while (true)
+{
+    Console.WriteLine("请输入两个数，中间用空格隔开，回车确认");
+    string str = Console.ReadLine();
+    var strs = str.Split(' ');
+    int a = int.Parse(strs[0]);
+    int b = int.Parse(strs[1]);
+
+    var sum = rpc.Sum(a, b);
+    Console.WriteLine(sum);
+}
+```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/XmlRpc)
