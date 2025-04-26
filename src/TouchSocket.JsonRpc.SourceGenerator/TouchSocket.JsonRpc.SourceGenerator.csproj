@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+		<BaseOutputPath>bin</BaseOutputPath>
+		<GenerateDocumentationFile>False</GenerateDocumentationFile>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<SignAssembly>false</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.SourceGenerator.SharedProject\Rpc\GeneratorFlag.cs" Link="GeneratorFlag.cs" />
+	  <Compile Include="..\TouchSocket.SourceGenerator.SharedProject\Rpc\RpcClientCodeBuilder.cs" Link="RpcClientCodeBuilder.cs" />
+	  <Compile Include="..\TouchSocket.SourceGenerator.SharedProject\Rpc\RpcUtils.cs" Link="RpcUtils.cs" />
+	  <Compile Include="..\TouchSocket.SourceGenerator.SharedProject\Utils.cs" Link="Utils.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
+	</ItemGroup>
+</Project>

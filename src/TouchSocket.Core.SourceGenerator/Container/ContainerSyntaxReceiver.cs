@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -16,174 +16,173 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace TouchSocket
+namespace TouchSocket;
+
+internal sealed class ContainerSyntaxReceiver : ISyntaxReceiver
 {
-    internal sealed class ContainerSyntaxReceiver : ISyntaxReceiver
+    public const string GeneratorContainerAttributeTypeName = "TouchSocket.Core.GeneratorContainerAttribute";
+    public const string AutoInjectForSingletonAttributeTypeName = "TouchSocket.Core.AutoInjectForSingletonAttribute";
+    public const string AutoInjectForTransientAttributeTypeName = "TouchSocket.Core.AutoInjectForTransientAttribute";
+    public const string ManualContainerTypeName = "TouchSocket.Core.ManualContainer";
+
+    public static INamedTypeSymbol GeneratorContainerAttribute { get; private set; }
+    public static INamedTypeSymbol AutoInjectForSingletonAttribute { get; private set; }
+    public static INamedTypeSymbol AutoInjectForTransientAttribute { get; private set; }
+
+    /// <summary>
+    /// 接口列表
+    /// </summary>
+    private readonly List<TypeDeclarationSyntax> m_classSyntaxList = new List<TypeDeclarationSyntax>();
+
+    /// <summary>
+    /// 访问语法树
+    /// </summary>
+    /// <param name="syntaxNode"></param>
+    void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
-        public const string GeneratorContainerAttributeTypeName = "TouchSocket.Core.GeneratorContainerAttribute";
-        public const string AutoInjectForSingletonAttributeTypeName = "TouchSocket.Core.AutoInjectForSingletonAttribute";
-        public const string AutoInjectForTransientAttributeTypeName = "TouchSocket.Core.AutoInjectForTransientAttribute";
-        public const string ManualContainerTypeName = "TouchSocket.Core.ManualContainer";
-
-        public static INamedTypeSymbol GeneratorContainerAttribute { get; private set; }
-        public static INamedTypeSymbol AutoInjectForSingletonAttribute { get; private set; }
-        public static INamedTypeSymbol AutoInjectForTransientAttribute { get; private set; }
-
-        /// <summary>
-        /// 接口列表
-        /// </summary>
-        private readonly List<TypeDeclarationSyntax> m_classSyntaxList = new List<TypeDeclarationSyntax>();
-
-        /// <summary>
-        /// 访问语法树
-        /// </summary>
-        /// <param name="syntaxNode"></param>
-        void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
+        if (syntaxNode is ClassDeclarationSyntax syntax)
         {
-            if (syntaxNode is ClassDeclarationSyntax syntax)
+            this.m_classSyntaxList.Add(syntax);
+        }
+        else if (syntaxNode is InterfaceDeclarationSyntax @interface)
+        {
+            this.m_classSyntaxList.Add(@interface);
+        }
+    }
+
+    /// <summary>
+    /// 获取所有Container符号
+    /// </summary>
+    /// <param name="compilation"></param>
+    /// <returns></returns>
+    public IEnumerable<INamedTypeSymbol> GetContainerClassTypes(Compilation compilation)
+    {
+        // Debugger.Launch();
+        GeneratorContainerAttribute = compilation.GetTypeByMetadataName(GeneratorContainerAttributeTypeName);
+        if (GeneratorContainerAttribute == null)
+        {
+            yield break;
+        }
+        foreach (var classSyntax in this.m_classSyntaxList)
+        {
+            var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
+            if (@class != null && IsContainerClass(@class))
             {
-                this.m_classSyntaxList.Add(syntax);
-            }
-            else if (syntaxNode is InterfaceDeclarationSyntax @interface)
-            {
-                this.m_classSyntaxList.Add(@interface);
+                yield return @class;
             }
         }
+    }
 
-        /// <summary>
-        /// 获取所有Container符号
-        /// </summary>
-        /// <param name="compilation"></param>
-        /// <returns></returns>
-        public IEnumerable<INamedTypeSymbol> GetContainerClassTypes(Compilation compilation)
+    public IEnumerable<InjectDescription> GetAutoInjectForSingletonClassTypes(Compilation compilation)
+    {
+        // Debugger.Launch();
+        AutoInjectForSingletonAttribute = compilation.GetTypeByMetadataName(AutoInjectForSingletonAttributeTypeName);
+        if (AutoInjectForSingletonAttribute == null)
         {
-            // Debugger.Launch();
-            GeneratorContainerAttribute = compilation.GetTypeByMetadataName(GeneratorContainerAttributeTypeName);
-            if (GeneratorContainerAttribute == null)
+            yield break;
+        }
+        foreach (var classSyntax in this.m_classSyntaxList)
+        {
+            var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
+            if (@class != null && IsAutoInjectForSingletonClass(@class, out var attributeData))
             {
-                yield break;
-            }
-            foreach (var classSyntax in this.m_classSyntaxList)
-            {
-                var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
-                if (@class != null && IsContainerClass(@class))
-                {
-                    yield return @class;
-                }
+                yield return this.Create(@class, attributeData);
             }
         }
+    }
 
-        public IEnumerable<InjectDescription> GetAutoInjectForSingletonClassTypes(Compilation compilation)
+    public IEnumerable<InjectDescription> GetAutoInjectForTransientClassTypes(Compilation compilation)
+    {
+        // Debugger.Launch();
+        AutoInjectForTransientAttribute = compilation.GetTypeByMetadataName(AutoInjectForTransientAttributeTypeName);
+        if (AutoInjectForTransientAttribute == null)
         {
-            // Debugger.Launch();
-            AutoInjectForSingletonAttribute = compilation.GetTypeByMetadataName(AutoInjectForSingletonAttributeTypeName);
-            if (AutoInjectForSingletonAttribute == null)
+            yield break;
+        }
+        foreach (var classSyntax in this.m_classSyntaxList)
+        {
+            var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
+            if (@class != null && IsAutoInjectForTransientClass(@class, out var attributeData))
             {
-                yield break;
-            }
-            foreach (var classSyntax in this.m_classSyntaxList)
-            {
-                var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
-                if (@class != null && IsAutoInjectForSingletonClass(@class, out var attributeData))
-                {
-                    yield return this.Create(@class, attributeData);
-                }
+                yield return this.Create(@class, attributeData);
             }
         }
+    }
 
-        public IEnumerable<InjectDescription> GetAutoInjectForTransientClassTypes(Compilation compilation)
+    private InjectDescription Create(INamedTypeSymbol typeSymbol, AttributeData attributeData)
+    {
+        var dic = attributeData.NamedArguments.ToImmutableDictionary();
+        var description = new InjectDescription();
+        if (dic.TryGetValue("FromType", out var typedConstant))
         {
-            // Debugger.Launch();
-            AutoInjectForTransientAttribute = compilation.GetTypeByMetadataName(AutoInjectForTransientAttributeTypeName);
-            if (AutoInjectForTransientAttribute == null)
-            {
-                yield break;
-            }
-            foreach (var classSyntax in this.m_classSyntaxList)
-            {
-                var @class = compilation.GetSemanticModel(classSyntax.SyntaxTree).GetDeclaredSymbol(classSyntax);
-                if (@class != null && IsAutoInjectForTransientClass(@class, out var attributeData))
-                {
-                    yield return this.Create(@class, attributeData);
-                }
-            }
+            description.From = (INamedTypeSymbol)typedConstant.Value;
         }
-
-        private InjectDescription Create(INamedTypeSymbol typeSymbol, AttributeData attributeData)
+        if (dic.TryGetValue("ToType", out typedConstant))
         {
-            var dic = attributeData.NamedArguments.ToImmutableDictionary();
-            var description = new InjectDescription();
-            if (dic.TryGetValue("FromType", out var typedConstant))
-            {
-                description.From = (INamedTypeSymbol)typedConstant.Value;
-            }
-            if (dic.TryGetValue("ToType", out typedConstant))
-            {
-                description.To = (INamedTypeSymbol)typedConstant.Value;
-            }
-            if (dic.TryGetValue("Key", out typedConstant))
-            {
-                description.Key = typedConstant.Value.ToString();
-            }
-            description.From ??= typeSymbol;
-            description.To ??= typeSymbol;
-            return description;
+            description.To = (INamedTypeSymbol)typedConstant.Value;
         }
-
-        /// <summary>
-        /// 是否为容器生成
-        /// </summary>
-        /// <param name="class"></param>
-        /// <returns></returns>
-        public static bool IsContainerClass(INamedTypeSymbol @class)
+        if (dic.TryGetValue("Key", out typedConstant))
         {
-            if (GeneratorContainerAttribute is null)
-            {
-                return false;
-            }
-            //Debugger.Launch();
+            description.Key = typedConstant.Value.ToString();
+        }
+        description.From ??= typeSymbol;
+        description.To ??= typeSymbol;
+        return description;
+    }
 
-            if (!@class.HasAttribute(GeneratorContainerAttributeTypeName, out _))
-            {
-                return false;
-            }
-            if (@class.IsInheritFrom(ManualContainerTypeName))
-            {
-                return true;
-            }
+    /// <summary>
+    /// 是否为容器生成
+    /// </summary>
+    /// <param name="class"></param>
+    /// <returns></returns>
+    public static bool IsContainerClass(INamedTypeSymbol @class)
+    {
+        if (GeneratorContainerAttribute is null)
+        {
             return false;
         }
+        //Debugger.Launch();
 
-        public static bool IsAutoInjectForSingletonClass(INamedTypeSymbol @class, out AttributeData attributeData)
+        if (!@class.HasAttribute(GeneratorContainerAttributeTypeName, out _))
         {
-            if (AutoInjectForSingletonAttribute is null)
-            {
-                attributeData = null;
-                return false;
-            }
-            //Debugger.Launch();
-
-            if (@class.HasAttribute(AutoInjectForSingletonAttributeTypeName, out attributeData))
-            {
-                return true;
-            }
             return false;
         }
-
-        public static bool IsAutoInjectForTransientClass(INamedTypeSymbol @class, out AttributeData attributeData)
+        if (@class.IsInheritFrom(ManualContainerTypeName))
         {
-            if (AutoInjectForTransientAttribute is null)
-            {
-                attributeData = null;
-                return false;
-            }
-            //Debugger.Launch();
+            return true;
+        }
+        return false;
+    }
 
-            if (@class.HasAttribute(AutoInjectForTransientAttributeTypeName, out attributeData))
-            {
-                return true;
-            }
+    public static bool IsAutoInjectForSingletonClass(INamedTypeSymbol @class, out AttributeData attributeData)
+    {
+        if (AutoInjectForSingletonAttribute is null)
+        {
+            attributeData = null;
             return false;
         }
+        //Debugger.Launch();
+
+        if (@class.HasAttribute(AutoInjectForSingletonAttributeTypeName, out attributeData))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsAutoInjectForTransientClass(INamedTypeSymbol @class, out AttributeData attributeData)
+    {
+        if (AutoInjectForTransientAttribute is null)
+        {
+            attributeData = null;
+            return false;
+        }
+        //Debugger.Launch();
+
+        if (@class.HasAttribute(AutoInjectForTransientAttributeTypeName, out attributeData))
+        {
+            return true;
+        }
+        return false;
     }
 }

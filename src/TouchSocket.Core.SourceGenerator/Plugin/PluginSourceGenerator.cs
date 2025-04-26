@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -14,12 +14,19 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 
-namespace TouchSocket
+namespace TouchSocket;
+
+[Generator]
+public class PluginSourceGenerator : ISourceGenerator
 {
-    [Generator]
-    public class PluginSourceGenerator : ISourceGenerator
-    {
-        private string m_generatorPluginAttribute = @"
+    private readonly string m_generatorPluginAttribute = @"
+
+/*
+此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码
+*/
+
+#pragma warning disable
+
 using System;
 
 namespace TouchSocket.Core
@@ -27,54 +34,58 @@ namespace TouchSocket.Core
     /// <summary>
     /// 使用源生成插件的调用。
     /// </summary>
-    internal class GeneratorPluginAttribute:Attribute
+    [AttributeUsage(AttributeTargets.Method)]
+    [Obsolete(""此特性已被弃用，请直接使用接口实现插件，支持AOT"",true)]
+    /*GeneratedCode*/
+    internal class GeneratorPluginAttribute : Attribute
     {
-        public string PluginName { get; set; }
+        public Type PluginType { get;}
 
         /// <summary>
         /// 使用源生成插件的调用。
         /// </summary>
-        /// <param name=""pluginName"">插件名称，一般建议使用nameof()解决。</param>
-        public GeneratorPluginAttribute(string pluginName)
+        /// <param name=""pluginType"">插件名称，一般建议使用<see langword=""typeof""/>解决。</param>
+        public GeneratorPluginAttribute(Type pluginType)
         {
-            this.PluginName = pluginName;
+            this.PluginType = pluginType;
         }
     }
 }
 
 ";
 
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForPostInitialization(a =>
-            {
-                a.AddSource(nameof(this.m_generatorPluginAttribute), this.m_generatorPluginAttribute);
-            });
-            context.RegisterForSyntaxNotifications(() => new PluginSyntaxReceiver());
-        }
+    public void Execute(GeneratorExecutionContext context)
+    {
+        var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
 
-        public void Execute(GeneratorExecutionContext context)
+        if (context.SyntaxReceiver is PluginSyntaxReceiver receiver)
         {
-            var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
-
-            if (context.SyntaxReceiver is PluginSyntaxReceiver receiver)
+            var builders = receiver
+                .GetPluginPluginInterfaceTypes(context.Compilation)
+                .Select(i => new PluginCodeBuilder(i))
+                .Distinct(CodeBuilderEqualityComparer<PluginCodeBuilder>.Default);
+            //Debugger.Launch();
+            foreach (var builder in builders)
             {
-                var builders = receiver
-                    .GetPluginClassTypes(context.Compilation)
-                    .Select(i => new PluginCodeBuilder(i))
-                    .Distinct();
-                //Debugger.Launch();
-                foreach (var builder in builders)
+                if (builder.TryToSourceText(out var sourceText))
                 {
-                    if (builder.TryToSourceText(out var sourceText))
-                    {
-                        var tree = CSharpSyntaxTree.ParseText(sourceText);
-                        var root = tree.GetRoot().NormalizeWhitespace();
-                        var ret = root.ToFullString();
-                        context.AddSource($"{builder.GetFileName()}.g.cs", ret);
-                    }
+                    var tree = CSharpSyntaxTree.ParseText(sourceText);
+                    var root = tree.GetRoot().NormalizeWhitespace();
+                    var ret = root.ToFullString();
+                    context.AddSource($"{builder.GetFileName()}.g.cs", ret);
                 }
             }
         }
+    }
+
+    public void Initialize(GeneratorInitializationContext context)
+    {
+        context.RegisterForPostInitialization(a =>
+        {
+            var sourceCode = this.m_generatorPluginAttribute.Replace("/*GeneratedCode*/", Utils.GetGeneratedCodeString());
+
+            a.AddSource(nameof(this.m_generatorPluginAttribute), sourceCode);
+        });
+        context.RegisterForSyntaxNotifications(() => new PluginSyntaxReceiver());
     }
 }

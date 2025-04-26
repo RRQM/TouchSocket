@@ -1,0 +1,8 @@
+TouchSocketPro是TouchSocket的企业版，其99%功能与TouchSocket一致。所有版权归作者若汝棋茗所有。
+
+TouchSocketPro许可证遵循：
+
+1.限时免费测试，测试期间可参与商业使用。
+2.付费使用，购买后还须遵循相关使用协议，详情咨询若汝棋茗。
+
+TouchSocketPro程序集源代码不公开开源，需要付费购买。

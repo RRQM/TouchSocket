@@ -5,62 +5,59 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
-using System;
 using System.Collections.Generic;
 
-namespace TouchSocket
+namespace TouchSocket;
+
+internal class InjectDescriptionCompare : IEqualityComparer<InjectDescription>
 {
-    class InjectDescriptionCompare : IEqualityComparer<InjectDescription>
+    public bool Equals(InjectDescription x, InjectDescription y)
     {
-        public bool Equals(InjectDescription x, InjectDescription y)
+        if (string.IsNullOrEmpty(x.Key) || string.IsNullOrEmpty(y.Key))
         {
-            if (string.IsNullOrEmpty(x.Key) || string.IsNullOrEmpty(y.Key))
-            {
-                return x.From.ToDisplayString() == y.From.ToDisplayString();
-            }
-            else
-            {
-                return x.From.ToDisplayString() == y.From.ToDisplayString() && x.Key == y.Key;
-            }
+            return x.From.ToDisplayString() == y.From.ToDisplayString();
         }
-
-        public int GetHashCode(InjectDescription obj)
+        else
         {
-            if (string.IsNullOrEmpty(obj.Key))
-            {
-                return obj.From.ToDisplayString().GetHashCode();
-            }
-            else
-            {
-                return obj.From.ToDisplayString().GetHashCode()^ obj.Key.GetHashCode();
-            }
+            return x.From.ToDisplayString() == y.From.ToDisplayString() && x.Key == y.Key;
         }
     }
-    internal class InjectDescription
-    {
-        public INamedTypeSymbol From { get; set; }
-        public INamedTypeSymbol To { get; set; }
-        public string Key { get; set; }
 
-        
-    }
-
-    internal class InjectPropertyDescription
+    public int GetHashCode(InjectDescription obj)
     {
-        public ITypeSymbol Type { get; set; }
-        public string Name { get; set; }
-        public string Key { get; set; }
+        if (string.IsNullOrEmpty(obj.Key))
+        {
+            return obj.From.ToDisplayString().GetHashCode();
+        }
+        else
+        {
+            return obj.From.ToDisplayString().GetHashCode() ^ obj.Key.GetHashCode();
+        }
     }
+}
 
-    internal class InjectMethodDescription
-    {
-        public IEnumerable<InjectPropertyDescription> Types { get; set; }
-        public string Name { get; set; }
-    }
+internal class InjectDescription
+{
+    public INamedTypeSymbol From { get; set; }
+    public INamedTypeSymbol To { get; set; }
+    public string Key { get; set; }
+}
+
+internal class InjectPropertyDescription
+{
+    public ITypeSymbol Type { get; set; }
+    public string Name { get; set; }
+    public string Key { get; set; }
+}
+
+internal class InjectMethodDescription
+{
+    public IEnumerable<InjectPropertyDescription> Types { get; set; }
+    public string Name { get; set; }
 }
