@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -140,7 +140,7 @@ namespace RpcPerformanceConsoleApp
     }
 
     [AutoInjectForSingleton]
-    public partial class TestController : RpcServer
+    public partial class TestController : SingletonRpcServer
     {
         [DmtpRpc(MethodInvoke =true)]
         public int Sum(int a, int b) => a + b;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -35,7 +35,6 @@ namespace RpcDelayPerConsoleApp
             {
                 Console.ReadKey();
                 tasks.Clear();
-                BytePool.Default.Clear();
                 GC.Collect();
             }
 
@@ -89,7 +88,7 @@ namespace RpcDelayPerConsoleApp
         }
     }
 
-    public partial class MyRpcServer : RpcServer
+    public partial class MyRpcServer : SingletonRpcServer
     {
         Timer m_timer;
         public MyRpcServer()

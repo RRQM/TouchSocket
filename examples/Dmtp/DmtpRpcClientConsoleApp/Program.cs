@@ -221,7 +221,7 @@ internal class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     }
 }
 
-internal partial class MyClientRpcServer : RpcServer
+internal partial class MyClientRpcServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 

@@ -95,7 +95,7 @@ interface IMyRpcServer : IRpcServer
     Task Output(int value);
 }
 
-public class MyRpcServer : RpcServer, IMyRpcServer
+public class MyRpcServer : SingletonRpcServer, IMyRpcServer
 {
     public async Task Output(int value)
     {

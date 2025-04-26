@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -255,7 +255,7 @@ public interface IJsonRpcServer : IRpcServer
     string TestJsonRpc(MyClass myClass);
 }
 
-public partial class JsonRpcServer : RpcServer, IJsonRpcServer
+public partial class JsonRpcServer : SingletonRpcServer, IJsonRpcServer
 {
 
     public string TestGetContext(ICallContext callContext, string str)

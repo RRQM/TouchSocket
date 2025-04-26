@@ -108,7 +108,7 @@ internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
     }
 }
 
-public partial class ReverseJsonRpcServer : RpcServer
+public partial class ReverseJsonRpcServer : SingletonRpcServer
 {
     [JsonRpc(MethodInvoke = true)]
     public int Add(int a, int b)

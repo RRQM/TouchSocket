@@ -20,7 +20,6 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        NewBytePool();
         BaseWriteRead();
         BufferWriterWriteRead();
         PrimitiveWriteRead();
@@ -45,7 +44,7 @@ internal class Program
 
     private static void IPackageWriteRead()
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             byteBlock.WritePackage(new MyPackage()
             {
@@ -59,7 +58,7 @@ internal class Program
 
     private static void BytesPackageWriteRead()
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
 
@@ -77,7 +76,7 @@ internal class Program
 
     private static void PrimitiveWriteRead()
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             byteBlock.WriteByte(byte.MaxValue);//写入byte类型
             byteBlock.WriteInt32(int.MaxValue);//写入int类型
@@ -95,7 +94,7 @@ internal class Program
 
     private static void BufferWriterWriteRead()
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             var span = byteBlock.GetSpan(4);
             span[0] = 0;
@@ -117,7 +116,7 @@ internal class Program
 
     private static void BaseWriteRead()
     {
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
 
@@ -126,17 +125,6 @@ internal class Program
             var buffer = new byte[byteBlock.Length];//定义一个数组容器
             var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
         }
-    }
-
-    private static void NewBytePool()
-    {
-        var bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
-        {
-            AutoZero = false,//在回收内存时，是否清空内存
-            MaxBucketsToTry = 5//最大梯度跨度
-        };
-        Console.WriteLine($"内存池容量={bytePool.Capacity}");
-        Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
     }
 
     private static void Performance()

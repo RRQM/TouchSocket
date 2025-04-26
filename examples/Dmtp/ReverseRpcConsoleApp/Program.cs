@@ -90,7 +90,7 @@ internal class Program
     }
 }
 
-public partial class ReverseCallbackServer : RpcServer
+public partial class ReverseCallbackServer : SingletonRpcServer
 {
     [DmtpRpc(MethodInvoke = true)]
     public string SayHello(string name)

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -20,10 +20,6 @@ namespace TcpStressTestingConsoleApp
                 SingleWriter = false,
             });
 
-
-
-            //BytePool.SetDefault(new BytePool(1024*1024,100));
-            Console.WriteLine($"当前内存池容量：{BytePool.Default.Capacity / (1048576.0):0.00}Mb");
             var service = GetTcpService();
 
             for (var i = 0; i < 5; i++)
@@ -82,8 +78,6 @@ namespace TcpStressTestingConsoleApp
 
             while (true)
             {
-                Console.WriteLine($"当前内存池长度：{BytePool.Default.GetPoolSize()}");
-                BytePool.Default.Clear();
                 GC.Collect();
                 Console.ReadKey();
             }

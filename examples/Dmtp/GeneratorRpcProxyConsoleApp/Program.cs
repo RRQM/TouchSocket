@@ -70,7 +70,7 @@ internal class Program
     }
 }
 
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [DmtpRpc]
     public bool Login(string account, string password)

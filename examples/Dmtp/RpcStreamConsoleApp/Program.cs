@@ -130,7 +130,7 @@ internal class Program
         Console.WriteLine($"状态：{channel.Status}，result={result}");
     }
 
-    public class MyRpcServer : RpcServer
+    public class MyRpcServer : SingletonRpcServer
     {
         /// <summary>
         /// "测试ServiceToClient创建通道，从而实现流数据的传输"

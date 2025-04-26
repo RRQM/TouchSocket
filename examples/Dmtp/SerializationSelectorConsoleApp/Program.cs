@@ -98,7 +98,7 @@ internal class Program
     }
 }
 
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 登录

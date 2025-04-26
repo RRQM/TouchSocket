@@ -7,7 +7,7 @@ using static UnityServerConsoleApp_All.TouchServer.Touch_HttpDmtp;
 
 namespace UnityServerConsoleApp_All.TouchServer;
 
-public partial class UnityRpcStore : RpcServer
+public partial class UnityRpcStore : SingletonRpcServer
 {
     public UnityRpcStore(ILog logger)
     {
@@ -36,7 +36,7 @@ public partial class UnityRpcStore : RpcServer
             return new LoginModelResult() { ResultCode = ResultCode.Success, Message = "Success" };
         }
 
-        return new LoginModelResult() { ResultCode = ResultCode.Fail, Message = "账号或密码错误" };
+        return new LoginModelResult() { ResultCode = ResultCode.Failure, Message = "账号或密码错误" };
     }
 
     [Description("性能测试")]

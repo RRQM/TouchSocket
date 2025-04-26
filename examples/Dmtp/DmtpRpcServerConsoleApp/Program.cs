@@ -76,7 +76,7 @@ internal class Program
 
 
 [MyRpcActionFilter]
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
     private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
@@ -183,7 +183,7 @@ public partial class MyRpcServer : RpcServer
     public async Task TestGetCallContextFromCallContextAccessor()
     {
         //通过CallContextAccessor获取当前关联的CallContext
-        //此处即使m_rpcCallContextAccessor与当前RpcServer均为单例，也能获取到正确的CallContext
+        //此处即使m_rpcCallContextAccessor与当前SingletonRpcServer均为单例，也能获取到正确的CallContext
         var callContext = this.m_rpcCallContextAccessor.CallContext;
         await Task.CompletedTask;
     }

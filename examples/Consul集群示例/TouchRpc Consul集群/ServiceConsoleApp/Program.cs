@@ -108,7 +108,7 @@ internal class Program
     }
 }
 
-internal partial class MyServer : RpcServer
+internal partial class MyServer : SingletonRpcServer
 {
     [WebApi(Method = HttpMethodType.Get)]
     [XmlRpc]

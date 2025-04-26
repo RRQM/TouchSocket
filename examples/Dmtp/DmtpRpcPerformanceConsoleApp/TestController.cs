@@ -1,10 +1,10 @@
-﻿using System.Text;
+using System.Text;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 
 namespace RpcPerformanceConsoleApp
 {
-    public partial class TestController : RpcServer
+    public partial class TestController : SingletonRpcServer
     {
       
         [DmtpRpc(MethodInvoke = true)]

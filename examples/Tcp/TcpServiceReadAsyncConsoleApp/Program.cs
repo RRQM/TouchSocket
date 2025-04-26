@@ -35,7 +35,7 @@ internal class Program
                  .SetOnClose(async (c, t) =>
                  {
                      await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-                     await c.SafeCloseAsync("超时无数据");
+                     await c.CloseAsync("超时无数据");
                  });
 
                  a.Add<TcpServiceReceiveAsyncPlugin>();

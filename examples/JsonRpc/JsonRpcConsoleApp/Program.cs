@@ -126,7 +126,7 @@ internal class Program
     }
 }
 
-public partial class JsonRpcServer : RpcServer
+public partial class JsonRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 使用调用上下文。

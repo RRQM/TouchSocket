@@ -498,7 +498,7 @@ internal class Program
                         //{
                         //    frame.Opcode = WSDataType.Close;
                         //    frame.FIN = true;
-                        //    frame.PayloadData=new ByteBlock();
+                        //    frame.PayloadData=new ByteBlock(1024*64);
                         //    frame.PayloadData.WriteUInt16(1000, EndianType.Big);
                         //    frame.PayloadData.Write(Encoding.UTF8.GetBytes("hello"));
                         //    await client.SendAsync(frame);
@@ -631,7 +631,7 @@ internal class Program
         public int Sum { get; set; }
     }
 
-    public class MyServer : RpcServer
+    public class MyServer : SingletonRpcServer
     {
         private readonly ILog m_logger;
 
@@ -647,10 +647,14 @@ internal class Program
         {
             if (callContext.Caller is HttpSessionClient socketClient)
             {
-                if (await socketClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext))
+                var result = await socketClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext);
+                if (!result.IsSuccess)
                 {
-                    this.m_logger.Info("WS通过WebApi连接");
+                    this.m_logger.Error(result.Message);
+                    return;
                 }
+
+                this.m_logger.Info("WS通过WebApi连接");
             }
         }
     }

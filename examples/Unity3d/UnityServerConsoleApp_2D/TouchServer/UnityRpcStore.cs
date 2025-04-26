@@ -8,7 +8,7 @@ using UnityRpcProxy;
 
 namespace UnityServerConsoleApp_2D.TouchServer;
 
-internal class UnityRpcStore : RpcServer
+internal class UnityRpcStore : SingletonRpcServer
 {
     private readonly ILog m_logger;
     public UnityRpcStore(ILog logger)
