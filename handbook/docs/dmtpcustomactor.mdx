@@ -137,7 +137,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         var methodModel = this.TryFindMethod.Invoke(package.MethodName);
         if (methodModel == null)
         {
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 package.Status = 4;
                 package.SwitchId();
@@ -150,7 +150,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         try
         {
             methodModel.Method.Invoke(methodModel.Target, default);
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 package.Status = 1;
                 package.SwitchId();
@@ -161,7 +161,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         }
         catch (Exception ex)
         {
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 package.Status = 5;
                 package.Message = ex.Message;
@@ -228,7 +228,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
 
         try
         {
-            using (var byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock(1024*64))
             {
                 package.Package(byteBlock);
                 this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock);

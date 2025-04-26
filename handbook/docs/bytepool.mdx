@@ -13,11 +13,11 @@ import CardLink from "@site/src/components/CardLink.js";
 
 ## 一、说明
 
-内存池是`TouchSocket`系列的最重要的组成部分，在`TouchSocket`产品中，`BytePool`贯穿始终。所以熟练使用`BytePool`，也是非常重要的。
+内存池是`TouchSocket`系列的最重要的组成部分，在`TouchSocket`产品中，`ArrayPool`贯穿始终。所以熟练使用`ArrayPool`，也是非常重要的。
 
 ## 二、功能
 
-内存池（`BytePool`）是解决创建、销毁大字节数组的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
+内存池（`ArrayPool<T>`）是微软的`ArrayPool<T>`。但是在用法上做了一些的优化。
 
 内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了`IBufferWriter<byte>`接口，可以更好的使用`GetMemory`、`GetSpan`与`Advance`等功能。
 
@@ -25,16 +25,12 @@ import CardLink from "@site/src/components/CardLink.js";
 
 ### 3.1 内存池
 
-`BytePool`在默认情况提供了一个`BytePool.Default`的默认静态实例。这是整个**进程**可以共享使用的。
+`ArrayPool<T>`在默认情况提供了一个`ArrayPool<T>.Shared`的默认静态实例。这是整个**进程**可以共享使用的。
 
-当然您可以创建只属于自己的`BytePool`。
+当然您可以创建只属于自己的`ArrayPool<T>`。
 
 ```csharp showLineNumbers
-BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
-{
-    AutoZero = false,//在回收内存时，是否清空内存
-    MaxBucketsToTry = 5//最大梯度跨度
-};
+ArrayPool<byte> bytePool = new ArrayPool<byte>(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50);
 ```
 
 
@@ -42,16 +38,6 @@ BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket
 
 - maxArrayLength，是内存池的最大字节数组尺寸。
 - maxArraysPerBucket是每个内存块桶的最大数组数量。
-- AutoZero属性，在回收内存时，是否清空内存。
-- MaxBucketsToTry是最大梯度跨度。例如：当梯度为16、32、64、128、512、1024时，MaxBucketsToTry为2，则当请求的长度是16时，且16的内存块均已派出，则会请求32，最大会请求到64，如果均已派出，则直接新建。
-
-
-在内存池创建以后，可以直观的查看它的各个属性。包括：
-
-```csharp showLineNumbers
-Console.WriteLine($"内存池容量={bytePool.Capacity}");
-Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
-```
 
 ### 3.2 创建、释放内存块
 
@@ -75,7 +61,7 @@ byteBlock.Dispose();
 以上的创建方式，都是从默认内存池创建。如果想要自定义内存池，可以在new的时候指定内存池。
 
 ```csharp showLineNumbers
-var byteBlock = new ByteBlock(1024 * 64,BytePool.Default);
+var byteBlock = new ByteBlock(1024 * 64,ArrayPool.Default);
 byteBlock.Dispose();
 ```
 
@@ -120,7 +106,7 @@ Memory<byte> memory = byteBlock.TotalMemory;
 
 :::tip 趣味理解
 
-`ByteBlock`的工作模式，就像是你向商店（`BytePool`）租借了一个杯子（`ByteBlock`），`TotalMemory`就是这个杯子本身。
+`ByteBlock`的工作模式，就像是你向商店（`ArrayPool`）租借了一个杯子（`ByteBlock`），`TotalMemory`就是这个杯子本身。
 
 于我们而言，只在乎杯中实际有多少水（`Span`、`Memory`），所以`byteBlock.Length`就是水位线。所以无论何时，我们都不可以喝超过水位线的水。因为超过水位线的水，可能是上个租客留下的口水。
 
@@ -138,7 +124,7 @@ Memory<byte> memory = byteBlock.TotalMemory;
 使用比较简单，支持Byte[]，Span、Memory等数据的直接写入。
 
 ```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
+using (var byteBlock = new ByteBlock(1024*64))
 {
     byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
 
@@ -152,7 +138,7 @@ using (var byteBlock = new ByteBlock())
 ### 4.2 基础类型的写入和读取
 
 ```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
+using (var byteBlock = new ByteBlock(1024*64))
 {
     byteBlock.WriteByte(byte.MaxValue);//写入byte类型
     byteBlock.WriteInt32(int.MaxValue);//写入int类型
@@ -171,7 +157,7 @@ using (var byteBlock = new ByteBlock())
 ### 4.3 按照BufferWriter方式写入
 
 ```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
+using (var byteBlock = new ByteBlock(1024*64))
 {
     var span = byteBlock.GetSpan(4);
     span[0] = 0;
@@ -241,4 +227,4 @@ ByteBlock在设置SetHolding(false)后，不需要再调用Dispose。
 
 ## 六、本文示例Demo
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/BytePoolConsoleApp"/>
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/ArrayPoolConsoleApp"/>

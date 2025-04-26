@@ -62,7 +62,7 @@ class MyRequestPackage : DmtpRouterPackage
     public override void UnpackageBody(ByteBlock byteBlock)
     {
         base.UnpackageBody(byteBlock);
-        this.ByteBlock = byteBlock.ReadByteBlock();
+        this.ByteBlock = byteBlock.ReadByteBlock(1024*64);
     }
 }
 

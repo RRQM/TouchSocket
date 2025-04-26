@@ -48,7 +48,7 @@ byte[] data = Encoding.UTF8.GetBytes("RRQM");
 
 adapter.SendInput(data, 0, data.Length);//模拟输入，会在SendCallBack中输出最终要发送的数据。
 
-using (ByteBlock block = new ByteBlock())
+using (ByteBlock block = new ByteBlock(1024*64))
 {
     block.Write(sentData);
     block.Pos = 0;

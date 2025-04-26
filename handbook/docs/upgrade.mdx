@@ -19,6 +19,82 @@ import Highlight from '@site/src/components/Highlight.js';
 :::
 
 
+## v3.1.0
+
+**更新日期：** 2025.4.26
+
+**更新描述：**
+
+此次升级可能会有部分代码不兼容项，请在升级前做好备份，并且详细阅读[3.1升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/IC1K3I)。
+
+此次升级所有组件在运行时**完全兼容3.0**，所以无论客户端还是服务端，都可以进行差异化更新。
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>调整</Tag> `DateTime`调整为`DateTimeOffset`。
+- &nbsp;<Tag>调整</Tag> `Task.Run`全部使用`EasyTask.Run`再次封装运行。
+- &nbsp;<Tag>优化</Tag> 所有组件在日志记录时，传入可触发源，可更好的进行日志记录。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>调整</Tag> `AsyncBoundedQueue`类调整为`AsyncQueue`。
+- &nbsp;<Tag>移除</Tag> `BytePool`类不再使用，目前使用`ArrayPool<T>`代替。
+- &nbsp;<Tag>调整</Tag> `ByteBlock`类不再提供默认参数构造函数，目前强制传入申请长度。
+- &nbsp;<Tag>调整</Tag> `ResultCode`枚举项`Fail`调整为`Failure`。
+- &nbsp;<Tag>调整</Tag> `FastSerializerContext`默认不再支持`DataTable`和`DataSet`。如有需要，请自行添加`DataTableFastBinaryConverter`和`DataSetFastBinaryConverter`。
+- &nbsp;<Tag>优化</Tag> `PeriodPackageAdapter`接收性能。
+- &nbsp;<Tag>优化</Tag> `BlockSegment`性能。
+- &nbsp;<Tag>优化</Tag> `WaitHandlePool`性能。
+- &nbsp;<Tag>修复</Tag> `PeriodPackageAdapter`接收不判断最大包设定的bug。
+- &nbsp;<Tag>新增</Tag> 若干扩展方法。
+
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>调整</Tag> `StopAsync`、`CloseAsync`等方法，在调用时不再抛出异常，而是返回`Task<Result>`。
+- &nbsp;<Tag>调整</Tag> `IClient`的接口，不再继承自`IDependencyObject`。如有需求请使用`IDependencyClient`。
+- &nbsp;<Tag>调整</Tag> `IServerStopedPlugin`插件，改名为`IServerStoppedPlugin`。
+- &nbsp;<Tag>优化</Tag> `Tcp`、`Udp`等组件的释放逻辑
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>优化</Tag> 添加`IActor`的方式。
+
+#### TouchSocket.Hosting
+
+- &nbsp;<Tag>优化</Tag> 日志记录信息。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> 性能大幅提高。
+- &nbsp;<Tag>新增</Tag> `HttpStatusCode`静态类，支持常用的状态码。
+- &nbsp;<Tag>调整</Tag> WebSocket的`SwitchProtocolToWebSocketAsync`方法返回值由`bool`改为`Result`。
+- &nbsp;<Tag>调整</Tag> `InitHeaders`、`SetStatus`等方法中设置`Header`的方法，由`Add`调整为`TryAdd`。
+- &nbsp;<Tag>调整</Tag> 默认情况下，服务在响应Header中，设置`Server`时，不再显示具体版本。[#IC25RJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IC25RJ)
+- &nbsp;<Tag>修复</Tag> HttpClient在断开连接时，不触发`OnTcpClosed`的bug。
+
+#### TouchSocket.WebApi.Swagger
+
+- &nbsp;<Tag>新增</Tag> 在Swagger显示时，支持参数属性。[PR68](https://gitee.com/RRQM_Home/TouchSocket/pulls/68)
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>调整</Tag> `RpcServer`名称改为`SingletonRpcServer`。
+- &nbsp;<Tag>优化</Tag> `QueueRpcDispatcher`性能。
+
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>新增</Tag> 功能首发。
+
+***
+
+<details>
+<summary>v3.0</summary>
+<div>
+
 ## v3.0.26
 
 **更新日期：** 2025.4.20
@@ -40,9 +116,6 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ***
 
-<details>
-<summary>v3.0</summary>
-<div>
 
 ## v3.0.25
 
