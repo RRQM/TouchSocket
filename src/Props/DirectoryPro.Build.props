@@ -1,0 +1,64 @@
+﻿<Project>
+
+	<ItemGroup Condition="'$(TargetFramework)'!='net45' And '!$(MSBuildProjectName.EndsWith(`SourceGenerator`))'">
+		<ProjectReference Include="..\TouchSocket.Core.SourceGenerator\TouchSocket.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(IsPro)'!='True'">
+		<None Include="$(SolutionDir)\Src\Resources\LICENSE.txt" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(IsPro)'=='True'">
+		<None Include="$(SolutionDir)\Src\Resources\LICENSEPRO.txt" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(IsPro)'!='True' And '$(Configuration)' == 'Release' And '$(IsSourceGenerator)'!='True'">
+		<!--<IncludeSymbols>True</IncludeSymbols>
+		<DebugSymbols>True</DebugSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedAllSources>True</EmbedAllSources>-->
+		<PackageIcon>logo.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(IsPro)'!='True' And '$(Configuration)' == 'Debug' And '$(IsSourceGenerator)'!='True'">
+		<!--<IncludeSymbols>True</IncludeSymbols>
+		<DebugSymbols>True</DebugSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedAllSources>True</EmbedAllSources>-->
+		<PackageIcon>logo.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(IsPro)'=='True' And '$(Configuration)' == 'Release' And '$(IsSourceGenerator)'!='True'">
+		<PackageIcon>logo.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSEPRO.txt</PackageLicenseFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(IsPro)'=='True' And '$(Configuration)' == 'Debug' And '$(IsSourceGenerator)'!='True'">
+		<PackageIcon>logo.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageLicenseFile>LICENSEPRO.txt</PackageLicenseFile>
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+	</PropertyGroup>
+
+	<!-- 包含PDB文件到主NuGet包 --><!--
+	<ItemGroup Condition="'$(Configuration)' == 'Debug' And '$(GeneratePackageOnBuild)' == 'true'">
+		<None Include="$(OutputPath)/$(TargetFramework)/$(AssemblyName).pdb"
+			  Pack="true"
+			  PackagePath="lib\$(TargetFramework)"
+			  Visible="false"/>
+	</ItemGroup>-->
+
+</Project>

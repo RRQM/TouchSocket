@@ -8,7 +8,6 @@
 		<GenerateDocumentationFile>False</GenerateDocumentationFile>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<SignAssembly>false</SignAssembly>
-		<DefineConstants>SourceGenerator</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,4 +18,10 @@
 		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
 		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Common\" />
+	</ItemGroup>
+
+	<Import Project="..\TouchSocket.SourceGenerator.SharedProject\TouchSocket.SourceGenerator.SharedProject.projitems" Label="Shared" />
 </Project>

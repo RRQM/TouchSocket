@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -14,164 +14,201 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Linq;
 
-namespace TouchSocket
+namespace TouchSocket;
+
+internal sealed class PluginCodeBuilder : CodeBuilder
 {
-    internal sealed class PluginCodeBuilder
+    private const string IPluginManagerString = "TouchSocket.Core.IPluginManager";
+    private const string PluginBaseString = "TouchSocket.Core.PluginBase";
+    private const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
+    private readonly INamedTypeSymbol m_pluginClass;
+
+    public PluginCodeBuilder(INamedTypeSymbol pluginClass)
     {
-        private readonly INamedTypeSymbol m_pluginClass;
+        this.m_pluginClass = pluginClass;
+    }
 
-        private const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
-        private const string PluginBaseString = "TouchSocket.Core.PluginBase";
-        private const string IPluginManagerString = "TouchSocket.Core.IPluginManager";
+    public override string Id => this.m_pluginClass.ToDisplayString();
+    public string Prefix { get; set; }
 
-        public PluginCodeBuilder(INamedTypeSymbol pluginClass)
+    public IEnumerable<string> Usings
+    {
+        get
         {
-            this.m_pluginClass = pluginClass;
-        }
-
-        public string Prefix { get; set; }
-
-        public IEnumerable<string> Usings
-        {
-            get
-            {
-                yield return "using System;";
-                yield return "using System.Diagnostics;";
-                yield return "using TouchSocket.Core;";
-                yield return "using System.Threading.Tasks;";
-            }
-        }
-
-        public string GetFileName()
-        {
-            return this.m_pluginClass.ToDisplayString() + "Generator";
-        }
-
-        public bool TryToSourceText(out SourceText sourceText)
-        {
-            var code = this.ToString();
-            if (string.IsNullOrEmpty(code))
-            {
-                sourceText = null;
-                return false;
-            }
-            sourceText = SourceText.From(code, Encoding.UTF8);
-            return true;
-        }
-
-        public override string ToString()
-        {
-            var methods = this.FindMethods().ToList();
-            if (methods.Count == 0)
-            {
-                return null;
-            }
-            var codeString = new StringBuilder();
-            codeString.AppendLine("/*");
-            codeString.AppendLine("此代码由Plugin工具直接生成，非必要请不要修改此处代码");
-            codeString.AppendLine("*/");
-            codeString.AppendLine("#pragma warning disable");
-
-            foreach (var item in this.Usings)
-            {
-                codeString.AppendLine(item);
-            }
-
-            //Debugger.Launch();
-
-            codeString.AppendLine($"namespace {this.m_pluginClass.ContainingNamespace}");
-            codeString.AppendLine("{");
-            codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
-            codeString.AppendLine($"partial class {this.m_pluginClass.Name}");
-            codeString.AppendLine("{");
-            codeString.AppendLine("private int RegisterPlugins(IPluginManager pluginManager)");
-            codeString.AppendLine("{");
-            foreach (var item in methods)
-            {
-                this.BuildMethod(codeString, item);
-            }
-            codeString.AppendLine($"return {methods.Count};");
-            codeString.AppendLine("}");
-            this.TryBuildInvokeRedister(codeString);
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
-
-            // System.Diagnostics.Debugger.Launch();
-            return codeString.ToString();
-        }
-
-        private void TryBuildInvokeRedister(StringBuilder stringBuilder)
-        {
-            if (!this.m_pluginClass.IsInheritFrom(PluginBaseString))
-            {
-                return;
-            }
-
-            if (this.HasOverrideMethod())
-            {
-                return;
-            }
-
-            stringBuilder.AppendLine("protected override void Loaded(IPluginManager pluginManager)");
-            stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine("base.Loaded(pluginManager);");
-            stringBuilder.AppendLine("this.RegisterPlugins(pluginManager);");
-            stringBuilder.AppendLine("}");
-        }
-
-        private void BuildMethod(StringBuilder stringBuilder, IMethodSymbol methodSymbol)
-        {
-            // Debugger.Launch();
-            var attributeData = methodSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == PluginSyntaxReceiver.GeneratorPluginAttributeTypeName);
-            stringBuilder.AppendLine();
-            stringBuilder.Append("pluginManager.Add<");
-            stringBuilder.Append($"{methodSymbol.Parameters[0].Type.ToDisplayString()},");
-            stringBuilder.Append($"{methodSymbol.Parameters[1].Type.ToDisplayString()}>(");
-            stringBuilder.Append($"\"{attributeData.ConstructorArguments[0].Value}\",this.");
-            stringBuilder.Append($"{methodSymbol.Name});");
-            stringBuilder.AppendLine();
-        }
-
-        private bool HasOverrideMethod()
-        {
-            return this.m_pluginClass
-                .GetMembers()
-                .OfType<IMethodSymbol>()
-                .Any(m =>
-                {
-                    if (m.Name == "Loaded" && m.IsOverride && m.Parameters.Length == 1 && m.Parameters[0].Type.ToDisplayString() == IPluginManagerString)
-                    {
-                        return true;
-                    }
-                    return false;
-                });
-        }
-
-        private IEnumerable<IMethodSymbol> FindMethods()
-        {
-            return this.m_pluginClass
-                .GetMembers()
-                .OfType<IMethodSymbol>()
-                .Where(m =>
-                {
-                    if (m.Parameters.Length != 2)
-                    {
-                        return false;
-                    }
-                    if (m.ReturnType.ToDisplayString() != typeof(Task).FullName)
-                    {
-                        return false;
-                    }
-                    if (!m.Parameters[1].Type.IsInheritFrom(PluginEventArgsString))
-                    {
-                        return false;
-                    }
-                    return m.GetAttributes().Any(a => a.AttributeClass.ToDisplayString() == PluginSyntaxReceiver.GeneratorPluginAttributeTypeName);
-                });
+            yield return "using System;";
+            yield return "using System.Diagnostics;";
+            yield return "using TouchSocket.Core;";
+            yield return "using System.Threading.Tasks;";
         }
     }
+
+    public override string GetFileName()
+    {
+        return this.m_pluginClass.ToDisplayString() + "ExtensionsGenerator";
+    }
+
+    public override string ToString()
+    {
+        var method = this.FindMethod();
+        if (method is null)
+        {
+            return null;
+        }
+        if (method.Parameters.Length != 2)
+        {
+            return null;
+        }
+        var codeString = new StringBuilder();
+        codeString.AppendLine("/*");
+        codeString.AppendLine("此代码由Plugin工具直接生成，非必要请不要修改此处代码");
+        codeString.AppendLine("*/");
+        codeString.AppendLine("#pragma warning disable");
+
+        foreach (var item in this.Usings)
+        {
+            codeString.AppendLine(item);
+        }
+
+        //Debugger.Launch();
+
+        var pluginClassName = this.GetPluginClassName();
+        var pluginMethodName = method.Name;
+        var firstType = method.Parameters[0].Type;
+        var secondType = method.Parameters[1].Type;
+        // var xml = ExtractSummary((method.GetDocumentationCommentXml() ?? this.m_pluginClass.GetDocumentationCommentXml()) ?? string.Empty);
+
+        if (!this.m_pluginClass.ContainingNamespace.IsGlobalNamespace)
+        {
+            codeString.AppendLine($"namespace {this.m_pluginClass.ContainingNamespace}");
+            codeString.AppendLine("{");
+        }
+
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}\"/>");
+        codeString.AppendLine($"public static class _{pluginClassName}Extensions");
+        codeString.AppendLine("{");
+        //1
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Func<{firstType.ToDisplayString()}, {secondType.ToDisplayString()}, Task> func)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), func);");
+        codeString.AppendLine("}");
+
+        //2
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Action<{firstType.ToDisplayString()}> action)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine("Task newFunc(object sender, PluginEventArgs e)");
+        codeString.AppendLine("{");
+        codeString.AppendLine($"action(({firstType.ToDisplayString()})sender);");
+        codeString.AppendLine("return e.InvokeNext();");
+        codeString.AppendLine("}");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), newFunc, action);");
+        codeString.AppendLine("}");
+
+        //3
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Action action)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), action);");
+        codeString.AppendLine("}");
+
+        //4
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Func<{secondType.ToDisplayString()},Task> func)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), func);");
+        codeString.AppendLine("}");
+
+        //5
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Func<{firstType.ToDisplayString()},Task> func)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine("async Task newFunc(object sender, PluginEventArgs e)");
+        codeString.AppendLine("{");
+        codeString.AppendLine($"await func(({firstType.ToDisplayString()})sender).ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+        codeString.AppendLine("await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+        codeString.AppendLine("}");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), newFunc, func);");
+        codeString.AppendLine("}");
+
+        //6
+        codeString.AppendLine($"/// <inheritdoc cref=\"{this.m_pluginClass.ToDisplayString()}.{method.Name}({firstType.ToDisplayString()},{secondType.ToDisplayString()})\"/>");
+        codeString.AppendLine($"public static void Add{pluginClassName}(this IPluginManager pluginManager, Func<Task> func)");
+
+        codeString.AppendLine("{");
+        codeString.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), func);");
+        codeString.AppendLine("}");
+
+        //class end
+        codeString.AppendLine("}");
+        if (!this.m_pluginClass.ContainingNamespace.IsGlobalNamespace)
+        {
+            codeString.AppendLine("}");
+        }
+
+        // System.Diagnostics.Debugger.Launch();
+        return codeString.ToString();
+    }
+
+    private string ExtractSummary(string xmlDoc)
+    {
+        if (string.IsNullOrEmpty(xmlDoc))
+        {
+            return string.Empty;
+        }
+        try
+        {
+            var doc = XDocument.Parse(xmlDoc);
+            var summaryElement = doc.Descendants("summary").FirstOrDefault();
+            var summary = summaryElement?.Value.Trim();
+
+            if (string.IsNullOrEmpty(summary))
+            {
+                return string.Empty;
+            }
+            //去掉换行符
+            return summary.Replace("\n", "").Replace("\r", "");
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string GetPluginClassName()
+    {
+        var name = this.m_pluginClass.Name;
+        if (name.StartsWith("I"))
+        {
+            return name.Substring(1);
+        }
+        return this.m_pluginClass.Name;
+    }
+
+    private IMethodSymbol FindMethod()
+    {
+        return this.m_pluginClass.GetMembers().OfType<IMethodSymbol>().FirstOrDefault();
+    }
+
+    public bool TryToSourceText(out SourceText sourceText)
+    {
+        var code = this.ToString();
+        if (string.IsNullOrEmpty(code))
+        {
+            sourceText = null;
+            return false;
+        }
+        sourceText = SourceText.From(code, Encoding.UTF8);
+        return true;
+    }
+
+
 }

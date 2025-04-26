@@ -1,0 +1,215 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core", "Src\TouchSocket.Core\TouchSocket.Core.csproj", "{12471445-B5C5-49E2-A7AC-15782299C5A9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket", "Src\TouchSocket\TouchSocket.csproj", "{375335C0-529E-4EE9-B80B-A3EC861783A1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Http", "Src\TouchSocket.Http\TouchSocket.Http.csproj", "{5DA6EA96-6762-4390-89E3-EECA272487F8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi", "Src\TouchSocket.WebApi\TouchSocket.WebApi.csproj", "{B2591766-592C-45BD-A1A5-1395ACAA7EEB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.JsonRpc", "Src\TouchSocket.JsonRpc\TouchSocket.JsonRpc.csproj", "{D31FBB16-D47E-4811-BBAA-D6E05C850DB8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc", "Src\TouchSocket.Rpc\TouchSocket.Rpc.csproj", "{BA8EABBF-89EA-4D24-9066-7003ADC9CD66}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.XmlRpc", "Src\TouchSocket.XmlRpc\TouchSocket.XmlRpc.csproj", "{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core.DependencyInjection", "Src\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj", "{AF0DAD14-1212-43D2-86CF-B14463D46C46}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.AspNetCore", "Src\TouchSocket.AspNetCore\TouchSocket.AspNetCore.csproj", "{8846520A-DE8F-4FCF-8313-015D6C2D1B54}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "开源版", "开源版", "{065EA3E8-D90E-4074-9979-D651EE4E6B3E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Dmtp", "Src\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj", "{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案配置", "解决方案配置", "{8D840BCD-6E10-4BF0-A44A-DC7BD97C1ADA}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Src\Directory.Build.props = Src\Directory.Build.props
+		Src\Props\DirectoryPro.Build.props = Src\Props\DirectoryPro.Build.props
+		TouchSocketVersion.props = TouchSocketVersion.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.NamedPipe", "Src\TouchSocket.NamedPipe\TouchSocket.NamedPipe.csproj", "{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi.Swagger", "Src\TouchSocket.WebApi.Swagger\TouchSocket.WebApi.Swagger.csproj", "{6D9EDD94-B7D2-4609-86A9-000EE8D3838C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Hosting", "Src\TouchSocket.Hosting\TouchSocket.Hosting.csproj", "{F2151B0D-E8C8-4434-9DDF-7112B708ED8A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SerialPorts", "Src\TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj", "{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core.Autofac", "Src\TouchSocket.Core.Autofac\TouchSocket.Core.Autofac.csproj", "{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Modbus", "Src\TouchSocket.Modbus\TouchSocket.Modbus.csproj", "{DE45D1DC-6764-433B-929C-F17147D338AC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "源生成器", "源生成器", "{33F8723D-9853-4E00-97DB-521E34EC895C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core.SourceGenerator", "Src\TouchSocket.Core.SourceGenerator\TouchSocket.Core.SourceGenerator.csproj", "{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc.SourceGenerator", "Src\TouchSocket.Rpc.SourceGenerator\TouchSocket.Rpc.SourceGenerator.csproj", "{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc.RateLimiting", "Src\TouchSocket.Rpc.RateLimiting\TouchSocket.Rpc.RateLimiting.csproj", "{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TouchSocket.Shared", "Src\TouchSocket.Shared\TouchSocket.Shared.shproj", "{BA463F9B-D28C-4C8A-AEB7-ECDC7FC1C3A1}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TouchSocket.SourceGenerator.SharedProject", "Src\TouchSocket.SourceGenerator.SharedProject\TouchSocket.SourceGenerator.SharedProject.shproj", "{5D348476-DB26-4BBA-AB83-272412C3BE71}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.XmlRpc.SourceGenerator", "Src\TouchSocket.XmlRpc.SourceGenerator\TouchSocket.XmlRpc.SourceGenerator.csproj", "{4F50F291-2110-4D10-B5F7-9F2AAC40AA27}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Dmtp.SourceGenerator", "Src\TouchSocket.Dmtp.SourceGenerator\TouchSocket.Dmtp.SourceGenerator.csproj", "{087F7541-0310-4EC6-B3D0-595AF37E30C8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.JsonRpc.SourceGenerator", "Src\TouchSocket.JsonRpc.SourceGenerator\TouchSocket.JsonRpc.SourceGenerator.csproj", "{8C2A5D9A-5A3B-4643-922A-71344C5E5991}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi.SourceGenerator", "Src\TouchSocket.WebApi.SourceGenerator\TouchSocket.WebApi.SourceGenerator.csproj", "{0A228D44-AE15-4515-A85A-DC9026E52615}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchSocket.Mqtt", "Src\TouchSocket.Mqtt\TouchSocket.Mqtt.csproj", "{201772F1-8C5E-4815-85F2-0CD8507006E7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12471445-B5C5-49E2-A7AC-15782299C5A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12471445-B5C5-49E2-A7AC-15782299C5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12471445-B5C5-49E2-A7AC-15782299C5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12471445-B5C5-49E2-A7AC-15782299C5A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{375335C0-529E-4EE9-B80B-A3EC861783A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{375335C0-529E-4EE9-B80B-A3EC861783A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{375335C0-529E-4EE9-B80B-A3EC861783A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{375335C0-529E-4EE9-B80B-A3EC861783A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DA6EA96-6762-4390-89E3-EECA272487F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA6EA96-6762-4390-89E3-EECA272487F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DA6EA96-6762-4390-89E3-EECA272487F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DA6EA96-6762-4390-89E3-EECA272487F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2591766-592C-45BD-A1A5-1395ACAA7EEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2591766-592C-45BD-A1A5-1395ACAA7EEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2591766-592C-45BD-A1A5-1395ACAA7EEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2591766-592C-45BD-A1A5-1395ACAA7EEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D31FBB16-D47E-4811-BBAA-D6E05C850DB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D31FBB16-D47E-4811-BBAA-D6E05C850DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D31FBB16-D47E-4811-BBAA-D6E05C850DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D31FBB16-D47E-4811-BBAA-D6E05C850DB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA8EABBF-89EA-4D24-9066-7003ADC9CD66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA8EABBF-89EA-4D24-9066-7003ADC9CD66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA8EABBF-89EA-4D24-9066-7003ADC9CD66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA8EABBF-89EA-4D24-9066-7003ADC9CD66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF0DAD14-1212-43D2-86CF-B14463D46C46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF0DAD14-1212-43D2-86CF-B14463D46C46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF0DAD14-1212-43D2-86CF-B14463D46C46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF0DAD14-1212-43D2-86CF-B14463D46C46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8846520A-DE8F-4FCF-8313-015D6C2D1B54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8846520A-DE8F-4FCF-8313-015D6C2D1B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8846520A-DE8F-4FCF-8313-015D6C2D1B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8846520A-DE8F-4FCF-8313-015D6C2D1B54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D9EDD94-B7D2-4609-86A9-000EE8D3838C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D9EDD94-B7D2-4609-86A9-000EE8D3838C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D9EDD94-B7D2-4609-86A9-000EE8D3838C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D9EDD94-B7D2-4609-86A9-000EE8D3838C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2151B0D-E8C8-4434-9DDF-7112B708ED8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2151B0D-E8C8-4434-9DDF-7112B708ED8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2151B0D-E8C8-4434-9DDF-7112B708ED8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2151B0D-E8C8-4434-9DDF-7112B708ED8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE45D1DC-6764-433B-929C-F17147D338AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE45D1DC-6764-433B-929C-F17147D338AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE45D1DC-6764-433B-929C-F17147D338AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE45D1DC-6764-433B-929C-F17147D338AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F50F291-2110-4D10-B5F7-9F2AAC40AA27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F50F291-2110-4D10-B5F7-9F2AAC40AA27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F50F291-2110-4D10-B5F7-9F2AAC40AA27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F50F291-2110-4D10-B5F7-9F2AAC40AA27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{087F7541-0310-4EC6-B3D0-595AF37E30C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{087F7541-0310-4EC6-B3D0-595AF37E30C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{087F7541-0310-4EC6-B3D0-595AF37E30C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{087F7541-0310-4EC6-B3D0-595AF37E30C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C2A5D9A-5A3B-4643-922A-71344C5E5991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C2A5D9A-5A3B-4643-922A-71344C5E5991}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C2A5D9A-5A3B-4643-922A-71344C5E5991}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C2A5D9A-5A3B-4643-922A-71344C5E5991}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A228D44-AE15-4515-A85A-DC9026E52615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A228D44-AE15-4515-A85A-DC9026E52615}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A228D44-AE15-4515-A85A-DC9026E52615}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A228D44-AE15-4515-A85A-DC9026E52615}.Release|Any CPU.Build.0 = Release|Any CPU
+		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12471445-B5C5-49E2-A7AC-15782299C5A9} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{375335C0-529E-4EE9-B80B-A3EC861783A1} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{5DA6EA96-6762-4390-89E3-EECA272487F8} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{B2591766-592C-45BD-A1A5-1395ACAA7EEB} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{D31FBB16-D47E-4811-BBAA-D6E05C850DB8} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{BA8EABBF-89EA-4D24-9066-7003ADC9CD66} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{3EA36139-BC17-4A9A-8B34-B19CBB9DD60A} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{AF0DAD14-1212-43D2-86CF-B14463D46C46} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{8846520A-DE8F-4FCF-8313-015D6C2D1B54} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{FA1CB5DE-B746-4E27-BFA2-CD727E086B0D} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{DB92CBD6-A2D9-490B-A2C7-004D8C45CE21} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{6D9EDD94-B7D2-4609-86A9-000EE8D3838C} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{F2151B0D-E8C8-4434-9DDF-7112B708ED8A} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{BB60C1A6-D7EE-4252-B9E8-F68BECE57D0A} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{EB7FF3DC-7DFD-4917-9A0A-01E2DD3F5406} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{DE45D1DC-6764-433B-929C-F17147D338AC} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{5FC2A71D-D865-4D53-A0B8-DCCABC9926A6} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{C9A87AE1-1512-4AD8-8E0C-9F0028E0F72B} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{781923FE-AF2E-4CB0-B7EF-98EA09DDEDB3} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{BA463F9B-D28C-4C8A-AEB7-ECDC7FC1C3A1} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{5D348476-DB26-4BBA-AB83-272412C3BE71} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{4F50F291-2110-4D10-B5F7-9F2AAC40AA27} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{087F7541-0310-4EC6-B3D0-595AF37E30C8} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{8C2A5D9A-5A3B-4643-922A-71344C5E5991} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{0A228D44-AE15-4515-A85A-DC9026E52615} = {33F8723D-9853-4E00-97DB-521E34EC895C}
+		{201772F1-8C5E-4815-85F2-0CD8507006E7} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AD1F133D-9B7E-4CD1-97E0-31D529E5CD90}
+		RESX_NeutralResourcesLanguage = en-001
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Src\TouchSocket.Shared\TouchSocket.Shared.projitems*{375335c0-529e-4ee9-b80b-a3ec861783a1}*SharedItemsImports = 5
+		Src\TouchSocket.SourceGenerator.SharedProject\TouchSocket.SourceGenerator.SharedProject.projitems*{5d348476-db26-4bba-ab83-272412c3be71}*SharedItemsImports = 13
+		Src\TouchSocket.SourceGenerator.SharedProject\TouchSocket.SourceGenerator.SharedProject.projitems*{5fc2a71d-d865-4d53-a0b8-dccabc9926a6}*SharedItemsImports = 5
+		Src\TouchSocket.Shared\TouchSocket.Shared.projitems*{ba463f9b-d28c-4c8a-aeb7-ecdc7fc1c3a1}*SharedItemsImports = 13
+		Src\TouchSocket.SourceGenerator.SharedProject\TouchSocket.SourceGenerator.SharedProject.projitems*{c9a87ae1-1512-4ad8-8e0c-9f0028e0f72b}*SharedItemsImports = 5
+	EndGlobalSection
+EndGlobal
