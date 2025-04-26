@@ -15,7 +15,7 @@ using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
-internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
+internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
 {
     private readonly ushort m_invoke_Request = 1000;
     private readonly ushort m_invoke_Response = 1001;
@@ -109,7 +109,7 @@ internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         var methodModel = this.TryFindMethod.Invoke(package.MethodName);
         if (methodModel == null)
         {
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
             try
             {
                 package.Status = 4;
@@ -127,7 +127,7 @@ internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         try
         {
             methodModel.Method.Invoke(methodModel.Target, default);
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
             try
             {
                 package.Status = 1;
@@ -143,7 +143,7 @@ internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         }
         catch (Exception ex)
         {
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
             try
             {
                 package.Status = 5;
@@ -215,7 +215,7 @@ internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
 
         try
         {
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
             try
             {
                 package.Package(ref byteBlock);

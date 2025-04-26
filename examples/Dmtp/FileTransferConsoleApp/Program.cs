@@ -571,7 +571,7 @@ internal class Program
         ////然后在重新发起请求传输值前，先对fileOperator.ResourceInfo做有效赋值。即可尝试断点传输。
 
         //byte[] cacheBytes;//这就是持久化后的数据。你可以将此数据写入到文件或数据库。
-        //using (var byteBlock=new ByteBlock())
+        //using (var byteBlock=new ByteBlock(1024*64))
         //{
         //    fileOperator.ResourceInfo.Save(byteBlock);
 

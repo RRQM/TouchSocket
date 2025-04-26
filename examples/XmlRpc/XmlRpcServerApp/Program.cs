@@ -57,7 +57,7 @@ internal class Program
     }
 }
 
-public partial class XmlServer : RpcServer
+public partial class XmlServer : SingletonRpcServer
 {
     [XmlRpc(MethodInvoke = true)]
     public int Sum(int a, int b)

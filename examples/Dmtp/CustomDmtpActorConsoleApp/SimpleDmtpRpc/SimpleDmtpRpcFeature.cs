@@ -26,7 +26,7 @@ internal class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpR
         {
             TryFindMethod = this.TryFindMethod
         };
-        client.DmtpActor.SetSimpleDmtpRpcActor(actor);
+        client.DmtpActor.AddActor(actor);
         await e.InvokeNext();
     }
 

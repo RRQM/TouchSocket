@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -69,7 +69,7 @@ namespace TcpConsoleApp
         }
     }
 
-    internal partial class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
+    internal partial class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStoppedPlugin
     {
         public Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
         {
@@ -91,7 +91,7 @@ namespace TcpConsoleApp
             return e.InvokeNext();
         }
 
-        public Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e)
+        public Task OnServerStopped(IServiceBase sender, ServiceStateEventArgs e)
         {
             Console.WriteLine("服务已停止");
             return e.InvokeNext();

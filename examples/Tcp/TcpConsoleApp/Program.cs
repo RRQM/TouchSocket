@@ -52,7 +52,7 @@ internal class Program
                  .SetOnClose(async (c, t) =>
                  {
                      await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-                     await c.SafeCloseAsync("超时无数据");
+                     await c.CloseAsync("超时无数据");
                  });
 
                  a.Add<ClosePlugin>();
@@ -206,7 +206,7 @@ internal class MyPluginClass : PluginBase
     }
 }
 
-internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
+internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStoppedPlugin
 {
     public Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
     {
@@ -228,7 +228,7 @@ internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerS
         return e.InvokeNext();
     }
 
-    public Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e)
+    public Task OnServerStopped(IServiceBase sender, ServiceStateEventArgs e)
     {
         Console.WriteLine("服务已停止");
         return e.InvokeNext();

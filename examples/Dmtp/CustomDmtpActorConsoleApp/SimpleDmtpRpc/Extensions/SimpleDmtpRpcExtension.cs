@@ -17,16 +17,6 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
 internal static class SimpleDmtpRpcExtension
 {
-    #region DependencyProperty
-
-    /// <summary>
-    /// SimpleDmtpRpcActor
-    /// </summary>
-    public static readonly DependencyProperty<ISimpleDmtpRpcActor> SimpleDmtpRpcActorProperty =
-        new("SimpleDmtpRpcActor", default);
-
-    #endregion DependencyProperty
-
     #region 插件扩展
 
     /// <summary>
@@ -48,7 +38,7 @@ internal static class SimpleDmtpRpcExtension
     /// <returns></returns>
     public static ISimpleDmtpRpcActor GetSimpleDmtpRpcActor(this IDmtpActor smtpActor)
     {
-        return smtpActor.GetValue(SimpleDmtpRpcActorProperty);
+        return smtpActor.GetActor<SimpleDmtpRpcActor>();
     }
 
     /// <summary>
@@ -65,15 +55,5 @@ internal static class SimpleDmtpRpcExtension
             throw new ArgumentNullException(nameof(smtpRpcActor), "SimpleRpcAcotr为空，请检查是否已启用UseSimpleDmtpRpc");
         }
         return smtpRpcActor;
-    }
-
-    /// <summary>
-    /// 向<see cref="DmtpActor"/>中设置<see cref="ISimpleDmtpRpcActor"/>
-    /// </summary>
-    /// <param name="smtpActor"></param>
-    /// <param name="smtpRpcActor"></param>
-    internal static void SetSimpleDmtpRpcActor(this IDmtpActor smtpActor, ISimpleDmtpRpcActor smtpRpcActor)
-    {
-        smtpActor.SetValue(SimpleDmtpRpcActorProperty, smtpRpcActor);
     }
 }

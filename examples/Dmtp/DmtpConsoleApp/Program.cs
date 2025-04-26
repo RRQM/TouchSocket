@@ -133,7 +133,7 @@ internal class Program
         //将json转为utf-8编码。
         var jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
@@ -151,7 +151,7 @@ internal class Program
         json = "{\"Sign\":2,\"Route\":false,\"SourceId\":null,\"TargetId\":null}";
         jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock())
+        using (var byteBlock = new ByteBlock(1024*64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));

@@ -141,7 +141,7 @@ internal class MyRequestInfo : IFixedHeaderRequestInfo
 
     public byte[] PackageAsBytes()
     {
-        using var byteBlock = new ByteBlock();
+        using var byteBlock = new ByteBlock(1024*64);
         this.Package(byteBlock);
         return byteBlock.ToArray();
     }

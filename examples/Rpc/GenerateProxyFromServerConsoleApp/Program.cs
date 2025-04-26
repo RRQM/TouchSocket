@@ -24,7 +24,7 @@ internal class Program
     }
 }
 
-internal partial class MyRpcClass : RpcServer
+internal partial class MyRpcClass : SingletonRpcServer
 {
     public int Add(int a, int b)
     {

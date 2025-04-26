@@ -119,7 +119,7 @@ internal class Program
 }
 
 [CustomResponse]
-public partial class ApiServer : RpcServer
+public partial class ApiServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 
@@ -269,7 +269,7 @@ public partial class ApiServer : RpcServer
     }
 }
 
-public class MyApiServer : RpcServer
+public class MyApiServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 
@@ -284,33 +284,37 @@ public class MyApiServer : RpcServer
     {
         if (callContext.Caller is HttpSessionClient sessionClient)
         {
-            if (await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext))
+            var result = await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext);
+            if (!result.IsSuccess)
             {
-                this.m_logger.Info("WS通过WebApi连接");
-                var webSocket = sessionClient.WebSocket;
+                Console.WriteLine(result.Message);
+                return;
+            }
 
-                webSocket.AllowAsyncRead = true;
+            this.m_logger.Info("WS通过WebApi连接");
+            var webSocket = sessionClient.WebSocket;
 
-                while (true)
+            webSocket.AllowAsyncRead = true;
+
+            while (true)
+            {
+                using (var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
-                    using (var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                    using (var receiveResult = await webSocket.ReadAsync(tokenSource.Token))
                     {
-                        using (var receiveResult = await webSocket.ReadAsync(tokenSource.Token))
+                        if (receiveResult.IsCompleted)
                         {
-                            if (receiveResult.IsCompleted)
-                            {
-                                //webSocket已断开
-                                return;
-                            }
-
-                            //webSocket数据帧
-                            var dataFrame = receiveResult.DataFrame;
-
-                            //此处可以处理数据
+                            //webSocket已断开
+                            return;
                         }
-                    }
 
+                        //webSocket数据帧
+                        var dataFrame = receiveResult.DataFrame;
+
+                        //此处可以处理数据
+                    }
                 }
+
             }
         }
     }

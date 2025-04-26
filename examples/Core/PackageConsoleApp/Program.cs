@@ -37,7 +37,7 @@ internal class Program
             { 2,new MyClassModel(){ P1=DateTime.Now} }
         };
 
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
             try
             {
                 myClass.Package(ref byteBlock);//打包，相当于序列化
@@ -69,7 +69,7 @@ internal class Program
             { 2,new MyClassModel(){ P1=DateTime.Now} }
         };
 
-            var byteBlock = new ByteBlock();
+            var byteBlock = new ByteBlock(1024*64);
 
             try
             {

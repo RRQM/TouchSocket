@@ -92,7 +92,7 @@ internal class Program
     }
 }
 
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [EnableRateLimiting("FixedWindow")]
     [Description("登录")]//服务描述，在生成代理时，会变成注释。

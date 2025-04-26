@@ -18,7 +18,7 @@ namespace WebApiConsoleApp
             {
                 a.AddRpcStore(store =>
                 {
-                    store.RegisterServer<ApiServer>();//×¢²á·şÎñ
+                    store.RegisterServer<ApiServer>();//æ³¨å†ŒæœåŠ¡
                 });
 
                 a.AddAspNetCoreLogger();
@@ -47,16 +47,16 @@ namespace WebApiConsoleApp
                     //a.UseHttpStaticPage()
                     //.SetNavigateAction(request =>
                     //{
-                    //    //´Ë´¦¿ÉÒÔÉèÖÃÖØ¶¨Ïò
+                    //    //æ­¤å¤„å¯ä»¥è®¾ç½®é‡å®šå‘
                     //    return request.RelativeURL;
                     //})
                     //.SetResponseAction(response =>
                     //{
-                    //    //¿ÉÒÔÉèÖÃÏìÓ¦Í·
+                    //    //å¯ä»¥è®¾ç½®å“åº”å¤´
                     //})
-                    //.AddFolder("api/");//Ìí¼Ó¾²Ì¬Ò³ÃæÎÄ¼ş¼Ğ£¬¿ÉÊ¹ÓÃ http://127.0.0.1:7789/index.html ·ÃÎÊ¾²Ì¬ÍøÒ³
+                    //.AddFolder("api/");//æ·»åŠ é™æ€é¡µé¢æ–‡ä»¶å¤¹ï¼Œå¯ä½¿ç”¨ http://127.0.0.1:7789/index.html è®¿é—®é™æ€ç½‘é¡µ
 
-                    ////´Ë²å¼şÊÇhttpµÄ¶µµ×²å¼ş£¬Ó¦¸Ã×îºóÌí¼Ó¡£×÷ÓÃÊÇµ±ËùÓĞÂ·ÓÉ²»Æ¥ÅäÊ±·µ»Ø404.ÇÒÄÚ²¿Ò²»á´¦ÀíOptionÇëÇó¡£¿ÉÒÔ¸üºÃµÄ´¦ÀíÀ´×Ôä¯ÀÀÆ÷µÄ¿çÓòÌ½²â¡£
+                    ////æ­¤æ’ä»¶æ˜¯httpçš„å…œåº•æ’ä»¶ï¼Œåº”è¯¥æœ€åæ·»åŠ ã€‚ä½œç”¨æ˜¯å½“æ‰€æœ‰è·¯ç”±ä¸åŒ¹é…æ—¶è¿”å›404.ä¸”å†…éƒ¨ä¹Ÿä¼šå¤„ç†Optionè¯·æ±‚ã€‚å¯ä»¥æ›´å¥½çš„å¤„ç†æ¥è‡ªæµè§ˆå™¨çš„è·¨åŸŸæ¢æµ‹ã€‚
                     //a.UseDefaultHttpServicePlugin();
                 });
             });
@@ -74,7 +74,7 @@ namespace WebApiConsoleApp
 
     }
 
-    public partial class ApiServer : RpcServer
+    public partial class ApiServer : SingletonRpcServer
     {
         private readonly ILog m_logger;
 
@@ -83,8 +83,8 @@ namespace WebApiConsoleApp
             this.m_logger = logger;
         }
 
-        [Router("[api]/[action]ab")]//´ËÂ·ÓÉ»áÒÔ"/Server/Sumab"ÊµÏÖ
-        [Router("[api]/[action]")]//´ËÂ·ÓÉ»áÒÔ"/Server/Sum"ÊµÏÖ
+        [Router("[api]/[action]ab")]//æ­¤è·¯ç”±ä¼šä»¥"/Server/Sumab"å®ç°
+        [Router("[api]/[action]")]//æ­¤è·¯ç”±ä¼šä»¥"/Server/Sum"å®ç°
         [WebApi(Method = HttpMethodType.Get)]
         public int Sum(int a, int b)
         {
