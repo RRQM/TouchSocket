@@ -595,7 +595,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 }
 
                 // 使用SystemBinary格式进行反序列化
-                using (var block = byteBlock.ReadByteBlock())
+                using (var block = byteBlock.ReadByteBlock(1024*64))
                 {
                     // 将字节块转换为流并进行反序列化
                     return SerializeConvert.BinaryDeserialize(block.AsStream());

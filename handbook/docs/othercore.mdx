@@ -60,7 +60,7 @@ long id=generator.NextID();
 byte[] data = new byte[1024];
 new Random().NextBytes(data);
 
-using (ByteBlock byteBlock=new ByteBlock())
+using (ByteBlock byteBlock=new ByteBlock(1024*64))
 {
     GZip.Compress(byteBlock,data,0,data.Length);//压缩
     var decompressData2 = GZip.Decompress(byteBlock.ToArray());//解压

@@ -108,7 +108,7 @@ var json = @"{""Token"":""Dmtp"",""Metadata"":{""a"":""a""},""Id"":null,""Sign""
 //将json转为utf-8编码。
 var jsonBytes = Encoding.UTF8.GetBytes(json);
 
-using (var byteBlock = new ByteBlock())
+using (var byteBlock = new ByteBlock(1024*64))
 {
     //按照Head+Flags+Length+Data的格式。
     byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
