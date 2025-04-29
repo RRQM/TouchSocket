@@ -9,6 +9,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\WebApi\WebApiParameterInfo.cs" Link="Common\WebApiParameterInfo.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

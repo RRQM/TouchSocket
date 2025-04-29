@@ -20,5 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalReceiverResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalSocketIoCore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ThrowHelperSockets.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WebApi\WebApiParameterInfo.cs" />
   </ItemGroup>
 </Project>

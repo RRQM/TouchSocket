@@ -21,18 +21,18 @@ internal class WebApiParameterInfo
     {
         this.IsFromBody = parameter.ParameterInfo.IsDefined(typeof(FromBodyAttribute), false);
 
-        if (parameter.ParameterInfo.GetCustomAttribute(typeof(FromQueryAttribute), false) is FromQueryAttribute fromQueryAttribute)
+        if (parameter.ParameterInfo.GetCustomAttribute<FromQueryAttribute>(false) is FromQueryAttribute fromQueryAttribute)
         {
             this.IsFromQuery = true;
             this.FromQueryName = fromQueryAttribute.Name ?? parameter.Name;
         }
-        if (parameter.ParameterInfo.GetCustomAttribute(typeof(FromFormAttribute), false) is FromFormAttribute fromFormAttribute)
+        if (parameter.ParameterInfo.GetCustomAttribute<FromFormAttribute>( false) is FromFormAttribute fromFormAttribute)
         {
             this.IsFromForm = true;
             this.FromFormName = fromFormAttribute.Name ?? parameter.Name;
         }
 
-        if (parameter.ParameterInfo.GetCustomAttribute(typeof(FromHeaderAttribute), false) is FromHeaderAttribute fromHeaderAttribute)
+        if (parameter.ParameterInfo.GetCustomAttribute<FromHeaderAttribute>(false) is FromHeaderAttribute fromHeaderAttribute)
         {
             this.IsFromHeader = true;
             this.FromHeaderName = fromHeaderAttribute.Name ?? parameter.Name;

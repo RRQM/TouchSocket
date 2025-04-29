@@ -57,7 +57,6 @@ public class HttpResponse : HttpBase
         this.m_httpSessionClient = httpSessionClient;
         this.ProtocolVersion = request.ProtocolVersion;
         this.Protocols = request.Protocols;
-        this.KeepAlive = request.KeepAlive;
     }
 
     #region 属性

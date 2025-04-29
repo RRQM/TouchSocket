@@ -76,6 +76,45 @@ public class HttpRequest : HttpBase
         }
     }
 
+    /// <summary>
+    /// 保持连接。
+    /// <para>
+    /// 一般的，当是http1.1时，如果没有显式的Connection: close，即返回true。当是http1.0时，如果没有显式的Connection: Keep-Alive，即返回false。
+    /// </para>
+    /// </summary>
+    public bool KeepAlive
+    {
+        get
+        {
+            var keepAlive = this.Headers.Get(HttpHeaders.Connection);
+            return this.ProtocolVersion == "1.0"
+                ? !keepAlive.IsNullOrEmpty() && keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
+                : keepAlive.IsNullOrEmpty() || keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            if (this.ProtocolVersion == "1.0")
+            {
+                if (value)
+                {
+                    this.Headers.Add(HttpHeaders.Connection, "Keep-Alive");
+                }
+                else
+                {
+                    this.Headers.Add(HttpHeaders.Connection, "close");
+                }
+            }
+            else
+            {
+                if (!value)
+                {
+                    this.Headers.Add(HttpHeaders.Connection, "close");
+                }
+            }
+        }
+    }
+
+
     /// <inheritdoc/>
     public override bool IsServer => this.m_isServer;
 

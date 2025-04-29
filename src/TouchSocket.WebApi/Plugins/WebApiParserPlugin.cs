@@ -297,7 +297,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
         if (!httpContext.Request.KeepAlive)
         {
-            await client.ShutdownAsync(SocketShutdown.Both);
+            await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }
