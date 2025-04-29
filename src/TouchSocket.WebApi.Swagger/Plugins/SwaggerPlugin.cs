@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -87,7 +88,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                     }
                     catch (Exception ex)
                     {
-                        this.m_logger?.Debug(this, ex);
+                        this.m_logger?.Exception(this, ex);
                     }
                 }
                 var key = prefix == "/" ? $"/{name}" : $"{prefix}/{name}";
@@ -282,22 +283,76 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
 
         var openApiParameters = new List<OpenApiParameter>();
 
-        var parameters = rpcMethod.GetNormalParameters().ToList();
+        var parameters = GetWebApiParameter(rpcMethod);
         if (parameters.Count > 0)
         {
-            var last = parameters.LastOrDefault();
-            if (!(last.Type.IsPrimitive || last.Type == typeof(string)))
+            #region 简单参数
+            var simpleParameters = parameters.Where(a =>
             {
-                parameters.Remove(last);
-
-                if (!this.ParseDataTypes(last.Type).IsPrimitive())
+                if (!this.ParseDataTypes(a.Parameter.Type).IsPrimitive())
                 {
-                    this.AddSchemaType(last.Type, schemaTypeList);
+                    return false;
+                }
+                if (a.IsFromBody || a.IsFromForm)
+                {
+                    return false;
+                }
+
+                return true;
+            });
+            foreach (var parameter in simpleParameters)
+            {
+                var openApiParameter = this.GetParameter(parameter.Parameter.ParameterInfo);
+                this.AddSchemaType(parameter.Parameter.Type, schemaTypeList);
+                openApiParameters.Add(openApiParameter);
+            }
+            #endregion
+
+            //优先form
+            var forms = parameters.Where(a => a.IsFromForm);
+            if (forms.Any())
+            {
+                //处理form
+
+                var body = new OpenApiRequestBody();
+                body.Content = new Dictionary<string, OpenApiContent>();
+                var content = new OpenApiContent();
+
+                Dictionary<string, OpenApiProperty> properties = new Dictionary<string, OpenApiProperty>();
+
+                foreach (var item in forms)
+                {
+                    var openApiProperty = this.CreateProperty(item.Parameter.Type, item.Parameter.ParameterInfo.GetDescription());
+                    properties.Add(GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
+                }
+
+                content.Schema = new OpenApiSchema()
+                {
+                    Type = OpenApiDataTypes.Object,
+                    Properties = properties
+                };
+                body.Content.Add("multipart/form-data", content);
+                openApiPathValue.RequestBody = body;
+            }
+            else
+            {
+                var last = parameters.Where(a => a.IsFromBody).FirstOrDefault();
+                if (last is null)
+                {
+                    if (!parameters.Last().Parameter.Type.IsPrimitive())
+                    {
+                        last = parameters.Last();
+                    }
+                }
+
+                if (last is not null)
+                {
+                    this.AddSchemaType(last.Parameter.Type, schemaTypeList);
 
                     var body = new OpenApiRequestBody();
                     body.Content = new Dictionary<string, OpenApiContent>();
                     var content = new OpenApiContent();
-                    content.Schema = this.CreateSchema(last.Type);
+                    content.Schema = this.CreateSchema(last.Parameter.Type);
                     body.Content.Add("application/json", content);
                     body.Content.Add("text/xml", content);
                     body.Content.Add("text/plain", content);
@@ -307,16 +362,6 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                 }
             }
 
-            foreach (var parameter in parameters)
-            {
-                if (this.ParseDataTypes(parameter.Type).IsPrimitive())
-                {
-                    var openApiParameter = this.GetParameter(parameter.ParameterInfo);
-                    openApiParameter.In = "query";
-                    this.AddSchemaType(parameter.Type, schemaTypeList);
-                    openApiParameters.Add(openApiParameter);
-                }
-            }
         }
 
         openApiPathValue.Parameters = openApiParameters.Count > 0 ? openApiParameters : default;
@@ -325,6 +370,12 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
 
         openApiPath.Add(httpMethod.ToString().ToLower(), openApiPathValue);
         paths.Add(url, openApiPath);
+    }
+
+    private List<WebApiParameterInfo> GetWebApiParameter(RpcMethod rpcMethod)
+    {
+        return rpcMethod.GetNormalParameters()
+            .Select(a => new WebApiParameterInfo(a)).ToList();
     }
 
     private void BuildResponse(RpcMethod rpcMethod, in OpenApiPathValue openApiPathValue, in List<Type> schemaTypeList)
@@ -496,22 +547,38 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         return components;
     }
 
-    private string GetIn(Type type)
+    private string GetIn(ParameterInfo parameter)
     {
-        if (type.IsPrimitive || type == typeof(string))
+        var type = parameter.ParameterType;
+        if (!type.IsPrimitive())
+        {
+            return default;
+        }
+
+        if (parameter.IsDefined(typeof(FromHeaderAttribute)))
+        {
+            return "header";
+        }
+        else if (parameter.IsDefined(typeof(FromBodyAttribute)))
+        {
+            return "body";
+        }
+        else if (parameter.IsDefined(typeof(FromFormAttribute)))
+        {
+            return "formData";
+        }
+        else
         {
             return "query";
         }
-
-        return null;
     }
 
     private OpenApiParameter GetParameter(ParameterInfo parameterInfo)
     {
         var openApiParameter = new OpenApiParameter();
-        openApiParameter.Name = parameterInfo.Name;
+        openApiParameter.Name = this.GetOpenApiParameterName(parameterInfo);
         openApiParameter.Description = parameterInfo.GetDescription();
-
+        openApiParameter.In = this.GetIn(parameterInfo);
         var openApiSchema = this.CreateSchema(parameterInfo.ParameterType);
 
         openApiParameter.Schema = openApiSchema;
@@ -519,40 +586,36 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         return openApiParameter;
     }
 
+    private string GetOpenApiParameterName(ParameterInfo parameter)
+    {
+        var attributes = parameter.GetCustomAttributes();
+
+        foreach (var item in attributes)
+        {
+            if (item is WebApiNameAttribute attribute)
+            {
+                if (attribute.Name.HasValue())
+                {
+                    return attribute.Name;
+                }
+            }
+        }
+
+        return parameter.Name;
+    }
+
     private string GetSchemaFormat(Type type)
     {
-        switch (Type.GetTypeCode(type))
+        return Type.GetTypeCode(type) switch
         {
-            case TypeCode.SByte:
-            case TypeCode.Byte:
-            case TypeCode.Int16:
-            case TypeCode.UInt16:
-            case TypeCode.Int32:
-            case TypeCode.UInt32:
-                return "int32";
-
-            case TypeCode.Int64:
-            case TypeCode.UInt64:
-                return "int64";
-
-            case TypeCode.Single:
-                return "float";
-
-            case TypeCode.Double:
-            case TypeCode.Decimal:
-                return "double";
-
-            case TypeCode.DateTime:
-                return "date-time";
-
-            case TypeCode.Boolean:
-            case TypeCode.Char:
-            case TypeCode.String:
-                return default;
-
-            default:
-                return "object";
-        }
+            TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or TypeCode.UInt16 or TypeCode.Int32 or TypeCode.UInt32 => "int32",
+            TypeCode.Int64 or TypeCode.UInt64 => "int64",
+            TypeCode.Single => "float",
+            TypeCode.Double or TypeCode.Decimal => "double",
+            TypeCode.DateTime => "date-time",
+            TypeCode.Boolean or TypeCode.Char or TypeCode.String => default,
+            _ => "object",
+        };
     }
 
     private string GetSchemaName(Type type)
@@ -659,16 +722,16 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
     {
         var context = e.Context;
         var request = context.Request;
-        //var response = context.Response;
+        var response = context.Response;
 
         if (this.m_swagger.TryGetValue(request.RelativeURL, out var bytes))
         {
             e.Handled = true;
-            context.Response
+            response
                 .SetStatus()
                 .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                 .SetContent(bytes);
-            await context.Response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);

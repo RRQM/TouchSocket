@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if !NET45
+#if NET45
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -43,7 +43,7 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     /// <summary>
     /// 不要设为readonly
     /// </summary>
-    private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
+    private Lock m_lock = new Lock();
     private readonly Dictionary<int, TWaitData> m_waitDic = new();
     private readonly Dictionary<int, TWaitDataAsync> m_waitDicAsync = new();
     private readonly Queue<TWaitData> m_waitQueue = new();
@@ -61,10 +61,8 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     /// <inheritdoc/>
     public void CancelAll()
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             foreach (var item in this.m_waitDic.Values)
             {
                 item.Cancel();
@@ -74,22 +72,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
                 item.Cancel();
             }
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public void Destroy(TWaitData waitData)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             if (waitData.WaitResult == null)
             {
                 return;
@@ -105,23 +94,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
                 this.m_waitQueue.Enqueue(waitData);
             }
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public void Destroy(TWaitDataAsync waitData)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
-
             if (waitData.WaitResult == null)
             {
                 return;
@@ -137,22 +116,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
                 this.m_waitQueueAsync.Enqueue(waitData);
             }
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public TWaitData GetWaitData(T result, bool autoSign = true)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
                 if (autoSign)
@@ -177,22 +147,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             this.m_waitDic.Add(result.Sign, waitData);
             return waitData;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public TWaitData GetWaitData(out int sign)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从同步等待队列中取出一个等待数据对象
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
@@ -215,22 +176,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             this.m_waitDic.Add(sign, waitData);
             return waitData;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public TWaitDataAsync GetWaitDataAsync(T result, bool autoSign = true)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
@@ -259,22 +211,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             this.m_waitDicAsync.Add(result.Sign, waitData);
             return waitData;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public TWaitDataAsync GetWaitDataAsync(out int sign)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
@@ -297,22 +240,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
             this.m_waitDicAsync.Add(sign, waitData);
             return waitData;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public bool SetRun(int sign)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
@@ -329,22 +263,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
 
             return false;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public bool SetRun(int sign, T waitResult)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
@@ -360,22 +285,13 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
 
             return false;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public bool SetRun(T waitResult)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
             {
@@ -392,48 +308,23 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
 
             return false;
         }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
     }
 
     /// <inheritdoc/>
     public bool TryGetData(int sign, out TWaitData waitData)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             return this.m_waitDic.TryGetValue(sign, out waitData);
-        }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
         }
     }
 
     /// <inheritdoc/>
     public bool TryGetDataAsync(int sign, out TWaitDataAsync waitDataAsync)
     {
-        var lockTaken = false;
-        try
+        lock (this.m_lock)
         {
-            this.m_lock.Enter(ref lockTaken);
             return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
-        }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
         }
     }
 
@@ -442,10 +333,8 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     {
         if (disposing)
         {
-            var lockTaken = false;
-            try
+            lock (this.m_lock)
             {
-                this.m_lock.Enter(ref lockTaken);
                 foreach (var item in this.m_waitDic.Values)
                 {
                     item.SafeDispose();
@@ -457,13 +346,6 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
                 this.m_waitDic.Clear();
 
                 this.m_waitQueue.Clear();
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
             }
         }
 
