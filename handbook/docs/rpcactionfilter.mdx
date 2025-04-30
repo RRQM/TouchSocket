@@ -18,8 +18,7 @@ Rpc服务在被调用时，会触发一系列的Rpc筛选器AOP**IRpcActionFilte
 |  方法名   | 触发时机  |功能|
 |  ----  | ----  |----  |
 | ExecutingAsync  | 在执行Rpc之前 |当invokeResult的InvokeStatus不为InvokeStatus.Ready。则不会执行Rpc。同时，当InvokeStatus为Success。会直接返回结果|
-| ExecutExceptionAsync  | 执行Rpc遇见异常 |如果修改invokeResult的InvokeStatus，或Result。则会影响Rpc最终结果|
-| ExecutedAsync  | 成功执行Rpc后 |如果修改invokeResult的InvokeStatus，或Result。则会影响Rpc最终结果|
+| ExecutedAsync  | 在执行Rpc后 |如果修改invokeResult的InvokeStatus，或Result。则会影响Rpc最终结果|
 
 ## 三、使用
 
@@ -28,37 +27,23 @@ Rpc服务在被调用时，会触发一系列的Rpc筛选器AOP**IRpcActionFilte
 ```csharp showLineNumbers
 public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
 {
-    public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    public override async Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
     {
-        //invokeResult = new InvokeResult()
-        //{
-        //    Status = InvokeStatus.UnEnable,
-        //    Message = "不允许执行",
-        //    Result = default
-        //};
         if (callContext.Caller is ITcpSessionClient client)
         {
             client.Logger.Info($"即将执行Rpc-{callContext.RpcMethod.Name}");
         }
-        return Task.FromResult(invokeResult);
+        return await Task.FromResult(invokeResult);
     }
 
-    public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
     {
         if (callContext.Caller is ITcpSessionClient client)
         {
-            client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}完成，状态={invokeResult.Status}");
+            client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}结束，状态={invokeResult.Status}");
         }
-        return Task.FromResult(invokeResult);
-    }
-
-    public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
-    {
-        if (callContext.Caller is ITcpSessionClient client)
-        {
-            client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}异常，信息={invokeResult.Message}");
-        }
-        return Task.FromResult(invokeResult);
+        
+        return  await base.ExecutedAsync(callContext, parameters, invokeResult, exception);
     }
 }
 ```
