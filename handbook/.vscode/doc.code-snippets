@@ -122,6 +122,13 @@
 		],
 		"description": "importHighlight"
 	},
+	"importBilibiliCard": {
+		"prefix": "importBilibiliCard",
+		"body": [
+			"import BilibiliCard from '@site/src/components/BilibiliCard.js';"
+		],
+		"description": "importBilibiliCard"
+	},
 	"importTag": {
 		"prefix": "importTag",
 		"body": [
