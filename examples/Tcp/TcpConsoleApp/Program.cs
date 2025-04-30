@@ -83,7 +83,7 @@ internal class Program
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseTcpReconnection()
+                    a.UseTcpReconnection<TcpClient>()
                     .UsePolling(TimeSpan.FromSeconds(1));
                 })
                 .ConfigureContainer(a =>

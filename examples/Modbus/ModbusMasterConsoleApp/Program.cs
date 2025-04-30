@@ -93,7 +93,12 @@ internal class Program
     public static async Task<IModbusMaster> GetModbusTcpMasterAsync()
     {
         var client = new ModbusTcpMaster();
-
+        await client.SetupAsync(new TouchSocketConfig()
+             .ConfigurePlugins(a =>
+             {
+                 a.UseModbusTcpMasterReconnectionPlugin()
+                        .UsePolling(TimeSpan.FromSeconds(1));
+             }));
         await client.ConnectAsync("127.0.0.1:502");
         return client;
     }
@@ -162,4 +167,54 @@ internal class MyClass
 {
     public int P1 { get; set; }
     public int P2 { get; set; }
+}
+
+public static class MasterReconnectionPluginExtension
+{
+    public static ReconnectionPlugin<IModbusTcpMaster> UseModbusTcpMasterReconnectionPlugin(this IPluginManager pluginManager)
+    {
+        ModbusTcpMasterReconnectionPlugin modbusTcpMasterReconnectionPlugin = new ModbusTcpMasterReconnectionPlugin();
+        pluginManager.Add(modbusTcpMasterReconnectionPlugin);
+        return modbusTcpMasterReconnectionPlugin;
+    }
+}
+
+internal sealed class ModbusTcpMasterReconnectionPlugin : ReconnectionPlugin<IModbusTcpMaster>, ITcpClosedPlugin
+{
+    public override Func<IModbusTcpMaster, int, Task<bool?>> ActionForCheck { get; set; }
+
+    public ModbusTcpMasterReconnectionPlugin()
+    {
+        this.ActionForCheck = (c, i) => Task.FromResult<bool?>(c.Online);
+    }
+
+    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+    {
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (client is not IModbusTcpMaster tClient)
+        {
+            return;
+        }
+
+        if (e.Manual)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (this.DisposedValue)
+                {
+                    return;
+                }
+                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    return;
+                }
+            }
+        });
+    }
 }
