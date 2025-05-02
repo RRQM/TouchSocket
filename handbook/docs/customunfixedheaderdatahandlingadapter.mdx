@@ -3,6 +3,8 @@ id: customunfixedheaderdatahandlingadapter
 title: 模板解析“非固定包头”数据适配器
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ### 定义
 
 命名空间：TouchSocket.Core <br/>
@@ -12,6 +14,7 @@ title: 模板解析“非固定包头”数据适配器
 
 有时候，我们需要解析的数据的包头是不定的，例如：`HTTP`数据格式，其数据头和数据体由`\r\n`隔开，而数据头又因为请求者的请求信息的不同，头部数据量不固定，而数据体的长度，也是由数据头的`ContentLength`的值显式指定的，所以，可以考虑使用`CustomUnfixedHeaderDataHandlingAdapter`解析。
 
+<BilibiliCard title="用户适配器之非固定包头模板适配器" link="https://www.bilibili.com/cheese/play/ep1522756" isPro="true"/>
 
 ## 二、特点
 

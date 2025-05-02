@@ -5,6 +5,8 @@ title: 创建TcpService
 
 import Tag from "@site/src/components/Tag.js";
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 ### 定义
 
@@ -69,6 +71,8 @@ flowchart TD;
 一般情况下，`TcpService`在`Setup`时，首先会创建一个`Scoped`区域，用于整个`TcpService`的生命周期。在`TcpService`释放（`Dispose`）时释放。
 
 然后，当有新客户端连接后，会为每个`SessionClient`的派生类实例也创建一个`Scoped`区域，用于`SessionClient`的生命周期。当连接断开时，会释放此区域。
+
+<BilibiliCard title="TCP服务器线程模型解析" link="https://www.bilibili.com/cheese/play/ep1510437" isPro="true"/>
 
 ## 五、可配置项
 
@@ -168,6 +172,8 @@ Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运
 
 :::  
 
+<BilibiliCard title="创建Tcp服务器" link="https://www.bilibili.com/cheese/play/ep1501990" isPro="true"/>
+
 ### 7.2 泛型创建
 
 通过泛型创建服务器，可以实现很多有意思，且能**重写**一些有用的功能。下面就演示，如何通过泛型创建服务器。
@@ -249,8 +255,6 @@ await service.StartAsync();//启动
 
 ## 八、配置监听
 
-<BilibiliCard title="服务器监听配置" isPro="true" link="https://www.bilibili.com/cheese/play/ep1541394"/>
-
 所有配置监听的项，都是从`IPHost`类创建而来。
 
 `IPHost`支持以下格式创建：
@@ -258,6 +262,8 @@ await service.StartAsync();//启动
 - 端口：直接按`int`入参，该操作一般在监听`Ipv4`时使用。
 - IPv4：按"127.0.0.1:7789"入参。
 - IPv6：按"[\*::\*]:7789"入参。
+
+<BilibiliCard title="服务器监听配置" isPro="true" link="https://www.bilibili.com/cheese/play/ep1541394"/>
 
 ### 8.1 Config直接配置
 
@@ -334,12 +340,16 @@ foreach (var item in service.Monitors)
     service.RemoveListen(item);//在Service运行时，可以调用，直接移除现有监听
 }
 ```
+<BilibiliCard title="服务器动态监听" link="https://www.bilibili.com/cheese/play/ep1541399" isPro="true"/>
+
 
 ## 九、接收数据
 
 在TcpService中，接收数据的方式有很多种。多种方式可以组合使用。
 
 ### 9.1 Received委托处理
+
+<BilibiliCard title="订阅事件完成基本通信" link="https://www.bilibili.com/cheese/play/ep1502002" isPro="true"/>
 
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
@@ -368,6 +378,15 @@ await service.StartAsync();//启动
 
 ### 9.3 插件处理 <Tag>推荐</Tag>
 
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "文档",value: "tab1"},
+        { label: "视频", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
@@ -415,6 +434,21 @@ await service.StartAsync();
 当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Length)。而不是ByteBlock.Buffer.Length
 
 :::  
+
+
+</TabItem>
+<TabItem value="tab2">
+<BilibiliCard title="使用插件接收消息" link="https://www.bilibili.com/cheese/play/ep1504559" isPro="true"/>
+<BilibiliCard title="注册插件的三种方式" link="https://www.bilibili.com/cheese/play/ep1504563" isPro="true"/>
+<BilibiliCard title="插件的封装性和扩展性详解" link="https://www.bilibili.com/cheese/play/ep1504564" isPro="true"/>
+<BilibiliCard title="插件的链式调用机制详解(1)" link="https://www.bilibili.com/cheese/play/ep1504565" isPro="true"/>
+<BilibiliCard title="插件的链式调用机制详解(2)" link="https://www.bilibili.com/cheese/play/ep1504567" isPro="true"/>
+<BilibiliCard title="在插件中获取IOC服务" link="https://www.bilibili.com/cheese/play/ep1504569" isPro="true"/>
+<BilibiliCard title="插件的卸载" link="https://www.bilibili.com/cheese/play/ep1504575" isPro="true"/>
+</TabItem>
+</Tabs>
+
+
 
 
 ### 9.4 异步阻塞接收 <Tag>推荐</Tag>

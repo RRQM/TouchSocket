@@ -150,6 +150,13 @@
 		],
 		"description": "CardLink"
 	},
+	"BilibiliCard": {
+		"prefix": "BilibiliCard",
+		"body": [
+			"<BilibiliCard title=\"$0\" link=\"$1\" isPro=\"true\"/>"
+		],
+		"description": "BilibiliCard"
+	},
 	"Tag": {
 		"prefix": "Tag",
 		"body": [

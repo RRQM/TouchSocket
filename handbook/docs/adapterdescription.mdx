@@ -3,6 +3,8 @@ id: adapterdescription
 title: 介绍及使用
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ### 定义
 
 命名空间：TouchSocket.Core <br/>
@@ -14,10 +16,13 @@ title: 介绍及使用
 
 而解析可以分为两种，第一种是解决数据的黏、分包问题，第二种是将收到的数据解析为数据对象。
 
+<BilibiliCard title="数据处理适配器的概念" link="https://www.bilibili.com/cheese/play/ep1510432" isPro="true"/>
 
 ## 二、为什么需要适配器
 
 适配器的作用就是解析数据，在TouchSocket系中，数据可分为**流式单线程**和**非流式多线程**两种。其中**流式单线程**以`Tcp`，`Namedpipe`、`SerialPort`等为代表。**非流式多线程**则以`Udp`为代表。接下来，我们会对其进行详细介绍。
+
+<BilibiliCard title="适配器的定义和重要性" link="https://www.bilibili.com/cheese/play/ep1510457" isPro="true"/>
 
 ### 2.1 流式单线程
 
@@ -50,6 +55,8 @@ title: 介绍及使用
 **那么，这就是`字符区间`的思路。**
 
 一般来说，99.5%的通讯协议，都是以上四种思路，或者其混合体。只要我们了解这些思路，那么就能很好的解决粘包、半包问题，**而适配器的时候，则会大大简化这个操作**。
+
+<BilibiliCard title="TCP粘包现象及其原因分析" link="https://www.bilibili.com/cheese/play/ep1510458" isPro="true"/>
 
 ### 2.2 非流式多线程
 
