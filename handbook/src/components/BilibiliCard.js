@@ -25,7 +25,7 @@ const BilibiliCard = ({ title, link, isPro }) => {
                 </div>
                 {isPro && (
                     <div className="pro-badge">
-                        <span>付费</span>
+                        <span>课程</span>
                     </div>
                 )}
             </a>

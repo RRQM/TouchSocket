@@ -86,6 +86,8 @@ flowchart TD;
 #### SetGetDefaultNewId
 配置初始Id的分配策略。
 
+<BilibiliCard title="服务器设置Id生成策略" link="https://www.bilibili.com/cheese/play/ep1541404" isPro="true"/>
+
 #### SetListenIPHosts
 设置统一的监听IP和端口号组，可以一次性设置多个地址。 
 
@@ -98,20 +100,36 @@ flowchart TD;
 #### SetBacklogProperty
 Tcp半连接挂起连接队列的最大长度。默认为30 
 
+<BilibiliCard title="服务器设置半连接数量" link="https://www.bilibili.com/cheese/play/ep1541411" isPro="true"/>
+
 #### SetMaxCount
 最大可连接数，默认为10000 
+
+<BilibiliCard title="服务器最大连接数" link="https://www.bilibili.com/cheese/play/ep1541412" isPro="true"/>
 
 #### SetServiceSslOption
 Ssl配置，为Null时则不启用。 
 
+<BilibiliCard title="SSL加密设置" link="https://www.bilibili.com/cheese/play/ep1541413" isPro="true"/>
+
 #### UseNoDelay
 设置Socket的NoDelay属性，默认false。 
+
+<BilibiliCard title="配置NoDelay算法" link="https://www.bilibili.com/cheese/play/ep1541414" isPro="true"/>
 
 #### UseReuseAddress
 启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题。
 
-#### SetSendTimeout
-设置发送超时时间，默认0ms，即禁用该配置。
+<BilibiliCard title="服务器端口复用" link="https://www.bilibili.com/cheese/play/ep1541415" isPro="true"/>
+<BilibiliCard title="复现服务器端口复用需求场景" link="https://www.bilibili.com/cheese/play/ep1541416" isPro="true"/>
+
+#### SetMaxBufferSize
+设置最大缓存容量，默认自动。
+
+#### SetMinBufferSize
+设置最小缓存容量，默认自动。
+
+<BilibiliCard title="最大(小)接收缓存池的设定场景" link="https://www.bilibili.com/cheese/play/ep1541425" isPro="true"/>
 
 </div>
 </details>
