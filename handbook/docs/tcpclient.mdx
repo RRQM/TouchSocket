@@ -4,6 +4,9 @@ title: 创建TcpClient
 ---
 
 import Tag from "@site/src/components/Tag.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 ### 定义
 
@@ -50,21 +53,38 @@ import Tag from "@site/src/components/Tag.js";
 客户端Ssl配置，为Null时则不启用。
 注意，当RemoteIPHost使用https、wss的域名时，该配置会使用系统默认配置生效。
 
+<BilibiliCard title="SSL加密设置" link="https://www.bilibili.com/cheese/play/ep1541413" isPro="true"/>
+
 #### SetKeepAliveValue
 为Socket设置的属性。
 注意：该配置仅在window平台生效。
+
+<BilibiliCard title="Tcp协议心跳设置(仅建议观看)" link="https://www.bilibili.com/cheese/play/ep1541421" isPro="true"/>
 
 #### SetBindIPHost
 绑定端口。
 - 在UdpSessionBase中表示本地监听地址
 - 在TcpClient中表示固定客户端端口号。
 
+<BilibiliCard title="客户端固定端口及重新连接问题建议" link="https://www.bilibili.com/cheese/play/ep1541435" isPro="true"/>
+
 
 #### UseNoDelay
 设置Socket的NoDelay属性，默认false。
+<BilibiliCard title="配置NoDelay算法" link="https://www.bilibili.com/cheese/play/ep1541414" isPro="true"/>
 
-#### SetSendTimeout
-设置发送超时时间，默认0ms，即禁用该配置。
+#### UseReuseAddress
+启用端口复用。该配置可在客户端在监听端口时，可以一定程度缓解端口来不及释放的问题。
+
+<BilibiliCard title="客户端端口复用场景详解" link="https://www.bilibili.com/cheese/play/ep1541418" isPro="true"/>
+
+#### SetMaxBufferSize
+设置最大缓存容量，默认自动。
+
+#### SetMinBufferSize
+设置最小缓存容量，默认自动。
+
+<BilibiliCard title="最大(小)接收缓存池的设定场景" link="https://www.bilibili.com/cheese/play/ep1541425" isPro="true"/>
 
 </div>
 </details>
@@ -121,6 +141,8 @@ if (result.IsSuccess())
 
 tcpClient.Logger.Info("客户端成功连接");
 ```
+
+<BilibiliCard title="创建Tcp客户端" link="https://www.bilibili.com/cheese/play/ep1501991" isPro="true"/>
 
 #### 6.2 继承实现
 
@@ -179,6 +201,17 @@ await tcpClient.ConnectAsync("127.0.0.1:7789");
 
 ### 7.2 插件处理 <Tag>推荐</Tag>
 
+
+
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "文档",value: "tab1"},
+        { label: "视频", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
@@ -227,6 +260,17 @@ await client.ConnectAsync();
 当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。
 
 :::  
+</TabItem>
+<TabItem value="tab2">
+<BilibiliCard title="使用插件接收消息" link="https://www.bilibili.com/cheese/play/ep1504559" isPro="true"/>
+<BilibiliCard title="注册插件的三种方式" link="https://www.bilibili.com/cheese/play/ep1504563" isPro="true"/>
+<BilibiliCard title="插件的封装性和扩展性详解" link="https://www.bilibili.com/cheese/play/ep1504564" isPro="true"/>
+<BilibiliCard title="插件的链式调用机制详解(1)" link="https://www.bilibili.com/cheese/play/ep1504565" isPro="true"/>
+<BilibiliCard title="插件的链式调用机制详解(2)" link="https://www.bilibili.com/cheese/play/ep1504567" isPro="true"/>
+<BilibiliCard title="在插件中获取IOC服务" link="https://www.bilibili.com/cheese/play/ep1504569" isPro="true"/>
+<BilibiliCard title="插件的卸载" link="https://www.bilibili.com/cheese/play/ep1504575" isPro="true"/>
+</TabItem>
+</Tabs>
 
 ### 7.3 异步阻塞接收 <Tag>推荐</Tag>
 
@@ -382,6 +426,8 @@ await tcpClient.ConnectAsync();//调用连接
 :::  
 
 
+<BilibiliCard title="客户端触发式断线重连" link="https://www.bilibili.com/cheese/play/ep1541437" isPro="true"/>
+
 ### 9.2 使用Polling轮询连接插件
 
 使用Polling断线重连，是一种无人值守的连接方式，它不要求首次连接。
@@ -407,6 +453,8 @@ await tcpClient.ConnectAsync();//调用连接
 UseReconnection插件，可以通过设置SetActionForCheck，自己规定检查活性的方法。默认情况下，只会检验Online属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
 
 :::  
+
+<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
 

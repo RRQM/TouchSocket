@@ -3,6 +3,8 @@ id: tcpintroduction
 title: Tcp入门基础
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ## 一、说明
 
 传输控制协议（TCP，Transmission Control Protocol）是一种面向连接的、可靠的、基于字节流的`传输层`通信协议。
@@ -15,6 +17,8 @@ title: Tcp入门基础
 4. 在网络状况不佳的时候尽量降低系统由于重传带来的带宽开销；
 5. 通信连接维护是面向通信的两个端点的，而不考虑中间网段和节点。
 
+<BilibiliCard title="Tcp协议基础概念说明" link="https://www.bilibili.com/cheese/play/ep1510375" isPro="true"/>
+
 ## 二、建立连接
 
 **TCP三次握手的过程如下：**
@@ -26,6 +30,8 @@ title: Tcp入门基础
 三次握手完成，TCP客户端和服务器端成功地建立连接，可以开始传输数据了。
 
 <img src={require('@site/static/img/docs/tcpintroduction-1.gif').default} width="500" />
+
+<BilibiliCard title="形象化的理解Tcp的三次握手过程" link="https://www.bilibili.com/cheese/play/ep1510376" isPro="true"/>
 
 ## 三、断开连接
 
@@ -56,6 +62,8 @@ FIN的接收也作为一个文件结束符（end-of-file）传递给接收端应
 
 <img src={require('@site/static/img/docs/tcpintroduction-2.gif').default} width="500" />
 
+<BilibiliCard title="形象化的理解Tcp四次挥手过程" link="https://www.bilibili.com/cheese/play/ep1510381" isPro="true"/>
+
 ## 四、发送
 
 当调用Send函数时，实际上在Socket内部会做以下事项：
@@ -76,4 +84,10 @@ FIN的接收也作为一个文件结束符（end-of-file）传递给接收端应
 调用完Send后，返回的字节数可能会小于需要发送的字节数，所以一般需要循环发送。但是在TouchSocket中，已经做了封装，所有调用Send的字节，都是完整数据发送。
 
 :::  
+
+<BilibiliCard title="Tcp的传输可靠性之包的序列号" link="https://www.bilibili.com/cheese/play/ep1510391" isPro="true"/>
+<BilibiliCard title="Tcp的传输可靠性之流量控制与拥塞控制机制" link="https://www.bilibili.com/cheese/play/ep1510393" isPro="true"/>
+<BilibiliCard title="Tcp的传输可靠性之数据校验与重传机制" link="https://www.bilibili.com/cheese/play/ep1510394" isPro="true"/>
+<BilibiliCard title="Tcp的传输可靠性之保活探测和定时器" link="https://www.bilibili.com/cheese/play/ep1510406" isPro="true"/>
+<BilibiliCard title="IP 地址、端口与 TCP 的协同关系" link="https://www.bilibili.com/cheese/play/ep1510407" isPro="true"/>
 

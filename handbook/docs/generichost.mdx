@@ -5,6 +5,7 @@ title: 通用主机
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -15,14 +16,15 @@ import TabItem from "@theme/TabItem";
 
 ## 一、说明
 
-Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host) 之后，可以通过Add的服务的形式创建`TouchSocket`的一些组件。如`TcpService`、`TcpClient`、`NamedPipeService`、`NamedPipeclient`等。
+`Hosting`通用主机，是在创建一个[HostBuilder](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host) 之后，可以通过Add的服务的形式创建`TouchSocket`的一些组件。如`TcpService`、`TcpClient`、`NamedPipeService`、`NamedPipeclient`等。
 
+<BilibiliCard title="为什么要用通用主机服务" link="https://www.bilibili.com/cheese/play/ep1564632" isPro="true"/>
 
 ## 二、安装Nuget包
 
-在安装Nuget之前，最好先确认目标项目是一个主机项目。例如：[辅助角色服务模板](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)、 [AspNetCore](https://learn.microsoft.com/zh-cn/aspnet/core)等。如果是其他项目，请自行解决依赖。
+在安装`Nuget`之前，最好先确认目标项目是一个主机项目。例如：[辅助角色服务模板](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)、 [AspNetCore](https://learn.microsoft.com/zh-cn/aspnet/core)等。如果是其他项目，请自行解决依赖。
 
-使用Nuget安装`TouchSocket.Hosting`、`TouchSocketPro.Hosting`、`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`其中的**任意一个**。
+使用`Nuget`安装`TouchSocket.Hosting`、`TouchSocketPro.Hosting`、`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`其中的**任意一个**。
 
 :::info 备注
 
@@ -32,7 +34,7 @@ Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.co
 
 :::tip 建议
 
-一般建议Web项目使用`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`。辅助角色项目、MAUI项目等使用`TouchSocket.Hosting`、`TouchSocketPro.Hosting`。
+一般建议`Web`项目使用`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`。辅助角色项目、`MAUI`项目等使用`TouchSocket.Hosting`、`TouchSocketPro.Hosting`。
 
 :::  
 
@@ -132,6 +134,8 @@ public static void Main(string[] args)
 </TabItem>
 </Tabs>
 
+<BilibiliCard title="认识通用主机服务" link="https://www.bilibili.com/cheese/play/ep1564639" isPro="true"/>
+
 ### 3.3 添加自定义服务器
 
 通过上述的方式添加的服务器，会使用固定的接口作为注册类型。例如：通过默认的`AddTcpService`来添加服务器，则会使用`ITcpService`作为注册类型。
@@ -205,6 +209,8 @@ public static void Main(string[] args)
 
 :::  
 
+<BilibiliCard title="为什么需要DI容器" link="https://www.bilibili.com/cheese/play/ep1564640" isPro="true"/>
+<BilibiliCard title="使用IServiceCollection以及3种生命周期" link="https://www.bilibili.com/cheese/play/ep1564651" isPro="true"/>
 
 ## 四、添加客户端类
 
@@ -277,5 +283,39 @@ public static void Main(string[] args)
     host.Run();
 }
 ```
+
+## 六、选项模式配置服务器
+
+通过选项模式，可以方便的对服务器进行配置。
+
+<BilibiliCard title="选项模式配置服务器" link="https://www.bilibili.com/cheese/play/ep1581737" isPro="true"/>
+
+
+## 七、实战
+
+<BilibiliCard title="使用通用主机的方式改造BigDogServer(1)" link="https://www.bilibili.com/cheese/play/ep1564652" isPro="true"/>
+<BilibiliCard title="使用通用主机的方式改造BigDogServer(2)" link="https://www.bilibili.com/cheese/play/ep1564653" isPro="true"/>
+<BilibiliCard title="使用通用主机的方式改造BigDogServer(3)" link="https://www.bilibili.com/cheese/play/ep1564665" isPro="true"/>
+<BilibiliCard title="完成通用主机改造BigDogServer" link="https://www.bilibili.com/cheese/play/ep1564666" isPro="true"/>
+<BilibiliCard title="使用NLog进行日志记录" link="https://www.bilibili.com/cheese/play/ep1581739" isPro="true"/>
+
+## 八、部署
+
+### 8.1 部署到Windows
+
+<BilibiliCard title="以Windows服务发布运行" link="https://www.bilibili.com/cheese/play/ep1581740" isPro="true"/>
+<BilibiliCard title="使用AOT发布Window服务" link="https://www.bilibili.com/cheese/play/ep1581742" isPro="true"/>
+<BilibiliCard title="解决AOT下的Json序列化问题" link="https://www.bilibili.com/cheese/play/ep1581747" isPro="true"/>
+
+###  8.2 部署到Linux
+
+<BilibiliCard title="发布到Linux并（长久）运行" link="https://www.bilibili.com/cheese/play/ep1581750" isPro="true"/>
+<BilibiliCard title="使用Systemed发布到linux" link="https://www.bilibili.com/cheese/play/ep1581762" isPro="true"/>
+
+###  8.3 部署到Docker
+
+<BilibiliCard title="创建Dockerfile和改造项目" link="https://www.bilibili.com/cheese/play/ep1581766" isPro="true"/>
+<BilibiliCard title="以Docker部署运行主机服务" link="https://www.bilibili.com/cheese/play/ep1581767" isPro="true"/>
+
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples_host/Examples.Host)
