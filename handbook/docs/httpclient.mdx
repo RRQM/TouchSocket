@@ -4,6 +4,7 @@ title: 创建HttpClient
 ---
 
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -35,6 +36,8 @@ var client = new HttpClient();
 await client.ConnectAsync("http://localhost:7219");//先做连接
 ```
 
+<BilibiliCard title="创建HttpClient并完成请求" link="https://www.bilibili.com/cheese/play/ep1688271" isPro="true"/>
+
 ### 4.2 创建Ssl的HttpClient（Https）
 
 ```csharp showLineNumbers
@@ -61,6 +64,8 @@ config.SetRemoteIPHost("https://localhost:7219")
 await client.SetupAsync(config);
 await client.ConnectAsync();//先做连接
 ```
+
+<BilibiliCard title="创建Https客户端" link="https://www.bilibili.com/cheese/play/ep1688272" isPro="true"/>
 
 :::info 备注
 
@@ -95,6 +100,8 @@ using (var stream=File.Create("1.txt"))
     await client.GetFileAsync("/WeatherForecast",stream);
 }
 ```
+
+<BilibiliCard title="自定义Query和Header参数" link="https://www.bilibili.com/cheese/play/ep1688274" isPro="true"/>
 
 ### 5.4 构建自定义请求
 
@@ -167,6 +174,8 @@ using (var stream=File.OpenRead("TouchSocket.dll"))
     Console.WriteLine("完成");
 }
 ```
+
+<BilibiliCard title="使用SSE实现类似AI问答效果" link="https://www.bilibili.com/cheese/play/ep1688275" isPro="true"/>
 
 :::tip 提示
 
