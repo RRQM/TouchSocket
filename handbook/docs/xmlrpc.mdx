@@ -24,10 +24,10 @@ XmlRpc是**通用**的工作在**Internet**上的RPC。一个[XML-RPC](https://b
 
 ### 3.1 定义服务
 
-在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记。
+在**服务器**端中新建一个类，继承于**SingletonRpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记。
 
 ```csharp showLineNumbers
-public partial class XmlServer : RpcServer
+public partial class XmlServer : SingletonRpcServer
 {
     [XmlRpc(MethodInvoke = true)]
     public int Sum(int a, int b)

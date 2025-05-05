@@ -33,7 +33,7 @@ title: 调用上下文
 定义的服务方法的`第一个参数`使用`ICallContext`或其派生类（例如：`DmtpRpc`可以使用`IDmtpRpcCallContext`）。
 
 ```csharp showLineNumbers
-public class MyRpcServer : RpcServer
+public class MyRpcServer : SingletonRpcServer
 {
     [Description("登录")]
     [DmtpRpc]
@@ -118,7 +118,7 @@ public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 然后，在Rpc服务中，通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
 
 ```csharp {5,7,16} showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
 

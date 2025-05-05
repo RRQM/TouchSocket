@@ -81,7 +81,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 #### TouchSocket.Rpc
 
-- &nbsp;<Tag>调整</Tag> `RpcServer`名称改为`SingletonRpcServer`。
+- &nbsp;<Tag>调整</Tag> `SingletonRpcServer`名称改为`SingletonRpcServer`。
 - &nbsp;<Tag>优化</Tag> `QueueRpcDispatcher`性能。
 
 
@@ -1634,7 +1634,7 @@ TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操
 | MsgEventArgs | MsgEventArgs |
 | RRQMEventAgrs | TouchSocketEventArgs |
 | IServerProvider | IRpcServer |
-| ServerProvider | RpcServer |
+| ServerProvider | SingletonRpcServer |
 | RRQMOverlengthException | OverlengthException |
 
 ### 3.使用逻辑修改

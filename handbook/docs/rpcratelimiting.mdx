@@ -116,7 +116,7 @@ AddTokenBucketLimiter 方法使用令牌桶来限制请求。 令牌桶限制器
 限流器使用很简单，只需要在需要限流的函数、服务或接口上添加特性即可。
 
 ```csharp {3} showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [EnableRateLimiting("FixedWindow")]
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
@@ -207,7 +207,7 @@ a.AddRateLimiter(p =>
 最后依然使用`EnableRateLimiting`特性即可。
 
 ```csharp {3} showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [EnableRateLimiting("FixedWindow")]
     ...

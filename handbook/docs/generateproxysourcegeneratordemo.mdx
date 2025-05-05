@@ -20,7 +20,7 @@ title: 源生成代理推荐写法
 /// 定义服务接口。
 /// </summary>
 [GeneratorRpcProxy]
-public interface IUserServer:IRpcServer
+public interface IUserServer:ISingletonRpcServer
 {
     [DmtpRpc]
     LoginResponse Login(LoginRequest request);

@@ -27,10 +27,10 @@ WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统�
 
 ## 三、定义服务
 
-在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记。
+在**服务器**端中新建一个类，继承于**SingletonRpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记。
 
 ```csharp showLineNumbers
-public partial class ApiServer : RpcServer
+public partial class ApiServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 
@@ -204,7 +204,7 @@ public int SumFromQuery([FromQuery(Name ="aa")] int a, [FromQuery] int b)
 将会以`/ApiServer/Sum`为请求url（不区分大小写）。
 
 ```csharp showLineNumbers
-public class ApiServer : RpcServer
+public class ApiServer : SingletonRpcServer
 {
     [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
@@ -222,7 +222,7 @@ public class ApiServer : RpcServer
 
 ```csharp showLineNumbers
 [Router("/user/[api]/test/[action]")]
-public class ApiServer : RpcServer
+public class ApiServer : SingletonRpcServer
 {
     [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
@@ -661,7 +661,7 @@ WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实�
 然后，在WebApi中使用特性进行跨域设置。
 
 ```csharp {3} showLineNumbers
-public partial class ApiServer : RpcServer
+public partial class ApiServer : SingletonRpcServer
 {
     [EnableCors("cors")]//使用跨域
     [WebApi(Method = HttpMethodType.Get)]

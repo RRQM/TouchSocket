@@ -268,7 +268,7 @@ class MyRpcAttribute : RpcAttribute
 例如：对于下列服务
 
 ```csharp showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [DmtpRpc]
     public bool Login(string account, string password)
@@ -336,7 +336,7 @@ GeneratorRpcProxyAttribute的配置，是对整个接口的总体配置，通过
 
 ```csharp {1}
 [GeneratorRpcProxy(Prefix = "RpcClassLibrary")]
-public interface IUserServer:IRpcServer
+public interface IUserServer:ISingletonRpcServer
 {
     [DmtpRpc]
     LoginResponse Login(LoginRequest request);
@@ -395,7 +395,7 @@ where TClient:IRpcClient
 
 ```csharp {1}
 [GeneratorRpcProxy(GeneratorFlag = CodeGeneratorFlag.ExtensionAsync| CodeGeneratorFlag.InterfaceAsync)]
-public interface IUserServer:IRpcServer
+public interface IUserServer:ISingletonRpcServer
 {
     [DmtpRpc]
     LoginResponse Login(LoginRequest request);
@@ -408,7 +408,7 @@ public interface IUserServer:IRpcServer
 
 ```csharp {1,6} 
 [GeneratorRpcProxy]
-public interface IUserServer:IRpcServer
+public interface IUserServer:ISingletonRpcServer
 {
     [DmtpRpc]
     LoginResponse Login(ICallContext callContext,LoginRequest request);
@@ -429,7 +429,7 @@ public interface IUserServer:IRpcServer
 
 ```csharp {1,7}
 [GeneratorRpcProxy(InheritedInterface =true)]
-public interface IA:IRpcServer
+public interface IA:ISingletonRpcServer
 {
    
 }
@@ -450,7 +450,7 @@ public interface IB:IA
 例如：对于下列服务
 
 ```csharp showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 将两个数相加
@@ -556,7 +556,7 @@ Console.WriteLine(result);
 例如：对于下列服务
 
 ```csharp showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 将两个数相加

@@ -47,7 +47,7 @@ Rpc执行调度器（`RpcDispatcher`）是`TouchSocket.Rpc`框架中的核心组
 但是对于有的`Rpc`方法，我们希望仅这个方法不支持可重入性，那么我们可以使用`[Reenterable]`特性来控制。
 
 ```csharp {3} showLineNumbers
-interface IMyRpcServer : IRpcServer
+interface IMyRpcServer : ISingletonRpcServer
 {
     [Reenterable(false)]
     [DmtpRpc(MethodInvoke = true)]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
