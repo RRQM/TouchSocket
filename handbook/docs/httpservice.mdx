@@ -6,6 +6,7 @@ title: 创建HttpService
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -17,11 +18,19 @@ import CardLink from "@site/src/components/CardLink.js";
 
 **HttpService**是能够提供Http相关服务的基础类型。
 
+<BilibiliCard title="轻量级Web开发框架序章" link="https://www.bilibili.com/cheese/play/ep1618488" isPro="true"/>
+
 ## 二、产品特点
 
 - 支持HTTPS。
 - **多种数据接收模式**
 - **多地址监听**（可以一次性监听多个IP及端口）
+- **高性能**
+- **支持跨域**（CORS）
+- **支持AOT，且体积比AspNetCore小50%**
+
+<BilibiliCard title="使用JMeter对Http组件进行性能测试" link="https://www.bilibili.com/cheese/play/ep1618489" isPro="true"/>
+<BilibiliCard title="Aot发布后与AspNetCore进行对比" link="https://www.bilibili.com/cheese/play/ep1618490" isPro="true"/>
 
 ## 三、产品应用场景
 
@@ -43,6 +52,7 @@ flowchart TD;
    
 ```
 
+<BilibiliCard title="HttpContext的生命周期" link="https://www.bilibili.com/cheese/play/ep1688270" isPro="true"/>
 
 ## 五、支持插件接口
 
@@ -105,6 +115,8 @@ await service.StartAsync();
 
 :::  
 
+<BilibiliCard title="创建Http服务器" link="https://www.bilibili.com/cheese/play/ep1618491" isPro="true"/>
+
 ## 七、获取请求
 
 每个`HttpClient`连接建立时，系统除了会创建一个`HttpSessionClient`与之对应之外，还会创建一个`HttpContext`实例与之对应。
@@ -117,11 +129,15 @@ var request = e.Context.Request;//http请求体
 var response = e.Context.Response;//http响应体
 ```
 
+<BilibiliCard title="Http方法解析与使用" link="https://www.bilibili.com/cheese/play/ep1618492" isPro="true"/>
+
 ### 7.1 获取Query参数
 
 ```csharp showLineNumbers
 string value = e.Context.Request.Query["key"];
 ```
+
+<BilibiliCard title="Query参数及用法" link="https://www.bilibili.com/cheese/play/ep1618493" isPro="true"/>
 
 ### 7.2 获取Header参数
 
@@ -135,6 +151,8 @@ string value = e.Context.Request.Headers["key"];
 string value = e.Context.Request.Headers[HttpHeaders.Cookie];
 ```
 
+<BilibiliCard title="Header参数及用法" link="https://www.bilibili.com/cheese/play/ep1618495" isPro="true"/>
+
 ### 7.3 获取Form参数
 
 ```csharp showLineNumbers
@@ -144,6 +162,9 @@ foreach (var item in multifileCollection)
     Console.WriteLine($"key={item.Key},value={item.Value}");
 }
 ```
+
+<BilibiliCard title="Form参数及小文件传输" link="https://www.bilibili.com/cheese/play/ep1618496" isPro="true"/>
+<BilibiliCard title="Form-data与x-www-form-urlencod" link="https://www.bilibili.com/cheese/play/ep1618497" isPro="true"/>
 
 ### 7.4 获取字符串Body内容
 
@@ -156,6 +177,9 @@ string bodyString = await e.Context.Request.GetBodyAsync();
 ```csharp showLineNumbers
 ReadOnlyMemory<byte> content = await e.Context.Request.GetContentAsync();
 ```
+
+<BilibiliCard title="接收并处理Json、Xml类Body数据" link="https://www.bilibili.com/cheese/play/ep1618500" isPro="true"/>
+<BilibiliCard title="接收Binary(小文件)类Body数据" link="https://www.bilibili.com/cheese/play/ep1618501" isPro="true"/>
 
 ### 7.6 持续读取Body内容
 
@@ -180,6 +204,8 @@ while (true)
 }
 ```
 
+<BilibiliCard title="接收超大文件字节流" link="https://www.bilibili.com/cheese/play/ep1618502" isPro="true"/>
+
 ### 7.7 获取Body持续写入Stream中
 
 当数据太大时，可持续读取数据直接到流容器中。
@@ -191,6 +217,9 @@ using (var stream = new MemoryStream())
     await e.Context.Request.ReadCopyToAsync(stream);
 }
 ```
+
+<BilibiliCard title="接收超大文件时显示进度和速度(1)" link="https://www.bilibili.com/cheese/play/ep1618503" isPro="true"/>
+<BilibiliCard title="接收超大文件时显示进度和速度(2)" link="https://www.bilibili.com/cheese/play/ep1618504" isPro="true"/>
 
 ### 7.8 获取Body小文件
 
@@ -222,6 +251,8 @@ await e.Context.Response
          .FromText("Ok")
          .AnswerAsync();
 ```
+<BilibiliCard title="Form参数及小文件传输" link="https://www.bilibili.com/cheese/play/ep1618496" isPro="true"/>
+<BilibiliCard title="Form-data与x-www-form-urlencod" link="https://www.bilibili.com/cheese/play/ep1618497" isPro="true"/>
 
 ## 八、响应请求
 
@@ -257,6 +288,8 @@ e.Context.Response.SetContent("hello");
 e.Context.Response.FromJson("{}");
 ```
 
+<BilibiliCard title="从Json格式进行响应" link="https://www.bilibili.com/cheese/play/ep1618507" isPro="true"/>
+
 ### 8.4 开始响应内容
 
 当通过上述步骤，完成了响应体的构建后，即可使用`AnswerAsync`直接进行响应。
@@ -270,6 +303,8 @@ await e.Context.Response
       .FromText("hello")
       .AnswerAsync();
 ```
+
+<BilibiliCard title="从Binary进行响应" link="https://www.bilibili.com/cheese/play/ep1618509" isPro="true"/>
 
 ### 8.5 插件响应Get请求
 
@@ -358,6 +393,10 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
 
 :::  
 
+<BilibiliCard title="响应小文件" link="https://www.bilibili.com/cheese/play/ep1618510" isPro="true"/>
+<BilibiliCard title="响应超大文件" link="https://www.bilibili.com/cheese/play/ep1618511" isPro="true"/>
+<BilibiliCard title="响应超大文件并显示进度和速度" link="https://www.bilibili.com/cheese/play/ep1618512" isPro="true"/>
+
 
 ### 8.7 响应页面请求
 
@@ -418,6 +457,8 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
 }
 ```
 
+<BilibiliCard title="从Xml、Html进行响应" link="https://www.bilibili.com/cheese/play/ep1618508" isPro="true"/>
+
 ## 九、进阶响应操作
 
 ### 9.1 响应有长度大数据
@@ -463,10 +504,12 @@ for (int i = 0; i < 1024; i++)
 await response.CompleteChunkAsync();
 ```
 
+<BilibiliCard title="使用Chunk编码传输不定长数据" link="https://www.bilibili.com/cheese/play/ep1618513" isPro="true"/>
+
 
 ## 九、创建加密Ssl的HttpsService
 
-Https服务器，和http服务器几乎一样，只不过增加了一个Ssl的配置。
+Https服务器，和http服务器几乎一样，只不过增加了一个Ssl的配置。具体的Ssl配置，请参考：[TcpService Ssl](./tcpservice.mdx)。
 
 ```csharp showLineNumbers
 .SetServiceSslOption(new ServiceSslOption() 

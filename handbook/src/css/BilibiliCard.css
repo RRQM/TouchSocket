@@ -52,7 +52,7 @@
   z-index: 1;
 }
 
-.pro-badge span {
+.pro-badge a {
   font-size: 12px;
   padding: 5px 10px;
   border: none;

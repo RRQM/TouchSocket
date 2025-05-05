@@ -4,6 +4,7 @@ title: 产品及架构介绍
 ---
 
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -13,6 +14,8 @@ import CardLink from "@site/src/components/CardLink.js";
 ## 一、说明
 
 WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统无关**。其路由机制模仿AspNetCore，可实现很多路由机制。但是因为http兼容性错综复杂，所以目前TouchSocket的WebApi仅支持**GET**、**POST**函数。使用体验接近于AspNetCore。
+
+<BilibiliCard title="为什么需要WebApi代替Http" link="https://www.bilibili.com/cheese/play/ep1688287" isPro="true"/>
 
 ## 二、特点
 
@@ -75,6 +78,7 @@ Console.WriteLine("以下连接用于测试webApi");
 Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 ```
 
+<BilibiliCard title="初步搭建WebApi服务" link="https://www.bilibili.com/cheese/play/ep1688288" isPro="true"/>
 
 ## 五、参数规则
 
@@ -127,6 +131,8 @@ public int Sum(int a, int b, MyClass myClass)
 }
 ```
 
+<BilibiliCard title="Get和Post参数默认来源讲解" link="https://www.bilibili.com/cheese/play/ep1688290" isPro="true"/>
+
 ### 5.3 特性规则
 
 `WebApi`支持使用特性来定制参数规则。目前支持`[FromQuery]`、`[FromHeader]`、`[FromForm]`、`[FromBody]`等。
@@ -172,6 +178,8 @@ public int SumFromBody([FromBody] MyClass myClass)
     return myClass.A + myClass.B;
 }
 ```
+
+<BilibiliCard title="使用规则特性重新定义参数来源" link="https://www.bilibili.com/cheese/play/ep1688291" isPro="true"/>
 
 :::tip 提示
 
@@ -223,6 +231,8 @@ public class ApiServer : RpcServer
     }
 }
 ```
+
+<BilibiliCard title="路由匹配机制" link="https://www.bilibili.com/cheese/play/ep1688292" isPro="true"/>
 
 :::tip 提示
 
@@ -410,6 +420,8 @@ a.UseWebApi()
 ```csharp showLineNumbers
 var sum3 =await client.SumAsync(10,20);
 ```
+
+<BilibiliCard title="使用代码生成的方式调用WebApi" link="https://www.bilibili.com/cheese/play/ep1688293" isPro="true"/>
 
 ### 8.6 使用DispatchProxy代理调用
 
