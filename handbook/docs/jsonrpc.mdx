@@ -31,11 +31,11 @@ JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关*
 
 ## 三、定义服务
 
-在**服务器**端中新建一个类，继承于`RpcServer`类（或实现`IRpcServer`），然后在该类中写**公共方法**，并用**JsonRpc**特性标签标记。
+在**服务器**端中新建一个类，继承于`SingletonRpcServer`类（或实现`ISingletonRpcServer`），然后在该类中写**公共方法**，并用**JsonRpc**特性标签标记。
 
 
 ```csharp showLineNumbers
-public partial class JsonRpcServer : RpcServer
+public partial class JsonRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 使用调用上下文。
@@ -372,7 +372,7 @@ while (true)
 首先，需要在*客户端*像常规`Rpc`一样声明一个`Rpc`服务。然后需要使用`JsonRpc`特性表示。
 
 ```csharp {3} showLineNumbers
-public partial class ReverseJsonRpcServer : RpcServer
+public partial class ReverseJsonRpcServer : SingletonRpcServer
 {
     [JsonRpc(MethodInvoke = true)]
     public int Add(int a, int b)

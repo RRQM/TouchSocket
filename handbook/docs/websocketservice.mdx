@@ -164,7 +164,7 @@ service.Logger.Info("服务器已启动");
 【接收连接】
 
 ```csharp {16} showLineNumbers
-public class MyApiServer : RpcServer
+public class MyApiServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 
@@ -192,7 +192,7 @@ public class MyApiServer : RpcServer
 或者接收到连接后，直接使用`WebSocket`接收。这样如果想直接在`WebApi`返回数据也比较方便。
 
 ```csharp {16-43} showLineNumbers
-public class MyApiServer : RpcServer
+public class MyApiServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
 

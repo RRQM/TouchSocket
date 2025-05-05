@@ -32,7 +32,7 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 3. 在该类中写**公共方法**，并用**DmtpRpc**属性标签标记。
 
 ```csharp showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
     [DmtpRpc(InvokeKey ="Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
@@ -67,7 +67,7 @@ public partial class MyRpcServer : TransientRpcServer
 
 :::info 信息
 
-`ITransientRpcServer`和`IRpcServer`相比，意为瞬时生命服务，即实现`ITransientRpcServer`的服务，在每次被调用时，都会创建一个新的服务实例。其优点为可以直接通过`this.CallContext`属性获得调用上下文。其缺点则是每次调用时会多消耗一些性能。
+`ITransientRpcServer`和`ISingletonRpcServer`相比，意为瞬时生命服务，即实现`ITransientRpcServer`的服务，在每次被调用时，都会创建一个新的服务实例。其优点为可以直接通过`this.CallContext`属性获得调用上下文。其缺点则是每次调用时会多消耗一些性能。
 
 :::  
 
@@ -292,7 +292,7 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 2. 用**DmtpRpc**标记需要公开的公共方法。
 
 ```csharp showLineNumbers
-public partial class ReverseCallbackServer : RpcServer
+public partial class ReverseCallbackServer : SingletonRpcServer
 {
     [DmtpRpc(MethodInvoke = true)]//使用方法名作为调用键
     public string SayHello(string name)

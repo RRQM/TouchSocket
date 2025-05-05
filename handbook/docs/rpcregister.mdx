@@ -4,6 +4,9 @@ title: 注册服务
 ---
 
 import Tag from "@site/src/components/Tag.js";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -18,7 +21,7 @@ import Tag from "@site/src/components/Tag.js";
 当服务仅是一个实例类，则可以在`AddRpcStore`时，可通过`RpcStore`实例，直接注册服务。
 
 ```csharp showLineNumbers
-public partial class MyRpcServer : RpcServer
+public partial class MyRpcServer : SingletonRpcServer
 {
     /// <summary>
     /// 将两个数相加
@@ -54,13 +57,13 @@ public partial class MyRpcServer : RpcServer
 当服务是一个接口时，则可以在`AddRpcStore`时，通过`RpcStore`实例，按注册接口与实例服务。
 
 ```csharp showLineNumbers
-public interface IMyRpcServer2 : IRpcServer
+public interface IMyRpcServer2 : ISingletonRpcServer
 {
     [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 
-public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
+public partial class MyRpcServer2 : SingletonRpcServer, IMyRpcServer2
 {
     public int Add(int a, int b)
     {
@@ -82,17 +85,27 @@ public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
 
 :::tip 提示
 
-使用接口注册服务时，标识Rpc（例如：DmtpRpc）特性必须放在接口方法中。否则不会生效。
+使用接口注册服务时，标识`Rpc`（例如：`DmtpRpc`）特性**必须放在接口方法**中。否则不会生效。
 
 :::  
 
-### 1.3 注册瞬态服务
+### 1.3 注册其他生命周期服务
 
-默认情况下，Rpc服务均是单例注册。当服务实例继承`TransientRpcServer`（或实现`ITransientRpcServer`）接口时，该服务会被注册为瞬态。
+默认情况下，`Rpc`服务是单例注册，即多个请求调用同一个`Rpc`服务实例。当服务实例继承`TransientRpcServer`（或实现`ITransientRpcServer`接口），或者继承`ScopedRpcServer`（或实现`IScopedRpcServer`接口）时，则服务将会以瞬态，或者区域（此时`IOC`容器必须使用`IServiceCollection`）被创建。
 
-注册为瞬态的服务，在每次调用时，都会创建一个新的服务实例。这可能会对性能产生一定影响。但是，瞬态服务可以直接获取调用上下文。
+- 注册为瞬态的服务，在每次调用时，都会创建一个**新的服务实例**。瞬态服务可以直接通过`this.CallContext`获取调用上下文。
+- 注册为区域的服务，在每次调用时，也会创建一个**新的服务实例**，并且在区域可用时单例。区域服务也可以直接通过`this.CallContext`获取调用上下文。
 
-
+【瞬态服务】
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "常规",value: "tab1"},
+        { label: "泛型", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
 ```csharp {7} showLineNumbers
 public partial class MyRpcServer : TransientRpcServer
 {
@@ -106,9 +119,8 @@ public partial class MyRpcServer : TransientRpcServer
     }
 }
 ```
-
-甚至直接指定泛型上下文
-
+</TabItem>
+<TabItem value="tab2">
 ```csharp {1,7} showLineNumbers
 public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 {
@@ -122,7 +134,50 @@ public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
     }
 }
 ```
+</TabItem>
+</Tabs>
 
+
+【区域服务】
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "常规",value: "tab1"},
+        { label: "泛型", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
+```csharp {7} showLineNumbers
+public partial class MyRpcServer : ScopedRpcServer
+{
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+</TabItem>
+<TabItem value="tab2">
+```csharp {1,7} showLineNumbers
+public partial class MyRpcServer : ScopedRpcServer<IDmtpRpcCallContext>
+{
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+</TabItem>
+</Tabs>
 
 ## 二、注册所有服务
 
@@ -164,7 +219,7 @@ public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 
 ## 三、源生成注册
 
-当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`IRpcServer`接口的类，并生成统一注册的源代码。
+当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`ISingletonRpcServer`接口的类，并生成统一注册的源代码。
 
 ### 3.1 启用源生成
 
@@ -212,13 +267,13 @@ public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 源生成的注册，支持接口与实例注册。例如下列服务：
 
 ```csharp showLineNumbers
-public interface IMyRpcServer : IRpcServer
+public interface IMyRpcServer : ISingletonRpcServer
 { 
     [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 
-public partial class MyRpcServer : RpcServer,IMyRpcServer
+public partial class MyRpcServer : SingletonRpcServer,IMyRpcServer
 {
     public int Add(int a, int b)
     {
