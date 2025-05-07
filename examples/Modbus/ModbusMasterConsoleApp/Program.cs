@@ -44,7 +44,12 @@ internal class Program
             valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
             //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-            valueByteBlock.WriteString("Hello");
+            valueByteBlock.WriteString("Hello1");
+
+            //如果想要直接写入字符串，可以使用WriteNormalString方法
+            //valueByteBlock.WriteNormalString("Hello1", System.Text.Encoding.UTF8);
+
+            //注意：写入字符串时，应当保证写入后的字节总数为双数。如果是单数，则会报错。
 
             //写入到寄存器
             await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
