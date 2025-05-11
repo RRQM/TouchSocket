@@ -38,13 +38,13 @@ internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<
             return;
         }
 
+        if (e.Manual)
+        {
+            return;
+        }
+
         _ = Task.Run(async () =>
         {
-            if (e.Manual)
-            {
-                return;
-            }
-
             while (true)
             {
                 if (this.DisposedValue)

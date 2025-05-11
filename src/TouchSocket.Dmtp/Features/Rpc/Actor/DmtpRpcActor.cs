@@ -449,7 +449,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(rpcPackage.Sign);
         }
     }
 
@@ -532,7 +532,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(rpcPackage.Sign);
         }
     }
 

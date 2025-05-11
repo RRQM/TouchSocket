@@ -210,7 +210,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitData);
+            this.WaitHandlePool.Destroy(waitVerify.Sign);
         }
     }
 
@@ -873,7 +873,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitData);
+            this.WaitHandlePool.Destroy(waitPing.Sign);
         }
     }
 
@@ -1166,7 +1166,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitData);
+            this.WaitHandlePool.Destroy(waitCreateChannel.Sign);
             byteBlock.Dispose();
         }
     }

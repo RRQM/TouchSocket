@@ -14,6 +14,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using System.Collections.Generic;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -88,7 +89,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             this.m_getContent = false;
             // 重置状态，为发送请求做准备
             this.Reset(token);
-
+            request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
             await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             // 等待响应状态，超时设定
@@ -171,11 +172,11 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         {
             // 标记为获取内容状态
             this.m_getContent = true;
-            // 重置状态，为发送请求做准备
-            this.Reset(token);
 
             // 重置状态，为发送请求做准备
             this.Reset(token);
+
+            request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
 
             await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 

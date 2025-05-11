@@ -216,7 +216,7 @@ public sealed class JsonRpcActor :DisposableObject, IJsonRpcClient
         }
         finally
         {
-            this.m_waitHandle.Destroy(waitData);
+            this.m_waitHandle.Destroy(sign);
         }
     }
 

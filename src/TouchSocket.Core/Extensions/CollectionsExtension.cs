@@ -84,6 +84,27 @@ public static class CollectionsExtension
 
 #endif
 
+    /// <summary>
+    /// 尝试从字典中移除指定键的值。
+    /// </summary>
+    /// <typeparam name="TKey">字典中键的类型。</typeparam>
+    /// <typeparam name="TValue">字典中值的类型。</typeparam>
+    /// <param name="dictionary">要操作的字典。</param>
+    /// <param name="key">要移除的键。</param>
+    /// <param name="value">如果移除成功，则包含移除的值；否则为默认值。</param>
+    /// <returns>如果成功移除并返回了值，则为 true；否则为 false。</returns>
+    public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key,out  TValue value)
+    {
+        if (dictionary.TryGetValue(key,out value))
+        {
+            // 如果字典中包含此键，则移除并返回true
+            dictionary.Remove(key);
+            return true;
+        }
+        // 如果字典中不包含此键，则返回false
+        value = default;
+        return false;
+    }
 
     /// <summary>
     /// 向字典中添加或更新指定键的值。

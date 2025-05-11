@@ -245,7 +245,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         if (disposing)
         {
-            this.Stop();
+            this.StopAsync().GetFalseAwaitResult();
             this.m_tcpCorePool.SafeDispose();
         }
         base.Dispose(disposing);

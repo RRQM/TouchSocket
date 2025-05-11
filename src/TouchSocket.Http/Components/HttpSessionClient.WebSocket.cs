@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
@@ -48,13 +49,14 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
             bytes.SeekToStart();
             if (bytes.Length >= 2)
             {
-                this.m_webSocket.CloseStatus = (System.Net.WebSockets.WebSocketCloseStatus)bytes.ReadUInt16(EndianType.Big);
+                var closeStatus = (WebSocketCloseStatus)bytes.ReadUInt16(EndianType.Big);
+                this.m_webSocket.CloseStatus = closeStatus;
             }
 
             var msg = bytes.ReadToSpan(bytes.CanReadLength).ToString(System.Text.Encoding.UTF8);
 
             await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await this.m_webSocket.CloseAsync("Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
@@ -213,7 +215,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
         {
             return Result.FromException(ex);
         }
-        
+
     }
 
     private void InitWebSocket(InternalWebSocket webSocket)

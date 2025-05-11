@@ -21,7 +21,7 @@ namespace TouchSocket.Http;
 /// </summary>
 public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    private HttpRequest m_request;
+    private HttpRequest m_currentRequest;
     private HttpRequest m_requestRoot;
     private long m_surLen;
     private Task m_task;
@@ -85,15 +85,15 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
         }
     }
 
-    private async Task DestroyRequest()
-    {
-        this.m_request = null;
-        if (this.m_task != null)
-        {
-            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_task = null;
-        }
-    }
+    //private void DestroyRequest()
+    //{
+    //    this.m_currentRequest = null;
+    //    //if (this.m_task != null)
+    //    //{
+    //    //    await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    //    this.m_task = null;
+    //    //}
+    //}
 
     private async Task Single(ByteBlock byteBlock, bool dis)
     {
@@ -105,34 +105,42 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                 {
                     return;
                 }
-                if (this.m_request == null)
+                if (this.m_currentRequest == null)
                 {
+                    if (this.m_task != null)
+                    {
+                        await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_task = null;
+                    }
+
                     this.m_requestRoot.ResetHttp();
-                    this.m_request = this.m_requestRoot;
-                    if (this.m_request.ParsingHeader(ref byteBlock))
+                    this.m_currentRequest = this.m_requestRoot;
+                    if (this.m_currentRequest.ParsingHeader(ref byteBlock))
                     {
                         //byteBlock.Position++;
-                        if (this.m_request.ContentLength > byteBlock.CanReadLength)
+                        if (this.m_currentRequest.ContentLength > byteBlock.CanReadLength)
                         {
-                            this.m_surLen = this.m_request.ContentLength;
+                            this.m_surLen = this.m_currentRequest.ContentLength;
 
-                            this.m_task = this.TaskRunGoReceived(this.m_request);
+                            this.m_task = this.TaskRunGoReceived(this.m_currentRequest);
                         }
                         else
                         {
-                            var contentLength = (int)this.m_request.ContentLength;
+                            var contentLength = (int)this.m_currentRequest.ContentLength;
                             var content = byteBlock.Memory.Slice(byteBlock.Position, contentLength);
                             byteBlock.Position += contentLength;
                            
-                            this.m_request.InternalSetContent(content);
-                            await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            this.m_currentRequest.InternalSetContent(content);
+
+                            this.m_task = this.TaskRunGoReceived(this.m_currentRequest);
+
+                            this.m_currentRequest = null;
                         }
                     }
                     else
                     {
                         this.Cache(byteBlock);
-                        this.m_request = null;
+                        this.m_currentRequest = null;
                         return;
                     }
                 }
@@ -143,19 +151,19 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                     {
                         var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
 
-                        await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_currentRequest.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         this.m_surLen -= len;
                         byteBlock.Position += len;
                         if (this.m_surLen == 0)
                         {
-                            await this.m_request.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.m_currentRequest.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            this.m_currentRequest = null;
                         }
                     }
                 }
                 else
                 {
-                    await this.DestroyRequest().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    this.m_currentRequest = null;
                 }
             }
         }
@@ -170,8 +178,7 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
 
     private Task TaskRunGoReceived(HttpRequest request)
     {
-        var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
-        task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var task = EasyTask.SafeRun< ByteBlock, IRequestInfo> (this.GoReceivedAsync, null, request);
         return task;
     }
 }

@@ -67,7 +67,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(waitData);
+            this.m_waitHandlePool.Destroy(sign);
             this.m_semaphoreSlim.Release();
         }
     }

@@ -728,7 +728,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             e.Handled = true;
             response
-                .SetStatus()
+                .SetStatusWithSuccess()
                 .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                 .SetContent(bytes);
             await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);

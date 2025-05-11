@@ -25,12 +25,12 @@ namespace TouchSocket.WebApi;
 /// WebApi解析器
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
+public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlugin
 {
     private readonly InternalWebApiMapping m_mapping = new InternalWebApiMapping();
     private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
     private readonly IRpcServerProvider m_rpcServerProvider;
-
+    private static readonly DependencyProperty<WebApiCallContext> s_webApiCallContextProperty = new DependencyProperty<WebApiCallContext>("WebApiCallContext", default);
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -84,8 +84,10 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         var rpcMethod = this.Mapping.Match(url, httpMethod);
         if (rpcMethod != null)
         {
-            using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
+            var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver);
+            try
             {
+                client.SetValue(s_webApiCallContextProperty, callContext);
                 var invokeResult = new InvokeResult();
                 var ps = new object[rpcMethod.Parameters.Length];
                 try
@@ -111,7 +113,17 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
                     return;
                 }
 
+                if (!client.Online)
+                {
+                    return;
+                }
+
                 await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            finally
+            {
+                callContext.Dispose();
+                client.RemoveValue(s_webApiCallContextProperty);
             }
         }
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -269,7 +281,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         {
             case InvokeStatus.Success:
                 {
-                    httpResponse.SetContent(this.Converter.Serialize(httpContext, invokeResult.Result)).SetStatus();
+                    httpResponse.SetContent(this.Converter.Serialize(httpContext, invokeResult.Result)).SetStatusWithSuccess();
                     break;
                 }
             case InvokeStatus.UnFound:
@@ -299,5 +311,15 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         {
             await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+    {
+        if (client.TryRemoveValue(s_webApiCallContextProperty, out var webApiCallContext))
+        {
+            webApiCallContext.Cancel();
+        }
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

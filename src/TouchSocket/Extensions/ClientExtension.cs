@@ -185,6 +185,7 @@ public static class ClientExtension
     /// </remarks>
     /// <typeparam name="TClient">要操作的客户端类型，必须实现<see cref="IClosableClient"/>接口</typeparam>
     /// <param name="client">要关闭的客户端实例</param>
+    [AsyncToSyncWarning]
     public static Result Close<TClient>(this TClient client) where TClient : IClosableClient
     {
         // 调用CloseAsync方法并立即返回，不等待异步操作完成。这样做是为了提供一个同步的关闭方式，
@@ -202,6 +203,7 @@ public static class ClientExtension
     /// <typeparam name="TClient">要操作的客户端类型，必须实现<see cref="IClosableClient"/>接口。</typeparam>
     /// <param name="client">要关闭的客户端实例。</param>
     /// <param name="msg">关闭客户端时发送的消息。</param>
+    [AsyncToSyncWarning]
     public static Result Close<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
         // 使用GetFalseAwaitResult方法使异步操作同步执行，这里无需额外注释。
@@ -338,6 +340,7 @@ public static class ClientExtension
     /// <param name="client">要连接的客户端对象。</param>
     /// <param name="millisecondsTimeout">连接超时时间，以毫秒为单位。默认为5000毫秒。</param>
     /// <param name="cancellationToken">用于取消操作的令牌。</param>
+    [AsyncToSyncWarning]
     public static void Connect(this IConnectableClient client, int millisecondsTimeout = 5000, CancellationToken cancellationToken = default)
     {
         // 使用GetFalseAwaitResult()方法直接等待异步操作完成，以实现同步执行。
@@ -355,6 +358,7 @@ public static class ClientExtension
     /// <param name="client">要进行连接的客户端实例。</param>
     /// <param name="ipHost">连接的目标IP地址和端口信息。</param>
     /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒，默认为5000毫秒。</param>
+    [AsyncToSyncWarning]
     public static void Connect<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, IConnectableClient
     {
         ConnectAsync(client, ipHost, millisecondsTimeout).GetFalseAwaitResult();
@@ -369,6 +373,7 @@ public static class ClientExtension
     /// <param name="client">要执行连接操作的客户端对象。</param>
     /// <param name="millisecondsTimeout">连接超时时间，以毫秒为单位。默认值为5000毫秒。</param>
     /// <returns>返回一个<see cref="Result"/>对象，其中包含连接操作的结果代码以及可能的异常消息。</returns>
+    [AsyncToSyncWarning]
     public static Result TryConnect(this IConnectableClient client, int millisecondsTimeout = 5000)
     {
         try
@@ -395,6 +400,7 @@ public static class ClientExtension
     /// <param name="client">要执行连接操作的客户端实例。</param>
     /// <param name="millisecondsTimeout">连接超时时间，以毫秒为单位。默认值为5000毫秒（5秒）。</param>
     /// <returns>一个<see cref="Result"/>实例，包含连接操作的结果代码和可能的异常消息。</returns>
+    [AsyncToSyncWarning]
     public static Result TryConnect<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, IConnectableClient
     {
         try

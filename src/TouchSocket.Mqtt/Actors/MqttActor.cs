@@ -115,7 +115,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(waitDataAsync);
+            this.m_waitHandlePool.Destroy(message.MessageId);
         }
     }
 
@@ -136,7 +136,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(waitData_1_Async);
+            this.m_waitHandlePool.Destroy(message.MessageId);
         }
 
         var mqttPubRelMessage = new MqttPubRelMessage()
@@ -154,7 +154,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(waitData_2_Async);
+            this.m_waitHandlePool.Destroy(mqttPubRelMessage.MessageId);
         }
     }
 
