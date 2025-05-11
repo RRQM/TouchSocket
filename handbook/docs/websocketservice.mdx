@@ -89,7 +89,7 @@ service.Logger.Info("服务器已启动");
 /// <param name="client"></param>
 /// <param name="context"></param>
 /// <returns></returns>
-private static bool VerifyConnection(IHttpSessionClient client, HttpContext context)
+private static Task<bool> VerifyConnection(IHttpSessionClient client, HttpContext context)
 {
     if (!context.Request.IsUpgrade())//如果不包含升级协议的header，就直接返回false。
     {
@@ -107,9 +107,9 @@ private static bool VerifyConnection(IHttpSessionClient client, HttpContext cont
         }
         else
         {
-            context.Response
+           await context.Response
                 .SetStatus(403, "token不正确")
-                .Answer();
+                .AnswerAsync();
         }
     }
     else if (context.Request.UrlEquals("/wsheader"))//以此连接，则需要从header传入token才可以连接
@@ -120,9 +120,9 @@ private static bool VerifyConnection(IHttpSessionClient client, HttpContext cont
         }
         else
         {
-            context.Response
+            await context.Response
                 .SetStatus(403, "token不正确")
-                .Answer();
+                .AnswerAsync();
         }
     }
     return false;
@@ -179,7 +179,8 @@ public class MyApiServer : SingletonRpcServer
     {
         if (callContext.Caller is HttpSessionClient sessionClient)
         {
-            if (await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext))
+            var result=await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext);
+            if (result.IsSuccess)
             {
                 m_logger.Info("WS通过WebApi连接");
                 var webSocket = sessionClient.WebSocket;
@@ -398,7 +399,7 @@ class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
             using (var receiveResult = await client.ReadAsync(CancellationToken.None))
             {
 
-                if (receiveResult.DataFrame == null)
+                if (receiveResult.IsCompleted)
                 {
                     break;
                 }
@@ -474,7 +475,7 @@ private static HttpService CreateHttpService()
 
 使用`ReadAsync`，在`OnWebSocketHandshaked`组合消息。
 
-```csharp {33-60} showLineNumbers
+```csharp {33-52} showLineNumbers
 internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 {
     private readonly ILog m_logger;
@@ -509,8 +510,11 @@ internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugi
                 {
                     case WSDataType.Cont:
                         {
-                            //收到的是中继包
-                            if (dataFrame.FIN)//判断是否为最终包
+                            //先缓存中继数据
+                            stream.Write(data.Span);
+
+                            //然后判断中继包是否为最终包
+                            if (dataFrame.FIN)
                             {
                                 //是
 
@@ -522,17 +526,6 @@ internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugi
                                 {
                                     this.m_logger.Info($"WebSocket二进制：{stream.Length}长度");
                                 }
-                            }
-                            else
-                            {
-                                //否，继续缓存
-
-                                //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
-                                //var segment = data.AsSegment();
-                                //stream.Write(segment.Array, segment.Offset, segment.Count);
-
-                                //如果是net6.0以上，直接写入span即可
-                                stream.Write(data.Span);
                             }
                         }
                         break;

@@ -247,7 +247,7 @@ foreach (var file in multifileCollection.Files)
 }
 
 await e.Context.Response
-         .SetStatus()
+         .SetStatusWithSuccess()
          .FromText("Ok")
          .AnswerAsync();
 ```
@@ -355,7 +355,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
                 var autoGzip = true;//自动判断是否应用gzip压缩。
 
                 await response
-                    .SetStatus()//必须要有状态
+                    .SetStatusWithSuccess()//必须要有状态
                     .FromFileAsync(fileInfo, e.Context.Request, fileName, maxSpeed, bufferLength, autoGzip);
 
                 //或者直接使用HttpContext
@@ -445,7 +445,7 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
 
             //回应html
             await response
-                 .SetStatus()//必须要有状态
+                 .SetStatusWithSuccess()//必须要有状态
                  .SetContentTypeByExtension(".html")
                  .SetContent(sb.ToString())
                  .AnswerAsync();
