@@ -75,6 +75,7 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     }
 
     /// <inheritdoc/>
+    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(in sign)的重载函数直接代替", true)]
     public void Destroy(TWaitData waitData)
     {
         lock (this.m_lock)
@@ -97,6 +98,7 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     }
 
     /// <inheritdoc/>
+    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(in sign)的重载函数直接代替", true)]
     public void Destroy(TWaitDataAsync waitData)
     {
         lock (this.m_lock)
@@ -114,6 +116,35 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
 
                 waitData.Reset();
                 this.m_waitQueueAsync.Enqueue(waitData);
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Destroy(int sign)
+    {
+        lock (this.m_lock)
+        {
+            if (this.m_waitDicAsync.TryRemove(sign, out var waitDataAsync))
+            {
+                if (waitDataAsync.DisposedValue)
+                {
+                    return;
+                }
+
+                waitDataAsync.Reset();
+                this.m_waitQueueAsync.Enqueue(waitDataAsync);
+                return;
+            }
+
+            if (this.m_waitDic.TryRemove(sign, out var waitData))
+            {
+                if (waitData.DisposedValue)
+                {
+                    return;
+                }
+                waitData.Reset();
+                this.m_waitQueue.Enqueue(waitData);
             }
         }
     }

@@ -23,6 +23,7 @@ public static class SetupConfigObjectExtension
     /// </summary>
     /// <param name="setupConfigObject">要配置的配置对象。</param>
     /// <param name="config">用于配置的配置对象。</param>
+    [AsyncToSyncWarning]
     public static void Setup(this ISetupConfigObject setupConfigObject, TouchSocketConfig config)
     {
         // 调用异步配置方法并忽略结果。这里解释了为什么需要忽略结果：可能是因为我们不关注异步操作的完成状态，或者我们已经处理了异步操作可能返回的所有必要结果。

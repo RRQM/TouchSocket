@@ -836,7 +836,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitFinishedPackage.Sign);
             byteBlock.Dispose();
         }
     }
@@ -905,7 +905,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitFileResource.Sign);
             byteBlock.Dispose();
         }
     }
@@ -977,7 +977,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         finally
         {
             fileSection.Status = FileSectionStatus.Transferred;
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitFileSection.Sign);
             byteBlock.Dispose();
         }
     }
@@ -1051,7 +1051,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitFileResource.Sign);
             byteBlock.Dispose();
         }
     }
@@ -1127,7 +1127,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitFileSection.Sign);
             byteBlock.Dispose();
         }
     }
@@ -1621,7 +1621,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitSmallFilePackage.Sign);
         }
     }
 
@@ -1705,7 +1705,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(waitSmallFilePackage.Sign);
             byteBlock.Dispose();
             ArrayPool<byte>.Shared.Return(buffer);
         }

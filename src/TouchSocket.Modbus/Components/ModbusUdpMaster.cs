@@ -56,7 +56,7 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(waitData);
+            this.m_waitHandlePool.Destroy(sign);
         }
     }
 

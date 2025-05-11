@@ -26,12 +26,9 @@ public class LoggerGroup : LoggerBase
     /// 一组日志记录器
     /// </summary>
     /// <param name="logs"></param>
-    public LoggerGroup(params ILog[] logs)
+    public LoggerGroup(params ILog[] logs):this()
     {
-        if (logs is null)
-        {
-            throw new ArgumentNullException(nameof(logs));
-        }
+        ThrowHelper.ThrowArgumentNullExceptionIf(logs,nameof(logs));
         foreach (var log in logs)
         {
             this.AddLogger(log);
@@ -44,6 +41,7 @@ public class LoggerGroup : LoggerBase
     [DependencyInject]
     public LoggerGroup()
     {
+        this.LogLevel = LogLevel.Trace;
     }
 
     /// <summary>

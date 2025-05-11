@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Net.Sockets;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -31,6 +32,7 @@ public static class SocketExtension
     /// <param name="offset">字节数组中开始发送数据的索引。</param>
     /// <param name="length">要发送的数据长度。</param>
     /// <exception cref="System.Net.Sockets.SocketException">当数据发送失败时抛出异常。</exception>
+    [Obsolete("此方法可能会与内部发生逻辑产生歧义，已被弃用")]
     public static void AbsoluteSend(this Socket socket, byte[] buffer, int offset, int length)
     {
         // 对Socket对象加锁，以确保线程安全。

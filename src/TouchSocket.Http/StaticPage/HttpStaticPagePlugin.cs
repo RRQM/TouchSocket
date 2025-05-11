@@ -184,7 +184,7 @@ public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
         {
             var request = e.Context.Request;
             var response = e.Context.Response;
-            response.SetStatus();
+            response.SetStatusWithSuccess();
             if (this.ContentTypeProvider?.TryGetContentType(url, out var result) != true)
             {
                 result = HttpTools.GetContentTypeFromExtension(url);

@@ -35,7 +35,7 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
     }
 
     /// <inheritdoc/>
-    public WaitDataStatus Status { get => this.m_status; }
+    public WaitDataStatus Status => this.m_status;
 
     /// <inheritdoc/>
     public T WaitResult { get; private set; }

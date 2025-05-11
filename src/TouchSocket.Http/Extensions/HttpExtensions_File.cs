@@ -61,7 +61,7 @@ public static partial class HttpExtensions
                 var range = request?.Headers.Get(HttpHeaders.Range);
                 if (string.IsNullOrEmpty(range))
                 {
-                    response.SetStatus();
+                    response.SetStatusWithSuccess();
                     if (!autoGzip)
                     {
                         response.ContentLength = fileInfo.Length;

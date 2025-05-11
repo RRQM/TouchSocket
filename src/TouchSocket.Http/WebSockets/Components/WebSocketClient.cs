@@ -148,13 +148,13 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     }
 
     /// <inheritdoc/>
-    public Task PingAsync()
+    public Task<Result> PingAsync()
     {
         return this.WebSocket.PingAsync();
     }
 
     /// <inheritdoc/>
-    public Task PongAsync()
+    public Task<Result> PongAsync()
     {
         return this.WebSocket.PongAsync();
     }

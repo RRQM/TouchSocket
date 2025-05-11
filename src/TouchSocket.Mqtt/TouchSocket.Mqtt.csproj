@@ -6,7 +6,7 @@
 
 说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket.Mqtt</Title>
-		<PackageOutputPath></PackageOutputPath>
+		<Version>$(TouchSocketVersion)-Alpha</Version>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />

@@ -57,13 +57,13 @@ public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IReso
     /// 异步发送Ping请求。
     /// </summary>
     /// <returns>任务完成时返回。</returns>
-    Task PingAsync();
+    Task<Result> PingAsync();
 
     /// <summary>
     /// 异步执行Pong操作。
     /// </summary>
     /// <returns>一个任务对象，表示异步操作的完成。</returns>
-    Task PongAsync();
+    Task<Result> PongAsync();
 
     /// <summary>
     /// 异步等待读取数据

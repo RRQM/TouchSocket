@@ -32,6 +32,7 @@ public static class SenderExtension
     /// <typeparam name="TClient">发送器类型参数，必须实现ISender接口。</typeparam>
     /// <param name="client">发送器实例。</param>
     /// <param name="memory">待发送的字节内存块，使用<see cref="ReadOnlyMemory{T}"/>类型以强调数据不会被修改。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, ReadOnlyMemory<byte> memory) where TClient : ISender
     {
         // 调用SendAsync方法发送数据，并立即返回，不等待发送完成。这种设计用于提高性能，特别是在高负载情况下。
@@ -44,10 +45,10 @@ public static class SenderExtension
     /// <typeparam name="TClient">发送者类型，必须实现ISender接口。</typeparam>
     /// <param name="client">发送者实例。</param>
     /// <param name="value">待发送的字符串。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, string value) where TClient : ISender
     {
-        // 将字符串转换为UTF-8编码的字节序列，然后发送。
-        client.Send(Encoding.UTF8.GetBytes(value));
+        client.SendAsync(value).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -57,10 +58,13 @@ public static class SenderExtension
     /// <param name="client">发送器实例。</param>
     /// <param name="value">待发送的字符串。</param>
     /// <returns>返回一个Task对象，表示异步操作。</returns>
-    public static Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
+    public static async Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
     {
-        // 将字符串转换为UTF-8编码的字节数组，然后异步发送。
-        return client.SendAsync(Encoding.UTF8.GetBytes(value));
+        using (var byteBlock=new ByteBlock(1024))
+        {
+            byteBlock.WriteNormalString(value, Encoding.UTF8);
+            await client.SendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
     }
 
     #endregion ISend
@@ -73,6 +77,7 @@ public static class SenderExtension
     /// <param name="client">发送数据的客户端对象。</param>
     /// <param name="bytesList">待发送的字节数据列表。</param>
     /// <typeparam name="TClient">客户端对象类型，必须实现<see cref="IClientSender"/>接口。</typeparam>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, IList<ArraySegment<byte>> bytesList) where TClient : IClientSender
     {
         // 调用客户端对象的SendAsync方法发送数据，并忽略返回结果。
@@ -89,6 +94,7 @@ public static class SenderExtension
     /// <param name="client">发起请求的客户端对象。</param>
     /// <param name="requestInfo">要发送的请求信息。</param>
     /// <typeparam name="TClient">客户端对象的类型，必须实现<see cref="IRequestInfoSender"/>接口。</typeparam>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, IRequestInfo requestInfo) where TClient : IRequestInfoSender
     {
         // 直接调用客户端对象的SendAsync方法并获取错误的等待结果
@@ -108,6 +114,7 @@ public static class SenderExtension
     /// <param name="client">客户端实例</param>
     /// <param name="id">请求的目标ID</param>
     /// <param name="requestInfo">请求信息对象，包含请求的各种细节</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, string id, IRequestInfo requestInfo) where TClient : IIdRequestInfoSender
     {
         // 调用异步发送方法而不等待结果，实现同步发送的效果
@@ -121,10 +128,10 @@ public static class SenderExtension
     /// <param name="client">客户端实例，用于发送数据。</param>
     /// <param name="id">标识符，用于指定发送的目标。</param>
     /// <param name="value">要发送的字符串内容。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, string id, string value) where TClient : IIdSender
     {
-        // 使用UTF-8编码将字符串转换为字节数组，并发送。
-        client.Send(id, Encoding.UTF8.GetBytes(value));
+        client.SendAsync(id, value).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -134,6 +141,7 @@ public static class SenderExtension
     /// <param name="client">发送器实例。</param>
     /// <param name="id">发送的数据的唯一标识。</param>
     /// <param name="memory">待发送的字节内存块，使用<see cref="ReadOnlyMemory{T}"/>以强调数据不会被修改。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, string id, in ReadOnlyMemory<byte> memory) where TClient : IIdSender
     {
         // 直接调用SendAsync方法并获取结果，这里使用GetFalseAwaitResult是因为发送操作不需要等待完成。
@@ -165,10 +173,10 @@ public static class SenderExtension
     /// <param name="client">用于发送数据的客户端实例。</param>
     /// <param name="endPoint">发送数据的目的地，表示为一个端点。</param>
     /// <param name="value">需要发送的字符串数据。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
     {
-        // 使用UTF-8编码将字符串转换为字节数组，并通过客户端实例发送。
-        client.Send(endPoint, Encoding.UTF8.GetBytes(value));
+        client.SendAsync(endPoint, value).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -178,6 +186,7 @@ public static class SenderExtension
     /// <param name="client">发送客户端实例。</param>
     /// <param name="endPoint">数据发送的目标端点。</param>
     /// <param name="memory">待发送的数据，以只读内存的方式提供。</param>
+    [AsyncToSyncWarning]
     public static void Send<TClient>(this TClient client, EndPoint endPoint, ReadOnlyMemory<byte> memory)
         where TClient : IUdpClientSender
     {
@@ -193,10 +202,13 @@ public static class SenderExtension
     /// <param name="endPoint">发送数据的目的地，可以是IP地址和端口号的组合。</param>
     /// <param name="value">需要发送的字符串内容。</param>
     /// <returns>返回一个Task对象，代表异步操作的完成状态。</returns>
-    public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
+    public static async Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
     {
-        // 使用UTF-8编码将字符串转换为字节数组，然后调用SendAsync方法发送。
-        return client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+        using (var byteBlock=new ByteBlock(1024))
+        {
+            byteBlock.WriteNormalString(value, Encoding.UTF8);
+            await client.SendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
     }
 
     #endregion IUdpClientSender

@@ -44,8 +44,8 @@ internal sealed partial class InternalWebSocket : IWebSocket
     public IHttpSession Client => this.m_isServer ? this.m_httpSocketClient : this.m_httpClientBase;
     public WebSocketCloseStatus CloseStatus { get; set; }
     public bool IsClient => !this.m_isServer;
-    public DateTimeOffset LastReceivedTime => Client.LastReceivedTime;
-    public DateTimeOffset LastSentTime => Client.LastSentTime;
+    public DateTimeOffset LastReceivedTime => this.Client.LastReceivedTime;
+    public DateTimeOffset LastSentTime => this.Client.LastSentTime;
     public ILog Logger => this.Client.Logger;
     public bool Online { get; set; }
     public Protocol Protocol => Protocol.WebSocket;
@@ -106,14 +106,32 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task PingAsync()
+    public async Task<Result> PingAsync()
     {
-        await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 
-    public async Task PongAsync()
+    public async Task<Result> PongAsync()
     {
-        await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+
+            return Result.FromException(ex);
+        }
+        
     }
 
     #region 发送

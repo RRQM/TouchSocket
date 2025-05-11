@@ -43,6 +43,10 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
     /// <param name="byteSize">要从字节池租用的字节数。</param>
     public ValueByteBlock(int byteSize)
     {
+        if (byteSize < 1)
+        {
+            byteSize = 16;
+        }
         this.m_bytePool = ArrayPool<byte>.Shared;
         this.m_buffer = this.m_bytePool.Rent(byteSize);
     }
@@ -54,6 +58,10 @@ public partial struct ValueByteBlock : IByteBlock, IEquatable<ValueByteBlock>
     /// <param name="bytePool">用于租用字节的 BytePool 实例。</param>
     public ValueByteBlock(int byteSize, ArrayPool<byte> bytePool)
     {
+        if (byteSize < 1)
+        {
+            byteSize = 16;
+        }
         this.m_bytePool = bytePool;
         this.m_buffer = bytePool.Rent(byteSize);
     }

@@ -114,7 +114,7 @@ public class MqttClientActor : MqttActor
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitDataAsync);
+            this.WaitHandlePool.Destroy(message.MessageId);
         }
         
     }
@@ -136,7 +136,7 @@ public class MqttClientActor : MqttActor
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitDataAsync);
+            this.WaitHandlePool.Destroy(message.MessageId);
         }
         
     }

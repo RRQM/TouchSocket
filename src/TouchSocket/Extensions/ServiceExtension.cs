@@ -31,6 +31,7 @@ public static class ServiceExtension
     /// 此方法使用了GetFalseAwaitResult方法来避免捕获异常，这在某些异步操作中可能是必要的，
     /// 但在常规情况下，应该避免在生产代码中直接调用非await的异步方法结果。
     /// </remarks>
+    [AsyncToSyncWarning]
     public static void Start<TService>(this TService service) where TService : IServiceBase
     {
         service.StartAsync().GetFalseAwaitResult();
@@ -41,10 +42,11 @@ public static class ServiceExtension
     /// </summary>
     /// <typeparam name="TService">要停止的服务类型，必须实现IServiceBase接口。</typeparam>
     /// <param name="service">要执行停止操作的服务实例。</param>
-    public static void Stop<TService>(this TService service) where TService : IServiceBase
+    [AsyncToSyncWarning]
+    public static Result Stop<TService>(this TService service) where TService : IServiceBase
     {
         // 直接调用服务的StopAsync方法，并获取其FalseAwaitResult，确保异步操作被立即处理。
-        service.StopAsync().GetFalseAwaitResult();
+        return service.StopAsync().GetFalseAwaitResult();
     }
 
     #endregion IServiceBase
@@ -52,6 +54,7 @@ public static class ServiceExtension
     #region ITcpService
 
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
+    [AsyncToSyncWarning]
     public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
     {
         StartAsync(service, iPHosts).GetFalseAwaitResult();
@@ -80,6 +83,7 @@ public static class ServiceExtension
     #region Udp
 
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
+    [AsyncToSyncWarning]
     public static void Start<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
     {
         StartAsync(service, iPHost).GetFalseAwaitResult();

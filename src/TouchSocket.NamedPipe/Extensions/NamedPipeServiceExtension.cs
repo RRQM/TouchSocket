@@ -22,6 +22,7 @@ namespace TouchSocket.NamedPipe;
 public static class NamedPipeServiceExtension
 {
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
+    [AsyncToSyncWarning]
     public static void Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
     {
         TouchSocketConfig config;
@@ -29,14 +30,14 @@ public static class NamedPipeServiceExtension
         {
             config = new TouchSocketConfig();
             config.SetPipeName(pipeName);
-            service.Setup(config);
+            service.SetupAsync(config).GetFalseAwaitResult();
         }
         else
         {
             config = service.Config;
             config.SetPipeName(pipeName);
         }
-        service.Start();
+        service.StartAsync().GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IServiceBase.StartAsync"/>

@@ -705,7 +705,20 @@ public static partial class HttpExtensions
     /// <typeparam name="TResponse">泛型参数，表示HttpResponse的类型。</typeparam>
     /// <param name="response">要设置状态的HttpResponse对象。</param>
     /// <returns>返回设置后的HttpResponse对象。</returns>
+    [Obsolete("此方法由于方法名称不能清楚表达http状态，已被弃用，请使用SetStatusWithSuccess直接代替")]
     public static TResponse SetStatus<TResponse>(this TResponse response) where TResponse : HttpResponse
+    {
+        // 调用重载的SetStatus方法，设置状态码为200，状态信息为"Success"。
+        return SetStatus(response, 200, "Success");
+    }
+
+    /// <summary>
+    /// 设置默认Success状态，并且附带时间戳。
+    /// </summary>
+    /// <typeparam name="TResponse">泛型参数，表示HttpResponse的类型。</typeparam>
+    /// <param name="response">要设置状态的HttpResponse对象。</param>
+    /// <returns>返回设置后的HttpResponse对象。</returns>
+    public static TResponse SetStatusWithSuccess<TResponse>(this TResponse response) where TResponse : HttpResponse
     {
         // 调用重载的SetStatus方法，设置状态码为200，状态信息为"Success"。
         return SetStatus(response, 200, "Success");

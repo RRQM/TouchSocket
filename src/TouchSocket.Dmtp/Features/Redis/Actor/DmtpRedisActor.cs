@@ -104,7 +104,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 
@@ -149,7 +149,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 
@@ -219,7 +219,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 
@@ -356,7 +356,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 
@@ -417,7 +417,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 

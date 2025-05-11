@@ -28,7 +28,7 @@ public class Method
     private readonly MethodInfo m_info;
     private Func<object, object[], object> m_invoker;
 
-    private readonly string m_generatorTypeNamespace = "TouchSocket.Core.__Internals";
+    private const string m_generatorTypeNamespace = "TouchSocket.Core.__Internals";
 
     /// <summary>
     /// 初始化一个动态调用方法
@@ -158,7 +158,7 @@ public class Method
             return false;
         }
 
-        var typeName = $"{this.m_generatorTypeNamespace}.__{StringExtension.MakeIdentifier(this.Info.DeclaringType.FullName)}MethodExtension";
+        var typeName = $"{m_generatorTypeNamespace}.__{StringExtension.MakeIdentifier(this.Info.DeclaringType.FullName)}MethodExtension";
 
         var type = this.Info.DeclaringType.Assembly.GetType(typeName);
         if (type == null)

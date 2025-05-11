@@ -57,8 +57,10 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
     /// <param name="byteSize">ByteBlock 的初始大小。</param>
     public ByteBlock(int byteSize)
     {
-        //设置租用字节数组的最小长度，以防为0或者负数
-        byteSize = Math.Max(16, byteSize);
+        if (byteSize < 1)
+        {
+            byteSize = 16;
+        }
         // 使用默认字节池初始化。
         this.m_bytePool = ArrayPool<byte>.Shared;
         // 从字节池租用指定大小的字节数组。
@@ -72,10 +74,12 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
     /// <param name="bytePool">用于 ByteBlock 的 BytePool 实例。</param>
     public ByteBlock(int byteSize, ArrayPool<byte> bytePool)
     {
+        if (byteSize < 1)
+        {
+            byteSize = 16;
+        }
         // 确保字节池不为空。
         this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool, nameof(bytePool));
-        //设置租用字节数组的最小长度，以防为0或者负数
-        byteSize = Math.Max(16, byteSize);
         // 从指定的字节池租用字节数组。
         this.m_buffer = bytePool.Rent(byteSize);
     }

@@ -22,6 +22,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// Tcp命令行插件。
 /// </summary>
+[DynamicMethod]
 public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
 {
     private readonly ILog m_logger;
@@ -124,14 +125,14 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
                     }
                     if (method.HasReturn)
                     {
-                        clientSender.Send(this.Converter.Serialize(null, result));
+                        await clientSender.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 catch (Exception ex)
                 {
                     if (this.ReturnException)
                     {
-                        clientSender.Send(ex.Message);
+                        await clientSender.SendAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }

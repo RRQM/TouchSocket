@@ -64,7 +64,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                         {
                             var response = e.Context.Response;
                             response.SetContent(data);
-                            response.SetStatus();
+                            response.SetStatusWithSuccess();
                             await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         },
                         SerializerConverter = this.SerializerConverter,

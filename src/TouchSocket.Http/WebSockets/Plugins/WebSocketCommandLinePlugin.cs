@@ -22,6 +22,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// WS命令行插件。
 /// </summary>
+[DynamicMethod]
 public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
 {
     private readonly ILog m_logger;
