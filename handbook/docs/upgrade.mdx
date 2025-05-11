@@ -18,6 +18,63 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.1.2
+
+**更新日期：** 2025.5.11
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>优化</Tag> 全系语法分析器和源生成器，使用增量源生成器，减少编译时间。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `Logger`在添加到容器时，支持直接设置日志等级。
+- &nbsp;<Tag>修复</Tag> `ByteBlock`、`ValueByteBlock`在请求的`length`为0时，会抛出异常。 [#69](https://gitee.com/RRQM_Home/TouchSocket/pulls/69)
+- &nbsp;<Tag>修复</Tag> `WaitHandlePool在waitData`为`null`无法`Destroy`释放问题。[#IC64WX](https://gitee.com/RRQM_Home/TouchSocket/issues/IC64WX)
+- &nbsp;<Tag>移除</Tag> 弃用`ManualContainer`。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>优化</Tag> 发送字符串的效率，极大减少GC的产生。
+- &nbsp;<Tag>优化</Tag> `UseCheckClear`的使用体验，使用更为贴切的方法名称。
+- &nbsp;<Tag>修复</Tag> `CheckClearPlugin`在应用到`Client`，第2次检验会失效的`bug`。[#IC5J1I](https://gitee.com/RRQM_Home/TouchSocket/issues/IC5J1I)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpClientBase`请求时，新增直接添加`Host`的逻辑。[#IC6OU2](https://gitee.com/RRQM_Home/TouchSocket/issues/IC6OU2)
+- &nbsp;<Tag>优化</Tag> `WebSocket`在断开时，会判断是否带有主动断开消息，如果带有，则投递主动断开的消息。
+- &nbsp;<Tag>优化</Tag> `SetStatus`的使用体验，在默认参数（成功）时，则使用`SetStatusWithSuccess`代替。
+- &nbsp;<Tag>调整</Tag> `WebSocket`的`Ping`与`Pong`使用`Result`进行返回。不再抛出异常。
+- &nbsp;<Tag>修复</Tag> `Http`在处理请求时，阻塞接收执行上下文的bug，这会导致如果收到`http`请求，且需要较长时间执行时，如果连接方已断开，则断开消息不会立即执行的bug。也会间接导致`WebApi`的`CancellationToken`失效。
+
+
+#### TouchSocket.NamedPipe
+
+- &nbsp;<Tag>新增</Tag> `UseNamedPipeSessionCheckClear`的插件扩展方法。
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>新增</Tag> `ISingletonRpcServer`的接口。
+
+#### TouchSocket.SerialPort
+
+- &nbsp;<Tag>新增</Tag> `UseSerialPortSessionCheckClear`的插件扩展方法。
+
+####  TouchSocket.WebApi
+
+- &nbsp;<Tag>修复</Tag> `WebApi`调用上下文中`CancellationToken`不起作用的bug。
+
+***
+
+<details>
+<summary>v3.1</summary>
+<div>
 
 ## v3.1.0(1)
 
@@ -90,6 +147,9 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>新增</Tag> 功能首发。
 
 ***
+
+</div>
+</details>
 
 <details>
 <summary>v3.0</summary>
