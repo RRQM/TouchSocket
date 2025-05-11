@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -162,9 +163,9 @@ public partial class Form1 : Form
         }
     }
 
-    private void button1_Click(object sender, EventArgs e)
+    private async void button1_Click(object sender, EventArgs e)
     {
-        this.m_tcpClient?.Close();
+        await this.m_tcpClient?.CloseAsync();
     }
 
     private CancellationTokenSource cts;

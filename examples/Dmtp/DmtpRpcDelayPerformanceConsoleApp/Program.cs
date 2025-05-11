@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -12,9 +13,9 @@ namespace RpcDelayPerConsoleApp
     {
         static async Task Main(string[] args)
         {
-            var service = GetService();
+            var service = await GetService();
 
-            var client = GetClient();
+            var client = await GetClient();
 
             List<Task> tasks = new List<Task>();
 
@@ -40,12 +41,12 @@ namespace RpcDelayPerConsoleApp
 
         }
 
-        static TcpDmtpService GetService()
+        static async Task<TcpDmtpService> GetService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
-                   .ConfigureContainer(a => 
+                   .ConfigureContainer(a =>
                    {
                        a.AddRpcStore(store =>
                        {
@@ -61,27 +62,27 @@ namespace RpcDelayPerConsoleApp
                        VerifyToken = "Rpc"
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;
         }
 
-        static TcpDmtpClient GetClient()
+        static async Task<TcpDmtpClient> GetClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a => 
-                { 
-                    a.UseDmtpRpc(); 
-                })
-                .SetDmtpOption(new DmtpOption() 
-                { 
-                    VerifyToken = "Rpc" 
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                  .SetRemoteIPHost("127.0.0.1:7789")
+                  .ConfigurePlugins(a =>
+                  {
+                      a.UseDmtpRpc();
+                  })
+                  .SetDmtpOption(new DmtpOption()
+                  {
+                      VerifyToken = "Rpc"
+                  }));
+            await client.ConnectAsync();
 
 
             return client;

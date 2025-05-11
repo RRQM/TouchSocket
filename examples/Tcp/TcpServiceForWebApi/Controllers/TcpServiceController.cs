@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -40,13 +41,13 @@ public class TcpServiceController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<TcpResult> SendMsgTo(string id, string msg)
+    public async Task<ActionResult<TcpResult>> SendMsgTo(string id, string msg)
     {
         try
         {
             if (this.m_tcpService.Clients.TryGetClient(id, out var client))
             {
-                client.Send(msg);
+                await client.SendAsync(msg);
                 return new TcpResult(ResultCode.Success, "success");
             }
             else
@@ -61,19 +62,19 @@ public class TcpServiceController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<Result> SendMsgThenWait(string id, string msg)
+    public async Task<ActionResult<Result>> SendMsgThenWait(string id, string msg)
     {
         try
         {
             if (this.m_tcpService.Clients.TryGetClient(id, out var client))
             {
-                var result = client.CreateWaitingClient(new WaitingOptions()
+                var result = await client.CreateWaitingClient(new WaitingOptions()
                 {
                     FilterFunc = data =>
                     {
                         return true;//此处可以筛选返回数据。
                     }
-                }).SendThenReturn(Encoding.UTF8.GetBytes(msg));
+                }).SendThenReturnAsync(Encoding.UTF8.GetBytes(msg));
                 return new Result(ResultCode.Success, Encoding.UTF8.GetString(result));
             }
             else

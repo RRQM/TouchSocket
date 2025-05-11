@@ -12,6 +12,7 @@
 
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -28,43 +29,42 @@ public partial class Form1 : Form
 
     private readonly UdpSession m_udpSession = new UdpSession();
 
-    private void button1_Click(object sender, EventArgs e)
+    private async void button1_Click(object sender, EventArgs e)
     {
-        this.m_udpSession.Received = (remote, e) =>
+        this.m_udpSession.Received = async (remote, e) =>
         {
             if (e.ByteBlock.Length > 1024)
             {
                 this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Length}长度的数据。");
-                this.m_udpSession.Send("收到");
+                await this.m_udpSession.SendAsync("收到");
             }
             else
             {
                 this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
             }
             var endPoint = e.EndPoint;
-            return EasyTask.CompletedTask;
         };
 
-        this.m_udpSession.SetupAsync(new TouchSocketConfig()
-             .SetBindIPHost(new IPHost(this.textBox2.Text))
-             .SetRemoteIPHost(new IPHost(this.textBox3.Text))
-             .UseBroadcast()
-             .SetUdpDataHandlingAdapter(() =>
-             {
-                 if (this.checkBox1.Checked)
-                 {
-                     return new UdpPackageAdapter();
-                 }
-                 else
-                 {
-                     return new NormalUdpDataHandlingAdapter();
-                 }
-             })
-             .ConfigureContainer(a =>
-             {
-                 a.AddLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
-             }));
-        this.m_udpSession.StartAsync();
+        await this.m_udpSession.SetupAsync(new TouchSocketConfig()
+               .SetBindIPHost(new IPHost(this.textBox2.Text))
+               .SetRemoteIPHost(new IPHost(this.textBox3.Text))
+               .UseBroadcast()
+               .SetUdpDataHandlingAdapter(() =>
+               {
+                   if (this.checkBox1.Checked)
+                   {
+                       return new UdpPackageAdapter();
+                   }
+                   else
+                   {
+                       return new NormalUdpDataHandlingAdapter();
+                   }
+               })
+               .ConfigureContainer(a =>
+               {
+                   a.AddLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+               }));
+        await this.m_udpSession.StartAsync();
         this.m_udpSession.Logger.Info("等待接收");
     }
 
@@ -74,12 +74,12 @@ public partial class Form1 : Form
         this.textBox1.AppendText("\r\n");
     }
 
-    private void button2_Click(object sender, EventArgs e)
+    private async void button2_Click(object sender, EventArgs e)
     {
-        this.m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, Encoding.UTF8.GetBytes(this.textBox4.Text));
+        await this.m_udpSession.SendAsync(new IPHost(this.textBox3.Text).EndPoint, Encoding.UTF8.GetBytes(this.textBox4.Text));
     }
 
-    private void button3_Click(object sender, EventArgs e)
+    private async void button3_Click(object sender, EventArgs e)
     {
         if (!this.checkBox1.Checked)
         {
@@ -88,7 +88,7 @@ public partial class Form1 : Form
 
         try
         {
-            this.m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, new byte[1024 * 1024]);
+            await this.m_udpSession.SendAsync(new IPHost(this.textBox3.Text).EndPoint, new byte[1024 * 1024]);
         }
         catch (Exception ex)
         {
@@ -96,7 +96,7 @@ public partial class Form1 : Form
         }
     }
 
-    private void button4_Click(object sender, EventArgs e)
+    private async void button4_Click(object sender, EventArgs e)
     {
         //调用CreateWaitingClient获取到IWaitingClient的对象。
         var waitClient = this.m_udpSession.CreateWaitingClient(new WaitingOptions()
@@ -105,7 +105,7 @@ public partial class Form1 : Form
         });
 
         //然后使用SendThenReturn。
-        var returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+        var returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
         this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
         ////同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.

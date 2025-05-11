@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -6,9 +7,9 @@ namespace TcpConnectStressTestingConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var service = GetTcpService();
+            var service = await GetTcpService();
 
             new SingleTimer(1000, () =>
             {
@@ -31,17 +32,17 @@ namespace TcpConnectStressTestingConsoleApp
             }
         }
 
-        static TcpService GetTcpService()
+        static async Task<TcpService> GetTcpService()
         {
             var service = new TcpService();
-            service.Setup(new TouchSocketConfig()
-                .ConfigurePlugins(a => 
-                {
-                    a.UseCheckClear()
-                    .SetTick(TimeSpan.FromSeconds(60));
-                })
-                .SetListenIPHosts(7789));
-            service.Start();
+            await service.SetupAsync(new TouchSocketConfig()
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseTcpSessionCheckClear()
+                     .SetTick(TimeSpan.FromSeconds(60));
+                 })
+                 .SetListenIPHosts(7789));
+            await service.StartAsync();
             service.Logger.Info("服务器已启动");
             return service;
         }

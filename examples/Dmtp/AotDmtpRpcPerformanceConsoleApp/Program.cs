@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -14,20 +15,20 @@ namespace RpcPerformanceConsoleApp
             var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
             consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
 
-            StartServer();
+            await StartServer();
 
             var count = 100000;
 
-            consoleAction.Add("3.1", "DmtpRpc测试Sum", () => StartSumClient(count));
-            consoleAction.Add("3.2", "DmtpRpc测试GetBytes", () => StartGetBytesClient(count));
-            consoleAction.Add("3.3", "DmtpRpc测试BigString", () => StartBigStringClient(count));
+            consoleAction.Add("3.1", "DmtpRpc测试Sum", async () =>await StartSumClient(count));
+            consoleAction.Add("3.2", "DmtpRpc测试GetBytes", async () => await StartGetBytesClient(count));
+            consoleAction.Add("3.3", "DmtpRpc测试BigString", async () =>await StartBigStringClient(count));
 
             consoleAction.ShowAll();
 
             await consoleAction.RunCommandLineAsync();
         }
 
-        public static void StartServer()
+        public static async Task StartServer()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -49,15 +50,15 @@ namespace RpcPerformanceConsoleApp
                        VerifyToken = "Rpc"//设定连接口令，作用类似账号密码
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }
 
-        public static void StartSumClient(int count)
+        public static async Task StartSumClient(int count)
         {
-            var client = GetClient();
+            var client =await GetClient();
             var timeSpan = TimeMeasurer.Run(() =>
             {
                 var actor = client.GetDmtpRpcActor();
@@ -76,26 +77,26 @@ namespace RpcPerformanceConsoleApp
             });
             Console.WriteLine(timeSpan);
         }
-        private static TcpDmtpClient GetClient()
+        private static async Task<TcpDmtpClient> GetClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
-                //.SetRegistrator(new MyContainer())
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc();
-                })
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Rpc"
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                 //.SetRegistrator(new MyContainer())
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc();
+                 })
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Rpc"
+                 }));
+            await client.ConnectAsync();
             return client;
         }
-        public static void StartGetBytesClient(int count)
+        public static async Task StartGetBytesClient(int count)
         {
-            var client = GetClient();
+            var client = await GetClient();
             var timeSpan = TimeMeasurer.Run(() =>
             {
                 var actor = client.GetDmtpRpcActor();
@@ -115,9 +116,9 @@ namespace RpcPerformanceConsoleApp
             Console.WriteLine(timeSpan);
         }
 
-        public static void StartBigStringClient(int count)
+        public static async Task StartBigStringClient(int count)
         {
-            var client = GetClient();
+            var client =await GetClient();
             var timeSpan = TimeMeasurer.Run(() =>
             {
                 var actor = client.GetDmtpRpcActor();
@@ -139,10 +140,9 @@ namespace RpcPerformanceConsoleApp
         }
     }
 
-    [AutoInjectForSingleton]
     public partial class TestController : SingletonRpcServer
     {
-        [DmtpRpc(MethodInvoke =true)]
+        [DmtpRpc(MethodInvoke = true)]
         public int Sum(int a, int b) => a + b;
 
         [DmtpRpc(MethodInvoke = true)]

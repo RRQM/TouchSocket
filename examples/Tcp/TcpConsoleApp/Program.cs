@@ -46,7 +46,7 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseCheckClear()
+                 a.UseTcpSessionCheckClear()
                  .SetCheckClearType(CheckClearType.All)
                  .SetTick(TimeSpan.FromSeconds(60))
                  .SetOnClose(async (c, t) =>
@@ -157,7 +157,7 @@ internal class Program
         {
             while (true)
             {
-                client.Send(Console.ReadLine());
+                await client.SendAsync(Console.ReadLine());
 
                 //receiverResult必须释放
                 using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
@@ -324,7 +324,7 @@ internal class ClosePlugin : PluginBase, ITcpReceivedPlugin
         catch (CloseException ex)
         {
             this.m_logger.Info("拦截到CloseException");
-            client.Close(ex.Message);
+            await client.CloseAsync(ex.Message);
         }
         catch (Exception exx)
         {

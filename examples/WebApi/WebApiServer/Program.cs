@@ -65,7 +65,7 @@ internal class Program
              {
                  //a.UseCors("cors");//全局跨域设定
 
-                 a.UseCheckClear();
+                 a.UseTcpSessionCheckClear();
 
                  a.Add<AuthenticationPlugin>();
 

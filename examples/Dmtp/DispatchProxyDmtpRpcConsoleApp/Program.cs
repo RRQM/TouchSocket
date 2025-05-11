@@ -73,7 +73,7 @@ internal class Program
         }
     }
 
-    private interface IMyRpcServer
+    public interface IMyRpcServer
     {
         /// <summary>
         /// 将两个数相加

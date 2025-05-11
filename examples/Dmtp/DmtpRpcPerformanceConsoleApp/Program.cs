@@ -1,4 +1,4 @@
-﻿using TouchSocket.Core;
+using TouchSocket.Core;
 
 namespace RpcPerformanceConsoleApp
 {
@@ -13,9 +13,9 @@ namespace RpcPerformanceConsoleApp
 
             var count = 100000;
 
-            consoleAction.Add("3.1", "TouchSocketRpc测试Sum", () => TouchSocketRpc.StartSumClient(count));
-            consoleAction.Add("3.2", "TouchSocketRpc测试GetBytes", () => TouchSocketRpc.StartGetBytesClient(count));
-            consoleAction.Add("3.3", "TouchSocketRpc测试BigString", () => TouchSocketRpc.StartBigStringClient(count));
+            consoleAction.Add("3.1", "TouchSocketRpc测试Sum", async () =>await TouchSocketRpc.StartSumClient(count));
+            consoleAction.Add("3.2", "TouchSocketRpc测试GetBytes", async () =>await TouchSocketRpc.StartGetBytesClient(count));
+            consoleAction.Add("3.3", "TouchSocketRpc测试BigString", async () =>await TouchSocketRpc.StartBigStringClient(count));
 
             consoleAction.ShowAll();
 

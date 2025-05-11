@@ -1,4 +1,5 @@
-﻿using TouchSocket.Core;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TcpFlowStressTestingConsoleApp
@@ -9,11 +10,11 @@ namespace TcpFlowStressTestingConsoleApp
         /// Tcp流量吞吐压力测试
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var service = GetTcpService();
+            var service =await GetTcpService();
 
-            var client = GetTcpClient();
+            var client =await GetTcpClient();
 
             Console.WriteLine("请输入BufferLength");
             var bytes = new byte[int.Parse(Console.ReadLine())];
@@ -21,11 +22,11 @@ namespace TcpFlowStressTestingConsoleApp
             Random.Shared.NextBytes(bytes);
             while (true)
             {
-                client.Send(bytes);
+                await client.SendAsync(bytes);
             }
         }
 
-        static TcpService GetTcpService()
+        static async Task<TcpService> GetTcpService()
         {
             var counter = new ValueCounter()//计数器
             {
@@ -42,15 +43,15 @@ namespace TcpFlowStressTestingConsoleApp
                 counter.Increment(e.ByteBlock.Length);
                 await Task.CompletedTask;
             };
-            service.Start(7789);
+            await service.StartAsync(7789);
             service.Logger.Info("服务器已启动");
             return service;
         }
 
-        static TcpClient GetTcpClient()
+        static async Task<TcpClient> GetTcpClient()
         {
             var tcpClient = new TcpClient();
-            tcpClient.Connect("127.0.0.1:7789");
+            await tcpClient.ConnectAsync("127.0.0.1:7789");
             return tcpClient;
         }
 

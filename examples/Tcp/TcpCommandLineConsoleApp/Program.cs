@@ -34,7 +34,7 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseCheckClear()
+                  a.UseTcpSessionCheckClear()
                   .SetCheckClearType(CheckClearType.All)
                   .SetTick(TimeSpan.FromSeconds(60));
 

@@ -89,7 +89,7 @@ internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlug
             case WSDataType.Close:
                 {
                     m_logger.Info("TCP_WebSocket:远程请求断开");
-                    client.Close("TCP_WebSocket:断开");
+                    await client.CloseAsync("TCP_WebSocket:断开");
                 }
                 return;
 
