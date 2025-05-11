@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -20,7 +21,7 @@ namespace TcpStressTestingConsoleApp
                 SingleWriter = false,
             });
 
-            var service = GetTcpService();
+            var service = await GetTcpService();
 
             for (var i = 0; i < 5; i++)
             {
@@ -86,7 +87,7 @@ namespace TcpStressTestingConsoleApp
 
         static Channel<ByteBlock> m_channel;
 
-        static TcpService GetTcpService()
+        static async Task<TcpService> GetTcpService()
         {
             var service = new TcpService();
             service.Received = async (client, e) =>
@@ -96,16 +97,16 @@ namespace TcpStressTestingConsoleApp
                 //client.Send(byteBlock);
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-                {
-                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                })
-                .ConfigurePlugins(a =>
-                {
-                }));
-            service.Start();//启动
+            await service.SetupAsync(new TouchSocketConfig()//载入配置
+                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+                 {
+                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                 }));
+            await service.StartAsync();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }
@@ -120,7 +121,7 @@ namespace TcpStressTestingConsoleApp
                     var clients = new List<TcpClient>();
                     for (var i = 0; i < count; i++)
                     {
-                        var client =await GetTcpClient();
+                        var client = await GetTcpClient();
                         clients.Add(client);
                     }
 

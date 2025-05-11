@@ -111,7 +111,7 @@ public class MyBigWriteHttpPlug : PluginBase, IHttpPlugin
                     Console.WriteLine($"读取数据，长度={count}");
 
                     await e.Context.Response
-                             .SetStatus()
+                             .SetStatusWithSuccess()
                              .FromText("Ok")
                              .AnswerAsync();
 
@@ -152,7 +152,7 @@ public class MyUploadBigFileHttpPlugin : PluginBase, IHttpPlugin
 
                     client.Logger.Info("大文件上传成功");
                     await e.Context.Response
-                             .SetStatus()
+                             .SetStatusWithSuccess()
                              .FromText("Ok")
                              .AnswerAsync();
                 }
@@ -237,7 +237,7 @@ public class MyHttpPlugin4 : PluginBase, IHttpPlugin
                     }
 
                     await e.Context.Response
-                             .SetStatus()
+                             .SetStatusWithSuccess()
                              .FromText("Ok")
                              .AnswerAsync();
                 }
@@ -277,7 +277,7 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
                 stringBuilder.AppendLine("</html>");
 
                 e.Context.Response
-                         .SetStatus()//必须要有状态
+                         .SetStatusWithSuccess()//必须要有状态
                          .SetContentTypeByExtension(".html")
                          .SetContent(stringBuilder.ToString());
                 await e.Context.Response.AnswerAsync();
@@ -301,7 +301,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
                 {
                     //直接回应文件。
                     await e.Context.Response
-                          .SetStatus()//必须要有状态
+                          .SetStatusWithSuccess()//必须要有状态
                           .FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), e.Context.Request);
                 }
                 catch (Exception ex)
@@ -354,7 +354,7 @@ public class TestFormPlugin : PluginBase, IHttpPlugin
                     Console.WriteLine($"{item.Key}={item.Value}");
                 }
                 await e.Context.Response
-                         .SetStatus()
+                         .SetStatusWithSuccess()
                          .FromText("Ok")
                          .AnswerAsync();
             }

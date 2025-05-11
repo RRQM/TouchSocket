@@ -12,6 +12,7 @@
 
 using RpcProxy;
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -117,9 +118,9 @@ public partial class Form1 : Form
         }
     }
 
-    private void button5_Click(object sender, EventArgs e)
+    private async void button5_Click(object sender, EventArgs e)
     {
-        this.m_client.Close();
+        await this.m_client.CloseAsync();
         this.m_client.SafeDispose();
     }
 

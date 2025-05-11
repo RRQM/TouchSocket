@@ -164,17 +164,17 @@ return (System.Int32) await client.InvokeAsync("JsonRpc_Performance",typeof(Syst
 }
 
 }
-public class LoginModelResult
-{
-public TouchSocket.Core.ResultCode ResultCode { get; set; }
-public System.String Message { get; set; }
-}
-
 public class LoginModel
 {
 public System.String Token { get; set; }
 public System.String Account { get; set; }
 public System.String Password { get; set; }
+}
+
+public class LoginModelResult
+{
+public TouchSocket.Core.ResultCode ResultCode { get; set; }
+public System.String Message { get; set; }
 }
 
 }

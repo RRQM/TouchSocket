@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -7,39 +8,39 @@ namespace TcpConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = CreateService();
-            var client = CreateClient();
+            var service = await CreateService();
+            var client = await CreateClient();
             Console.WriteLine("输入任意内容，回车发送");
             while (true)
             {
-                client.Send(Console.ReadLine());
+                await client.SendAsync(Console.ReadLine());
             }
         }
 
-        private static TcpService CreateService()
+        private static async Task<TcpService> CreateService()
         {
             var service = new TcpService();
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-                {
-                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                    a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<ClosePlugin>();
-                    a.Add<TcpServiceReceivedPlugin>();
-                    a.Add<MyServicePluginClass>();
-                    //a.Add();//此处可以添加插件
-                }));
-            service.Start();//启动
+            await service.SetupAsync(new TouchSocketConfig()//载入配置
+                  .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                  .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+                  {
+                      a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                      a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
+                  })
+                  .ConfigurePlugins(a =>
+                  {
+                      a.Add<ClosePlugin>();
+                      a.Add<TcpServiceReceivedPlugin>();
+                      a.Add<MyServicePluginClass>();
+                      //a.Add();//此处可以添加插件
+                  }));
+            await service.StartAsync();//启动
             return service;
         }
 
-        private static TcpClient CreateClient()
+        private static async Task<TcpClient> CreateClient()
         {
             var tcpClient = new TcpClient();
             tcpClient.Received = (client, e) =>
@@ -52,18 +53,18 @@ namespace TcpConsoleApp
             };
 
             //载入配置
-            tcpClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .ConfigurePlugins(a =>
-                {
-                    a.UseTcpReconnection()
-                    .UsePolling(TimeSpan.FromSeconds(1));
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }));
-            tcpClient.Connect();
+            await tcpClient.SetupAsync(new TouchSocketConfig()
+                  .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                  .ConfigurePlugins(a =>
+                  {
+                      a.UseTcpReconnection()
+                      .UsePolling(TimeSpan.FromSeconds(1));
+                  })
+                  .ConfigureContainer(a =>
+                  {
+                      a.AddConsoleLogger();//添加一个日志注入
+                  }));
+            await tcpClient.ConnectAsync();
             tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
         }

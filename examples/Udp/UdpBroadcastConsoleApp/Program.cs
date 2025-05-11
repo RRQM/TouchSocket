@@ -12,6 +12,7 @@
 
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -19,41 +20,43 @@ namespace UdpBroadcastConsoleApp;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         //创建udpService
         var udpService = new UdpSession();
-        udpService.SetupAsync(new TouchSocketConfig()
-            .SetBindIPHost(new IPHost(7789))
-            .UseBroadcast()
-            .ConfigurePlugins(a =>
-            {
-                a.Add<MyPluginClass1>();
-                a.Add<MyPluginClass2>();
-                a.Add<MyPluginClass3>();
-            })
-            .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
-        udpService.StartAsync();
+        await udpService.SetupAsync(new TouchSocketConfig()
+             .SetBindIPHost(new IPHost(7789))
+             .UseBroadcast()
+             .ConfigurePlugins(a =>
+             {
+                 a.Add<MyPluginClass1>();
+                 a.Add<MyPluginClass2>();
+                 a.Add<MyPluginClass3>();
+             })
+             .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+        await udpService.StartAsync();
 
         //加入组播组
         udpService.JoinMulticastGroup(IPAddress.Parse("224.5.6.7"));
 
         var udpClient = new UdpSession();
-        udpClient.SetupAsync(new TouchSocketConfig()
-            //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
-            .SetBindIPHost(new IPHost(7788))
-            .UseBroadcast()//该配置在广播时是必须的
-            .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
-        udpClient.StartAsync();
+        await udpClient.SetupAsync(new TouchSocketConfig()
+              //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
+              .SetBindIPHost(new IPHost(7788))
+              .UseBroadcast()//该配置在广播时是必须的
+              .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+        await udpClient.StartAsync();
 
         while (true)
         {
-            udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
-            udpClient.Send(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
+            await udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
+            await udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
 
-            udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("hello"));
-            udpClient.Send(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("hi"));
-            Thread.Sleep(1000);
+            await udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("hello"));
+            await udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("hi"));
+
+
+            await Task.Delay(1000);
         }
     }
 

@@ -246,7 +246,7 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(waitData);
+            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
         }
     }
 }

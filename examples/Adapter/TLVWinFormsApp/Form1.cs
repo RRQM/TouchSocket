@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -88,11 +89,11 @@ public partial class Form1 : Form
         this.m_client.Logger.Info("���ӳɹ�");
     }
 
-    private void button3_Click(object sender, EventArgs e)
+    private async void button3_Click(object sender, EventArgs e)
     {
         try
         {
-            this.m_client?.Send(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(this.textBox1.Text)));
+            await this.m_client?.SendAsync(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(this.textBox1.Text)));
         }
         catch (Exception ex)
         {
@@ -112,13 +113,13 @@ public partial class Form1 : Form
         }
     }
 
-    private void button5_Click(object sender, EventArgs e)
+    private async void button5_Click(object sender, EventArgs e)
     {
         for (var i = 0; i < 100; i++)
         {
             try
             {
-                this.m_client?.Send(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(i.ToString())));
+                await this.m_client?.SendAsync(new ValueTLVDataFrame((ushort)this.numericUpDown1.Value, Encoding.UTF8.GetBytes(i.ToString())));
             }
             catch (Exception ex)
             {
