@@ -9,32 +9,185 @@ title: 大小端转换器
 程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
 
 
-## 一、说明
+## 一、基本概念
 
-大小端在计算机业界，**Endian**表示数据在存储器中的存放顺序。
+### 1. 大小端模式
+- **大端模式 (Big Endian)**  
+  高位字节存储在内存低地址，低位字节存储在高地址。  
+  *示例：整数 `10` 的4字节大端表示为 `{0, 0, 0, 10}*`
 
-- **大端模式**，是指**数据的高字节保存在内存的低地址中，而数据的低字节保存在内存的高地址中**，这样的存储模式有点儿类似于把数据当作字符串顺序处理：地址由小向大增加，而数据从高位往低位放；
-- **小端模式**，是指**数据的高字节保存在内存的高地址中，而数据的低字节保存在内存的低地址中**，这种存储模式将地址的高低和数据位权有效地结合起来，高地址部分权值高，低地址部分权值低，和我们的逻辑方法一致。
+- **小端模式 (Little Endian)**  
+  低位字节存储在内存低地址，高位字节存储在高地址。  
+  *示例：整数 `10` 的4字节小端表示为 `{10, 0, 0, 0}`
 
-## 二、绝对大端
-
-```csharp showLineNumbers
-byte[] data= TouchSocketBitConverter.BigEndian.GetBytes(10);
-//结果 {0,0,0,10}
+### 2. 端序类型枚举
+```csharp
+public enum EndianType {
+    Big,        // 标准大端
+    Little,     // 标准小端
+    BigSwap,    // 交换大端（特殊场景）
+    LittleSwap  // 交换小端（特殊场景）
+}
 ```
-## 三、绝对小端
 
-```csharp showLineNumbers
-byte[] data= TouchSocketBitConverter.LittleEndian.GetBytes(10);
-//结果 {10,0,0,0}
+---
+
+
+## 二、核心 API 使用
+
+### 1. 直接指定端序转换器
+```csharp
+// 预定义静态实例
+TouchSocketBitConverter.BigEndian        // 绝对大端
+TouchSocketBitConverter.LittleEndian     // 绝对小端
+TouchSocketBitConverter.BigSwapEndian    // 交换大端
+TouchSocketBitConverter.LittleSwapEndian // 交换小端
 ```
 
-## 四、默认端
-
-TouchSocket系全采用默认“小端”模式。可通过DefaultEndianType属性，修改为大端。
-
-```csharp showLineNumbers
+### 2. 默认端序配置
+```csharp
+// 默认小端模式（可全局修改）
 TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
-byte[] data= TouchSocketBitConverter.Default.GetBytes(10);
+
+// 获取当前默认转换器
+TouchSocketBitConverter.Default.GetBytes(123);
 ```
 
+---
+
+## 三、基础数据类型转换
+
+### 1. 数值类型转换
+#### 转换整型 (`int`)
+```csharp
+// int -> byte[]
+byte[] data = TouchSocketBitConverter.BigEndian.GetBytes(0x12345678); 
+
+// byte[] -> int
+int value = TouchSocketBitConverter.BigEndian.ToInt32(data, 0);
+```
+
+#### 转换浮点型 (`float`)
+```csharp
+// float -> byte[]
+float num = 3.14f;
+byte[] bytes = TouchSocketBitConverter.LittleEndian.GetBytes(num);
+
+// byte[] -> float
+float result = TouchSocketBitConverter.LittleEndian.ToSingle(bytes, 0);
+```
+
+### 2. 长数据类型处理
+#### 转换长整型 (`long`)
+```csharp
+// long -> byte[]
+long bigValue = 0x123456789ABCDEF0;
+byte[] data = TouchSocketBitConverter.Default.GetBytes(bigValue);
+
+// byte[] -> long
+long restored = TouchSocketBitConverter.Default.ToInt64(data, 0);
+```
+
+#### 转换高精度小数 (`decimal`)
+```csharp
+// decimal -> byte[]
+decimal money = 123456.78m;
+byte[] decimalBytes = TouchSocketBitConverter.BigEndian.GetBytes(money);
+
+// byte[] -> decimal
+decimal result = TouchSocketBitConverter.BigEndian.ToDecimal(decimalBytes, 0);
+```
+
+---
+
+## 四、高级功能
+
+### 1. 不安全内存操作
+```csharp
+unsafe {
+    byte[] buffer = new byte[8];
+    long value = 0x1122334455667788;
+
+    // 直接内存写入
+    fixed (byte* ptr = buffer) {
+        TouchSocketBitConverter.LittleEndian.UnsafeWriteBytes(ref *ptr, value);
+    }
+
+    // 直接内存读取
+    long readValue = TouchSocketBitConverter.LittleEndian.UnsafeTo<long>(ref buffer[0]);
+}
+```
+
+### 2. 布尔数组转换
+```csharp
+// bool[] -> byte[]
+bool[] flags = { true, false, true, true, false, true, false, true };
+byte[] boolBytes = TouchSocketBitConverter.Default.GetBytes(flags);
+
+// byte[] -> bool[]
+bool[] decodedFlags = TouchSocketBitConverter.Default.ToBooleans(boolBytes, length: 1);
+```
+
+---
+
+## 五、特殊场景处理
+
+### 1. 字节序验证
+```csharp
+// 检查当前配置是否与系统字节序一致
+bool isCompatible = TouchSocketBitConverter.Default.IsSameOfSet();
+```
+
+### 2. 交换端序模式
+```csharp
+// 使用 BigSwap 模式处理网络数据包
+byte[] swappedData = TouchSocketBitConverter.BigSwapEndian.GetBytes(0xAABBCCDD);
+```
+
+---
+
+## 六、注意事项
+
+1. **字节数组长度验证**  
+   所有转换方法会检查数组长度，不足时抛出 `ArgumentOutOfRangeException`
+
+2. **跨平台兼容性**  
+   建议通过 `IsSameOfSet()` 验证端序一致性
+
+3. **性能优化**  
+   对性能敏感场景推荐使用 `UnsafeWriteBytes` 和 `UnsafeTo` 方法
+
+---
+
+## 七、完整示例
+
+### 网络数据包处理
+```csharp
+// 配置全局大端模式
+TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
+
+// 构造数据包
+var packet = new byte[16];
+int header = 0x4D534754;  // "MSGT"
+float payload = 1024.5f;
+
+// 写入数据
+TouchSocketBitConverter.Default.WriteBytes(packet.AsSpan(0, 4), header);
+TouchSocketBitConverter.Default.WriteBytes(packet.AsSpan(4, 4), payload);
+
+// 解析数据
+int parsedHeader = TouchSocketBitConverter.Default.ToInt32(packet, 0);
+float parsedPayload = TouchSocketBitConverter.Default.ToSingle(packet, 4);
+```
+
+---
+
+## 八、API 参考
+
+| 方法 | 说明 |
+|------|------|
+| `GetBytes<T>(T value)` | 将值转换为字节数组 |
+| `To<T>(ReadOnlySpan<byte>)` | 从字节跨度转换回值 |
+| `WriteBytes(Span<byte>, T)` | 将值写入字节跨度 |
+| `UnsafeWriteBytes(ref byte, T)` | 不安全内存写入 |
+| `UnsafeTo<T>(ref byte)` | 不安全内存读取 |
