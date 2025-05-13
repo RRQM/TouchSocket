@@ -4,12 +4,13 @@ title: 创建Dmtp客户端
 ---
 
 import Tag from "@site/src/components/Tag.js";
+import Pro from "@site/src/components/Pro.js";
 
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
 程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)<br/>
-程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Tag>Pro</Tag>
+程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Pro/> 
 
 ## 一、说明
 
@@ -123,7 +124,7 @@ await websocketDmtpClient.ConnectAsync();
 [基于Aspnetcore的Dmtp示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpWebApplication)
 
 
-### 4.5 DmtpClient工厂 <Tag>Pro</Tag>
+### 4.5 DmtpClient工厂 <Pro/> 
 
 DmtpClient工厂工作模式是一种，由单个主通讯连接和多个传输通讯连接组成的连接池。默认提供了两种类型的客户端工厂，分别为`TcpDmtpClientFactory`，`HttpDmtpClientFactory`。两者工作流程及配置基本相同，下面以`TcpDmtpClientFactory`为例。
 

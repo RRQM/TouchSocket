@@ -4,12 +4,13 @@ title: 创建Dmtp服务器
 ---
 
 import Tag from "@site/src/components/Tag.js";
+import Pro from "@site/src/components/Pro.js";
 
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
 程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)<br/>
-程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Tag>Pro</Tag>
+程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Pro/> 
 
 ## 一、说明
 
@@ -166,7 +167,7 @@ app.UseWebSockets();
 app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
 ```
 
-### 5.5 基于AspNetCore的Http协议 <Tag>Pro</Tag>
+### 5.5 基于AspNetCore的Http协议 <Pro/> 
 
 具体步骤
 
@@ -219,7 +220,7 @@ builder.Services.ConfigureContainer(container =>
 
 [基于Aspnetcore的Dmtp示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpWebApplication)
 
-### 5.6 基于NamedPipe协议 <Tag>Pro</Tag>
+### 5.6 基于NamedPipe协议 <Pro/> 
 
 这是基于`NamedPipe`的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
 
