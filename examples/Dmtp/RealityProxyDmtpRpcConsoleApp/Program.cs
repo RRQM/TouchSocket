@@ -65,7 +65,7 @@ internal class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
         {
             VerifyToken = "Dmtp"
         }));
-        client.ConnectAsync();
+        client.ConnectAsync().GetFalseAwaitResult();
         client.Logger.Info($"连接成功，Id={client.Id}");
         return client;
     }

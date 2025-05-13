@@ -2,12 +2,13 @@
 id: dmtpdescription
 title: 产品及架构介绍
 ---
-
+import Pro from "@site/src/components/Pro.js";
 
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
 程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)
+
 
 ## 一、说明
 
@@ -26,59 +27,134 @@ DMTP（Duplex Message Transport Protocol双工消息传输协议）是一个简�
 - 再4字节为`大端Int32`**有**符号类型，表示本次协议的载荷数据长度。
 - 其余数据为实际载荷数据。
 
+DMTP核心特性：
 
-可能好多人会疑惑，Dmtp和tcp、udp有什么关系？或者说，类似tcp，本身就是可靠传输协议了，那Dmtp的可靠又体现在什么地方呢？
+- **协议简洁**：仅包含协议头、标志位、数据长度及载荷四部分
+- **高效扩展**：支持自定义协议标志位（0-19为系统保留，20-65535开放扩展）
+- **可靠传输**：基于底层传输协议实现消息确认机制
+- **跨协议支持**：可运行于TCP/UDP/HTTP/WebSocket/NamedPipe等多种传输层协议
 
-### 1.1 Dmtp和Tcp、Udp有什么关系？
+```mermaid
+---
+title: "Dmtp Packet"
+---
+packet-beta
+0-15: "Head"
+16-31: "Flags"
+32-63: "Length"
+64-95: "Data (variable length)"
 
-Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于最基本的tcp或http工作，也能基于websocket工作。
+```
 
-**所以，可以认为Dmtp是更为高级的应用层协议。**
+## 二、协议架构
 
-### 1.2 Tcp本身就是可靠传输协议了，那Dmtp的可靠又体现在什么地方呢？
+### 2.1 协议格式
 
-首先呢，我们得明确，tcp的可靠，是在保持连接的时候，才可靠。当突然断网时，这种可靠将被打破。其次这种可靠是单项的，举例来说，发送方只是负责将数据发给接收方，至于接收方处理了没有，或者处理结果如何，都是未知的。那么这时候聪明的小伙伴就会想到让接收方回复一个状态不就行了？是的，这就是Dmtp工作的场景之一了。
+| 字段        | 字节数 | 类型             | 说明                          |
+|-------------|--------|------------------|-------------------------------|
+| Head        | 2      | ASCII            | 固定标识"dm"                 |
+| Flags       | 2      | Big-Endian ushort| 协议标志位（0-65535）         |
+| Length      | 4      | Big-Endian int32 | 数据载荷长度（有符号）        |
+| Data        | n      | Binary           | 实际传输数据                  |
 
-当然，Dmtp的功能远非上述的两个场景，详细概览如下：
+### 2.2 协议层对比
 
+| 特性                | TCP               | DMTP               |
+|---------------------|-------------------|--------------------|
+| 传输可靠性          | 连接级可靠        | 消息级可靠         |
+| 消息确认机制        | 无                | 支持发送/接收确认  |
+| 双工通信            | 基础支持          | 增强型双工支持     |
+| 应用层功能          | 无                | 内置ID管理、路由等 |
 
-## 二、特点
+---
 
-### 2.1 基础功能
+## 三、核心特性
 
-- 支持[连接验证](./dmtpbase.mdx)，也支持动态信息验证。
-- 支持[Id同步](./dmtpbase.mdx)，每个客户端连接到服务器后，自身Id会与服务器Id同步，且支持重置。
-- 支持ssl加密。
-- 支持[协议扩展](./dmtpbase.mdx)。
-- 支持独立通道数据，可进行数据隔离。
-- 支持服务器到客户端，客户端到客户端的操作。
+### 3.1 基础服务
 
+- **安全认证**：支持动态Token凭证验证与SSL/TLS加密
+- **节点管理**：自动同步全局唯一ID，支持ID重定向
+- **协议扩展**：开放65535个协议标志位供业务扩展
+- **数据隔离**：支持多通道并行数据传输
 
-## 三、场景
+### 2.2 高级功能
 
-什么情况下使用Dmtp比较好呢？。
+- **跨协议路由**：支持服务器与客户端、客户端与客户端直连通信
+- **微服务支持**：内置反向RPC机制，支持服务网格架构
+- **流量控制**：提供QoS服务质量保障机制
+- **断线恢复**：支持会话状态保持与断线续传
 
-1. 基本上不需要跨语言的终端，例如：Unity游戏，Winform、WPF、MAUI等软件。
-2. 服务器之间集群。
-3. 扩展微服务，此时可以使用反向Rpc实现。
+---
 
-*实际上目前Dmtp有五个版本，分别为：*
+## 三、适用场景
 
-| **类型** | **特性** |
-| --- | --- |
-| **Tcp版** | 基于Tcp协议，连接性能最好，执行效率最高，支持Dmtp所有功能。 |
-| **Udp版** | 基于Udp协议，不需要连接，会标识基于不可靠协议，**可能**支持Dmtp所有功能，具体的还要看实际添加的插件是否支持在不可靠协议工作。例如DmtpRpc就**支持**在Udp不可靠协议工作。 |
-| **NamedPipe版** | 基于命名管道，流速性能最好，比Tcp版多出3倍。响应效率一般，是Tcp版的一半，是进程通讯的最佳选择。支持Dmtp所有功能。 |
-| **Http版** | 基于Http握手连接，数据交互仍然使用TCP。连接性能一般，但兼容性强，支持JsonRpc，WebApi，XmlRpc，WebSocket等一系列Http组件，且执行效率和TCP版一样高，支持Dmtp所有功能。 |
-| **WebSocket版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的是WebSocket，所有效率只有Tcp版的80%。支持Dmtp所有功能 |
-| **Http中间件版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的Http自升级协议，所有效率介于WebSocket与Tcp版之间。支持Dmtp所有功能 |
+### 3.1 客户端应用
 
-## 四、注意事项
+- Unity/WinForm/WPF/MAUI等桌面/移动端应用
+- 实时游戏通信（位置同步、状态更新）
+- 工业控制系统的指令传输
 
-### 4.1 连接注意事项
+### 3.2 服务端架构
 
-Dmtp拥有独立的连接机制，在连接前后会依次触发`IDmtpHandshakingPlugin`与`IDmtpHandshakedPlugin`插件。当完成连接时，其`IDmtpActor.Online`方为`true`，此后才可以进行后续操作。
+- 微服务集群内部通信
+- 分布式系统节点协调
+- 边缘计算节点数据同步
 
-例如：Dmtp-Tcp组件，这是基于Tcp协议的Dmtp，因为它是继承实现，所以会拥有`Online`和`Online`两个属性。其中Online仅仅表示已经建立Tcp连接，IsHandshaked才表示Dmtp是否完成握手。
+### 3.3 特殊场景
 
-所以，在一些情况下，可能可能需要判断`Online`完成，才能进行后续操作。
+- 进程间通信（NamedPipe版本）
+- 浏览器双向通信（WebSocket版本）
+- 内网穿透中继服务（UDP版本）
+
+---
+
+## 四、协议实现
+
+### 4.1 版本矩阵
+
+| 版本类型         | 传输协议   | 性能指标 | 可靠性 |
+|------------------|------------|----------|--------|
+| TCP版           | TCP        | ★★★★★    | 可靠   |
+| UDP版           | UDP        | ★★★★☆    | 可选   |
+| NamedPipe版 <Pro/>      | 命名管道   | ★★★★★★   | 可靠   |
+| Http版          | HTTP       | ★★★☆☆    | 可靠   |
+| AspNetCore Http版   <Pro/>      | HTTP       | ★★★☆☆    | 可靠   |
+| WebSocket版     | WebSocket  | ★★★☆☆    | 可靠   |
+
+### 4.2 连接生命周期 
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    
+    Client->>Server: Tcp Connect
+    Client->>Server: 发送握手请求（包含验证Token、Metadata和预定Id等）
+    Server-->>Client: 响应握手请求（完成全局ID分配）
+    Note over Client,Server: Online=true
+    Client<<->>Server: 业务数据通信
+    Server<<->>Client: 心跳维持
+    Client->>Server: 请求断开
+    Server-->>Client: 断开
+    Note over Client,Server: Online=false
+```
+
+---
+
+## 五、最佳实践
+
+### 5.1 协议选择建议
+
+1. **优先选择TCP版**：需要最高性能时
+2. **跨进程通信**：使用NamedPipe版本（速度比TCP快3倍）
+3. **浏览器集成**：采用WebSocket版本
+4. **弱网环境**：使用Http版本穿透复杂网络
+
+### 5.2 可靠性保障
+
+- 始终检查`Online`状态后再进行业务操作
+- 配置合理的心跳间隔（默认60秒）
+
+### 5.3 性能优化
+
+- 使用`BlockBlock`处理大数据分片

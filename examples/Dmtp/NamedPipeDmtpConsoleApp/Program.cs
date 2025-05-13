@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.NamedPipe;
@@ -19,7 +20,7 @@ namespace NamedPipeDmtpConsoleApp;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         try
         {
@@ -29,32 +30,32 @@ internal class Program
         {
             ConsoleLogger.Default.Info(ex.Message);
         }
-        var service = GetService();
-        var client = GetClient();
+        var service = await GetService();
+        var client = await GetClient();
 
         Console.ReadKey();
     }
 
-    private static NamedPipeDmtpClient GetClient()
+    private static async Task<NamedPipeDmtpClient> GetClient()
     {
         var client = new NamedPipeDmtpClient();
-        client.SetupAsync(new TouchSocketConfig()
-            .ConfigureContainer(a =>
-            {
-                a.AddConsoleLogger();
-            })
-            .SetPipeName("TouchSocketPipe")//设置管道名称
-            .SetDmtpOption(new DmtpOption()
-            {
-                VerifyToken = "Dmtp"
-            }));
-        client.ConnectAsync();
+        await client.SetupAsync(new TouchSocketConfig()
+             .ConfigureContainer(a =>
+             {
+                 a.AddConsoleLogger();
+             })
+             .SetPipeName("TouchSocketPipe")//设置管道名称
+             .SetDmtpOption(new DmtpOption()
+             {
+                 VerifyToken = "Dmtp"
+             }));
+        await client.ConnectAsync();
 
         client.Logger.Info("连接成功");
         return client;
     }
 
-    private static NamedPipeDmtpService GetService()
+    private static async Task<NamedPipeDmtpService> GetService()
     {
         var service = new NamedPipeDmtpService();
         var config = new TouchSocketConfig()//配置
@@ -68,9 +69,9 @@ internal class Program
                    VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
                });
 
-        service.SetupAsync(config);
+        await service.SetupAsync(config);
 
-        service.StartAsync();
+        await service.StartAsync();
 
         service.Logger.Info($"{service.GetType().Name}已启动");
 

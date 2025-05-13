@@ -30,7 +30,7 @@ internal class Program
         {
             ConsoleLogger.Default.Info(ex.Message);
         }
-        var service = GetTcpDmtpService();
+        var service =await GetTcpDmtpService();
 
         var consoleAction = new ConsoleAction();
         consoleAction.OnException += ConsoleAction_OnException;

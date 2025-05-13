@@ -136,6 +136,13 @@
 		],
 		"description": "importTag"
 	},
+	"importPro": {
+		"prefix": "importPro",
+		"body": [
+			"import Pro from \"@site/src/components/Pro.js\";"
+		],
+		"description": "importPro"
+	},
 	"importCardLink": {
 		"prefix": "importCardLink",
 		"body": [

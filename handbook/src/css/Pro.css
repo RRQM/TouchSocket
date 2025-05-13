@@ -1,0 +1,31 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: #fff;
+  border-radius: 3px;
+  line-height: normal;
+  margin-left: -3px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.pro-badge2 a {
+    padding: 4px 5px;
+    border: none;
+    border-radius: 3px;
+    background-color: #007bff;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.pro-badge2 a:hover {
+    background-color: #0056b3;
+}
+
+.icon {
+  margin-right: 4px;
+}
