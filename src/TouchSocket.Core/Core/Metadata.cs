@@ -42,7 +42,7 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
     {
         if (this.ContainsKey(name))
         {
-            this[name] = value;
+            base[name] = value;
         }
         else
         {
