@@ -5,6 +5,7 @@ title: 创建WebSocket客户端
 
 import Tag from "@site/src/components/Tag.js";
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -181,6 +182,8 @@ client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ## 五、发送数据
 
 客户端定义了一些发送方法，方便开发者快速发送数据。
+
+<BilibiliCard title="使用ws完成基本的数据接收和发送" link="https://www.bilibili.com/cheese/play/ep1709023" isPro="true"/>
 
 ### 5.1 发送文本类消息
 
@@ -368,10 +371,14 @@ using (var client = GetClient())
 
 ::: 
 
+<BilibiliCard title="使用ReadAsync的方式读取ws数据" link="https://www.bilibili.com/cheese/play/ep1709028" isPro="true"/>
+
 
 ### 6.4 接收中继数据
 
 `WebSocket`协议本身是支持超大数据包的，但是这些包不会一次性接收，而是分多次接收的，同时会通过`Opcode`来表明其为中继数据。
+
+<BilibiliCard title="ws接收并处理中继数据" link="https://www.bilibili.com/cheese/play/ep1709029" isPro="true"/>
 
 下面将演示接收文本数据。
 
@@ -623,6 +630,9 @@ await client.PingAsync();
 await client.PongAsync();
 ```
 
+<BilibiliCard title="ws的Ping和Pong的使用" link="https://www.bilibili.com/cheese/play/ep1709027" isPro="true"/>
+
+
 :::tip 建议
 
 `WebSocket`是双向通讯，所以支持客户端和服务器双向操作`Ping`和`Pong`报文。但是一般来说都是客户端执行`Ping`，服务器回应`Pong`。
@@ -640,6 +650,8 @@ await client.PongAsync();
 })
 ```
 
+<BilibiliCard title="WebSocket的断线重连以及无人值守模式" link="https://www.bilibili.com/cheese/play/ep1709031" isPro="true"/>
+
 ## 八、关闭连接
 
 在使用`WebSocket`时，如果想主动关闭连接，可以使用`CloseAsync`方法，同时可以携带一个关闭原因。
@@ -655,6 +667,8 @@ await webSocket.CloseAsync("关闭");
 ```csharp showLineNumbers
 await webSocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable,"关闭");//状态码为1001，意为：服务端不可用。
 ```
+
+<BilibiliCard title="主动处理ws的Close报文" link="https://www.bilibili.com/cheese/play/ep1709025" isPro="true"/>
 
 ## 九、本文示例Demo
 
