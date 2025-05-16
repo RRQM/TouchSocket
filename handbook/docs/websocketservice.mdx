@@ -4,6 +4,7 @@ title: 创建WebSocket服务器
 ---
 
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -57,6 +58,8 @@ await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
+
+<BilibiliCard title="创建WebSocket服务器和客户端" link="https://www.bilibili.com/cheese/play/ep1709021" isPro="true"/>
 
 ### 4.2 验证连接
 
@@ -160,6 +163,8 @@ await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
+
+<BilibiliCard title="使用WebApi等多种方法验证ws连接" link="https://www.bilibili.com/cheese/play/ep1709022" isPro="true"/>
 
 【接收连接】
 
@@ -277,6 +282,8 @@ config.SetServiceSslOption(new ServiceSslOption() //Ssl配置，当为null的时
 ## 五、接收消息
 
 WebSocket服务器接收消息，目前有两种方式。第一种就是通过订阅`IWebSocketReceivedPlugin`插件完全异步的接收消息。第二种就是调用`WebSocket`，然后调用`ReadAsync`方法异步阻塞式读取。
+
+<BilibiliCard title="使用ws完成基本的数据接收和发送" link="https://www.bilibili.com/cheese/play/ep1709023" isPro="true"/>
 
 ### 5.1 简单接收消息
 
@@ -424,6 +431,8 @@ class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 }
 ```
 
+<BilibiliCard title="使用ReadAsync的方式读取ws数据" link="https://www.bilibili.com/cheese/play/ep1709028" isPro="true"/>
+
 【使用】
 
 ```csharp {16}
@@ -468,6 +477,8 @@ private static HttpService CreateHttpService()
 ### 5.3 接收中继数据
 
 `WebSocket`协议本身是支持超大数据包的，但是这些包不会一次性接收，而是分多次接收的，同时会通过`Opcode`来表明其为中继数据。
+
+<BilibiliCard title="ws接收并处理中继数据" link="https://www.bilibili.com/cheese/play/ep1709029" isPro="true"/>
 
 下面将演示接收文本数据。
 
@@ -865,6 +876,8 @@ await webSocket.PingAsync();
 await webSocket.PongAsync();
 ```
 
+<BilibiliCard title="ws的Ping和Pong的使用" link="https://www.bilibili.com/cheese/play/ep1709027" isPro="true"/>
+
 ### 6.8 发送大数据
 
 发送大数据时，需要分包发送，可以使用`SendAsync`的重载方法，设置`FIN`标志。
@@ -899,6 +912,8 @@ await webSocket.CloseAsync("关闭");
 ```csharp showLineNumbers
 await webSocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable,"关闭");//状态码为1001，意为：服务端不可用。
 ```
+
+<BilibiliCard title="主动处理ws的Close报文" link="https://www.bilibili.com/cheese/play/ep1709025" isPro="true"/>
 
 ## 八、本文示例Demo
 
