@@ -179,7 +179,7 @@ internal class Program
             try
             {
                 var method = item;
-                if (method.TaskType == TaskReturnType.Task)
+                if (method.IsAwaitable)
                 {
                     await method.InvokeAsync(myClass);
                 }
@@ -207,9 +207,9 @@ internal class Program
             try
             {
                 var method = item;
-                if (method.TaskType == TaskReturnType.TaskObject)
+                if (method.ReturnKind == MethodReturnKind.AwaitableObject)
                 {
-                    var result = await method.InvokeObjectAsync(myClass);
+                    var result = await method.InvokeAsync(myClass);
                     Console.WriteLine($"result={result}");
                 }
 
