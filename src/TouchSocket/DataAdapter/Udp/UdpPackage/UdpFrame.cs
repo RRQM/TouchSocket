@@ -50,7 +50,7 @@ public struct UdpFrame
     /// 解析给定的只读字节跨度数据。
     /// </summary>
     /// <param name="span">待解析的只读字节跨度。</param>
-    /// <returns>如果解析成功，则返回true；否则返回false。</returns>
+    /// <returns>如果解析成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public unsafe bool Parse(ReadOnlySpan<byte> span)
     {
         // 获取输入跨度的长度
@@ -87,10 +87,10 @@ public struct UdpFrame
                 }
             }
 
-            // 成功解析输入跨度数据，返回true
+            // 成功解析输入跨度数据，返回<see langword="true"/>
             return true;
         }
-        // 输入长度不足，无法解析，返回false
+        // 输入长度不足，无法解析，返回<see langword="false"/>
         return false;
     }
 }

@@ -384,7 +384,7 @@ public static partial class HttpExtensions
     /// </summary>
     /// <param name="request">请求对象，用于获取待对比的相对URL。</param>
     /// <param name="url">待对比的目标URL字符串。</param>
-    /// <returns>如果两个URL都不为null且在忽略大小写的情况下相等，则返回true；否则返回false。</returns>
+    /// <returns>如果两个URL都不为null且在忽略大小写的情况下相等，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool UrlEquals<TRequest>(this TRequest request, string url) where TRequest : HttpRequest
     {
         // 检查两个URL是否都不为null，并且在文化无关的大小写不敏感的情况下是否相等
@@ -510,7 +510,7 @@ public static partial class HttpExtensions
     /// 判断当前请求是否为Delete操作
     /// </summary>
     /// <param name="request">请求对象，用于检查请求方法</param>
-    /// <returns>如果请求方法为Delete，则返回true；否则返回false</returns>
+    /// <returns>如果请求方法为Delete，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsDelete<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         return request.Method == HttpMethod.Delete;
@@ -520,7 +520,7 @@ public static partial class HttpExtensions
     /// 判断当前请求是否为Get请求
     /// </summary>
     /// <param name="request">请求对象，用于检查其请求方法</param>
-    /// <returns>如果请求方法是Get，则返回true；否则返回false</returns>
+    /// <returns>如果请求方法是Get，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsGet<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         return request.Method == HttpMethod.Get;
@@ -531,7 +531,7 @@ public static partial class HttpExtensions
     /// </summary>
     /// <param name="request">待检查的HTTP请求</param>
     /// <param name="method">要判断的HTTP方法类型，如"Get"、"Post"</param>
-    /// <returns>如果请求的方法类型与指定的方法一致，则返回true；否则返回false</returns>
+    /// <returns>如果请求的方法类型与指定的方法一致，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsMethod<TRequest>(this TRequest request, string method) where TRequest : HttpRequest
     {
         return request.Method == new HttpMethod(method);
@@ -541,7 +541,7 @@ public static partial class HttpExtensions
     /// 判断当前请求是否为Post请求
     /// </summary>
     /// <param name="request">请求对象，泛型参数，必须是HttpRequest的子类或实现</param>
-    /// <returns>如果当前请求方法是Post，则返回true；否则返回false</returns>
+    /// <returns>如果当前请求方法是Post，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsPost<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         // 直接比较请求对象的Method属性是否为HttpMethod.Post，以判断是否为Post请求
@@ -552,7 +552,7 @@ public static partial class HttpExtensions
     /// 判断请求是否为PUT方法
     /// </summary>
     /// <param name="request">请求对象，类型为HttpRequest的泛型实例</param>
-    /// <returns>如果请求方法为PUT，则返回true；否则返回false</returns>
+    /// <returns>如果请求方法为PUT，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsPut<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         return request.Method == HttpMethod.Put;
@@ -566,7 +566,7 @@ public static partial class HttpExtensions
     /// 判断请求是否接受Gzip压缩。
     /// </summary>
     /// <param name="request">请求对象，用于获取请求的接受编码。</param>
-    /// <returns>如果请求接受Gzip压缩，则返回true；否则返回false。</returns>
+    /// <returns>如果请求接受Gzip压缩，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool IsAcceptGzip<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         // 获取请求头中的接受编码信息
@@ -580,7 +580,7 @@ public static partial class HttpExtensions
     /// 判断请求头中是否包含升级连接
     /// </summary>
     /// <param name="request">请求对象，泛型参数，要求是HttpRequest的子类或实现</param>
-    /// <returns>如果请求头中包含升级连接，则返回true；否则返回false</returns>
+    /// <returns>如果请求头中包含升级连接，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     public static bool IsUpgrade<TRequest>(this TRequest request) where TRequest : HttpRequest
     {
         // 比较请求头中的连接类型是否为升级类型，忽略大小写

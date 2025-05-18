@@ -526,12 +526,12 @@ public abstract class RpcAttribute : Attribute
         if (isAsync)
         {
             // 如果返回类型为空，则默认为Task；否则，构造Task<T>类型
-            return rpcMethod.ReturnType == null ? "Task" : $"Task<{this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}>";
+            return rpcMethod.RealReturnType == null ? "Task" : $"Task<{this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}>";
         }
         else
         {
             // 当非异步调用时，返回void或方法的返回参数名
-            return rpcMethod.ReturnType == null ? "void" : this.GetProxyParameterName(rpcMethod.Info.ReturnParameter);
+            return rpcMethod.RealReturnType == null ? "void" : this.GetProxyParameterName(rpcMethod.Info.ReturnParameter);
         }
     }
 

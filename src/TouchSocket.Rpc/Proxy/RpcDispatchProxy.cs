@@ -75,23 +75,22 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
 
         object result = default;
 
-        switch (rpcMethod.TaskType)
+        switch (rpcMethod.ReturnKind)
         {
-            case TaskReturnType.Task:
+            case MethodReturnKind.Awaitable:
                 {
-                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps);
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps);
                     break;
                 }
-            case TaskReturnType.TaskObject:
+            case MethodReturnKind.AwaitableObject:
                 {
-                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps).GetFalseAwaitResult();
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps).GetFalseAwaitResult();
                     result = value.GenericMethod.Invoke(default, result);
                     break;
                 }
-            case TaskReturnType.None:
             default:
                 {
-                    result = this.GetClient().Invoke(invokeKey, rpcMethod.ReturnType, invokeOption, ps);
+                    result = this.GetClient().Invoke(invokeKey, rpcMethod.RealReturnType, invokeOption, ps);
                     break;
                 }
         }
@@ -117,7 +116,7 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
             InvokeKey = invokeKey,
             RpcMethod = rpcMethod,
             InvokeOption = invokeOption,
-            GenericMethod = rpcMethod.TaskType == TaskReturnType.TaskObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(rpcMethod.ReturnType)) : default
+            GenericMethod = rpcMethod.ReturnKind == MethodReturnKind.AwaitableObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(rpcMethod.RealReturnType)) : default
         };
     }
 

@@ -133,7 +133,7 @@ public interface IFixedHeaderByteBlockRequestInfo : IRequestInfo
     /// <summary>
     /// 当收到数据，由框架封送固定协议头。
     /// <para>您需要在此函数中，解析自己的固定包头，并且对<see cref="BodyLength"/>赋值后续数据的长度，然后返回True。</para>
-    /// <para>如果返回false，则意味着放弃本次解析</para>
+    /// <para>如果返回<see langword="false"/>，则意味着放弃本次解析</para>
     /// </summary>
     /// <param name="header"></param>
     /// <returns></returns>
@@ -141,7 +141,7 @@ public interface IFixedHeaderByteBlockRequestInfo : IRequestInfo
 
     /// <summary>
     /// 当收到数据，由框架封送有效载荷数据。
-    /// <para>如果返回false，意味着放弃本次解析的所有数据，包括已经解析完成的Header</para>
+    /// <para>如果返回<see langword="false"/>，意味着放弃本次解析的所有数据，包括已经解析完成的Header</para>
     /// </summary>
     /// <param name="byteBlock">载荷数据，注意：该字节块生命周期不受框架控制，请一定自行调用Dispose</param>
     /// <returns>是否成功有效</returns>

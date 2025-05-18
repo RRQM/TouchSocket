@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading;
 using System.Buffers;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace TouchSocket.Core;
 
@@ -206,7 +207,7 @@ public static class SystemExtension
     /// </summary>
     /// <param name="b">要检查的无符号长整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到63。</param>
-    /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+    /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到63之间时，抛出此异常。</exception>
     public static bool GetBit(this ulong b, int index)
     {
@@ -222,7 +223,7 @@ public static class SystemExtension
     /// </summary>
     /// <param name="b">要检查的无符号整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到31。</param>
-    /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+    /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到31之间时，抛出此异常。</exception>
     public static bool GetBit(this uint b, int index)
     {
@@ -238,7 +239,7 @@ public static class SystemExtension
     /// </summary>
     /// <param name="b">要检查的无符号短整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到15。</param>
-    /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+    /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到15之间时，抛出此异常。</exception>
     public static bool GetBit(this ushort b, int index)
     {
@@ -254,7 +255,7 @@ public static class SystemExtension
     /// </summary>
     /// <param name="b">要检查的字节型数值。</param>
     /// <param name="index">要检查的位的位置，从0到7。</param>
-    /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+    /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到7之间时，抛出此异常。</exception>
     public static bool GetBit(this byte b, int index)
     {
@@ -630,6 +631,39 @@ public static class SystemExtension
     public static bool IsPrimitive(this Type type)
     {
         return type.IsPrimitive || type == typeof(string);
+    }
+
+    /// <summary>
+    /// 获取类型的短确定性名称，支持泛型。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public static string GetDeterminantName(this Type type)
+    {
+        IEnumerable<Type> types;
+        if (type.IsGenericType)
+        {
+            types = type.GetGenericArguments();
+        }
+        else if (type.IsArray)
+        {
+            types = new Type[] { type.GetElementType() };
+        }
+        else
+        {
+            types = [];
+        }
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append(type.Namespace);
+        stringBuilder.Append(type.Name);
+        foreach (var item in types)
+        {
+            stringBuilder.Append(item.Namespace);
+            stringBuilder.Append(item.Name);
+        }
+
+        return stringBuilder.ToString();
     }
 
     #endregion Type

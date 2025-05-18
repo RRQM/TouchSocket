@@ -79,7 +79,7 @@ public class HttpRequest : HttpBase
     /// <summary>
     /// 保持连接。
     /// <para>
-    /// 一般的，当是http1.1时，如果没有显式的Connection: close，即返回true。当是http1.0时，如果没有显式的Connection: Keep-Alive，即返回false。
+    /// 一般的，当是http1.1时，如果没有显式的Connection: close，即返回<see langword="true"/>。当是http1.0时，如果没有显式的Connection: Keep-Alive，即返回<see langword="false"/>。
     /// </para>
     /// </summary>
     public bool KeepAlive

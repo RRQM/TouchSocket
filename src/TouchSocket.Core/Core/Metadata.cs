@@ -20,7 +20,6 @@ namespace TouchSocket.Core;
 [FastConverter(typeof(MetadataFastBinaryConverter))]
 public sealed class Metadata : Dictionary<string, string>, IPackage
 {
-
     /// <summary>
     /// 获取或设置指定键的值。
     /// </summary>
@@ -28,8 +27,16 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
     /// <returns></returns>
     public new string this[string key]
     {
-        get => this.TryGetValue(key, out var value) ? value : null;
-        set => this.Add(key, value);
+        get
+        {
+            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            return this.TryGetValue(key, out var value) ? value : null;
+        }
+        set
+        {
+            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            base[key] = value;
+        }
     }
 
     /// <summary>
@@ -40,15 +47,7 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
     /// <returns>返回当前元数据对象，以支持链式调用。</returns>
     public new Metadata Add(string name, string value)
     {
-        if (this.ContainsKey(name))
-        {
-            base[name] = value;
-        }
-        else
-        {
-            base.Add(name, value);
-        }
-
+        base[name] = value;
         return this;
     }
 

@@ -105,24 +105,7 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
 
         try
         {
-            object result;
-            switch (method.TaskType)
-            {
-                case TaskReturnType.Task:
-                    await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    result = default;
-                    break;
-
-                case TaskReturnType.TaskObject:
-                    result = await method.InvokeObjectAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    break;
-
-                case TaskReturnType.None:
-                default:
-                    result = method.Invoke(this, os);
-                    break;
-            }
-
+            var result=await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (method.HasReturn)
             {
                 await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

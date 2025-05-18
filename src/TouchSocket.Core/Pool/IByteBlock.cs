@@ -377,7 +377,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <summary>
     /// 读取是否为null。
     /// </summary>
-    /// <returns>如果读取内容为null，则返回true；否则返回false。</returns>
+    /// <returns>如果读取内容为null，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     bool ReadIsNull();
 
     /// <summary>

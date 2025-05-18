@@ -349,7 +349,7 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
     /// </summary>
     /// <param name="id">客户端的唯一标识符</param>
     /// <param name="sessionClient">输出参数，用于返回找到的客户端实例</param>
-    /// <returns>如果找到对应的客户端，则返回true；否则返回false</returns>
+    /// <returns>如果找到对应的客户端，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     protected bool ProtectedTryGetClient(string id, out NamedPipeSessionClientBase sessionClient)
     {
         // 调用内部方法尝试获取客户端

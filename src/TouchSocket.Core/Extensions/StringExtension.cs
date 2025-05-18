@@ -107,7 +107,7 @@ public static class StringExtension
     /// 检查字符串是否具有有效值。
     /// </summary>
     /// <param name="str">要检查的字符串。</param>
-    /// <returns>如果字符串不是null且非空格或制表符等，则返回true；否则返回false。</returns>
+    /// <returns>如果字符串不是null且非空格或制表符等，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool HasValue([NotNullWhen(true)] this string str)
     {
         // 使用string.IsNullOrWhiteSpace方法检查字符串是否为null或包含仅空格或制表符等
@@ -311,10 +311,10 @@ public static class StringExtension
     ///<param name="value">待解析的字符串</param>
     ///<param name="destinationType">目标数据类型</param>
     /// <param name="returnValue">解析后的值，输出参数</param>
-    ///   <returns>如果解析成功返回true，否则返回false</returns>
+    ///   <returns>如果解析成功返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     public static bool TryParseToType(string value, Type destinationType, out object returnValue)
     {
-        // 如果字符串为空或只含空格，将returnValue设为默认值并返回true
+        // 如果字符串为空或只含空格，将returnValue设为默认值并返回<see langword="true"/>
         if (string.IsNullOrEmpty(value))
         {
             returnValue = default;
@@ -421,7 +421,7 @@ public static class StringExtension
                     returnValue = value;
                     return true;
                 }
-            // 对空类型、对象类型或数据库空值类型，将returnValue设为默认值并返回false
+            // 对空类型、对象类型或数据库空值类型，将returnValue设为默认值并返回<see langword="false"/>
             case TypeCode.Empty:
             case TypeCode.Object:
             case TypeCode.DBNull:

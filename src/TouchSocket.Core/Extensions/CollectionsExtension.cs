@@ -69,10 +69,10 @@ public static class CollectionsExtension
     /// <param name="dictionary">要添加键值对的字典。</param>
     /// <param name="key">要添加的键。</param>
     /// <param name="value">要添加的值。</param>
-    /// <returns>如果添加成功则返回true，否则返回false。</returns>
+    /// <returns>如果添加成功则返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
-        // 如果字典中已经包含此键，则不添加，并返回false
+        // 如果字典中已经包含此键，则不添加，并返回<see langword="false"/>
         if (dictionary.ContainsKey(key))
         {
             return false;
@@ -97,11 +97,11 @@ public static class CollectionsExtension
     {
         if (dictionary.TryGetValue(key,out value))
         {
-            // 如果字典中包含此键，则移除并返回true
+            // 如果字典中包含此键，则移除并返回<see langword="true"/>
             dictionary.Remove(key);
             return true;
         }
-        // 如果字典中不包含此键，则返回false
+        // 如果字典中不包含此键，则返回<see langword="false"/>
         value = default;
         return false;
     }

@@ -98,7 +98,7 @@ public class StaticFilesPool : DisposableObject
     /// <param name="key">缓存键</param>
     /// <param name="value">缓存值，以字节数组形式存储</param>
     /// <param name="millisecondsTimeout">缓存条目的超时时间，以毫秒为单位</param>
-    /// <returns>始终返回true，表示添加操作已完成</returns>
+    /// <returns>始终返回<see langword="true"/>，表示添加操作已完成</returns>
     public bool AddEntry(string key, byte[] value, TimeSpan millisecondsTimeout)
     {
         // 使用WriteLock确保在添加缓存条目时数据的一致性
@@ -118,7 +118,7 @@ public class StaticFilesPool : DisposableObject
     /// <param name="key">要添加的条目的键。</param>
     /// <param name="value">要添加的条目的值，包含文件信息。</param>
     /// <param name="millisecondsTimeout">条目过期的时间段，以毫秒为单位。</param>
-    /// <returns>总是返回true，表示条目已成功添加。</returns>
+    /// <returns>总是返回<see langword="true"/>，表示条目已成功添加。</returns>
     public bool AddEntry(string key, FileInfo value, TimeSpan millisecondsTimeout)
     {
         // 使用WriteLock确保在添加条目时数据的一致性
@@ -175,7 +175,7 @@ public class StaticFilesPool : DisposableObject
     /// </summary>
     /// <param name="key">要查找的键。</param>
     /// <param name="cacheEntry">找到的缓存项，通过引用返回。</param>
-    /// <returns>如果找到缓存项则返回true；否则返回false。</returns>
+    /// <returns>如果找到缓存项则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool TryFindEntry(string key, out StaticEntry cacheEntry)
     {
         // 使用读锁来确保并发访问时的一致性
@@ -238,7 +238,7 @@ public class StaticFilesPool : DisposableObject
     /// 检查指定路径的文件夹是否存在于集合中。
     /// </summary>
     /// <param name="path">要检查的文件夹路径。</param>
-    /// <returns>如果文件夹存在于集合中，则返回true；否则返回false。</returns>
+    /// <returns>如果文件夹存在于集合中，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool ContainsFolder(string path)
     {
         // 使用读取锁确保线程安全

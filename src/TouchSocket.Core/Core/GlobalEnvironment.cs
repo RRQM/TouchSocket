@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Runtime.CompilerServices;
+
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -21,4 +23,18 @@ public static class GlobalEnvironment
     /// 动态构建类型，默认使用IL
     /// </summary>
     public static DynamicBuilderType DynamicBuilderType { get; set; } = DynamicBuilderType.IL;
+
+#if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+
+    /// <summary>
+    /// 是否支持动态代码
+    /// </summary>
+    public static bool IsDynamicCodeSupported => RuntimeFeature.IsDynamicCodeSupported;
+#else
+    /// <summary>
+    /// 是否支持动态代码
+    /// </summary>
+    public static bool IsDynamicCodeSupported => true;
+#endif
+
 }

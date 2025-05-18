@@ -41,7 +41,7 @@ public interface INatSessionClient : ITcpSession, ITcpListenableClient, IClient,
     /// 移除目标客户端。
     /// </summary>
     /// <param name="client">要移除的TCP客户端。</param>
-    /// <returns>如果移除成功则返回true，否则返回false。</returns>
+    /// <returns>如果移除成功则返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     bool RemoveTargetClient(NatTargetClient client);
 
     /// <summary>

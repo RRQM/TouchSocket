@@ -131,7 +131,7 @@ public sealed partial class TouchSocketBitConverter
     /// <summary>
     /// 判断当前字节序是否与系统字节序相同
     /// </summary>
-    /// <returns>如果字节序相同返回true，否则返回false</returns>
+    /// <returns>如果字节序相同返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsSameOfSet()
     {

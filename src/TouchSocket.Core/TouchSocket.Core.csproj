@@ -14,6 +14,10 @@
 		<None Include="..\TouchSocket.Core.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Core.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
 	</ItemGroup>
 
+	<!--<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<Analyzer Include="..\TouchSocket.Core.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Core.SourceGenerator.dll" />
+	</ItemGroup>-->
+
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" PrivateAssets="All" />

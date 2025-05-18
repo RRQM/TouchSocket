@@ -1067,7 +1067,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 channel = null;
                 return false;
             }
-            channelOut.SetUsing();
+            channelOut.MakeUsing();
             channel = channelOut;
             return true;
         }
@@ -1133,7 +1133,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                                 {
                                     var channel = new InternalChannel(this, targetId, result.Metadata);
                                     channel.SetId(result.ChannelId);
-                                    channel.SetUsing();
+                                    channel.MakeUsing();
                                     if (this.m_userChannels.TryAdd(result.ChannelId, channel))
                                     {
                                         return channel;

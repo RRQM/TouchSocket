@@ -66,7 +66,7 @@ public static class CacheManagementExtensions
     /// <param name="key">要获取的缓存键。</param>
     /// <param name="value">输出参数，包含获取的缓存值。</param>
     /// <param name="update">是否更新缓存项的时间戳。</param>
-    /// <returns>如果成功获取值则返回true，否则返回false。</returns>
+    /// <returns>如果成功获取值则返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     public static bool TryGetValue<TKey, TValue>(this ICache<TKey, TValue> cacheClient, TKey key, out TValue value, bool update = false)
     {
         // 从缓存中获取缓存项。

@@ -60,7 +60,7 @@ public class FlowGate : Counter
     /// </remarks>
     public async Task AddCheckWaitAsync(long increment)
     {
-        // 尝试增加计数器，如果返回true，则表示增加成功，需要进一步处理
+        // 尝试增加计数器，如果返回<see langword="true"/>，则表示增加成功，需要进一步处理
         if (this.Increment(increment))
         {
             // 如果当前计数超过设定的最大值

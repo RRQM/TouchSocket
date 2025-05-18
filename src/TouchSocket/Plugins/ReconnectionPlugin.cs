@@ -46,7 +46,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     }
 
     /// <summary>
-    /// 每个周期可执行的委托。用于检验客户端活性。返回true表示存活，返回
+    /// 每个周期可执行的委托。用于检验客户端活性。返回<see langword="true"/>表示存活，返回
     /// </summary>
     public abstract Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -113,7 +113,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// 设置连接动作
     /// </summary>
     /// <param name="sleepTime">失败时间隔时间</param>
-    /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为null或者返回false，则终止尝试下次连接。</param>
+    /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为null或者返回<see langword="false"/>，则终止尝试下次连接。</param>
     /// <param name="successCallback">成功连接时回调</param>
     /// <returns></returns>
     public ReconnectionPlugin<TClient> SetConnectAction(TimeSpan sleepTime,

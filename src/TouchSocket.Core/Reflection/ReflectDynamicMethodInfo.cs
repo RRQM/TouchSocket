@@ -10,14 +10,25 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
+namespace TouchSocket.Core;
+internal class ReflectDynamicMethodInfo : DynamicMethodInfoBase
+{
+    private readonly MethodInfo m_method;
 
-#if NET6_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
+    public ReflectDynamicMethodInfo(MethodInfo method) : base(method)
+    {
+        this.m_method = method;
+    }
 
-[assembly: UnconditionalSuppressMessage("ReflectionAnalysis", "IL2104",
-            Justification = "The list only contains types stored through the annotated setter111.")]
-
-[assembly: UnconditionalSuppressMessage("ReflectionAnalysis", "IL3153",
-            Justification = "The list only contains types stored through the annotated setter222.")]
-#endif
+    public override object Invoke(object instance, object[] parameters)
+    {
+        return m_method.Invoke(instance, parameters);
+    }
+}

@@ -12,23 +12,29 @@
 
 namespace TouchSocket.Core;
 
+
 /// <summary>
-/// Task类型
+/// 表示方法的返回类型。
 /// </summary>
-public enum TaskReturnType
+public enum MethodReturnKind
 {
     /// <summary>
-    /// 没有Task
+    /// 方法没有返回值。
     /// </summary>
-    None,
+    Void,
 
     /// <summary>
-    /// 仅返回Task
+    /// 方法返回一个对象。
     /// </summary>
-    Task,
+    Object,
 
     /// <summary>
-    /// 返回Task的值
+    /// 方法返回一个可等待的任务。
     /// </summary>
-    TaskObject
+    Awaitable,
+
+    /// <summary>
+    /// 方法返回一个可等待的任务，并且任务有返回值。
+    /// </summary>
+    AwaitableObject
 }

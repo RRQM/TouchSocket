@@ -22,7 +22,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp;
 
 [DebuggerDisplay("Id={Id},Status={Status}")]
-internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
+internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpChannel
 {
     private readonly DmtpActor m_actor;
     private readonly ConcurrentQueue<ChannelPackage> m_dataQueue;
@@ -94,11 +94,11 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
 
     #region 操作
 
-    public async Task CancelAsync(string operationMes = null)
+    public async Task<Result> CancelAsync(string operationMes = null)
     {
         if ((byte)this.Status > 3)
         {
-            return;
+            return Result.Success;
         }
         try
         {
@@ -114,53 +114,73 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
 
-    public async Task CompleteAsync(string operationMes = null)
+    public async Task<Result> CompleteAsync(string operationMes = null)
     {
         if ((byte)this.Status > 3)
         {
-            return;
+            return Result.Success;
+        }
+        try
+        {
+            this.RequestComplete(true);
+            var channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.Id,
+                RunNow = true,
+                DataType = ChannelDataType.CompleteOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.Id,
+                TargetId = this.TargetId
+            };
+            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
         }
 
-        this.RequestComplete(true);
-        var channelPackage = new ChannelPackage()
-        {
-            ChannelId = this.Id,
-            RunNow = true,
-            DataType = ChannelDataType.CompleteOrder,
-            Message = operationMes,
-            SourceId = this.m_actor.Id,
-            TargetId = this.TargetId
-        };
-        await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_lastOperationTime = DateTimeOffset.UtcNow;
     }
 
-    public async Task HoldOnAsync(string operationMes = null)
+    public async Task<Result> HoldOnAsync(string operationMes = null)
     {
         if ((byte)this.Status > 3)
         {
-            return;
+            return Result.Success;
         }
-        var channelPackage = new ChannelPackage()
+        try
         {
-            ChannelId = this.Id,
-            RunNow = true,
-            DataType = ChannelDataType.HoldOnOrder,
-            Message = operationMes,
-            SourceId = this.m_actor.Id,
-            TargetId = this.TargetId
-        };
-        await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            var channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.Id,
+                RunNow = true,
+                DataType = ChannelDataType.HoldOnOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.Id,
+                TargetId = this.TargetId
+            };
+            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+
     }
 
-    protected override void Dispose(bool disposing)
+
+    protected override void SafetyDispose(bool disposing)
     {
         //不判断disposing，能够让GC也能发送释放指令
         try
@@ -186,9 +206,8 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
         catch
         {
         }
-        base.Dispose(disposing);
     }
-
+    
     #endregion 操作
 
     public ByteBlock GetCurrent()
@@ -394,7 +413,7 @@ internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
         this.Id = id;
     }
 
-    internal void SetUsing()
+    internal void MakeUsing()
     {
         this.Using = true;
     }
