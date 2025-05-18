@@ -134,7 +134,7 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
         header = (header << 1) + (this.RSV1 ? 1 : 0);
         header = (header << 1) + (this.RSV2 ? 1 : 0);
         header = (header << 1) + (this.RSV3 ? 1 : 0);
-        header = (header << 4) + (ushort)this.Opcode;
+        header = (header << 4) + (byte)this.Opcode;
 
         header = this.Mask ? (header << 1) + 1 : (header << 1) + 0;
 

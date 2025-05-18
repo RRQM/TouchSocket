@@ -22,7 +22,7 @@ public interface IContentTypeProvider
     /// </summary>
     /// <param name="subpath">文件路径</param>
     /// <param name="contentType">MIME类型</param>
-    /// <returns>如果找到匹配的MIME类型则返回true，否则返回false</returns>
+    /// <returns>如果找到匹配的MIME类型则返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     bool TryGetContentType(string subpath, out string contentType);
 
     /// <summary>

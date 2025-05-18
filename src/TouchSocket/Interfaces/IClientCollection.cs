@@ -42,7 +42,7 @@ public interface IClientCollection<TClient> : IEnumerable<TClient> where TClient
     /// 判断指定Id的客户端是否存在于集合中
     /// </summary>
     /// <param name="id">要查找的客户端的唯一标识符</param>
-    /// <returns>如果集合中存在该Id对应的客户端返回true，否则返回false</returns>
+    /// <returns>如果集合中存在该Id对应的客户端返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     bool ClientExist(string id);
 
     /// <summary>
@@ -50,6 +50,6 @@ public interface IClientCollection<TClient> : IEnumerable<TClient> where TClient
     /// </summary>
     /// <param name="id">要获取的客户端的唯一标识符</param>
     /// <param name="client">输出参数，用于存储找到的客户端对象</param>
-    /// <returns>如果找到对应的客户端对象返回true，否则返回false</returns>
+    /// <returns>如果找到对应的客户端对象返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     bool TryGetClient(string id, out TClient client);
 }

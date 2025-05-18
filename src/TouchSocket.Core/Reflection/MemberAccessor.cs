@@ -47,7 +47,7 @@ public class MemberAccessor : IMemberAccessor
     /// 动态成员访问器
     /// </summary>
     /// <param name="type"></param>
-    public MemberAccessor(Type type)
+    public MemberAccessor([DynamicallyAccessedMembers( DynamicallyAccessedMemberTypes.PublicFields| DynamicallyAccessedMemberTypes.PublicProperties)]Type type)
     {
         this.Type = type;
         this.OnGetFieldInfos = (t) => { return t.GetFields(); };

@@ -52,7 +52,7 @@ public interface IFormCollection : IEnumerable<KeyValuePair<string, string>>
     /// 判断集合中是否包含指定的键
     /// </summary>
     /// <param name="key">要检查的键</param>
-    /// <returns>如果集合包含指定的键，则返回true；否则返回false</returns>
+    /// <returns>如果集合包含指定的键，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     bool ContainsKey(string key);
 
     /// <summary>
@@ -60,6 +60,6 @@ public interface IFormCollection : IEnumerable<KeyValuePair<string, string>>
     /// </summary>
     /// <param name="key">要获取值的键</param>
     /// <param name="value">与指定键关联的值，如果键不存在则为null</param>
-    /// <returns>如果键存在于集合中，则返回true；否则返回false</returns>
+    /// <returns>如果键存在于集合中，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     bool TryGetValue(string key, out string value);
 }

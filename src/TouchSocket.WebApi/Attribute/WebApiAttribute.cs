@@ -169,7 +169,7 @@ public sealed class WebApiAttribute : RpcAttribute
         var parameterInfos = webApiParameterInfos.Where(a => a.IsFromHeader);
         var list = parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{GetParameterToString(a.Parameter)})").ToList();
 
-        if (rpcMethod.HasReturn && rpcMethod.ReturnType == typeof(string))
+        if (rpcMethod.HasReturn && rpcMethod.RealReturnType == typeof(string))
         {
             list.Add($"new KeyValuePair<string, string>(\"Accept\",\"text/plain\")");
         }

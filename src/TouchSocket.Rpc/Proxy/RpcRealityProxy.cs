@@ -91,23 +91,22 @@ public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyB
 
         object result;
 
-        switch (rpcMethod.TaskType)
+        switch (rpcMethod.ReturnKind)
         {
-            case TaskReturnType.Task:
+            case MethodReturnKind.Awaitable:
                 {
-                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps);
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps);
                     break;
                 }
-            case TaskReturnType.TaskObject:
+            case MethodReturnKind.AwaitableObject:
                 {
-                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps).GetFalseAwaitResult();
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps).GetFalseAwaitResult();
                     result = value.GenericMethod.Invoke(default, result);
                     break;
                 }
-            case TaskReturnType.None:
             default:
                 {
-                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps).GetFalseAwaitResult();
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps).GetFalseAwaitResult();
                     break;
                 }
         }
@@ -132,7 +131,7 @@ public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyB
             InvokeKey = invokeKey,
             RpcMethod = rpcMethod,
             InvokeOption = invokeOption,
-            GenericMethod = rpcMethod.TaskType == TaskReturnType.TaskObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(rpcMethod.ReturnType)) : default
+            GenericMethod = rpcMethod.ReturnKind == MethodReturnKind.AwaitableObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(rpcMethod.RealReturnType)) : default
         };
     }
 

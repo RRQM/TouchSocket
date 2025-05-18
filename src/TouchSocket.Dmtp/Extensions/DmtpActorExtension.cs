@@ -58,24 +58,28 @@ public static class DmtpActorExtension
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
+    [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(metadata).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata)"/>
+    [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(id, metadata).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata)"/>
+    [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, id, metadata).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata)"/>
+    [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, metadata).GetFalseAwaitResult();
@@ -144,7 +148,7 @@ public static class DmtpActorExtension
     /// <returns>返回一个布尔值，表示是否成功发送数据。</returns>
     public static async Task<bool> TrySendAsync(this IDmtpActorObject client, ushort protocol)
     {
-        // 尝试发送数据，如果成功则返回true，失败则返回false。
+        // 尝试发送数据，如果成功则返回<see langword="true"/>，失败则返回<see langword="false"/>。
         try
         {
             // 使用空的内存数据发送协议命令。
@@ -153,7 +157,7 @@ public static class DmtpActorExtension
         }
         catch
         {
-            // 如果发送过程中发生异常，则返回false。
+            // 如果发送过程中发生异常，则返回<see langword="false"/>。
             return false;
         }
     }
@@ -219,12 +223,12 @@ public static class DmtpActorExtension
         {
             // 实际执行发送操作。
             await SendAsync(client, protocol, package, maxSize).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            // 发送成功，返回true。
+            // 发送成功，返回<see langword="true"/>。
             return true;
         }
         catch
         {
-            // 发送失败，返回false。
+            // 发送失败，返回<see langword="false"/>。
             return false;
         }
     }
@@ -235,10 +239,10 @@ public static class DmtpActorExtension
     /// <param name="client">要发送包的客户端。</param>
     /// <param name="protocol">使用的协议。</param>
     /// <param name="package">要发送的包。</param>
-    /// <returns>如果发送成功，则返回true；否则返回false。</returns>
+    /// <returns>如果发送成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static async Task<bool> TrySendAsync(this IDmtpActorObject client, ushort protocol, IPackage package)
     {
-        // 尝试发送包，如果成功则返回true，失败则返回false
+        // 尝试发送包，如果成功则返回<see langword="true"/>，失败则返回<see langword="false"/>
         try
         {
             // 实际执行发送操作，64KB是根据业务需求预设的限制

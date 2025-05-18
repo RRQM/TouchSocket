@@ -217,7 +217,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     /// 尝试添加客户端到集合中。
     /// </summary>
     /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
-    /// <returns>如果添加成功返回true，否则返回false。</returns>
+    /// <returns>如果添加成功返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     internal bool TryAdd(WebSocketDmtpSessionClient sessionClient)
     {
         return this.m_clients.TryAdd(sessionClient);
@@ -228,7 +228,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     /// </summary>
     /// <param name="id">客户端标识符。</param>
     /// <param name="sessionClient">移除的WebSocketDmtpSessionClient对象。</param>
-    /// <returns>如果移除成功返回true，否则返回false。</returns>
+    /// <returns>如果移除成功返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     internal bool TryRemove(string id, out WebSocketDmtpSessionClient sessionClient)
     {
         return this.m_clients.TryRemoveClient(id, out sessionClient);

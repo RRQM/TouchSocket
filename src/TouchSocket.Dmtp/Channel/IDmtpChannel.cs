@@ -87,14 +87,14 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     /// </summary>
     /// <param name="operationMes">可选参数，用于提供取消操作的详细信息</param>
     /// <returns>返回一个Task对象，表示异步取消操作的完成</returns>
-    Task CancelAsync(string operationMes = null);
+    Task<Result> CancelAsync(string operationMes = null);
 
     /// <summary>
     /// 异步完成操作
     /// </summary>
     /// <param name="operationMes">操作信息，可选参数，默认为null</param>
     /// <returns>返回一个Task对象，表示异步操作的完成</returns>
-    Task CompleteAsync(string operationMes = null);
+    Task<Result> CompleteAsync(string operationMes = null);
 
     /// <summary>
     /// 获取当前的有效数据。在使用之后，请进行显式的<see cref="IDisposable.Dispose"/>调用。
@@ -107,7 +107,7 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     /// </summary>
     /// <param name="operationMes"></param>
     /// <returns></returns>
-    Task HoldOnAsync(string operationMes = null);
+    Task<Result> HoldOnAsync(string operationMes = null);
 
     /// <summary>
     /// 转向下个元素

@@ -13,9 +13,10 @@
 namespace TouchSocket.Http.WebSockets;
 
 /// <summary>
-/// WebSocket数据类型
+/// WebSocket数据类型。
+/// 支持最大值为2^4，不能超过16，即0-15
 /// </summary>
-public enum WSDataType : ushort
+public enum WSDataType : byte
 {
     /// <summary>
     /// 表示一个中间数据包

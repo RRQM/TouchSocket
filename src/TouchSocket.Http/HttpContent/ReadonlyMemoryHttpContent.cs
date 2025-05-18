@@ -57,7 +57,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
             return true;
         }
 
-        //返回false，提示后续数据可能太大，通过WriteContent执行。
+        //返回<see langword="false"/>，提示后续数据可能太大，通过WriteContent执行。
         return false;
     }
 

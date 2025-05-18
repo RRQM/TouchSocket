@@ -69,7 +69,7 @@ public sealed class WebSocketMessageCombinator
     /// </summary>
     /// <param name="dataFrame">待组合的数据帧。</param>
     /// <param name="webSocketMessage">组合成功的WebSocket消息。</param>
-    /// <returns>如果成功组合则返回true；否则返回false。</returns>
+    /// <returns>如果成功组合则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool TryCombine(WSDataFrame dataFrame, out WebSocketMessage webSocketMessage)
     {
         var data = dataFrame.PayloadData;

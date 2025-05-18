@@ -44,7 +44,7 @@ public readonly struct RouteType
     /// </summary>
     /// <param name="a">第一个RouteType对象</param>
     /// <param name="b">第二个RouteType对象</param>
-    /// <returns>如果两个对象相等返回true，否则返回false</returns>
+    /// <returns>如果两个对象相等返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     public static bool operator ==(RouteType a, RouteType b)
     {
         return a.m_value == b.m_value;
@@ -55,7 +55,7 @@ public readonly struct RouteType
     /// </summary>
     /// <param name="a">第一个RouteType对象</param>
     /// <param name="b">第二个RouteType对象</param>
-    /// <returns>如果两个对象不相等返回true，否则返回false</returns>
+    /// <returns>如果两个对象不相等返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     public static bool operator !=(RouteType a, RouteType b)
     {
         return a.m_value != b.m_value;
@@ -65,7 +65,7 @@ public readonly struct RouteType
     /// 重写Equals方法，用于比较两个RouteType对象是否相等
     /// </summary>
     /// <param name="obj">要比较的对象</param>
-    /// <returns>如果对象相等返回true，否则返回false</returns>
+    /// <returns>如果对象相等返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     public override bool Equals(object obj)
     {
         return obj is RouteType type && this == type;

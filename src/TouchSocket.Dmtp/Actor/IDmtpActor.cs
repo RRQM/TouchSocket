@@ -68,7 +68,7 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// 判断指定Id的通道是否已经存在
     /// </summary>
     /// <param name="id">要判断的通道Id</param>
-    /// <returns>如果通道存在返回true，否则返回false</returns>
+    /// <returns>如果通道存在返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     bool ChannelExisted(int id);
 
     /// <summary>
@@ -108,7 +108,7 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// </summary>
     /// <param name="id">要订阅的通道的标识符。</param>
     /// <param name="channel">订阅的通道对象，成功时返回此参数。</param>
-    /// <returns>如果订阅成功则返回true；如果通道不存在或发生错误则返回false。</returns>
+    /// <returns>如果订阅成功则返回<see langword="true"/>；如果通道不存在或发生错误则返回<see langword="false"/>。</returns>
     bool TrySubscribeChannel(int id, out IDmtpChannel channel);
 
     #endregion IDmtpChannel

@@ -37,7 +37,7 @@ public abstract class SslOption
     /// <param name="certificate">客户端证书</param>
     /// <param name="chain">证书链</param>
     /// <param name="sslPolicyErrors">SSL策略错误</param>
-    /// <returns>总是返回true，表示接受证书</returns>
+    /// <returns>总是返回<see langword="true"/>，表示接受证书</returns>
     private bool OnCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
     {
         return true;

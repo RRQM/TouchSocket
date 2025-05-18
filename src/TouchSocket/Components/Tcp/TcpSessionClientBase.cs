@@ -526,10 +526,9 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// <param name="sourceId">原始Id</param>
     /// <param name="targetId">目标Id</param>
     /// <returns>异步任务</returns>
-    protected virtual Task IdChanged(string sourceId, string targetId)
+    protected virtual async Task IdChanged(string sourceId, string targetId)
     {
-        //此处无需执行任何操作，直接返回一个已完成的异步任务
-        return EasyTask.CompletedTask;
+        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId,targetId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -620,7 +619,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// </summary>
     /// <param name="id">客户端的唯一标识符</param>
     /// <param name="sessionClient">输出参数，用于返回找到的客户端实例</param>
-    /// <returns>如果找到对应的客户端，则返回true；否则返回false</returns>
+    /// <returns>如果找到对应的客户端，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     protected bool ProtectedTryGetClient(string id, out TcpSessionClientBase sessionClient)
     {
         // 调用内部方法m_tryGet来尝试获取客户端

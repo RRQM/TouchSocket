@@ -38,7 +38,7 @@ public readonly ref struct MqttV5PropertiesReader<TByteBlock> where TByteBlock :
     /// </summary>
     /// <param name="byteBlock">字节块引用。</param>
     /// <param name="identifier">读取的属性标识符。</param>
-    /// <returns>如果读取成功，则返回true；否则返回false。</returns>
+    /// <returns>如果读取成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool TryRead(ref TByteBlock byteBlock, out MqttPropertyId identifier)
     {
         if (byteBlock.Position >= this.m_endPosition)

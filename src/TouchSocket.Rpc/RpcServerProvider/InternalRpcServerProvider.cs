@@ -36,13 +36,13 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             rpcCallContextAccessor.CallContext = callContext;
         }
         var ps = callContext.Parameters;
-        var rpcMethod = callContext.RpcMethod;
-        if (rpcMethod is null)
+        var method = callContext.RpcMethod;
+        if (method is null)
         {
             return new InvokeResult(InvokeStatus.UnFound);
         }
 
-        var filters = callContext.RpcMethod.GetFilters();
+        var filters = method.GetFilters();
         try
         {
             for (var i = 0; i < filters.Count; i++)
@@ -55,37 +55,15 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             {
                 var rpcServer = this.GetRpcServer(callContext);
 
-                //调用
-                switch (callContext.RpcMethod.TaskType)
+                if (method.IsAwaitable)
                 {
-                    case TaskReturnType.Task:
-                        {
-                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        break;
-
-                    case TaskReturnType.TaskObject:
-                        {
-                            invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
+                    invokeResult.Result = await callContext.RpcMethod.InvokeAsync(rpcServer, ps)
                                 .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        break;
-
-                    default:
-                    case TaskReturnType.None:
-                        {
-                            if (callContext.RpcMethod.HasReturn)
-                            {
-                                invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
-                            }
-                            else
-                            {
-                                callContext.RpcMethod.Invoke(rpcServer, ps);
-                            }
-                        }
-                        break;
                 }
-
+                else
+                {
+                    invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
+                }
                 invokeResult.Status = InvokeStatus.Success;
             }
         }

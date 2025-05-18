@@ -49,7 +49,7 @@ public interface IFileResourceController : IDisposable
     /// </summary>
     /// <param name="resourceHandle">资源句柄，标识需要释放的文件资源定位器</param>
     /// <param name="locator">输出参数，返回被释放的文件资源定位器</param>
-    /// <returns>如果成功释放文件资源定位器，则返回true；否则返回false</returns>
+    /// <returns>如果成功释放文件资源定位器，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator);
 
     /// <summary>
@@ -57,7 +57,7 @@ public interface IFileResourceController : IDisposable
     /// </summary>
     /// <param name="resourceHandle">文件句柄，用于标识特定的文件资源。</param>
     /// <param name="fileResourceLocator">输出参数，返回文件的资源定位器。</param>
-    /// <returns>如果成功获取资源定位器，返回true；否则返回false。</returns>
+    /// <returns>如果成功获取资源定位器，返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     bool TryGetFileResourceLocator(int resourceHandle, out FileResourceLocator fileResourceLocator);
 
     /// <summary>

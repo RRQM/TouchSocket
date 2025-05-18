@@ -102,7 +102,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     /// </summary>
     /// <param name="modbusRequest">Modbus请求</param>
     /// <param name="response">Modbus响应</param>
-    /// <returns>如果请求和响应匹配则返回true，否则返回false</returns>
+    /// <returns>如果请求和响应匹配则返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     protected virtual bool SetRun(IModbusRequest modbusRequest, IModbusResponse response)
     {
         if (modbusRequest.SlaveId != response.SlaveId)

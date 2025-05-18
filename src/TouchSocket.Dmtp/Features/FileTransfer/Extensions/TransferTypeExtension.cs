@@ -21,7 +21,7 @@ public static class TransferTypeExtension
     /// 表示当前传输类型是否属于<see cref="TransferType.Pull"/>、<see cref="TransferType.SmallPull"/>其中的一种。
     /// </summary>
     /// <param name="transferType">要检查的传输类型。</param>
-    /// <returns>如果传输类型是<see cref="TransferType.Pull"/>或<see cref="TransferType.SmallPull"/>，则返回true；否则返回false。</returns>
+    /// <returns>如果传输类型是<see cref="TransferType.Pull"/>或<see cref="TransferType.SmallPull"/>，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool IsPull(this TransferType transferType)
     {
         return transferType == TransferType.Pull || transferType == TransferType.SmallPull;

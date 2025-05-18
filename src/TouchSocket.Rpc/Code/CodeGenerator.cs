@@ -291,9 +291,9 @@ public static class CodeGenerator
             {
                 if (attributeType == att.GetType())
                 {
-                    if (rpcMethod.ReturnType != null)
+                    if (rpcMethod.RealReturnType != null)
                     {
-                        classCodeGenerator.AddTypeString(rpcMethod.ReturnType);
+                        classCodeGenerator.AddTypeString(rpcMethod.RealReturnType);
                     }
 
                     var psTypes = rpcMethod.GetNormalParameters().Select(a => a.Type);

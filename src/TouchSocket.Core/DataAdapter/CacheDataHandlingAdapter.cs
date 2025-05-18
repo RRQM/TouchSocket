@@ -50,7 +50,7 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
 
     /// <summary>
     /// 获取当前缓存，
-    /// 如果缓存超时，或者不存在，均会返回false。
+    /// 如果缓存超时，或者不存在，均会返回<see langword="false"/>。
     /// 如果获取成功，则会清空内部缓存。
     /// </summary>
     /// <returns></returns>

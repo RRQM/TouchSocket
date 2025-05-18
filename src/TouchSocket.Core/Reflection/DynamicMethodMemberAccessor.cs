@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace TouchSocket.Core;
@@ -44,23 +45,23 @@ public class DynamicMethodMemberAccessor : IMemberAccessor
     public Func<Type, PropertyInfo[]> OnGetProperties { get; set; }
 
     /// <inheritdoc/>
-    public object GetValue(object instance, string memberName)
+    public object GetValue([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] object instance, string memberName)
     {
         return this.FindClassAccessor(instance).GetValue(instance, memberName);
     }
 
     /// <inheritdoc/>
-    public void SetValue(object instance, string memberName, object newValue)
+    public void SetValue([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] object instance, string memberName, object newValue)
     {
         this.FindClassAccessor(instance).SetValue(instance, memberName, newValue);
     }
 
-    private IMemberAccessor FindClassAccessor(object instance)
+    private IMemberAccessor FindClassAccessor([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] object instance)
     {
-        var typekey = instance.GetType();
-        if (!this.m_classAccessors.TryGetValue(typekey, out var classAccessor))
+        var typeKey = instance.GetType();
+        if (!this.m_classAccessors.TryGetValue(typeKey, out var classAccessor))
         {
-            var memberAccessor = new MemberAccessor(instance.GetType());
+            var memberAccessor = new MemberAccessor(typeKey);
             if (this.OnGetFieldInfes != null)
             {
                 memberAccessor.OnGetFieldInfos = this.OnGetFieldInfes;
@@ -72,7 +73,7 @@ public class DynamicMethodMemberAccessor : IMemberAccessor
             }
             memberAccessor.Build();
             classAccessor = memberAccessor;
-            this.m_classAccessors.TryAdd(typekey, classAccessor);
+            this.m_classAccessors.TryAdd(typeKey, classAccessor);
         }
         return classAccessor;
     }

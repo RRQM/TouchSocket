@@ -39,11 +39,11 @@ public static class ReflectionExtension
 
     private static string GenerateKey(MethodInfo method)
     {
-        var parameterTypes = method.GetParameters().Select(p => p.ParameterType).ToArray(); // 使用类型名称
+        var parameterTypes = method.GetParameters().Select(p => p.ParameterType); // 使用类型名称
         return GenerateKey(method.Name, parameterTypes);
     }
 
-    private static string GenerateKey(string methodName, Type[] parameterTypes)
+    private static string GenerateKey(string methodName, IEnumerable<Type> parameterTypes)
     {
         // 将参数类型名称转换为合法的标识符
         var parameterTypeNames = string.Join("_", parameterTypes.Select(t => StringExtension.MakeIdentifier(t.GetRefOutType().Name)));
@@ -145,28 +145,28 @@ public static class ReflectionExtension
     /// 检查属性是否可以公开写入
     /// </summary>
     /// <param name="propertyInfo">要检查的属性信息</param>
-    /// <returns>如果属性可以公开写入则返回true，否则返回false</returns>
+    /// <returns>如果属性可以公开写入则返回<see langword="true"/>，否则返回<see langword="false"/></returns>
     public static bool CanPublicWrite(this PropertyInfo propertyInfo)
     {
-        // 如果属性不支持写操作，则直接返回false
+        // 如果属性不支持写操作，则直接返回<see langword="false"/>
         if (!propertyInfo.CanWrite)
         {
             return false;
         }
 
-        // 如果属性的设置方法为null，则表示不能写入，返回false
+        // 如果属性的设置方法为null，则表示不能写入，返回<see langword="false"/>
         if (propertyInfo.SetMethod == null)
         {
             return false;
         }
 
-        // 如果属性的设置方法是公共的，并且接受一个参数，则认为该属性可以公开写入，返回true
+        // 如果属性的设置方法是公共的，并且接受一个参数，则认为该属性可以公开写入，返回<see langword="true"/>
         if (propertyInfo.SetMethod.IsPublic && propertyInfo.SetMethod.GetParameters().Length == 1)
         {
             return true;
         }
 
-        // 如果上述条件都不满足，则返回false
+        // 如果上述条件都不满足，则返回<see langword="false"/>
         return false;
     }
 

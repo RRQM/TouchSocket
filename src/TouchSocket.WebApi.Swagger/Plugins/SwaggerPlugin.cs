@@ -392,8 +392,8 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             openApiResponse.Content.Add("text/plain", openApiContent);
             openApiResponse.Content.Add("text/json", openApiContent);
             openApiResponse.Content.Add("application/xml", openApiContent);
-            openApiContent.Schema = this.CreateSchema(rpcMethod.ReturnType);
-            this.AddSchemaType(rpcMethod.ReturnType, schemaTypeList);
+            openApiContent.Schema = this.CreateSchema(rpcMethod.RealReturnType);
+            this.AddSchemaType(rpcMethod.RealReturnType, schemaTypeList);
         }
 
         openApiPathValue.Responses = new Dictionary<string, OpenApiResponse>();

@@ -133,7 +133,7 @@ public static class ServiceExtension
     /// <param name="connectableService">一个实现了<see cref="IConnectableService{TClient}"/>接口的可连接服务对象。</param>
     /// <param name="id">要获取的客户端的唯一标识符。</param>
     /// <param name="client">如果找到匹配的客户端，则设置此参数为该客户端对象；如果未找到，则设置为default(TClient)。</param>
-    /// <returns>如果找到匹配的客户端，则返回true；否则返回false。</returns>
+    /// <returns>如果找到匹配的客户端，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool TryGetClient<TClient>(this IConnectableService<TClient> connectableService, string id, out TClient client)
                 where TClient : IIdClient, IClient
     {
