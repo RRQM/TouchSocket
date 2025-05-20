@@ -61,21 +61,21 @@ method.Invoke(instance);
 ### 4.1 构建器类型选择
 
 ```csharp showLineNumbers
-// 使用IL生成（最高性能）
+// 使用IL生成
 var ilMethod = new Method(
     typeof(MyClass), 
     nameof(MyClass.SimpleMethod),
     DynamicBuilderType.IL
 );
 
-// 使用表达式树（平衡性能与兼容性）
+// 使用表达式树
 var exprMethod = new Method(
     typeof(MyClass),
     nameof(MyClass.SimpleMethod),
     DynamicBuilderType.Expression
 );
 
-// 使用源生成（AOT环境推荐）
+// 使用源生成（性能最强，AOT环境推荐）
 var sourceGenMethod = new Method(
     typeof(MyClass),
     nameof(MyClass.SimpleMethod),
@@ -84,9 +84,9 @@ var sourceGenMethod = new Method(
 ```
 
 :::tip 构建器选择建议
-- **开发阶段**：使用IL生成获得最佳性能
-- **AOT环境**：必须使用SourceGenerator
-- **兼容性优先**：选择Expression模式
+
+- **任何时候**：使用SourceGenerator，无论性能还是AOT环境，都是首选。
+
 :::
 
 ### 4.2 异步方法支持

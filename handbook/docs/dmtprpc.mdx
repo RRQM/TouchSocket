@@ -16,20 +16,19 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 
 本Rpc是基于Dmtp协议的Rpc组件。其功能包括：
 
-  - 支持客户端主动调用服务器。
-  - 支持服务主动调用客户端。
-  - 支持客户端之间互相调用。
-  - 支持绝大多数数据类型及自定义实体类。
-  - 支持自定义序列化。
-  - 支持out，ref关键字。
+- 支持客户端主动调用服务器。
+- 支持服务主动调用客户端。
+- 支持客户端之间互相调用。
+- 支持绝大多数数据类型及自定义实体类。
+- 支持自定义序列化。
 
 ## 二、使用Rpc服务
 
 ### 2.1 定义服务
 
-1. 在**服务器**端中新建一个类名为**MyRpcServer**。
-2. 继承于RpcServer类、或实现IRpcServer。亦或者将服务器声明为**瞬时生命**的服务，继承TransientRpcServer、或ITransientRpcServer。
-3. 在该类中写**公共方法**，并用**DmtpRpc**属性标签标记。
+1. 在**服务器**端中新建一个类名为`MyRpcServer`。
+2. 继承于`SingletonRpcServer`类、或实现`ISingletonRpcServer`。亦或者将服务器声明为**瞬时生命**的服务，继承`TransientRpcServer`、或`ITransientRpcServer`。
+3. 在该类中写**公共方法**，并用`DmtpRpc`属性标签标记。
 
 ```csharp showLineNumbers
 public partial class MyRpcServer : SingletonRpcServer
@@ -156,7 +155,11 @@ bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitIn
 
 :::  
 
-【生成的代理】
+
+<details>
+<summary>生成的代理</summary>
+<div>
+
 
 ```csharp showLineNumbers
 using System;
@@ -250,6 +253,11 @@ namespace RpcProxy
     }
 }
 ```
+
+
+</div>
+</details>
+
 
 使用代理扩展直接调用。
 
