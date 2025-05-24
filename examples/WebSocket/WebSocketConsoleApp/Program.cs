@@ -348,11 +348,11 @@ internal class Program
                     {
                         case WSDataType.Cont:
                             {
-                                //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                 //var segment = data.AsSegment();
                                 //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                //如果是net8.0以上，直接写入span即可
+                                //如果是net9.0以上，直接写入span即可
                                 stream.Write(data.Span);
 
                                 //收到的是中继包
@@ -393,11 +393,11 @@ internal class Program
 
                                     //下面则是缓存逻辑
 
-                                    //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                    //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                     //var segment = data.AsSegment();
                                     //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                    //如果是net8.0以上，直接写入span即可
+                                    //如果是net9.0以上，直接写入span即可
                                     stream.Write(data.Span);
                                 }
                             }
@@ -420,11 +420,11 @@ internal class Program
 
                                     //下面则是缓存逻辑
 
-                                    //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                    //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                     //var segment = data.AsSegment();
                                     //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                    //如果是net8.0以上，直接写入span即可
+                                    //如果是net9.0以上，直接写入span即可
                                     stream.Write(data.Span);
                                 }
                             }

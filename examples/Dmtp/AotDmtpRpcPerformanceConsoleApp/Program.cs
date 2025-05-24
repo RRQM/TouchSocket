@@ -59,12 +59,12 @@ namespace RpcPerformanceConsoleApp
         public static async Task StartSumClient(int count)
         {
             var client =await GetClient();
-            var timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(async () =>
             {
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 0; i < count; i++)
                 {
-                    var rs = actor.InvokeT<int>("Sum", InvokeOption.WaitInvoke, i, i);
+                    var rs =await actor.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, i, i);
                     if (rs != i + i)
                     {
                         Console.WriteLine("调用结果不一致");
@@ -97,12 +97,12 @@ namespace RpcPerformanceConsoleApp
         public static async Task StartGetBytesClient(int count)
         {
             var client = await GetClient();
-            var timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(async () =>
             {
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 1; i < count; i++)
                 {
-                    var rs = actor.InvokeT<byte[]>("GetBytes", InvokeOption.WaitInvoke, i);//测试10k数据
+                    var rs =await actor.InvokeTAsync<byte[]>("GetBytes", InvokeOption.WaitInvoke, i);//测试10k数据
                     if (rs.Length != i)
                     {
                         Console.WriteLine("调用结果不一致");
@@ -119,12 +119,12 @@ namespace RpcPerformanceConsoleApp
         public static async Task StartBigStringClient(int count)
         {
             var client =await GetClient();
-            var timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(async () =>
             {
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 0; i < count; i++)
                 {
-                    var rs = actor.InvokeT<string>("GetBigString", InvokeOption.WaitInvoke);
+                    var rs =await actor.InvokeTAsync<string>("GetBigString", InvokeOption.WaitInvoke);
                     if (i % 1000 == 0)
                     {
                         Console.WriteLine(i);

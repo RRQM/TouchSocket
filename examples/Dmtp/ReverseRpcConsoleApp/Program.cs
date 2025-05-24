@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -21,7 +22,7 @@ namespace ReverseRpcConsoleApp;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         //创建逻辑服务器
         var tcpDmtpService = CreateTcpDmtpService(7789);
@@ -31,7 +32,7 @@ internal class Program
 
         foreach (var item in tcpDmtpService.Clients)
         {
-            client.Logger.Info(item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三"));
+            client.Logger.Info(await item.GetDmtpRpcActor().InvokeTAsync<string>("SayHello", InvokeOption.WaitInvoke, "张三"));
             client.Logger.Info("调用完成");
         }
 

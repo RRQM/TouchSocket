@@ -29,7 +29,7 @@ namespace WebApiConsoleApp
                 config.SetListenIPHosts(7789)
                 .ConfigurePlugins(a =>
                 {
-                    a.UseCheckClear();
+                    a.UseTcpSessionCheckClear();
 
                     a.UseWebApi()
                     .ConfigureConverter(converter =>

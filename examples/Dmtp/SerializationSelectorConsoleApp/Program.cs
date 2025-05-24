@@ -36,7 +36,7 @@ internal class Program
             Timeout = 1000 * 10
         };
 
-        var msg = client.GetDmtpRpcActor().Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
+        var msg = await client.GetDmtpRpcActor().LoginAsync(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
         Console.WriteLine("调用成功，结果：" + msg);
         Console.ReadKey();
     }

@@ -31,12 +31,12 @@ public partial class Form1 : Form
         this.InitializeComponent();
     }
 
-    private void button1_Click(object sender, EventArgs e)
+    private async void button1_Click(object sender, EventArgs e)
     {
         //直接调用时，第一个参数为调用键，服务类全名+方法名（必须全小写）
         //第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。
         //后续参数为调用参数。
-        var result = this.m_client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitInvoke, this.textBox1.Text, this.textBox2.Text);
+        var result =await this.m_client.GetDmtpRpcActor().InvokeTAsync<bool>("Login", InvokeOption.WaitInvoke, this.textBox1.Text, this.textBox2.Text);
         MessageBox.Show(result.ToString());
     }
 

@@ -66,7 +66,7 @@ internal class Program
             var str = Console.ReadLine();
             if (service.TryGetClient(str.Split(' ')[0], out var socketClient))
             {
-                var result = socketClient.GetDmtpRpcActor().InvokeT<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
+                var result =await socketClient.GetDmtpRpcActor().InvokeTAsync<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
 
                 service.Logger.Info($"调用结果{result}");
             }

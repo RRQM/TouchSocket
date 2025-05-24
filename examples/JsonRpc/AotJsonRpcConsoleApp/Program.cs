@@ -48,10 +48,10 @@ internal class Program
          });
 
         Console.WriteLine("连接成功");
-        var result = jsonRpcClient.TestJsonRpc(new MyClass() { P1 = 10, P2 = "ABC" });
+        var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
         Console.WriteLine($"Http返回结果:{result}");
 
-        result = jsonRpcClient.TestGetContext("RRQM");
+        result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"Http返回结果:{result}");
     }
 
@@ -68,13 +68,13 @@ internal class Program
         });
 
         Console.WriteLine("连接成功");
-        var result = jsonRpcClient.TestJsonRpc(new MyClass() { P1 = 10, P2 = "ABC" });
+        var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
         Console.WriteLine($"Tcp返回结果:{result}");
 
-        result = jsonRpcClient.TestJsonRpc(new MyClass() { P1 = 10, P2 = "ABC" });
+        result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
         Console.WriteLine($"Tcp返回结果:{result}");
 
-        result = jsonRpcClient.TestGetContext("RRQM");
+        result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"Tcp返回结果:{result}");
     }
 
@@ -90,13 +90,13 @@ internal class Program
         });
 
         Console.WriteLine("连接成功");
-        var result = jsonRpcClient.TestJsonRpc(new MyClass() { P1 = 10, P2 = "ABC" });
+        var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
         Console.WriteLine($"WebSocket返回结果:{result}");
 
-        result = jsonRpcClient.TestJsonRpc(new MyClass() { P1 = 10, P2 = "ABC" });
+        result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
         Console.WriteLine($"WebSocket返回结果:{result}");
 
-        result = jsonRpcClient.TestGetContext("RRQM");
+        result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"WebSocket返回结果:{result}");
     }
 
@@ -202,7 +202,7 @@ internal class Program
 
 }
 
-class MyTcpPlugin : PluginBase, ITcpReceivedPlugin,ITcpSendingPlugin
+class MyTcpPlugin : PluginBase, ITcpReceivedPlugin, ITcpSendingPlugin
 {
     private readonly ILog logger;
 
