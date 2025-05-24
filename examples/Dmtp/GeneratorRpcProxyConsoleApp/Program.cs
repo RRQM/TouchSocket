@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -22,7 +23,7 @@ namespace GeneratorRpcProxyConsoleApp;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         //创建服务器
         var service = new TcpDmtpService();
@@ -45,27 +46,27 @@ internal class Program
                    VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
                });
 
-        service.SetupAsync(config);
-        service.StartAsync();
+        await service.SetupAsync(config);
+        await service.StartAsync();
 
         service.Logger.Info($"{service.GetType().Name}已启动");
 
         //创建客户端
         var client = new TcpDmtpClient();
-        client.SetupAsync(new TouchSocketConfig()
-            .SetRemoteIPHost("127.0.0.1:7789")
-            .ConfigurePlugins(a =>
-            {
-                a.UseDmtpRpc();
-            })
-            .SetDmtpOption(new DmtpOption()
-            {
-                VerifyToken = "Dmtp"
-            }));
-        client.ConnectAsync();
+        await client.SetupAsync(new TouchSocketConfig()
+             .SetRemoteIPHost("127.0.0.1:7789")
+             .ConfigurePlugins(a =>
+             {
+                 a.UseDmtpRpc();
+             })
+             .SetDmtpOption(new DmtpOption()
+             {
+                 VerifyToken = "Dmtp"
+             }));
+        await client.ConnectAsync();
 
         //此处的Login方法则是vs源代码自动生成的，可以f12查看。
-        Console.WriteLine(client.GetDmtpRpcActor().Login("123", "abc"));
+        Console.WriteLine(await client.GetDmtpRpcActor().LoginAsync("123", "abc"));
         Console.ReadKey();
     }
 }

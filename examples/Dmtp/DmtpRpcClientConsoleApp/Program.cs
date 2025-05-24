@@ -129,7 +129,7 @@ internal class Program
         using var client = await GetTcpDmtpClient();
         var status = ChannelStatus.Default;
         var size = 0;
-        var channel = client.CreateChannel();//创建通道
+        var channel =await client.CreateChannelAsync();//创建通道
         var task = Task.Run(() =>//这里必须用异步
         {
             using (channel)

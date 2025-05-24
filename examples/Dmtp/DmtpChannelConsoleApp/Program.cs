@@ -38,7 +38,7 @@ internal class Program
         //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel = client.CreateChannel())
+        using (var channel =await client.CreateChannelAsync())
         {
             //设置限速
             //channel.MaxSpeed = 1024 * 1024;
@@ -68,7 +68,7 @@ internal class Program
         var count = 1024 * 1;//测试1Gb数据
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel = client.CreateChannel())
+        using (var channel =await client.CreateChannelAsync())
         {
             //设置限速
             //channel.MaxSpeed = 1024 * 1024;

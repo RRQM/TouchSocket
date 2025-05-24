@@ -67,7 +67,7 @@ internal class Program
         await client.ConnectAsync();
 
         //Login即为在RpcClassLibrary中自动生成的项目
-        var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
+        var response =await client.GetDmtpRpcActor().LoginAsync(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
         Console.WriteLine(response.Result);
         Console.ReadKey();
     }
