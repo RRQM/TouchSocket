@@ -23,7 +23,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     private readonly EndPoint m_endPoint;
     private readonly UdpDmtp m_udpSession;
     private IPluginManager m_pluginManager;
-
+    public override bool Online => true;
     /// <summary>
     /// UdpDmtp终端客户端
     /// </summary>
@@ -61,8 +61,6 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
         {
             return false;
         }
-
-        this.Online = true;
 
         args = new DmtpVerifyEventArgs()
         {

@@ -230,7 +230,7 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpHandshakingPlugin, 
         dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 
         dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
-        client.DmtpActor.AddActor<DmtpRpcActor>(dmtpRpcActor);
+        client.DmtpActor.TryAddActor<DmtpRpcActor>(dmtpRpcActor);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

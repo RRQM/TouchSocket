@@ -37,12 +37,12 @@ public static class DmtpRpcActorExtension
     #endregion DependencyProperty
 
     /// <summary>
-    /// 新创建一个直接向目标地址请求的<see cref="IRpcClient"/>客户端。
+    /// 新创建一个直接向目标地址请求的<see cref="IDmtpRpcActor"/>客户端。
     /// </summary>
     /// <param name="client">要为其创建目标DMTP RPC演员的客户端。</param>
     /// <param name="targetId">目标地址的标识符。</param>
-    /// <returns>返回一个新的<see cref="IRpcClient"/>实例，该实例能够直接向指定目标地址发起请求。</returns>
-    public static IRpcClient CreateTargetDmtpRpcActor(this IDmtpActorObject client, string targetId)
+    /// <returns>返回一个新的<see cref="IDmtpRpcActor"/>实例，该实例能够直接向指定目标地址发起请求。</returns>
+    public static IDmtpRpcActor CreateTargetDmtpRpcActor(this IDmtpActorObject client, string targetId)
     {
         // 使用指定的目标ID和当前客户端的DMTP RPC演员创建一个新的目标DMTP RPC演员。
         return new TargetDmtpRpcActor(targetId, client.GetDmtpRpcActor());

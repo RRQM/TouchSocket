@@ -24,12 +24,14 @@ public static class DmtpActorExtension
     #region Ping
 
     /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
+    [AsyncToSyncWarning]
     public static bool Ping(this IDmtpActorObject client, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(millisecondsTimeout).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.PingAsync(string, int)"/>
+    [AsyncToSyncWarning]
     public static bool Ping(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(targetId, millisecondsTimeout).GetFalseAwaitResult();

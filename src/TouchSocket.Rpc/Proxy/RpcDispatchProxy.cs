@@ -90,7 +90,7 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
                 }
             default:
                 {
-                    result = this.GetClient().Invoke(invokeKey, rpcMethod.RealReturnType, invokeOption, ps);
+                    result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.RealReturnType, invokeOption, ps).GetFalseAwaitResult();
                     break;
                 }
         }

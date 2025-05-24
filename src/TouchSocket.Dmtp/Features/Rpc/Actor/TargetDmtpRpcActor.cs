@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp.Rpc;
 /// <summary>
 /// TargetDmtpRpcActor
 /// </summary>
-internal class TargetDmtpRpcActor : IRpcClient
+internal class TargetDmtpRpcActor : IDmtpRpcActor
 {
     private readonly IDmtpRpcActor m_rpcActor;
     private readonly string m_targetId;
@@ -35,8 +35,29 @@ internal class TargetDmtpRpcActor : IRpcClient
         this.m_rpcActor = rpcActor; // 初始化RPC行为接口
     }
 
+    public IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> Dispatcher => this.m_rpcActor.Dispatcher;
+
+    public IDmtpActor DmtpActor => this.m_rpcActor.DmtpActor;
+
+    public bool DisposedValue => this.m_rpcActor.DisposedValue;
+
+    public void Dispose()
+    {
+        this.m_rpcActor.Dispose();
+    }
+
+    public Task<bool> InputReceivedData(DmtpMessage message)
+    {
+        return this.m_rpcActor.InputReceivedData(message);
+    }
+
     public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
     {
-        return this.m_rpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
+        return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, returnType, invokeOption, parameters);
+    }
+
+    public Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    {
+        return this.m_rpcActor.InvokeAsync(targetId, invokeKey, returnType, invokeOption, parameters);
     }
 }

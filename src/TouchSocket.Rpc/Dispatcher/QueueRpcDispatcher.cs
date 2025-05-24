@@ -44,7 +44,7 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
     private readonly AsyncQueue<InvokeContext> m_queue = new();
 
     /// <inheritdoc/>
-    public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func)
+    public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<TCallContext, Task> func)
     {
         this.m_queue.Enqueue(new InvokeContext(callContext, func));
         return EasyTask.CompletedTask;
@@ -84,13 +84,13 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
 
     private readonly struct InvokeContext
     {
-        public InvokeContext(TCallContext iDmtpRpcCallContext, Func<object, Task> func)
+        public InvokeContext(TCallContext iDmtpRpcCallContext, Func<TCallContext, Task> func)
         {
             this.IDmtpRpcCallContext = iDmtpRpcCallContext;
             this.Func = func;
         }
 
-        public Func<object, Task> Func { get; }
+        public Func<TCallContext, Task> Func { get; }
         public TCallContext IDmtpRpcCallContext { get; }
     }
 }
