@@ -498,18 +498,14 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
  例如：
 
- ```csharp {4-10} showLineNumbers
- .ConfigurePlugins(a =>
+ ```csharp showLineNumbers
+ a.UseDmtpRpc()
+.ConfigureDefaultSerializationSelector(selector =>
 {
-    a.UseDmtpRpc()
-        .SetSerializationSelector(new DefaultSerializationSelector()
-        {
-            //仅示例，实际使用时，请赋值有效值
-            FastSerializerContext = default,
-            JsonSerializerSettings = default,
-            SerializationBinder = default,
-        });
-})
+    selector.JsonSerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+    selector.FastSerializerContext=default;
+    ...
+});
  ```
 
  #### 5.2.2 自定义序列化
@@ -851,7 +847,7 @@ TouchSocketConfig config = new TouchSocketConfig()//配置
 /// <param name="channelID"></param>
 [Description("测试客户端请求，服务器响应大量流数据")]
 [DmtpRpc]
-public int RpcPullChannel(ICallContext callContext, int channelID)
+public async Task<int> RpcPullChannel(ICallContext callContext, int channelID)
 {
     var size = 0;
     var package = 1024 * 64;
@@ -862,9 +858,9 @@ public int RpcPullChannel(ICallContext callContext, int channelID)
             for (var i = 0; i < 10; i++)
             {
                 size += package;
-                channel.Write(new byte[package]);
+                await channel.WriteAsync(new byte[package]);
             }
-            channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+            await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
         }
     }
     return size;
@@ -877,19 +873,20 @@ public int RpcPullChannel(ICallContext callContext, int channelID)
 using var client = GetTcpDmtpClient();
 ChannelStatus status = ChannelStatus.Default;
 int size = 0;
-var channel = client.CreateChannel();//创建通道
+var channel = await client.CreateChannelAsync(new Metadata() { {"rpc","rpc" } });//创建通道
 Task task = Task.Run(() =>//这里必须用异步
 {
     using (channel)
     {
         foreach (var currentByteBlock in channel)
         {
+            var data = currentByteBlock.Span;
             size += currentByteBlock.Length;//此处可以处理传递来的流数据
         }
         status = channel.Status;//最后状态
     }
 });
-int result = client.GetDmtpRpcActor().RpcPullChannel(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
+int result =await client.GetDmtpRpcActor().RpcPullChannelAsync(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
 await task;//等待异步接收完成
 Console.WriteLine($"状态：{status}，size={size}");
 ```
@@ -908,7 +905,7 @@ Console.WriteLine($"状态：{status}，size={size}");
 /// <param name="channelID"></param>
 [Description("测试客户端推送流数据")]
 [DmtpRpc]
-public int RpcPushChannel(ICallContext callContext, int channelID)
+public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
 {
     int size = 0;
 
@@ -916,9 +913,10 @@ public int RpcPushChannel(ICallContext callContext, int channelID)
     {
         if (SessionClient.TrySubscribeChannel(channelID, out var channel))
         {
-            foreach (var item in channel)
+            await foreach (var currentByteBlock in channel)
             {
-                size += item.Length;//此处处理流数据
+                var data = currentByteBlock.Span;
+                size += currentByteBlock.Length;//此处处理流数据
             }
         }
     }
@@ -933,19 +931,19 @@ using var client = GetTcpDmtpClient();
 ChannelStatus status = ChannelStatus.Default;
 int size = 0;
 int package = 1024;
-var channel = client.CreateChannel();//创建通道
-Task task = Task.Run(() =>//这里必须用异步
+var channel = await client.CreateChannelAsync();//创建通道
+Task task = Task.Run(async () =>//这里必须用异步
 {
     for (int i = 0; i < 1024; i++)
     {
         size += package;
-        channel.Write(new byte[package]);
+        await channel.WriteAsync(new byte[package]);
     }
-    channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+    await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
 
     status = channel.Status;
 });
-int result = client.GetDmtpRpcActor().RpcPushChannel(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
+int result = await client.GetDmtpRpcActor().RpcPushChannelAsync(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
 await task;//等待异步接收完成
 Console.WriteLine($"状态：{status}，result={result}");
 ```
