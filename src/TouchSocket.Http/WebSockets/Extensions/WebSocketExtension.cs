@@ -264,7 +264,7 @@ public static class WebSocketExtension
     /// <summary>
     /// WebSocketMessageCombinatorProperty
     /// </summary>
-    public static DependencyProperty<WebSocketMessageCombinator> WebSocketMessageCombinatorProperty =
+    public readonly static DependencyProperty<WebSocketMessageCombinator> WebSocketMessageCombinatorProperty =
              new DependencyProperty<WebSocketMessageCombinator>("WebSocketMessageCombinator", (obj) =>
              {
                  var combinator = new WebSocketMessageCombinator();

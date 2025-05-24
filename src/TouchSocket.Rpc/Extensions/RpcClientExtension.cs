@@ -24,15 +24,17 @@ public static class RpcClientExtension
     #region RpcClient
 
     /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
+    [AsyncToSyncWarning]
     public static object Invoke(this IRpcClient client, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
     {
         return client.InvokeAsync(invokeKey, returnType, invokeOption, parameters).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
+    [AsyncToSyncWarning]
     public static T InvokeT<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
     {
-        return (T)(client.Invoke(invokeKey, typeof(T), invokeOption, parameters));
+        return (T)(client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).GetFalseAwaitResult());
     }
 
     /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
@@ -46,15 +48,17 @@ public static class RpcClientExtension
     #region ITargetRpcClient
 
     /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
+    [AsyncToSyncWarning]
     public static object Invoke(this ITargetRpcClient client, string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
     {
         return client.InvokeAsync(targetId, invokeKey, returnType, invokeOption, parameters).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(string, string, Type, IInvokeOption, object[])"/>
+    [AsyncToSyncWarning]
     public static T InvokeT<T>(this ITargetRpcClient client, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
     {
-        return (T)(client.Invoke(targetId, invokeKey, typeof(T), invokeOption, parameters));
+        return (T)(client.InvokeAsync(targetId, invokeKey, typeof(T), invokeOption, parameters).GetFalseAwaitResult());
     }
 
     /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(string, string, Type, IInvokeOption, object[])"/>

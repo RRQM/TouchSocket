@@ -65,11 +65,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; set; }
 
-    ///// <summary>
-    ///// 发送数据接口
-    ///// </summary>
-    //public Action<DmtpActor, ArraySegment<byte>[]> OutputSend { get; set; }
-
     /// <summary>
     /// 异步发送数据接口
     /// </summary>
@@ -89,7 +84,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public string Id { get; set; }
 
     /// <inheritdoc/>
-    public bool Online { get; protected set; }
+    public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
     public bool IsReliable { get; }
@@ -112,8 +107,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
     private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
     private CancellationTokenSource m_cancellationTokenSource;
+    private bool m_online;
     private readonly Lock m_syncRoot = new Lock();
-    private Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
+    private readonly Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
     #endregion
 
     /// <summary>
@@ -146,7 +142,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <exception cref="TimeoutException"></exception>
     public virtual async Task HandshakeAsync(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
     {
-        if (this.Online)
+        if (this.m_online)
         {
             return;
         }
@@ -181,7 +177,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         if (verifyResult.Status == 1)
                         {
                             this.Id = verifyResult.Id;
-                            this.Online = true;
+                            this.m_online = true;
                             _ = EasyTask.SafeRun(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
                             {
                                 Id = verifyResult.Id,
@@ -225,20 +221,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     {
         lock (this.m_syncRoot)
         {
-            if (!this.Online)
+            if (!this.m_online)
             {
                 return;
             }
-            this.Online = false;
+            this.m_online = false;
             this.WaitHandlePool.CancelAll();
             this.m_cancellationTokenSource?.Cancel();
-
-            foreach (var item in this.m_actors)
-            {
-                item.Value.SafeDispose();
-            }
-
-            this.m_actors.Clear();
         }
 
         if (manual || this.Closing == null)
@@ -433,7 +422,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = args.Message ?? TouchSocketCoreResource.OperationSuccessful;
                             await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.Online = true;
+                            this.m_online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                             this.m_cancellationTokenSource = new CancellationTokenSource();
                             _ = EasyTask.SafeRun(this.PrivateOnHandshaked, args);
@@ -840,6 +829,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     private async Task<bool> PrivatePingAsync(string targetId, int millisecondsTimeout)
     {
+        if (!this.Online)
+        {
+            return false;
+        }
         var waitPing = new WaitPing
         {
             TargetId = targetId,
@@ -879,16 +872,34 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     #region Actor
     /// <inheritdoc/>
+    public bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor
+    {
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
+        var type = typeof(TActor);
+
+        lock (this.m_syncRoot)
+        {
+            if (this.m_actors.ContainsKey(type))
+            {
+                return false;
+            }
+            this.m_actors.Add(type, actor);
+            return true;
+        }
+        
+    }
+
+    /// <inheritdoc/>
     public void AddActor<TActor>(TActor actor) where TActor : class, IActor
     {
         ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
         var type = typeof(TActor);
 
-        if (this.m_actors.ContainsKey(type))
+        lock (this.m_syncRoot)
         {
-            ThrowHelper.ThrowException(TouchSocketDmtpResource.ActorAlreadyExists.Format(type));
+            this.m_actors.AddOrUpdate(type, actor);
         }
-        this.m_actors.Add(type, actor);
+
     }
 
     /// <inheritdoc/>
@@ -913,11 +924,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             lock (this.m_syncRoot)
             {
-                if (!this.Online)
+                if (!this.m_online)
                 {
                     return;
                 }
-                this.Online = false;
+                this.m_online = false;
 
                 this.Closing = null;
                 this.Routing = null;
@@ -927,6 +938,12 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 this.IdChanged = null;
                 //this.OutputSend = null;
 
+                foreach (var item in this.m_actors)
+                {
+                    item.Value.SafeDispose();
+                }
+
+                this.m_actors.Clear();
                 this.WaitHandlePool.CancelAll();
                 this.WaitHandlePool.SafeDispose();
             }
@@ -956,7 +973,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <returns></returns>
     public async Task<Result> SendCloseAsync(string msg)
     {
-        if (!this.Online)
+        if (!this.m_online)
         {
             return Result.FromFail(TouchSocketResource.ClientNotConnected);
         }

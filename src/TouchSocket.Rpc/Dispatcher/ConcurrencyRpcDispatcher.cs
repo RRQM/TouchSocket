@@ -29,7 +29,7 @@ public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> :DisposableObject
     public bool Reenterable => true;
 
     /// <inheritdoc/>
-    public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func)
+    public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<TCallContext, Task> func)
     {
         // 获取当前调用上下文中定义的RPC方法信息
         var rpcMethod = callContext.RpcMethod;

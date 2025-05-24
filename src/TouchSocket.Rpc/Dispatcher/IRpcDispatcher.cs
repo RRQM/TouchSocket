@@ -33,7 +33,7 @@ public interface IRpcDispatcher<TRpcActor, TCallContext>:IDisposableObject
     /// <param name="callContext">调用的上下文信息，包含调用相关的元数据。</param>
     /// <param name="func">一个函数委托，表示实际执行的异步操作。</param>
     /// <returns>一个任务，表示异步操作的完成。</returns>
-    Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func);
+    Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<TCallContext, Task> func);
 
     /// <summary>
     /// 获取一个值，指示是否可重新进入。

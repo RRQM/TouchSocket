@@ -116,12 +116,7 @@ public static class CollectionsExtension
     /// <typeparam name="TValue">字典中值的类型。</typeparam>
     public static void AddOrUpdate<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
-        // 尝试向字典中添加键值对。如果键不存在，则成功添加；如果键已存在，则不会添加新的键值对。
-        if (!dictionary.TryAdd(key, value))
-        {
-            // 如果尝试添加失败，则说明键已存在，此时更新键对应的值。
-            dictionary[key] = value;
-        }
+        dictionary[key] = value;
     }
 
 
@@ -135,12 +130,8 @@ public static class CollectionsExtension
     /// <typeparam name="TValue">值的类型。</typeparam>
     public static void AddOrUpdate<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
-        // 尝试向字典中添加键值对。如果键已存在，则不会添加。
-        if (!dictionary.TryAdd(key, value))
-        {
-            // 如果键已存在，更新其值。
-            dictionary[key] = value;
-        }
+        // 直接使用内置方法，语义更明确
+        dictionary.AddOrUpdate(key, value, (_, _) => value);
     }
 
 

@@ -119,6 +119,7 @@ public abstract class RpcAttribute : Attribute
                 codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
             }
 
+            codeString.AppendLine("[AsyncToSyncWarning]");
             codeString.Append("public static ");
             codeString.Append(this.GetReturn(rpcMethod, false));
             codeString.Append(' ');
@@ -244,7 +245,7 @@ public abstract class RpcAttribute : Attribute
             {
                 codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
             }
-
+            codeString.AppendLine("[AsyncToSyncWarning]");
             codeString.Append("public ");
             codeString.Append(this.GetReturn(rpcMethod, false));
             codeString.Append(' ');
@@ -337,6 +338,7 @@ public abstract class RpcAttribute : Attribute
                 codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
             }
 
+            codeString.AppendLine("[AsyncToSyncWarning]");
             codeString.Append(this.GetReturn(rpcMethod, false));
             codeString.Append(' ');
             codeString.Append(this.GetMethodName(rpcMethod, false));

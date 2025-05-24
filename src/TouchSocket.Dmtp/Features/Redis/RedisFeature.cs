@@ -59,7 +59,7 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
         };
 
         dmtpRedisActor.SetProtocolFlags(this.StartProtocol);
-        client.DmtpActor.AddActor<DmtpRedisActor>(dmtpRedisActor);
+        client.DmtpActor.TryAddActor<DmtpRedisActor>(dmtpRedisActor);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

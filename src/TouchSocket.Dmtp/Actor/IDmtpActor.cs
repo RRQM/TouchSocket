@@ -122,6 +122,16 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <param name="actor">要添加的 Actor 实例。</param>
     void AddActor<TActor>(TActor actor) where TActor : class, IActor;
 
+
+
+    /// <summary>
+    /// 尝试添加一个实现了 <see cref="IActor"/> 接口的 Actor 实例。
+    /// </summary>
+    /// <typeparam name="TActor">Actor 的具体类型，必须实现 <see cref="IActor"/> 接口。</typeparam>
+    /// <param name="actor">要添加的 Actor 实例。</param>
+    /// <returns>如果添加成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+    bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor;
+
     /// <summary>
     /// 获取指定类型的 Actor 实例。
     /// </summary>

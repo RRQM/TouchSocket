@@ -255,7 +255,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
         }
     }
 
-    private async Task InvokeThisAsync(object o)
+    private async Task InvokeThisAsync(IDmtpRpcCallContext o)
     {
         var callContext = (DmtpRpcCallContext)o;
         var rpcRequestPackage = callContext.DmtpRpcPackage;
@@ -291,9 +291,9 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
             }
             else
             {
-                if (rpcRequestPackage.Feedback == FeedbackType.WaitInvoke && rpcMethod.HasCallContext)
+                if (rpcRequestPackage.Feedback == FeedbackType.WaitInvoke)
                 {
-                    this.m_callContextDic.TryAdd(rpcRequestPackage.Sign, callContext);
+                    this.m_callContextDic.AddOrUpdate(rpcRequestPackage.Sign, callContext);
                 }
             }
 
@@ -353,8 +353,9 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
                 byteBlock.Dispose();
             }
         }
-        catch
+        catch(Exception ex)
         {
+            this.DmtpActor.Logger?.Exception(this, ex);
         }
         finally
         {
@@ -383,7 +384,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
     {
         if (disposing)
         {
-            Dispatcher.SafeDispose();
+            this.Dispatcher.SafeDispose();
         }
         base.Dispose(disposing);
     }
