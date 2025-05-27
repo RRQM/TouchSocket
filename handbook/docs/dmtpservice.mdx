@@ -5,6 +5,7 @@ title: 创建Dmtp服务器
 
 import Tag from "@site/src/components/Tag.js";
 import Pro from "@site/src/components/Pro.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -16,6 +17,7 @@ import Pro from "@site/src/components/Pro.js";
 
 Dmtp的服务器有多种形式的host，每种服务器的创建都大同小异，且功能基本一致。
 
+<BilibiliCard title="新创建Dmtp服务器项目" link="https://www.bilibili.com/cheese/play/ep1726345" isPro="true"/>
 
 ## 二、服务器架构
 
@@ -59,6 +61,8 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 
 `TcpDmtpService`是基于`Tcp`协议的Dmtp。在可配置的基础之上，还可以配置与[TcpService可配置项](./tcpservice.mdx)相关的配置。
 
+<BilibiliCard title="创建Tcp协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726346" isPro="true"/>
+
 ```csharp showLineNumbers
 var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
@@ -82,6 +86,8 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 ### 5.2 UdpDmtp
 
 `UdpDmtp`是基于`Udp`协议Dmtp。在可配置的基础之上，还可以配置与[UdpSession可配置项](./udpsession.mdx)相关的配置。
+
+<BilibiliCard title="创建Udp协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726348" isPro="true"/>
 
 ```csharp showLineNumbers
 var udpDmtp = new UdpDmtp();
@@ -107,6 +113,8 @@ await udpDmtp.StartAsync();
 ### 5.3 HttpDmtpService
 
 `HttpDmtpService`是基于`Http`升级协议。在该解析器中，配置设置[HttpService](./httpservice.mdx)一致。
+
+<BilibiliCard title="创建Http协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726350" isPro="true"/>
 
 ```csharp showLineNumbers
 var service = new HttpDmtpService();
@@ -136,6 +144,8 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 2. `IServiceCollection`添加`AddWebSocketDmtpService`，并进行相关配置（不用配置端口，会和asp使用同一端口）。
 3. `IApplicationBuilder`必须先使用`UseWebSockets`。
 4. `IApplicationBuilder`调用`UseWebSocketDmtp`，并传入url设置。
+
+<BilibiliCard title="创建WebSocket协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726354" isPro="true"/>
 
 在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
@@ -174,6 +184,8 @@ app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之�
 1. nuget 安装`TouchSocketPro.AspNetCore`。
 2. `IServiceCollection`添加`AddHttpMiddlewareDmtpService`，并进行相关配置（不用配置端口，会和asp使用同一端口）。
 3. `IApplicationBuilder`调用`UseHttpDmtp`。
+
+<BilibiliCard title="创建基于AspNetCore的Http协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726353" isPro="true"/>
 
 在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
@@ -223,6 +235,8 @@ builder.Services.ConfigureContainer(container =>
 ### 5.6 基于NamedPipe协议 <Pro/> 
 
 这是基于`NamedPipe`的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
+
+<BilibiliCard title="创建NamedPipe协议的Dmtp服务器" link="https://www.bilibili.com/cheese/play/ep1726356" isPro="true"/>
 
 ```csharp showLineNumbers
 var service = new NamedPipeDmtpService();
