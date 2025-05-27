@@ -3,6 +3,8 @@ id: dmtprpc
 title: Rpc功能
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ### 定义
 
 命名空间：TouchSocket.Dmtp.Rpc <br/>
@@ -21,6 +23,12 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 - 支持客户端之间互相调用。
 - 支持绝大多数数据类型及自定义实体类。
 - 支持自定义序列化。
+
+<BilibiliCard title="DmtpRpc简单介绍" link="https://www.bilibili.com/cheese/play/ep1742128" isPro="true"/>
+
+<BilibiliCard title="完成DmtpRpc的基本调用" link="https://www.bilibili.com/cheese/play/ep1742130" isPro="true"/>
+
+<BilibiliCard title="DmtpRpc的调用原理" link="https://www.bilibili.com/cheese/play/ep1742131" isPro="true"/>
 
 ## 二、使用Rpc服务
 
@@ -143,6 +151,10 @@ bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitIn
 #### 2.3.2 代理调用
 
 代理调用的便捷在于，客户端不用再知道哪些服务可调，也不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。
+
+<BilibiliCard title="使用代理生成文件的方式调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742132" isPro="true"/>
+
+<BilibiliCard title="使用源生成的方式调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742133" isPro="true"/>
 
 详细步骤：
 
@@ -288,6 +300,9 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 
 一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器发起，客户端响应，所以需要反向rpc。
 
+<BilibiliCard title="反向调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742134" isPro="true"/>
+<BilibiliCard title="使用源生成反向调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742135" isPro="true"/>
+
 ### 3.1 定义、发布反向Rpc服务
 
 实际上，Dmtp的全称（Duplex Message Transport Protocol双工消息传输协议），Duplex意为双工，则表明，当Dmtp客户端连接到服务以后，拥有与服务器同等的通讯权限与功能。所以客户端发布Rpc服务的步骤和服务器完全一致。即：当客户端和服务器建立连接以后，就不再区分谁是客户端，谁是服务器了。只关心，**谁能提供服务，谁在调用服务**。
@@ -402,6 +417,9 @@ partial class MyRpcServer : TransientRpcServer
 
 除了Rpc，反向Rpc，DmtpRpc还支持**客户端**之间互Call Rpc。服务的定义与Rpc一样。
 
+<BilibiliCard title="客户端互CallRpc" link="https://www.bilibili.com/cheese/play/ep1742136" isPro="true"/>
+<BilibiliCard title="使用源生成客户端互CallRpc" link="https://www.bilibili.com/cheese/play/ep1742137" isPro="true"/>
+
 ### 4.1 互Call RPC
 
 客户端1调用客户端2的方法，需要知道对方的**Id**。然后和调用Rpc方法一致。然后使用下列函数调用即可。
@@ -480,6 +498,8 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 - `WaitSend`意为发送Rpc请求，并等待**接收**结果。即，返回时，仅表示对方收到了Rpc请求，但是具体执行如何，则不可知。这一般在不可靠协议中是有用的。
 - `WaitInvoke`意为发送Rpc请求，并等待**执行**结果。即，返回时，表示对方已经执行了Rpc请求，如果有执行返回值，则携带返回值。如果执行过程发生异常，则会将异常返回。
 
+<BilibiliCard title="FeedbackType详解和性能对比测试" link="https://www.bilibili.com/cheese/play/ep1742138" isPro="true"/>
+
 ### 5.2 SerializationType
 
 `SerializationType`是序列化类型，其枚举值有`FastBinary`、`Json`、`Xml`、`SystemBinary`。其特点如下：
@@ -495,6 +515,14 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
  - FastSerializerContext：快速序列化上下文属性
  - JsonSerializerSettings：Json序列化设置属性
  - SerializationBinder：系统二进制序列化绑定器
+
+ <BilibiliCard title="DmtpRpc使用4种序列化的场景分析" link="https://www.bilibili.com/cheese/play/ep1742141" isPro="true"/>
+
+ <BilibiliCard title="配置默认序列化选择器和使用Fast序列化的源生成" link="https://www.bilibili.com/cheese/play/ep1742143" isPro="true"/>
+
+ <BilibiliCard title="在DmtpRpc种使用SystemTextJson源生成" link="https://www.bilibili.com/cheese/play/ep1742144" isPro="true"/>
+
+ <BilibiliCard title="自定义序列化并且使用MemoryPack实践" link="https://www.bilibili.com/cheese/play/ep1742145" isPro="true"/>
 
  例如：
 
@@ -749,6 +777,8 @@ var invokeOption = new DmtpInvokeOption()//调用配置
 
 Timeout是超时时间，单位是毫秒。
 
+<BilibiliCard title="DmtpRpc的超时设定和CancellationTok" link="https://www.bilibili.com/cheese/play/ep1742140" isPro="true"/>
+
 ### 5.4 CancellationToken
 
 CancellationToken是取消令箭源，可用于取消Rpc的调用。
@@ -780,6 +810,8 @@ client.Logger.Info($"调用Add方法成功，结果：{sum}");
 
 Metadata是字符串键值对，其作用类似http的headers，用于传递一些附加信息。
 
+<BilibiliCard title="使用Dmtp的Metadata传递自定义消息" link="https://www.bilibili.com/cheese/play/ep1742139" isPro="true"/>
+
 在请求时可以通过DmtpInvokeOption进行传参。
 
 ```csharp {6} showLineNumbers
@@ -807,6 +839,9 @@ public Metadata CallContextMetadata(IDmtpRpcCallContext callContext)
 ## 六、Rpc大数据传输
 
 > **在Rpc中，并没有对传输的数据做限制，但是因为Rpc默认使用的固定包头适配器中，默认设置的可传递数据为10Mb，所以在Rpc中，用户可一次性传递的数据包大约为9.9Mb。所以，如果用户传递超出阈值的数据，适配器则会触发异常，而无法接收。但在实际上Rpc的使用中，大数据的传输也是很重要的一个环节，所以在此做了大数据的传输思路建议，希望能有效解决大家的麻烦。**
+
+
+<BilibiliCard title="DmtpRpc结合Channel发送和接受大数据包" link="https://www.bilibili.com/cheese/play/ep1742147" isPro="true"/>
 
 <a name="DU9Pj"></a>
 

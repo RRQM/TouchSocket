@@ -3,6 +3,8 @@ id: dmtpbase
 title: Dmtp基础功能
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
@@ -15,6 +17,8 @@ title: Dmtp基础功能
 ### 1.1 Token验证
 
 在服务器或客户端的配置上，设置`VerifyToken`，即可实现字符串`Token`验证。
+
+<BilibiliCard title="使用Token、或动态验证连接" link="https://www.bilibili.com/cheese/play/ep1726372" isPro="true"/>
 
 ```csharp {4} showLineNumbers
 var config = new TouchSocketConfig()
@@ -175,6 +179,7 @@ DMTP基础功能是比较容易跨语言的，但这并不意味着DMTP所有的
 
 在Dmtp中，存在于服务器的辅助客户端（SessionClient），与远程客户端（Client）是一一对应关系，其Id也**完全一致**。所以在任意一方修改Id（调用ResetId），都会同时修改远程Id。所以合理使用该操作，可以完成复用Id（重置Id）的需求。
 
+<BilibiliCard title="Dmtp预设Id和重置Id" link="https://www.bilibili.com/cheese/play/ep1726373" isPro="true"/>
 
 ## 三、发送数据
 
@@ -183,6 +188,10 @@ Dmtp提供协议发送数据，又叫协议扩展功能，就是对现有的Dmtp
 使用起来是非常简单的，每个DmtpActor，都实现了Send方法接口。
 
 第一个参数为`ushort`类型，使用者可以**约定任意大于20数值**。
+
+<BilibiliCard title="使用Dmtp发送协议数据" link="https://www.bilibili.com/cheese/play/ep1726375" isPro="true"/>
+
+<BilibiliCard title="使用Dmtp发送IPackage数据" link="https://www.bilibili.com/cheese/play/ep1726376" isPro="true"/>
 
 ```csharp showLineNumbers
 client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
@@ -220,6 +229,10 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 `Channel`是`DmtpActor`的一个传输通道。一般来说，`DmtpActor`是一个逻辑连接（例如：一个`Tcp`、`Udp`、`NamedPipe`等）。而`Channel`则是更加细分`DmtpActor`的一个传输通道。
 
 换言之，一个`DmtpActor`可以有**多个Channel**。多个`Channel`可以**同时进行传输**。并且数据互不干扰。
+
+<BilibiliCard title="使用Channel发送数据" link="https://www.bilibili.com/cheese/play/ep1726377" isPro="true"/>
+
+<BilibiliCard title="Dmtp路由转发Channel数据" link="https://www.bilibili.com/cheese/play/ep1726378" isPro="true"/>
 
 ### 4.1 特点
 

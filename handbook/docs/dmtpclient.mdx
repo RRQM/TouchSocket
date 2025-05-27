@@ -5,6 +5,7 @@ title: 创建Dmtp客户端
 
 import Tag from "@site/src/components/Tag.js";
 import Pro from "@site/src/components/Pro.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -53,6 +54,8 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 
 `TcpDmtpClient`对应`TcpDmtpService`服务器。基本创建如下，支持[创建TcpClient](./tcpclient.mdx)的所有配置。
 
+<BilibiliCard title="创建Tcp协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726347" isPro="true"/>
+
 ```csharp showLineNumbers
 var client = new TcpDmtpClient();
 await client.SetupAsync(new TouchSocketConfig()
@@ -67,6 +70,8 @@ await client.ConnectAsync();
 ### 4.2 UdpDmtp
 
 `UdpDmtp`对应`UdpDmtp`服务器，即`UdpDmtp`即是服务器，又是客户端。基本创建如下，支持[创建UdpSession](./udpsession.mdx)的所有配置。
+
+<BilibiliCard title="创建Udp协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726349" isPro="true"/>
 
 ```csharp {1,4-6,11} showLineNumbers
 var client = new UdpDmtp();
@@ -97,6 +102,8 @@ var client = new UdpDmtp();
 
 `HttpDmtpClient`对应`HttpDmtpService`，或者`HttpMiddlewareDmtpService`服务器。基本创建如下，支持[创建HttpClient](./httpclient.mdx)的所有配置。
 
+<BilibiliCard title="创建Http协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726352" isPro="true"/>
+
 ```csharp showLineNumbers
 var client = new HttpDmtpClient();
 await client.SetupAsync(new TouchSocketConfig()
@@ -109,6 +116,8 @@ await client.ConnectAsync();
 ```
 
 ### 4.4 WebSocketDmtpClient
+
+<BilibiliCard title="创建WebSocket协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726355" isPro="true"/>
 
 ```csharp showLineNumbers
 var websocketDmtpClient = new WebSocketDmtpClient();
@@ -179,6 +188,8 @@ finally
 ### 4.6 NamedPipeDmtpClient
 
 `NamedPipeDmtpClient`对应`NamedPipeDmtpService`服务器。基本创建如下，支持[创建NamedPipeClient](./namedpipeclient.mdx)的所有配置。
+
+<BilibiliCard title="创建NamedPipe协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726360" isPro="true"/>
 
 ```csharp showLineNumbers
 var client = new NamedPipeDmtpClient();
