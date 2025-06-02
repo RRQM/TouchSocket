@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc;
 /// 立即执行RPC调度器类，用于同步执行RPC调用。
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为者类型。</typeparam>
-/// <typeparam name="TCallContext">调用上下文类型，必须是ICallContext的子类。</typeparam>
+/// <typeparam name="TCallContext">调用上下文类型，必须是<see cref="ICallContext"/>的子类。</typeparam>
 public class ImmediateRpcDispatcher<TRpcActor, TCallContext> :DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext

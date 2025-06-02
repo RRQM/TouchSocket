@@ -22,12 +22,15 @@ namespace TouchSocket.Rpc;
 /// 队列RPC调度器类，用于管理和调度RPC调用请求。
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为者的类型，必须是类类型。</typeparam>
-/// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现ICallContext接口。</typeparam>
+/// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现<see cref="ICallContext"/>接口。</typeparam>
 public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext
 {
-    
+    private readonly CancellationTokenSource m_cancellationTokenSource = new CancellationTokenSource();
+
+    private readonly AsyncQueue<InvokeContext> m_queue = new();
+
     /// <summary>
     /// 初始化<see cref="QueueRpcDispatcher{TRpcActor, TCallContext}"/>类的新实例。
     /// </summary>
@@ -36,18 +39,25 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
         _ = EasyTask.SafeRun(this.RpcTrigger);
     }
 
-    private readonly CancellationTokenSource m_cancellationTokenSource = new CancellationTokenSource();
-
     /// <inheritdoc/>
     public bool Reenterable => false;
-
-    private readonly AsyncQueue<InvokeContext> m_queue = new();
 
     /// <inheritdoc/>
     public Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<TCallContext, Task> func)
     {
         this.m_queue.Enqueue(new InvokeContext(callContext, func));
         return EasyTask.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_cancellationTokenSource.Cancel();
+            this.m_cancellationTokenSource.SafeDispose();
+        }
+        base.Dispose(disposing);
     }
 
     private async Task RpcTrigger()
@@ -69,17 +79,6 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
             {
             }
         }
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_cancellationTokenSource.Cancel();
-            this.m_cancellationTokenSource.SafeDispose();
-        }
-        base.Dispose(disposing);
     }
 
     private readonly struct InvokeContext

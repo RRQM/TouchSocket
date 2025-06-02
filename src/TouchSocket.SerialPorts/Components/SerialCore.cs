@@ -116,8 +116,10 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         this.m_core.Reset();
         this.SetBuffer(byteBlock);
 
-        if (m_receiveLock.CurrentCount == 0)
-            m_receiveLock.Release();
+        if (this.m_receiveLock.CurrentCount == 0)
+        {
+            this.m_receiveLock.Release();
+        }
 
         return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
     }
@@ -149,8 +151,8 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             try
             {
                 // 取消未完成的任务源
-                m_cancellationTokenSource.Cancel();
-                m_cancellationTokenSource.Dispose();
+                this.m_cancellationTokenSource.Cancel();
+                this.m_cancellationTokenSource.Dispose();
                 this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
                 this.m_serialPort.Close();
                 this.m_serialPort.Dispose();
@@ -162,24 +164,6 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         }
         base.Dispose(disposing);
     }
-
-    //protected override SerialOperationResult GetResult()
-    //{
-    //    var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
-    //    var bytes = this.m_byteBlock.Memory.GetArray();
-    //    var r = this.m_serialPort.Read(bytes.Array, 0, length);
-    //    this.m_receiveCounter.Increment(r);
-    //    return new SerialOperationResult(r, this.m_eventType);
-    //}
-
-    //protected override void Scheduler(Action<object> action, object state)
-    //{
-    //    void Run(object o)
-    //    {
-    //        action.Invoke(o);
-    //    }
-    //    ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-    //}
 
     private void OnReceivePeriod(long value)
     {
@@ -198,28 +182,30 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             return;
         }
 
-        while (this.m_serialPort.BytesToRead > 0)
+        try
         {
-            try
+            var bytesToRead = this.m_serialPort.BytesToRead;
+            while (bytesToRead > 0)
             {
                 this.m_receiveLock.Wait(this.m_cancellationToken);
 
                 var eventType = e.EventType;
 
-                var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
-                var bytes = this.m_byteBlock.Memory.GetArray();
+                var length = Math.Min(bytesToRead, this.m_byteBlock.Capacity);
+                var bytes = this.m_byteBlock.TotalMemory.GetArray();
                 var r = this.m_serialPort.Read(bytes.Array, 0, length);
                 this.m_receiveCounter.Increment(r);
                 var serialOperationResult = new SerialOperationResult(r, eventType);
                 this.m_core.SetResult(serialOperationResult);
-            }
-            catch (Exception ex)
-            {
-                // 设置任务源的异常
-                this.m_core.SetException(ex);
-                break;
+                bytesToRead -= r;
             }
         }
+        catch (Exception ex)
+        {
+            // 设置任务源的异常
+            this.m_core.SetException(ex);
+        }
+        
     }
 
     private void SetBuffer(ByteBlock byteBlock)
@@ -227,156 +213,3 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         this.m_byteBlock = byteBlock;
     }
 }
-
-///// <summary>
-///// Serial核心
-///// </summary>
-//internal class SerialCore : ValueTaskSource<SerialOperationResult>
-//{
-//    private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
-//    private readonly SerialPort m_serialPort;
-//    private ByteBlock m_byteBlock;
-//    private SerialData m_eventType;
-//    private int m_receiveBufferSize = 1024 * 10;
-
-//    private ValueCounter m_receiveCounter;
-
-//    private int m_sendBufferSize = 1024 * 10;
-
-//    private ValueCounter m_sendCounter;
-
-//    /// <summary>
-//    /// Serial核心
-//    /// </summary>
-//    public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits)
-//    {
-//        this.m_receiveCounter = new ValueCounter
-//        {
-//            Period = TimeSpan.FromSeconds(1),
-//            OnPeriod = this.OnReceivePeriod
-//        };
-
-//        this.m_sendCounter = new ValueCounter
-//        {
-//            Period = TimeSpan.FromSeconds(1),
-//            OnPeriod = this.OnSendPeriod
-//        };
-
-//        this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
-//        this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
-//    }
-
-//    /// <summary>
-//    /// 最大缓存尺寸
-//    /// </summary>
-//    public int MaxBufferSize { get; set; } = 1024 * 1024 * 10;
-
-//    /// <summary>
-//    /// 最小缓存尺寸
-//    /// </summary>
-//    public int MinBufferSize { get; set; } = 1024 * 10;
-
-//    /// <summary>
-//    /// 接收缓存池,运行时的值会根据流速自动调整
-//    /// </summary>
-//    public int ReceiveBufferSize => this.m_receiveBufferSize;
-
-//    /// <summary>
-//    /// 接收计数器
-//    /// </summary>
-//    public ValueCounter ReceiveCounter => this.m_receiveCounter;
-
-//    /// <summary>
-//    /// 发送缓存池,运行时的值会根据流速自动调整
-//    /// </summary>
-//    public int SendBufferSize => this.m_sendBufferSize;
-
-//    /// <summary>
-//    /// 发送计数器
-//    /// </summary>
-//    public ValueCounter SendCounter => this.m_sendCounter;
-
-//    public SerialPort SerialPort => this.m_serialPort;
-
-//    public ValueTask<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
-//    {
-//        this.SetBuffer(byteBlock);
-
-//        return new ValueTask<SerialOperationResult>(this, 0);
-//    }
-
-//    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
-//    {
-//        await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-//        try
-//        {
-//            var segment = memory.GetArray();
-//            this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
-
-//            this.m_sendCounter.Increment(memory.Length);
-//        }
-//        finally
-//        {
-//            this.m_semaphoreForSend.Release();
-//        }
-//    }
-
-//    protected override void Dispose(bool disposing)
-//    {
-//        if (this.DisposedValue)
-//        {
-//            return;
-//        }
-//        if (disposing)
-//        {
-//            try
-//            {
-//                this.m_serialPort.Close();
-//                this.m_serialPort.Dispose();
-//            }
-//            catch
-//            {
-//            }
-//        }
-//        base.Dispose(disposing);
-//    }
-
-//    protected override SerialOperationResult GetResult()
-//    {
-//        var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
-//        var bytes = this.m_byteBlock.Memory.GetArray();
-//        var r = this.m_serialPort.Read(bytes.Array, 0, length);
-//        this.m_receiveCounter.Increment(r);
-//        return new SerialOperationResult(r, this.m_eventType);
-//    }
-
-//    protected override void Scheduler(Action<object> action, object state)
-//    {
-//        void Run(object o)
-//        {
-//            action.Invoke(o);
-//        }
-//        ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-//    }
-
-//    private void OnReceivePeriod(long value)
-//    {
-//        this.m_receiveBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
-//    }
-
-//    private void OnSendPeriod(long value)
-//    {
-//        this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
-//    }
-
-//    private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
-//    {
-//        this.m_eventType = e.EventType;
-//        base.Complete(true);
-//    }
-
-//    private void SetBuffer(ByteBlock byteBlock)
-//    {
-//        this.m_byteBlock = byteBlock;
-//    }
-//}

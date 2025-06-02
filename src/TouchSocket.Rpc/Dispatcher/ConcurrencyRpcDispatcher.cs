@@ -19,8 +19,8 @@ namespace TouchSocket.Rpc;
 /// <summary>
 /// 并发RPC调度器，用于管理RPC方法的并发调用。
 /// </summary>
-/// <typeparam name="TRpcActor">RPC行为的类型，必须是IDependencyObject的子类。</typeparam>
-/// <typeparam name="TCallContext">调用上下文的类型，必须是ICallContext的子类。</typeparam>
+/// <typeparam name="TRpcActor">RPC行为的类型。</typeparam>
+/// <typeparam name="TCallContext">调用上下文的类型，必须是<see cref="ICallContext"/>的子类。</typeparam>
 public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> :DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext

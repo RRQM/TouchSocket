@@ -25,7 +25,7 @@ public sealed class XmlRpcAttribute : RpcAttribute
 {
     /// <summary>
     ///  适用于XmlRpc的标记.
-    ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
+    ///  <para>是否仅以函数名调用，当为<see langword="true"/>是，调用时仅需要传入方法名即可。</para>
     /// </summary>
     /// <param name="methodInvoke"></param>
     [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
@@ -44,11 +44,11 @@ public sealed class XmlRpcAttribute : RpcAttribute
     /// <summary>
     /// 适用于XmlRpc的标记.
     /// </summary>
-    /// <param name="invokenKey"></param>
+    /// <param name="invokeKey"></param>
     [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-    public XmlRpcAttribute(string invokenKey)
+    public XmlRpcAttribute(string invokeKey)
     {
-        this.InvokeKey = invokenKey;
+        this.InvokeKey = invokeKey;
     }
 
     /// <inheritdoc/>

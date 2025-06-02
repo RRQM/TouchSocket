@@ -138,7 +138,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
 
     /// <summary>
     /// 组合发送预处理数据，
-    /// 当属性SplicingSend实现为True时，系统才会调用该方法。
+    /// 当属性SplicingSend实现为<see langword="true"/>时，系统才会调用该方法。
     /// </summary>
     /// <param name="transferBytes">代发送数据组合</param>
     protected virtual Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
