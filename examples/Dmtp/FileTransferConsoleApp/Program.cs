@@ -36,23 +36,23 @@ internal class Program
 
         var consoleAction = new ConsoleAction();
         consoleAction.OnException += ConsoleAction_OnException;
-        consoleAction.Add("1", "测试客户端向服务器请求文件", async () => { await ClientPullFileFromService(client); });
-        consoleAction.Add("2", "测试客户端向服务器推送文件", async () => { await ClientPushFileFromService(client); });
+        consoleAction.Add("1", "测试客户端向服务器请求文件", async () => await ClientPullFileFromService(client));
+        consoleAction.Add("2", "测试客户端向服务器推送文件", async () => await ClientPushFileFromService(client));
 
         //此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SessionClient同步Id。
         //详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
         //所以此处直接使用客户端Id。
-        consoleAction.Add("3", "测试服务器向客户端请求文件", async () => { await ServicePullFileFromClient(service, client.Id); });
-        consoleAction.Add("4", "测试服务器向客户端推送文件", async () => { await ServicePushFileFromClient(service, client.Id); });
+        consoleAction.Add("3", "测试服务器向客户端请求文件", async () => await ServicePullFileFromClient(service, client.Id));
+        consoleAction.Add("4", "测试服务器向客户端推送文件", async () => await ServicePushFileFromClient(service, client.Id));
 
-        consoleAction.Add("5", "测试客户端向其他客户端请求文件", async () => { await ClientPullFileFromClient(); });
-        consoleAction.Add("6", "测试客户端向其他客户端推送文件", async () => { await ClientPushFileFromClient(); });
+        consoleAction.Add("5", "测试客户端向其他客户端请求文件", async () => await ClientPullFileFromClient());
+        consoleAction.Add("6", "测试客户端向其他客户端推送文件", async () => await ClientPushFileFromClient());
 
-        consoleAction.Add("7", "测试客户端向服务器请求小文件", async () => { await PullSmallFileFromService(client); });
-        consoleAction.Add("8", "测试客户端向服务器推送小文件", async () => { await PushSmallFileFromService(client); });
+        consoleAction.Add("7", "测试客户端向服务器请求小文件", async () => await PullSmallFileFromService(client));
+        consoleAction.Add("8", "测试客户端向服务器推送小文件", async () => await PushSmallFileFromService(client));
 
-        consoleAction.Add("9", "测试客户端工厂向服务器请求文件", async () => { await MultithreadingClientPullFileFromService(); });
-        consoleAction.Add("10", "测试客户端工厂向服务器推送文件", async () => { await MultithreadingClientPushFileFromService(); });
+        consoleAction.Add("9", "测试客户端工厂向服务器请求文件", async () => await MultithreadingClientPullFileFromService());
+        consoleAction.Add("10", "测试客户端工厂向服务器推送文件", async () => await MultithreadingClientPushFileFromService());
 
         consoleAction.ShowAll();
 
@@ -110,7 +110,7 @@ internal class Program
 
         _ = loopAction.RunAsync();
 
-        //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
+        //此方法会等待，直到传输结束
         IResult result = await clientFactory.PushFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info($"向服务器推送文件结束，{result}");
@@ -170,7 +170,7 @@ internal class Program
 
         _ = loopAction.RunAsync();
 
-        //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
+        //此方法会等待，直到传输结束
         IResult result = await clientFactory.PullFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");

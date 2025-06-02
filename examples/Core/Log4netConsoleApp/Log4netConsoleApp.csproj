@@ -9,12 +9,12 @@
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="3.1.0" />
-    <PackageReference Include="TouchSocket" Version="3.1.5" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="3.1.5" />
-    <PackageReference Include="TouchSocket.Rpc" Version="3.1.5" />
-    <PackageReference Include="TouchSocket.WebApi" Version="3.1.5" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="3.1.5" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.1.5" />
+    <PackageReference Include="TouchSocket" Version="3.1.6" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="3.1.6" />
+    <PackageReference Include="TouchSocket.Rpc" Version="3.1.6" />
+    <PackageReference Include="TouchSocket.WebApi" Version="3.1.6" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="3.1.6" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.1.6" />
   </ItemGroup>
 
   <ItemGroup>

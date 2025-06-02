@@ -43,7 +43,7 @@ internal class Program
         client.Logger.Info("已经成功载入流，请输入任意字符");
 
         //可以持续写入流，但在此处只写入了一次
-        remoteStream.Write(Encoding.UTF8.GetBytes(Console.ReadLine()));
+        await remoteStream.WriteAsync(Encoding.UTF8.GetBytes(Console.ReadLine()));
 
         //可以使用下列代码完成持续读流
         //while (true)
