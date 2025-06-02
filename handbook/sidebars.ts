@@ -454,38 +454,43 @@ module.exports =
       "items": [
         {
           "type": "doc",
+          "id": "rpcdescription",
+          "label": "15.1 Rpc描述"
+        },
+        {
+          "type": "doc",
           "id": "rpcregister",
-          "label": "15.1 注册服务"
+          "label": "15.2 注册服务"
         },
         {
           "type": "doc",
           "id": "rpcgenerateproxy",
-          "label": "15.2 生成调用代理"
+          "label": "15.3 生成调用代理"
         },
         {
           "type": "doc",
           "id": "generateproxysourcegeneratordemo",
-          "label": "15.3 源生成代理推荐写法"
+          "label": "15.4 源生成代理推荐写法"
         },
         {
           "type": "doc",
           "id": "rpcactionfilter",
-          "label": "15.4 Rpc服务AOP"
+          "label": "15.5 Rpc服务AOP"
         },
         {
           "type": "doc",
           "id": "rpcallcontext",
-          "label": "15.5 调用上下文"
+          "label": "15.6 调用上下文"
         },
         {
           "type": "doc",
           "id": "rpcratelimiting",
-          "label": "15.6 Rpc访问速率限制"
+          "label": "15.7 Rpc访问速率限制"
         },
         {
           "type": "doc",
           "id": "rpcdispatcher",
-          "label": "15.7 Rpc执行调度器"
+          "label": "15.8 Rpc执行调度器"
         }
       ]
     },
