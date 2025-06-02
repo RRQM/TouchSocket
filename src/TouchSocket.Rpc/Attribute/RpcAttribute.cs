@@ -62,7 +62,7 @@ public abstract class RpcAttribute : Attribute
     public string InvokeKey { get; set; }
 
     /// <summary>
-    /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
+    /// 是否仅以函数名调用，当为<see langword="true"/>是，调用时仅需要传入方法名即可。
     /// </summary>
     public bool MethodInvoke { get; set; }
 

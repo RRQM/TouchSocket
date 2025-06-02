@@ -321,7 +321,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             if (this.Count < this.MaxCount)
             {
                 //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                _ = EasyTask.Run(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                _ = EasyTask.SafeRun(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
             }
             else
             {
@@ -353,13 +353,12 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         }
     }
 
-    private async Task OnClientInit(object obj)
+    private async Task OnClientInit(Tuple<Socket, TcpNetworkMonitor> tuple)
     {
-        if (obj == null)
+        if (tuple == null)
         {
             return;
         }
-        var tuple = (Tuple<Socket, TcpNetworkMonitor>)obj;
         var socket = tuple.Item1;
         var monitor = tuple.Item2;
 

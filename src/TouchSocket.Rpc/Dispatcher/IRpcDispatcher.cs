@@ -20,7 +20,7 @@ namespace TouchSocket.Rpc;
 /// 定义了一个接口，用于在RPC（远程过程调用）环境中分发调用请求。
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为的类型，必须是类类型。</typeparam>
-/// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现ICallContext接口。</typeparam>
+/// <typeparam name="TCallContext">调用上下文的类型，必须是类类型并且实现<see cref="ICallContext"/>接口。</typeparam>
 public interface IRpcDispatcher<TRpcActor, TCallContext>:IDisposableObject
     where TRpcActor : class
     where TCallContext : class, ICallContext

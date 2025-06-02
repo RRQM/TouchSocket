@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Core;
 using static System.Collections.Specialized.BitVector32;
 
@@ -46,13 +47,7 @@ public static partial class RpcContainerExtension
     /// <typeparam name="TRpcServerProvider"></typeparam>
     /// <param name="registrator"></param>
     /// <returns></returns>
-#if NET6_0_OR_GREATER
     public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(CoreContainerExtension.DynamicallyAccessed)] TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
-#else
-
-    public static IRegistrator AddRpcServerProvider<TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
-#endif
-
     {
         registrator.RegisterSingleton<IRpcServerProvider, TRpcServerProvider>();
         return registrator;

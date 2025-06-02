@@ -246,7 +246,7 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 筛选器
     /// </summary>
-    public IList<IRpcActionFilter> GetFilters()
+    public IReadOnlyList<IRpcActionFilter> GetFilters()
     {
         if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3])
         {

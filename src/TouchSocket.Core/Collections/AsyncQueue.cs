@@ -375,14 +375,14 @@ public class AsyncQueue<T>
         bool dequeued;
         lock (this.SyncRoot)
         {
-            if (this.m_queueElements is object && this.m_queueElements.Count > 0 && (valueCheck is null || valueCheck(this.m_queueElements.Peek())))
+            if (this.m_queueElements is not null && this.m_queueElements.Count > 0 && (valueCheck is null || valueCheck(this.m_queueElements.Peek())))
             {
                 value = this.m_queueElements.Dequeue();
                 dequeued = true;
             }
             else
             {
-                value = default(T)!;
+                value = default!;
                 dequeued = false;
             }
         }

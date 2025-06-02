@@ -44,7 +44,7 @@ public sealed partial class ByteBlockStream : Stream
     public ByteBlock ByteBlock => this.m_byteBlock;
 
     /// <summary>
-    /// 仅当内存块可用，且<see cref="CanReadLength"/>>0时为True。
+    /// 仅当内存块可用，且<see cref="CanReadLength"/>>0时为<see langword="true"/>。
     /// </summary>
     public override bool CanRead => this.Using && this.CanReadLength > 0;
 

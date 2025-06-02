@@ -93,7 +93,7 @@ public class TouchSocketCoreUtility
     /// 判断输入的字符串是否是表示一个IP地址
     /// </summary>
     /// <param name="input">被比较的字符串</param>
-    /// <returns>是IP地址则为True</returns>
+    /// <returns>是IP地址则为<see langword="true"/></returns>
     public static bool IsIPv4(string input)
     {
         try

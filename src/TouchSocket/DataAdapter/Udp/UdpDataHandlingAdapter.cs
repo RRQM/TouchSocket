@@ -164,7 +164,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
 
     /// <summary>
     /// 组合发送预处理数据，
-    /// 当属性SplicingSend实现为True时，系统才会调用该方法。
+    /// 当属性SplicingSend实现为<see langword="true"/>时，系统才会调用该方法。
     /// </summary>
     /// <param name="endPoint"></param>
     /// <param name="transferBytes"></param>
