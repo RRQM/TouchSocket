@@ -99,25 +99,24 @@ The following is just a simple example of how to create an example, please see [
 
 ```
 TcpService service = new TcpService();
-service.Connecting = (client, e) => {return EasyTask.CompletedTask; };//有客户端正在连接
-service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端连接
-service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接
+service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端连接
+service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 service.Received = (client, e) =>
 {
     //Received information from the client
     string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"Removed from {client. ID} Message received: {}");
+    Console.WriteLine($"From {client.Id} received message：{mes}");
     return EasyTask.CompletedTask;
 };
-await service.StartAsync(7789);//Start
+await service.StartAsync(7789);//Start listening
 ```
 
 #### TcpClient
 
 ```
 TcpClient tcpClient = new TcpClient();
-tcpClient.Connected = (client, e) => {return EasyTask.CompletedTask; };//Successfully connected to the server
-tcpClient.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//Disconnect from the server, which is not triggered when the connection is unsuccessful.
+tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//Successfully connected to the server
+tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//Disconnect from the server, which is not triggered when the connection is unsuccessful.
 tcpClient.Received = (client, e) =>
 {
     //Information is received from the server
@@ -127,6 +126,8 @@ tcpClient.Received = (client, e) =>
 };
 
 await tcpClient.ConnectAsync("127.0.0.1:7789");
+
+//Send a message to the server
 await tcpClient.SendAsync("Hello");
 ```
 
