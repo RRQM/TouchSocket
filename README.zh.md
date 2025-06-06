@@ -99,9 +99,8 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 
 ```
 TcpService service = new TcpService();
-service.Connecting = (client, e) => {return EasyTask.CompletedTask; };//有客户端正在连接
-service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端连接
-service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接
+service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端连接
+service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 service.Received = (client, e) =>
 {
     //从客户端收到信息
@@ -116,8 +115,8 @@ await service.StartAsync(7789);//启动
 
 ```
 TcpClient tcpClient = new TcpClient();
-tcpClient.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
-tcpClient.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
 tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息
@@ -127,6 +126,8 @@ tcpClient.Received = (client, e) =>
 };
 
 await tcpClient.ConnectAsync("127.0.0.1:7789");
+
+//发送信息到服务器
 await tcpClient.SendAsync("Hello");
 ```
 
