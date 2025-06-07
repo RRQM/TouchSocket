@@ -491,6 +491,11 @@ module.exports =
           "type": "doc",
           "id": "rpcdispatcher",
           "label": "15.8 Rpc执行调度器"
+        },
+        {
+          "type": "doc",
+          "id": "rpcauthorization",
+          "label": "15.9 Rpc鉴权授权策略"
         }
       ]
     },
