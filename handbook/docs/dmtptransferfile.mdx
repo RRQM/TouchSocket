@@ -5,6 +5,7 @@ title: 传输文件
 
 import Tag from "@site/src/components/Tag.js";
 import Pro from "@site/src/components/Pro.js";
+import CardLink from "@site/src/components/CardLink.js";
 
 ### 定义
 
@@ -28,22 +29,28 @@ import Pro from "@site/src/components/Pro.js";
 - 支持传输限速。
 - 支持文件多链路、多线程传输 <Pro/> 。
 
+## 二、支持插件
 
-## 二、性能
+|  插件方法| 功能 |
+| --- | --- |
+| IDmtpFileTransferringPlugin | 文件传输之前触发。仅在响应端有效。 |
+| IDmtpFileTransferredPlugin | 文件传输结束后可能触发，触发时不代表传输成功，具体状态查看`e.Result`属性。 仅在响应端有效。|
+
+## 三、性能
 
 可以看到，下图正在上传一个Window的系统镜像文件，大约4.2Gb，传输速度已达到800Mb/s，GC基本上没有释放，性能非常强悍（中间有稍微停顿，因为程序在获取文件MD5值）。
 
 <img src={require('@site/static/img/docs/transferfile-1.gif').default} />
 
-## 三、产品应用场景
+## 四、产品应用场景
 
 - 常规C/S应用使用场景：开发使用非常方便，连接验证，数据业务，文件传输等一系列功能完全集成。
 - Unity游戏场景：性能卓越，功能丰富，使用方便。 <a name="h50Dz"></a>
 
 
-## 四、传输流程及名词介绍
+## 五、传输流程及名词介绍
 
-### 4.1 响应流程
+### 5.1 响应流程
 
 1. 请求端（可能是客户端，也可能是服务器）调用Pull(请求)或Push（推送）。
 2. 响应方（可能是服务器，也可能是客户端）触发**FileTransferring**。
@@ -71,7 +78,7 @@ import Pro from "@site/src/components/Pro.js";
 :::  
 
 
-### 4.2 传输控制器
+### 5.2 传输控制器
 
 `FileOperator`是本次文件传输的操作器，主要用于获取传输进度、速度、状态以及取消传输等操作。
 
@@ -138,7 +145,7 @@ string类型的键值对，用于和接收方交互数据。
 
 <a name="JeQp8"></a>
 
-## 五、 传输文件
+## 六、 传输文件
 
 传输文件功能，是`DmtpFileTransferFeature`功能插件基于Dmtp协议提供的功能。所以，`Dmtp服务器`和`客户端`都必须配置添加该功能插件。即调用`UseDmtpFileTransfer`。
 
@@ -203,7 +210,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTran
 }
 ```
 
-### 5.1 客户端向服务器请求文件
+### 6.1 客户端向服务器请求文件
 
 
 【客户端代码】
@@ -231,7 +238,7 @@ fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -241,10 +248,10 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = client.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result =await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 ```
 
-### 5.2 客户端向服务器推送文件
+### 6.2 客户端向服务器推送文件
 
 ```csharp showLineNumbers
 var filePath = "ClientPushFileFromService.Test";
@@ -269,7 +276,7 @@ fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -279,10 +286,10 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
+IResult result =await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 ```
 
-### 5.3 服务器向客户端请求文件
+### 6.3 服务器向客户端请求文件
 
 服务器主动向客户端请求文件，必须通过Id，找到其`SessionClient`的派生类。
 
@@ -315,7 +322,7 @@ fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -325,10 +332,10 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result =await SessionClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 ```
 
-### 5.4 服务器向客户端推送文件
+### 6.4 服务器向客户端推送文件
 
 服务器主动向客户端推送文件，必须通过Id，找到其`SessionClient`的派生类。
 
@@ -360,7 +367,7 @@ fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -370,10 +377,10 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-IResult result = SessionClient.GetDmtpFileTransferActor().PushFile(fileOperator);
+IResult result =await SessionClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 ```
 
-### 5.5 客户端之间传输文件
+### 6.5 客户端之间传输文件
 
 该功能支持客户端之间传输文件，使用方法基本一致，只需要在请求`PullFile`或者`PushFile`时额外增加目标Id即可。
 
@@ -409,7 +416,7 @@ internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
 
 其他`PullFile`或者`PushFile`操作均和上述一致。
 
-## 六、断点续传
+## 七、断点续传
 
 本文件传输，支持断点续传。能够在传输过程中，暂停（实际上就是取消）传输，下次继续传输。
 
@@ -462,12 +469,12 @@ using (var byteBlock=new ByteBlock(cacheBytes))
 
 :::  
 
-## 七、取消传输
+## 八、取消传输
 
 传输取消，指的是，在传输过程中，用户主动取消传输。
 
 
-### 7.1 Token传递
+### 8.1 Token传递
 
 使用方法非常简单，因为`FileOperator`中允许传入一个可取消令箭。所以只需要通过`CancellationTokenSource`，将`Token`传入，然后直接使用`CancellationTokenSource`取消即可。
 
@@ -487,10 +494,10 @@ var fileOperator = new FileOperator()//实例化本次传输的控制器，用�
     Token = tokenSource.Token
 };
 
-IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result =await SessionClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 ```
 
-### 7.1 使用CancellationFileOperator 
+### 8.2 使用CancellationFileOperator 
 
 `CancellationFileOperator`是继承`FileOperator`并且已经实现取消传输的操作器。原理和`Token`一致，这里只是做了一次封装。
 
@@ -503,7 +510,7 @@ var fileOperator = new CancellationFileOperator()//实例化本次传输的控�
 //模拟五秒后自动取消传输，或者直接Cancel
 fileOperator.CancelAfter(TimeSpan.FromSeconds(5));
 
-IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result =await SessionClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 ```
 
 :::tip 提示
@@ -513,7 +520,7 @@ IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator)
 :::  
 
 
-## 八、小文件传输
+## 九、小文件传输
 
 小文件传输是指，当传输文件小于设定大小（默认1024*1024字节）时的传输。
 
@@ -522,7 +529,7 @@ IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator)
 常规传输，建立一个传输通道，大约需要传输两端，往返通信4-6次。这在本地局域网中，显得无所谓。但是在互联网环境中，一次ping延迟平均50ms，那么建立一个传输，就大约需要200-300ms。这也就意味着，即使一个文件只有一字节，也需要200ms-300。所以，这明显是不合理的。所以又新增了小文件传输，只要文件在1Mb以内，仅往返1次，就可以完成传输。
 
 
-### 8.1 拉取小文件
+### 9.1 拉取小文件
 
 1. 直接调用PullSmallFile或者PullSmallFileAsync，获取到实际的文件数据。
 2. 通过Save方法，将数据写入文件。也可以自行保存。
@@ -536,12 +543,12 @@ metadata.Add("1", "1");
 metadata.Add("2", "2");
 
 //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-PullSmallFileResult result = client.GetDmtpFileTransferActor().PullSmallFile(filePath, metadata);
+PullSmallFileResult result =await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata);
 byte[] data = result.Value;//此处即是下载的小文件的实际数据
 result.Save(saveFilePath,overwrite:true);//将数据保存到指定路径。
 ```
 
-### 8.2 推送小文件
+### 9.2 推送小文件
 
 【推送文件】
 
@@ -564,7 +571,7 @@ metadata.Add("1", "1");
 metadata.Add("2", "2");
 
 //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-var result = client.GetDmtpFileTransferActor().PushSmallFile(saveFilePath,new FileInfo(filePath), metadata);
+var result =await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath,new FileInfo(filePath), metadata);
 if (result.IsSuccess())
 {
     //成功
@@ -577,7 +584,7 @@ if (result.IsSuccess())
 
 :::  
 
-## 九、多线程文件传输 <Pro/> 
+## 十、多线程文件传输 <Pro/> 
 
 多线程文件传输，顾名思义，就是多个连接链路，共同传输一个文件。
 
@@ -588,7 +595,7 @@ if (result.IsSuccess())
 例如，我自己租的一个单核云服务器，它的单个连接速率只有1Mb，但是弹性带宽却有10Mb。宏观表象就是，一个客户端连接时，可以用1Mb带宽，两个客户端连接时，就可以用2Mb。那么这时候，多线程传输就显得格外重要了。
 
 
-### 9.1 创建多链路连接器
+### 10.1 创建多链路连接器
 
 因为是多链路传输，所以，就必须建立多个客户端的连接到服务器。这里使用已经封装好的通信模型ClientFactory。
 
@@ -599,44 +606,36 @@ ClientFactory的通信模型使用的是一个主通信端+多个传输客户端
 ```csharp showLineNumbers
 var clientFactory = new TcpDmtpClientFactory()
 {
-    MinCount = 5,
-    MaxCount = 10,
-    OnGetTransferConfig = () => //配置辅助通信
+    MinCount=5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
+    MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
+    ConnectTimeout = TimeSpan.FromSeconds(10),//连接超时时间
+    GetConfig = () =>
     {
         return new TouchSocketConfig()
         .SetRemoteIPHost("127.0.0.1:7789")
-        .SetDmtpOption(new DmtpOption()
-        {
-             VerifyToken = "File"//连接验证口令。
-        })
         .ConfigurePlugins(a =>
         {
-            a.UseDmtpFileTransfer();
+            a.UseDmtpFileTransfer()
+            .SetMaxSmallFileLength(1024 * 1024);
+
+            a.AddDmtpFileTransferringPlugin(async (c, e) =>
+            {
+                e.IsPermitOperation = true; //允许传输操作
+                await e.InvokeNext();
+            });
+        })
+        .SetDmtpOption(new DmtpOption()
+        {
+            VerifyToken = "Dmtp",
         });
     }
 };
-clientFactory.MainConfig//配置主通信
-             .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
-             {
-                 VerifyToken = "Rpc"//连接验证口令。
-             })
-             .ConfigurePlugins(a =>
-             {
-                 a.UseDmtpFileTransfer();
-             });
 ```
 
-### 9.2 多线程请求文件
+### 10.2 多线程请求文件
 
 ```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
-Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
-if (!resultCon.IsSuccess())
-{
-    //没有连接
-    return;
-}
 ConsoleLogger.Default.Info("开始从服务器下载文件");
 var filePath = "MultithreadingClientPullFileFromService.Test";
 var saveFilePath = "SaveMultithreadingClientPullFileFromService.Test";
@@ -661,7 +660,7 @@ fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -670,23 +669,16 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 
 loopAction.RunAsync();
 
-//此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = clientFactory.PullFile(fileOperator);
+//此方法会阻塞，直到传输结束
+IResult result =await clientFactory.PullFileAsync(fileOperator);
 
 ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 ```
 
-### 9.3 多线程推送文件
+### 10.3 多线程推送文件
 
 ```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
-Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
-
-if (!resultCon.IsSuccess())
-{
-    //没有连接
-    return;
-}
 ConsoleLogger.Default.Info("开始向服务器推送文件");
 var filePath = "MultithreadingClientPushFileFromService.Test";
 var saveFilePath = "SaveMultithreadingClientPushFileFromService.Test";
@@ -711,7 +703,7 @@ fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
-    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    if (fileOperator.IsEnd)
     {
         loop.Dispose();
     }
@@ -720,11 +712,11 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 
 loopAction.RunAsync();
 
-//此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-IResult result = clientFactory.PushFile(fileOperator);
+//此方法会阻塞，直到传输结束
+IResult result =await clientFactory.PushFileAsync(fileOperator);
 ```
 
-### 9.4 客户端之间传输文件
+### 10.4 客户端之间传输文件
 
 该功能也支持客户端之间互相传输。使用方法基本一致，需要额外指定目标Id，以及**获取传输的Id集合**即可。
 
@@ -751,4 +743,6 @@ clientFactory.SetFindTransferIds((client, targetId) =>
 
 ::: 
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/FileTransferConsoleApp)
+## 十一、示例代码
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/FileTransferConsoleApp"/>

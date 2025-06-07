@@ -500,7 +500,7 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
 <BilibiliCard title="FeedbackType详解和性能对比测试" link="https://www.bilibili.com/cheese/play/ep1742138" isPro="true"/>
 
-### 5.2 SerializationType
+### 5.2 SerializationType (支持AOT)
 
 `SerializationType`是序列化类型，其枚举值有`FastBinary`、`Json`、`Xml`、`SystemBinary`。其特点如下：
 
@@ -518,12 +518,6 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
  <BilibiliCard title="DmtpRpc使用4种序列化的场景分析" link="https://www.bilibili.com/cheese/play/ep1742141" isPro="true"/>
 
- <BilibiliCard title="配置默认序列化选择器和使用Fast序列化的源生成" link="https://www.bilibili.com/cheese/play/ep1742143" isPro="true"/>
-
- <BilibiliCard title="在DmtpRpc种使用SystemTextJson源生成" link="https://www.bilibili.com/cheese/play/ep1742144" isPro="true"/>
-
- <BilibiliCard title="自定义序列化并且使用MemoryPack实践" link="https://www.bilibili.com/cheese/play/ep1742145" isPro="true"/>
-
  例如：
 
  ```csharp showLineNumbers
@@ -536,7 +530,18 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 });
  ```
 
- #### 5.2.2 自定义序列化
+ #### 5.2.2 支持AOT的序列化选择器
+
+ DmtpRpc默认是支持AOT的，但是当参数或返回值是其他类型时，需要对序列化进行一些额外配置。下面介绍的几种就是支持AOT环境的序列化配置方法。
+
+ <BilibiliCard title="配置默认序列化选择器和使用Fast序列化的源生成" link="https://www.bilibili.com/cheese/play/ep1742143" isPro="true"/>
+
+ <BilibiliCard title="在DmtpRpc种使用SystemTextJson源生成" link="https://www.bilibili.com/cheese/play/ep1742144" isPro="true"/>
+
+ <BilibiliCard title="自定义序列化并且使用MemoryPack实践" link="https://www.bilibili.com/cheese/play/ep1742145" isPro="true"/>
+
+
+ #### 5.2.3 自定义序列化
 
 <details>
 <summary>自定义序列化</summary>
