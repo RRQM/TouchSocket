@@ -25,7 +25,6 @@ public class FileResourceInfo : PackageBase
 {
     private FileSection[] m_fileSections;
 
-
     /// <summary>
     /// 初始化FileResourceInfo对象的新实例。
     /// </summary>
@@ -41,7 +40,7 @@ public class FileResourceInfo : PackageBase
         }
 
         // 使用FileInfo对象创建RemoteFileInfo对象，并用其初始化FileResourceInfo对象
-        this.Create(fileInfo.Map<RemoteFileInfo>(), fileSectionSize);
+        this.PrivateCreate(fileInfo.Map<RemoteFileInfo>(), fileSectionSize);
     }
 
     /// <summary>
@@ -62,13 +61,14 @@ public class FileResourceInfo : PackageBase
     public FileResourceInfo(RemoteFileInfo fileInfo, int fileSectionSize)
     {
         // 调用Create方法来初始化远程资源，这是因为初始化过程可能涉及到复杂的逻辑，通过调用已有方法可以简化构造函数的代码
-        this.Create(fileInfo, fileSectionSize);
+        this.PrivateCreate(fileInfo, fileSectionSize);
     }
 
     /// <summary>
     /// 从内存初始化资源
     /// </summary>
     /// <param name="byteBlock">包含资源信息的字节块</param>
+    [Obsolete($"此方法已被弃用，请使用{nameof(FileResourceInfo.Create)}")]
     public FileResourceInfo(in IByteBlock byteBlock)
     {
         // 读取文件区块大小
@@ -92,6 +92,10 @@ public class FileResourceInfo : PackageBase
         this.m_fileSections = fileSections;
     }
 
+    private FileResourceInfo()
+    {
+    }
+
     /// <summary>
     /// 资源文件信息
     /// </summary>
@@ -111,6 +115,58 @@ public class FileResourceInfo : PackageBase
     /// 资源句柄唯一标识
     /// </summary>
     public int ResourceHandle { get; private set; }
+
+    /// <summary>
+    /// 从字节块创建一个新的 <see cref="FileResourceInfo"/> 实例。
+    /// </summary>
+    /// <param name="byteBlock">字节块，用于读取文件资源信息。</param>
+    /// <returns>返回一个新的 <see cref="FileResourceInfo"/> 实例。</returns>
+    public static FileResourceInfo Create(ByteBlock byteBlock)
+    {
+        return Create(ref byteBlock);
+    }
+
+    /// <summary>
+    /// 从流中创建一个新的 <see cref="FileResourceInfo"/> 实例。
+    /// </summary>
+    /// <param name="stream">包含文件资源信息的流。</param>
+    /// <returns>返回一个新的 <see cref="FileResourceInfo"/> 实例。</returns>
+    public static FileResourceInfo Create(Stream stream)
+    {
+        return Create(new ByteBlock(stream.ReadAllToByteArray()));
+    }
+
+    /// <summary>
+    /// 从字节块创建一个新的 <see cref="FileResourceInfo"/> 实例。
+    /// </summary>
+    /// <typeparam name="TByteBlock">字节块的类型，必须实现 <see cref="IByteBlock"/> 接口。</typeparam>
+    /// <param name="byteBlock">引用的字节块，用于读取文件资源信息。</param>
+    /// <returns>返回一个新的 <see cref="FileResourceInfo"/> 实例。</returns>
+    public static FileResourceInfo Create<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    {
+        var fileResourceInfo = new FileResourceInfo();
+        // 读取文件区块大小
+        fileResourceInfo.FileSectionSize = byteBlock.ReadInt32();
+        // 读取资源句柄
+        fileResourceInfo.ResourceHandle = byteBlock.ReadInt32();
+        // 读取文件信息
+        fileResourceInfo.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
+        // 读取文件区块数量
+        var len = byteBlock.ReadInt32();
+
+        // 根据读取的文件区块数量，创建相应的 FileSection 数组
+        var fileSections = new FileSection[len];
+        // 遍历每个文件区块，并从字节块中读取具体信息
+        for (var i = 0; i < len; i++)
+        {
+            fileSections[i] = byteBlock.ReadPackage<FileSection>();
+        }
+
+        // 将读取的文件区块信息数组赋值给成员变量
+        fileResourceInfo.m_fileSections = fileSections;
+
+        return fileResourceInfo;
+    }
 
     /// <summary>
     /// 获取尝试续传时的索引。
@@ -151,6 +207,7 @@ public class FileResourceInfo : PackageBase
         // 使用LINQ查询语法，筛选出所有Status为指定fileSectionStatus的FileSection对象
         return this.FileSections.Where(a => a.Status == fileSectionStatus);
     }
+
     /// <inheritdoc/>
     public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
@@ -173,35 +230,6 @@ public class FileResourceInfo : PackageBase
         this.ResourceHandle = handle;
     }
 
-    /// <inheritdoc/>
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
-    {
-        this.ResourceHandle = byteBlock.ReadInt32();
-        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-    }
-
-    private void Create(RemoteFileInfo fileInfo, long fileSectionSize)
-    {
-        this.ResourceHandle = this.GetHashCode();
-        this.FileSectionSize = (int)fileSectionSize;
-        var sectionCount = (int)((fileInfo.Length / fileSectionSize) + 1);
-        var sections = new FileSection[sectionCount];
-        for (var i = 0; i < sectionCount; i++)
-        {
-            var fileSection = new FileSection()
-            {
-                Offset = i * fileSectionSize,
-                Length = (int)Math.Min(fileInfo.Length - i * fileSectionSize, fileSectionSize),
-                ResourceHandle = this.ResourceHandle,
-                Status = FileSectionStatus.Default,
-                Index = i
-            };
-            sections[i] = fileSection;
-        }
-        this.FileInfo = fileInfo;
-        this.m_fileSections = sections;
-    }
-
     /// <summary>
     /// 将<see cref="FileResourceInfo"/>对象保存到内存。
     /// </summary>
@@ -221,5 +249,57 @@ public class FileResourceInfo : PackageBase
         {
             byteBlock.WritePackage(item);
         }
+    }
+
+    /// <summary>
+    /// 将<see cref="FileResourceInfo"/>对象保存到内存。
+    /// </summary>
+    /// <param name="byteBlock">用于存储文件资源信息的字节块参数。</param>
+    public void Save(ByteBlock byteBlock)
+    {
+        this.Save(ref byteBlock);
+    }
+
+    /// <summary>
+    /// 将 <see cref="FileResourceInfo"/> 对象保存到指定的流中。
+    /// </summary>
+    /// <param name="stream">目标流，用于存储文件资源信息。</param>
+    public void Save(Stream stream)
+    {
+        using (var byteBlock = new ByteBlock(1024 * 64))
+        {
+            this.Save(byteBlock);
+            // 将字节块的内容写入到指定的流中
+            stream.Write(byteBlock.Span);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        this.ResourceHandle = byteBlock.ReadInt32();
+        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
+    }
+
+    private void PrivateCreate(RemoteFileInfo fileInfo, long fileSectionSize)
+    {
+        this.ResourceHandle = this.GetHashCode();
+        this.FileSectionSize = (int)fileSectionSize;
+        var sectionCount = (int)((fileInfo.Length / fileSectionSize) + 1);
+        var sections = new FileSection[sectionCount];
+        for (var i = 0; i < sectionCount; i++)
+        {
+            var fileSection = new FileSection()
+            {
+                Offset = i * fileSectionSize,
+                Length = (int)Math.Min(fileInfo.Length - i * fileSectionSize, fileSectionSize),
+                ResourceHandle = this.ResourceHandle,
+                Status = FileSectionStatus.Default,
+                Index = i
+            };
+            sections[i] = fileSection;
+        }
+        this.FileInfo = fileInfo;
+        this.m_fileSections = sections;
     }
 }

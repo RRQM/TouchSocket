@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -22,88 +23,21 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 客户端工厂的基类，用于创建特定类型的客户端对象。
 /// </summary>
-/// <typeparam name="TClient">客户端类型，必须实现IClient接口。</typeparam>
+/// <typeparam name="TClient">客户端类型，必须实现<see cref="IClient"/>接口。</typeparam>
 public abstract class ClientFactory<TClient> : DependencyObject where TClient : IClient
 {
     private readonly ConcurrentList<TClient> m_createdClients = new ConcurrentList<TClient>();
+    private readonly CancellationTokenSource m_cts = new CancellationTokenSource();
     private readonly ConcurrentQueue<TClient> m_freeClients = new ConcurrentQueue<TClient>();
-    private readonly SingleTimer m_singleTimer;
 
     /// <summary>
     /// 客户端工厂类的构造函数。
     /// </summary>
     public ClientFactory()
     {
-        // 初始化一个单例计时器，每1000毫秒执行一次指定的回调方法。
-        this.m_singleTimer = new SingleTimer(1000, () =>
-        {
-            // 创建一个临时客户端列表，用于存储需要移除的客户端。
-            var list = new List<TClient>();
-
-            // 移除所有不再活跃的客户端。
-            this.m_createdClients.RemoveAll(a =>
-            {
-                // 如果客户端不再活跃，则移除并处理该客户端。
-                if (!this.IsAlive(a))
-                {
-                    this.DisposeClient(a);
-                    return true;
-                }
-                return false;
-            });
-
-            // 注释掉的代码块，用于在客户端数量不足最小值时新增客户端。
-            //if (this.CreatedClients.Count < this.MinCount)
-            //{
-            //    using (this.GetClient())
-            //    {
-            //    }
-            //}
-        });
+        // 启动定时任务但不阻塞构造函数
+        _ = this.RunPeriodicAsync();
     }
-
-    #region 属性
-
-    /// <summary>
-    /// 获取可用的客户端数量。
-    /// <para>
-    /// 该值指示了当前空闲的客户端数量和未创建的客户端数量。
-    /// </para>
-    /// </summary>
-    /// <returns></returns>
-    public int AvailableCount => Math.Max(0, this.MaxCount - this.CreatedClients.Count) + this.FreeClients.Count;
-
-    /// <summary>
-    /// 获取已经创建的客户端数量。
-    /// </summary>
-    public int CreatedCount => this.CreatedClients.Count;
-
-    /// <summary>
-    /// 获取空闲的客户端数量。
-    /// </summary>
-    public int FreeCount => this.FreeClients.Count;
-
-    /// <summary>
-    /// 最大客户端数量。默认10。
-    /// </summary>
-    public int MaxCount { get; set; } = 10;
-
-    /// <summary>
-    /// 池中维护的最小客户端数量。默认0。
-    /// </summary>
-    public int MinCount { get; set; }
-
-    /// <summary>
-    /// 已创建的客户端安全列表，一般不要直接操作。
-    /// </summary>
-    protected IReadOnlyList<TClient> CreatedClients => this.m_createdClients;
-
-    /// <summary>
-    /// 空闲客户端的安全队列，一般不要直接操作。
-    /// </summary>
-    protected ConcurrentQueue<TClient> FreeClients => this.m_freeClients;
-
-    #endregion 属性
 
     /// <summary>
     /// 清理池中的所有客户端。
@@ -140,31 +74,6 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
         this.m_createdClients.Remove(client);
     }
 
-    #region GetClient
-
-    /// <summary>
-    /// 获取用于传输的客户端结果。可以支持<see cref="IDisposable"/>。
-    /// </summary>
-    /// <param name="waitTime">等待时间，超过此时间则取消获取客户端的操作。</param>
-    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
-    public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(TimeSpan waitTime)
-    {
-        // 租用客户端，并配置不等待主线程
-        return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
-    }
-
-    /// <summary>
-    /// 获取一个指定客户端，默认情况下等待1秒。
-    /// </summary>
-    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
-    public ValueTask<ClientFactoryResult<TClient>> GetClient()
-    {
-        // 使用默认等待时间1秒来获取客户端
-        return this.GetClient(TimeSpan.FromSeconds(1));
-    }
-
-    #endregion GetClient
-
     /// <summary>
     /// 判断客户端是不是存活状态。
     /// </summary>
@@ -183,7 +92,7 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     {
         if (disposing)
         {
-            this.m_singleTimer.SafeDispose();
+            this.m_cts.Cancel();
             this.Clear();
         }
         base.Dispose(disposing);
@@ -247,6 +156,119 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
             this.DisposeClient(client);
         }
     }
+
+    private async Task ExecuteAsyncTask()
+    {
+        try
+        {
+            // 移除所有不再活跃的客户端。
+            this.m_createdClients.RemoveAll(a =>
+            {
+                // 如果客户端不再活跃，则移除并处理该客户端。
+                if (!this.IsAlive(a))
+                {
+                    this.DisposeClient(a);
+                    return true;
+                }
+                return false;
+            });
+
+
+            var clients = new List<TClient>();
+            while (this.CreatedCount < this.MinCount)
+            {
+                var client = await this.RentClient(TimeSpan.FromSeconds(1)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                clients.Add(client);
+            }
+
+            foreach (var item in clients)
+            {
+                this.ReturnClient(item);
+            }
+        }
+        catch
+        {
+
+        }
+    }
+
+    private async Task RunPeriodicAsync()
+    {
+        while (!this.m_cts.IsCancellationRequested)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(EasyTask.ContinueOnCapturedContext); // 每秒执行
+            await this.ExecuteAsyncTask().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+    }
+
+    #region 属性
+
+    /// <summary>
+    /// 获取可用的客户端数量。
+    /// <para>
+    /// 该值指示了当前空闲的客户端数量和未创建的客户端数量。
+    /// </para>
+    /// </summary>
+    /// <returns></returns>
+    public int AvailableCount => Math.Max(0, this.MaxCount - this.CreatedClients.Count) + this.FreeClients.Count;
+
+    /// <summary>
+    /// 获取已经创建的客户端数量。
+    /// </summary>
+    public int CreatedCount => this.CreatedClients.Count;
+
+    /// <summary>
+    /// 获取空闲的客户端数量。
+    /// </summary>
+    public int FreeCount => this.FreeClients.Count;
+
+    /// <summary>
+    /// 最大客户端数量。默认10。
+    /// </summary>
+    public int MaxCount { get; set; } = 10;
+
+    /// <summary>
+    /// 池中维护的最小客户端数量。默认0。
+    /// </summary>
+    public int MinCount { get; set; }
+
+    /// <summary>
+    /// 已创建的客户端安全列表，一般不要直接操作。
+    /// </summary>
+    protected IReadOnlyList<TClient> CreatedClients => this.m_createdClients;
+
+    /// <summary>
+    /// 空闲客户端的安全队列，一般不要直接操作。
+    /// </summary>
+    protected ConcurrentQueue<TClient> FreeClients => this.m_freeClients;
+
+    #endregion 属性
+
+    #region GetClient
+
+    /// <summary>
+    /// 获取用于传输的客户端结果。可以支持<see cref="IDisposable"/>。
+    /// </summary>
+    /// <param name="waitTime">等待时间，超过此时间则取消获取客户端的操作。</param>
+    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
+    public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(TimeSpan waitTime)
+    {
+        // 租用客户端，并配置不等待主线程
+        return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
+    }
+
+    /// <summary>
+    /// 获取一个指定客户端，默认情况下等待1秒。
+    /// </summary>
+    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
+    public ValueTask<ClientFactoryResult<TClient>> GetClient()
+    {
+        // 使用默认等待时间1秒来获取客户端
+        return this.GetClient(TimeSpan.FromSeconds(1));
+    }
+
+    #endregion GetClient
 
     private bool Wait()
     {

@@ -20,7 +20,6 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// </summary>
 public class FileSectionResult : ResultBase, IDisposable
 {
-
     /// <summary>
     /// 构造函数：初始化FileSectionResult对象，用于处理文件段结果。
     /// </summary>
@@ -61,7 +60,8 @@ public class FileSectionResult : ResultBase, IDisposable
     /// </summary>
     public void Dispose()
     {
-        // 释放当前对象持有的资源
-        this.Value.Dispose();
+        var value = this.Value;
+        this.Value = null;
+        value.SafeDispose();
     }
 }
