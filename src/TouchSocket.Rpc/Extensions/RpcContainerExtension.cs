@@ -15,10 +15,6 @@ using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Core;
 using static System.Collections.Specialized.BitVector32;
 
-#if NET6_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
-#endif
-
 namespace TouchSocket.Rpc;
 
 /// <summary>

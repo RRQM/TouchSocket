@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -37,4 +38,13 @@ public static class GlobalEnvironment
     public static bool IsDynamicCodeSupported => true;
 #endif
 
+    /// <summary>
+    /// 获取应用程序的基础目录。
+    /// </summary>
+    public static string BaseDirectory =>
+#if NET45
+            AppDomain.CurrentDomain.BaseDirectory;
+#else
+            AppContext.BaseDirectory;
+#endif
 }

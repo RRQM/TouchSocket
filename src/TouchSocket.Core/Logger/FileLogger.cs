@@ -42,7 +42,7 @@ public sealed class FileLogger : LoggerBase, IDisposable
         // 表达式的结果是根据当前日期格式化后的字符串，确保每天的日志被打包在不同的文件夹中
         this.m_createLogFolder = (logLevel) =>
         {
-            return Path.Combine("logs", DateTime.Now.ToString("[yyyy-MM-dd]"));
+            return Path.Combine(GlobalEnvironment.BaseDirectory, "logs", DateTime.Now.ToString("[yyyy-MM-dd]"));
         };
     }
 
