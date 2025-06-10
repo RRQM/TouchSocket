@@ -41,6 +41,8 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     private ValueCounter m_sendCounter;
 
+    private bool m_streamAsync;
+
     /// <summary>
     /// Serial核心
     /// </summary>
@@ -59,6 +61,8 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         };
 
         this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
+
+        this.m_streamAsync = streamAsync;
 
         if (streamAsync)
         {
@@ -141,8 +145,10 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         try
         {
             var segment = memory.GetArray();
-            await this.m_serialPort.BaseStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
+            if (m_streamAsync)
+                await this.m_serialPort.BaseStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            else
+                this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
             this.m_sendCounter.Increment(memory.Length);
         }
         finally
