@@ -6,6 +6,7 @@ title: 传输文件
 import Tag from "@site/src/components/Tag.js";
 import Pro from "@site/src/components/Pro.js";
 import CardLink from "@site/src/components/CardLink.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
 
 ### 定义
 
@@ -29,6 +30,8 @@ import CardLink from "@site/src/components/CardLink.js";
 - 支持传输限速。
 - 支持文件多链路、多线程传输 <Pro/> 。
 
+<BilibiliCard title="Dmtp文件传输特点说明" link="https://www.bilibili.com/cheese/play/ep1774676" isPro="true"/>
+
 ## 二、支持插件
 
 |  插件方法| 功能 |
@@ -49,6 +52,8 @@ import CardLink from "@site/src/components/CardLink.js";
 
 
 ## 五、传输流程及名词介绍
+
+<BilibiliCard title="Dmtp文件传输配置，显示传输进度、速度等" link="https://www.bilibili.com/cheese/play/ep1774691" isPro="true"/>
 
 ### 5.1 响应流程
 
@@ -212,6 +217,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTran
 
 ### 6.1 客户端向服务器请求文件
 
+<BilibiliCard title="客户端从服务器拉取文件" link="https://www.bilibili.com/cheese/play/ep1774679" isPro="true"/>
 
 【客户端代码】
 
@@ -253,6 +259,8 @@ IResult result =await client.GetDmtpFileTransferActor().PullFileAsync(fileOperat
 
 ### 6.2 客户端向服务器推送文件
 
+<BilibiliCard title="客户端推送文件到服务器" link="https://www.bilibili.com/cheese/play/ep1774693" isPro="true"/>
+
 ```csharp showLineNumbers
 var filePath = "ClientPushFileFromService.Test";
 var saveFilePath = "SaveClientPushFileFromService.Test";
@@ -290,6 +298,8 @@ IResult result =await client.GetDmtpFileTransferActor().PushFileAsync(fileOperat
 ```
 
 ### 6.3 服务器向客户端请求文件
+
+<BilibiliCard title="服务器主动向客户端推送、拉取文件" link="https://www.bilibili.com/cheese/play/ep1774696" isPro="true"/>
 
 服务器主动向客户端请求文件，必须通过Id，找到其`SessionClient`的派生类。
 
@@ -382,6 +392,8 @@ IResult result =await SessionClient.GetDmtpFileTransferActor().PushFileAsync(fil
 
 ### 6.5 客户端之间传输文件
 
+<BilibiliCard title="客户端之间直接推送、拉取文件" link="https://www.bilibili.com/cheese/play/ep1774699" isPro="true"/>
+
 该功能支持客户端之间传输文件，使用方法基本一致，只需要在请求`PullFile`或者`PushFile`时额外增加目标Id即可。
 
 此外，**响应中介（一般是服务器）**需要添加`路由策略`和`同意路由`。
@@ -424,6 +436,8 @@ internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
 
 1. 当本次传输失败、或主动取消时，可以保存`fileOperator.ResourceInfo`对象属性。
 2. 当下次再次请求传输时，可以将已保存的`ResourceInfo`对象，先赋值给`fileOperator.ResourceInfo`属性。那么如果保存路径一致，且文件大小符合续传要求，则可以继续传输。
+
+<BilibiliCard title="Dmtp文件传输断点续传、暂停传输" link="https://www.bilibili.com/cheese/play/ep1774701" isPro="true"/>
 
 ```csharp showLineNumbers
 //关于断点续传
@@ -528,6 +542,7 @@ IResult result =await SessionClient.GetDmtpFileTransferActor().PullFileAsync(fil
 
 常规传输，建立一个传输通道，大约需要传输两端，往返通信4-6次。这在本地局域网中，显得无所谓。但是在互联网环境中，一次ping延迟平均50ms，那么建立一个传输，就大约需要200-300ms。这也就意味着，即使一个文件只有一字节，也需要200ms-300。所以，这明显是不合理的。所以又新增了小文件传输，只要文件在1Mb以内，仅往返1次，就可以完成传输。
 
+<BilibiliCard title="Dmtp小文件传输" link="https://www.bilibili.com/cheese/play/ep1774703" isPro="true"/>
 
 ### 9.1 拉取小文件
 
@@ -594,6 +609,7 @@ if (result.IsSuccess())
 
 例如，我自己租的一个单核云服务器，它的单个连接速率只有1Mb，但是弹性带宽却有10Mb。宏观表象就是，一个客户端连接时，可以用1Mb带宽，两个客户端连接时，就可以用2Mb。那么这时候，多线程传输就显得格外重要了。
 
+<BilibiliCard title="Dmtp多线程拉取、推送文件" link="https://www.bilibili.com/cheese/play/ep1774717" isPro="true"/>
 
 ### 10.1 创建多链路连接器
 
@@ -725,6 +741,9 @@ IResult result =await clientFactory.PushFileAsync(fileOperator);
 
 【获取目标传输客户端的Id集合】
 在TcpDmtpClientFactory属性中，有个OnFindTransferIds。通过实现该属性，使其能够获取到对应客户端的传输客户端Id集合（下列代码为模拟值，要具体实现该功能，还得自行实现）。
+
+<BilibiliCard title="Dmtp多线程端对端传输文件(1)" link="https://www.bilibili.com/cheese/play/ep1774718" isPro="true"/>
+<BilibiliCard title="Dmtp多线程端对端传输文件(2)" link="https://www.bilibili.com/cheese/play/ep1774724" isPro="true"/>
 
 ```csharp showLineNumbers
 clientFactory.SetFindTransferIds((client, targetId) =>
