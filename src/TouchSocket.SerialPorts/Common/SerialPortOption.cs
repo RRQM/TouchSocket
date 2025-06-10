@@ -53,6 +53,11 @@ public class SerialPortOption
     ///<inheritdoc cref = "SerialPort.RtsEnable" />
     public bool RtsEnable { get; set; }
 
+    /// <summary>
+    /// 流异步操作
+    /// </summary>
+    public bool StearmAsync { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {

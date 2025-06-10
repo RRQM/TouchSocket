@@ -330,7 +330,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     private static SerialCore CreateSerial(SerialPortOption option)
     {
-        var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits);
+        var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits, option.StearmAsync);
         serialPort.SerialPort.Handshake = option.Handshake;
         serialPort.SerialPort.RtsEnable = option.RtsEnable;
         serialPort.SerialPort.DtrEnable = option.DtrEnable;

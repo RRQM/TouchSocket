@@ -41,10 +41,12 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     private ValueCounter m_sendCounter;
 
+    private bool m_streamAsync;
+
     /// <summary>
     /// Serial核心
     /// </summary>
-    public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits)
+    public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, bool streamAsync)
     {
         this.m_receiveCounter = new ValueCounter
         {
@@ -59,10 +61,23 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         };
 
         this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
-        this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
+
+        this.m_streamAsync = streamAsync;
+
+        if (streamAsync)
+        {
+            _ = Task.Run(this.BeginReceive);
+        }
+        else
+        {
+            this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
+        }
 
         this.m_cancellationToken = this.m_cancellationTokenSource.Token;
     }
+
+
+
 
     /// <summary>
     /// 最大缓存尺寸
@@ -130,8 +145,10 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         try
         {
             var segment = memory.GetArray();
-            this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
-
+            if (m_streamAsync)
+                await this.m_serialPort.BaseStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            else
+                this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
             this.m_sendCounter.Increment(memory.Length);
         }
         finally
@@ -157,6 +174,8 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
                 this.m_serialPort.Close();
                 this.m_serialPort.Dispose();
                 this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
+
+
             }
             catch
             {
@@ -205,7 +224,45 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             // 设置任务源的异常
             this.m_core.SetException(ex);
         }
-        
+
+    }
+
+
+
+    private async Task BeginReceive()
+    {
+
+        if (this.m_cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        while (!m_cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await this.m_receiveLock.WaitAsync(this.m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                var bytes = this.m_byteBlock.TotalMemory.GetArray();
+
+
+
+                var r = await this.m_serialPort.BaseStream.ReadAsync(bytes.Array, 0, this.m_byteBlock.Capacity, m_cancellationToken).ConfigureAwait(false);
+
+                if (m_serialPort.BytesToRead > 0)
+                    r += await this.m_serialPort.BaseStream.ReadAsync(bytes.Array, r, this.m_byteBlock.Capacity - r, m_cancellationToken).ConfigureFalseAwait();
+
+                this.m_receiveCounter.Increment(r);
+                var serialOperationResult = new SerialOperationResult(r, SerialData.Chars);
+                this.m_core.SetResult(serialOperationResult);
+            }
+            catch (Exception ex)
+            {
+                // 设置任务源的异常
+                this.m_core.SetException(ex);
+            }
+        }
+
     }
 
     private void SetBuffer(ByteBlock byteBlock)
