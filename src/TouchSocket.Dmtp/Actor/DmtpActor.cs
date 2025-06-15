@@ -886,7 +886,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             this.m_actors.Add(type, actor);
             return true;
         }
-        
+
     }
 
     /// <inheritdoc/>
@@ -1123,7 +1123,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             }
         }
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         var waitCreateChannel = new WaitCreateChannelPackage()
         {
             Random = random,

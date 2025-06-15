@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -85,7 +84,7 @@ public static partial class SerializeConvert
     /// <param name="length"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
-    
+
     public static T BinaryDeserialize<T>(byte[] data, int offset, int length, SerializationBinder binder = null)
     {
         using (var DeserializeStream = new MemoryStream(data, offset, length))

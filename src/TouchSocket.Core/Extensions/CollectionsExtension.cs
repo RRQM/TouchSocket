@@ -93,9 +93,9 @@ public static class CollectionsExtension
     /// <param name="key">要移除的键。</param>
     /// <param name="value">如果移除成功，则包含移除的值；否则为默认值。</param>
     /// <returns>如果成功移除并返回了值，则为 true；否则为 false。</returns>
-    public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key,out  TValue value)
+    public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, out TValue value)
     {
-        if (dictionary.TryGetValue(key,out value))
+        if (dictionary.TryGetValue(key, out value))
         {
             // 如果字典中包含此键，则移除并返回<see langword="true"/>
             dictionary.Remove(key);

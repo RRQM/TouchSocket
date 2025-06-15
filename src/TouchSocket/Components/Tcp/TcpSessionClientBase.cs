@@ -477,7 +477,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         }
         catch (Exception ex)
         {
-          return Result.FromException(ex);
+            return Result.FromException(ex);
         }
     }
 
@@ -528,7 +528,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// <returns>异步任务</returns>
     protected virtual async Task IdChanged(string sourceId, string targetId)
     {
-        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId,targetId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

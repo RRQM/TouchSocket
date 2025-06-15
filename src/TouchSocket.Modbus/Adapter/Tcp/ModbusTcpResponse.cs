@@ -85,4 +85,6 @@ internal sealed class ModbusTcpResponse : ModbusTcpBase, IFixedHeaderRequestInfo
     }
 
     public IModbusRequest Request { get; set; }
+
+    public bool IsSuccess => this.ErrorCode == ModbusErrorCode.Success;
 }

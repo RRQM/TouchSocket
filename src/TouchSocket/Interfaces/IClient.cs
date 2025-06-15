@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 终端接口
 /// </summary>
-public interface IClient : ILoggerObject,IDisposableObject
+public interface IClient : ILoggerObject, IDisposableObject
 {
     /// <summary>
     /// 终端协议

@@ -24,12 +24,12 @@ namespace TouchSocket.SerialPorts;
 /// </summary>
 internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationResult>
 {
+    private readonly CancellationTokenSource m_cancellationTokenSource = new();
     private readonly SemaphoreSlim m_receiveLock = new(0, 1);
     private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
     private readonly SerialPort m_serialPort;
+    private readonly bool m_streamAsync;
     private ByteBlock m_byteBlock;
-    private CancellationToken m_cancellationToken;
-    private readonly CancellationTokenSource m_cancellationTokenSource = new();
     private ManualResetValueTaskSourceCore<SerialOperationResult> m_core = new ManualResetValueTaskSourceCore<SerialOperationResult>();
 
     //private SerialData m_eventType;
@@ -40,8 +40,6 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
     private int m_sendBufferSize = 1024 * 10;
 
     private ValueCounter m_sendCounter;
-
-    private bool m_streamAsync;
 
     /// <summary>
     /// Serial核心
@@ -64,20 +62,11 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
         this.m_streamAsync = streamAsync;
 
-        if (streamAsync)
-        {
-            _ = Task.Run(this.BeginReceive);
-        }
-        else
+        if (!streamAsync)
         {
             this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
         }
-
-        this.m_cancellationToken = this.m_cancellationTokenSource.Token;
     }
-
-
-
 
     /// <summary>
     /// 最大缓存尺寸
@@ -126,29 +115,41 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         this.m_core.OnCompleted(continuation, state, token, flags);
     }
 
-    public ValueTask<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
+    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
     {
-        this.m_core.Reset();
-        this.SetBuffer(byteBlock);
-
-        if (this.m_receiveLock.CurrentCount == 0)
+        if (this.m_streamAsync)
         {
-            this.m_receiveLock.Release();
+            // 如果是异步流，则使用异步读取方式
+            var token = this.m_cancellationTokenSource.Token;
+            await this.m_receiveLock.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            try
+            {
+                var stream = this.m_serialPort.BaseStream;
+                var length = Math.Min(this.m_receiveBufferSize, byteBlock.Capacity);
+                var memory = byteBlock.TotalMemory;
+                var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.m_receiveCounter.Increment(r);
+                return new SerialOperationResult(r, SerialData.Chars);
+            }
+            finally
+            {
+                this.m_receiveLock.Release();
+            }
         }
-
-        return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
+        else
+        {
+            return await this.ValueReceiveAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
     }
 
     public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
     {
-        await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var token = this.m_cancellationTokenSource.Token;
+        await this.m_semaphoreForSend.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            var segment = memory.GetArray();
-            if (m_streamAsync)
-                await this.m_serialPort.BaseStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            else
-                this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
+            var stream = this.m_serialPort.BaseStream;
+            await stream.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_sendCounter.Increment(memory.Length);
         }
         finally
@@ -174,8 +175,6 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
                 this.m_serialPort.Close();
                 this.m_serialPort.Dispose();
                 this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
-
-
             }
             catch
             {
@@ -196,7 +195,8 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        if (this.m_cancellationToken.IsCancellationRequested)
+        var token = this.m_cancellationTokenSource.Token;
+        if (token.IsCancellationRequested)
         {
             return;
         }
@@ -206,7 +206,7 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             var bytesToRead = this.m_serialPort.BytesToRead;
             while (bytesToRead > 0)
             {
-                this.m_receiveLock.Wait(this.m_cancellationToken);
+                this.m_receiveLock.Wait(token);
 
                 var eventType = e.EventType;
 
@@ -224,49 +224,23 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             // 设置任务源的异常
             this.m_core.SetException(ex);
         }
-
-    }
-
-
-
-    private async Task BeginReceive()
-    {
-
-        if (this.m_cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
-
-        while (!m_cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await this.m_receiveLock.WaitAsync(this.m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                var bytes = this.m_byteBlock.TotalMemory.GetArray();
-
-
-
-                var r = await this.m_serialPort.BaseStream.ReadAsync(bytes.Array, 0, this.m_byteBlock.Capacity, m_cancellationToken).ConfigureAwait(false);
-
-                if (m_serialPort.BytesToRead > 0)
-                    r += await this.m_serialPort.BaseStream.ReadAsync(bytes.Array, r, this.m_byteBlock.Capacity - r, m_cancellationToken).ConfigureFalseAwait();
-
-                this.m_receiveCounter.Increment(r);
-                var serialOperationResult = new SerialOperationResult(r, SerialData.Chars);
-                this.m_core.SetResult(serialOperationResult);
-            }
-            catch (Exception ex)
-            {
-                // 设置任务源的异常
-                this.m_core.SetException(ex);
-            }
-        }
-
     }
 
     private void SetBuffer(ByteBlock byteBlock)
     {
         this.m_byteBlock = byteBlock;
+    }
+
+    private ValueTask<SerialOperationResult> ValueReceiveAsync(ByteBlock byteBlock)
+    {
+        this.m_core.Reset();
+        this.SetBuffer(byteBlock);
+
+        if (this.m_receiveLock.CurrentCount == 0)
+        {
+            this.m_receiveLock.Release();
+        }
+
+        return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
     }
 }

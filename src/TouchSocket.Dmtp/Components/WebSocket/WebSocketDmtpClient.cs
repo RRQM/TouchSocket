@@ -12,7 +12,6 @@
 
 using System;
 using System.Net.WebSockets;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -105,7 +104,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     /// <inheritdoc/>
     public override bool Online => base.Online && this.m_dmtpActor != null && this.m_dmtpActor.Online;
 
-    
+
     /// <inheritdoc/>
     public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {

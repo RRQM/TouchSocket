@@ -18,7 +18,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -283,7 +282,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
 
         var openApiParameters = new List<OpenApiParameter>();
 
-        var parameters = GetWebApiParameter(rpcMethod);
+        var parameters = this.GetWebApiParameter(rpcMethod);
         if (parameters.Count > 0)
         {
             #region 简单参数
@@ -318,12 +317,12 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
                 body.Content = new Dictionary<string, OpenApiContent>();
                 var content = new OpenApiContent();
 
-                Dictionary<string, OpenApiProperty> properties = new Dictionary<string, OpenApiProperty>();
+                var properties = new Dictionary<string, OpenApiProperty>();
 
                 foreach (var item in forms)
                 {
                     var openApiProperty = this.CreateProperty(item.Parameter.Type, item.Parameter.ParameterInfo.GetDescription());
-                    properties.Add(GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
+                    properties.Add(this.GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
                 }
 
                 content.Schema = new OpenApiSchema()

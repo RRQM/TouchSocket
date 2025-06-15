@@ -193,7 +193,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     /// </summary>
     /// <returns>异步任务。</returns>
     /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
-    public override Task<Result> StopAsync(CancellationToken token=default)
+    public override Task<Result> StopAsync(CancellationToken token = default)
     {
         throw new NotSupportedException("此服务的生命周期跟随主Host");
     }

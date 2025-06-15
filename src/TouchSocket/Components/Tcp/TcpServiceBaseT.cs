@@ -433,7 +433,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         catch (Exception ex)
         {
             socket.SafeDispose();
-            this.Logger?.Exception(this,ex);
+            this.Logger?.Exception(this, ex);
         }
     }
 

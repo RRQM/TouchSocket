@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets;
 /// 检查清理连接插件。服务器与客户端均适用。
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IDependencyClient, IClosableClient,IOnlineClient
+public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IDependencyClient, IClosableClient, IOnlineClient
 {
     private static readonly DependencyProperty<bool> s_checkClearProperty =
         new("CheckClear", false);
@@ -229,7 +229,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
             {
                 await this.OnClose.Invoke(client, checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 this.m_logger.Debug(this, ex.Message);
             }
@@ -240,7 +240,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
     {
         try
         {
-            this.m_logger.Debug(this,$"{this.GetType()} begin polling");
+            this.m_logger.Debug(this, $"{this.GetType()} begin polling");
             while (true)
             {
                 if (this.DisposedValue)
@@ -270,17 +270,17 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
                 }
                 catch (Exception ex)
                 {
-                    this.m_logger.Debug(this,ex.Message);
+                    this.m_logger.Debug(this, ex.Message);
                 }
             }
         }
         catch (Exception ex)
         {
-            this.m_logger.Debug(this,ex.Message);
+            this.m_logger.Debug(this, ex.Message);
         }
         finally
         {
-            this.m_logger.Debug(this,$"{this.GetType()} end polling");
+            this.m_logger.Debug(this, $"{this.GetType()} end polling");
         }
     }
 }

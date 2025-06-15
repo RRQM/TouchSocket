@@ -11,9 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using TouchSocket.Core;
-using System.Collections.Generic;
 
 namespace TouchSocket.Http.WebSockets;
 
@@ -113,7 +113,7 @@ internal static class WSTools
         return Convert.ToBase64String(src);
     }
 
-   
+
     public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
     {
         for (var i = 0; i < memorySpan.Length; i++)
@@ -132,7 +132,7 @@ internal static class WSTools
     public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
     {
         var request = new HttpRequest();
-        request.URL=(httpClientBase.RemoteIPHost.PathAndQuery);
+        request.URL = (httpClientBase.RemoteIPHost.PathAndQuery);
         request.Headers.TryAdd(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
         request.Headers.TryAdd(HttpHeaders.Connection, "upgrade");
         request.Headers.TryAdd(HttpHeaders.Upgrade, "websocket");

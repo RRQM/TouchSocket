@@ -23,7 +23,7 @@ namespace TouchSocket.JsonRpc;
 /// <summary>
 /// 表示一个JsonRpcActor类，用于处理JsonRpc请求和响应。
 /// </summary>
-public sealed class JsonRpcActor :DisposableObject, IJsonRpcClient
+public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 {
     private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
     private readonly JsonRpcWaitResultConverter m_jsonRpcWaitResultConverter = new JsonRpcWaitResultConverter();
@@ -126,7 +126,7 @@ public sealed class JsonRpcActor :DisposableObject, IJsonRpcClient
         }
         catch (Exception ex)
         {
-            this.Logger?.Debug(this,ex.Message);
+            this.Logger?.Debug(this, ex.Message);
         }
     }
 

@@ -51,10 +51,10 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     {
         if (this.m_dmtpActor != null)
         {
-            await this.m_dmtpActor.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
-        return await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

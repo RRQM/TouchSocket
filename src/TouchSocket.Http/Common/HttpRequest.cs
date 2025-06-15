@@ -12,9 +12,7 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -131,14 +129,14 @@ public class HttpRequest : HttpBase
     /// <summary>
     /// 相对路径（不含参数）
     /// </summary>
-    public string RelativeURL { get => m_relativeURL; }
+    public string RelativeURL { get => this.m_relativeURL; }
 
     /// <summary>
     /// Url全地址，包含参数
     /// </summary>
     public string URL
     {
-        get => m_url;
+        get => this.m_url;
         set
         {
             // 确保URL以斜杠开始，如果不是，则添加斜杠
@@ -319,7 +317,7 @@ public class HttpRequest : HttpBase
         start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, methodEnd + 1);
 
         // 解析 URL
-        int urlEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
+        var urlEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
         if (urlEnd == -1)
         {
             this.URL = TouchSocketHttpUtility.UnescapeDataString(requestLineSpan.Slice(start));
@@ -330,8 +328,8 @@ public class HttpRequest : HttpBase
         start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, urlEnd + 1);
 
         // 解析 Protocol (HTTP/1.1)
-        ReadOnlySpan<byte> protocolSpan = requestLineSpan.Slice(start);
-        int slashIndex = protocolSpan.IndexOf((byte)'/');
+        var protocolSpan = requestLineSpan.Slice(start);
+        var slashIndex = protocolSpan.IndexOf((byte)'/');
         if (slashIndex > 0 && slashIndex < protocolSpan.Length - 1)
         {
             this.Protocols = new Protocol(protocolSpan.Slice(0, slashIndex).ToString(Encoding.UTF8));
@@ -381,7 +379,7 @@ public class HttpRequest : HttpBase
         {
             //清除所有现有参数
             this.m_relativeURL = url.ToString();
-            m_query.Clear();
+            this.m_query.Clear();
         }
     }
 }

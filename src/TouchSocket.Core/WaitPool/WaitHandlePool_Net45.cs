@@ -43,7 +43,7 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     /// <summary>
     /// 不要设为readonly
     /// </summary>
-    private Lock m_lock = new Lock();
+    private readonly Lock m_lock = new Lock();
     private readonly Dictionary<int, TWaitData> m_waitDic = new();
     private readonly Dictionary<int, TWaitDataAsync> m_waitDicAsync = new();
     private readonly Queue<TWaitData> m_waitQueue = new();

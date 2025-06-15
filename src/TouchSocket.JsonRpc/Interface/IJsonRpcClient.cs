@@ -18,7 +18,7 @@ namespace TouchSocket.JsonRpc;
 /// <summary>
 /// IJsonRpcClient
 /// </summary>
-public interface IJsonRpcClient : IRpcClient,IDisposableObject
+public interface IJsonRpcClient : IRpcClient, IDisposableObject
 {
     /// <summary>
     /// 获取用于 JSON-RPC 的序列化转换器。

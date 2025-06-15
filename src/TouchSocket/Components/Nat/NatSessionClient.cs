@@ -75,7 +75,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         {
             if (!client.StandBy)
             {
-                client.ShutdownAsync( System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
+                client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
                 client.SafeDispose();
             }
 
@@ -187,7 +187,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             }
             catch (Exception ex)
             {
-                this.Logger?.Debug(this,ex);
+                this.Logger?.Debug(this, ex);
             }
         }
 
@@ -200,7 +200,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             }
             catch (Exception ex)
             {
-                this.Logger?.Debug(this,ex);
+                this.Logger?.Debug(this, ex);
             }
         }
     }

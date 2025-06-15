@@ -611,6 +611,30 @@ public sealed partial class TouchSocketBitConverter
     /// <summary>
     /// 将指定的字节，按位解析为bool数组。
     /// </summary>
+    /// <param name="span"></param>
+    /// <returns>返回一个bool数组，其中每个元素对应字节中的一个位。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool[] ToBooleans(ReadOnlySpan<byte> span)
+    {
+        // 根据参数length计算出需要解析出的bool值的总数，每个字节可以解析出8个bool值。
+        var bools = new bool[8 * span.Length];
+        // 遍历每个bool值的位置，从0到bools.Length-1。
+        for (var i = 0; i < bools.Length; i++)
+        {
+            // 计算当前bool值所在的字节位置，每8个bool值共用一个字节。
+            var byteIndex = i / 8;
+            // 获取当前bool值在字节中的位置，范围为0到7。
+            var bitIndex = i % 8;
+            // 通过GetBit方法从字节中获取指定位置的位值，并将其转换为bool类型。
+            bools[i] = Convert.ToBoolean(span[byteIndex].GetBit(bitIndex));
+        }
+        // 返回解析出的bool数组。
+        return bools;
+    }
+
+    /// <summary>
+    /// 将指定的字节，按位解析为bool数组。
+    /// </summary>
     /// <param name="buffer">指向待解析的字节缓冲区的引用。</param>
     /// <param name="length">要解析的字节数。</param>
     /// <returns>包含每个字节按位解析后的bool值的数组。</returns>

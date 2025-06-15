@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -388,7 +387,7 @@ public static partial class HttpExtensions
     public static bool UrlEquals<TRequest>(this TRequest request, string url) where TRequest : HttpRequest
     {
         // 检查两个URL是否都不为null，并且在文化无关的大小写不敏感的情况下是否相等
-        return !string.IsNullOrEmpty(request.RelativeURL) && !string.IsNullOrEmpty(url)&& request.RelativeURL.Equals(url, StringComparison.OrdinalIgnoreCase);
+        return !string.IsNullOrEmpty(request.RelativeURL) && !string.IsNullOrEmpty(url) && request.RelativeURL.Equals(url, StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool CheckFormBody(string contentType, out Encoding encoding)

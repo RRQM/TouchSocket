@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
+using System;
 
 namespace TouchSocket.Modbus;
 
@@ -27,7 +27,7 @@ public interface IModbusResponse
     /// <summary>
     /// 数据
     /// </summary>
-    byte[] Data { get; }
+    ReadOnlyMemory<byte> Data { get; }
 
     /// <summary>
     /// 功能码
@@ -38,6 +38,11 @@ public interface IModbusResponse
     /// 错误码
     /// </summary>
     ModbusErrorCode ErrorCode { get; }
+
+    /// <summary>
+    /// 指示响应是否成功
+    /// </summary>
+    bool IsSuccess { get; }
 
     /// <summary>
     /// 获取和当前响应对应的请求

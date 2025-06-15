@@ -23,7 +23,7 @@ public readonly struct SerialOperationResult
     /// <summary>
     /// 已传输的字节数。
     /// </summary>
-    public readonly int BytesTransferred { get; }
+    public int BytesTransferred { get; }
 
     /// <summary>
     /// 串行数据事件类型。

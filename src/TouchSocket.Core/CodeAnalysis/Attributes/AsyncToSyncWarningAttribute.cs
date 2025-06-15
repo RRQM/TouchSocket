@@ -11,17 +11,13 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 标识方法是异步转换成的同步，所以在特殊平台上，会给出特别建议。
 /// </summary>
-[AttributeUsage( AttributeTargets.Method)]
-public sealed class AsyncToSyncWarningAttribute:Attribute
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class AsyncToSyncWarningAttribute : Attribute
 {
 }

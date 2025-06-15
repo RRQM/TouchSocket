@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
-using System.Collections.Generic;
 
 namespace TouchSocket.Dmtp;
 
@@ -124,11 +123,11 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 向IDmtpActor对象发送关闭消息
             await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的关闭方法
-        return await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 断开

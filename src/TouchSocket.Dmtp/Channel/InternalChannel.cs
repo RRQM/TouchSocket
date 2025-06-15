@@ -207,7 +207,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         {
         }
     }
-    
+
     #endregion 操作
 
     public ByteBlock GetCurrent()

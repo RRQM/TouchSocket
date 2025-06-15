@@ -11,10 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http;
@@ -42,6 +38,6 @@ class HttpReadOnlyMemoryBlockResult : IReadOnlyMemoryBlockResult
 
     public void Dispose()
     {
-        m_actionForDispose.Invoke();
+        this.m_actionForDispose.Invoke();
     }
 }

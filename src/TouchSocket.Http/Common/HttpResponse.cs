@@ -12,9 +12,7 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -365,6 +363,7 @@ public class HttpResponse : HttpBase
         this.IsChunk = false;
         this.StatusCode = 200;
         this.StatusMessage = "Success";
+        this.Content = default;
         if (this.m_isServer)
         {
             this.m_canWrite = true;

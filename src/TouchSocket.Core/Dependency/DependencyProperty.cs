@@ -33,6 +33,7 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     /// <param name="onFailedToGetTheValue">当<see cref="IDependencyObject"/>获取属性失败时，回调该函数</param>
     /// <param name="placeholder">占位重载，无实际意义</param>
     public DependencyProperty(string propertyName, Func<IDependencyObject, TValue> onFailedToGetTheValue, bool placeholder)
+        : base(propertyName)
     {
         this.m_name = propertyName;
         this.OnFailedToGetTheValue = ThrowHelper.ThrowArgumentNullExceptionIf(onFailedToGetTheValue, nameof(onFailedToGetTheValue));
@@ -47,10 +48,6 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     {
     }
 
-    /// <summary>
-    /// 属性名称
-    /// </summary>
-    public string Name => this.m_name;
 
     /// <summary>
     /// 当<see cref="IDependencyObject"/>获取属性失败时，回调该函数

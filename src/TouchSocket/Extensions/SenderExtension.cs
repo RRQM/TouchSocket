@@ -60,7 +60,7 @@ public static class SenderExtension
     /// <returns>返回一个Task对象，表示异步操作。</returns>
     public static async Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
     {
-        using (var byteBlock=new ByteBlock(1024))
+        using (var byteBlock = new ByteBlock(1024))
         {
             byteBlock.WriteNormalString(value, Encoding.UTF8);
             await client.SendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -204,7 +204,7 @@ public static class SenderExtension
     /// <returns>返回一个Task对象，代表异步操作的完成状态。</returns>
     public static async Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
     {
-        using (var byteBlock=new ByteBlock(1024))
+        using (var byteBlock = new ByteBlock(1024))
         {
             byteBlock.WriteNormalString(value, Encoding.UTF8);
             await client.SendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

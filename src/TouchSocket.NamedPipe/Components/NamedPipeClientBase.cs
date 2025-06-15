@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
@@ -174,7 +173,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
                 this.m_dataHandlingAdapter.SafeDispose();
                 this.m_dataHandlingAdapter = default;
 
-                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeClosed, (new ClosedEventArgs(manual, msg),this.m_receiveTask,this.m_receiver));
+                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeClosed, (new ClosedEventArgs(manual, msg), this.m_receiveTask, this.m_receiver));
             }
         }
     }
@@ -337,7 +336,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         this.ThrowIfDisposed();
 
         ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
-        
+
         // 如果当前实例已有配置，则将配置应用到新适配器上
         if (this.Config != null)
         {

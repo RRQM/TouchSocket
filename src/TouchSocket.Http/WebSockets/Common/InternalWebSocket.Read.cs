@@ -13,10 +13,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 using TouchSocket.Core;
 using TouchSocket.Resources;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
 
@@ -44,14 +42,14 @@ internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceive
     }
     internal async Task InputReceiveAsync(WSDataFrame dataFrame)
     {
-        m_blockResult.DataFrame = dataFrame;
+        this.m_blockResult.DataFrame = dataFrame;
         await base.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     protected override IWebSocketReceiveResult CreateResult(Action actionForDispose)
     {
-        m_blockResult = new WebSocketReceiveBlockResult(actionForDispose);
-        return m_blockResult;
+        this.m_blockResult = new WebSocketReceiveBlockResult(actionForDispose);
+        return this.m_blockResult;
     }
     private void ThrowIfNotAllowAsyncRead()
     {
@@ -83,7 +81,7 @@ internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceive
 
         void IDisposable.Dispose()
         {
-            m_actionForDispose.Invoke();
+            this.m_actionForDispose.Invoke();
         }
     }
     #endregion

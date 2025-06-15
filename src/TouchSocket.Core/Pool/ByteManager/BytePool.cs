@@ -11,14 +11,13 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 内存池
 /// </summary>
-[Obsolete("此类已被弃用，请使用ArrayPool<byte>代替",true)]
+[Obsolete("此类已被弃用，请使用ArrayPool<byte>代替", true)]
 public sealed class BytePool
 {
     static BytePool()

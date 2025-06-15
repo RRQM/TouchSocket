@@ -21,7 +21,7 @@ namespace TouchSocket.Rpc;
 /// </summary>
 /// <typeparam name="TRpcActor">RPC行为的类型。</typeparam>
 /// <typeparam name="TCallContext">调用上下文的类型，必须是<see cref="ICallContext"/>的子类。</typeparam>
-public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> :DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
+public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRpcDispatcher<TRpcActor, TCallContext>
     where TRpcActor : class
     where TCallContext : class, ICallContext
 {

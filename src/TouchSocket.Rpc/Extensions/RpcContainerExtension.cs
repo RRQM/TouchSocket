@@ -13,7 +13,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Core;
-using static System.Collections.Specialized.BitVector32;
 
 namespace TouchSocket.Rpc;
 

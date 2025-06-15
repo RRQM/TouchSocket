@@ -26,7 +26,7 @@ internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHead
     {
         get
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(key,nameof(key));
+            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
             return this.TryGetValue(key, out var value) ? value : null;
         }
         set

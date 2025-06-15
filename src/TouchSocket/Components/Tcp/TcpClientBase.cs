@@ -267,7 +267,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 adapter.SafeDispose();
                 this.CancelReceive();
                 // 启动一个新任务来处理连接关闭事件
-                _ = EasyTask.SafeRun(this.PrivateOnTcpClosed, (this.m_receiveTask, new ClosedEventArgs(manual, msg),this.m_receiver));
+                _ = EasyTask.SafeRun(this.PrivateOnTcpClosed, (this.m_receiveTask, new ClosedEventArgs(manual, msg), this.m_receiver));
             }
         }
     }

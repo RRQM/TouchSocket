@@ -38,7 +38,7 @@ public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlu
 
                 try
                 {
-                   var result= await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (result.IsSuccess)
                     {
                         failedCount = 0;

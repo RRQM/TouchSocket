@@ -232,7 +232,7 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
                 this.m_dataHandlingAdapter.SafeDispose();
 
                 // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
-                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeClosed,this.m_receiveTask, new ClosedEventArgs(manual, msg));
+                _ = EasyTask.SafeRun(this.PrivateOnNamedPipeClosed, this.m_receiveTask, new ClosedEventArgs(manual, msg));
             }
         }
     }
@@ -468,7 +468,7 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
         return Math.Min(Math.Max(this.m_receiveBufferSize, minBufferSize), maxBufferSize);
     }
 
-    private async Task PrivateOnNamedPipeClosed(Task receiveTask,ClosedEventArgs e)
+    private async Task PrivateOnNamedPipeClosed(Task receiveTask, ClosedEventArgs e)
     {
         var receiver = this.m_receiver;
         if (receiver != null)

@@ -17,7 +17,6 @@ using System.Xml;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.XmlRpc;
 
@@ -131,7 +130,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     var httpResponse = e.Context.Response;
 
-                    var byteBlock = new ByteBlock(1024*64);
+                    var byteBlock = new ByteBlock(1024 * 64);
 
                     if (invokeResult.Status == InvokeStatus.Success)
                     {

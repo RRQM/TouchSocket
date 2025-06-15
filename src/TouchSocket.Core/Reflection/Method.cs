@@ -12,11 +12,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -73,7 +69,7 @@ public class Method
                     break;
 
                 case DynamicBuilderType.SourceGenerator:
-                    this.m_dynamicMethodInfo = CreateDynamicMethodInfoFromSG();
+                    this.m_dynamicMethodInfo = this.CreateDynamicMethodInfoFromSG();
                     break;
 
                 default:
@@ -123,7 +119,7 @@ public class Method
     /// <summary>
     /// 是否具有返回值。当返回值为Task时，也会认为没有返回值。
     /// </summary>
-    public bool HasReturn => this.RealReturnType!=null;
+    public bool HasReturn => this.RealReturnType != null;
 
     /// <summary>
     /// 方法信息。

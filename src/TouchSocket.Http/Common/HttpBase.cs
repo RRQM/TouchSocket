@@ -14,7 +14,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -175,8 +174,8 @@ public abstract class HttpBase : IRequestInfo
 
         if (!keySpan.IsEmpty && !valueSpan.IsEmpty)
         {
-            string key = keySpan.ToString(Encoding.UTF8).ToLower();
-            string value = valueSpan.ToString(Encoding.UTF8);
+            var key = keySpan.ToString(Encoding.UTF8).ToLower();
+            var value = valueSpan.ToString(Encoding.UTF8);
             this.m_headers[key] = value;
         }
     }
@@ -195,7 +194,7 @@ public abstract class HttpBase : IRequestInfo
 
         // 提取请求行
         var requestLineSpan = span.Slice(0, lineEnd);
-        ReadRequestLine(requestLineSpan);
+        this.ReadRequestLine(requestLineSpan);
         //this.RequestLine = requestLineSpan.ToString(Encoding.UTF8);
 
         // 跳过请求行及CRLF（+2）

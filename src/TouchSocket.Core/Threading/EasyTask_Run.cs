@@ -11,9 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
@@ -71,7 +68,7 @@ public static partial class EasyTask
         }
         try
         {
-            await Task.Run(() => func(status), ct);
+            await Task.Run(() => func(status), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch
         {
@@ -150,7 +147,7 @@ public static partial class EasyTask
         }
         try
         {
-            await Task.Run(() => func(), ct);
+            await Task.Run(() => func(), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch
         {
@@ -179,7 +176,7 @@ public static partial class EasyTask
         }
         try
         {
-            await Task.Run(() => func(status1, status2), ct);
+            await Task.Run(() => func(status1, status2), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch
         {

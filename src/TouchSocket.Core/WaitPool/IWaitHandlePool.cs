@@ -44,7 +44,7 @@ public interface IWaitHandlePool<TWaitData, TWaitDataAsync, T> : IDisposableObje
     /// 销毁指定的等待数据。
     /// </summary>
     /// <param name="waitData">要销毁的等待数据。</param>
-    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(int sign)的重载函数直接代替",true)]
+    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(int sign)的重载函数直接代替", true)]
     void Destroy(TWaitData waitData);
 
     /// <summary>

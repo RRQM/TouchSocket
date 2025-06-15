@@ -246,7 +246,7 @@ internal static class XmlDataTool
 
         CreateParam(xml, valueElement, value);
 
-        using (var xmlBlock = new ByteBlock(1024*64))
+        using (var xmlBlock = new ByteBlock(1024 * 64))
         {
             xml.Save(xmlBlock.AsStream());
 

@@ -160,7 +160,7 @@ public partial class TcpClientBase
             }
 
             // 启动新任务，处理连接后的操作
-            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(),this.m_tokenSourceForReceive.Token);
+            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
         }
         finally
         {

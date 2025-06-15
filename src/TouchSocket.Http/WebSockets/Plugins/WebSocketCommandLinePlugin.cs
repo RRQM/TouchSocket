@@ -105,7 +105,7 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
 
         try
         {
-            var result=await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (method.HasReturn)
             {
                 await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

@@ -177,7 +177,7 @@ public static class LoggerContainerExtension
         {
             // 指定日志文件的路径为基于当前日期的文件夹
             CreateLogFolder = l => Path.Combine(rootPath, DateTime.Now.ToString("[yyyy-MM-dd]")),
-             LogLevel = logLevel
+            LogLevel = logLevel
         });
         return container;
     }
