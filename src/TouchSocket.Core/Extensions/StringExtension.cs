@@ -197,7 +197,7 @@ public static class StringExtension
     /// <exception cref="NotSupportedException">类型转换失败</exception>
     public static T ParseToType<T>(this string value)
     {
-        if (TryParseToType<T>(value,  out var returnValue))
+        if (TryParseToType<T>(value, out var returnValue))
         {
             return returnValue;
         }
@@ -431,7 +431,7 @@ public static class StringExtension
         }
     }
 
-   
+
     ///<summary>
     /// 尝试将字符串解析为指定的类型。
     /// </summary>
@@ -454,7 +454,7 @@ public static class StringExtension
         if (type.IsEnum)
         {
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-            bool success = Enum.TryParse(type, value, out object enumResult);
+            var success = Enum.TryParse(type, value, out var enumResult);
             if (success)
             {
                 returnValue = (T)enumResult;
@@ -479,7 +479,7 @@ public static class StringExtension
         switch (Type.GetTypeCode(type))
         {
             case TypeCode.Boolean:
-                if (bool.TryParse(value, out bool boolResult))
+                if (bool.TryParse(value, out var boolResult))
                 {
                     returnValue = Unsafe.As<bool, T>(ref boolResult);
                     return true;
@@ -487,7 +487,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.Char:
-                if (char.TryParse(value, out char charResult))
+                if (char.TryParse(value, out var charResult))
                 {
                     returnValue = Unsafe.As<char, T>(ref charResult);
                     return true;
@@ -495,7 +495,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.SByte:
-                if (sbyte.TryParse(value, out sbyte sbyteResult))
+                if (sbyte.TryParse(value, out var sbyteResult))
                 {
                     returnValue = Unsafe.As<sbyte, T>(ref sbyteResult);
                     return true;
@@ -503,7 +503,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.Byte:
-                if (byte.TryParse(value, out byte byteResult))
+                if (byte.TryParse(value, out var byteResult))
                 {
                     returnValue = Unsafe.As<byte, T>(ref byteResult);
                     return true;
@@ -511,7 +511,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.Int16:
-                if (short.TryParse(value, out short shortResult))
+                if (short.TryParse(value, out var shortResult))
                 {
                     returnValue = Unsafe.As<short, T>(ref shortResult);
                     return true;
@@ -519,7 +519,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.UInt16:
-                if (ushort.TryParse(value, out ushort ushortResult))
+                if (ushort.TryParse(value, out var ushortResult))
                 {
                     returnValue = Unsafe.As<ushort, T>(ref ushortResult);
                     return true;
@@ -527,7 +527,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.Int32:
-                if (int.TryParse(value, out int intResult))
+                if (int.TryParse(value, out var intResult))
                 {
                     returnValue = Unsafe.As<int, T>(ref intResult);
                     return true;
@@ -535,7 +535,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.UInt32:
-                if (uint.TryParse(value, out uint uintResult))
+                if (uint.TryParse(value, out var uintResult))
                 {
                     returnValue = Unsafe.As<uint, T>(ref uintResult);
                     return true;
@@ -543,7 +543,7 @@ public static class StringExtension
                 break;
 
             case TypeCode.Int64:
-                if (long.TryParse(value, out long longResult))
+                if (long.TryParse(value, out var longResult))
                 {
                     returnValue = Unsafe.As<long, T>(ref longResult);
                     return true;

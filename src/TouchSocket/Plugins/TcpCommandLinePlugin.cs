@@ -106,7 +106,7 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
 
                 try
                 {
-                    var result=await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (method.HasReturn)
                     {
                         await clientSender.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

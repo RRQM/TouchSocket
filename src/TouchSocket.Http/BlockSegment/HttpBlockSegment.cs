@@ -11,9 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -24,8 +21,8 @@ class HttpBlockSegment : BlockSegment<IReadOnlyMemoryBlockResult>
     HttpReadOnlyMemoryBlockResult m_blockResult;
     protected override IReadOnlyMemoryBlockResult CreateResult(Action actionForDispose)
     {
-        m_blockResult = new HttpReadOnlyMemoryBlockResult(actionForDispose);
-        return m_blockResult;
+        this.m_blockResult = new HttpReadOnlyMemoryBlockResult(actionForDispose);
+        return this.m_blockResult;
     }
 
     internal async Task InternalComplete(string msg)

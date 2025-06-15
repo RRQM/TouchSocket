@@ -11,10 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using System.Collections.Generic;
 
 namespace TouchSocket.Http;
 
@@ -30,13 +30,13 @@ public class ReadonlyMemoryHttpContent : HttpContent
     /// </summary>
     /// <param name="memory">要封装的只读内存。</param>
     /// <param name="contentType">内容类型</param>
-    public ReadonlyMemoryHttpContent(ReadOnlyMemory<byte> memory, string contentType=default)
+    public ReadonlyMemoryHttpContent(ReadOnlyMemory<byte> memory, string contentType = default)
     {
         this.m_memory = memory;
         this.m_contentType = contentType;
     }
 
-    private string m_contentType;
+    private readonly string m_contentType;
 
     /// <summary>
     /// 获取封装的只读内存。
@@ -65,7 +65,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
     protected override void OnBuildingHeader(IHttpHeader header)
     {
         header.Add(HttpHeaders.ContentLength, this.m_memory.Length.ToString());
-        if (this.m_contentType!=null)
+        if (this.m_contentType != null)
         {
             header.Add(HttpHeaders.ContentType, this.m_contentType);
         }

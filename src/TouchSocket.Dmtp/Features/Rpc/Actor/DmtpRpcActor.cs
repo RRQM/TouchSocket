@@ -23,7 +23,7 @@ namespace TouchSocket.Dmtp.Rpc;
 /// DmtpRpcActor 类，继承自 ConcurrentDictionary，并实现 IDmtpRpcActor 接口。
 /// 该类用于管理远程过程调用(RPC)的上下文，通过关联任务和超时逻辑来实现。
 /// </summary>
-public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
+public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 {
     private readonly ConcurrentDictionary<long, DmtpRpcCallContext> m_callContextDic = new ConcurrentDictionary<long, DmtpRpcCallContext>();
 
@@ -238,7 +238,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
 
     private async Task CanceledInvokeAsync(CanceledPackage canceled)
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             var block = byteBlock;
             canceled.Package(ref block);
@@ -353,7 +353,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
                 byteBlock.Dispose();
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             this.DmtpActor.Logger?.Exception(this, ex);
         }
@@ -409,7 +409,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
                 waitData.SetCancellationToken(invokeOption.Token);
             }
 
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 rpcPackage.Package(ref byteBlock);
@@ -489,7 +489,7 @@ public class DmtpRpcActor :DisposableObject, IDmtpRpcActor
                 waitData.SetCancellationToken(invokeOption.Token);
             }
 
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 rpcPackage.Package(ref byteBlock);

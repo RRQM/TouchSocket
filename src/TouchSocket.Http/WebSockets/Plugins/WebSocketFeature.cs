@@ -137,11 +137,11 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
             if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 e.Handled = true;
-               var result= await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (!result.IsSuccess)
                 {
-                    client.Logger?.Debug(this,result.Message);
+                    client.Logger?.Debug(this, result.Message);
                     return;
                 }
 

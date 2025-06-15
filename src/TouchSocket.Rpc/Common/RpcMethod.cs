@@ -62,7 +62,7 @@ public sealed class RpcMethod : Method
             //{
             //    throw new InvalidOperationException($"没有找到方法{method.Name}的实现");
             //}
-            this.ToMethodInfo = CodeGenerator.GetToMethodInfo(method,serverFromType,serverToType);
+            this.ToMethodInfo = CodeGenerator.GetToMethodInfo(method, serverFromType, serverToType);
 
             this.ParameterNames = this.Parameters.Select(a => a.Name).ToArray();
             this.ParameterTypes = this.Parameters.Select(a => a.Type).ToArray();

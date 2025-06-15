@@ -29,7 +29,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     private readonly SemaphoreSlim m_resetEventForCompleteRead = new(0, 1);
     private CancellationTokenRegistration m_tokenRegistration;
     private ManualResetValueTaskSourceCore<TBlockResult> m_valueTaskSourceCore;
-    private TBlockResult m_blockResult;
+    private readonly TBlockResult m_blockResult;
 
     #endregion 字段
 
@@ -39,7 +39,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// <param name="runContinuationsAsynchronously">指示是否异步运行延续。</param>
     public BlockSegment(bool runContinuationsAsynchronously = false)
     {
-        m_valueTaskSourceCore = new ManualResetValueTaskSourceCore<TBlockResult>()
+        this.m_valueTaskSourceCore = new ManualResetValueTaskSourceCore<TBlockResult>()
         {
             RunContinuationsAsynchronously = runContinuationsAsynchronously
         };

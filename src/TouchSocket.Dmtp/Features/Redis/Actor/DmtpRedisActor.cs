@@ -21,7 +21,7 @@ namespace TouchSocket.Dmtp.Redis;
 /// DmtpRedisActor 类，实现了 IDmtpRedisActor 接口。
 /// 该类通过 Redis 操作，为分布式消息传输协议（Dmtp）提供演员（Actor）模型的实现。
 /// </summary>
-internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
+internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
 {
     /// <summary>
     /// 初始化DmtpRedisActor类的新实例。
@@ -75,7 +75,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 var block = byteBlock;
                 package.Package(ref block);
@@ -125,7 +125,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 var block = byteBlock;
                 package.Package(ref block);
@@ -296,7 +296,7 @@ internal sealed class DmtpRedisActor :DisposableObject, IDmtpRedisActor
                 waitResult.Message = ex.Message;
             }
 
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 var block = byteBlock;
                 waitResult.Package(ref block);

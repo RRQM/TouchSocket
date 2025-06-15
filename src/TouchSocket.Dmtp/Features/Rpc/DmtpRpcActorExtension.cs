@@ -17,7 +17,6 @@ using System.Diagnostics.CodeAnalysis;
 using System;
 using TouchSocket.Core;
 using TouchSocket.Resources;
-using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
 
@@ -83,7 +82,7 @@ public static class DmtpRpcActorExtension
         ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
         return (TDmtpRpcActor)actor;
     }
-    
+
 
     #region 插件扩展
 

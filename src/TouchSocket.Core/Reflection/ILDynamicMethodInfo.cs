@@ -11,26 +11,21 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 internal class ILDynamicMethodInfo : DynamicMethodInfoBase
 {
-    private Func<object, object[], object> m_func;
+    private readonly Func<object, object[], object> m_func;
     public ILDynamicMethodInfo(MethodInfo method) : base(method)
     {
-        m_func = CreateILInvoker(method);
+        this.m_func = CreateILInvoker(method);
     }
 
     public override object Invoke(object instance, object[] parameters)
     {
-        return m_func(instance, parameters);
+        return this.m_func(instance, parameters);
     }
 
     protected static Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)

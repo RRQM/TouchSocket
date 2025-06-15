@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.ComponentModel;
-
 namespace TouchSocket.Http;
-
-using System;
-
 /// <summary>
 /// 请求头静态类
 /// </summary>

@@ -23,7 +23,7 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// <summary>
 /// 能够基于Dmtp协议提供文件传输功能
 /// </summary>
-internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransferActor
+internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransferActor
 {
     /// <summary>
     /// 创建一个<see cref="DmtpFileTransferActor"/>
@@ -784,7 +784,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFinishedPackage);
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         try
         {
             var block = byteBlock;
@@ -854,7 +854,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileResource);
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         try
         {
             var block = byteBlock;
@@ -922,7 +922,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileSection);
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         try
         {
             var block = byteBlock;
@@ -1000,7 +1000,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitFileResource);
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         try
         {
             var block = byteBlock;
@@ -1232,7 +1232,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
             await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
 
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitFinishedPackage.SwitchId();
                 var block = byteBlock;
@@ -1297,7 +1297,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
                 waitFileResource.Message = ex.Message;
                 waitFileResource.Status = TouchSocketDmtpStatus.Exception.ToValue();
             }
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitFileResource.SwitchId();
                 var block = byteBlock;
@@ -1421,7 +1421,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
                 waitFileResource.Status = TouchSocketDmtpStatus.Exception.ToValue();
                 waitFileResource.Message = ex.Message;
             }
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitFileResource.SwitchId();
                 var block = byteBlock;
@@ -1480,7 +1480,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
             waitFileSection.Value.SafeDispose();
             waitFileSection.Value = default;
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitFileSection.SwitchId();
                 var block = byteBlock;
@@ -1568,7 +1568,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         try
         {
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
@@ -1646,7 +1646,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
 
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(waitSmallFilePackage);
 
-        var byteBlock = new ByteBlock(1024*64);
+        var byteBlock = new ByteBlock(1024 * 64);
         var buffer = ArrayPool<byte>.Shared.Rent((int)fileInfo.Length);
         try
         {
@@ -1780,7 +1780,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
                 waitSmallFilePackage.Message = ex.Message;
             }
 
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitSmallFilePackage.SwitchId();
                 var block = byteBlock;
@@ -1846,7 +1846,7 @@ internal sealed class DmtpFileTransferActor :DisposableObject, IDmtpFileTransfer
             waitSmallFilePackage.FileInfo = default;
             waitSmallFilePackage.Data = default;
             waitSmallFilePackage.SwitchId();
-            using (var byteBlock = new ByteBlock(1024*64))
+            using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);

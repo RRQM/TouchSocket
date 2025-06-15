@@ -62,7 +62,7 @@ internal sealed class TcpCore : DisposableObject
     private bool m_noDelay;
     private readonly SocketOperationResult m_result = new SocketOperationResult();
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
-    private CancellationToken m_cancellationToken;
+    private readonly CancellationToken m_cancellationToken;
     #endregion 字段
 
     /// <summary>
@@ -158,7 +158,7 @@ internal sealed class TcpCore : DisposableObject
 
             return Result.Success;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return Result.FromException(ex);
         }
@@ -337,7 +337,7 @@ internal sealed class TcpCore : DisposableObject
     {
         var valuesToProcess = new SendSegment[BatchSize];
 
-        while (!m_cancellationToken.IsCancellationRequested)
+        while (!this.m_cancellationToken.IsCancellationRequested)
         {
             // 重置计数器和数组内容
             var count = 0;
@@ -352,7 +352,7 @@ internal sealed class TcpCore : DisposableObject
                 this.m_semaphoreSlimForMax.Release();
             }
 
-            if(m_cancellationToken.IsCancellationRequested)
+            if (this.m_cancellationToken.IsCancellationRequested)
             {
                 return;
             }
@@ -395,7 +395,7 @@ internal sealed class TcpCore : DisposableObject
                 //Debug.WriteLine("Pause");
                 // 队列为空，设置事件并等待
                 this.m_asyncResetEventForSend.Set();
-                await this.m_asyncResetEventForTask.WaitOneAsync(m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_asyncResetEventForTask.WaitOneAsync(this.m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }
@@ -412,7 +412,7 @@ internal sealed class TcpCore : DisposableObject
         if (this.m_useSsl)
         {
             var segment = memory.GetArray();
-            await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, this.m_cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 #endif
         else

@@ -20,7 +20,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 手动IOC容器
 /// </summary>
-[Obsolete("此类由于功能不完善，且没有完善的意义，所以不再使用",true)]
+[Obsolete("此类由于功能不完善，且没有完善的意义，所以不再使用", true)]
 public abstract class ManualContainer : IContainer
 {
     private readonly ConcurrentDictionary<string, object> m_singletonInstances = new ConcurrentDictionary<string, object>();

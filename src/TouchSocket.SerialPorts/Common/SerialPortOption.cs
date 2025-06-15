@@ -56,7 +56,7 @@ public class SerialPortOption
     /// <summary>
     /// 流异步操作
     /// </summary>
-    public bool StearmAsync { get; set; }
+    public bool StreamAsync { get; set; }
 
     /// <inheritdoc/>
     public override string ToString()

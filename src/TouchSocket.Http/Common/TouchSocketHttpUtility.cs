@@ -141,7 +141,7 @@ public static class TouchSocketHttpUtility
 #if NET9_0_OR_GREATER
         // 直接处理字节的URL解码
         Span<char> charBuffer = stackalloc char[urlSpan.Length];
-        int charCount = Encoding.UTF8.GetChars(urlSpan, charBuffer);
+        var charCount = Encoding.UTF8.GetChars(urlSpan, charBuffer);
         return Uri.UnescapeDataString(charBuffer.Slice(0, charCount));
 #else
         return Uri.UnescapeDataString(urlSpan.ToString(Encoding.UTF8));
@@ -164,7 +164,7 @@ public static class TouchSocketHttpUtility
 
     internal static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
     {
-        for (int i = start; i < span.Length; i++)
+        for (var i = start; i < span.Length; i++)
         {
             if (TouchSocketHttpUtility.IsWhitespace(span[i]))
             {

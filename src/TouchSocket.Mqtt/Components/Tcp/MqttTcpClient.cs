@@ -75,7 +75,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
             {
                 await this.m_mqttActor.DisconnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
         }

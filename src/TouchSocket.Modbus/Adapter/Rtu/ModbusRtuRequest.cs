@@ -45,7 +45,7 @@ internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRe
             byteBlock.WriteByte(this.SlaveId);
             byteBlock.WriteByte((byte)this.FunctionCode);
             byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
-            byteBlock.Write(this.Data);
+            byteBlock.Write(this.Data.Span);
         }
         else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
         {
@@ -54,7 +54,7 @@ internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRe
             byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
             byteBlock.WriteUInt16(this.Quantity, EndianType.Big);
             byteBlock.WriteByte((byte)this.Data.Length);
-            byteBlock.Write(this.Data);
+            byteBlock.Write(this.Data.Span);
         }
         else if (this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
         {
@@ -65,7 +65,7 @@ internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRe
             byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
             byteBlock.WriteUInt16(this.Quantity, EndianType.Big);
             byteBlock.WriteByte((byte)this.Data.Length);
-            byteBlock.Write(this.Data);
+            byteBlock.Write(this.Data.Span);
         }
         else
         {

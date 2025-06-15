@@ -111,7 +111,7 @@ internal static partial class ThrowHelper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static T ThrowArgumentNullExceptionIf<T>(T obj, string objectName,string msg) where T : class
+    public static T ThrowArgumentNullExceptionIf<T>(T obj, string objectName, string msg) where T : class
     {
         return obj ?? throw new ArgumentNullException(msg.Format(objectName));
     }
@@ -160,21 +160,21 @@ internal static partial class ThrowHelper
     }
 
     #region Assert
-    public static void AssertTrue(bool value,string name)
+    public static void AssertTrue(bool value, string name)
     {
         if (value)
         {
             return;
         }
 
-        throw new Exception(TouchSocketCoreResource.AssertTrueFail.Format(name,value));
+        throw new Exception(TouchSocketCoreResource.AssertTrueFail.Format(name, value));
     }
 
     public static void AssertFalse(bool value, string name)
     {
         if (value)
         {
-            throw new Exception(TouchSocketCoreResource.AssertFalseFail.Format(name,value));
+            throw new Exception(TouchSocketCoreResource.AssertFalseFail.Format(name, value));
         }
     }
     #endregion

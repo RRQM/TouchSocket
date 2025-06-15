@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Collections.Generic;
 using System.Threading;
 
 namespace TouchSocket.Core;
@@ -19,6 +20,8 @@ namespace TouchSocket.Core;
 /// </summary>
 public abstract class DependencyPropertyBase
 {
+    internal static readonly Dictionary<int, string> s_keyNameMap = new();
+
     /// <summary>
     /// 用于生成依赖属性标识的唯一ID。
     /// </summary>
@@ -27,14 +30,25 @@ public abstract class DependencyPropertyBase
     /// <summary>
     /// 初始化依赖属性对象，为每个属性分配唯一的ID。
     /// </summary>
-    public DependencyPropertyBase()
+    public DependencyPropertyBase(string name)
     {
         // 原子性增加s_idCount并赋值给当前实例的Id，保证Id的唯一性。
         this.Id = Interlocked.Increment(ref s_idCount);
+        this.Name = name;
+
+        lock (s_keyNameMap)
+        {
+            s_keyNameMap.Add(this.Id, name);
+        }
     }
 
     /// <summary>
     /// 标识属性的唯一ID。
     /// </summary>
     public int Id { get; }
+
+    /// <summary>
+    /// 属性名称
+    /// </summary>
+    public string Name { get; }
 }

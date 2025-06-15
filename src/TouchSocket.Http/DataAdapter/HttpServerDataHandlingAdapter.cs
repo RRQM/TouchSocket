@@ -129,7 +129,7 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                             var contentLength = (int)this.m_currentRequest.ContentLength;
                             var content = byteBlock.Memory.Slice(byteBlock.Position, contentLength);
                             byteBlock.Position += contentLength;
-                           
+
                             this.m_currentRequest.InternalSetContent(content);
 
                             this.m_task = this.TaskRunGoReceived(this.m_currentRequest);
@@ -178,7 +178,7 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
 
     private Task TaskRunGoReceived(HttpRequest request)
     {
-        var task = EasyTask.SafeRun< ByteBlock, IRequestInfo> (this.GoReceivedAsync, null, request);
+        var task = EasyTask.SafeRun<ByteBlock, IRequestInfo>(this.GoReceivedAsync, null, request);
         return task;
     }
 }

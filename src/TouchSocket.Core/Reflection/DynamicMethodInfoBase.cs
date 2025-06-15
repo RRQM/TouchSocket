@@ -38,11 +38,11 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
                 this.ReturnKind = MethodReturnKind.AwaitableObject;
             }
         }
-        else if (method.ReturnType == typeof(Task)|| method.ReturnType == typeof(ValueTask))
+        else if (method.ReturnType == typeof(Task) || method.ReturnType == typeof(ValueTask))
         {
             this.ReturnKind = MethodReturnKind.Awaitable;
         }
-        else if (method.ReturnType.IsGenericType && (method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)|| method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
+        else if (method.ReturnType.IsGenericType && (method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) || method.ReturnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
         {
             this.RealReturnType = method.ReturnType.GetGenericArguments().First();
             this.ReturnKind = MethodReturnKind.AwaitableObject;
@@ -62,7 +62,7 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
         if (result is Task task)
         {
             await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (this.ReturnKind== MethodReturnKind.AwaitableObject)
+            if (this.ReturnKind == MethodReturnKind.AwaitableObject)
             {
                 return DynamicMethodMemberAccessor.Default.GetValue(task, nameof(Task<object>.Result));
             }
@@ -78,18 +78,18 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
     {
         returnType = null;
         // 1. 查找GetAwaiter实例方法（无参数）
-        MethodInfo getAwaiterMethod = type.GetMethod("GetAwaiter", BindingFlags.Public | BindingFlags.Instance);
+        var getAwaiterMethod = type.GetMethod("GetAwaiter", BindingFlags.Public | BindingFlags.Instance);
         if (getAwaiterMethod == null)
         {
             return false;
         }
 
         // 2. 获取Awaiter类型
-        Type awaiterType = getAwaiterMethod.ReturnType;
+        var awaiterType = getAwaiterMethod.ReturnType;
 
         // 3. 验证Awaiter是否实现必要的接口
-        Type inotifyCompletion = typeof(System.Runtime.CompilerServices.INotifyCompletion);
-        Type icriticalNotifyCompletion = typeof(System.Runtime.CompilerServices.ICriticalNotifyCompletion);
+        var inotifyCompletion = typeof(System.Runtime.CompilerServices.INotifyCompletion);
+        var icriticalNotifyCompletion = typeof(System.Runtime.CompilerServices.ICriticalNotifyCompletion);
 
         var implementsInterface = awaiterType.GetInterfaces().Any(i =>
             i == inotifyCompletion || i == icriticalNotifyCompletion);

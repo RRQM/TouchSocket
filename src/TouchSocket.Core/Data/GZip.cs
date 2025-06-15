@@ -10,9 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.IO;
 using System.IO.Compression;
-using System.Buffers;
 
 namespace TouchSocket.Core;
 

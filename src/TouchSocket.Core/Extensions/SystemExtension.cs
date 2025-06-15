@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,9 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Buffers;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace TouchSocket.Core;
 
@@ -38,19 +37,21 @@ public static class SystemExtension
     /// 安全性释放（不用判断对象是否为空）。不会抛出任何异常。
     /// </summary>
     /// <param name="dis"></param>
-    /// <returns></returns>
-    public static void SafeDispose(this IDisposable dis)
+    /// <returns>释放状态，当对象为<see langword="null"/>，或者已被释放时，均会返回<see cref="Result.Success"/>，只有实际在释放时遇到异常时，才显示其他状态。</returns>
+    public static Result SafeDispose(this IDisposable dis)
     {
         if (dis == default)
         {
-            return;
+            return Result.Success;
         }
         try
         {
             dis.Dispose();
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
 
@@ -61,23 +62,25 @@ public static class SystemExtension
     /// </para>
     /// </summary>
     /// <param name="disposableObject"></param>
-    /// <returns></returns>
-    public static void SafeDispose(this IDisposableObject disposableObject)
+    /// <returns>释放状态，当对象为<see langword="null"/>，或者已被释放时，均会返回<see cref="Result.Success"/>，只有实际在释放时遇到异常时，才显示其他状态。</returns>
+    public static Result SafeDispose(this IDisposableObject disposableObject)
     {
         if (disposableObject == default)
         {
-            return;
+            return Result.Success;
         }
         if (disposableObject.DisposedValue)
         {
-            return;
+            return Result.Success;
         }
         try
         {
             disposableObject.Dispose();
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
 

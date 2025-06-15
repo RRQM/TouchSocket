@@ -41,7 +41,7 @@ public static class HttpClientExtension
         request.InitHeaders();
         request.SetHost(httpClient.RemoteIPHost.Host);
         // 设置请求URL
-        request.URL=(url);
+        request.URL = (url);
 
         // 使用指定的超时时间和取消令牌发起HTTP请求
         using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))

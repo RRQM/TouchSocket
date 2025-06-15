@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Modbus;
@@ -63,7 +64,7 @@ public class ModbusRequest : IModbusRequest
     /// <summary>
     /// 数据
     /// </summary>
-    public byte[] Data { get; set; }
+    public ReadOnlyMemory<byte> Data { get; set; }
 
     /// <summary>
     /// 功能码
@@ -76,6 +77,16 @@ public class ModbusRequest : IModbusRequest
     public ushort Quantity { get; set; }
 
     /// <summary>
+    /// 读取长度
+    /// </summary>
+    public ushort ReadQuantity { get; set; }
+
+    /// <summary>
+    /// 在读起始位置。
+    /// </summary>
+    public ushort ReadStartAddress { get; set; }
+
+    /// <summary>
     /// 站点号（单元标识符）
     /// </summary>
     public byte SlaveId { get; set; }
@@ -86,16 +97,6 @@ public class ModbusRequest : IModbusRequest
     public ushort StartingAddress { get; set; }
 
     /// <summary>
-    /// 在读起始位置。
-    /// </summary>
-    public ushort ReadStartAddress { get; set; }
-
-    /// <summary>
-    /// 读取长度
-    /// </summary>
-    public ushort ReadQuantity { get; set; }
-
-    /// <summary>
     /// 设置<see cref="Data"/>的值为一个 bool。
     /// </summary>
     /// <param name="value">要设置的布尔值。</param>
@@ -104,16 +105,17 @@ public class ModbusRequest : IModbusRequest
         // 将布尔值转换为字节数组，以便进行后续的通信或存储操作。
         this.Data = TouchSocketModbusUtility.BoolToBytes(value);
     }
+
     /// <summary>
     /// 设置<see cref="Data"/>的值为数组，同时设置<see cref="Quantity"/>的数量（即数组长度的1/2）。
     /// </summary>
-    /// <param name="bytes">要设置的字节数组</param>
-    public void SetValue(byte[] bytes)
+    /// <param name="memory">要设置的字节数组</param>
+    public void SetValue(ReadOnlyMemory<byte> memory)
     {
         // 将输入的字节数组赋值给Data属性
-        this.Data = bytes;
+        this.Data = memory;
         // 根据字节数组的长度计算Quantity属性的值，因为每个数据项假设占用2个字节，所以Quantity是数组长度的一半
-        this.Quantity = (ushort)(bytes.Length / 2);
+        this.Quantity = (ushort)(memory.Length / 2);
     }
 
     /// <summary>

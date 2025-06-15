@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 namespace TouchSocket.Rpc;
 
 [DebuggerDisplay("CallContext = {CallContext}")]
-internal class RpcCallContextAccessor:IRpcCallContextAccessor
+internal class RpcCallContextAccessor : IRpcCallContextAccessor
 {
     private static readonly AsyncLocal<RpcCallContextHolder> s_rpcCallContextCurrent = new AsyncLocal<RpcCallContextHolder>();
 

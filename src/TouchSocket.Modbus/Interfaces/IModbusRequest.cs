@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -30,7 +32,7 @@ public interface IModbusRequest
     /// <summary>
     /// 数据
     /// </summary>
-    byte[] Data { get; }
+    ReadOnlyMemory<byte> Data { get; }
 
     /// <summary>
     /// 站点号（单元标识符）

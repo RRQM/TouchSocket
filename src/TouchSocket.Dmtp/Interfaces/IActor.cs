@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp;
 /// <summary>
 /// 定义了Actor接口，用于规范Actor的行为。
 /// </summary>
-public interface IActor:IDisposableObject
+public interface IActor : IDisposableObject
 {
     /// <summary>
     /// 包含当前Actor的父容器。

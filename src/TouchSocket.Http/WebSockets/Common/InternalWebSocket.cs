@@ -131,7 +131,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
             return Result.FromException(ex);
         }
-        
+
     }
 
     #region 发送

@@ -24,9 +24,9 @@ public static class ModbusResponseExtension
     /// </summary>
     /// <param name="response">The response.</param>
     /// <returns></returns>
-    public static ValueByteBlock CreateReader(this IModbusResponse response)
+    public static BytesReader CreateReader(this IModbusResponse response)
     {
         // 使用response的数据创建并返回一个新的ValueByteBlock对象
-        return new ValueByteBlock(response.Data);
+        return new BytesReader(response.Data.Span);
     }
 }

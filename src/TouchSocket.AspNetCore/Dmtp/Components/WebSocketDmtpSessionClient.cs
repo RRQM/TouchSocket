@@ -195,14 +195,14 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
         this.m_client = client;
         this.m_httpContext = context;
-        string msg = string.Empty;
+        var msg = string.Empty;
         try
         {
             while (true)
             {
                 using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                 {
-                    if (client.State!= WebSocketState.Open)
+                    if (client.State != WebSocketState.Open)
                     {
                         msg = TouchSocketResource.ClientNotConnected;
                         break;

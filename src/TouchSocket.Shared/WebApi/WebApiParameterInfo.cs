@@ -26,7 +26,7 @@ internal class WebApiParameterInfo
             this.IsFromQuery = true;
             this.FromQueryName = fromQueryAttribute.Name ?? parameter.Name;
         }
-        if (parameter.ParameterInfo.GetCustomAttribute<FromFormAttribute>( false) is FromFormAttribute fromFormAttribute)
+        if (parameter.ParameterInfo.GetCustomAttribute<FromFormAttribute>(false) is FromFormAttribute fromFormAttribute)
         {
             this.IsFromForm = true;
             this.FromFormName = fromFormAttribute.Name ?? parameter.Name;

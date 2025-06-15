@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 定义WebSocket服务的接口，继承自IDisposable, IOnlineClient, IClosableClient接口。
 /// </summary>
-public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject,IClient
+public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject, IClient
 {
     /// <summary>
     /// 允许异步Read读取

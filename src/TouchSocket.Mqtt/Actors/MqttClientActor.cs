@@ -116,7 +116,7 @@ public class MqttClientActor : MqttActor
         {
             this.WaitHandlePool.Destroy(message.MessageId);
         }
-        
+
     }
 
     public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, int timeout = 5000, CancellationToken token = default)
@@ -138,6 +138,6 @@ public class MqttClientActor : MqttActor
         {
             this.WaitHandlePool.Destroy(message.MessageId);
         }
-        
+
     }
 }

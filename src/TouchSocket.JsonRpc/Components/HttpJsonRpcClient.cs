@@ -95,7 +95,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
         if (disposing)
         {
-            m_jsonRpcActor.SafeDispose();
+            this.m_jsonRpcActor.SafeDispose();
         }
         base.Dispose(disposing);
     }

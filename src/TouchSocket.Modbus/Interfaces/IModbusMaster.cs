@@ -12,13 +12,14 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Modbus;
 
 /// <summary>
 /// 提供Modbus的操作接口
 /// </summary>
-public interface IModbusMaster
+public interface IModbusMaster : IDependencyObject
 {
     /// <summary>
     /// 异步发送Modbus请求

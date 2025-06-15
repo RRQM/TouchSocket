@@ -68,11 +68,11 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             // 向IDmtpActor对象发送关闭消息
             await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的CloseAsync方法完成后续关闭操作
-        return await base.CloseAsync(msg,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 断开

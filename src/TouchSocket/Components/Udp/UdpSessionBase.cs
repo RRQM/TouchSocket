@@ -192,7 +192,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token=default)
+    public override async Task<Result> StopAsync(CancellationToken token = default)
     {
         try
         {

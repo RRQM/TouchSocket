@@ -282,13 +282,13 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                 }
                 catch (Exception ex)
                 {
-                    client.Logger?.Exception(this,ex);
+                    client.Logger?.Exception(this, ex);
                 }
             }
         }
         catch (Exception ex)
         {
-            client.Logger?.Exception(this,ex);
+            client.Logger?.Exception(this, ex);
         }
         finally
         {

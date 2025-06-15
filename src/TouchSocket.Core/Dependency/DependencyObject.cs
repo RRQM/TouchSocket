@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -21,16 +20,11 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 依赖项对象. 线程安全。
 /// </summary>
+
 public class DependencyObject : DisposableObject, IDependencyObject
 {
-    private Dictionary<int, object> m_dp;
+    private DependencyProperties m_dp;
     private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Dictionary<int, object> GetDp()
-    {
-        return this.m_dp ??= new Dictionary<int, object>();
-    }
 
     /// <inheritdoc/>
     public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
@@ -219,5 +213,11 @@ public class DependencyObject : DisposableObject, IDependencyObject
             }
         }
         base.Dispose(disposing);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private DependencyProperties GetDp()
+    {
+        return this.m_dp ??= new();
     }
 }

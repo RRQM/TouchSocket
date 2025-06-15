@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -84,7 +83,7 @@ public class MqttSessionActor : MqttActor
         {
             await this.m_mqttArrivedMessageQueue.Writer.WriteAsync(message, tokenClosed).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine("DistributeMessagesAsync:" + ex.Message);
         }
@@ -216,7 +215,7 @@ public class MqttSessionActor : MqttActor
         }
         catch (Exception ex)
         {
-            Console.WriteLine("PublishDistributeMessageAsync:"+ex);
+            Console.WriteLine("PublishDistributeMessageAsync:" + ex);
         }
     }
 

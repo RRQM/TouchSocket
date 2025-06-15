@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +38,7 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
         this.ThrowIfMoreThanMaxPackageSize(this.m_dataCount);
 
-        _ =EasyTask.SafeRun(this.DelayGo);
+        _ = EasyTask.SafeRun(this.DelayGo);
         return EasyTask.CompletedTask;
     }
 

@@ -11,25 +11,22 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 internal class ExpressionDynamicMethodInfo : DynamicMethodInfoBase
 {
-    private Func<object, object[], object> m_func;
+    private readonly Func<object, object[], object> m_func;
     public ExpressionDynamicMethodInfo(MethodInfo method) : base(method)
     {
-        m_func = CreateExpressionInvoker(method);
+        this.m_func = this.CreateExpressionInvoker(method);
     }
 
     public override object Invoke(object instance, object[] parameters)
     {
-        return m_func.Invoke(instance, parameters);
+        return this.m_func.Invoke(instance, parameters);
     }
 
     /// <summary>

@@ -19,4 +19,6 @@ internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse, IRequestInfo
     public ModbusErrorCode ErrorCode { get; set; }
 
     public IModbusRequest Request { get; set; }
+
+    public bool IsSuccess => this.ErrorCode == ModbusErrorCode.Success;
 }

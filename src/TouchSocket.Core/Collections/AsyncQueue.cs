@@ -1,10 +1,18 @@
-using Microsoft;
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
@@ -233,7 +241,7 @@ public class AsyncQueue<T>
     /// <exception cref="InvalidOperationException">如果队列为空，则抛出此异常。</exception>
     public T Peek()
     {
-        if (!this.TryPeek(out T value))
+        if (!this.TryPeek(out var value))
         {
             ThrowHelper.ThrowInvalidOperationException(TouchSocketCoreResource.QueueEmpty);
         }
@@ -331,7 +339,7 @@ public class AsyncQueue<T>
     /// <returns>如果有元素被出队，则返回 <see langword="true" />；如果队列为空，则返回 <see langword="false" />。</returns>
     protected bool TryDequeue(Predicate<T> valueCheck, out T value)
     {
-        bool result = this.TryDequeueInternal(valueCheck, out value);
+        var result = this.TryDequeueInternal(valueCheck, out value);
         this.CompleteIfNecessary();
         return result;
     }

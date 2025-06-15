@@ -36,7 +36,7 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     {
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
 

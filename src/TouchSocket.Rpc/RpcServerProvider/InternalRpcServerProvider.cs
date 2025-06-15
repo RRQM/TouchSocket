@@ -30,7 +30,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
 
     public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, InvokeResult invokeResult)
     {
-        var rpcCallContextAccessor=callContext.Resolver.Resolve<IRpcCallContextAccessor>();
+        var rpcCallContextAccessor = callContext.Resolver.Resolve<IRpcCallContextAccessor>();
         if (rpcCallContextAccessor is not null)
         {
             rpcCallContextAccessor.CallContext = callContext;

@@ -39,7 +39,7 @@ internal sealed class InternalUdpReceiver : BlockSegment<IUdpReceiverResult>, IR
     /// Receiver
     /// </summary>
     /// <param name="client"></param>
-    public InternalUdpReceiver(IReceiverClient<IUdpReceiverResult> client):base(true)
+    public InternalUdpReceiver(IReceiverClient<IUdpReceiverResult> client) : base(true)
     {
         this.m_client = client;
     }
@@ -47,7 +47,7 @@ internal sealed class InternalUdpReceiver : BlockSegment<IUdpReceiverResult>, IR
     public bool CacheMode { get => this.m_cacheMode; set => this.m_cacheMode = value; }
 
     public int MaxCacheSize { get => this.m_maxCacheSize; set => this.m_maxCacheSize = value; }
-   
+
     public async Task Complete(string msg)
     {
         try

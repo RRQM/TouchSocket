@@ -47,7 +47,7 @@ public static class DmtpRedisActorExtensions
     /// <returns>返回从<see cref="DmtpActor"/>中获取的<see cref="IDmtpRedisActor"/>实例</returns>
     public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor dmtpActor)
     {
-         return dmtpActor.GetActor<DmtpRedisActor>();
+        return dmtpActor.GetActor<DmtpRedisActor>();
     }
 
     /// <summary>
