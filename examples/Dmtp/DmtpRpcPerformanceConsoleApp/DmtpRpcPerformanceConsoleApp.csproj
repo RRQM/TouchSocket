@@ -9,8 +9,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
-		<PackageReference Include="TouchSocket.Dmtp" Version="3.1.7" />
-		<PackageReference Include="TouchSocket.Hosting" Version="3.1.7" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="3.1.8" />
+		<PackageReference Include="TouchSocket.Hosting" Version="3.1.8" />
 	</ItemGroup>
 
 	<!--<ItemGroup>

@@ -21,7 +21,6 @@ public class Program
     {
         try
         {
-            //��ҵ�����Ҫ
             Enterprise.ForTest();
         }
         catch (Exception ex)
@@ -30,16 +29,14 @@ public class Program
         }
         var builder = WebApplication.CreateBuilder(args);
 
-        //������ͨ��Host�У���������Ṳ��һ��������
-        //���Խ���ʹ��ConfigureContainerͳһ���á�
+      
         builder.Services.ConfigureContainer(container =>
         {
             container.AddConsoleLogger();
             container.AddDmtpRouteService();
         });
 
-        //����WebSocketЭ���Dmtp
-        //�ͻ���ʹ��WebSocketDmtpClient
+       
         builder.Services.AddWebSocketDmtpService(config =>
         {
             config
@@ -49,14 +46,12 @@ public class Program
                 })
                 .ConfigurePlugins(a =>
                 {
-                    //���Ӳ��
+                    
                     a.Add<MyClassPlugin>();
                 });
         });
 
-        //��ҵ�湦��
-        //���ӻ���Http����Э���Dmtp��
-        //�ͻ���ʹ��HttpDmtpClient
+       
         builder.Services.AddHttpMiddlewareDmtpService(config =>
         {
             config.SetDmtpOption(new DmtpOption()
@@ -72,11 +67,11 @@ public class Program
 
         var app = builder.Build();
 
-        //WebSocketDmtp������UseWebSockets֮��ʹ�á�
+        
         app.UseWebSockets();
         app.UseWebSocketDmtp("/WebSocketDmtp");
 
-        //HttpDmtp���Ե���ֱ��ʹ�á�
+      
         app.UseHttpDmtp();
 
         app.Run();
