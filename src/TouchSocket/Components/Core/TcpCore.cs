@@ -452,13 +452,13 @@ internal sealed class TcpCore : DisposableObject
 
     private struct SendSegment
     {
-        public byte[] Date;
+        public byte[] Data;
         public int Length;
         public short version;
 
         public SendSegment(byte[] bytes, int length, short version)
         {
-            this.Date = bytes;
+            this.Data = bytes;
             this.Length = length;
             this.version = version;
         }
