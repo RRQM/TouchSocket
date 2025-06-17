@@ -61,17 +61,7 @@ MQTT Broker地址，格式：
 六、创建MQTT客户端
 
 ```csharp {1,4-6,11} showLineNumbers
-var mqttClient = new MQTTClient();
-mqttClient.Connected = (client, e) => {
-    Console.WriteLine($"Connected to {e.Options.Server}");
-    return EasyTask.CompletedTask;
-};
 
-await mqttClient.SetupAsync(new TouchSocketConfig()
-    .SetRemoteIPHost("mqtt://127.0.0.1:1883")
-    .SetClientId("device_001"));
-    
-await mqttClient.ConnectAsync();
 ```
 
 
