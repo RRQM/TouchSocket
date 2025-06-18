@@ -369,9 +369,9 @@ internal sealed class TcpCore : DisposableObject
                         {
                             var value = valuesToProcess[i];
 
-                            byteBlock.Write(new ReadOnlySpan<byte>(value.Date, 0, value.Length));
+                            byteBlock.Write(new ReadOnlySpan<byte>(value.Data, 0, value.Length));
 
-                            ArrayPool<byte>.Shared.Return(value.Date);
+                            ArrayPool<byte>.Shared.Return(value.Data);
                             //value.Dispose();
                         }
 
