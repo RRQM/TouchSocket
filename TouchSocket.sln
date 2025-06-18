@@ -29,7 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案配置", "解�
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		Src\Directory.Build.props = Src\Directory.Build.props
-		Src\Props\DirectoryPro.Build.props = Src\Props\DirectoryPro.Build.props
 		TouchSocketVersion.props = TouchSocketVersion.props
 	EndProjectSection
 EndProject
@@ -202,8 +201,8 @@ Global
 		{201772F1-8C5E-4815-85F2-0CD8507006E7} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {AD1F133D-9B7E-4CD1-97E0-31D529E5CD90}
 		RESX_NeutralResourcesLanguage = en-001
+		SolutionGuid = {AD1F133D-9B7E-4CD1-97E0-31D529E5CD90}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Src\TouchSocket.Shared\TouchSocket.Shared.projitems*{375335c0-529e-4ee9-b80b-a3ec861783a1}*SharedItemsImports = 5
