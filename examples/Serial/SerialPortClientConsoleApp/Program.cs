@@ -38,9 +38,10 @@ internal class Program
                  DataBits = 8,//数据位
                  Parity = System.IO.Ports.Parity.None,//校验位
                  PortName = "COM1",//COM
-                 StopBits = System.IO.Ports.StopBits.One//停止位
+                 StopBits = System.IO.Ports.StopBits.One,//停止位
+                 //StreamAsync = true//可以使用异步流，理论上可以提高性能。
              })
-             .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter(){ CacheTimeout = TimeSpan.FromMilliseconds(100)})
+             .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromMilliseconds(100) })
              .ConfigurePlugins(a =>
              {
                  a.Add<MyPlugin>();
@@ -98,7 +99,7 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
-        
+
         await e.InvokeNext();
     }
 }
