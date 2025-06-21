@@ -5,6 +5,8 @@ title: 同步请求
 
 import CardLink from "@site/src/components/CardLink.js";
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+
 ### 定义
 
 命名空间：TouchSocket.Sockets <br/>
@@ -25,7 +27,7 @@ import CardLink from "@site/src/components/CardLink.js";
 
 例如：`TcpClient`、`TcpService`、`NamedPipeClient`、`NamedPipeService`、`SerialPortClient`等。
 
-:::  
+<BilibiliCard title="等待响应组件的基本使用" link="https://www.bilibili.com/cheese/play/ep1800816" isPro="true"/>
 
 ## 二、在客户端使用
 
@@ -167,6 +169,8 @@ FilterFuncAsync=async response=>await Task.FromResult(true)
 
 ## 五、使用注意事项
 
+<BilibiliCard title="等待响应组件的使用注意事项" link="https://www.bilibili.com/cheese/play/ep1800837" isPro="true"/>
+
 ### 5.1 线程安全
 
 `WaitingClient`是线程安全的，可以多线程使用。但是实际上内部有`SemaphoreSlim`锁，所以，如果使用在多线程中，可能会造成大量锁竞争，从而降低效率。
@@ -280,6 +284,8 @@ this.m_tcpClient.Received =async (client,e) =>
 1. 响应机制是依赖`Reveiver`来实现的，会在请求时创建`Reveiver`，在响应时，会销毁`Reveiver`。这其中可能导致数据丢失。
 2. 响应数据没办法和请求进行关联，导致数据可能被其他数据打断。
 
+<BilibiliCard title="等待响应组件有哪些缺陷" link="https://www.bilibili.com/cheese/play/ep1800841" isPro="true"/>
+
 那么基于此，如果您有更高要求的需求，我们建议使用以下方法实现：
 
 ### 6.1 设计通信协议，以支持响应数据关联
@@ -291,11 +297,15 @@ this.m_tcpClient.Received =async (client,e) =>
 5. 在响应方收到请求数据时，将请求数据发送给对应的响应方。
 6. 在响应方收到响应数据时，将响应数据发送给对应的请求方。
 
-### 6.2 长期持有Reveiver，以建议相较稳固的接收
+<BilibiliCard title="如何设计一个支持响应数据关联的通信协议" link="https://www.bilibili.com/cheese/play/ep1800842" isPro="true"/>
+
+### 6.2 长期持有Reveiver，以建立相较稳固的接收
+
+<BilibiliCard title="长期持有Reveiver，以建立相较稳固的接收" link="https://www.bilibili.com/cheese/play/ep1800843" isPro="true"/>
 
 ### 6.3 使用继承的方式实现
 
-
+<BilibiliCard title="使用继承的方式实现等待响应" link="https://www.bilibili.com/cheese/play/ep1800846" isPro="true"/>
 
 ## 七、示例代码
 
