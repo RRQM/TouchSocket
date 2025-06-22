@@ -121,20 +121,11 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         {
             // 如果是异步流，则使用异步读取方式
             var token = this.m_cancellationTokenSource.Token;
-            await this.m_receiveLock.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            try
-            {
-                var stream = this.m_serialPort.BaseStream;
-                var length = Math.Min(this.m_receiveBufferSize, byteBlock.Capacity);
-                var memory = byteBlock.TotalMemory;
-                var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_receiveCounter.Increment(r);
-                return new SerialOperationResult(r, SerialData.Chars);
-            }
-            finally
-            {
-                this.m_receiveLock.Release();
-            }
+            var stream = this.m_serialPort.BaseStream;
+            var memory = byteBlock.TotalMemory;
+            var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_receiveCounter.Increment(r);
+            return new SerialOperationResult(r, SerialData.Chars);
         }
         else
         {
