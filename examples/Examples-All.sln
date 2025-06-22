@@ -345,6 +345,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MqttConsoleApp", "Mqtt\Mqtt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiPerformanceConsoleApp", "WebApi\WebApiPerformanceConsoleApp\WebApiPerformanceConsoleApp.csproj", "{8849C272-4073-1AF3-0EF1-8E7517A13F38}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PlcBridges", "PlcBridges", "{CDED01F8-D581-2FF7-E03E-F4B04DDFAC03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlcBridgesConsoleApp", "PlcBridges\PlcBridgesConsoleApp\PlcBridgesConsoleApp.csproj", "{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -795,6 +799,10 @@ Global
 		{8849C272-4073-1AF3-0EF1-8E7517A13F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8849C272-4073-1AF3-0EF1-8E7517A13F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8849C272-4073-1AF3-0EF1-8E7517A13F38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -945,6 +953,7 @@ Global
 		{EE4D59CB-3126-4660-8661-8150D43F65EF} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
 		{F3CE7BE9-54E4-4442-BE5E-7D0C2AC89F6D} = {C3E50032-382B-4BCF-8361-1C592A78CC06}
 		{8849C272-4073-1AF3-0EF1-8E7517A13F38} = {5836A018-B0F3-4D6F-8C45-FC1E9C85D51A}
+		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12} = {CDED01F8-D581-2FF7-E03E-F4B04DDFAC03}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
