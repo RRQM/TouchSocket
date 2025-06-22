@@ -11,6 +11,7 @@
 // ------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
@@ -225,4 +226,5 @@ public static partial class EasyTask
 
         return Task.Run(() => func(status, ct), ct);
     }
+
 }
