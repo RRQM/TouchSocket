@@ -83,6 +83,33 @@ public static class SystemThreadingExtension
         }
     }
 
+    /// <summary>  
+    /// 异步等待信号量并返回结果，支持取消令牌。  
+    /// </summary>  
+    /// <param name="semaphoreSlim">要等待的信号量。</param>  
+    /// <param name="token">用于取消操作的取消令牌。</param>  
+    /// <returns>一个 <see cref="Result"/> 对象，表示操作的结果。</returns>  
+    public static async Task<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken token)
+    {
+        try
+        {
+            await semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (OperationCanceledException)
+        {
+            return Result.Canceled;
+        }
+        catch (ObjectDisposedException)
+        {
+            return Result.Disposed;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
     #endregion SemaphoreSlim
 
     #region Task
