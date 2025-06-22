@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -505,12 +506,12 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="values">待转换的布尔数组。</param>
     /// <returns>转换后的字节数组。</returns>
     /// <exception cref="ArgumentNullException">如果传入的布尔数组为null，则抛出此异常。</exception>
-    public byte[] GetBytes(bool[] values)
+    public byte[] GetBytes(ReadOnlySpan<bool> values)
     {
         // 检查传入的布尔数组是否为空
-        if (values is null)
+        if (values.IsEmpty)
         {
-            throw new ArgumentNullException(nameof(values));
+            return [];
         }
 
         // 计算所需的字节数组的长度，如果布尔数组的长度不是8的倍数，则向上取整
@@ -548,12 +549,12 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="values">待转换的布尔值数组。</param>
     /// <exception cref="ArgumentNullException">如果values参数为null，则抛出此异常。</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void GetBytes(ref byte buffer, bool[] values)
+    public unsafe void GetBytes(ref byte buffer, ReadOnlySpan<bool> values)
     {
         // 检查输入的布尔值数组是否为空
-        if (values is null)
+        if (values.IsEmpty)
         {
-            throw new ArgumentNullException(nameof(values));
+            return;
         }
         // 使用fixed语句固定缓冲区的起始地址，以便直接操作内存
         fixed (byte* p = &buffer)
@@ -590,22 +591,9 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="length">要解析的字节数。</param>
     /// <returns>返回一个bool数组，其中每个元素对应字节中的一个位。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool[] ToBooleans(byte[] buffer, int offset, int length)
+    public bool[] ToBooleansByBit(byte[] buffer, int offset, int length)
     {
-        // 根据参数length计算出需要解析出的bool值的总数，每个字节可以解析出8个bool值。
-        var bools = new bool[8 * length];
-        // 遍历每个bool值的位置，从0到bools.Length-1。
-        for (var i = 0; i < bools.Length; i++)
-        {
-            // 计算当前bool值所在的字节位置，每8个bool值共用一个字节。
-            var byteIndex = offset + i / 8;
-            // 获取当前bool值在字节中的位置，范围为0到7。
-            var bitIndex = i % 8;
-            // 通过GetBit方法从字节中获取指定位置的位值，并将其转换为bool类型。
-            bools[i] = Convert.ToBoolean(buffer[byteIndex].GetBit(bitIndex));
-        }
-        // 返回解析出的bool数组。
-        return bools;
+        return this.ToBooleansByBit(new ReadOnlySpan<byte>(buffer, offset, length));
     }
 
     /// <summary>
@@ -614,22 +602,40 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="span"></param>
     /// <returns>返回一个bool数组，其中每个元素对应字节中的一个位。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool[] ToBooleans(ReadOnlySpan<byte> span)
+    public bool[] ToBooleansByBit(ReadOnlySpan<byte> span)
     {
-        // 根据参数length计算出需要解析出的bool值的总数，每个字节可以解析出8个bool值。
         var bools = new bool[8 * span.Length];
-        // 遍历每个bool值的位置，从0到bools.Length-1。
-        for (var i = 0; i < bools.Length; i++)
-        {
-            // 计算当前bool值所在的字节位置，每8个bool值共用一个字节。
-            var byteIndex = i / 8;
-            // 获取当前bool值在字节中的位置，范围为0到7。
-            var bitIndex = i % 8;
-            // 通过GetBit方法从字节中获取指定位置的位值，并将其转换为bool类型。
-            bools[i] = Convert.ToBoolean(span[byteIndex].GetBit(bitIndex));
-        }
-        // 返回解析出的bool数组。
+        this.ToBooleansByBit(span, bools);
         return bools;
+    }
+
+    /// <summary>
+    /// 将字节跨度按位解析为布尔值，并存储在布尔值跨度中。
+    /// </summary>
+    /// <param name="byteSpan">包含待解析字节的只读跨度。</param>
+    /// <param name="boolSpan">存储解析结果的布尔值跨度。</param>
+    /// <returns>解析的布尔值数量。</returns>
+    /// <exception cref="ArgumentOutOfRangeException">当布尔值跨度长度不足以存储解析结果时抛出。</exception>
+    public int ToBooleansByBit(ReadOnlySpan<byte> byteSpan,Span<bool> boolSpan)
+    {
+        if (byteSpan.IsEmpty)
+        {
+            return 0;
+        }
+        var length = byteSpan.Length * 8;
+       
+        if (boolSpan.Length < length)
+        {
+            ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(boolSpan.Length), boolSpan.Length, length);
+        }
+
+        for (var i = 0; i < boolSpan.Length; i++)
+        {
+            var byteIndex = i / 8;
+            var bitIndex = i % 8;
+            boolSpan[i] = byteSpan[byteIndex].GetBit(bitIndex);
+        }
+        return length;
     }
 
     /// <summary>
@@ -639,50 +645,14 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="length">要解析的字节数。</param>
     /// <returns>包含每个字节按位解析后的bool值的数组。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe bool[] ToBooleans(ref byte buffer, int length)
+    public unsafe bool[] ToBooleansByBit(ref byte buffer, int length)
     {
-        // 使用fixed语句将buffer字节的引用固定在内存中，以便直接访问。
-        fixed (byte* p = &buffer)
+        fixed (byte* p=&buffer)
         {
-            // 初始化一个bool数组，长度为输入字节数乘以8（每个字节8位）。
-            var bools = new bool[8 * length];
-            // 遍历bool数组，从每个字节中提取位信息并转换为bool值。
-            for (var i = 0; i < bools.Length; i++)
-            {
-                // 从字节缓冲区中按位提取bool值。
-                bools[i] = Convert.ToBoolean(p[i / 8].GetBit(i % 8));
-            }
-            // 返回解析后的bool数组。
-            return bools;
+            return this.ToBooleansByBit(new ReadOnlySpan<byte>(p, length));
         }
+        
     }
-
-    /// <summary>
-    /// 将字节的只读跨度转换为布尔值数组。
-    /// </summary>
-    /// <param name="span">要转换的字节跨度。</param>
-    /// <param name="length">要处理的字节长度。</param>
-    /// <returns>转换后的布尔值数组。</returns>
-    public unsafe bool[] ToBooleans(ReadOnlySpan<byte> span, int length)
-    {
-        // 固定字节跨度的起始位置，以便直接访问底层内存。
-        fixed (byte* p = &span[0])
-        {
-            // 初始化布尔值数组，长度为字节长度的8倍，因为每个字节可以包含8个布尔值。
-            var bools = new bool[8 * length];
-
-            // 遍历布尔值数组，从字节跨度中提取每个布尔值。
-            for (var i = 0; i < bools.Length; i++)
-            {
-                // 从字节跨度中获取布尔值。每个字节的每一位代表一个布尔值。
-                bools[i] = Convert.ToBoolean(p[i / 8].GetBit(i % 8));
-            }
-
-            // 返回转换后的布尔值数组。
-            return bools;
-        }
-    }
-
     #endregion bool
 
     #region char
@@ -1614,4 +1584,77 @@ public sealed partial class TouchSocketBitConverter
     }
 
     #endregion Tool
+
+    #region 其他
+
+    /// <summary>
+    /// 计算从源类型到目标类型的转换长度。
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="length">源类型的元素数量。</param>
+    /// <returns>目标类型的元素数量。</returns>
+    /// <exception cref="InvalidOperationException">当目标类型的大小为零时抛出。</exception>
+    /// <exception cref="ArgumentException">当源类型的比特数不能被目标类型的比特数整除时抛出。</exception>
+    /// <exception cref="OverflowException">当转换后的长度超过 <see cref="int.MaxValue"/> 时抛出。</exception>
+    public static int GetConvertedLength<TSource, TTarget>(int length)
+       where TSource : unmanaged
+       where TTarget : unmanaged
+    {
+        // 计算源类型的比特总数
+        long sourceBits;
+        if (typeof(TSource) == typeof(bool))
+        {
+            // bool类型的每个元素代表1位
+            sourceBits = length;
+        }
+        else
+        {
+            // 其他类型按字节计算
+            int sizeT1 = Unsafe.SizeOf<TSource>();
+            sourceBits = (long)length * sizeT1 * 8;
+        }
+
+        // 计算目标类型的比特占用
+        long targetBitSize;
+        if (typeof(TTarget) == typeof(bool))
+        {
+            // bool类型每个元素代表1位
+            targetBitSize = 1;
+        }
+        else
+        {
+            // 其他类型按字节计算
+            targetBitSize = (long)Unsafe.SizeOf<TTarget>() * 8;
+        }
+
+        // 特殊情况处理
+        if (sourceBits == 0)
+        {
+            return 0;
+        }
+
+        if (targetBitSize == 0)
+        {
+            throw new InvalidOperationException("Target type cannot have zero size");
+        }
+
+        // 检查是否可整除
+        if (sourceBits % targetBitSize != 0)
+        {
+            throw new ArgumentException(
+                $"Source bits ({sourceBits}) must be divisible by target type bit size ({targetBitSize})");
+        }
+
+        // 计算目标长度并检查溢出
+        var resultLength = sourceBits / targetBitSize;
+        if (resultLength > int.MaxValue)
+        {
+            throw new OverflowException($"Converted length ({resultLength}) exceeds maximum Span size");
+        }
+
+        return (int)resultLength;
+    }
+
+    #endregion
 }
