@@ -83,6 +83,7 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
         // 从指定的字节池租用字节数组。
         this.m_buffer = bytePool.Rent(byteSize);
     }
+
     /// <summary>
     /// 实例化一个已知内存的对象。且该内存不会被回收。
     /// </summary>
@@ -386,5 +387,6 @@ public sealed partial class ByteBlock : DisposableObject, IByteBlock
         this.ExtendSize(sizeHint);
         return new Span<byte>(this.m_buffer, this.m_position, this.m_buffer.Length - this.m_position);
     }
-    #endregion
+
+    #endregion BufferWriter
 }

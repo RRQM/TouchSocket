@@ -143,7 +143,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// 写入一个布尔值数组。
     /// </summary>
     /// <param name="values">要写入的布尔值数组。</param>
-    void WriteBooleans(bool[] values);
+    void WriteBooleans(ReadOnlySpan<bool> values);
 
     #endregion Boolean
 

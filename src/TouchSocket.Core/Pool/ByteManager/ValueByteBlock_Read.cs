@@ -474,7 +474,7 @@ public partial struct ValueByteBlock
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), this.CanReadLength, size);
         }
-        var value = TouchSocketBitConverter.Default.ToBooleans(ref this.m_buffer[this.m_position], 1);
+        var value = TouchSocketBitConverter.Default.ToBooleansByBit(ref this.m_buffer[this.m_position], 1);
         this.m_position += size;
         return value;
     }
