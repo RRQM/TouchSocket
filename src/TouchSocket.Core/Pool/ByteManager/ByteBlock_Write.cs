@@ -439,7 +439,7 @@ public sealed partial class ByteBlock
     }
 
     /// <inheritdoc/>
-    public void WriteBooleans(bool[] values)
+    public void WriteBooleans(ReadOnlySpan<bool> values)
     {
         var size = values.Length % 8 == 0 ? values.Length / 8 : values.Length / 8 + 1;
         this.ExtendSize(size);
