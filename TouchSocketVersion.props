@@ -1,7 +1,7 @@
 ﻿<Project>
 
 	<PropertyGroup>
-		<BaseVersion>3.1.8</BaseVersion>
+		<BaseVersion>3.1.9</BaseVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<TouchSocketVersion>$(BaseVersion)</TouchSocketVersion>
