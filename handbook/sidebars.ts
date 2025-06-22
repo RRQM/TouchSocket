@@ -623,6 +623,22 @@ module.exports =
           "id": "mqttclient"
         }
       ]
+    },
+    {
+      "type": "category",
+      "label": "23、PlcBridge组件",
+      "items": [
+        {
+          "type": "doc",
+          "label": "23.1 PlcBridge说明",
+          "id": "plcbridgedescription"
+        },
+        {
+          "type": "doc",
+          "label": "23.2 PlcBridge服务",
+          "id": "plcbridgeservice"
+        }
+      ]
     }
   ]
 }
