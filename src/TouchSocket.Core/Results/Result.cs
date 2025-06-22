@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
@@ -18,6 +19,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 结果返回
 /// </summary>
+[DebuggerDisplay("ResultCode = {ResultCode}, Message = {Message}")]
 public record struct Result : IResult
 {
     /// <summary>

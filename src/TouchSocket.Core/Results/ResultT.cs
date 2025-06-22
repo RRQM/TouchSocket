@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
@@ -19,6 +20,7 @@ namespace TouchSocket.Core;
 /// 表示一个结构化的操作结果，包含操作的返回值、结果代码和消息。
 /// </summary>
 /// <typeparam name="T">结果值的类型。</typeparam>
+[DebuggerDisplay("ResultCode = {ResultCode}, Message = {Message}, Value={Value}")]
 public readonly struct Result<T> : IResult<T>
 {
     /// <summary>
