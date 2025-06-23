@@ -1,0 +1,273 @@
+---
+id: plcbridgemodbus
+title: PlcBridge Modbus 集成指南
+---
+
+import Pro from "@site/src/components/Pro.js";
+
+import CardLink from "@site/src/components/CardLink.js";
+
+### 定义
+
+命名空间：TouchSocketPro.PlcBridges <Pro/>  <br/>
+命名空间：TouchSocketPro.Modbus <Pro/>  <br/>
+程序集：[TouchSocketPro.PlcBridges.dll](https://www.nuget.org/packages/TouchSocketPro.PlcBridges)<br/>
+程序集：[TouchSocketPro.Modbus.dll](https://www.nuget.org/packages/TouchSocketPro.Modbus)
+
+
+## 一、说明
+
+TouchSocket PLC Bridge 提供了强大的工业自动化设备集成能力，尤其适合处理**多协议**、**多设备**的复杂场景。本指南将结合示例代码，详细说明如何使用 PLC Bridge 整合 Modbus TCP、UDP 和串口设备，创建一个统一的设备访问接口。
+
+## 二、核心优势
+
+1. **统一访问接口**：通过单一API访问多种Modbus设备（TCP/UDP/串口）
+2. **智能数据映射**：将不同设备的寄存器地址映射到统一的虚拟地址空间
+3. **高性能处理**：自动合并读写请求，优化通信效率
+4. **类型安全访问**：支持复杂数据类型（long, float等）的自动转换
+5. **可扩展架构**：轻松添加新设备或调整配置
+
+## 三、准备工作
+
+### 3.1 硬件环境
+
+- Modbus TCP 设备（端口502）
+- Modbus UDP 设备（端口503）
+- Modbus 串口设备（COM2）
+- 安装 Modbus 设备模拟器
+
+
+## 四、设备桥接实现步骤
+
+### 4.1 初始化 PLC Bridge 服务
+
+```csharp
+var plcBridge = new PlcBridgeService();
+await plcBridge.SetupAsync(new TouchSocketConfig());
+```
+
+### 4.2 配置 Modbus TCP 设备桥接
+
+```csharp
+// 连接 TCP Modbus 设备
+var modbusTcpMaster = new ModbusTcpMaster();
+await modbusTcpMaster.ConnectAsync("127.0.0.1:502");
+
+// 映射第一个寄存器区段 (0-20)
+var plcDrive1 = new MyModbusHoldingRegistersDrive(modbusTcpMaster, new ModbusDriveOption()
+{
+    Start = 0,       // 虚拟起始地址
+    Count = 20,      // 寄存器数量
+    //Group = "Group", // 执行组（同组设备串行操作）
+    Name = "TcpDevice1",
+    SlaveId = 1,     // Modbus 从站ID
+    ModbusStart = 0  // 物理设备起始地址
+});
+await plcBridge.AddDriveAsync(plcDrive1);
+
+// 映射第二个寄存器区段 (50-70)
+var plcDrive2 = new MyModbusHoldingRegistersDrive(modbusTcpMaster, new ModbusDriveOption()
+{
+    Start = 20,      // 下一个虚拟起始地址
+    Count = 20,
+    //Group = "Group",
+    Name = "TcpDevice2",
+    SlaveId = 1,
+    ModbusStart = 50 // 物理设备偏移地址
+});
+await plcBridge.AddDriveAsync(plcDrive2);
+```
+
+### 4.3 配置 Modbus UDP 设备桥接
+
+```csharp
+var modbusUdpMaster = new ModbusUdpMaster();
+await modbusUdpMaster.SetupAsync(new TouchSocketConfig()
+     .UseUdpReceive()
+     .SetRemoteIPHost("127.0.0.1:503"));
+await modbusUdpMaster.StartAsync();
+
+var plcDrive3 = new MyModbusHoldingRegistersDrive(modbusUdpMaster, new ModbusDriveOption()
+{
+    Start = 40,      // 虚拟地址偏移
+    Count = 20,
+    //Group = "Group",
+    Name = "UdpDevice1",
+    SlaveId = 1,
+    ModbusStart = 10 // 物理设备起始地址
+});
+await plcBridge.AddDriveAsync(plcDrive3);
+```
+
+### 4.4 配置 Modbus 串口设备桥接
+
+```csharp
+var modbusRtuMaster = new ModbusRtuMaster();
+await modbusRtuMaster.SetupAsync(new TouchSocketConfig()
+     .SetSerialPortOption(new SerialPortOption()
+     {
+         BaudRate = 9600,
+         DataBits = 8,
+         Parity = System.IO.Ports.Parity.Even,
+         PortName = "COM2",
+         StopBits = System.IO.Ports.StopBits.One
+     }));
+await modbusRtuMaster.ConnectAsync();
+
+var plcDrive4 = new MyModbusHoldingRegistersDrive(modbusRtuMaster, new ModbusDriveOption()
+{
+    Start = 60,      // 虚拟地址偏移
+    Count = 20,
+    //Group = "Group",
+    Name = "SerialDevice1",
+    SlaveId = 1,
+    ModbusStart = 20 // 物理设备起始地址
+});
+await plcBridge.AddDriveAsync(plcDrive4);
+```
+
+### 4.5 启动桥接服务
+
+```csharp
+await plcBridge.StartAsync();
+```
+
+## 五、创建统一访问接口
+
+### 5.1 定义 PLC 数据对象
+
+```csharp
+partial class MyPlcObject : PlcObject
+{
+    public MyPlcObject(IPlcBridgeService bridgeService) : base(bridgeService)
+    {
+    }
+
+    // 以 short 类型访问所有寄存器 (0-79)
+    [PlcField<short>(Start = 0, Quantity = 80)]
+    private ReadOnlyMemory<short> m_allInt16Data;
+
+    // 以 long 类型访问寄存器 (每4个寄存器合并为1个long)
+    [PlcField<short>(Start = 0, Quantity = 20)]
+    private ReadOnlyMemory<long> m_allInt64Data;
+
+    // 访问特定 long 数据 (地址59-62)
+    [PlcField<short>(Start = 59)]
+    private long m_int64Data;
+}
+```
+
+### 5.2 使用 PLC 数据对象
+
+```csharp
+// 创建PLC数据访问对象
+MyPlcObject myPlcObject = new MyPlcObject(plcBridge);
+
+// 写入long数据
+var setInt64Result = await myPlcObject.SetInt64DataAsync(1000);
+Console.WriteLine($"写入Int64结果: {setInt64Result}");
+
+// 读取long数据
+var readInt64Result = await myPlcObject.GetInt64DataAsync();
+Console.WriteLine($"读取Int64结果: {readInt64Result}");
+
+// 批量写入short数据
+var data = Enumerable.Range(1, 80).Select(i => (short)i).ToArray();
+var setAllInt16Result = await myPlcObject.SetAllInt16DataAsync(data);
+
+// 批量读取short数据
+var readAllInt16Result = await myPlcObject.GetAllInt16DataAsync();
+
+// 批量读取long数据
+var readAllInt64Result = await myPlcObject.GetAllInt64DataAsync();
+```
+
+## 六、自定义驱动器实现
+
+```csharp
+class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
+{
+    public MyModbusHoldingRegistersDrive(IModbusMaster master, ModbusDriveOption option) 
+        : base(master, option)
+    {
+    }
+
+    // 自定义读取操作（添加日志等）
+    protected override async Task<Result> ExecuteReadAsync(
+        ExecuteReadableValue<short> readableValue, 
+        CancellationToken token)
+    {
+        var result = await base.ExecuteReadAsync(readableValue, token);
+        Console.WriteLine($"设备类型={this.Master.GetType().Name}，读取地址={readableValue.Start + this.ModbusStart}，长度={readableValue.Count}，结果：{result.ToJsonString()}");
+        return result;
+    }
+
+    // 自定义写入操作
+    protected override async Task<Result> ExecuteWriteAsync(
+        WritableValue<short> writableValue, 
+        CancellationToken token)
+    {
+        var result = await base.ExecuteWriteAsync(writableValue, token);
+        Console.WriteLine($"设备类型={this.Master.GetType().Name}，写入地址={writableValue.Start + this.ModbusStart}，长度={writableValue.Count}，结果：{result.ToJsonString()}");
+        return result;
+    }
+}
+```
+
+## 七、执行流程
+
+### 7.1 初始化阶段
+
+- 创建 PLC Bridge 服务
+- 配置并添加各设备驱动器
+- 启动桥接服务
+
+### 7.2 数据访问阶段
+
+- 通过统一接口读写数据
+- PLC Bridge 自动处理：
+    * 地址映射转换
+    * 请求合并优化
+    * 数据类型转换
+    * 多设备协同
+
+### 7.3 资源释放
+
+```csharp
+await plcBridge.StopAsync();
+await modbusTcpMaster.CloseAsync();
+await modbusUdpMaster.StopAsync();
+await modbusRtuMaster.CloseAsync();
+// ...释放其他资源
+```
+
+## 八、典型应用场景
+
+1. **跨设备数据采集**：同时从不同协议的设备读取数据
+2. **集中控制**：通过单一接口控制多个设备
+3. **数据聚合**：将不同设备的数据合并处理
+4. **协议转换**：将不同协议统一为标准接口
+5. **设备热插拔**：动态添加/移除设备不影响系统运行
+
+## 九、性能优化建议
+
+1. **分组策略**：对实时性要求高的设备使用独立组
+2. **批量处理**：使用`ReadOnlyMemory`进行批量读写
+3. **地址规划**：将相邻地址分配到同一设备驱动器
+4. **缓存机制**：对低频变化数据实现读取缓存
+5. **连接复用**：同协议设备共享Master连接
+
+## 十、总结
+
+TouchSocket PLC Bridge 通过：
+1. **统一访问层** 抽象底层设备差异
+2. **智能地址映射** 简化多设备协同
+3. **自动优化** 提升通信效率
+4. **强类型接口** 保证数据一致性
+5. **可扩展架构** 支持灵活定制
+
+解决了工业自动化中多协议设备集成的核心挑战，是构建复杂工业控制系统的理想选择。
+
+## 十一、本文示例
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/PlcBridges/ModbusPlcBridgeConsoleApp"/>
