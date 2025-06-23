@@ -637,6 +637,11 @@ module.exports =
           "type": "doc",
           "label": "23.2 PlcBridge服务",
           "id": "plcbridgeservice"
+        },
+        {
+          "type": "doc",
+          "label": "23.3 PlcBridgeModbus",
+          "id": "plcbridgemodbus"
         }
       ]
     }
