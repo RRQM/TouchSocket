@@ -20,12 +20,12 @@ namespace TouchSocket.Modbus;
 public interface IModbusRequest
 {
     /// <summary>
-    /// 数量
+    /// 读取或者写入的数量
     /// </summary>
     ushort Quantity { get; }
 
     /// <summary>
-    /// 起始位置
+    /// 读取或者写入的起始位置
     /// </summary>
     ushort StartingAddress { get; }
 
@@ -45,12 +45,12 @@ public interface IModbusRequest
     FunctionCode FunctionCode { get; }
 
     /// <summary>
-    /// 在读起始位置。
+    /// 在读起始位置。该属性仅仅在<see cref="FunctionCode"/>为<see cref="FunctionCode.ReadWriteMultipleRegisters"/>时才表示读取起始位置。
     /// </summary>
     ushort ReadStartAddress { get; }
 
     /// <summary>
-    /// 读取长度
+    /// 读取长度，该属性仅在<see cref="FunctionCode"/>为<see cref="FunctionCode.ReadWriteMultipleRegisters"/>时才表示读取数量。
     /// </summary>
     ushort ReadQuantity { get; }
 }

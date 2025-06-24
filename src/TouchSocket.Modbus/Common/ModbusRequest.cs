@@ -61,39 +61,32 @@ public class ModbusRequest : IModbusRequest
         this.FunctionCode = functionCode;
     }
 
-    /// <summary>
-    /// 数据
-    /// </summary>
+   
+    /// <inheritdoc/>
     public ReadOnlyMemory<byte> Data { get; set; }
 
-    /// <summary>
-    /// 功能码
-    /// </summary>
+    
+    /// <inheritdoc/>
     public FunctionCode FunctionCode { get; set; }
 
-    /// <summary>
-    /// 数量
-    /// </summary>
+   
+    /// <inheritdoc/>
     public ushort Quantity { get; set; }
 
-    /// <summary>
-    /// 读取长度
-    /// </summary>
+    
+    /// <inheritdoc/>
     public ushort ReadQuantity { get; set; }
 
-    /// <summary>
-    /// 在读起始位置。
-    /// </summary>
+   
+    /// <inheritdoc/>
     public ushort ReadStartAddress { get; set; }
 
-    /// <summary>
-    /// 站点号（单元标识符）
-    /// </summary>
+    
+    /// <inheritdoc/>
     public byte SlaveId { get; set; }
 
-    /// <summary>
-    /// 起始位置
-    /// </summary>
+    
+    /// <inheritdoc/>
     public ushort StartingAddress { get; set; }
 
     /// <summary>
