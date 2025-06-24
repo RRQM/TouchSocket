@@ -1,17 +1,17 @@
 ---
 id: mqttclient
-title: MQTT客户端使用
+title: Mqtt客户端使用
 ---
 
 import Tag from "@site/src/components/Tag.js";
 
 ### 定义
 
-命名空间：TouchSocket.MQTT <br/>
+命名空间：TouchSocket.Mqtt <br/>
 程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
 
 ## 一、说明
-`MQTTClient`是遵循MQTT协议的消息客户端，支持连接MQTT Broker、订阅主题、发布消息等功能，支持QoS 0/1/2三种消息质量等级。
+`MqttClient`是遵循Mqtt协议的消息客户端，支持连接Mqtt Broker、订阅主题、发布消息等功能，支持QoS 0/1/2三种消息质量等级。
 
 ## 二、特点
 - 轻量级协议支持
@@ -34,7 +34,7 @@ import Tag from "@site/src/components/Tag.js";
 <div>
 
 #### SetRemoteIPHost
-MQTT Broker地址，格式：
+Mqtt Broker地址，格式：
 - mqtt://127.0.0.1:1883
 - mqtts://broker.emqx.io:8883 (TLS加密)
 
@@ -58,10 +58,10 @@ MQTT Broker地址，格式：
 | 插件接口 | 功能 | | --- | --- | | IMqttConnectingPlugin | 连接Broker前触发 | | IMqttConnectedPlugin | 成功连接后触发 | | IMqttSubscribedPlugin | 订阅主题成功时触发 | | IMqttUnsubscribedPlugin | 取消订阅时触发 | | IMqttMessageReceivedPlugin | 收到消息时触发 |
 
 
-六、创建MQTT客户端
+六、创建Mqtt客户端
 
 ```csharp {1,4-6,11} showLineNumbers
-var mqttClient = new MQTTClient();
+var mqttClient = new MqttClient();
 mqttClient.Connected = (client, e) => {
     Console.WriteLine($"Connected to {e.Options.Server}");
     return EasyTask.CompletedTask;
