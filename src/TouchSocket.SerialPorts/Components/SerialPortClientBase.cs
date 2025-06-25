@@ -230,7 +230,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     #region Connect
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
