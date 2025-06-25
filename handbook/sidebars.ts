@@ -619,7 +619,12 @@ module.exports =
       "items": [
         {
           "type": "doc",
-          "label": "22.1 Mqtt客户端",
+          "label": "22.1 Mqtt服务端",
+          "id": "mqttservice"
+        },
+        {
+          "type": "doc",
+          "label": "22.2 Mqtt客户端",
           "id": "mqttclient"
         }
       ]
