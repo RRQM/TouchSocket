@@ -50,7 +50,7 @@ import Tag from "@site/src/components/Tag.js";
 | `ClientId`              | 3.1.1+              | 客户端唯一标识符（服务端用于识别客户端）；Mqtt 3.1.1 中必填（长度 1-23 字节，ASCII 字符）；5.0+ 允许空字符串（仅当服务端允许时）。 |
 | `KeepAlive`             | 3.1.1+              | 心跳保活时长（单位：秒），表示客户端与服务端保持连接的最长时间；需与服务端配置兼容（服务端可能拒绝过大或过小的值），默认值通常为 60 秒。 |
 | `Password`              | 3.1.1+              | 连接认证密码（与 `UserName` 配合使用）；若 `UserName` 为空则无效；5.0+ 支持二进制数据（需通过 `AuthenticationData` 传递）。 |
-| `ProtocolName`          | 3.1.1+              | Mqtt 协议名称（固定为 "Mqtt"），默认值为 "Mqtt"，通常无需手动设置。                       |
+| `ProtocolName`          | 3.1.1+              | Mqtt 协议名称（固定为 "MQTT"），默认值为 "MQTT"，通常无需手动设置。                       |
 | `UserName`              | 3.1.1+              | 连接认证用户名（与 `Password` 配合使用）；5.0+ 支持二进制数据（需通过 `AuthenticationData` 传递）。                     |
 | `Version`               | 3.1.1+/5.0+         | Mqtt 协议版本（如 `MqttProtocolVersion.V311` 或 `V500`）；需根据服务端支持的版本设置，否则可能导致连接失败。               |
 
