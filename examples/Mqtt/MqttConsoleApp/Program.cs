@@ -29,13 +29,25 @@ internal class Program
 
         try
         {
-            var topic = "topic1";
+            var topic1 = "topic1";
+            var topic2 = "topic2";
+            SubscribeRequest subscribeRequest1 = new SubscribeRequest(topic1, QosLevel.AtLeastOnce);//订阅请求
+            SubscribeRequest subscribeRequest2 = new SubscribeRequest(topic2, QosLevel.AtMostOnce);//可以设置不同的Qos级别
 
-            var mqttSubscribeMessage = new MqttSubscribeMessage(new SubscribeRequest(topic, QosLevel.AtLeastOnce));
+            //多个订阅请求
+            var mqttSubscribeMessage = new MqttSubscribeMessage(subscribeRequest1, subscribeRequest2);
 
+            //执行订阅
             var mqttSubAckMessage = await client.SubscribeAsync(mqttSubscribeMessage);
 
-            //var mqttUnsubAckMessage = await client.UnsubscribeAsync(new MqttUnsubscribeMessage(topic));
+            //输出订阅结果
+            foreach (var item in mqttSubAckMessage.ReturnCodes)
+            {
+                Console.WriteLine($"ReturnCode:{item}");
+            }
+
+            //取消订阅
+            //var mqttUnsubAckMessage = await client.UnsubscribeAsync(new MqttUnsubscribeMessage(topic1,topic2));
 
             //client.su
             ValueCounter counter = new()
@@ -49,7 +61,7 @@ internal class Program
 
             long i = 0;
 
-            MqttPublishMessage message = new(topic, false, QosLevel.AtLeastOnce, Encoding.UTF8.GetBytes(
+            MqttPublishMessage message = new(topic1, false, QosLevel.AtLeastOnce, Encoding.UTF8.GetBytes(
                    $"Hello World{i}"));
 
             while (true)
@@ -103,17 +115,59 @@ internal class Program
                      Console.WriteLine($"IdChanged:{e.OldId}->{e.NewId}");
                      await e.InvokeNext();
                  });
-                 //a.AddMqttReceivingPlugin(async (client, e) => 
-                 //{
-                 //    Console.WriteLine("Reving:"+ e.MqttMessage.MessageType);
-                 //    await e.InvokeNext();
-                 //});
 
-                 //a.AddMqttReceivedPlugin(async (client, e) =>
-                 //{
-                 //    Console.WriteLine("Reved:"+ e.Message);
-                 //    await e.InvokeNext();
-                 //});
+                 a.AddMqttReceivingPlugin(async (client, e) =>
+                 {
+                     switch (e.MqttMessage)
+                     {
+                         case MqttSubscribeMessage message:
+                             {
+                                 //订阅消息
+                                 Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+
+                                 foreach (var subscribeRequest in message.SubscribeRequests)
+                                 {
+                                     var topic = subscribeRequest.Topic;
+                                     var qosLevel = subscribeRequest.QosLevel;
+                                     //或者其他属性
+                                     Console.WriteLine($"Subscribe Topic:{topic},QosLevel:{qosLevel}");
+                                 }
+                                 break;
+                             }
+                         case MqttUnsubscribeMessage message:
+                             {
+
+                                 //取消订阅消息
+                                 Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+                                 foreach (var topic in message.TopicFilters)
+                                 {
+                                     //取消订阅的主题
+                                     Console.WriteLine($"Unsubscribe Topic:{topic}");
+                                 }
+                                 break;
+                             }
+                         default:
+                             break;
+                     }
+                     Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+                     await e.InvokeNext();
+                 });
+
+                 a.AddMqttReceivedPlugin(async (client, e) =>
+                 {
+                     var mqttMessage = e.MqttMessage;
+                     Console.WriteLine("Reved:" + mqttMessage);
+
+                     //订阅消息的主题
+                     var topicName = mqttMessage.TopicName;
+
+                     //订阅消息的Qos级别
+                     var qosLevel = mqttMessage.QosLevel;
+
+                     //订阅消息的Payload
+                     var payload = mqttMessage.Payload;
+                     await e.InvokeNext();
+                 });
 
                  a.AddMqttConnectingPlugin(async (client, e) =>
                  {
@@ -168,6 +222,7 @@ internal class Program
             })
             .ConfigurePlugins(a =>
             {
+                a.Add<MyMqttReceivedPlugin>();//添加自定义插件
                 ValueCounter counter = new()
                 {
                     OnPeriod = (c) =>
@@ -199,7 +254,7 @@ internal class Program
 
                 a.AddMqttReceivedPlugin(async (mqttSession, e) =>
                 {
-                    var message = e.Message;
+                    var message = e.MqttMessage;
                     var s = message.Retain;
                     counter.Increment();
                     await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -221,5 +276,24 @@ internal class Program
 
         await client.ConnectAsync();//连接
         return client;
+    }
+}
+
+
+class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
+{
+    public async Task OnMqttReceived(IMqttSession client, MqttReceivedEventArgs e)
+    {
+        var mqttMessage = e.MqttMessage;
+
+        //订阅消息的主题
+        var topicName = mqttMessage.TopicName;
+
+        //订阅消息的Qos级别
+        var qosLevel = mqttMessage.QosLevel;
+
+        //订阅消息的Payload
+        var payload = mqttMessage.Payload;
+        await e.InvokeNext();
     }
 }
