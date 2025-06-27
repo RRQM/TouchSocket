@@ -82,3 +82,104 @@ await service.SetupAsync(new TouchSocketConfig()
 await service.StartAsync();
 ```
 
+
+## 七、接收消息
+
+在Mqtt服务端创建好之后，Mqtt组件的消息都是通过插件抛出的。你可以订阅`IMqttReceivingPlugin`插件和`IMqttReceivedPlugin`插件来接收消息。
+
+正如插件说明所示，`IMqttReceivingPlugin`插件可以在收到所有消息时触发，`IMqttReceivedPlugin`插件可以在收到发布消息时触发。
+
+所以如果你只关心发布成功的消息，那么可以只订阅`IMqttReceivedPlugin`插件即可。
+
+但是对于服务器来说，也可能需要获取到的消息可能是订阅、发布、取消订阅等。所以你可以通过`IMqttReceivingPlugin`的`e.MqttMessage`来获取到具体的消息类型。
+
+下列将简单演示。
+
+### 7.1 订阅消息
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.AddMqttReceivingPlugin(async (client, e) =>
+    {
+        switch (e.MqttMessage)
+        {
+            case MqttSubscribeMessage message:
+                {
+                    //订阅消息
+                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+                    foreach (var subscribeRequest in message.SubscribeRequests)
+                    {
+                        var topic = subscribeRequest.Topic;
+                        var qosLevel = subscribeRequest.QosLevel;
+                        //或者其他属性
+                        Console.WriteLine($"Subscribe Topic:{topic},QosLevel:{qosLevel}");
+                    }
+                    break;
+                }
+            default:
+                break;
+        }
+        Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+        await e.InvokeNext();
+    });
+})
+```
+
+### 7.2 取消订阅消息
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.AddMqttReceivingPlugin(async (client, e) =>
+    {
+        switch (e.MqttMessage)
+        {
+            case MqttUnsubscribeMessage message:
+                {
+
+                    //取消订阅消息
+                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+                    foreach (var topic in message.TopicFilters)
+                    {
+                        //取消订阅的主题
+                        Console.WriteLine($"Unsubscribe Topic:{topic}");
+                    }
+                    break;
+                }
+            default:
+                break;
+        }
+        Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+        await e.InvokeNext();
+    });
+})
+```
+
+### 7.3 发布消息
+
+所以如果你只关心发布成功的消息，那么可以只订阅`IMqttReceivedPlugin`插件即可。
+
+你可以直接使用委托实现订阅：
+
+```csharp {3-17} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.AddMqttReceivedPlugin(async (client, e) =>
+    {
+        var mqttMessage = e.MqttMessage;
+        Console.WriteLine("Reved:" + mqttMessage);
+
+        //订阅消息的主题
+        var topicName = mqttMessage.TopicName;
+
+        //订阅消息的Qos级别
+        var qosLevel = mqttMessage.QosLevel;
+
+        //订阅消息的Payload
+        var payload = mqttMessage.Payload;
+        await e.InvokeNext();
+    });
+})
+```
+
