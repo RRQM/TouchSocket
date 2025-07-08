@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -23,6 +24,7 @@ namespace TouchSocket.Sockets;
 public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
 {
     private Task m_beginReconnectTask;
+    private CancellationTokenSource _cancellationBeginReconnectTaskTokenSource;
     private bool m_polling;
     private TimeSpan m_tick = TimeSpan.FromSeconds(1);
 
@@ -43,6 +45,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                 return false;
             }
         };
+        this._cancellationBeginReconnectTaskTokenSource = new CancellationTokenSource();
     }
 
     /// <summary>
@@ -63,7 +66,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
-        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender);
+        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender, _cancellationBeginReconnectTaskTokenSource.Token);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -230,7 +233,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     {
         if (disposing)
         {
-            this.m_beginReconnectTask.Dispose();
+            this._cancellationBeginReconnectTaskTokenSource.Cancel();            
         }
         base.Dispose(disposing);
     }
@@ -253,7 +256,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
 
         try
         {
-            while (true)
+            while (!_cancellationBeginReconnectTaskTokenSource.IsCancellationRequested)
             {
                 if (this.DisposedValue)
                 {
