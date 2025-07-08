@@ -3,12 +3,21 @@ import './Definition.css';
 
 // 预定义的TouchSocket包配置
 const TOUCHSOCKET_PACKAGES = {
+  // 基础包
+  TouchSocket: {
+    namespace: 'TouchSocket',
+    assembly: 'TouchSocket.dll',
+    packageName: 'TouchSocket',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket'
+  },
   TouchSocketCore: {
     namespace: 'TouchSocket.Core',
     assembly: 'TouchSocket.Core.dll',
     packageName: 'TouchSocket.Core',
     nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Core'
   },
+  
+  // 通信协议包
   TouchSocketDmtp: {
     namespace: 'TouchSocket.Dmtp',
     assembly: 'TouchSocket.Dmtp.dll',
@@ -21,11 +30,57 @@ const TOUCHSOCKET_PACKAGES = {
     packageName: 'TouchSocket.Http',
     nugetUrl: ['https://www.nuget.org/packages/TouchSocket.Http', 'https://www.nuget.org/packages/TouchSocket.Http']
   },
+  TouchSocketNamedPipe: {
+    namespace: 'TouchSocket.NamedPipe',
+    assembly: 'TouchSocket.NamedPipe.dll',
+    packageName: 'TouchSocket.NamedPipe',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.NamedPipe'
+  },
+  TouchSocketSerialPorts: {
+    namespace: 'TouchSocket.SerialPorts',
+    assembly: 'TouchSocket.SerialPorts.dll',
+    packageName: 'TouchSocket.SerialPorts',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.SerialPorts'
+  },
+  
+  // RPC包
   TouchSocketRpc: {
     namespace: ['TouchSocket.Rpc', 'TouchSocket.Rpc.JsonRpc'],
     assembly: ['TouchSocket.Rpc.dll', 'TouchSocket.Rpc.JsonRpc.dll'],
     packageName: 'TouchSocket.Rpc',
     nugetUrl: ['https://www.nuget.org/packages/TouchSocket.Rpc', 'https://www.nuget.org/packages/TouchSocket.Rpc']
+  },
+  TouchSocketJsonRpc: {
+    namespace: 'TouchSocket.JsonRpc',
+    assembly: 'TouchSocket.JsonRpc.dll',
+    packageName: 'TouchSocket.JsonRpc',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.JsonRpc'
+  },
+  TouchSocketXmlRpc: {
+    namespace: 'TouchSocket.XmlRpc',
+    assembly: 'TouchSocket.XmlRpc.dll',
+    packageName: 'TouchSocket.XmlRpc',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.XmlRpc'
+  },
+  TouchSocketWebApi: {
+    namespace: 'TouchSocket.WebApi',
+    assembly: 'TouchSocket.WebApi.dll',
+    packageName: 'TouchSocket.WebApi',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.WebApi'
+  },
+  TouchSocketWebApiSwagger: {
+    namespace: 'TouchSocket.WebApi.Swagger',
+    assembly: 'TouchSocket.WebApi.Swagger.dll',
+    packageName: 'TouchSocket.WebApi.Swagger',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.WebApi.Swagger'
+  },
+  
+  // 工业协议包
+  TouchSocketModbus: {
+    namespace: 'TouchSocket.Modbus',
+    assembly: 'TouchSocket.Modbus.dll',
+    packageName: 'TouchSocket.Modbus',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Modbus'
   },
   TouchSocketMqtt: {
     namespace: 'TouchSocket.Mqtt',
@@ -33,11 +88,83 @@ const TOUCHSOCKET_PACKAGES = {
     packageName: 'TouchSocket.Mqtt',
     nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Mqtt'
   },
-  TouchSocketModbus: {
-    namespace: 'TouchSocket.Modbus',
-    assembly: 'TouchSocket.Modbus.dll',
-    packageName: 'TouchSocket.Modbus',
-    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Modbus'
+  
+  // 扩展包
+  TouchSocketAspNetCore: {
+    namespace: 'TouchSocket.AspNetCore',
+    assembly: 'TouchSocket.AspNetCore.dll',
+    packageName: 'TouchSocket.AspNetCore',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.AspNetCore'
+  },
+  TouchSocketHosting: {
+    namespace: 'TouchSocket.Hosting',
+    assembly: 'TouchSocket.Hosting.dll',
+    packageName: 'TouchSocket.Hosting',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Hosting'
+  },
+  TouchSocketCoreDependencyInjection: {
+    namespace: 'TouchSocket.Core.DependencyInjection',
+    assembly: 'TouchSocket.Core.DependencyInjection.dll',
+    packageName: 'TouchSocket.Core.DependencyInjection',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Core.DependencyInjection'
+  },
+  TouchSocketCoreAutofac: {
+    namespace: 'TouchSocket.Core.Autofac',
+    assembly: 'TouchSocket.Core.Autofac.dll',
+    packageName: 'TouchSocket.Core.Autofac',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Core.Autofac'
+  },
+  TouchSocketRpcRateLimiting: {
+    namespace: 'TouchSocket.Rpc.RateLimiting',
+    assembly: 'TouchSocket.Rpc.RateLimiting.dll',
+    packageName: 'TouchSocket.Rpc.RateLimiting',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Rpc.RateLimiting'
+  },
+  
+  // 专业版包
+  TouchSocketPro: {
+    namespace: 'TouchSocketPro',
+    assembly: 'TouchSocketPro.dll',
+    packageName: 'TouchSocketPro',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro'
+  },
+  TouchSocketProDmtp: {
+    namespace: 'TouchSocketPro.Dmtp',
+    assembly: 'TouchSocketPro.Dmtp.dll',
+    packageName: 'TouchSocketPro.Dmtp',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro.Dmtp'
+  },
+  TouchSocketProAspNetCore: {
+    namespace: 'TouchSocketPro.AspNetCore',
+    assembly: 'TouchSocketPro.AspNetCore.dll',
+    packageName: 'TouchSocketPro.AspNetCore',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro.AspNetCore'
+  },
+  TouchSocketProHosting: {
+    namespace: 'TouchSocketPro.Hosting',
+    assembly: 'TouchSocketPro.Hosting.dll',
+    packageName: 'TouchSocketPro.Hosting',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro.Hosting'
+  },
+  TouchSocketProModbus: {
+    namespace: 'TouchSocketPro.Modbus',
+    assembly: 'TouchSocketPro.Modbus.dll',
+    packageName: 'TouchSocketPro.Modbus',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro.Modbus'
+  },
+  TouchSocketProPlcBridges: {
+    namespace: ['TouchSocketPro.PlcBridges', 'TouchSocketPro.Modbus'],
+    assembly: ['TouchSocketPro.PlcBridges.dll', 'TouchSocketPro.Modbus.dll'],
+    packageName: ['TouchSocketPro.PlcBridges', 'TouchSocketPro.Modbus'],
+    nugetUrl: ['https://www.nuget.org/packages/TouchSocketPro.PlcBridges', 'https://www.nuget.org/packages/TouchSocketPro.Modbus']
+  },
+  
+  // 实验性包
+  TouchSocketPipelines: {
+    namespace: 'TouchSocket.Pipelines',
+    assembly: 'TouchSocket.Pipelines.dll',
+    packageName: 'TouchSocket.Pipelines',
+    nugetUrl: 'https://www.nuget.org/packages/TouchSocket.Pipelines'
   }
 };
 
@@ -74,8 +201,12 @@ const Definition = ({
       };
 
   const dotnetCommand = config.version 
-    ? `dotnet add package ${config.packageName} --version ${config.version}`
-    : `dotnet add package ${config.packageName}`;
+    ? Array.isArray(config.packageName) 
+      ? config.packageName.map(pkg => `dotnet add package ${pkg} --version ${config.version}`).join(' && ')
+      : `dotnet add package ${config.packageName} --version ${config.version}`
+    : Array.isArray(config.packageName)
+      ? config.packageName.map(pkg => `dotnet add package ${pkg}`).join(' && ')
+      : `dotnet add package ${config.packageName}`;
 
   const copyCommand = async () => {
     try {
@@ -169,17 +300,68 @@ const Definition = ({
 };
 
 // 预定义组件导出
+// 基础包
+export const TouchSocketDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocket" version={withVersion ? '3.1.12' : undefined} />;
 export const TouchSocketCoreDefinition = ({ withVersion = false }) => 
   <Definition type="TouchSocketCore" version={withVersion ? '3.1.12' : undefined} />;
+
+// 通信协议包
 export const TouchSocketDmtpDefinition = ({ withVersion = false }) => 
   <Definition type="TouchSocketDmtp" version={withVersion ? '3.1.12' : undefined} />;
 export const TouchSocketHttpDefinition = ({ withVersion = false }) => 
   <Definition type="TouchSocketHttp" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketNamedPipeDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketNamedPipe" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketSerialPortsDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketSerialPorts" version={withVersion ? '3.1.12' : undefined} />;
+
+// RPC包
 export const TouchSocketRpcDefinition = ({ withVersion = false }) => 
   <Definition type="TouchSocketRpc" version={withVersion ? '3.1.12' : undefined} />;
-export const TouchSocketMqttDefinition = ({ withVersion = false }) => 
-  <Definition type="TouchSocketMqtt" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketJsonRpcDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketJsonRpc" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketXmlRpcDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketXmlRpc" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketWebApiDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketWebApi" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketWebApiSwaggerDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketWebApiSwagger" version={withVersion ? '3.1.12' : undefined} />;
+
+// 工业协议包
 export const TouchSocketModbusDefinition = ({ withVersion = false }) => 
   <Definition type="TouchSocketModbus" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketMqttDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketMqtt" version={withVersion ? '3.1.12' : undefined} />;
+
+// 扩展包
+export const TouchSocketAspNetCoreDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketAspNetCore" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketHostingDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketHosting" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketCoreDependencyInjectionDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketCoreDependencyInjection" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketCoreAutofacDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketCoreAutofac" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketRpcRateLimitingDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketRpcRateLimiting" version={withVersion ? '3.1.12' : undefined} />;
+
+// 专业版包
+export const TouchSocketProDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketPro" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketProDmtpDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketProDmtp" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketProAspNetCoreDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketProAspNetCore" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketProHostingDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketProHosting" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketProModbusDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketProModbus" version={withVersion ? '3.1.12' : undefined} />;
+export const TouchSocketProPlcBridgesDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketProPlcBridges" version={withVersion ? '3.1.12' : undefined} />;
+
+// 实验性包
+export const TouchSocketPipelinesDefinition = ({ withVersion = false }) => 
+  <Definition type="TouchSocketPipelines" version={withVersion ? '2.1.0-alpha.31' : undefined} />;
 
 export default Definition;
