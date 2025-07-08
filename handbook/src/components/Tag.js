@@ -7,47 +7,51 @@ export default function (props) {
   const operates = {
     新增: {
       icon: "xinzeng",
-      bgColor: "#39b54a",
+      bgColor: "#52c41a",
     },
     修复: {
       icon: "bug",
-      bgColor: "#9c26b0",
+      bgColor: "#722ed1",
     },
     文档: {
       icon: "wendang",
-      bgColor: "rgb(79, 147, 255)",
+      bgColor: "#1890ff",
     },
     更新: {
       icon: "gengxin",
-      bgColor: "#0081ff",
+      bgColor: "#13c2c2",
     },
     调整: {
       icon: "tiaozheng",
-      bgColor: "#333",
+      bgColor: "#595959",
     },
     升级: {
       icon: "shengji",
-      bgColor: "#e03997",
+      bgColor: "#eb2f96",
     },
     移除: {
       icon: "shanchu",
-      bgColor: "red",
+      bgColor: "#f5222d",
     },
     答疑: {
       icon: "dayi",
-      bgColor: "#bbb",
+      bgColor: "#8c8c8c",
     },
     优化: {
       icon: "youhua",
-      bgColor: "#38e550",
+      bgColor: "#52c41a",
+    },
+    重构: {
+      icon: "gengxin",
+      bgColor: "#fa8c16",
     },
 
     推荐: {
-      bgColor: "#38e550",
+      bgColor: "#52c41a",
     },
 
     Pro: {
-      bgColor: "#23AAF2",
+      bgColor: "#1890ff",
     }
   };
   return (
