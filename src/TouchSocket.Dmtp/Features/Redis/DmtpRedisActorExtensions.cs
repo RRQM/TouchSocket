@@ -32,7 +32,7 @@ public static class DmtpRedisActorExtensions
     /// </summary>
     /// <param name="client">要获取<see cref="IDmtpRedisActor"/>的<see cref="IDmtpActorObject"/>实例</param>
     /// <returns><see cref="IDmtpRedisActor"/>实例</returns>
-    /// <exception cref="Exception">当<see cref="IDmtpRedisActor"/>为null时抛出<see cref="ArgumentException"/></exception>
+    /// <exception cref="Exception">当<see cref="IDmtpRedisActor"/>为<see langword="null"/>时抛出<see cref="ArgumentException"/></exception>
     public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActorObject client)
     {
         var actor = client.DmtpActor.GetDmtpRedisActor();

@@ -14,14 +14,21 @@ using System;
 
 namespace TouchSocket.WebApi;
 
+/// <summary>  
+/// 表示一个正则表达式路由的特性。  
+/// </summary>  
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
 public sealed class RegexRouterAttribute : Attribute
 {
-    /// <summary>
-    /// 路由模板。
-    /// </summary>
+    /// <summary>  
+    /// 获取路由模板的正则表达式。  
+    /// </summary>  
     public string RegexTemple { get; }
 
+    /// <summary>  
+    /// 初始化 <see cref="RegexRouterAttribute"/> 类的新实例。  
+    /// </summary>  
+    /// <param name="regexTemple">路由模板的正则表达式。</param>  
     public RegexRouterAttribute(string regexTemple)
     {
         this.RegexTemple = regexTemple;

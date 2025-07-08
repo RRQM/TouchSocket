@@ -315,7 +315,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
 
-        // 如果适配器参数为null，抛出ArgumentNullException异常
+        // 如果适配器参数为<see langword="null"/>，抛出ArgumentNullException异常
         ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
 
         // 如果当前实例的配置对象不为空，则将配置应用到适配器上

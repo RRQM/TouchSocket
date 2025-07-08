@@ -230,8 +230,8 @@
     <comment>对于枚举类型：‘{0}’，设置了无效的枚举值‘{1}’。</comment>
   </data>
   <data name="PluginIsNull" xml:space="preserve">
-    <value>插件‘{0}’为null，它可能在容器中缺少注册信息。</value>
-    <comment>插件‘{0}’为null，它可能在容器中缺少注册信息。</comment>
+    <value>插件‘{0}’为null。<see langword="null" />，它可能在容器中缺少注册信息。</value>
+    <comment>插件‘{0}’为<see langword="null" />，它可能在容器中缺少注册信息。</comment>
   </data>
   <data name="InvalidAfterCompleted" xml:space="preserve">
     <value>完成后无效。</value>

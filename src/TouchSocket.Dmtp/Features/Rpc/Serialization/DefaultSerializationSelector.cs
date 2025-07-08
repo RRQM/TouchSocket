@@ -76,10 +76,10 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 // 使用FastBinary格式进行反序列化
                 return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType, this.FastSerializerContext);
             case SerializationType.SystemBinary:
-                // 检查字节块是否为null
+                // 检查字节块是否为<see langword="null"/>
                 if (byteBlock.ReadIsNull())
                 {
-                    // 如果为null，则返回该类型的默认值
+                    // 如果为<see langword="null"/>，则返回该类型的默认值
                     return parameterType.GetDefault();
                 }
 
@@ -91,10 +91,10 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.Json:
                 {
-                    // 检查字节块是否为null
+                    // 检查字节块是否为<see langword="null"/>
                     if (byteBlock.ReadIsNull())
                     {
-                        // 如果为null，则返回该类型的默认值
+                        // 如果为<see langword="null"/>，则返回该类型的默认值
                         return parameterType.GetDefault();
                     }
 
@@ -110,10 +110,10 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
 
                 }
             case SerializationType.Xml:
-                // 检查字节块是否为null
+                // 检查字节块是否为<see langword="null"/>
                 if (byteBlock.ReadIsNull())
                 {
-                    // 如果为null，则返回该类型的默认值
+                    // 如果为<see langword="null"/>，则返回该类型的默认值
                     return parameterType.GetDefault();
                 }
                 // 使用Xml格式进行反序列化
@@ -144,14 +144,14 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.SystemBinary:
                 {
-                    // 参数为null时，写入空值标记
+                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         byteBlock.WriteNull();
                     }
                     else
                     {
-                        // 参数不为null时，标记并序列化参数
+                        // 参数不为<see langword="null"/>时，标记并序列化参数
                         byteBlock.WriteNotNull();
                         using (var block = new ByteBlock(1024 * 64))
                         {
@@ -168,28 +168,28 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
 #if SystemTextJson
                     if (this.m_useSystemTextJson)
                     {
-                        // 参数为null时，写入空值标记
+                        // 参数为<see langword="null"/>时，写入空值标记
                         if (parameter is null)
                         {
                             byteBlock.WriteNull();
                         }
                         else
                         {
-                            // 参数不为null时，标记并转换为JSON字符串
+                            // 参数不为<see langword="null"/>时，标记并转换为JSON字符串
                             byteBlock.WriteNotNull();
                             byteBlock.WriteString(System.Text.Json.JsonSerializer.Serialize(parameter, parameter.GetType(), this.m_jsonSerializerOptions));
                         }
                         return;
                     }
 #endif
-                    // 参数为null时，写入空值标记
+                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         byteBlock.WriteNull();
                     }
                     else
                     {
-                        // 参数不为null时，标记并转换为JSON字符串
+                        // 参数不为<see langword="null"/>时，标记并转换为JSON字符串
                         byteBlock.WriteNotNull();
                         byteBlock.WriteString(JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
                     }
@@ -197,14 +197,14 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.Xml:
                 {
-                    // 参数为null时，写入空值标记
+                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         byteBlock.WriteNull();
                     }
                     else
                     {
-                        // 参数不为null时，标记并转换为Xml字节
+                        // 参数不为<see langword="null"/>时，标记并转换为Xml字节
                         byteBlock.WriteNotNull();
                         byteBlock.WriteBytesPackage(SerializeConvert.XmlSerializeToBytes(parameter));
                     }

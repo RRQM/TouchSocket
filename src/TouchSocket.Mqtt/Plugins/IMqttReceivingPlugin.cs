@@ -16,13 +16,13 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 定义一个插件接口，用于处理MQTT接收事件。
+/// 定义一个插件接口，用于处理Mqtt接收事件。
 /// </summary>
 [DynamicMethod]
 public interface IMqttReceivingPlugin : IPlugin
 {
     /// <summary>
-    /// 当接收到MQTT消息时调用。
+    /// 当接收到Mqtt消息时调用。
     /// </summary>
     /// <param name="client">客户端对象。</param>
     /// <param name="e">包含事件数据的 <see cref="MqttReceivingEventArgs"/> 实例。</param>

@@ -16,7 +16,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 卸载消息。
+/// 表示 Mqtt 卸载消息。
 /// </summary>
 public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
 {

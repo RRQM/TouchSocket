@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个MQTT Ping请求消息。
+/// 表示一个Mqtt Ping请求消息。
 /// </summary>
 public sealed partial class MqttPingReqMessage : MqttMessage
 {

@@ -16,7 +16,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个MQTT订阅消息。
+/// 表示一个Mqtt订阅消息。
 /// </summary>
 public sealed partial class MqttSubscribeMessage : MqttIdentifierMessage
 {

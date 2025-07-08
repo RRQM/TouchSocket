@@ -15,21 +15,21 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示接收到的 MQTT 消息事件参数。
+/// 表示接收到的 Mqtt 消息事件参数。
 /// </summary>
 public class MqttReceivedEventArgs : PluginEventArgs
 {
     /// <summary>
     /// 初始化 <see cref="MqttReceivedEventArgs"/> 类的新实例。
     /// </summary>
-    /// <param name="message">接收到的 MQTT 消息。</param>
+    /// <param name="message">接收到的 Mqtt 消息。</param>
     public MqttReceivedEventArgs(MqttArrivedMessage message)
     {
-        this.Message = message;
+        this.MqttMessage = message;
     }
 
     /// <summary>
-    /// 获取接收到的 MQTT 消息。
+    /// 获取接收到的 Mqtt 消息。
     /// </summary>
-    public MqttArrivedMessage Message { get; }
+    public MqttArrivedMessage MqttMessage { get; }
 }

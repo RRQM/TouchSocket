@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 协议中的控制报文类型。
+/// 表示 Mqtt 协议中的控制报文类型。
 /// </summary>
 public enum MqttMessageType
 {

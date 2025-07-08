@@ -38,7 +38,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
     }
 
     /// <summary>
-    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为<see langword="null"/>或空时，会全部响应。
     /// </summary>
     public string JsonRpcUrl
     {
@@ -85,7 +85,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
     /// <summary>
     /// 设置JSON-RPC URL的匹配规则。
     /// 当挂载在<see cref="HttpService"/>时，根据指定的URL进行匹配并响应请求。
-    /// 如果设置为null或空，将对所有请求进行响应。
+    /// 如果设置为<see langword="null"/>或空，将对所有请求进行响应。
     /// </summary>
     /// <param name="jsonRpcUrl">要匹配的JSON-RPC URL。</param>
     /// <returns>返回当前的<see cref="HttpJsonRpcParserPlugin"/>实例，支持链式调用。</returns>

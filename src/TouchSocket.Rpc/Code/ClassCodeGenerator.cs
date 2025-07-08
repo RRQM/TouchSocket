@@ -279,7 +279,7 @@ public class ClassCodeGenerator
 
     private static string ExtractNonGenericTypeName(string typeName)
     {
-        // 检查输入是否为null或空字符串
+        // 检查输入是否为<see langword="null"/>或空字符串
         if (string.IsNullOrEmpty(typeName))
         {
             throw new ArgumentException("Type name cannot be null or empty.", nameof(typeName));

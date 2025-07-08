@@ -17,7 +17,7 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个MQTT客户端接口。
+/// 表示一个Mqtt客户端接口。
 /// </summary>
 public interface IMqttClient : IMqttSession, IConnectableClient
 {

@@ -63,7 +63,7 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
 
     /// <summary>
     /// 用于WebSocket连接的路径，默认为“/ws”
-    /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
+    /// <para>如果设置为<see langword="null"/>或空，则意味着所有的连接都将解释为WS</para>
     /// </summary>
     public string WSUrl
     {
@@ -109,7 +109,7 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
 
     /// <summary>
     /// 用于WebSocket连接的路径，默认为“/ws”
-    /// <para>如果设置为null或空，则意味着所有的连接都将解释为WS</para>
+    /// <para>如果设置为<see langword="null"/>或空，则意味着所有的连接都将解释为WS</para>
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>

@@ -14,7 +14,7 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 /// <summary>
-/// 表示 MQTT 关闭事件的参数。
+/// 表示 Mqtt 关闭事件的参数。
 /// </summary>
 public class MqttClosingEventArgs : ClosingEventArgs
 {
@@ -31,7 +31,7 @@ public class MqttClosingEventArgs : ClosingEventArgs
     /// <summary>
     /// 初始化 <see cref="MqttClosingEventArgs"/> 类的新实例。
     /// </summary>
-    /// <param name="message">MQTT 断开连接消息。</param>
+    /// <param name="message">Mqtt 断开连接消息。</param>
     public MqttClosingEventArgs(MqttDisconnectMessage message) : base(message.ReasonString)
     {
         this.m_message = message;

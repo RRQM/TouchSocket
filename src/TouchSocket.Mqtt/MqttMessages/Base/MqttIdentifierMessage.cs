@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个带有标识符的 MQTT 消息。
+/// 表示一个带有标识符的 Mqtt 消息。
 /// </summary>
 public abstract class MqttIdentifierMessage : MqttUserPropertiesMessage, IWaitHandle
 {

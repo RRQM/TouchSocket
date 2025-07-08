@@ -20,7 +20,7 @@ public sealed class DistributeMessage
     /// <summary>
     /// 初始化 <see cref="DistributeMessage"/> 类的新实例。
     /// </summary>
-    /// <param name="message">MQTT 到达的消息。</param>
+    /// <param name="message">Mqtt 到达的消息。</param>
     /// <param name="qosLevel">服务质量级别。</param>
     public DistributeMessage(MqttArrivedMessage message, QosLevel qosLevel)
     {
@@ -29,7 +29,7 @@ public sealed class DistributeMessage
     }
 
     /// <summary>
-    /// 获取 MQTT 到达的消息。
+    /// 获取 Mqtt 到达的消息。
     /// </summary>
     public MqttArrivedMessage Message { get; }
 

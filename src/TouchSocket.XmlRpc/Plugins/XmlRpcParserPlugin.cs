@@ -50,7 +50,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     public RpcStore RpcStore { get; private set; }
 
     /// <summary>
-    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为<see langword="null"/>或空时，会全部响应。
     /// </summary>
     public string XmlRpcUrl
     {
@@ -167,7 +167,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     }
 
     /// <summary>
-    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为<see langword="null"/>或空时，会全部响应。
     /// </summary>
     /// <param name="xmlRpcUrl"></param>
     /// <returns></returns>

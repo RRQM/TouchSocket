@@ -16,15 +16,15 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 定义一个插件接口，用于处理MQTT连接事件。
+/// 定义一个插件接口，用于处理Mqtt连接事件。
 /// </summary>
 [DynamicMethod]
 public interface IMqttConnectingPlugin : IPlugin
 {
     /// <summary>
-    /// 当MQTT客户端正在连接时调用此方法。
+    /// 当Mqtt客户端正在连接时调用此方法。
     /// </summary>
-    /// <param name="client">MQTT会话客户端。</param>
+    /// <param name="client">Mqtt会话客户端。</param>
     /// <param name="e">包含连接事件数据的参数。</param>
     /// <returns>表示异步操作的任务。</returns>
     Task OnMqttConnecting(IMqttSession client, MqttConnectingEventArgs e);

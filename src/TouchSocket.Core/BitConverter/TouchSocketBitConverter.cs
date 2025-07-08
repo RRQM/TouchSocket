@@ -505,7 +505,6 @@ public sealed partial class TouchSocketBitConverter
     /// </summary>
     /// <param name="values">待转换的布尔数组。</param>
     /// <returns>转换后的字节数组。</returns>
-    /// <exception cref="ArgumentNullException">如果传入的布尔数组为null，则抛出此异常。</exception>
     public byte[] GetBytes(ReadOnlySpan<bool> values)
     {
         // 检查传入的布尔数组是否为空
@@ -547,7 +546,7 @@ public sealed partial class TouchSocketBitConverter
     /// </summary>
     /// <param name="buffer">指向目标字节缓冲区的引用。</param>
     /// <param name="values">待转换的布尔值数组。</param>
-    /// <exception cref="ArgumentNullException">如果values参数为null，则抛出此异常。</exception>
+    /// <exception cref="ArgumentNullException">如果values参数为<see langword="null"/>，则抛出此异常。</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void GetBytes(ref byte buffer, ReadOnlySpan<bool> values)
     {

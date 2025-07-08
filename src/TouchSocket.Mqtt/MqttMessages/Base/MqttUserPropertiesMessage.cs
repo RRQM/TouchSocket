@@ -16,7 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个包含用户属性的 MQTT 消息。
+/// 表示一个包含用户属性的 Mqtt 消息。
 /// </summary>
 public abstract class MqttUserPropertiesMessage : MqttMessage
 {

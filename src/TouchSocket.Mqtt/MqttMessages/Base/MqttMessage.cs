@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个MQTT消息的抽象基类。
+/// 表示一个Mqtt消息的抽象基类。
 /// </summary>
 public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
 {
@@ -52,10 +52,10 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     protected uint RemainingLength { get; set; }
 
     /// <summary>
-    /// 创建MQTT消息实例。
+    /// 创建Mqtt消息实例。
     /// </summary>
-    /// <param name="mqttDataType">MQTT数据类型。</param>
-    /// <returns>MQTT消息实例。</returns>
+    /// <param name="mqttDataType">Mqtt数据类型。</param>
+    /// <returns>Mqtt消息实例。</returns>
     public static MqttMessage CreateMqttMessage(MqttMessageType mqttDataType)
     {
         //Console.WriteLine(mqttDataType);
@@ -83,7 +83,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     #region Build
 
     /// <summary>
-    /// 构建MQTT消息。
+    /// 构建Mqtt消息。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块类型。</typeparam>
     /// <param name="byteBlock">字节块引用。</param>
@@ -134,7 +134,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     #region Unpack
 
     /// <summary>
-    /// 解包MQTT消息。
+    /// 解包Mqtt消息。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块类型。</typeparam>
     /// <param name="byteBlock">字节块引用。</param>

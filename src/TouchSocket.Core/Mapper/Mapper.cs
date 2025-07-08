@@ -162,7 +162,7 @@ public static partial class Mapper
     /// <returns>一个新集合，包含原始集合中每个元素的映射结果。</returns>
     public static IEnumerable<T1> MapList<T, T1>(this IEnumerable<T> list, MapperOption option = default) where T : class where T1 : class, new()
     {
-        // 检查输入的集合是否为null，如果是，则抛出异常
+        // 检查输入的集合是否为<see langword="null"/>，如果是，则抛出异常
         if (list is null)
         {
             throw new ArgumentNullException(nameof(list));
@@ -190,7 +190,7 @@ public static partial class Mapper
     /// <returns>映射后的指定类型的集合。</returns>
     public static IEnumerable<T1> MapList<T1>(this IEnumerable<object> list, MapperOption option = default) where T1 : class, new()
     {
-        // 检查输入集合是否为null，如果是，则抛出异常
+        // 检查输入集合是否为<see langword="null"/>，如果是，则抛出异常
         if (list is null)
         {
             throw new ArgumentNullException(nameof(list));

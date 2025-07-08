@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT PubAck 消息。
+/// 表示 Mqtt PubAck 消息。
 /// </summary>
 public sealed partial class MqttPubAckMessage : MqttIdentifierMessage
 {

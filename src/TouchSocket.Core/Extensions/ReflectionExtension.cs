@@ -153,7 +153,7 @@ public static class ReflectionExtension
             return false;
         }
 
-        // 如果属性的设置方法为null，则表示不能写入，返回<see langword="false"/>
+        // 如果属性的设置方法为<see langword="null"/>，则表示不能写入，返回<see langword="false"/>
         if (propertyInfo.SetMethod == null)
         {
             return false;

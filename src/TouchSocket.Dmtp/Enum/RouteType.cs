@@ -26,10 +26,10 @@ public readonly struct RouteType
     /// 路由类型的构造函数
     /// </summary>
     /// <param name="value">路由类型的字符串表示</param>
-    /// <exception cref="ArgumentException">当value为null或空时抛出</exception>
+    /// <exception cref="ArgumentException">当value为<see langword="null"/>或空时抛出</exception>
     public RouteType(string value)
     {
-        // 检查参数value是否为null或空，如果是则抛出ArgumentException异常
+        // 检查参数value是否为<see langword="null"/>或空，如果是则抛出ArgumentException异常
         if (string.IsNullOrEmpty(value))
         {
             throw new ArgumentException($"“{nameof(value)}”不能为 null 或空。", nameof(value));

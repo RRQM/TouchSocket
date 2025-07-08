@@ -71,7 +71,7 @@ public class FileSection : PackageBase
     /// <returns>如果待比较的文件段对象的基本信息与当前对象一致，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool Equals(FileSection fileSection)
     {
-        // 检查待比较的文件段对象是否为null
+        // 检查待比较的文件段对象是否为<see langword="null"/>
         if (fileSection == null)
         {
             // 如果是null，直接返回<see langword="false"/>，因为无法比较

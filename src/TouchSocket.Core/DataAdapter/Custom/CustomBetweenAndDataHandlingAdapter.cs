@@ -20,7 +20,7 @@ namespace TouchSocket.Core;
 public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo> : CustomDataHandlingAdapter<TBetweenAndRequestInfo> where TBetweenAndRequestInfo : IRequestInfo
 {
     /// <summary>
-    /// 起始字符，不可以为null，可以为0长度
+    /// 起始字符，不可以为<see langword="null"/>，可以为0长度
     /// </summary>
     public abstract byte[] StartCode { get; }
 
@@ -30,7 +30,7 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     public int MinSize { get; set; }
 
     /// <summary>
-    /// 结束字符，不可以为null，不可以为0长度，必须具有有效值。
+    /// 结束字符，不可以为<see langword="null"/>，不可以为0长度，必须具有有效值。
     /// </summary>
     public abstract byte[] EndCode { get; }
 

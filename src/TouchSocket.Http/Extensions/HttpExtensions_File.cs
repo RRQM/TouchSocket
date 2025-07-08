@@ -29,7 +29,7 @@ public static partial class HttpExtensions
     /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
     /// </summary>
     /// <param name="response">响应</param>
-    /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
+    /// <param name="request">请求头，用于尝试续传，为<see langword="null"/>时则不续传。</param>
     /// <param name="fileInfo">文件信息</param>
     /// <param name="flowOperator">流速控制</param>
     /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
@@ -174,7 +174,7 @@ public static partial class HttpExtensions
     /// </summary>
     /// <param name="response">响应</param>
     /// <param name="fileInfo">文件信息</param>
-    /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
+    /// <param name="request">请求头，用于尝试续传，为<see langword="null"/>时则不续传。</param>
     /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
     /// <param name="maxSpeed">最大速度。</param>
     /// <param name="bufferLen">读取长度。</param>

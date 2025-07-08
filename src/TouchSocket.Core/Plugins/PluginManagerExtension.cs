@@ -35,7 +35,7 @@ public static class PluginManagerExtension
     /// <returns>返回添加到插件管理器中的插件实例。</returns>
     public static TPlugin Add<[DynamicallyAccessedMembers(PluginAccessedMemberTypes)] TPlugin>(this IPluginManager pluginManager, Func<IResolver, TPlugin> func) where TPlugin : class, IPlugin
     {
-        // 检查传入的函数是否为null，并抛出异常
+        // 检查传入的函数是否为<see langword="null"/>，并抛出异常
         ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
 
         // 使用提供的函数和插件管理器的解析器来创建插件实例

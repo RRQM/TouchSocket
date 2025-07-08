@@ -18,7 +18,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个 MQTT 会话的 Actor。
+/// 表示一个 Mqtt 会话的 Actor。
 /// </summary>
 public class MqttSessionActor : MqttActor
 {
@@ -39,11 +39,11 @@ public class MqttSessionActor : MqttActor
     /// <summary>
     /// 初始化 <see cref="MqttSessionActor"/> 类的新实例。
     /// </summary>
-    /// <param name="messageCenter">MQTT 消息中心。</param>
+    /// <param name="messageCenter">Mqtt 消息中心。</param>
     public MqttSessionActor(MqttBroker messageCenter)
     {
         this.m_mqttBroker = messageCenter;
-        Task.Run(this.WaitForReadAsync);
+        _=EasyTask.SafeRun(this.WaitForReadAsync);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public class MqttSessionActor : MqttActor
     /// 异步分发消息。
     /// </summary>
     /// <param name="message">要分发的消息。</param>
-    public async Task DistributeMessagesAsync(DistributeMessage message)
+    public async Task PostDistributeMessageAsync(DistributeMessage message)
     {
         var tokenClosed = this.TokenSource.Token;
         if (tokenClosed.IsCancellationRequested)
@@ -111,7 +111,7 @@ public class MqttSessionActor : MqttActor
     #region 属性
 
     /// <summary>
-    /// 获取 MQTT 消息中心。
+    /// 获取 Mqtt 消息中心。
     /// </summary>
     public MqttBroker MqttBroker => this.m_mqttBroker;
 
@@ -161,6 +161,7 @@ public class MqttSessionActor : MqttActor
         throw new NotImplementedException();
     }
 
+    /// <inheritdoc/>
     protected override async Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message)
     {
         var contentForAck = new MqttSubAckMessage()
@@ -175,6 +176,7 @@ public class MqttSessionActor : MqttActor
         await this.ProtectedOutputSendAsync(contentForAck).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
+    /// <inheritdoc/>
     protected override async Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message)
     {
         foreach (var topic in message.TopicFilters)
@@ -194,12 +196,12 @@ public class MqttSessionActor : MqttActor
         await base.PublishMessageArrivedAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PublishDistributeMessageAsync(DistributeMessage distributeMessage)
+    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage)
     {
         var token = this.TokenSource.Token;
         if (token.IsCancellationRequested)
         {
-            return;
+            return false;
         }
 
         var message = distributeMessage.Message;
@@ -212,16 +214,19 @@ public class MqttSessionActor : MqttActor
         try
         {
             await this.PublishAsync(publishMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return true;
         }
         catch (Exception ex)
         {
             Console.WriteLine("PublishDistributeMessageAsync:" + ex);
+            return false;
         }
     }
 
     private async Task WaitForReadAsync()
     {
         var token = this.TokenSource.Token;
+        var reader=this.m_mqttArrivedMessageQueue.Reader;
         while (true)
         {
             try
@@ -231,16 +236,23 @@ public class MqttSessionActor : MqttActor
                     Console.WriteLine("WaitForReadAsync IsCancellationRequested");
                     return;
                 }
-
-                var distributeMessage = await this.m_mqttArrivedMessageQueue.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (distributeMessage is null)
+                
+               var b=await reader.WaitToReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (!b)
                 {
-                    Console.WriteLine("WaitForReadAsync distributeMessage is null");
+                    return;
+                }
+
+                if (!reader.TryPeek(out var distributeMessage))
+                {
                     continue;
                 }
 
-
-                await this.PublishDistributeMessageAsync(distributeMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+               var published= await this.PublishDistributeMessageAsync(distributeMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (published)
+                {
+                    reader.TryRead(out _);
+                }
             }
             catch (OperationCanceledException)
             {

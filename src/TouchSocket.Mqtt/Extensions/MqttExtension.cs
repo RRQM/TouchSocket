@@ -18,7 +18,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 提供用于 MQTT 操作的扩展方法。
+/// 提供用于 Mqtt 操作的扩展方法。
 /// </summary>
 public static class MqttExtension
 {
@@ -27,7 +27,7 @@ public static class MqttExtension
     private const uint VariableByteIntegerMaxValue = 268435455;
 
     /// <summary>
-    /// 从字节块中读取 MQTT Int16 字符串。
+    /// 从字节块中读取 Mqtt Int16 字符串。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块的类型。</typeparam>
     /// <param name="byteBlock">要读取的字节块。</param>
@@ -39,7 +39,7 @@ public static class MqttExtension
     }
 
     /// <summary>
-    /// 从字节块中读取 MQTT Int16 字符串。
+    /// 从字节块中读取 Mqtt Int16 字符串。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块的类型。</typeparam>
     /// <param name="byteBlock">要读取的字节块。</param>
@@ -76,11 +76,11 @@ public static class MqttExtension
     }
 
     /// <summary>
-    /// 将 MQTT 固定报头写入字节块。
+    /// 将 Mqtt 固定报头写入字节块。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块的类型。</typeparam>
     /// <param name="byteBlock">要写入的字节块。</param>
-    /// <param name="packetType">MQTT 消息类型。</param>
+    /// <param name="packetType">Mqtt 消息类型。</param>
     /// <param name="flags">要写入的标志。</param>
     public static void WriteMqttFixedHeader<TByteBlock>(ref TByteBlock byteBlock, MqttMessageType packetType, byte flags = 0)
         where TByteBlock : IByteBlock
@@ -91,7 +91,7 @@ public static class MqttExtension
     }
 
     /// <summary>
-    /// 将 MQTT Int16 字符串写入字节块。
+    /// 将 Mqtt Int16 字符串写入字节块。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块的类型。</typeparam>
     /// <param name="byteBlock">要写入的字节块。</param>
@@ -163,7 +163,7 @@ public static class MqttExtension
     }
 
     /// <summary>
-    /// 获取 MQTT Int16 字符串的长度。
+    /// 获取 Mqtt Int16 字符串的长度。
     /// </summary>
     /// <param name="value">字符串值。</param>
     /// <returns>字符串的长度。</returns>
@@ -237,7 +237,7 @@ public static class MqttExtension
     }
 
     /// <summary>
-    /// 从字节块中读取 MQTT 二进制数据。
+    /// 从字节块中读取 Mqtt 二进制数据。
     /// </summary>
     /// <typeparam name="TByteBlock">字节块的类型。</typeparam>
     /// <param name="byteBlock">要读取的字节块。</param>
@@ -282,7 +282,7 @@ public static class MqttExtension
     #endregion QosLevel
 
     /// <summary>
-    /// 将缓冲区转换为 MQTT Int16 值。
+    /// 将缓冲区转换为 Mqtt Int16 值。
     /// </summary>
     /// <param name="buffer">要转换的缓冲区。</param>
     /// <param name="offset">开始转换的偏移量。</param>

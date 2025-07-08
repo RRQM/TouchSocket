@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 有效负载格式指示符。
+/// 表示 Mqtt 有效负载格式指示符。
 /// </summary>
 public enum MqttPayloadFormatIndicator : byte
 {
