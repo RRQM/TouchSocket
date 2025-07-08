@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示MQTT消息的服务质量（QoS）级别。
+/// 表示Mqtt消息的服务质量（QoS）级别。
 /// </summary>
 public enum QosLevel : byte
 {

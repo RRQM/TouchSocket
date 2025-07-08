@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// MQTT协议中的原因码枚举，用于表示不同 MQTT 报文处理结果或错误情况。
+/// Mqtt协议中的原因码枚举，用于表示不同 Mqtt 报文处理结果或错误情况。
 /// </summary>
 public enum MqttReasonCode
 {
@@ -156,10 +156,10 @@ public enum MqttReasonCode
     ImplementationSpecificError = 131,
 
     /// <summary>
-    /// 仅用于 <see cref="MqttConnAckMessage"/> 报文。对于支持了 MQTT 5.0 的服务端来说，如果不支持客户端当前使用的 MQTT 协议版本，
+    /// 仅用于 <see cref="MqttConnAckMessage"/> 报文。对于支持了 Mqtt 5.0 的服务端来说，如果不支持客户端当前使用的 Mqtt 协议版本，
     /// 或者客户端指定了一个错误的协议版本或协议名。例如，客户端将协议版本设置为 6，
-    /// 那么服务端可以发送 ReasonCode 为该值的 <see cref="MqttConnAckMessage"/> 报文，表示不支持该协议版本并且表明自己 MQTT 服务端的身份，
-    /// 然后关闭网络连接。当然服务端也可以选择直接关闭网络连接，因为使用 MQTT 3.1 或 3.1.1 的 MQTT 客户端
+    /// 那么服务端可以发送 ReasonCode 为该值的 <see cref="MqttConnAckMessage"/> 报文，表示不支持该协议版本并且表明自己 Mqtt 服务端的身份，
+    /// 然后关闭网络连接。当然服务端也可以选择直接关闭网络连接，因为使用 Mqtt 3.1 或 3.1.1 的 Mqtt 客户端
     /// 可能并不能理解该值这个 ReasonCode 的含义。这两个版本都是在 <see cref="MqttConnAckMessage"/> 报文使用 1 来表示不支持客户端指定的协议版本。
     /// 适用报文：<see cref="MqttConnAckMessage"/>
     /// </summary>
@@ -270,7 +270,7 @@ public enum MqttReasonCode
 
     /// <summary>
     /// 仅用于 <see cref="MqttDisconnectMessage"/> 报文，表示超出了接收最大值。
-    /// MQTT 5.0 增加了流控机制，客户端和服务端在连接时通过 Receive Maximum 属性约定它们愿意并发处理的可靠消息数（QoS > 0）。
+    /// Mqtt 5.0 增加了流控机制，客户端和服务端在连接时通过 Receive Maximum 属性约定它们愿意并发处理的可靠消息数（QoS > 0）。
     /// 所以一旦发送方发送的没有完成确认的消息超过了这一数量限制，接收方就会发送 ReasonCode 为该值的 <see cref="MqttDisconnectMessage"/> 报文然后关闭网络连接。
     /// 适用报文：<see cref="MqttDisconnectMessage"/>
     /// </summary>

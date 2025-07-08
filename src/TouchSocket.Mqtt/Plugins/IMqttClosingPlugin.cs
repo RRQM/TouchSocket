@@ -16,15 +16,15 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 定义一个插件接口，当MQTT客户端关闭时调用。
+/// 定义一个插件接口，当Mqtt客户端关闭时调用。
 /// </summary>
 [DynamicMethod]
 public interface IMqttClosingPlugin : IPlugin
 {
     /// <summary>
-    /// 当MQTT客户端正在关闭时调用。
+    /// 当Mqtt客户端正在关闭时调用。
     /// </summary>
-    /// <param name="client">MQTT会话客户端。</param>
+    /// <param name="client">Mqtt会话客户端。</param>
     /// <param name="e">包含关闭事件数据的参数。</param>
     /// <returns>表示异步操作的任务。</returns>
     Task OnMqttClosing(IMqttSession client, MqttClosingEventArgs e);

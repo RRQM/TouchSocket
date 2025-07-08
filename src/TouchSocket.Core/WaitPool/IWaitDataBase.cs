@@ -37,7 +37,7 @@ public interface IWaitDataBase<T> : IDisposableObject
 
     /// <summary>
     /// 重置等待对象。
-    /// 设置<see cref="WaitResult"/>为null。然后重置状态为<see cref="WaitDataStatus.Default"/>。
+    /// 设置<see cref="WaitResult"/>为<see langword="null"/>。然后重置状态为<see cref="WaitDataStatus.Default"/>。
     /// </summary>
     void Reset();
 

@@ -49,7 +49,7 @@ public interface IUnfixedHeaderRequestInfo : IRequestInfo
 }
 
 /// <summary>
-/// 用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，同时<see cref="IRequestInfo"/>将实现为TUnfixedHeaderRequestInfo。
+/// 用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为<see langword="null"/>，同时<see cref="IRequestInfo"/>将实现为TUnfixedHeaderRequestInfo。
 /// </summary>
 public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderRequestInfo> : CustomDataHandlingAdapter<TUnfixedHeaderRequestInfo> where TUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
 {

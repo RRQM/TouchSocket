@@ -23,7 +23,7 @@ namespace TouchSocket.Http;
 public interface IHttpSessionClient : IHttpSession, ISessionClient, ITcpListenableClient, IOnlineClient
 {
     /// <summary>
-    /// 当该连接是WebSocket时，可获取该对象，否则为null。
+    /// 当该连接是WebSocket时，可获取该对象，否则为<see langword="null"/>。
     /// </summary>
     IWebSocket WebSocket { get; }
 

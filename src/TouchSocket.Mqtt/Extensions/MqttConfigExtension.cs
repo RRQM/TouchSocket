@@ -16,20 +16,20 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 提供用于配置MQTT选项的扩展方法。
+/// 提供用于配置Mqtt选项的扩展方法。
 /// </summary>
 public static class MqttConfigExtension
 {
     /// <summary>
-    /// MQTT连接选项的依赖属性。
+    /// Mqtt连接选项的依赖属性。
     /// </summary>
     public static readonly DependencyProperty<MqttConnectOptions> MqttConnectOptionsProperty = new DependencyProperty<MqttConnectOptions>("MqttConnectOptions", null);
 
     /// <summary>
-    /// 设置MQTT连接选项。
+    /// 设置Mqtt连接选项。
     /// </summary>
     /// <param name="config">TouchSocket配置。</param>
-    /// <param name="options">用于配置MQTT连接选项的操作。</param>
+    /// <param name="options">用于配置Mqtt连接选项的操作。</param>
     /// <returns>更新后的TouchSocket配置。</returns>
     public static TouchSocketConfig SetMqttConnectOptions(this TouchSocketConfig config, Action<MqttConnectOptions> options)
     {

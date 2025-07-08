@@ -300,7 +300,7 @@ public static class SystemExtension
     }
     /// <summary>
     /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
-    /// <para>如果目标数组为null或长度为0，则直接返回offset的值</para>
+    /// <para>如果目标数组为<see langword="null"/>或长度为0，则直接返回offset的值</para>
     /// </summary>
     /// <param name="srcByteArray"></param>
     /// <param name="offset"></param>
@@ -313,7 +313,7 @@ public static class SystemExtension
     }
     /// <summary>
     /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
-    /// <para>如果目标数组为null或长度为0，则直接返回offset的值</para>
+    /// <para>如果目标数组为<see langword="null"/>或长度为0，则直接返回offset的值</para>
     /// </summary>
     /// <param name="srcByteArray"></param>
     /// <param name="offset"></param>

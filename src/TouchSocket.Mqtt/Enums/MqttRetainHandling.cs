@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 保留消息处理方式的枚举。
+/// 表示 Mqtt 保留消息处理方式的枚举。
 /// </summary>
 public enum MqttRetainHandling : byte
 {

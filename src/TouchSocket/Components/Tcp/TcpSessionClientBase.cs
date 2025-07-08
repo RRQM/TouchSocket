@@ -630,10 +630,10 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// 设置数据处理适配器。
     /// </summary>
     /// <param name="adapter">要设置的适配器实例。</param>
-    /// <exception cref="ArgumentNullException">如果提供的适配器为null，则抛出此异常。</exception>
+    /// <exception cref="ArgumentNullException">如果提供的适配器为<see langword="null"/>，则抛出此异常。</exception>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
-        // 检查适配器是否为null，如果是则抛出异常
+        // 检查适配器是否为<see langword="null"/>，如果是则抛出异常
         if (adapter is null)
         {
             throw new ArgumentNullException(nameof(adapter));

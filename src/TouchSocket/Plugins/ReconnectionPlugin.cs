@@ -23,8 +23,7 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
 {
-    private Task m_beginReconnectTask;
-    private CancellationTokenSource _cancellationBeginReconnectTaskTokenSource;
+    private CancellationTokenSource m_cancellationBeginReconnectTaskTokenSource;
     private bool m_polling;
     private TimeSpan m_tick = TimeSpan.FromSeconds(1);
 
@@ -45,7 +44,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                 return false;
             }
         };
-        this._cancellationBeginReconnectTaskTokenSource = new CancellationTokenSource();
+        this.m_cancellationBeginReconnectTaskTokenSource = new CancellationTokenSource();
     }
 
     /// <summary>
@@ -66,7 +65,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
-        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender, _cancellationBeginReconnectTaskTokenSource.Token);
+        _ = EasyTask.Run(this.BeginReconnect, sender, this.m_cancellationBeginReconnectTaskTokenSource.Token);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -233,12 +232,12 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     {
         if (disposing)
         {
-            this._cancellationBeginReconnectTaskTokenSource.Cancel();            
+            this.m_cancellationBeginReconnectTaskTokenSource.Cancel();
         }
         base.Dispose(disposing);
     }
 
-    private async Task BeginReconnect(IConfigObject sender)
+    private async Task BeginReconnect(IConfigObject sender, CancellationToken token)
     {
         if (!this.m_polling)
         {
@@ -250,20 +249,20 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
             return;
         }
 
-        client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingBegin.Format(this.Tick));
+        client.Logger?.Debug(this, TouchSocketResource.PollingBegin.Format(this.Tick));
 
         var failCount = 0;
 
         try
         {
-            while (!_cancellationBeginReconnectTaskTokenSource.IsCancellationRequested)
+            while (true)
             {
-                if (this.DisposedValue)
+                if (this.DisposedValue || token.IsCancellationRequested)
                 {
-                    client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingWillEnd);
+                    client.Logger?.Debug(this, TouchSocketResource.PollingWillEnd);
                     return;
                 }
-                await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(this.Tick, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
                     var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -297,6 +296,5 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         {
             client.Logger?.Debug(this, TouchSocketResource.PollingEnd);
         }
-
     }
 }

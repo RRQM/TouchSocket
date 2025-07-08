@@ -489,7 +489,7 @@
 //        #region BytesPackage
 
 //        /// <summary>
-//        /// 写入一个独立的<see cref="byte"/>数组包，值可以为null。
+//        /// 写入一个独立的<see cref="byte"/>数组包，值可以为<see langword="null"/>。
 //        /// </summary>
 //        /// <param name="value"></param>
 //        /// <param name="offset"></param>
@@ -512,7 +512,7 @@
 //        }
 
 //        /// <summary>
-//        /// 写入一个独立的<see cref="byte"/>数组包。值可以为null。
+//        /// 写入一个独立的<see cref="byte"/>数组包。值可以为<see langword="null"/>。
 //        /// </summary>
 //        /// <param name="value"></param>
 //        public void WriteBytesPackage(byte[] value)
@@ -537,10 +537,10 @@
 //        #region String
 
 //        /// <summary>
-//        /// 写入<see cref="string"/>值。值可以为null，或者空。
+//        /// 写入<see cref="string"/>值。值可以为<see langword="null"/>，或者空。
 //        /// <para>注意：该操作不具备通用性，读取时必须使用ReadString。或者得先做出判断，由默认端序的int32值标识，具体如下：</para>
 //        /// <list type="bullet">
-//        /// <item>小于0，表示字符串为null</item>
+//        /// <item>小于0，表示字符串为<see langword="null"/></item>
 //        /// <item>等于0，表示字符串为""</item>
 //        /// <item>大于0，表示字符串在utf-8编码下的字节长度。</item>
 //        /// </list>

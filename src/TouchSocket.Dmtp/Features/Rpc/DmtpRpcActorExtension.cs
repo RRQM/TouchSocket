@@ -62,7 +62,7 @@ public static class DmtpRpcActorExtension
     /// </summary>
     /// <param name="client">要获取<see cref="IDmtpRpcActor"/>的<see cref="IDmtpActorObject"/>对象。</param>
     /// <returns>返回<see cref="IDmtpRpcActor"/>对象。</returns>
-    /// <exception cref="ArgumentNullException">如果<see cref="IDmtpRpcActor"/>对象为null，则抛出此异常。</exception>
+    /// <exception cref="ArgumentNullException">如果<see cref="IDmtpRpcActor"/>对象为<see langword="null"/>，则抛出此异常。</exception>
     public static IDmtpRpcActor GetDmtpRpcActor(this IDmtpActorObject client)
     {
         var actor = client.DmtpActor.GetDmtpRpcActor();

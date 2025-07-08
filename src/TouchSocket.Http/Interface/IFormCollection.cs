@@ -59,7 +59,7 @@ public interface IFormCollection : IEnumerable<KeyValuePair<string, string>>
     /// 尝试根据键获取对应的值
     /// </summary>
     /// <param name="key">要获取值的键</param>
-    /// <param name="value">与指定键关联的值，如果键不存在则为null</param>
+    /// <param name="value">与指定键关联的值，如果键不存在则为<see langword="null"/></param>
     /// <returns>如果键存在于集合中，则返回<see langword="true"/>；否则返回<see langword="false"/></returns>
     bool TryGetValue(string key, out string value);
 }

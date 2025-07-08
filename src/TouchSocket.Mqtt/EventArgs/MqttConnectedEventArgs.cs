@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 连接事件参数。
+/// 表示 Mqtt 连接事件参数。
 /// </summary>
 public class MqttConnectedEventArgs : PluginEventArgs
 {

@@ -92,7 +92,7 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     /// <summary>
     /// 异步完成操作
     /// </summary>
-    /// <param name="operationMes">操作信息，可选参数，默认为null</param>
+    /// <param name="operationMes">操作信息，可选参数，默认为<see langword="null"/></param>
     /// <returns>返回一个Task对象，表示异步操作的完成</returns>
     Task<Result> CompleteAsync(string operationMes = null);
 

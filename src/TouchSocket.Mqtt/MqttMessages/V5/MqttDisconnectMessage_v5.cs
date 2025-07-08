@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示MQTT断开连接消息。
+/// 表示Mqtt断开连接消息。
 /// </summary>
 public partial class MqttDisconnectMessage
 {

@@ -177,7 +177,7 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// </summary>
     /// <param name="protocol">指定的协议编号。</param>
     /// <param name="value">要发送的字符串内容。</param>
-    /// <exception cref="ArgumentNullException">当<paramref name="value"/>为null时抛出异常。</exception>
+    /// <exception cref="ArgumentNullException">当<paramref name="value"/>为<see langword="null"/>时抛出异常。</exception>
     Task SendStringAsync(ushort protocol, string value);
 
     /// <summary>

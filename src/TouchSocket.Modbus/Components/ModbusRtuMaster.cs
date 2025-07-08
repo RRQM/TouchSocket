@@ -23,6 +23,8 @@ namespace TouchSocket.Modbus;
 /// </summary>
 public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
 {
+    private ModbusRequest m_modbusRequest;
+
     /// <summary>
     /// 基于串口的Modbus主站接口
     /// </summary>
@@ -30,7 +32,13 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     {
         this.Protocol = TouchSocketModbusUtility.ModbusRtu;
     }
-    private ModbusRequest m_modbusRequest;
+
+    /// <inheritdoc/>
+    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    {
+        return base.SerialPortConnectAsync(millisecondsTimeout, token);
+    }
+
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
     {
@@ -95,7 +103,6 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
         }
         await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
-
 
     /// <summary>
     /// 验证Modbus请求和响应是否匹配

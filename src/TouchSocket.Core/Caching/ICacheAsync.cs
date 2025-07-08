@@ -46,7 +46,7 @@ public partial interface ICacheAsync<TKey, TValue>
     /// </summary>
     /// <param name="key">用于检索缓存条目的键。</param>
     /// <returns>返回一个任务，该任务结果包含缓存条目。</returns>
-    /// <exception cref="ArgumentNullException">当键为null时抛出此异常。</exception>
+    /// <exception cref="ArgumentNullException">当键为<see langword="null"/>时抛出此异常。</exception>
     Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key);
 
     /// <summary>

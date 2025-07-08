@@ -15,14 +15,14 @@ using System;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个到达的 MQTT 消息。
+/// 表示一个到达的 Mqtt 消息。
 /// </summary>
 public sealed class MqttArrivedMessage
 {
     /// <summary>
     /// 初始化 <see cref="MqttArrivedMessage"/> 类的新实例。
     /// </summary>
-    /// <param name="message">MQTT 发布消息。</param>
+    /// <param name="message">Mqtt 发布消息。</param>
     public MqttArrivedMessage(MqttPublishMessage message)
     {
         this.QosLevel = message.QosLevel;

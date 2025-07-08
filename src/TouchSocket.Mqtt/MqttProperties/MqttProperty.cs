@@ -15,7 +15,7 @@ using System;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示MQTT用户属性。
+/// 表示Mqtt用户属性。
 /// </summary>
 public readonly record struct MqttUserProperty
 {

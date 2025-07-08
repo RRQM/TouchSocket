@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示一个 MQTT 会话客户端接口。
+/// 表示一个 Mqtt 会话客户端接口。
 /// </summary>
 public interface IMqttSessionClient : IMqttSession
 {

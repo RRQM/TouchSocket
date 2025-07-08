@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 协议的取消订阅确认消息。
+/// 表示 Mqtt 协议的取消订阅确认消息。
 /// </summary>
 public sealed partial class MqttUnsubAckMessage : MqttIdentifierMessage
 {

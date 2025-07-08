@@ -110,7 +110,7 @@ public static class StringExtension
     /// <returns>如果字符串不是null且非空格或制表符等，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public static bool HasValue([NotNullWhen(true)] this string str)
     {
-        // 使用string.IsNullOrWhiteSpace方法检查字符串是否为null或包含仅空格或制表符等
+        // 使用string.IsNullOrWhiteSpace方法检查字符串是否为<see langword="null"/>或包含仅空格或制表符等
         // 返回相反的结果以确定字符串是否具有有效值
         return !string.IsNullOrWhiteSpace(str);
     }

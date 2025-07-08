@@ -138,7 +138,7 @@ public class Method
 
     /// <summary>
     /// 真实返回值类型。
-    /// <para>当方法为void或task时，为null。</para>
+    /// <para>当方法为void或task时，为<see langword="null"/>。</para>
     /// <para>当方法为task泛型时，为泛型元素类型。</para>
     /// </summary>
     public Type RealReturnType => this.m_dynamicMethodInfo.RealReturnType;

@@ -375,22 +375,22 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     #region Null
 
     /// <summary>
-    /// 读取是否为null。
+    /// 读取是否为<see langword="null"/>。
     /// </summary>
-    /// <returns>如果读取内容为null，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
+    /// <returns>如果读取内容为<see langword="null"/>，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     bool ReadIsNull();
 
     /// <summary>
-    /// 写入一个值，并标记该值是否为null。
+    /// 写入一个值，并标记该值是否为<see langword="null"/>。
     /// </summary>
     /// <param name="t">要写入的值。</param>
     /// <typeparam name="T">值的类型，必须是引用类型。</typeparam>
     void WriteIsNull<T>(T t) where T : class;
 
     /// <summary>
-    /// 写入一个可能为null的值，并标记该值是否为null。
+    /// 写入一个可能为<see langword="null"/>的值，并标记该值是否为<see langword="null"/>。
     /// </summary>
-    /// <param name="t">要写入的值，可以为null。</param>
+    /// <param name="t">要写入的值，可以为<see langword="null"/>。</param>
     /// <typeparam name="T">值的类型，必须是值类型。</typeparam>
     void WriteIsNull<T>(T? t) where T : struct;
 
@@ -900,7 +900,7 @@ public interface IByteBlock : IDisposable, IBufferWriter<byte>
     /// <summary>
     /// 读取字节流数据包为只读内存。
     /// </summary>
-    /// <returns>只读内存字节块，可能为null</returns>
+    /// <returns>只读内存字节块，可能为<see langword="null"/></returns>
     ReadOnlyMemory<byte>? ReadBytesPackageMemory();
 
     /// <summary>

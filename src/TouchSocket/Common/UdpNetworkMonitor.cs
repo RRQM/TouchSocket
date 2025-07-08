@@ -26,7 +26,7 @@ public class UdpNetworkMonitor
     /// </summary>
     /// <param name="iPHost">IP主机信息</param>
     /// <param name="socket">Socket对象，用于网络通信</param>
-    /// <exception cref="ArgumentNullException">如果socket为null，则抛出此异常</exception>
+    /// <exception cref="ArgumentNullException">如果socket为<see langword="null"/>，则抛出此异常</exception>
     public UdpNetworkMonitor(IPHost iPHost, Socket socket)
     {
         this.IPHost = iPHost;

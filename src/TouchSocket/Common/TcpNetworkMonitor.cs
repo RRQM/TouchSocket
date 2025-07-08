@@ -27,12 +27,10 @@ public class TcpNetworkMonitor
     /// <param name="option">监听配置选项</param>
     /// <param name="socket">Socket组件</param>
     /// <param name="e">Socket异步事件参数</param>
-    /// <exception cref="ArgumentNullException">如果option或socket为null，则抛出此异常</exception>
+    /// <exception cref="ArgumentNullException">如果option或socket为<see langword="null"/>，则抛出此异常</exception>
     public TcpNetworkMonitor(TcpListenOption option, Socket socket, SocketAsyncEventArgs e)
     {
-        // 使用ThrowHelper方法验证option参数是否为null，如果为null则抛出ArgumentNullException异常
         this.Option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
-        // 使用ThrowHelper方法验证socket参数是否为null，如果为null则抛出ArgumentNullException异常
         this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
         this.SocketAsyncEvent = e;
     }

@@ -229,8 +229,13 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     #region Connect
 
-    /// <inheritdoc/>
-    public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    /// <summary>
+    /// 异步连接到串口设备。
+    /// </summary>
+    /// <param name="millisecondsTimeout">连接操作的超时时间（以毫秒为单位）。</param>
+    /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    protected async Task SerialPortConnectAsync(int millisecondsTimeout, CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
@@ -300,12 +305,12 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 设置数据处理适配器。
     /// </summary>
     /// <param name="adapter">要设置的适配器实例。</param>
-    /// <exception cref="ArgumentNullException">如果提供的适配器实例为null，则抛出此异常。</exception>
+    /// <exception cref="ArgumentNullException">如果提供的适配器实例为<see langword="null"/>，则抛出此异常。</exception>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
         // 检查当前实例是否已被释放，如果是，则抛出异常。
         this.ThrowIfDisposed();
-        // 检查adapter参数是否为null，如果是，则抛出ArgumentNullException异常。
+        // 检查adapter参数是否为<see langword="null"/>，如果是，则抛出ArgumentNullException异常。
         if (adapter is null)
         {
             throw new ArgumentNullException(nameof(adapter));
@@ -397,7 +402,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 清除接收器对象
     /// </summary>
     /// <remarks>
-    /// 将内部接收器对象置为null，以释放资源或重置状态
+    /// 将内部接收器对象置为<see langword="null"/>，以释放资源或重置状态
     /// </remarks>
     protected void ProtectedClearReceiver()
     {
@@ -410,7 +415,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// <param name="receiverObject">接收器客户端对象，用于接收操作结果。</param>
     /// <returns>返回一个实现了IReceiver&lt;IReceiverResult&gt;接口的接收器对象。</returns>
     /// <remarks>
-    /// 这个方法使用了空条件运算符（??=）来实现懒加载，即只有当m_receiver为null时才会创建一个新的InternalReceiver对象。
+    /// 这个方法使用了空条件运算符（??=）来实现懒加载，即只有当m_receiver为<see langword="null"/>时才会创建一个新的InternalReceiver对象。
     /// 这样做可以提高性能，因为无需频繁地创建接收器实例。
     /// </remarks>
     protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)

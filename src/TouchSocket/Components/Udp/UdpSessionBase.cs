@@ -94,7 +94,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="multicastAddr">指定的组播地址。</param>
     /// <exception cref="ObjectDisposedException">如果当前对象已被处置，则引发异常。</exception>
-    /// <exception cref="ArgumentNullException">如果multicastAddr为null，则引发异常。</exception>
+    /// <exception cref="ArgumentNullException">如果multicastAddr为<see langword="null"/>，则引发异常。</exception>
     public void DropMulticastGroup(IPAddress multicastAddr)
     {
         this.ThrowIfDisposed();
@@ -499,7 +499,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
     protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
     {
-        // 确保RemoteIPHost不为null，因为发送操作需要它。
+        // 确保RemoteIPHost不为<see langword="null"/>，因为发送操作需要它。
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传递目的端点和内存数据。
         return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory);
@@ -512,7 +512,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
     protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo)
     {
-        // 确保RemoteIPHost不为null，因为发送操作需要它。
+        // 确保RemoteIPHost不为<see langword="null"/>，因为发送操作需要它。
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传递目的端点和请求信息。
         return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo);
@@ -652,7 +652,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <returns>返回一个任务，表示异步操作的完成。</returns>
     protected Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
     {
-        // 检查RemoteIPHost是否为null，因为发送数据前需要确保目标端点已设置。
+        // 检查RemoteIPHost是否为<see langword="null"/>，因为发送数据前需要确保目标端点已设置。
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传入远端端点和要传输的字节数据。
         return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, transferBytes);
@@ -726,7 +726,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     protected void ProtectedClearReceiver()
     {
-        // 将m_receiver设置为null，以确保在不再需要时，接收器对象可以被垃圾回收。
+        // 将m_receiver设置为<see langword="null"/>，以确保在不再需要时，接收器对象可以被垃圾回收。
         this.m_receiver = null;
     }
 

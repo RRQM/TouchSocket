@@ -362,10 +362,10 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
     /// <param name="adapter">要设置的适配器实例</param>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
-        // 检查传入的适配器实例是否为null
+        // 检查传入的适配器实例是否为<see langword="null"/>
         if (adapter is null)
         {
-            // 如果为null，则抛出ArgumentNullException异常
+            // 如果为<see langword="null"/>，则抛出ArgumentNullException异常
             throw new ArgumentNullException(nameof(adapter));
         }
 

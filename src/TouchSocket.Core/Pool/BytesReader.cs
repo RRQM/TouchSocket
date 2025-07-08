@@ -1293,7 +1293,7 @@ public ref struct BytesReader
     #region Null
 
     /// <summary>
-    /// 从当前流位置读取一个标识值，判断是否为null。
+    /// 从当前流位置读取一个标识值，判断是否为<see langword="null"/>。
     /// </summary>
     public bool ReadIsNull()
     {

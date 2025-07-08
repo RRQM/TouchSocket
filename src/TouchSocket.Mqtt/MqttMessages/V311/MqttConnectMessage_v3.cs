@@ -15,7 +15,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示MQTT连接消息。
+/// 表示Mqtt连接消息。
 /// </summary>
 public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
 {
@@ -32,7 +32,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     /// <summary>
     /// 初始化 <see cref="MqttConnectMessage"/> 类的新实例。
     /// </summary>
-    /// <param name="options">MQTT连接选项。</param>
+    /// <param name="options">Mqtt连接选项。</param>
     public MqttConnectMessage(MqttConnectOptions options)
     {
         this.ProtocolName = MqttUtility.MqttProtocolName;
@@ -92,7 +92,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     public ushort KeepAlive { get; private set; }
 
     /// <summary>
-    /// 获取MQTT数据包类型。
+    /// 获取Mqtt数据包类型。
     /// </summary>
     public override MqttMessageType MessageType => MqttMessageType.Connect;
 
@@ -190,7 +190,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     /// 获取一个值，该值指示是否清理会话。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以下
+    /// Mqtt 5.0.0以下
     /// </remarks>
     public bool CleanSession => this.m_connectFlags.GetBit(1);
 

@@ -17,7 +17,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 连接选项。
+/// 表示 Mqtt 连接选项。
 /// </summary>
 public class MqttConnectOptions
 {
@@ -97,7 +97,7 @@ public class MqttConnectOptions
     /// 获取或设置认证数据。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public byte[] AuthenticationData { get; set; }
 
@@ -105,7 +105,7 @@ public class MqttConnectOptions
     /// 获取或设置认证方法。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public string AuthenticationMethod { get; set; }
 
@@ -113,7 +113,7 @@ public class MqttConnectOptions
     /// 获取或设置最大数据包大小。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public uint MaximumPacketSize { get; set; }
 
@@ -121,7 +121,7 @@ public class MqttConnectOptions
     /// 获取或设置接收最大值。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public ushort ReceiveMaximum { get; set; }
 
@@ -129,7 +129,7 @@ public class MqttConnectOptions
     /// 获取或设置请求问题信息标志。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public bool RequestProblemInformation { get; set; }
 
@@ -137,7 +137,7 @@ public class MqttConnectOptions
     /// 获取或设置请求响应信息标志。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public bool RequestResponseInformation { get; set; }
 
@@ -145,7 +145,7 @@ public class MqttConnectOptions
     /// 获取或设置会话过期时间间隔。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public uint SessionExpiryInterval { get; set; }
 
@@ -153,7 +153,7 @@ public class MqttConnectOptions
     /// 获取或设置主题别名最大值。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public ushort TopicAliasMaximum { get; set; }
 
@@ -165,7 +165,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱内容类型。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public string WillContentType { get; set; }
 
@@ -173,7 +173,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱关联数据。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public byte[] WillCorrelationData { get; set; }
 
@@ -181,7 +181,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱延迟时间间隔。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public uint WillDelayInterval { get; set; }
 
@@ -189,7 +189,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱消息过期时间间隔。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public uint WillMessageExpiryInterval { get; set; }
 
@@ -197,7 +197,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱负载格式指示符。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public MqttPayloadFormatIndicator WillPayloadFormatIndicator { get; set; }
 
@@ -205,7 +205,7 @@ public class MqttConnectOptions
     /// 获取或设置遗嘱响应主题。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public string WillResponseTopic { get; set; }
 
@@ -213,7 +213,7 @@ public class MqttConnectOptions
     /// 获取遗嘱用户属性列表。
     /// </summary>
     /// <remarks>
-    /// MQTT 5.0.0以上
+    /// Mqtt 5.0.0以上
     /// </remarks>
     public IReadOnlyList<MqttUserProperty> WillUserProperties { get; set; }
     public string WillMessage { get; internal set; }

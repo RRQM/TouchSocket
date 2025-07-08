@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，
+/// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为<see langword="null"/>，
 /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
 /// </summary>
 public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : IRequestInfo
@@ -208,7 +208,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     protected virtual bool IsBeCached(in TRequest request)
     {
         // 如果请求对象类型是值类型，则判断其哈希码是否与默认值不同；
-        // 如果是引用类型，则判断对象本身是否为null。
+        // 如果是引用类型，则判断对象本身是否为<see langword="null"/>。
         return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
     }
 

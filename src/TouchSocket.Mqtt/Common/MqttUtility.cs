@@ -18,8 +18,8 @@ namespace TouchSocket.Mqtt;
 
 public static class MqttUtility
 {
-    public const string MqttProtocolName = "MQTT";
-    public static ReadOnlySpan<byte> MqttProtocolNameSpan => Encoding.UTF8.GetBytes("MQTT");
+    public const string MqttProtocolName = "Mqtt";
+    public static ReadOnlySpan<byte> MqttProtocolNameSpan => Encoding.UTF8.GetBytes("Mqtt");
 
     public static IReadOnlyList<MqttUserProperty> EmptyUserProperties { get; } = [];
 }

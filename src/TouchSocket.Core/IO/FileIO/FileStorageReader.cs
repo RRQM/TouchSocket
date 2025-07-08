@@ -28,12 +28,12 @@ public partial class FileStorageReader : SafetyDisposableObject
     /// <param name="fileStorage">文件存储对象，用于处理文件读取操作。</param>
     /// <remarks>
     /// 此构造函数接收一个FileStorage对象作为参数，用于后续的文件读取操作。
-    /// 如果传入的FileStorage对象为null，则抛出ArgumentNullException异常，
+    /// 如果传入的FileStorage对象为<see langword="null"/>，则抛出ArgumentNullException异常，
     /// 这确保了文件读取操作不会在不合法的参数状态下执行，提高了代码的健壮性。
     /// </remarks>
     public FileStorageReader(FileStorage fileStorage)
     {
-        // 使用ThrowHelper提供的扩展方法验证fileStorage参数是否为null，
+        // 使用ThrowHelper提供的扩展方法验证fileStorage参数是否为<see langword="null"/>，
         // 并将fileStorage赋值给类成员变量FileStorage。
         this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
     }

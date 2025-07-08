@@ -393,43 +393,49 @@ public sealed class WebApiAttribute : RpcAttribute
         return default;
     }
 
+    /// <summary>
+    /// 获取正则路由路径。
+    /// <para>正则路由路径的第一个值会被当做调用值。</para>
+    /// </summary>
+    /// <param name="rpcMethod">表示远程过程调用方法的对象。</param>
+    /// <returns>返回正则路由路径的字符串数组。</returns>
     public string[] GetRegexRouteUrls(RpcMethod rpcMethod)
     {
         if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
         {
-            var urls = new List<string>();
-            //如果方法有特性，则会覆盖类的特性
-            var attrs = rpcMethod.Info.GetCustomAttributes(typeof(RegexRouterAttribute), false);
-            if (attrs.Length > 0)
+            var routes = new List<string>();
+            // 如果方法有特性，则会覆盖类的特性
+            var attributes = rpcMethod.Info.GetCustomAttributes(typeof(RegexRouterAttribute), false);
+            if (attributes.Length > 0)
             {
-                foreach (var item in attrs.Cast<RegexRouterAttribute>())
+                foreach (var item in attributes.Cast<RegexRouterAttribute>())
                 {
-                    var url = item.RegexTemple.ToLower();
+                    var route = item.RegexTemple.ToLower();
 
-                    if (!urls.Contains(url))
+                    if (!routes.Contains(route))
                     {
-                        urls.Add(url);
+                        routes.Add(route);
                     }
                 }
             }
             else
             {
-                attrs = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RegexRouterAttribute), false);
-                if (attrs.Length > 0)
+                attributes = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RegexRouterAttribute), false);
+                if (attributes.Length > 0)
                 {
-                    foreach (var item in attrs.Cast<RegexRouterAttribute>())
+                    foreach (var item in attributes.Cast<RegexRouterAttribute>())
                     {
-                        var url = item.RegexTemple.ToLower();
+                        var route = item.RegexTemple.ToLower();
 
-                        if (!urls.Contains(url))
+                        if (!routes.Contains(route))
                         {
-                            urls.Add(url);
+                            routes.Add(route);
                         }
                     }
                 }
             }
 
-            return urls.ToArray();
+            return routes.ToArray();
         }
         return default;
     }

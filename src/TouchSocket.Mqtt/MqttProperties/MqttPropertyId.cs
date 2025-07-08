@@ -13,7 +13,7 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 MQTT 属性的标识符。
+/// 表示 Mqtt 属性的标识符。
 /// </summary>
 public enum MqttPropertyId
 {

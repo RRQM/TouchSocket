@@ -82,7 +82,7 @@ public static class ClientExtension
     [Obsolete("此操作已被弃用，请使用ShutdownAsync代替", true)]
     public static bool TryShutdown<TClient>(this TClient client, SocketShutdown how = SocketShutdown.Both) where TClient : class, ITcpSession
     {
-        // 检查客户端对象是否为null或默认值
+        // 检查客户端对象是否为<see langword="null"/>或默认值
         if (client == default)
         {
             return false;
@@ -138,7 +138,7 @@ public static class ClientExtension
     [Obsolete("此操作已被弃用，请直接使用CloseAsync代替", true)]
     public static async Task SafeCloseAsync<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
-        // 尝试关闭客户端，如果客户端为null，则不执行任何操作。
+        // 尝试关闭客户端，如果客户端为<see langword="null"/>，则不执行任何操作。
         try
         {
             if (client == null)
@@ -222,7 +222,7 @@ public static class ClientExtension
     [Obsolete("此操作已被弃用，请直接使用Close代替", true)]
     public static void SafeClose<TClient>(this TClient client, string msg) where TClient : IClosableClient
     {
-        // 尝试关闭客户端，如果客户端为null，则不执行任何操作。
+        // 尝试关闭客户端，如果客户端为<see langword="null"/>，则不执行任何操作。
         try
         {
             if (client == null)
