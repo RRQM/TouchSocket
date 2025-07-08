@@ -1,29 +1,89 @@
 .TouchSocket-banner {
   padding: 4rem 2rem;
   align-items: center;
-  background-image: linear-gradient(to bottom, #211b50, #0a3e75, #006194, #0084ab, #00a8bc, #15b5c8, #23c3d4, #2fd1e0, #3ecaee, #60c2f5, #82b8f4, #a0aeec);
+  position: relative;
+  /* 白百合蓝色渐变背景 */
+  background: linear-gradient(135deg, 
+    #f0f8ff 0%,     /* Alice Blue */
+    #e6f3ff 25%,    /* Light Alice Blue */
+    #b3d9ff 50%,    /* Soft Blue */
+    #7fc8ff 75%,    /* Light Blue */
+    #4fb3ff 100%    /* Vibrant Blue */
+  );
+  /* 毛玻璃效果 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(79, 179, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.TouchSocket-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(79, 179, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(127, 200, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(240, 248, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .TouchSocket-banner.dark {
-  padding: 4rem 2rem;
-  align-items: center;
-  background-image: linear-gradient(to bottom, #211b50, #002d5b, #003956, #004248, #004838, #004b39, #004e3a, #00513b, #005250, #005060, #144d68, #384968);
+  background: linear-gradient(135deg, 
+    #1a2332 0%,     /* Dark Blue */
+    #2d3e5c 25%,    /* Medium Dark Blue */
+    #3e5a7a 50%,    /* Blue Grey */
+    #4f7698 75%,    /* Light Blue Grey */
+    #6092b6 100%    /* Soft Blue */
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(26, 35, 50, 0.3);
+  border: 1px solid rgba(96, 146, 182, 0.2);
 }
 
 .TouchSocket-banner-container {
   display: flex;
   justify-content: space-between;
-  max-width: 1140px;
+  align-items: flex-start;
+  max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  gap: 2rem;
 }
 
 .TouchSocket-banner-item {
   flex: 1;
+  min-width: 0;
+}
+
+.TouchSocket-banner-item:first-child {
+  flex: 0 0 auto;
+  max-width: 580px;
+  min-width: 520px;
+}
+
+.TouchSocket-banner-item:last-child {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
 }
 
 .TouchSocket-banner-project {
   font-size: 1.5em;
   font-weight: 700;
+  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.2));
+  margin-bottom: 0.5em;
 }
 
 .TouchSocket-banner-description {
@@ -31,10 +91,22 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
-  background-image: linear-gradient(81deg, #8759ff, #3fc4fe, #42ffac);
+  /* 白百合蓝色渐变文字 */
+  background: linear-gradient(135deg, 
+    #2d5aa0 0%,     /* Deep Alice Blue */
+    #4f7cb8 25%,    /* Medium Blue */
+    #7fa8d3 50%,    /* Light Blue */
+    #a5c6e0 75%,    /* Soft Blue */
+    #c7dded 100%    /* Very Light Blue */
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.1));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .TouchSocket-banner-description.dark {
@@ -42,89 +114,140 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
-  background-image: linear-gradient(to left top, #e0def1, #d6e1f9, #c9e6fe, #bbebfe, #b0eff8, #9ef0ef, #93efe0, #90eecc, #87e9af, #8ae28d, #96da66, #a8cf39);
+  background: linear-gradient(135deg, 
+    #c7dded 0%,     /* Very Light Blue */
+    #a5c6e0 25%,    /* Soft Blue */
+    #7fa8d3 50%,    /* Light Blue */
+    #6092b6 75%,    /* Medium Blue */
+    #8bb4d9 100%    /* Light Alice Blue */
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(199, 221, 237, 0.2));
 }
 
 .TouchSocket-banner-spec {
   padding: 0;
-  opacity: 0.7;
-  font-family: Muli;
+  opacity: 0.8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1em;
   font-weight: 500;
-  line-height: 1.33;
-  color: #fff;
+  line-height: 1.6;
+  color: #2d5aa0; /* Deep Alice Blue for better readability */
 }
 
 .TouchSocket-banner-spec li {
   list-style: none;
   position: relative;
-  padding-left: 1em;
+  padding-left: 1.5em;
   margin-bottom: 1em;
 }
 
 .TouchSocket-banner-spec li::before {
   content: "";
   position: absolute;
-  top: 0.5em;
+  top: 0.6em;
   left: 0;
-  width: 4px;
-  height: 4px;
-  background-color: rgb(135, 89, 255);
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #4f7cb8, #7fa8d3);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(79, 124, 184, 0.3);
 }
 
 .TouchSocket-support-platform {
-  font-size: 0.85em;
+  font-size: 0.9em;
   line-height: 2;
   margin-top: 3em;
-  font-weight: 500;
-  opacity: 0.6;
-  color: white;
-  font-family: Muli;
+  font-weight: 600;
+  opacity: 0.7;
+  color: #2d5aa0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.5px;
 }
 
 .TouchSocket-support-icons {
   display: flex;
-  margin-top: 12px;
+  margin-top: 16px;
+  align-items: center;
 }
 
 .TouchSocket-support-icons span {
-  margin-right: 20px;
+  margin-right: 24px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 2px 8px rgba(79, 124, 184, 0.2));
+}
+
+.TouchSocket-support-icons span:hover {
+  transform: translateY(-2px) scale(1.05);
+  filter: drop-shadow(0 4px 12px rgba(79, 124, 184, 0.4));
 }
 
 .TouchSocket-get-start,
 .TouchSocket-try-demo {
   margin-top: 4em;
   border-radius: 2em;
-  min-width: 145px;
-  color: #fff;
-  background: #8759ff;
+  min-width: 160px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f7cb8 0%, #7fa8d3 100%);
   position: relative;
-  line-height: 1.5;
+  line-height: 1.6;
   text-align: center;
-  padding: 8px 32px;
+  padding: 12px 36px;
   text-decoration: none;
   display: inline-block;
   white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(79, 124, 184, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.TouchSocket-get-start::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.TouchSocket-get-start:hover::before {
+  left: 100%;
 }
 
 .TouchSocket-try-demo {
-  background-color: rgb(33, 176, 145);
-  margin-left: 20px;
+  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  margin-left: 24px;
 }
 
 .TouchSocket-get-start:hover {
-  background: rgba(135, 89, 255, 0.9);
+  background: linear-gradient(135deg, #4169a3 0%, #6b96c7 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 124, 184, 0.4);
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .TouchSocket-try-demo:hover {
-  opacity: 0.9;
+  background: linear-gradient(135deg, #254a8a 0%, #4169a3 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45, 90, 160, 0.4);
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .TouchSocket-banner-item .system-window {
-  width: 34rem;
+  width: 42rem;
+  max-width: 50vw;
+  min-width: 34rem;
 }
 
 .TouchSocket-get-start:hover,
@@ -134,80 +257,204 @@
 }
 
 .system-top-bar {
-  background-image: linear-gradient(to right,
-      rgba(136, 89, 255, 0.2),
-      rgba(63, 196, 254, 0.2) 90%,
-      rgba(66, 255, 172, 0.2));
-  padding: 0.25em 1em;
+  background: linear-gradient(135deg, 
+    rgba(79, 179, 255, 0.2) 0%,
+    rgba(127, 200, 255, 0.15) 50%,
+    rgba(165, 198, 224, 0.1) 100%
+  );
+  padding: 0.5em 1em;
+  border-bottom: 1px solid rgba(79, 179, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .system-top-bar-circle {
   display: inline-block;
-  width: 0.5em;
-  height: 0.5em;
+  width: 0.6em;
+  height: 0.6em;
   margin-left: 0.3em;
   border-radius: 50%;
-  filter: brightness(100%);
+  filter: brightness(120%);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
 }
 
 .system-window {
   --ifm-leading: 0;
   width: 95%;
   padding: 0;
-  border-radius: 1em;
+  border-radius: 16px;
   overflow: hidden;
-  background: rgb(33, 27, 80);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .system-window iframe {
   border-radius: unset;
 }
 
+/* 代码窗口内部样式优化 */
 .system-window pre {
   margin-bottom: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 1.5rem !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  overflow-x: auto;
+}
+
+.system-window code {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  white-space: pre !important;
+}
+
+/* 移动端代码窗口优化 */
+@media screen and (max-width: 1024px) {
+  .system-window pre {
+    padding: 1rem !important;
+    font-size: 13px !important;
+  }
+  
+  .system-window code {
+    font-size: 13px !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .system-window pre {
+    padding: 0.75rem !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+  
+  .system-window code {
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .system-window pre {
+    padding: 0.5rem !important;
+    font-size: 11px !important;
+  }
+  
+  .system-window code {
+    font-size: 11px !important;
+  }
+}
+
+/* 宽屏下的字体大小优化 */
+@media screen and (min-width: 1440px) {
+  .system-window pre {
+    font-size: 15px !important;
+    padding: 2rem !important;
+  }
+  
+  .system-window code {
+    font-size: 15px !important;
+  }
+}
+
+@media screen and (min-width: 1920px) {
+  .system-window pre {
+    font-size: 16px !important;
+    padding: 2.5rem !important;
+  }
+  
+  .system-window code {
+    font-size: 16px !important;
+  }
 }
 
 .blue-accent {
-  --uni-border-color: #3fbbfe;
-  --uni-box-shadow-color: rgba(63, 187, 254, 0.1);
-  --ifm-menu-color-active: #3fbbfe;
+  --uni-border-color: #4f7cb8;
+  --uni-box-shadow-color: rgba(79, 124, 184, 0.15);
+  --ifm-menu-color-active: #4f7cb8;
 }
 
 .preview-border {
-  box-shadow: 0 6px 58px 0 rgba(63, 187, 254, 0.1);
-  border: solid 1px #3fbbfe;
+  box-shadow: 0 8px 32px rgba(79, 124, 184, 0.15);
+  border: solid 1px #4f7cb8;
 }
 
 .TouchSocket-content {
   margin-top: 4em;
   margin-bottom: 4em;
   text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-radius: 24px;
+  margin-left: 2rem;
+  margin-right: 2rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 179, 255, 0.1);
 }
 
 .TouchSocket-small-title {
-  color: #412a94;
-  font-family: Muli;
+  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1em;
   font-weight: 600;
   letter-spacing: 1px;
-  opacity: 0.6;
+  opacity: 0.8;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.1));
 }
 
 .TouchSocket-small-title.dark {
-  color: #f5f6f7;
+  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
+  background: linear-gradient(135deg, #a5c6e0 0%, #7fa8d3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(165, 198, 224, 0.2));
 }
 
 .TouchSocket-big-title {
-  color: #412a94;
-  font-family: Poppins;
-  font-size: 2em;
+  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 2.2em;
   font-weight: 700;
   line-height: 1.31;
   margin-bottom: 2em;
+  background: linear-gradient(135deg, 
+    #2d5aa0 0%,     /* Deep Alice Blue */
+    #4f7cb8 25%,    /* Medium Blue */
+    #7fa8d3 50%,    /* Light Blue */
+    #a5c6e0 100%    /* Soft Blue */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(45, 90, 160, 0.1));
 }
 
 .TouchSocket-big-title.dark {
-  color: #f5f6f7;
+  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
+  background: linear-gradient(135deg, 
+    #c7dded 0%,     /* Very Light Blue */
+    #a5c6e0 25%,    /* Soft Blue */
+    #7fa8d3 50%,    /* Light Blue */
+    #6092b6 100%    /* Medium Blue */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(165, 198, 224, 0.2));
 }
 
 .TouchSocket-gitee-log {
@@ -217,28 +464,51 @@
 }
 
 .TouchSocket-log-item {
-  width: 260px;
-  height: 173px;
+  width: 280px;
+  height: 180px;
   box-sizing: border-box;
   margin-right: 65px;
   position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.9) 0%,
+    rgba(230, 243, 255, 0.9) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(79, 179, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.TouchSocket-log-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(79, 179, 255, 0.25);
 }
 
 .TouchSocket-log-jiao {
-  width: 100px;
-  height: 100px;
-  background: #fff;
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
   position: absolute;
-  top: 0;
-  right: 0;
-  top: -6px;
-  right: -6px;
-  border-top: 1px dashed #a795e8;
-  border-right: 1px dashed #a795e8;
+  top: -8px;
+  right: -8px;
+  border-top: 2px solid rgba(79, 179, 255, 0.3);
+  border-right: 2px solid rgba(79, 179, 255, 0.3);
+  border-radius: 0 16px 0 50px;
 }
 
 .TouchSocket-log-jiao.dark {
-  background: #18191a;
+  background: linear-gradient(135deg, 
+    rgba(26, 35, 50, 0.8) 0%,
+    rgba(46, 62, 92, 0.6) 100%
+  );
+  border-top: 2px solid rgba(96, 146, 182, 0.4);
+  border-right: 2px solid rgba(96, 146, 182, 0.4);
 }
 
 .TouchSocket-log-item:last-child {
@@ -254,24 +524,32 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .TouchSocket-log-number div {
-  font-size: 3em;
+  font-size: 3.2em;
   font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.2em;
 }
 
 .TouchSocket-log-number span {
-  font-family: Poppins, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-stretch: normal;
   font-style: normal;
-  letter-spacing: normal;
+  letter-spacing: 1px;
   line-height: normal;
-  color: #1c1e21;
+  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  font-weight: 600;
+  font-size: 1.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .TouchSocket-log-number span.dark {
-  color: #f5f6f7;
+  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
 }
 
 .TouchSocket-remark {
@@ -462,6 +740,9 @@
 .TouchSocket-get-start-btn {
   position: relative;
   display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 2rem;
 }
 
 .TouchSocket-version {
@@ -473,14 +754,114 @@
   font-size: 16px;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.TouchSocket-banner-item {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.TouchSocket-banner-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.TouchSocket-log-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.TouchSocket-log-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.TouchSocket-log-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.TouchSocket-banner-spec li {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.TouchSocket-banner-spec li:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.TouchSocket-banner-spec li:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.TouchSocket-banner-spec li:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
 @media screen and (max-width: 1024px) {
+  .TouchSocket-banner {
+    padding: 2rem 1rem;
+  }
+
   .TouchSocket-banner-container {
     justify-content: unset;
     flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+    max-width: 100%;
+  }
+
+  .TouchSocket-banner-item:first-child {
+    max-width: 100%;
+    min-width: auto;
+  }
+
+  .TouchSocket-banner-item:last-child {
+    justify-content: center;
+  }
+
+  .TouchSocket-banner-description {
+    font-size: 1.6em;
+    margin: 1.5rem 0;
+    white-space: normal !important;
+    line-height: 1.3;
+  }
+
+  .TouchSocket-banner-spec {
+    text-align: left;
+    margin: 0 auto;
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .TouchSocket-support-platform {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  .TouchSocket-support-icons {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .TouchSocket-support-icons span {
+    margin-right: 0;
   }
 
   .TouchSocket-get-start-btn {
     text-align: center;
+    margin-top: 2rem;
+  }
+
+  .TouchSocket-get-start {
+    display: inline-block;
+    min-width: 180px;
+    margin: 0 auto;
   }
 
   #dotnet-china {
@@ -489,7 +870,9 @@
 
   .TouchSocket-banner-item .system-window {
     width: 100%;
-    margin-top: 3rem;
+    max-width: 100%;
+    margin-top: 2rem;
+    float: none !important;
   }
 
   .TouchSocket-gitee-log {
@@ -497,18 +880,32 @@
     flex-wrap: unset;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 1rem;
   }
 
   .TouchSocket-log-item {
     width: 100%;
-    height: 173px;
+    max-width: 320px;
+    height: 180px;
     margin-right: 0;
-    margin-top: 25px;
+    margin-bottom: 20px;
   }
 
   .TouchSocket-big-title {
     margin-bottom: 1em;
+    font-size: 1.4em;
+    padding: 0 1rem;
+  }
+
+  .TouchSocket-small-title {
+    font-size: 0.9em;
+    padding: 0 1rem;
+  }
+
+  .TouchSocket-content {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    padding: 1.5rem;
   }
 
   .TouchSocket-remark {
@@ -554,52 +951,260 @@
   }
 }
 
-.TouchSocket-bifa {
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  color: #fff;
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: center;
-  padding: 100px 0;
+/* 大屏幕下的代码窗口优化 */
+@media screen and (min-width: 1440px) {
+  .TouchSocket-banner-item .system-window {
+    width: 48rem;
+    max-width: 55vw;
+  }
+  
+  .TouchSocket-banner-container {
+    max-width: 1600px;
+    gap: 3rem;
+  }
+  
+  .TouchSocket-banner-item:first-child {
+    max-width: 620px;
+    min-width: 580px;
+  }
+  
+  .TouchSocket-banner-description {
+    font-size: 2.4em;
+  }
 }
 
-.TouchSocket-wzi {
-  border-left: 1px solid rgba(137, 147, 180, 0.5);
-  writing-mode: vertical-lr;
-  font-size: 20px;
-  font-family: Arial, Helvetica, sans-serif;
-  letter-spacing: 10px;
-  padding: 25px;
-  height: 320px;
+@media screen and (min-width: 1920px) {
+  .TouchSocket-banner-item .system-window {
+    width: 56rem;
+    max-width: 60vw;
+  }
+  
+  .TouchSocket-banner-container {
+    max-width: 1800px;
+    gap: 4rem;
+  }
+  
+  .TouchSocket-banner-item:first-child {
+    max-width: 680px;
+    min-width: 620px;
+  }
+  
+  .TouchSocket-banner-description {
+    font-size: 2.6em;
+  }
 }
 
-.TouchSocket-wzi span {
-  color: rgb(68, 188, 254);
-  font-weight: 500;
+/* 中等屏幕优化 */
+@media screen and (min-width: 1200px) and (max-width: 1439px) {
+  .TouchSocket-banner-item .system-window {
+    width: 40rem;
+    max-width: 48vw;
+  }
+  
+  .TouchSocket-banner-item:first-child {
+    max-width: 540px;
+    min-width: 480px;
+  }
+  
+  .TouchSocket-banner-description {
+    font-size: 2.0em;
+  }
 }
 
-.TouchSocket-wzi-title {
-  width: 84px;
-  height: 320px;
-  writing-mode: vertical-lr;
-  background: rgb(68, 114, 196);
-  background-image: linear-gradient(rgb(91, 128, 212) 1px, transparent 0),
-    linear-gradient(90deg, rgb(91, 128, 212) 1px, transparent 0);
-  background-size: 8px 8px;
-  margin-left: 40px;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 12px;
-  display: flex;
-  align-items: center;
+/* 确保描述文字的响应式显示 */
+@media screen and (max-width: 1199px) {
+  .TouchSocket-banner-description {
+    white-space: normal !important;
+    font-size: 1.8em;
+  }
 }
 
-.TouchSocket-wzi-title b {
-  font-size: 20px;
-  writing-mode: horizontal-tb;
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 20px 0;
-  letter-spacing: 2px;
+@media screen and (min-width: 1200px) {
+  .TouchSocket-banner-description {
+    white-space: nowrap;
+  }
+}
+
+/* 如果文字太长，在特定宽度范围内允许换行 */
+@media screen and (min-width: 1200px) and (max-width: 1350px) {
+  .TouchSocket-banner-description {
+    white-space: normal;
+    font-size: 1.9em;
+  }
+}
+
+/* 代码区域的语法高亮优化 */
+.system-window .language-cs {
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%) !important;
+  color: #e6edf3 !important;
+}
+
+.system-window .token.keyword {
+  color: #4f7cb8 !important; /* 白百合蓝色 - 关键字 */
+}
+
+.system-window .token.string {
+  color: #7fa8d3 !important; /* 白百合蓝色 - 字符串 */
+}
+
+.system-window .token.comment {
+  color: #6092b6 !important; /* 白百合蓝色 - 注释 */
+  font-style: italic;
+}
+
+.system-window .token.class-name {
+  color: #2d5aa0 !important; /* 白百合蓝色 - 类名 */
+}
+
+.system-window .token.function {
+  color: #4f7cb8 !important; /* 白百合蓝色 - 函数 */
+}
+
+.system-window .token.operator {
+  color: #a5c6e0 !important; /* 白百合蓝色 - 操作符 */
+}
+
+.system-window .token.punctuation {
+  color: #8bb4d9 !important; /* 白百合蓝色 - 标点 */
+}
+
+.system-window .token.number {
+  color: #c7dded !important; /* 白百合蓝色 - 数字 */
+}
+
+/* 代码高亮行 */
+.system-window .docusaurus-highlight-code-line {
+  background-color: rgba(79, 124, 184, 0.1) !important;
+  display: block;
+  margin: 0 -1em;
+  padding: 0 1em;
+  border-left: 3px solid #4f7cb8;
+}
+
+/* 代码块滚动条样式 */
+.system-window pre::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.system-window pre::-webkit-scrollbar-track {
+  background: rgba(79, 124, 184, 0.1);
+  border-radius: 4px;
+}
+
+.system-window pre::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4f7cb8 0%, #7fa8d3 100%);
+  border-radius: 4px;
+}
+
+.system-window pre::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+}
+
+/* 小屏幕优化 (手机屏幕) */
+@media screen and (max-width: 768px) {
+  .TouchSocket-banner {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .TouchSocket-banner-container {
+    gap: 1.5rem;
+  }
+
+  .TouchSocket-banner-description {
+    font-size: 1.4em;
+    margin: 1rem 0;
+    line-height: 1.2;
+  }
+
+  .TouchSocket-banner-spec {
+    padding: 0 0.5rem;
+    font-size: 0.9em;
+  }
+
+  .TouchSocket-banner-item .system-window {
+    margin-top: 1.5rem;
+  }
+
+  .TouchSocket-support-icons span {
+    transform: scale(0.9);
+  }
+
+  .TouchSocket-get-start {
+    min-width: 160px;
+    padding: 10px 24px;
+    font-size: 0.9em;
+  }
+
+  .TouchSocket-content {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    padding: 1rem;
+  }
+
+  .TouchSocket-big-title {
+    font-size: 1.2em;
+    line-height: 1.3;
+  }
+
+  .TouchSocket-log-item {
+    max-width: 280px;
+    height: 160px;
+  }
+
+  .TouchSocket-log-number div {
+    font-size: 2.5em;
+  }
+}
+
+/* 超小屏幕优化 */
+@media screen and (max-width: 480px) {
+  .TouchSocket-banner {
+    padding: 1rem 0.5rem;
+  }
+
+  .TouchSocket-banner-description {
+    font-size: 1.2em;
+  }
+
+  .TouchSocket-banner-spec {
+    font-size: 0.85em;
+  }
+
+  .TouchSocket-support-icons span {
+    transform: scale(0.8);
+    margin: 0.25rem;
+  }
+
+  .TouchSocket-get-start {
+    min-width: 140px;
+    padding: 8px 20px;
+    font-size: 0.85em;
+  }
+
+  .TouchSocket-content {
+    margin: 0.25rem;
+    padding: 0.75rem;
+  }
+
+  .TouchSocket-big-title {
+    font-size: 1.1em;
+  }
+
+  .TouchSocket-small-title {
+    font-size: 0.8em;
+  }
+
+  .TouchSocket-log-item {
+    max-width: 260px;
+    height: 140px;
+  }
+
+  .TouchSocket-log-number div {
+    font-size: 2.2em;
+  }
+
+  .TouchSocket-log-number span {
+    font-size: 0.9em;
+  }
 }

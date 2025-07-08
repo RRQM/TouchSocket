@@ -1,67 +1,444 @@
-/* CardLink.css */
+/* BilibiliCard.css - 优化的白百合蓝色主题设计 */
+.bilibili-card {
+  margin: 16px 0;
+  position: relative;
+}
+
 .card-link {
   display: block;
   width: 100%;
-  /* 设置宽度为100%，占据父容器全宽 */
   position: relative;
-  text-align: left;
-  /* 左对齐文本 */
-  padding: 20px;
-  margin: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
   text-decoration: none;
-  color: #333;
-  transition: background-color 0.3s ease;
+  color: inherit;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(248, 253, 255, 0.95) 0%,
+    rgba(240, 248, 255, 0.95) 50%,
+    rgba(232, 243, 255, 0.95) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79, 179, 255, 0.15);
+  box-shadow: 
+    0 4px 20px rgba(79, 179, 255, 0.08),
+    0 2px 6px rgba(79, 179, 255, 0.05);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(79, 179, 255, 0.05) 50%,
+    transparent 100%
+  );
+  transition: left 0.8s ease;
+  z-index: 1;
+}
+
+.card-link:hover::before {
+  left: 100%;
 }
 
 .card-link:hover {
-  background-color: #f0f0f0;
+  background: linear-gradient(135deg, 
+    rgba(240, 248, 255, 0.98) 0%,
+    rgba(232, 243, 255, 0.98) 50%,
+    rgba(217, 235, 255, 0.98) 100%
+  );
+  border-color: rgba(79, 179, 255, 0.25);
+  box-shadow: 
+    0 8px 32px rgba(79, 179, 255, 0.12),
+    0 4px 12px rgba(79, 179, 255, 0.08);
+  transform: translateY(-3px);
+  color: inherit;
+  text-decoration: none;
 }
 
 .card-content {
   display: flex;
-  /* 使用Flex布局 */
   align-items: center;
-  /* 垂直居中对齐 */
+  padding: 18px 24px;
+  position: relative;
+  z-index: 2;
 }
 
-.card-content img {
-  margin-right: 10px;
-  /* 图片与文本之间的间距 */
+.icon-container {
+  margin-right: 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    rgba(79, 179, 255, 0.1) 0%,
+    rgba(79, 179, 255, 0.05) 100%
+  );
+  transition: all 0.3s ease;
+}
+
+.bilibili-icon {
+  color: #4fb3ff;
+  width: 36px;
+  height: 36px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(79, 179, 255, 0.2));
+}
+
+.card-link:hover .icon-container {
+  background: linear-gradient(135deg, 
+    rgba(79, 179, 255, 0.15) 0%,
+    rgba(79, 179, 255, 0.08) 100%
+  );
+  transform: scale(1.05);
+}
+
+.card-link:hover .bilibili-icon {
+  color: #2d8ce6;
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(79, 179, 255, 0.3));
+}
+
+.card-text {
+  flex: 1;
 }
 
 .card-content h3 {
-  margin: 5px;
-  margin-left: 10px;
-  /* 设置左边距 */
-  /* 标题与描述之间的间距 */
-  flex: 1;
-  /* 让标题占据剩余空间 */
+  margin: 0 0 2px 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #2d5aa0;
+  line-height: 1.3;
+  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 1px 2px rgba(45, 90, 160, 0.1));
+  transition: all 0.3s ease;
 }
 
-.card-content p {
-  flex: 1;
-  /* 让描述占据剩余空间 */
+.card-link:hover .card-content h3 {
+  background: linear-gradient(135deg, #1e4080 0%, #2d5aa0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: translateX(2px);
+}
+
+.card-description {
+  margin: 0;
+  color: #6092b6;
+  font-size: 0.8em;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.card-link:hover .card-description {
+  color: #4f7cb8;
+  opacity: 1;
 }
 
 .pro-badge {
   position: absolute;
-  top: 1px;
-  right: 2px;
-  z-index: 1;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
 }
 
 .pro-badge a {
-  font-size: 12px;
-  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 6px 12px;
   border: none;
-  border-radius: 3px;
-  background-color: #007bff;
+  border-radius: 14px;
+  background: linear-gradient(135deg, 
+    #4f7cb8 0%,
+    #7fa8d3 50%,
+    #a5c6e0 100%
+  );
   color: white;
+  text-decoration: none;
   cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 
+    0 3px 10px rgba(79, 124, 184, 0.25),
+    0 1px 3px rgba(79, 124, 184, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pro-badge a span {
+  position: relative;
+  z-index: 1;
+}
+
+.pro-badge a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+  z-index: 0;
+}
+
+.pro-badge a:hover::before {
+  left: 100%;
 }
 
 .pro-badge a:hover {
-  background-color: #0056b3;
+  background: linear-gradient(135deg, 
+    #2d5aa0 0%,
+    #4f7cb8 50%,
+    #7fa8d3 100%
+  );
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(79, 124, 184, 0.35),
+    0 3px 8px rgba(79, 124, 184, 0.25);
+  color: white;
+  text-decoration: none;
+}
+
+/* 暗色主题适配 */
+[data-theme='dark'] .bilibili-card {
+  margin: 16px 0;
+}
+
+[data-theme='dark'] .card-link {
+  background: linear-gradient(135deg, 
+    rgba(28, 36, 52, 0.95) 0%,
+    rgba(35, 45, 62, 0.95) 50%,
+    rgba(42, 54, 72, 0.95) 100%
+  );
+  border: 1px solid rgba(96, 146, 182, 0.2);
+  box-shadow: 
+    0 4px 20px rgba(15, 23, 35, 0.3),
+    0 2px 6px rgba(15, 23, 35, 0.2);
+}
+
+[data-theme='dark'] .card-link::before {
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(96, 146, 182, 0.08) 50%,
+    transparent 100%
+  );
+}
+
+[data-theme='dark'] .card-link:hover {
+  background: linear-gradient(135deg, 
+    rgba(42, 54, 72, 0.98) 0%,
+    rgba(52, 68, 88, 0.98) 50%,
+    rgba(62, 82, 108, 0.98) 100%
+  );
+  border-color: rgba(96, 146, 182, 0.35);
+  box-shadow: 
+    0 8px 32px rgba(15, 23, 35, 0.4),
+    0 4px 12px rgba(15, 23, 35, 0.25);
+}
+
+[data-theme='dark'] .icon-container {
+  background: linear-gradient(135deg, 
+    rgba(96, 146, 182, 0.15) 0%,
+    rgba(96, 146, 182, 0.08) 100%
+  );
+}
+
+[data-theme='dark'] .bilibili-icon {
+  color: #8bb4d9;
+}
+
+[data-theme='dark'] .card-link:hover .icon-container {
+  background: linear-gradient(135deg, 
+    rgba(96, 146, 182, 0.22) 0%,
+    rgba(96, 146, 182, 0.12) 100%
+  );
+}
+
+[data-theme='dark'] .card-link:hover .bilibili-icon {
+  color: #a5c6e0;
+}
+
+[data-theme='dark'] .card-content h3 {
+  background: linear-gradient(135deg, #a5c6e0 0%, #c7dded 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(165, 198, 224, 0.2));
+}
+
+[data-theme='dark'] .card-link:hover .card-content h3 {
+  background: linear-gradient(135deg, #c7dded 0%, #e6f3ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme='dark'] .card-description {
+  color: #8bb4d9;
+}
+
+[data-theme='dark'] .card-link:hover .card-description {
+  color: #a5c6e0;
+}
+
+[data-theme='dark'] .pro-badge a {
+  background: linear-gradient(135deg, 
+    #6092b6 0%,
+    #8bb4d9 50%,
+    #a5c6e0 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 3px 10px rgba(15, 23, 35, 0.4),
+    0 1px 3px rgba(15, 23, 35, 0.25);
+}
+
+[data-theme='dark'] .pro-badge a:hover {
+  background: linear-gradient(135deg, 
+    #4f7698 0%,
+    #6092b6 50%,
+    #8bb4d9 100%
+  );
+  box-shadow: 
+    0 4px 16px rgba(15, 23, 35, 0.5),
+    0 2px 6px rgba(15, 23, 35, 0.35);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .bilibili-card {
+    margin: 12px 0;
+  }
+  
+  .card-content {
+    padding: 16px 20px;
+  }
+  
+  .icon-container {
+    width: 38px;
+    height: 38px;
+    margin-right: 14px;
+  }
+  
+  .bilibili-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .card-content h3 {
+    font-size: 1em;
+  }
+  
+  .card-description {
+    font-size: 0.75em;
+  }
+  
+  .pro-badge {
+    top: 12px;
+    right: 12px;
+  }
+  
+  .pro-badge a {
+    font-size: 9px;
+    padding: 5px 10px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .bilibili-card {
+    margin: 10px 0;
+  }
+  
+  .card-content {
+    padding: 14px 18px;
+  }
+  
+  .icon-container {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+  }
+  
+  .bilibili-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .card-content h3 {
+    font-size: 0.95em;
+    line-height: 1.2;
+  }
+  
+  .card-description {
+    font-size: 0.7em;
+  }
+  
+  .pro-badge {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .pro-badge a {
+    font-size: 8px;
+    padding: 4px 8px;
+  }
+}
+
+/* 添加一些微动画增强体验 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.card-link:active .icon-container {
+  animation: pulse 0.3s ease;
+}
+
+.card-link:active .bilibili-icon {
+  animation: pulse 0.3s ease;
+}
+
+/* 改善点击体验 */
+.card-link:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.pro-badge a:active {
+  transform: translateY(-1px) scale(0.95);
 }
