@@ -18,6 +18,59 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.1.12
+
+**更新日期：** 2025.1.8
+
+**更新描述：**
+
+- 兼容性修复升级。
+- 代码质量和文档规范化改进，以及功能增强。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> 代码注释规范化，统一将 "null" 改为 `<see langword="null"/>` 的XML文档格式。
+- &nbsp;<Tag>新增</Tag> `EasyMemoryMarshal` 类增加了更详细的文档和泛型约束。
+- &nbsp;<Tag>优化</Tag> 多个核心类的内存管理和线程安全性。
+- &nbsp;<Tag>优化</Tag> `TouchSocketBitConverter` 中的异常文档注释。
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>优化</Tag> MQTT协议名称从 "MQTT" 统一为 "Mqtt"。
+- &nbsp;<Tag>重构</Tag> `MqttSessionActor` 消息分发机制，提升性能和稳定性。
+- &nbsp;<Tag>新增</Tag> `ThreadSafeTopicSubscriptions` 类，提供线程安全的主题订阅管理。
+- &nbsp;<Tag>优化</Tag> `MqttBroker` 的消息转发逻辑，改进并发处理能力。
+- &nbsp;<Tag>修复</Tag> `MqttReceivedEventArgs` 中属性命名一致性问题。
+
+#### TouchSocket.SerialPorts
+
+- &nbsp;<Tag>新增</Tag> `ISerialPortClient` 和 `SerialPortClient` 实现 `IConnectableClient` 接口。
+- &nbsp;<Tag>新增</Tag> `ConnectAsync` 方法支持异步连接操作。
+- &nbsp;<Tag>调整</Tag> `ISerialPortSession` 接口继承关系，移除冗余接口。
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>新增</Tag> `IModbusRtuMaster` 实现 `IConnectableClient` 接口。
+- &nbsp;<Tag>新增</Tag> `ModbusRtuMaster` 增加 `ConnectAsync` 方法支持。
+
+#### TouchSocket.WebApi
+
+- &nbsp;<Tag>新增</Tag> `RegexRouterAttribute` 类增加详细的XML文档注释。
+- &nbsp;<Tag>优化</Tag> `WebApiAttribute` 中的路由处理逻辑和变量命名。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>优化</Tag> 网络监听器和客户端基类的参数验证和错误处理。
+- &nbsp;<Tag>修复</Tag> `ReconnectionPlugin` 的 Dispose 方法错误，修复无限循环任务的正确释放机制。([#68](https://github.com/RRQM/TouchSocket/pull/68) by [@godchadigo](https://github.com/godchadigo))
+
+***
+
+<details>
+<summary>v3.1</summary>
+<div>
+
 ## v3.1.9(10)(11)
 
 **更新日期：** 2025.6.24
@@ -53,11 +106,6 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>新增</Tag> `PlcObject`组件。
 
 ***
-
-<details>
-<summary>v3.1</summary>
-<div>
-
 
 ## v3.1.8
 
