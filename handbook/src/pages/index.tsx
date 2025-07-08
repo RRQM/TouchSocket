@@ -38,11 +38,9 @@ function Banner() {
       <div className="TouchSocket-banner-container">
         <div className="TouchSocket-banner-item">
           <div className="TouchSocket-banner-project">
-            <span style={{ fontSize: 20, fontWeight: "Blod", color: "#FFFFFF" }}>
-              TouchSocket
-            </span>
+            TouchSocket
           </div>
-          <div style={{ color: "#82aaff", position: "relative", fontSize: 14 }}>
+          <div style={{ color: "#4f7cb8", position: "relative", fontSize: 14, fontWeight: 500, marginTop: "0.5em" }}>
             一款简单易用的基础网络通讯组件库。
           </div>
           <div className={"TouchSocket-banner-description"+ (isDarkTheme ? " dark" : "")}>
@@ -138,37 +136,37 @@ function Gitee() {
       <div className="TouchSocket-gitee-log">
         <div
           className="TouchSocket-log-item"
-          style={{ border: "6px solid #723cff" }}
+          style={{ border: "3px solid #4f7cb8" }}
         >
           <div
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#723cff" }}>2000 +</div>
+            <div style={{ color: "#2d5aa0" }}>2000 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Stars</span>
           </div>
         </div>
         <div
           className="TouchSocket-log-item"
-          style={{ border: "6px solid #3fbbfe" }}
+          style={{ border: "3px solid #7fa8d3" }}
         >
           <div
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#3fbbfe" }}>600 +</div>
+            <div style={{ color: "#4f7cb8" }}>600 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Forks</span>
           </div>
         </div>
         <div
           className="TouchSocket-log-item"
-          style={{ border: "6px solid #1fd898" }}
+          style={{ border: "3px solid #a5c6e0" }}
         >
           <div
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#1fd898" }}>202,125</div>
+            <div style={{ color: "#6092b6" }}>202,125</div>
             <span className={isDarkTheme ? " dark" : ""}>Downloads</span>
           </div>
         </div>
@@ -216,15 +214,15 @@ function SystemWindow(systemWindowProps) {
       <div className="system-top-bar">
         <span
           className="system-top-bar-circle"
-          style={{ backgroundColor: "#8759ff" }}
+          style={{ backgroundColor: "#f5222d" }}
         />
         <span
           className="system-top-bar-circle"
-          style={{ backgroundColor: "#3fc4fe" }}
+          style={{ backgroundColor: "#faad14" }}
         />
         <span
           className="system-top-bar-circle"
-          style={{ backgroundColor: "#42ffac" }}
+          style={{ backgroundColor: "#52c41a" }}
         />
       </div>
       {children}

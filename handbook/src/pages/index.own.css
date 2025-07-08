@@ -1,25 +1,245 @@
 .navbar {
-  background-color: #211b50;
+  background: linear-gradient(135deg, 
+    #f0f8ff 0%,     /* Alice Blue */
+    #e6f3ff 25%,    /* Light Alice Blue */
+    #d9ecff 50%,    /* Soft Blue */
+    #cce5ff 100%    /* Light Blue */
+  );
 }
 
 .navbar__brand {
-  color: #fff;
+  color: #2d5aa0; /* 深蓝色 */
+  font-weight: 700;
 }
 
 .navbar__link {
-  color: #fff;
+  color: #2d5aa0; /* 深蓝色 */
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  margin: 0 0.25rem;
 }
 
-.navbar__link:hover,
+.navbar__link:hover {
+  color: #4f7cb8; /* 中蓝色 */
+  background: rgba(79, 124, 184, 0.1);
+  transform: translateY(-1px);
+}
+
 .navbar__link--active {
-  color: yellow;
+  color: #4f7cb8; /* 中蓝色 */
+  background: rgba(79, 124, 184, 0.15);
+  box-shadow: 0 2px 8px rgba(79, 124, 184, 0.2);
+}
+
+.navbar__link--active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, #4f7cb8, #7fa8d3);
+  border-radius: 1px;
 }
 
 .navbar__items {
-  color: #fff;
+  color: #2d5aa0; /* 深蓝色 */
 }
 
 .menu__list-item .navbar__link--active,
 .menu__list-item .navbar__link:hover {
-  color: #743dff;
+  color: #4f7cb8; /* 中蓝色 */
+}
+
+/* 下拉菜单样式 */
+.dropdown__menu {
+  background: rgba(240, 248, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(79, 124, 184, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(79, 124, 184, 0.15);
+  padding: 0.5rem 0;
+}
+
+.dropdown__link {
+  color: #2d5aa0;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown__link:hover {
+  background: rgba(79, 124, 184, 0.1);
+  color: #4f7cb8;
+}
+
+/* 菜单分割线 */
+.navbar__separator {
+  margin: 0 0.5rem;
+  color: rgba(45, 90, 160, 0.3);
+}
+
+/* 暗色主题下的导航栏样式 */
+[data-theme='dark'] .navbar {
+  background: linear-gradient(135deg, 
+    #1a2332 0%,     /* Dark Blue */
+    #2d3e5c 25%,    /* Medium Dark Blue */
+    #3e5a7a 50%,    /* Blue Grey */
+    #4f7698 100%    /* Light Blue Grey */
+  );
+}
+
+[data-theme='dark'] .navbar__brand {
+  color: #a5c6e0; /* 浅蓝色 */
+}
+
+[data-theme='dark'] .navbar__link {
+  color: #a5c6e0; /* 浅蓝色 */
+}
+
+[data-theme='dark'] .navbar__link:hover {
+  color: #c7dded; /* 更浅的蓝色 */
+  background: rgba(165, 198, 224, 0.15);
+}
+
+[data-theme='dark'] .navbar__link--active {
+  color: #c7dded; /* 更浅的蓝色 */
+  background: rgba(165, 198, 224, 0.2);
+  box-shadow: 0 2px 8px rgba(165, 198, 224, 0.2);
+}
+
+[data-theme='dark'] .navbar__link--active::after {
+  background: linear-gradient(90deg, #a5c6e0, #c7dded);
+}
+
+[data-theme='dark'] .navbar__items {
+  color: #a5c6e0; /* 浅蓝色 */
+}
+
+[data-theme='dark'] .menu__list-item .navbar__link--active,
+[data-theme='dark'] .menu__list-item .navbar__link:hover {
+  color: #c7dded; /* 更浅的蓝色 */
+}
+
+[data-theme='dark'] .dropdown__menu {
+  background: rgba(26, 35, 50, 0.95);
+  border: 1px solid rgba(96, 146, 182, 0.3);
+  box-shadow: 0 4px 16px rgba(26, 35, 50, 0.3);
+}
+
+[data-theme='dark'] .dropdown__link {
+  color: #a5c6e0;
+}
+
+[data-theme='dark'] .dropdown__link:hover {
+  background: rgba(96, 146, 182, 0.15);
+  color: #c7dded;
+}
+
+[data-theme='dark'] .navbar__separator {
+  color: rgba(165, 198, 224, 0.3);
+}
+
+/* 移动端菜单样式优化 */
+@media (max-width: 996px) {
+  .menu__link {
+    color: #2d5aa0;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    margin: 0.125rem 0.5rem;
+    display: block;
+    position: relative;
+  }
+  
+  .menu__link:hover {
+    background: rgba(79, 124, 184, 0.1);
+    color: #4f7cb8;
+    transform: translateX(4px);
+  }
+  
+  .menu__link--active {
+    background: rgba(79, 124, 184, 0.15);
+    color: #4f7cb8;
+    font-weight: 600;
+  }
+  
+  .menu__link--active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(180deg, #4f7cb8, #7fa8d3);
+    border-radius: 0 2px 2px 0;
+  }
+  
+  .menu__list-item {
+    margin: 0.25rem 0;
+  }
+  
+  .menu__caret {
+    transition: transform 0.2s ease;
+  }
+  
+  .menu__list-item--collapsed .menu__caret {
+    transform: rotate(-90deg);
+  }
+  
+  /* 暗色主题移动端菜单 */
+  [data-theme='dark'] .menu__link {
+    color: #a5c6e0;
+  }
+  
+  [data-theme='dark'] .menu__link:hover {
+    background: rgba(96, 146, 182, 0.15);
+    color: #c7dded;
+  }
+  
+  [data-theme='dark'] .menu__link--active {
+    background: rgba(96, 146, 182, 0.2);
+    color: #c7dded;
+  }
+  
+  [data-theme='dark'] .menu__link--active::before {
+    background: linear-gradient(180deg, #a5c6e0, #c7dded);
+  }
+}
+
+/* 面包屑导航样式 */
+.breadcrumbs__link {
+  color: #2d5aa0;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.breadcrumbs__link:hover {
+  background: rgba(79, 124, 184, 0.1);
+  color: #4f7cb8;
+}
+
+.breadcrumbs__item--active .breadcrumbs__link {
+  color: #4f7cb8;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .breadcrumbs__link {
+  color: #a5c6e0;
+}
+
+[data-theme='dark'] .breadcrumbs__link:hover {
+  background: rgba(96, 146, 182, 0.15);
+  color: #c7dded;
+}
+
+[data-theme='dark'] .breadcrumbs__item--active .breadcrumbs__link {
+  color: #c7dded;
 }
