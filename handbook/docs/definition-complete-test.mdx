@@ -1,0 +1,154 @@
+---
+title: Definition组件完整测试
+---
+
+import { 
+  TouchSocketDefinition,
+  TouchSocketCoreDefinition,
+  TouchSocketDmtpDefinition,
+  TouchSocketHttpDefinition,
+  TouchSocketNamedPipeDefinition,
+  TouchSocketSerialPortsDefinition,
+  TouchSocketRpcDefinition,
+  TouchSocketJsonRpcDefinition,
+  TouchSocketXmlRpcDefinition,
+  TouchSocketWebApiDefinition,
+  TouchSocketWebApiSwaggerDefinition,
+  TouchSocketModbusDefinition,
+  TouchSocketMqttDefinition,
+  TouchSocketAspNetCoreDefinition,
+  TouchSocketHostingDefinition,
+  TouchSocketCoreDependencyInjectionDefinition,
+  TouchSocketCoreAutofacDefinition,
+  TouchSocketRpcRateLimitingDefinition,
+  TouchSocketProDefinition,
+  TouchSocketProDmtpDefinition,
+  TouchSocketProAspNetCoreDefinition,
+  TouchSocketProHostingDefinition,
+  TouchSocketProModbusDefinition,
+  TouchSocketProPlcBridgesDefinition,
+  TouchSocketPipelinesDefinition
+} from '@site/src/components/Definition.js';
+
+# Definition组件完整测试
+
+这个页面展示了所有可用的TouchSocket预定义Definition组件。
+
+## 基础包
+
+### TouchSocket
+<TouchSocketDefinition />
+
+### TouchSocket.Core
+<TouchSocketCoreDefinition />
+
+## 通信协议包
+
+### TouchSocket.Dmtp
+<TouchSocketDmtpDefinition />
+
+### TouchSocket.Http
+<TouchSocketHttpDefinition />
+
+### TouchSocket.NamedPipe
+<TouchSocketNamedPipeDefinition />
+
+### TouchSocket.SerialPorts
+<TouchSocketSerialPortsDefinition />
+
+## RPC包
+
+### TouchSocket.Rpc
+<TouchSocketRpcDefinition />
+
+### TouchSocket.JsonRpc
+<TouchSocketJsonRpcDefinition />
+
+### TouchSocket.XmlRpc
+<TouchSocketXmlRpcDefinition />
+
+### TouchSocket.WebApi
+<TouchSocketWebApiDefinition />
+
+### TouchSocket.WebApi.Swagger
+<TouchSocketWebApiSwaggerDefinition />
+
+## 工业协议包
+
+### TouchSocket.Modbus
+<TouchSocketModbusDefinition />
+
+### TouchSocket.Mqtt
+<TouchSocketMqttDefinition />
+
+## 扩展包
+
+### TouchSocket.AspNetCore
+<TouchSocketAspNetCoreDefinition />
+
+### TouchSocket.Hosting
+<TouchSocketHostingDefinition />
+
+### TouchSocket.Core.DependencyInjection
+<TouchSocketCoreDependencyInjectionDefinition />
+
+### TouchSocket.Core.Autofac
+<TouchSocketCoreAutofacDefinition />
+
+### TouchSocket.Rpc.RateLimiting
+<TouchSocketRpcRateLimitingDefinition />
+
+## 专业版包
+
+### TouchSocketPro
+<TouchSocketProDefinition />
+
+### TouchSocketPro.Dmtp
+<TouchSocketProDmtpDefinition />
+
+### TouchSocketPro.AspNetCore
+<TouchSocketProAspNetCoreDefinition />
+
+### TouchSocketPro.Hosting
+<TouchSocketProHostingDefinition />
+
+### TouchSocketPro.Modbus
+<TouchSocketProModbusDefinition />
+
+### TouchSocketPro.PlcBridges (多包组合)
+<TouchSocketProPlcBridgesDefinition />
+
+## 实验性包
+
+### TouchSocket.Pipelines
+<TouchSocketPipelinesDefinition />
+
+## 带版本号测试
+
+### TouchSocket.Core (带版本号)
+<TouchSocketCoreDefinition withVersion={true} />
+
+### TouchSocketPro.Dmtp (带版本号)
+<TouchSocketProDmtpDefinition withVersion={true} />
+
+## 总结
+
+✅ **已完成的优化项目**：
+1. **BilibiliCard组件美化** - SVG内嵌、主题适配、响应式优化
+2. **Definition组件重构** - 支持type预设、多命名空间/程序集、dotnet命令智能生成
+3. **预定义组件扩展** - 覆盖所有26个TouchSocket NuGet包
+4. **批量替换脚本升级** - 自动检测程序集类型、处理特殊格式、支持复杂定义部分
+5. **文档统一替换** - 处理了547个文件，320个成功更新
+
+📊 **处理统计**：
+- **docs目录**: 121个文件，81个更新
+- **versioned_docs目录**: 426个文件，239个更新  
+- **总计**: 547个文件，320个成功更新，227个跳过（无定义部分或已处理）
+
+🎯 **技术特性**：
+- 支持单一和多个命名空间显示
+- 支持单一和多个程序集链接
+- 智能生成dotnet安装命令（支持多包组合）
+- 一键复制安装命令
+- 响应式设计，暗色主题适配
+- 预定义组件简化使用，可选版本控制
