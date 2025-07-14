@@ -18,6 +18,30 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.1.13
+
+**更新日期：** 2025.7.14
+
+**更新描述：**
+
+- 修复和改进升级，提升稳定性和性能。
+- MQTT协议处理优化和错误修复。
+
+**更新详情：**
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>修复</Tag> MQTT 协议名称统一为 "MQTT"（大写），修复协议标准一致性问题。
+- &nbsp;<Tag>修复</Tag> `MqttAdapter` 中消息解析位置计算错误，修复数据包边界计算问题。
+- &nbsp;<Tag>修复</Tag> `VariableByteIntegerRecorder` 中长度设置错误，修复变长整数记录器的边界处理。
+
+***
+
+
+<details>
+<summary>v3.1</summary>
+<div>
+
 ## v3.1.12
 
 **更新日期：** 2025.7.8
@@ -67,9 +91,6 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ***
 
-<details>
-<summary>v3.1</summary>
-<div>
 
 ## v3.1.9(10)(11)
 
