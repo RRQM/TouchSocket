@@ -15,8 +15,8 @@
 	<ItemGroup>
 		<PackageReference Include="FastEndpoints" Version="6.1.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="TouchSocket.Hosting" Version="3.1.12" />
-		<PackageReference Include="TouchSocket.WebApi" Version="3.1.12" />
-		<PackageReference Include="TouchSocket.WebApi.Swagger" Version="3.1.12" />
+		<PackageReference Include="TouchSocket.Hosting" Version="3.1.13" />
+		<PackageReference Include="TouchSocket.WebApi" Version="3.1.13" />
+		<PackageReference Include="TouchSocket.WebApi.Swagger" Version="3.1.13" />
 	</ItemGroup>
 </Project>
