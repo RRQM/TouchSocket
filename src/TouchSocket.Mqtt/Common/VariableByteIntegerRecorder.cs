@@ -40,13 +40,15 @@ internal ref struct VariableByteIntegerRecorder
         if (lenCount > this.m_minimumCount)
         {
             var moveCount = lenCount - this.m_minimumCount;
+            //len += moveCount;
+
             byteBlock.ExtendSize(moveCount);
             var span = byteBlock.TotalMemory.Span.Slice(this.m_dataPosition);
             ShiftWithRight(span, moveCount);
 
             byteBlock.Position = this.m_startPosition;
             MqttExtension.WriteVariableByteInteger(ref byteBlock, (uint)len);
-            byteBlock.SetLength(endPosition);
+            byteBlock.SetLength(endPosition+ moveCount);
             byteBlock.SeekToEnd();
         }
         else

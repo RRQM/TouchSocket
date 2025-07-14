@@ -16,11 +16,11 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
 
-internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
+public class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
 {
     public override bool CanSendRequestInfo => true;
 
-    public MqttProtocolVersion Version { get; private set; } = MqttProtocolVersion.Unknown;
+    public MqttProtocolVersion Version { get; private set; } = MqttProtocolVersion.V311;
 
     protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref MqttMessage request, ref int tempCapacity)
     {
@@ -51,7 +51,7 @@ internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
 
         byteBlock.Position = position;
         mqttMessage.Unpack(ref byteBlock);
-        if (byteBlock.Position != position + remainingLength + 2)
+        if (byteBlock.Position != position + remainingLength + 1+MqttExtension.GetVariableByteIntegerCount((int)remainingLength))
         {
             throw new Exception("存在没有读取的数据");
         }
