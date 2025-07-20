@@ -203,20 +203,21 @@ public class HttpResponse : HttpBase
     {
         if (!this.ContentCompleted.HasValue)
         {
-            if (!this.IsChunk && this.ContentLength == 0)
+            var contentLength= this.ContentLength;
+            if (!this.IsChunk && contentLength == 0)
             {
                 this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
                 return this.m_contentMemory;
             }
 
-            if (!this.IsChunk && this.ContentLength > MaxCacheSize)
+            if (!this.IsChunk && contentLength > MaxCacheSize)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
+                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(contentLength), contentLength, MaxCacheSize);
             }
 
             try
             {
-                using (var memoryStream = new MemoryStream(1024 * 1024))
+                using (var memoryStream = new MemoryStream((int)contentLength))
                 {
                     while (true)
                     {
@@ -232,7 +233,7 @@ public class HttpResponse : HttpBase
 
                         if (memoryStream.Length > MaxCacheSize)
                         {
-                            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
+                            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(contentLength), contentLength, MaxCacheSize);
                         }
                     }
                     this.ContentCompleted = true;
