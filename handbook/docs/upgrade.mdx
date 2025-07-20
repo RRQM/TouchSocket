@@ -18,6 +18,24 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.1.14
+
+**更新日期：** 2025.7.20
+
+**更新描述：**
+
+- HTTP模块性能优化和内存管理改进。
+
+**更新详情：**
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> `HttpResponse.GetContentAsync` 方法中的内存流初始化，使用精确的内容长度预分配内存，提升性能。
+- &nbsp;<Tag>优化</Tag> 内存分配策略，减少不必要的内存占用。
+- &nbsp;<Tag>优化</Tag> 变量命名和局部变量使用，提升代码可读性。
+
+***
+
 ## v3.1.13
 
 **更新日期：** 2025.7.14
