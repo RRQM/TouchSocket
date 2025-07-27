@@ -49,7 +49,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
                 {
                     SerializerConverter = this.SerializerConverter,
                     Resolver = client.Client.Resolver,
-                    SendAction = (data) => client.SendAsync(data, WSDataType.Text)
+                    SendAction = (data,token) => client.SendAsync(data, WSDataType.Text,true,token)
                 };
 
                 jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
@@ -68,7 +68,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
         {
             e.Handled = true;
 
-            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData.Memory, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {

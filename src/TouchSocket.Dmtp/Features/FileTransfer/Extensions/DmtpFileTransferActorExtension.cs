@@ -147,7 +147,7 @@ public static class DmtpFileTransferActorExtension
             }
 
             var failResult = Result.UnknownFail;
-            await Task.Run(async () =>
+            await EasyTask.SafeRun(async () =>
              {
                  var failed = 0;
                  while (true)
@@ -282,7 +282,7 @@ public static class DmtpFileTransferActorExtension
             }
 
             var failResult = Result.UnknownFail;
-            await Task.Run(async () =>
+            await EasyTask.SafeRun(async () =>
             {
                 var failed = 0;
                 while (true)

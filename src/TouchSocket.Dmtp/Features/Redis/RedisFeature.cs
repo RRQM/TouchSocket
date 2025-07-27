@@ -41,7 +41,7 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
     /// <summary>
     /// 实际储存缓存。
     /// </summary>
-    public ICache<string, byte[]> ICache { get; set; } = new MemoryCache<string, byte[]>();
+    public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; } = new MemoryCache<string, ReadOnlyMemory<byte>>();
 
     /// <inheritdoc/>
     public ushort ReserveProtocolSize => 5;
@@ -82,7 +82,7 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
     /// 设置实际储存缓存。默认使用<see cref="MemoryCache{TKey, TValue}"/>
     /// </summary>
     /// <param name="cache"></param>
-    public RedisFeature SetCache(ICache<string, byte[]> cache)
+    public RedisFeature SetCache(ICache<string, ReadOnlyMemory<byte>> cache)
     {
         this.ICache = cache;
         return this;

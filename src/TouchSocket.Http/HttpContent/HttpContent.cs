@@ -59,7 +59,7 @@ public abstract class HttpContent
     /// <param name="func">一个函数，用于处理字节块的写入操作</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>, Task> func, CancellationToken token)
+    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> func, CancellationToken token)
     {
         return this.WriteContent(func, token);
     }
@@ -91,7 +91,7 @@ public abstract class HttpContent
     /// <param name="writeFunc">一个函数，用于处理字节块的写入操作</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token);
+    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> writeFunc, CancellationToken token);
 
     #region implicit
 

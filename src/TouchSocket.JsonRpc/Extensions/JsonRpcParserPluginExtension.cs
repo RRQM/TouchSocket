@@ -20,8 +20,6 @@ namespace TouchSocket.JsonRpc;
 /// </summary>
 public static class JsonRpcParserPluginExtension
 {
-#if SystemTextJson
-
     /// <summary>
     /// 使用System.Text.Json进行序列化
     /// </summary>
@@ -39,5 +37,4 @@ public static class JsonRpcParserPluginExtension
 
         return jsonRpcParserPlugin;
     }
-#endif
 }

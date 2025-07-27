@@ -76,9 +76,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> writeFunc, CancellationToken token)
     {
-        await writeFunc(this.m_memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writeFunc(this.m_memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

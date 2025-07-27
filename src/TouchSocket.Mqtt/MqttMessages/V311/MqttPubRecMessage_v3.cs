@@ -23,15 +23,15 @@ public sealed partial class MqttPubRecMessage : MqttIdentifierMessage
     public override MqttMessageType MessageType => MqttMessageType.PubRec;
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
     }
     /// <inheritdoc/>
     protected override int GetMinimumRemainingLength()

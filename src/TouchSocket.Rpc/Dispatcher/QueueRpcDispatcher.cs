@@ -53,7 +53,7 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
     {
         if (disposing)
         {
-            this.m_cancellationTokenSource.Cancel();
+            this.m_cancellationTokenSource.SafeCancel();
             this.m_cancellationTokenSource.SafeDispose();
         }
         base.Dispose(disposing);

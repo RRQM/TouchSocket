@@ -21,45 +21,7 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public static class WebSocketDataFrameExtension
 {
-
-    /// <summary>
-    /// 将二进制数据追加到WSDataFrame对象的PayloadData属性中。
-    /// </summary>
-    /// <param name="dataFrame">要追加数据的WSDataFrame对象。</param>
-    /// <param name="span">要追加的二进制数据，使用<see cref="ReadOnlySpan{T}"/>类型以提高性能。</param>
-    /// <returns>返回修改后的WSDataFrame对象，以便支持链式调用。</returns>
-    public static WSDataFrame AppendBinary(this WSDataFrame dataFrame, ReadOnlySpan<byte> span)
-    {
-        // 如果PayloadData属性尚未初始化，则创建一个新的ByteBlock对象，大小为span的长度。
-        dataFrame.PayloadData ??= new ByteBlock(span.Length);
-        // 将span中的数据写入PayloadData属性的末尾。
-        dataFrame.PayloadData.Write(span);
-        // 返回修改后的WSDataFrame对象。
-        return dataFrame;
-    }
-
-
-    /// <summary>
-    /// 将文本数据追加到WSDataFrame对象的PayloadData中。
-    /// </summary>
-    /// <param name="dataFrame">要追加文本数据的WSDataFrame对象。</param>
-    /// <param name="text">要追加的文本数据。</param>
-    /// <param name="encoding">文本数据的编码方式。默认为UTF8。</param>
-    /// <returns>追加文本数据后的WSDataFrame对象。</returns>
-    public static WSDataFrame AppendText(this WSDataFrame dataFrame, string text, Encoding encoding = default)
-    {
-        // 根据提供的编码方式或默认UTF8编码，将文本转换为字节数据。
-        var data = (encoding == default ? Encoding.UTF8 : encoding).GetBytes(text);
-
-        // 如果WSDataFrame的PayloadData尚未初始化，则使用当前数据长度初始化一个新的ByteBlock。
-        dataFrame.PayloadData ??= new ByteBlock(data.Length);
-
-        // 将转换后的字节数据写入PayloadData中。
-        dataFrame.PayloadData.Write(data);
-
-        // 返回更新后的WSDataFrame对象。
-        return dataFrame;
-    }
+    public static readonly ReadOnlyMemory<byte> DefaultMaskingKey = "RRQM".ToUtf8Bytes();
 
     /// <summary>
     /// 构建请求数据（含Make）
@@ -68,18 +30,18 @@ public static class WebSocketDataFrameExtension
     /// <param name="byteBlock">字节块对象，用于存储构建的请求数据</param>
     /// <typeparam name="TByteBlock">泛型参数，指定字节块的类型，必须实现IByteBlock接口</typeparam>
     /// <remarks>
-    /// 此方法通过设置数据帧的Mask属性为true，并确保数据帧具有MaskingKey，
+    /// 此方法通过设置数据帧的Mask属性为<see langword="true"/>，并确保数据帧具有MaskingKey，
     /// 然后调用dataFrame的Build方法来构建请求数据，并将结果存储在byteBlock中。
     /// 如果MaskingKey未设置，则使用"RRQM"作为默认值。
     /// </remarks>
     public static void BuildRequest<TByteBlock>(this WSDataFrame dataFrame, ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        // 设置数据帧的Mask属性为true，表示数据在传输前会被掩码处理
+        // 设置数据帧的Mask属性为<see langword="true"/>，表示数据在传输前会被掩码处理
         dataFrame.Mask = true;
         // 检查MaskingKey是否已设置，如果没有设置，则使用默认值"RRQM"
-        if (dataFrame.MaskingKey == null)
+        if (dataFrame.MaskingKey.IsEmpty)
         {
-            dataFrame.SetMaskString("RRQM");
+            dataFrame.SetMask(DefaultMaskingKey);
         }
         // 调用Build方法构建请求数据，并将结果存储在byteBlock中
         dataFrame.Build(ref byteBlock);
@@ -92,12 +54,12 @@ public static class WebSocketDataFrameExtension
     /// <returns>构建完成的字节数组</returns>
     public static byte[] BuildRequestToBytes(this WSDataFrame dataFrame)
     {
-        // 设置数据帧的Mask属性为true，确保数据帧被掩码处理
+        // 设置数据帧的Mask属性为<see langword="true"/>，确保数据帧被掩码处理
         dataFrame.Mask = true;
         // 如果数据帧的MaskingKey属性为空，则设置MaskingKey
-        if (dataFrame.MaskingKey == null)
+        if (dataFrame.MaskingKey.IsEmpty)
         {
-            dataFrame.SetMaskString("RRQM");
+            dataFrame.SetMask(DefaultMaskingKey);
         }
         // 创建一个ValueByteBlock对象，用于存储构建过程中的字节数据
         var byteBlock = new ValueByteBlock(dataFrame.MaxLength);

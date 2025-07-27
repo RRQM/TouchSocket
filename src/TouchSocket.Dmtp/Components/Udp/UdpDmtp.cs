@@ -65,17 +65,17 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
         return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory)
+    internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(m_endPoint, memory);
+        return this.ProtectedSendAsync(m_endPoint, memory,token);
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_timer.SafeDispose();
         this.m_udpDmtpClients.Clear();
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>

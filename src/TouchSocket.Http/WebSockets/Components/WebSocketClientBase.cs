@@ -162,7 +162,7 @@ public abstract class WebSocketClientBase : HttpClientBase
     {
         if (dataFrame.IsClose)
         {
-            var msg = dataFrame.PayloadData?.ToString();
+            var msg = dataFrame.PayloadData.Span.ToUtf8String();
             await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             await this.m_webSocket.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;

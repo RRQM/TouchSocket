@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -23,7 +22,7 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
 {
-    private CancellationTokenSource m_cancellationBeginReconnectTaskTokenSource;
+    private Task m_beginReconnectTask;
     private bool m_polling;
     private TimeSpan m_tick = TimeSpan.FromSeconds(1);
 
@@ -44,7 +43,6 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                 return false;
             }
         };
-        this.m_cancellationBeginReconnectTaskTokenSource = new CancellationTokenSource();
     }
 
     /// <summary>
@@ -65,7 +63,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
-        _ = EasyTask.Run(this.BeginReconnect, sender, this.m_cancellationBeginReconnectTaskTokenSource.Token);
+        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -115,7 +113,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// 设置连接动作
     /// </summary>
     /// <param name="sleepTime">失败时间隔时间</param>
-    /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为null或者返回<see langword="false"/>，则终止尝试下次连接。</param>
+    /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为<see langword="null"/>或者返回<see langword="false"/>，则终止尝试下次连接。</param>
     /// <param name="successCallback">成功连接时回调</param>
     /// <returns></returns>
     public ReconnectionPlugin<TClient> SetConnectAction(TimeSpan sleepTime,
@@ -230,14 +228,10 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            this.m_cancellationBeginReconnectTaskTokenSource.Cancel();
-        }
         base.Dispose(disposing);
     }
 
-    private async Task BeginReconnect(IConfigObject sender, CancellationToken token)
+    private async Task BeginReconnect(IConfigObject sender)
     {
         if (!this.m_polling)
         {
@@ -249,7 +243,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
             return;
         }
 
-        client.Logger?.Debug(this, TouchSocketResource.PollingBegin.Format(this.Tick));
+        client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingBegin.Format(this.Tick));
 
         var failCount = 0;
 
@@ -257,12 +251,12 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         {
             while (true)
             {
-                if (this.DisposedValue || token.IsCancellationRequested)
+                if (this.DisposedValue)
                 {
-                    client.Logger?.Debug(this, TouchSocketResource.PollingWillEnd);
+                    client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingWillEnd);
                     return;
                 }
-                await Task.Delay(this.Tick, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
                     var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -296,5 +290,6 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         {
             client.Logger?.Debug(this, TouchSocketResource.PollingEnd);
         }
+
     }
 }

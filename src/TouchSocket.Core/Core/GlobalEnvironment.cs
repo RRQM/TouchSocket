@@ -41,10 +41,5 @@ public static class GlobalEnvironment
     /// <summary>
     /// 获取应用程序的基础目录。
     /// </summary>
-    public static string BaseDirectory =>
-#if NET45
-            AppDomain.CurrentDomain.BaseDirectory;
-#else
-            AppContext.BaseDirectory;
-#endif
+    public static string BaseDirectory => AppContext.BaseDirectory;
 }

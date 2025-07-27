@@ -23,19 +23,27 @@ public interface IFastBinaryConverter
     /// <summary>
     /// 从字节块中读取对象。
     /// </summary>
-    /// <param name="byteBlock">包含对象数据的字节块。</param>
+    /// <param name="reader">包含对象数据的字节块。</param>
     /// <param name="type">要读取的对象的类型。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+    /// <typeparam name="TReader">字节块的类型，实现了IByteBlock接口。</typeparam>
     /// <returns>从字节块中读取的对象实例。</returns>
-    object Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
+    object Read<TReader>(ref TReader reader, Type type) where TReader : IBytesReader
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 
     /// <summary>
     /// 将对象写入字节块。
     /// </summary>
-    /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+    /// <param name="writer">将要包含对象数据的字节块。</param>
     /// <param name="obj">要写入的对象实例。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
-    void Write<TByteBlock>(ref TByteBlock byteBlock, in object obj) where TByteBlock : IByteBlock;
+    /// <typeparam name="TWriter">字节块的类型，实现了IByteBlock接口。</typeparam>
+    void Write<TWriter>(ref TWriter writer, in object obj) where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 }
 
 /// <summary>
@@ -47,40 +55,48 @@ public abstract class FastBinaryConverter<T> : IFastBinaryConverter
     /// <summary>
     /// 通过此实现从字节块中读取对象。
     /// </summary>
-    /// <param name="byteBlock">包含对象数据的字节块。</param>
+    /// <param name="reader">包含对象数据的字节块。</param>
     /// <param name="type">要读取的对象的类型。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+    /// <typeparam name="TReader">字节块的类型，实现了IByteBlock接口。</typeparam>
     /// <returns>从字节块中读取的对象实例。</returns>
-    object IFastBinaryConverter.Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    object IFastBinaryConverter.Read<TReader>(ref TReader reader, Type type)
     {
-        return this.Read(ref byteBlock, type);
+        return this.Read(ref reader, type);
     }
 
     /// <summary>
     /// 通过此实现将对象写入字节块。
     /// </summary>
-    /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+    /// <param name="writer">将要包含对象数据的字节块。</param>
     /// <param name="obj">要写入的对象实例。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
-    void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock, in object obj)
+    /// <typeparam name="TWriter">字节块的类型，实现了IByteBlock接口。</typeparam>
+    void IFastBinaryConverter.Write<TWriter>(ref TWriter writer, in object obj)
     {
-        this.Write(ref byteBlock, (T)obj);
+        this.Write(ref writer, (T)obj);
     }
 
     /// <summary>
     /// 从字节块中读取对象。必须由具体实现类实现。
     /// </summary>
-    /// <param name="byteBlock">包含对象数据的字节块。</param>
+    /// <param name="reader">包含对象数据的字节块。</param>
     /// <param name="type">要读取的对象的类型。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+    /// <typeparam name="TReader">字节块的类型，实现了IByteBlock接口。</typeparam>
     /// <returns>从字节块中读取的对象实例。</returns>
-    protected abstract T Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
+    protected abstract T Read<TReader>(ref TReader reader, Type type) where TReader : IBytesReader
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 
     /// <summary>
     /// 将对象写入字节块。必须由具体实现类实现。
     /// </summary>
-    /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+    /// <param name="writer">将要包含对象数据的字节块。</param>
     /// <param name="obj">要写入的对象实例。</param>
-    /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
-    protected abstract void Write<TByteBlock>(ref TByteBlock byteBlock, in T obj) where TByteBlock : IByteBlock;
+    /// <typeparam name="TWriter">字节块的类型，实现了IByteBlock接口。</typeparam>
+    protected abstract void Write<TWriter>(ref TWriter writer, in T obj) where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 }

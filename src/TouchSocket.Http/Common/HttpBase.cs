@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -128,15 +129,17 @@ public abstract class HttpBase : IRequestInfo
         return this.m_httpBlockSegment.InternalInputAsync(memory);
     }
 
-    internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    internal bool ParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
     {
-        var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(StringExtension.Default_RNRN_Utf8Span);
-        if (index > 0)
+        var index = ReaderExtension.IndexOf(ref reader, StringExtension.Default_RNRN_Utf8Span);
+
+        if (index >= 0)
         {
-            var headerLength = index - byteBlock.Position + 2;
-            this.ReadHeaders(byteBlock.Span.Slice(byteBlock.Position, headerLength));
-            byteBlock.Position += headerLength;
-            byteBlock.Position += 2;
+            var headerLength = (int)(index - reader.BytesRead + 2);
+            var headerSpan= reader.GetSpan(headerLength).Slice(0, headerLength);
+           
+            this.ReadHeaders(headerSpan);
+            reader.Advance(headerLength + 2);
             return true;
         }
         else

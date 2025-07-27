@@ -382,7 +382,7 @@ public static class SystemExtension
     /// <param name="length"></param>
     /// <param name="subByteArray"></param>
     /// <returns></returns>
-    public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, Span<byte> subByteArray)
+    public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, ReadOnlySpan<byte> subByteArray)
     {
         var subByteArrayLen = subByteArray.Length;
         var indexes = new List<int>();
@@ -648,13 +648,9 @@ public static class SystemExtension
         {
             types = type.GetGenericArguments();
         }
-        else if (type.IsArray)
-        {
-            types = new Type[] { type.GetElementType() };
-        }
         else
         {
-            types = [];
+            types = type.IsArray ? (new Type[] { type.GetElementType() }) : (IEnumerable<Type>)[];
         }
 
         var stringBuilder = new StringBuilder();
@@ -670,64 +666,6 @@ public static class SystemExtension
     }
 
     #endregion Type
-
-    #region Memory
-
-    /// <summary>
-    /// 从指定的 <see cref="Memory{T}"/> 对象中获取内部数组。
-    /// </summary>
-    /// <param name="memory">要获取内部数组的内存对象。</param>
-    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
-    /// <remarks>
-    /// 此方法通过将 <see cref="Memory{T}"/> 对象转换为 <see cref="ReadOnlyMemory{T}"/> 对象，
-    /// 然后调用 <see cref="GetArray(ReadOnlyMemory{byte})"/> 方法来获取内部数组。
-    /// </remarks>
-    public static ArraySegment<byte> GetArray(this Memory<byte> memory)
-    {
-        return ((ReadOnlyMemory<byte>)memory).GetArray();
-    }
-
-    /// <summary>
-    /// 从指定的 <see cref="ReadOnlyMemory{T}"/> 对象中获取内部数组。
-    /// </summary>
-    /// <param name="memory">要获取内部数组的只读内存对象。</param>
-    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
-    /// <remarks>
-    /// 此方法尝试通过 <see cref="MemoryMarshal.TryGetArray"/> 方法获取内存的内部数组。
-    /// 如果成功，直接返回结果；如果失败（即内存不是由数组支持的），则将内存复制到数组并返回该数组的段。
-    /// </remarks>
-    public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
-    {
-        return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
-    }
-
-    #endregion Memory
-
-    #region EndPoint
-
-    /// <summary>
-    /// 从<see cref="EndPoint"/>中获得IP地址。
-    /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
-    public static string GetIP(this EndPoint endPoint)
-    {
-        var r = endPoint.ToString().LastIndexOf(":");
-        return endPoint.ToString().Substring(0, r);
-    }
-
-    /// <summary>
-    /// 从<see cref="EndPoint"/>中获得Port。
-    /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
-    public static int GetPort(this EndPoint endPoint)
-    {
-        var r = endPoint.ToString().LastIndexOf(":");
-        return Convert.ToInt32(endPoint.ToString().Substring(r + 1, endPoint.ToString().Length - (r + 1)));
-    }
-
-    #endregion EndPoint
 
     #region Span<byte>
     /// <summary>
@@ -752,6 +690,11 @@ public static class SystemExtension
         // 对于更早的版本，将Span转换为数组再处理
         return encoding.GetString(span.ToArray());
 #endif
+    }
+
+    public static unsafe string ToUtf8String(this ReadOnlySpan<byte> span)
+    {
+        return ToString(span, Encoding.UTF8);
     }
 
     /// <summary>
@@ -811,6 +754,73 @@ public static class SystemExtension
     /// </summary>
     private static bool IsWhitespace(byte b) => b == 0x20 || b == 0x09;
     #endregion
+
+    #region Memory
+
+    /// <summary>
+    /// 从指定的 <see cref="Memory{T}"/> 对象中获取内部数组。
+    /// </summary>
+    /// <param name="memory">要获取内部数组的内存对象。</param>
+    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+    /// <remarks>
+    /// 此方法通过将 <see cref="Memory{T}"/> 对象转换为 <see cref="ReadOnlyMemory{T}"/> 对象，
+    /// 然后调用 <see cref="GetArray(ReadOnlyMemory{byte})"/> 方法来获取内部数组。
+    /// </remarks>
+    public static ArraySegment<byte> GetArray(this Memory<byte> memory)
+    {
+        return ((ReadOnlyMemory<byte>)memory).GetArray();
+    }
+
+    /// <summary>
+    /// 从指定的 <see cref="ReadOnlyMemory{T}"/> 对象中获取内部数组。
+    /// </summary>
+    /// <param name="memory">要获取内部数组的只读内存对象。</param>
+    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+    /// <remarks>
+    /// 此方法尝试通过 <see cref="MemoryMarshal.TryGetArray"/> 方法获取内存的内部数组。
+    /// 如果成功，直接返回结果；如果失败（即内存不是由数组支持的），则将内存复制到数组并返回该数组的段。
+    /// </remarks>
+    public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
+    {
+        return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
+    }
+
+    public static T First<T>(this ReadOnlyMemory<T> memory)
+    {
+        if (memory.IsEmpty)
+        {
+            ThrowHelper.ThrowArgumentNullException(nameof(memory));
+        }
+        return memory.Span[0];
+    }
+
+    #endregion Memory
+
+    #region EndPoint
+
+    /// <summary>
+    /// 从<see cref="EndPoint"/>中获得IP地址。
+    /// </summary>
+    /// <param name="endPoint"></param>
+    /// <returns></returns>
+    public static string GetIP(this EndPoint endPoint)
+    {
+        var r = endPoint.ToString().LastIndexOf(":");
+        return endPoint.ToString().Substring(0, r);
+    }
+
+    /// <summary>
+    /// 从<see cref="EndPoint"/>中获得Port。
+    /// </summary>
+    /// <param name="endPoint"></param>
+    /// <returns></returns>
+    public static int GetPort(this EndPoint endPoint)
+    {
+        var r = endPoint.ToString().LastIndexOf(":");
+        return Convert.ToInt32(endPoint.ToString().Substring(r + 1, endPoint.ToString().Length - (r + 1)));
+    }
+
+    #endregion EndPoint
 
     #region DateTime
     private static readonly DateTime s_utc_time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -927,10 +937,10 @@ public static class SystemExtension
     /// <remarks>
     /// 此方法利用内存块的 GetArray 方法获取数组段信息，然后使用现有的 WriteAsync 方法异步地将内容写入流中，提高了写入操作的效率和灵活性。
     /// </remarks>
-    public static async Task WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var segment = memory.GetArray();
-        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token);
+        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -986,11 +996,7 @@ public static class SystemExtension
         {
             var buffer = new byte[stream.Length];
             var bytesRead = stream.Read(buffer, 0, buffer.Length);
-            if (bytesRead != buffer.Length)
-            {
-                throw new IOException("读取的字节数与流的长度不匹配。");
-            }
-            return buffer;
+            return bytesRead != buffer.Length ? throw new IOException("读取的字节数与流的长度不匹配。") : buffer;
         }
 
         // 如果流不支持长度属性或位置不在起始位置，使用 MemoryStream 来读取数据
@@ -1013,12 +1019,71 @@ public static class SystemExtension
     /// </summary>
     public static IEnumerable<T> GetSafeEnumerator<T>(this IEnumerable<T> enumerator)
     {
-        if (enumerator is null)
-        {
-            return [];
-        }
+        return enumerator is null ? [] : enumerator;
+    }
+    #endregion
 
-        return enumerator;
+    #region ReadOnlySequence
+    public static long IndexOf(this ReadOnlySequence<byte> sequence, ReadOnlySpan<byte> value)
+    {
+        // 处理空值或空序列
+        if (value.Length == 0) return 0;
+        if (sequence.Length < value.Length) return -1;
+
+        byte firstByte = value[0];
+        long globalPosition = 0;
+        var enumerator = sequence.GetEnumerator();
+
+        // 遍历每个内存段
+        while (enumerator.MoveNext())
+        {
+            ReadOnlySpan<byte> currentSpan = enumerator.Current.Span;
+            int localIndex = 0;
+
+            // 在当前段中搜索首字节
+            while (localIndex < currentSpan.Length)
+            {
+                // 查找首字节匹配位置
+                int matchIndex = currentSpan.Slice(localIndex).IndexOf(firstByte);
+                if (matchIndex == -1) break;
+
+                localIndex += matchIndex;
+                long globalIndex = globalPosition + localIndex;
+
+                // 检查剩余长度是否足够
+                if (sequence.Length - globalIndex < value.Length)
+                    return -1;
+
+                // 检查完整匹配
+                if (IsMatch(sequence, globalIndex, value))
+                    return globalIndex;
+
+                localIndex++; // 继续搜索下一个位置
+            }
+            globalPosition += currentSpan.Length;
+        }
+        return -1;
+    }
+
+    private static bool IsMatch(ReadOnlySequence<byte> sequence, long start, ReadOnlySpan<byte> value)
+    {
+        // 切片目标长度的子序列
+        var slice = sequence.Slice(start, value.Length);
+        int valueIndex = 0;
+
+        // 遍历子序列的所有段
+        foreach (var segment in slice)
+        {
+            ReadOnlySpan<byte> segmentSpan = segment.Span;
+            for (int i = 0; i < segmentSpan.Length; i++)
+            {
+                if (segmentSpan[i] != value[valueIndex++])
+                    return false;
+                if (valueIndex >= value.Length)
+                    return true; // 已匹配所有字节
+            }
+        }
+        return valueIndex == value.Length;
     }
     #endregion
 }

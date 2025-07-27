@@ -330,6 +330,14 @@ public class AsyncQueue<T>
         }
     }
 
+    public void Clear()
+    {
+        lock (this.SyncRoot)
+        {
+            this.m_queueElements?.Clear();
+        }
+    }
+
     /// <summary>
     /// 如果队列头部有满足指定检查的可用元素，则立即将其出队；
     /// 否则返回而不出队。

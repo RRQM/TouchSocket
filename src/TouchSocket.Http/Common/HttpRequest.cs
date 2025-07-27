@@ -39,9 +39,9 @@ public class HttpRequest : HttpBase
     /// </remarks>
     public HttpRequest()
     {
-        // 初始化时，设置m_isServer为false，表示当前请求不是由服务器发起的。
+        // 初始化时，设置m_isServer为<see langword="false"/>，表示当前请求不是由服务器发起的。
         this.m_isServer = false;
-        // 初始化时，设置m_canRead为false，表示当前请求不能读取数据。
+        // 初始化时，设置m_canRead为<see langword="false"/>，表示当前请求不能读取数据。
     }
 
     /// <summary>
@@ -238,47 +238,47 @@ public class HttpRequest : HttpBase
         return this;
     }
 
-    internal void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    internal void BuildHeader<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.WriteNormalString(this.Method.ToString(), Encoding.UTF8);//Get
-        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.RelativeURL);
+        WriterExtension.WriteNormalString(ref writer,this.Method.ToString(), Encoding.UTF8);//Get
+        TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+        TouchSocketHttpUtility.AppendUtf8String(ref writer, this.RelativeURL);
         if (this.m_query.Count > 0)
         {
-            TouchSocketHttpUtility.AppendQuestionMark(ref byteBlock);
+            TouchSocketHttpUtility.AppendQuestionMark(ref writer);
             var i = 0;
             foreach (var item in this.m_query.Keys)
             {
-                byteBlock.WriteNormalString(item, Encoding.UTF8);
-                TouchSocketHttpUtility.AppendEqual(ref byteBlock);
+                WriterExtension.WriteNormalString(ref writer,item, Encoding.UTF8);
+                TouchSocketHttpUtility.AppendEqual(ref writer);
                 var value = this.m_query[item];
                 if (value.HasValue())
                 {
-                    byteBlock.WriteNormalString(Uri.EscapeDataString(value), Encoding.UTF8);
+                    WriterExtension.WriteNormalString(ref writer,Uri.EscapeDataString(value), Encoding.UTF8);
                 }
 
                 if (++i < this.m_query.Count)
                 {
-                    TouchSocketHttpUtility.AppendAnd(ref byteBlock);
+                    TouchSocketHttpUtility.AppendAnd(ref writer);
                 }
             }
         }
-        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-        TouchSocketHttpUtility.AppendHTTP(ref byteBlock);//HTTP
-        TouchSocketHttpUtility.AppendSlash(ref byteBlock);//斜杠
-        byteBlock.WriteNormalString(this.ProtocolVersion, Encoding.UTF8);//1.1
-        TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
+        TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+        TouchSocketHttpUtility.AppendHTTP(ref writer);//HTTP
+        TouchSocketHttpUtility.AppendSlash(ref writer);//斜杠
+        WriterExtension.WriteNormalString(ref writer,this.ProtocolVersion, Encoding.UTF8);//1.1
+        TouchSocketHttpUtility.AppendRn(ref writer);//换行
 
         foreach (var headerKey in this.Headers.Keys)
         {
-            byteBlock.WriteNormalString(headerKey, Encoding.UTF8);//key
-            TouchSocketHttpUtility.AppendColon(ref byteBlock);//冒号
-            TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-            byteBlock.WriteNormalString(this.Headers[headerKey], Encoding.UTF8);//value
-            TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
+            WriterExtension.WriteNormalString(ref writer,headerKey, Encoding.UTF8);//key
+            TouchSocketHttpUtility.AppendColon(ref writer);//冒号
+            TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+            WriterExtension.WriteNormalString(ref writer,this.Headers[headerKey], Encoding.UTF8);//value
+            TouchSocketHttpUtility.AppendRn(ref writer);//换行
         }
 
-        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+        TouchSocketHttpUtility.AppendRn(ref writer);
     }
 
     /// <inheritdoc/>

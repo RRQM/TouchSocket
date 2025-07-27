@@ -41,9 +41,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory)
+    private Task SendAction(ReadOnlyMemory<byte> memory,CancellationToken token)
     {
-        return base.ProtectedSendAsync(memory);
+        return base.ProtectedSendAsync(memory, token);
     }
 
     #endregion JsonRpcActor
@@ -69,13 +69,13 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_jsonRpcActor.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>

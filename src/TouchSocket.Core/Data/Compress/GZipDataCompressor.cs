@@ -20,13 +20,13 @@ namespace TouchSocket.Core;
 
 public sealed partial class GZipDataCompressor : IDataCompressor
 {
-    byte[] IDataCompressor.Compress(ArraySegment<byte> data)
+    public void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
-        return GZip.Compress(data.Array, data.Offset, data.Count);
+        GZip.Compress(ref writer, data);
     }
 
-    byte[] IDataCompressor.Decompress(ArraySegment<byte> data)
+    public void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
-        return GZip.Decompress(data.Array, data.Offset, data.Count);
+        GZip.Decompress(ref writer, data);
     }
 }

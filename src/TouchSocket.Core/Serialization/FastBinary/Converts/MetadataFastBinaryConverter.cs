@@ -19,25 +19,27 @@ namespace TouchSocket.Core;
 /// </summary>
 internal sealed class MetadataFastBinaryConverter : FastBinaryConverter<Metadata>
 {
-    protected override Metadata Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    protected override Metadata Read<TReader>(ref TReader reader, Type type)
     {
-        var count = byteBlock.ReadInt32();
+        var count = ReaderExtension.ReadValue<TReader, int>(ref reader);
 
         var metadata = new Metadata();
         for (var i = 0; i < count; i++)
         {
-            metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
+            var key = ReaderExtension.ReadString<TReader>(ref reader, FixedHeaderType.Ushort);
+            var value = ReaderExtension.ReadString<TReader>(ref reader, FixedHeaderType.Ushort);
+            metadata.Add(key, value);
         }
         return metadata;
     }
 
-    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Metadata obj)
+    protected override void Write<TWriter>(ref TWriter writer, in Metadata obj)
     {
-        byteBlock.WriteInt32(obj.Count);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, obj.Count);
         foreach (var item in obj)
         {
-            byteBlock.WriteString(item.Key);
-            byteBlock.WriteString(item.Value);
+            WriterExtension.WriteString(ref writer, item.Key, FixedHeaderType.Ushort);
+            WriterExtension.WriteString(ref writer, item.Value, FixedHeaderType.Ushort);
         }
     }
 }

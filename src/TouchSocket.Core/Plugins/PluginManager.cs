@@ -191,25 +191,13 @@ public sealed class PluginManager : DisposableObject, IPluginManager
             return 0;
         }
 
-        if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
-        {
-            return pluginInvokeLine.FromIocCount;
-        }
-
-        return 0;
+        return this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine) ? pluginInvokeLine.FromIocCount : 0;
     }
 
     /// <inheritdoc/>
     public int GetPluginCount(Type pluginType)
     {
-        if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginModel))
-        {
-            return pluginModel.GetPluginEntities().Count;
-        }
-        else
-        {
-            return 0;
-        }
+        return this.m_pluginMethods.TryGetValue(pluginType, out var pluginModel) ? pluginModel.GetPluginEntities().Count : 0;
     }
 
     /// <inheritdoc/>
@@ -225,11 +213,9 @@ public sealed class PluginManager : DisposableObject, IPluginManager
             return new ValueTask<bool>(true);
         }
 
-        if (!this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
-        {
-            return new ValueTask<bool>(false);
-        }
-        return new ValueTask<bool>(this.RaisePluginAsync(pluginInvokeLine, resolver, sender, e));
+        return !this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine)
+            ? new ValueTask<bool>(false)
+            : new ValueTask<bool>(this.RaisePluginAsync(pluginInvokeLine, resolver, sender, e));
     }
 
     /// <inheritdoc/>
@@ -290,11 +276,7 @@ public sealed class PluginManager : DisposableObject, IPluginManager
 
     private static bool IsPluginInterface(Type type)
     {
-        if (type == typeof(IPlugin))
-        {
-            return false;
-        }
-        return typeof(IPlugin).IsAssignableFrom(type);
+        return type != typeof(IPlugin) && typeof(IPlugin).IsAssignableFrom(type);
     }
 
     private static bool IsPluginMethod(MethodInfo methodInfo)

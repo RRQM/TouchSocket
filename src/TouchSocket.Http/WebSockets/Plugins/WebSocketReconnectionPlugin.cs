@@ -43,7 +43,7 @@ internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<
             return;
         }
 
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             while (true)
             {

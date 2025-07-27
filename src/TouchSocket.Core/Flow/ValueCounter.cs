@@ -20,15 +20,20 @@ namespace TouchSocket.Core;
 /// </summary>
 public struct ValueCounter
 {
-    /// <summary>
-    /// 周期内的累计计数值。
-    /// </summary>
     private long m_count;
 
     /// <summary>
     /// 最后一次递增时间
     /// </summary>
     private DateTimeOffset m_lastIncrement;
+
+    private long m_totalcount;
+
+    public ValueCounter(TimeSpan period, Action<long> onPeriod) : this()
+    {
+        this.OnPeriod = onPeriod;
+        this.Period = period;
+    }
 
     /// <summary>
     /// 周期内的累计计数值。
@@ -49,6 +54,8 @@ public struct ValueCounter
     /// 计数周期。
     /// </summary>
     public TimeSpan Period { get; set; }
+
+    public readonly long TotalCount => this.m_totalcount;
 
     /// <summary>
     /// 累计增加计数
@@ -84,6 +91,7 @@ public struct ValueCounter
 
         // 原子性地增加计数器的值
         Interlocked.Add(ref this.m_count, value);
+        Interlocked.Add(ref this.m_totalcount, value);
 
         // 返回是否在周期内的标志
         return isPeriod;
@@ -104,7 +112,8 @@ public struct ValueCounter
     /// </summary>
     public void Reset()
     {
-        this.m_count = 0;
+        Interlocked.Exchange(ref this.m_count, 0);
+        Interlocked.Exchange(ref this.m_totalcount, 0);
         this.m_lastIncrement = default;
     }
 }

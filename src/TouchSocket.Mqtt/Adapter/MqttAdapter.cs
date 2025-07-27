@@ -11,32 +11,81 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
 
-public class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
+//class MqttAdapter2 : CacheDataHandlingAdapterSlim<MqttMessage>
+//{
+//    protected override bool TryParseRequestAfterCacheVerification<TReader>(ref TReader reader, out MqttMessage message)
+//    {
+//        if (reader.BytesRemaining < 2)
+//        {
+//            message = default;
+//            return false;
+//        }
+
+//        var firstByte = reader.GetSpan(1)[0];
+//        var mqttControlPacketType = (MqttMessageType)firstByte.GetHeight4();
+//        //var fixHeaderFlags = new FixHeaderFlags(firstByte);
+
+//        var remainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
+//        if (reader.CanReadLength < remainingLength)
+//        {
+//            reader.Position = position;
+//            return FilterResult.Cache;
+//        }
+
+//        var mqttMessage = MqttMessage.CreateMqttMessage(mqttControlPacketType);
+
+//        //Console.WriteLine("Rev:"+ mqttMessage.MessageType);
+
+//        if (mqttMessage.MessageType != MqttMessageType.Connect)
+//        {
+//            mqttMessage.InternalSetVersion(this.Version);
+//        }
+
+//        reader.Position = position;
+//        mqttMessage.Unpack(ref reader);
+//        if (reader.Position != position + remainingLength + 1 + MqttExtension.GetVariableByteIntegerCount((int)remainingLength))
+//        {
+//            throw new Exception("存在没有读取的数据");
+//        }
+
+//        if (mqttMessage.MessageType == MqttMessageType.Connect)
+//        {
+//            this.Version = mqttMessage.Version;
+//        }
+
+//        message = mqttMessage;
+//        return FilterResult.Success;
+//    }
+//}
+internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
 {
-    public override bool CanSendRequestInfo => true;
-
-    public MqttProtocolVersion Version { get; private set; } = MqttProtocolVersion.V311;
-
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref MqttMessage request, ref int tempCapacity)
+    public MqttAdapter()
     {
-        if (byteBlock.CanReadLength < 2)
+    }
+
+    public MqttProtocolVersion Version { get; set; } = MqttProtocolVersion.Unknown;
+
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MqttMessage request, ref int tempCapacity)
+    {
+        if (reader.BytesRemaining < 2)
         {
             return FilterResult.Cache;
         }
-        var position = byteBlock.Position;
-        var firstByte = byteBlock.ReadByte();
+        var position = reader.BytesRead;
+        var firstByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         var mqttControlPacketType = (MqttMessageType)firstByte.GetHeight4();
-        //var fixHeaderFlags = new FixHeaderFlags(firstByte);
-
-        var remainingLength = MqttExtension.ReadVariableByteInteger(ref byteBlock);
-        if (byteBlock.CanReadLength < remainingLength)
+      
+        var remainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
+        if (reader.BytesRemaining < remainingLength)
         {
-            byteBlock.Position = position;
+            reader.BytesRead = position;
             return FilterResult.Cache;
         }
 
@@ -44,48 +93,24 @@ public class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
 
         //Console.WriteLine("Rev:"+ mqttMessage.MessageType);
 
-        if (mqttMessage is not MqttConnectMessage)
+        if (mqttMessage.MessageType != MqttMessageType.Connect)
         {
             mqttMessage.InternalSetVersion(this.Version);
         }
 
-        byteBlock.Position = position;
-        mqttMessage.Unpack(ref byteBlock);
-        if (byteBlock.Position != position + remainingLength + 1+MqttExtension.GetVariableByteIntegerCount((int)remainingLength))
+        reader.BytesRead = position;
+        mqttMessage.Unpack(ref reader);
+        if (reader.BytesRead != position + remainingLength + 1 + MqttExtension.GetVariableByteIntegerCount((int)remainingLength))
         {
             throw new Exception("存在没有读取的数据");
         }
 
-        if (mqttMessage is MqttConnectMessage connectMessage)
+        if (mqttMessage.MessageType == MqttMessageType.Connect)
         {
-            this.Version = connectMessage.Version;
+            this.Version = mqttMessage.Version;
         }
 
         request = mqttMessage;
         return FilterResult.Success;
-    }
-
-    protected override async Task PreviewSendAsync(IRequestInfo requestInfo)
-    {
-        if (requestInfo is MqttMessage mqttMessage)
-        {
-            //Console.WriteLine("Send:" + mqttMessage.MessageType);
-
-            if (mqttMessage.MessageType == MqttMessageType.Connect)
-            {
-                this.Version = ((MqttConnectMessage)mqttMessage).Version;
-            }
-            var byteBlock = new ValueByteBlock(mqttMessage.MaxLength);
-            try
-            {
-                mqttMessage.InternalSetVersion(this.Version);
-                mqttMessage.Build(ref byteBlock);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
     }
 }

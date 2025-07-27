@@ -1,0 +1,67 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
+using System;
+using System.IO.Pipelines;
+using System.Threading;
+using System.Threading.Tasks;
+using TouchSocket.Core;
+
+namespace TouchSocket.Core;
+
+public struct PipeBytesWriter : IBytesWriter
+{
+    private readonly PipeWriter m_writer;
+    private long m_writtenCount;
+
+    public PipeBytesWriter(PipeWriter writer)
+    {
+        this.m_writer = writer;
+    }
+
+    public readonly bool SupportsRewind => false;
+    public readonly short Version => 0;
+
+    public readonly long WrittenCount => this.m_writtenCount;
+    public void Advance(int count)
+    {
+        this.m_writer.Advance(count);
+        this.m_writtenCount += count;
+    }
+
+    public ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_writer.FlushAsync(cancellationToken);
+    }
+
+    public Memory<byte> GetMemory(int sizeHint = 0)
+    {
+        return this.m_writer.GetMemory(sizeHint);
+    }
+
+    public Span<byte> GetSpan(int sizeHint = 0)
+    {
+        return this.m_writer.GetSpan(sizeHint);
+    }
+
+    public void Write(scoped ReadOnlySpan<byte> span)
+    {
+        var length = span.Length;
+        if (length == 0)
+        {
+            return;
+        }
+        var memory = this.GetMemory(length);
+        span.CopyTo(memory.Span);
+        this.Advance(length);
+    }
+}

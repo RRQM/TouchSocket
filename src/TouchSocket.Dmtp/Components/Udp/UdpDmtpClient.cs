@@ -12,6 +12,7 @@
 
 using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -99,8 +100,8 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
     //}
 
-    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
     {
-        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory);
+        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory,token);
     }
 }

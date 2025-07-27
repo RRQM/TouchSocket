@@ -44,8 +44,6 @@ public static class JsonRpcClientExtension
         }
     }
 
-#if SystemTextJson
-
     /// <summary>
     /// 使用System.Text.Json进行序列化
     /// </summary>
@@ -61,5 +59,4 @@ public static class JsonRpcClientExtension
 
         return jsonRpcClient;
     }
-#endif
 }

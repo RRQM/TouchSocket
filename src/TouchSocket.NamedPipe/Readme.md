@@ -12,8 +12,8 @@ TouchSocket.NamedPipe 是一个基于命名管道的组件库。它模仿 Tcp �
 详细的说明文档请访问：[https://touchsocket.net/](https://touchsocket.net/)
 
 ## 支持的目标框架
+
 - net481
-- net45
 - net462
 - net472
 - netstandard2.0

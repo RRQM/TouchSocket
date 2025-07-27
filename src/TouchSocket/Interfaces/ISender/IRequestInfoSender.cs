@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -26,8 +27,9 @@ public interface IRequestInfoSender
     /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
     /// </summary>
     /// <param name="requestInfo">解析对象</param>
+    /// <param name="token">可取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
-    Task SendAsync(IRequestInfo requestInfo);
+    Task SendAsync(IRequestInfo requestInfo,CancellationToken token=default);
 }

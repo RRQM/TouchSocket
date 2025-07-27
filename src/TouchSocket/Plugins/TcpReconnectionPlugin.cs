@@ -39,7 +39,7 @@ internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClien
             return;
         }
 
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             while (true)
             {

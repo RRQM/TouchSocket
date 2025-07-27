@@ -23,7 +23,7 @@ public class ByteBlockEventArgs : PluginEventArgs
     /// 初始化字节事件参数对象
     /// </summary>
     /// <param name="byteBlock">需要传递的字节块数据</param>
-    public ByteBlockEventArgs(ByteBlock byteBlock)
+    public ByteBlockEventArgs(IByteBlockReader byteBlock)
     {
         this.ByteBlock = byteBlock;
     }
@@ -31,5 +31,5 @@ public class ByteBlockEventArgs : PluginEventArgs
     /// <summary>
     /// 获取字节块数据
     /// </summary>
-    public ByteBlock ByteBlock { get; private set; }
+    public IByteBlockReader ByteBlock { get;}
 }

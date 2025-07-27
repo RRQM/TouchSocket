@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Diagnostics;
 using TouchSocket.Core;
 
@@ -18,35 +19,35 @@ namespace TouchSocket.Mqtt;
 /// <summary>
 /// 读取Mqtt v5属性的类。
 /// </summary>
-/// <typeparam name="TByteBlock">实现IByteBlock接口的类型。</typeparam>
-public readonly ref struct MqttV5PropertiesReader<TByteBlock> where TByteBlock : IByteBlock
+/// <typeparam name="TReader">实现IByteBlock接口的类型。</typeparam>
+public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IBytesReader
 {
     private readonly int m_endPosition;
 
     /// <summary>
     /// 初始化MqttV5PropertiesReader类的新实例。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
-    public MqttV5PropertiesReader(ref TByteBlock byteBlock)
+    /// <param name="reader">字节块引用。</param>
+    public MqttV5PropertiesReader(ref TReader reader)
     {
-        var length = MqttExtension.ReadVariableByteInteger(ref byteBlock);
-        this.m_endPosition = (int)(byteBlock.Position + length);
+        var length = MqttExtension.ReadVariableByteInteger(ref reader);
+        this.m_endPosition = (int)(reader.BytesRead + length);
     }
 
     /// <summary>
     /// 尝试读取属性标识符。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <param name="identifier">读取的属性标识符。</param>
     /// <returns>如果读取成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
-    public bool TryRead(ref TByteBlock byteBlock, out MqttPropertyId identifier)
+    public bool TryRead(ref TReader reader, out MqttPropertyId identifier)
     {
-        if (byteBlock.Position >= this.m_endPosition)
+        if (reader.BytesRead >= this.m_endPosition)
         {
             identifier = MqttPropertyId.None;
             return false;
         }
-        identifier = (MqttPropertyId)byteBlock.ReadByte();
+        identifier = (MqttPropertyId)ReaderExtension.ReadValue<TReader,byte>(ref reader);
         Debug.WriteLine($"PropertyId:{identifier}");
         return true;
     }
@@ -54,273 +55,273 @@ public readonly ref struct MqttV5PropertiesReader<TByteBlock> where TByteBlock :
     /// <summary>
     /// 读取有效载荷格式指示符。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>有效载荷格式指示符。</returns>
-    public MqttPayloadFormatIndicator ReadPayloadFormatIndicator(ref TByteBlock byteBlock)
+    public MqttPayloadFormatIndicator ReadPayloadFormatIndicator(ref TReader reader)
     {
-        return (MqttPayloadFormatIndicator)byteBlock.ReadByte();
+        return (MqttPayloadFormatIndicator)ReaderExtension.ReadValue<TReader,byte>(ref reader);
     }
 
     /// <summary>
     /// 读取消息过期间隔。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>消息过期间隔。</returns>
-    public uint ReadMessageExpiryInterval(ref TByteBlock byteBlock)
+    public uint ReadMessageExpiryInterval(ref TReader reader)
     {
-        return byteBlock.ReadUInt32(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取内容类型。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>内容类型。</returns>
-    public string ReadContentType(ref TByteBlock byteBlock)
+    public string ReadContentType(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取响应主题。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>响应主题。</returns>
-    public string ReadResponseTopic(ref TByteBlock byteBlock)
+    public string ReadResponseTopic(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取关联数据。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>关联数据。</returns>
-    public byte[] ReadCorrelationData(ref TByteBlock byteBlock)
+    public ReadOnlyMemory<byte> ReadCorrelationData(ref TReader reader)
     {
-        return MqttExtension.ReadMqttBinaryData(ref byteBlock);
+        return MqttExtension.ReadMqttBinaryData(ref reader);
     }
 
     /// <summary>
     /// 读取订阅标识符。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>订阅标识符。</returns>
-    public uint ReadSubscriptionIdentifier(ref TByteBlock byteBlock)
+    public uint ReadSubscriptionIdentifier(ref TReader reader)
     {
-        return MqttExtension.ReadVariableByteInteger(ref byteBlock);
+        return MqttExtension.ReadVariableByteInteger(ref reader);
     }
 
     /// <summary>
     /// 读取会话过期间隔。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>会话过期间隔。</returns>
-    public uint ReadSessionExpiryInterval(ref TByteBlock byteBlock)
+    public uint ReadSessionExpiryInterval(ref TReader reader)
     {
-        return byteBlock.ReadUInt32(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取分配的客户端标识符。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>分配的客户端标识符。</returns>
-    public string ReadAssignedClientIdentifier(ref TByteBlock byteBlock)
+    public string ReadAssignedClientIdentifier(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取服务器保持连接时间。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>服务器保持连接时间。</returns>
-    public ushort ReadServerKeepAlive(ref TByteBlock byteBlock)
+    public ushort ReadServerKeepAlive(ref TReader reader)
     {
-        return byteBlock.ReadUInt16(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取认证方法。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>认证方法。</returns>
-    public string ReadAuthenticationMethod(ref TByteBlock byteBlock)
+    public string ReadAuthenticationMethod(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取认证数据。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>认证数据。</returns>
-    public byte[] ReadAuthenticationData(ref TByteBlock byteBlock)
+    public ReadOnlyMemory<byte> ReadAuthenticationData(ref TReader reader)
     {
-        return MqttExtension.ReadMqttBinaryData(ref byteBlock);
+        return MqttExtension.ReadMqttBinaryData(ref reader);
     }
 
     /// <summary>
     /// 读取请求问题信息标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>请求问题信息标志。</returns>
-    public bool ReadRequestProblemInformation(ref TByteBlock byteBlock)
+    public bool ReadRequestProblemInformation(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 
     /// <summary>
     /// 读取遗嘱延迟间隔。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>遗嘱延迟间隔。</returns>
-    public uint ReadWillDelayInterval(ref TByteBlock byteBlock)
+    public uint ReadWillDelayInterval(ref TReader reader)
     {
-        return byteBlock.ReadUInt32(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取请求响应信息标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>请求响应信息标志。</returns>
-    public bool ReadRequestResponseInformation(ref TByteBlock byteBlock)
+    public bool ReadRequestResponseInformation(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 
     /// <summary>
     /// 读取响应信息。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>响应信息。</returns>
-    public string ReadResponseInformation(ref TByteBlock byteBlock)
+    public string ReadResponseInformation(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取服务器引用。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>服务器引用。</returns>
-    public string ReadServerReference(ref TByteBlock byteBlock)
+    public string ReadServerReference(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取原因字符串。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>原因字符串。</returns>
-    public string ReadReasonString(ref TByteBlock byteBlock)
+    public string ReadReasonString(ref TReader reader)
     {
-        return MqttExtension.ReadMqttInt16String(ref byteBlock);
+        return MqttExtension.ReadMqttInt16String(ref reader);
     }
 
     /// <summary>
     /// 读取接收最大值。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>接收最大值。</returns>
-    public ushort ReadReceiveMaximum(ref TByteBlock byteBlock)
+    public ushort ReadReceiveMaximum(ref TReader reader)
     {
-        return byteBlock.ReadUInt16(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取主题别名最大值。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>主题别名最大值。</returns>
-    public ushort ReadTopicAliasMaximum(ref TByteBlock byteBlock)
+    public ushort ReadTopicAliasMaximum(ref TReader reader)
     {
-        return byteBlock.ReadUInt16(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取主题别名。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>主题别名。</returns>
-    public ushort ReadTopicAlias(ref TByteBlock byteBlock)
+    public ushort ReadTopicAlias(ref TReader reader)
     {
-        return byteBlock.ReadUInt16(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取最大服务质量。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>最大服务质量。</returns>
-    public QosLevel ReadMaximumQoS(ref TByteBlock byteBlock)
+    public QosLevel ReadMaximumQoS(ref TReader reader)
     {
-        return (QosLevel)byteBlock.ReadByte();
+        return (QosLevel)ReaderExtension.ReadValue<TReader,byte>(ref reader);
     }
 
     /// <summary>
     /// 读取保留可用标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>保留可用标志。</returns>
-    public bool ReadRetainAvailable(ref TByteBlock byteBlock)
+    public bool ReadRetainAvailable(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 
     /// <summary>
     /// 读取用户属性。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>用户属性。</returns>
-    public MqttUserProperty ReadUserProperty(ref TByteBlock byteBlock)
+    public MqttUserProperty ReadUserProperty(ref TReader reader)
     {
-        var name = MqttExtension.ReadMqttInt16String(ref byteBlock);
-        var value = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        var name = MqttExtension.ReadMqttInt16String(ref reader);
+        var value = MqttExtension.ReadMqttInt16String(ref reader);
         return new MqttUserProperty(name, value);
     }
 
     /// <summary>
     /// 读取最大数据包大小。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>最大数据包大小。</returns>
-    public uint ReadMaximumPacketSize(ref TByteBlock byteBlock)
+    public uint ReadMaximumPacketSize(ref TReader reader)
     {
-        return byteBlock.ReadUInt32(EndianType.Big);
+        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
     }
 
     /// <summary>
     /// 读取通配符订阅可用标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>通配符订阅可用标志。</returns>
-    public bool ReadWildcardSubscriptionAvailable(ref TByteBlock byteBlock)
+    public bool ReadWildcardSubscriptionAvailable(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 
     /// <summary>
     /// 读取订阅标识符可用标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>订阅标识符可用标志。</returns>
-    public bool ReadSubscriptionIdentifiersAvailable(ref TByteBlock byteBlock)
+    public bool ReadSubscriptionIdentifiersAvailable(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 
     /// <summary>
     /// 读取共享订阅可用标志。
     /// </summary>
-    /// <param name="byteBlock">字节块引用。</param>
+    /// <param name="reader">字节块引用。</param>
     /// <returns>共享订阅可用标志。</returns>
-    public bool ReadSharedSubscriptionAvailable(ref TByteBlock byteBlock)
+    public bool ReadSharedSubscriptionAvailable(ref TReader reader)
     {
-        return byteBlock.ReadByte() == 1;
+        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
     }
 }
 
@@ -334,15 +335,15 @@ public readonly ref struct MqttV5PropertiesReader<TByteBlock> where TByteBlock :
 //    /// <summary>
 //    /// 初始化MqttV5PropertiesReader类的新实例。
 //    /// </summary>
-//    /// <param name="byteBlock">字节块引用。</param>
-//    public MqttV5PropertiesReader(ref TByteBlock byteBlock)
+//    /// <param name="reader">字节块引用。</param>
+//    public MqttV5PropertiesReader(ref TByteBlock reader)
 //    {
-//        var length = MqttExtension.ReadVariableByteInteger(ref byteBlock);
-//        var endPosition = byteBlock.Position + length;
+//        var length = MqttExtension.ReadVariableByteInteger(ref reader);
+//        var endPosition = reader.Position + length;
 //        var properties = new List<MqttUserProperty>();
-//        while (byteBlock.Position < endPosition)
+//        while (reader.Position < endPosition)
 //        {
-//            var identifier = (MqttPropertyId)byteBlock.ReadByte();
+//            var identifier = (MqttPropertyId)ReaderExtension.ReadValue<TReader,byte>(ref reader);
 //            Debug.WriteLine($"PropertyId:{identifier}");
 //            switch (identifier)
 //            {
@@ -351,165 +352,165 @@ public readonly ref struct MqttV5PropertiesReader<TByteBlock> where TByteBlock :
 
 //                case MqttPropertyId.PayloadFormatIndicator:
 //                    {
-//                        this.PayloadFormatIndicator = (MqttPayloadFormatIndicator)byteBlock.ReadByte();
+//                        this.PayloadFormatIndicator = (MqttPayloadFormatIndicator)ReaderExtension.ReadValue<TReader,byte>(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.MessageExpiryInterval:
 //                    {
-//                        this.MessageExpiryInterval = byteBlock.ReadUInt32(EndianType.Big);
+//                        this.MessageExpiryInterval = ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ContentType:
 //                    {
-//                        this.ContentType = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.ContentType = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ResponseTopic:
 //                    {
-//                        this.ResponseTopic = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.ResponseTopic = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.CorrelationData:
 //                    {
-//                        this.CorrelationData = MqttExtension.ReadMqttBinaryData(ref byteBlock);
+//                        this.CorrelationData = MqttExtension.ReadMqttBinaryData(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.SubscriptionIdentifier:
 //                    {
-//                        this.SubscriptionIdentifier = MqttExtension.ReadVariableByteInteger(ref byteBlock);
+//                        this.SubscriptionIdentifier = MqttExtension.ReadVariableByteInteger(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.SessionExpiryInterval:
 //                    {
-//                        this.SessionExpiryInterval = byteBlock.ReadUInt32(EndianType.Big);
+//                        this.SessionExpiryInterval = ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.AssignedClientIdentifier:
 //                    {
-//                        this.AssignedClientIdentifier = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.AssignedClientIdentifier = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ServerKeepAlive:
 //                    {
-//                        this.ServerKeepAlive = byteBlock.ReadUInt16(EndianType.Big);
+//                        this.ServerKeepAlive = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.AuthenticationMethod:
 //                    {
-//                        this.AuthenticationMethod = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.AuthenticationMethod = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.AuthenticationData:
 //                    {
-//                        this.AuthenticationData = MqttExtension.ReadMqttBinaryData(ref byteBlock);
+//                        this.AuthenticationData = MqttExtension.ReadMqttBinaryData(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.RequestProblemInformation:
 //                    {
-//                        this.RequestProblemInformation = byteBlock.ReadByte() == 1;
+//                        this.RequestProblemInformation = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 
 //                case MqttPropertyId.WillDelayInterval:
 //                    {
-//                        this.WillDelayInterval = byteBlock.ReadUInt32(EndianType.Big);
+//                        this.WillDelayInterval = ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.RequestResponseInformation:
 //                    {
-//                        this.RequestResponseInformation = byteBlock.ReadByte() == 1;
+//                        this.RequestResponseInformation = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ResponseInformation:
 //                    {
-//                        this.ResponseInformation = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.ResponseInformation = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ServerReference:
 //                    {
-//                        this.ServerReference = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.ServerReference = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ReasonString:
 //                    {
-//                        this.ReasonString = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        this.ReasonString = MqttExtension.ReadMqttInt16String(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.ReceiveMaximum:
 //                    {
-//                        this.ReceiveMaximum = byteBlock.ReadUInt16(EndianType.Big);
+//                        this.ReceiveMaximum = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.TopicAliasMaximum:
 //                    {
-//                        this.TopicAliasMaximum = byteBlock.ReadUInt16(EndianType.Big);
+//                        this.TopicAliasMaximum = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.TopicAlias:
 //                    {
-//                        this.TopicAlias = byteBlock.ReadUInt16(EndianType.Big);
+//                        this.TopicAlias = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.MaximumQoS:
 //                    {
-//                        this.MaximumQoS = (QosLevel)byteBlock.ReadByte();
+//                        this.MaximumQoS = (QosLevel)ReaderExtension.ReadValue<TReader,byte>(ref reader);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.RetainAvailable:
 //                    {
-//                        this.RetainAvailable = byteBlock.ReadByte() == 1;
+//                        this.RetainAvailable = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 
 //                case MqttPropertyId.UserProperty:
 //                    {
-//                        var name = MqttExtension.ReadMqttInt16String(ref byteBlock);
-//                        var value = MqttExtension.ReadMqttInt16String(ref byteBlock);
+//                        var name = MqttExtension.ReadMqttInt16String(ref reader);
+//                        var value = MqttExtension.ReadMqttInt16String(ref reader);
 //                        properties.Add(new MqttUserProperty(name, value));
 //                    }
 //                    break;
 
 //                case MqttPropertyId.MaximumPacketSize:
 //                    {
-//                        this.MaximumPacketSize = byteBlock.ReadUInt32(EndianType.Big);
+//                        this.MaximumPacketSize = ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
 //                    }
 //                    break;
 
 //                case MqttPropertyId.WildcardSubscriptionAvailable:
 //                    {
-//                        this.WildcardSubscriptionAvailable = byteBlock.ReadByte() == 1;
+//                        this.WildcardSubscriptionAvailable = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 
 //                case MqttPropertyId.SubscriptionIdentifiersAvailable:
 //                    {
-//                        this.SubscriptionIdentifiersAvailable = byteBlock.ReadByte() == 1;
+//                        this.SubscriptionIdentifiersAvailable = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 
 //                case MqttPropertyId.SharedSubscriptionAvailable:
 //                    {
-//                        this.SharedSubscriptionAvailable = byteBlock.ReadByte() == 1;
+//                        this.SharedSubscriptionAvailable = ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
 //                    }
 //                    break;
 

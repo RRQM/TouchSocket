@@ -113,7 +113,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
@@ -135,10 +135,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     #region Override
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_dmtpActor?.SafeDispose();
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -220,15 +220,15 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
 
     #region 内部委托绑定
 
-    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedDefaultSendAsync(memory,token);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
         await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.Abort(false, msg);
+        //this.Abort(false, msg);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)

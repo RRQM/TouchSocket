@@ -307,10 +307,6 @@ public static partial class FileUtility
         {
             return $"{(length / gb):F2}Gb";
         }
-        if (length < pb)
-        {
-            return $"{(length / tb):F2}Tb";
-        }
-        return $"{(length / pb):F2}Pb";
+        return length < pb ? $"{(length / tb):F2}Tb" : $"{(length / pb):F2}Pb";
     }
 }

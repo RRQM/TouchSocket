@@ -58,13 +58,13 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
             return;
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
         if (disposing && this.m_dmtpActor != null)
         {
             this.m_dmtpActor.Dispose();
@@ -111,9 +111,9 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         this.SetAdapter(new DmtpAdapter());
     }
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
     {
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedDefaultSendAsync(memory, token);
     }
 
     #region Override
@@ -168,7 +168,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        base.Abort(false, msg);
+        //base.Abort(false, msg);
         return EasyTask.CompletedTask;
     }
 

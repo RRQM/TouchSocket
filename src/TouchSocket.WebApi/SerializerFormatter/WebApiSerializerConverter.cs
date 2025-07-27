@@ -57,7 +57,6 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
         this.Add(new WebApiXmlSerializerFormatter());
     }
 
-#if SystemTextJson
     /// <summary>
     /// 添加System.Text.Json序列化器
     /// </summary>
@@ -70,5 +69,4 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
 
         this.Add(new WebApiSystemTextJsonSerializerFormatter(jsonSerializerOptions));
     }
-#endif
 }

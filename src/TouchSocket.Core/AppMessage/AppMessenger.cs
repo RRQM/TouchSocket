@@ -50,7 +50,7 @@ public class AppMessenger
     /// <summary>
     /// 添加
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <param name="messageInstance"></param>
     /// <exception cref="MessageRegisteredException"></exception>
     public void Add(string token, MessageInstance messageInstance)
@@ -76,7 +76,7 @@ public class AppMessenger
     /// <summary>
     /// 判断能否触发该消息，意味着该消息是否已经注册。
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <returns></returns>
     public bool CanSendMessage(string token)
     {
@@ -103,7 +103,7 @@ public class AppMessenger
     /// <summary>
     /// 移除
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     public void Remove(string token)
     {
         this.m_tokenAndInstance.TryRemove(token, out _);
@@ -141,7 +141,7 @@ public class AppMessenger
     /// <summary>
     /// 发送消息
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <param name="parameters"></param>
     /// <exception cref="MessageNotFoundException"></exception>
     public async Task SendAsync(string token, params object[] parameters)
@@ -175,7 +175,7 @@ public class AppMessenger
     /// 发送消息，当多播时，只返回最后一个返回值
     /// </summary>
     /// <typeparam name="T">返回值类型</typeparam>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <param name="parameters"></param>
     /// <returns></returns>
     /// <exception cref="MessageNotFoundException"></exception>

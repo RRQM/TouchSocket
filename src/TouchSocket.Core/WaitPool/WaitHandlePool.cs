@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if !NET45
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -24,9 +22,23 @@ namespace TouchSocket.Core;
 /// 表示一个等待句柄池。
 /// </summary>
 /// <typeparam name="T">等待句柄的类型。</typeparam>
-public class WaitHandlePool<T> : WaitHandlePool<WaitData<T>, WaitDataAsync<T>, T>, IWaitHandlePool<T>
+public sealed class WaitHandlePool<T> : WaitHandlePool<WaitData<T>, WaitDataAsync<T>, T>, IWaitHandlePool<T>
     where T : IWaitHandle
 {
+    /// <summary>
+    /// 初始化一个新的 <see cref="WaitHandlePool{T}"/> 实例。
+    /// </summary>
+    public WaitHandlePool() : base()
+    {
+    }
+    /// <summary>
+    /// 初始化一个新的 <see cref="WaitHandlePool{T}"/> 实例。
+    /// </summary>
+    /// <param name="minSign">最小签名值。</param>
+    /// <param name="maxSign">最大签名值。</param>
+    public WaitHandlePool(int minSign, int maxSign) : base(minSign, maxSign)
+    {
+    }
 }
 
 /// <summary>
@@ -49,14 +61,26 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
     private readonly Queue<TWaitData> m_waitQueue = new();
     private readonly Queue<TWaitDataAsync> m_waitQueueAsync = new();
     private int m_currentSign;
-    private int m_maxSign = int.MaxValue;
-    private int m_minSign = 0;
+    private readonly int m_maxSign;
+    private readonly int m_minSign;
+
+    public WaitHandlePool(): this(0, int.MaxValue)
+    {
+
+    }
+
+    public WaitHandlePool(int minSign, int maxSign)
+    {
+        this.m_maxSign = maxSign;
+        this.m_minSign = minSign;
+        this.m_currentSign = minSign;
+    }
 
     /// <inheritdoc/>
-    public int MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
+    public int MaxSign => this.m_maxSign;
 
     /// <inheritdoc/>
-    public int MinSign { get => this.m_minSign; set => this.m_minSign = value; }
+    public int MinSign => this.m_minSign;
 
     /// <inheritdoc/>
     public void CancelAll()
@@ -111,71 +135,6 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
                 }
                 waitData.Reset();
                 this.m_waitQueue.Enqueue(waitData);
-            }
-        }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(in sign)的重载函数直接代替", true)]
-    public void Destroy(TWaitData waitData)
-    {
-        var lockTaken = false;
-        try
-        {
-            this.m_lock.Enter(ref lockTaken);
-            if (waitData.WaitResult == null)
-            {
-                return;
-            }
-            if (this.m_waitDic.Remove(waitData.WaitResult.Sign))
-            {
-                if (waitData.DisposedValue)
-                {
-                    return;
-                }
-
-                waitData.Reset();
-                this.m_waitQueue.Enqueue(waitData);
-            }
-        }
-        finally
-        {
-            if (lockTaken)
-            {
-                this.m_lock.Exit(false);
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(in sign)的重载函数直接代替", true)]
-    public void Destroy(TWaitDataAsync waitData)
-    {
-        var lockTaken = false;
-        try
-        {
-            this.m_lock.Enter(ref lockTaken);
-
-            if (waitData.WaitResult == null)
-            {
-                return;
-            }
-            if (this.m_waitDicAsync.Remove(waitData.WaitResult.Sign))
-            {
-                if (waitData.DisposedValue)
-                {
-                    return;
-                }
-
-                waitData.Reset();
-                this.m_waitQueueAsync.Enqueue(waitData);
             }
         }
         finally
@@ -522,4 +481,3 @@ public class WaitHandlePool<TWaitData, TWaitDataAsync, T> : DisposableObject, IW
         return sign;
     }
 }
-#endif

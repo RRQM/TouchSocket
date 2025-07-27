@@ -139,7 +139,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -150,7 +150,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             this.Abort(true, $"调用{nameof(Dispose)}");
         }
 
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -165,21 +165,25 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     }
 
     /// <inheritdoc/>
-    protected override async Task OnReceived(WebSocketReceiveResult result, ByteBlock byteBlock)
+    protected override async Task OnReceived(WebSocketReceiveResult result, IByteBlockReader byteBlock)
     {
         try
         {
             //处理数据
-            while (byteBlock.CanRead)
+            while (byteBlock.CanReadLength>0)
             {
                 if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
                 {
-                    using (message)
+                    try
                     {
                         if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
+                    }
+                    finally
+                    {
+                        message.Dispose();
                     }
                 }
             }
@@ -225,9 +229,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         return this.OnRouting(e);
     }
 
-    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
     {
-        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 内部委托绑定

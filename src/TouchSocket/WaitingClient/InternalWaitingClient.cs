@@ -52,12 +52,8 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                         using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             var byteBlock = receiverResult.ByteBlock;
-                            ByteBlock newByteBlock = default;
-                            if (byteBlock != null)
-                            {
-                                newByteBlock = new ByteBlock(byteBlock.ToArray());
-                            }
-                            var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
+                            
+                            var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)
@@ -90,12 +86,8 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             }
 
                             var byteBlock = receiverResult.ByteBlock;
-                            ByteBlock newByteBlock = default;
-                            if (byteBlock != null)
-                            {
-                                newByteBlock = new ByteBlock(byteBlock.ToArray());
-                            }
-                            var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
+                           
+                            var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)

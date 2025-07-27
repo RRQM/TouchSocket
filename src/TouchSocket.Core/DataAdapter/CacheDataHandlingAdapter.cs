@@ -22,18 +22,15 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
     /// <summary>
     /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="IDisposable.Dispose"/>后，再置空；
     /// </summary>
-    protected ByteBlock m_cacheByteBlock;
+    private ByteBlock m_cacheByteBlock;
 
     /// <summary>
     /// 将数据缓存起来
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    protected void Cache(byte[] buffer, int offset, int length)
+    protected void Cache(ReadOnlySpan<byte> span)
     {
-        this.m_cacheByteBlock ??= new ByteBlock(length);
-        this.m_cacheByteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
+        this.m_cacheByteBlock ??= new ByteBlock(span.Length);
+        this.m_cacheByteBlock.Write(span);
         if (this.UpdateCacheTimeWhenRev)
         {
             this.LastCacheTime = DateTimeOffset.UtcNow;
@@ -48,52 +45,26 @@ public abstract class CacheDataHandlingAdapter : SingleStreamDataHandlingAdapter
         base.Reset();
     }
 
-    /// <summary>
-    /// 获取当前缓存，
-    /// 如果缓存超时，或者不存在，均会返回<see langword="false"/>。
-    /// 如果获取成功，则会清空内部缓存。
-    /// </summary>
-    /// <returns></returns>
-    protected bool TryGetCache(out byte[] buffer)
+    protected bool TryCombineCache(ReadOnlySpan<byte> span, out IByteBlock cacheByteBlock)
     {
         if (this.m_cacheByteBlock == null)
         {
-            buffer = null;
+            cacheByteBlock = default;
             return false;
         }
-        if (DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
-        {
-            this.m_cacheByteBlock.SafeDispose();
-            this.m_cacheByteBlock = null;
-            buffer = null;
-            return false;
-        }
-        buffer = this.m_cacheByteBlock.ToArray();
-        this.m_cacheByteBlock.SafeDispose();
-        this.m_cacheByteBlock = null;
-        return true;
-    }
 
-    /// <summary>
-    /// 获取缓存，注意：获取的ByteBlock需要手动释放。
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <returns></returns>
-    protected bool TryGetCache(out ByteBlock byteBlock)
-    {
-        if (this.m_cacheByteBlock == null)
-        {
-            byteBlock = null;
-            return false;
-        }
-        if (DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
             this.m_cacheByteBlock.SafeDispose();
             this.m_cacheByteBlock = null;
-            byteBlock = null;
+            cacheByteBlock = default;
             return false;
         }
-        byteBlock = this.m_cacheByteBlock;
+
+        this.m_cacheByteBlock.Write(span);
+        cacheByteBlock = this.m_cacheByteBlock;
+        ReaderExtension.SeekToStart(ref cacheByteBlock);
+        this.m_cacheByteBlock = default;
         return true;
     }
 }

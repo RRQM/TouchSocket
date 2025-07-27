@@ -12,6 +12,7 @@
 
 using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -28,11 +29,12 @@ public interface IUdpRequestInfoSender
     /// </summary>
     /// <param name="endPoint">发送数据的目标端点。</param>
     /// <param name="requestInfo">要发送的请求信息，包含具体的请求数据和元信息。</param>
+    /// <param name="token">可取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <remarks>
     /// 此方法为异步非阻塞方式，调用后立即返回，不保证数据发送成功。
     /// </remarks>
-    Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo);
+    Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo,CancellationToken token = default);
 }

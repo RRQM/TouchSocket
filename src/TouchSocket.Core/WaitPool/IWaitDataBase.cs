@@ -44,15 +44,13 @@ public interface IWaitDataBase<T> : IDisposableObject
     /// <summary>
     /// 使等待的线程继续执行。
     /// </summary>
-    /// <returns>如果操作成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
-    bool Set();
+    void Set();
 
     /// <summary>
     /// 使等待的线程继续执行，并设置等待结果。
     /// </summary>
     /// <param name="waitResult">等待结果。</param>
-    /// <returns>如果操作成功，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
-    bool Set(T waitResult);
+    void Set(T waitResult);
 
     /// <summary>
     /// 设置取消令牌。

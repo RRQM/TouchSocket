@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -28,13 +29,11 @@ public static class WebSocketClientExtension
     /// <param name="memory">要发送的二进制数据。</param>
     /// <param name="dataType">数据类型。</param>
     /// <param name="endOfMessage">是否为消息的结束帧。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>表示异步操作的任务。</returns>
-    public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true)
+    public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true, CancellationToken token = default)
     {
-        using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })
-        {
-            frame.AppendBinary(memory.Span);
-            await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+        var frame = new WSDataFrame(memory) { FIN = endOfMessage, Opcode = dataType };
+        await webSocket.SendAsync(frame, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

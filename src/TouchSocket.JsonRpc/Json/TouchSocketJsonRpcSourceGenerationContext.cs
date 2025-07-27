@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if SystemTextJson
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,4 +27,3 @@ namespace TouchSocket.JsonRpc;
 internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
 {
 }
-#endif

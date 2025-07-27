@@ -21,41 +21,41 @@ internal ref struct VariableByteIntegerRecorder
     private int m_minimumCount;
     private int m_startPosition;
 
-    public void CheckOut<TByteBlock>(ref TByteBlock byteBlock, int minimum = 0)
-        where TByteBlock : IByteBlock
+    public void CheckOut(ref BytesWriter writer, int minimum = 0)
+#if AllowsRefStruct
+,allows ref struct
+#endif
     {
         this.m_minimumCount = MqttExtension.GetVariableByteIntegerCount(minimum);
-        this.m_startPosition = byteBlock.Position;
-        byteBlock.Position += this.m_minimumCount;
-        this.m_dataPosition = byteBlock.Position;
+        this.m_startPosition = writer.Position;
+        writer.Position += this.m_minimumCount;
+        this.m_dataPosition = writer.Position;
     }
 
-    public readonly int CheckIn<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock
+    public readonly int CheckIn(ref BytesWriter writer)
+#if AllowsRefStruct
+,allows ref struct
+#endif
     {
-        var endPosition = byteBlock.Position;
+        var endPosition = writer.Position;
 
         var len = endPosition - this.m_dataPosition;
-        var lenCount = MqttExtension.GetVariableByteIntegerCount(len);
+        var lenCount = MqttExtension.GetVariableByteIntegerCount((int)len);
         if (lenCount > this.m_minimumCount)
         {
             var moveCount = lenCount - this.m_minimumCount;
-            //len += moveCount;
-
-            byteBlock.ExtendSize(moveCount);
-            var span = byteBlock.TotalMemory.Span.Slice(this.m_dataPosition);
+            var span = writer.TotalMemory.Span.Slice(this.m_dataPosition);
             ShiftWithRight(span, moveCount);
 
-            byteBlock.Position = this.m_startPosition;
-            MqttExtension.WriteVariableByteInteger(ref byteBlock, (uint)len);
-            byteBlock.SetLength(endPosition+ moveCount);
-            byteBlock.SeekToEnd();
+            writer.Position = this.m_startPosition;
+            MqttExtension.WriteVariableByteInteger(ref writer, (uint)len);
+            writer.Position=(endPosition+ moveCount);
         }
         else
         {
-            byteBlock.Position = this.m_startPosition;
-            MqttExtension.WriteVariableByteInteger(ref byteBlock, (uint)len);
-            byteBlock.SeekToEnd();
+            writer.Position = this.m_startPosition;
+            MqttExtension.WriteVariableByteInteger(ref writer, (uint)len);
+            writer.Position = endPosition;
         }
         return len;
     }
@@ -69,3 +69,62 @@ internal ref struct VariableByteIntegerRecorder
         }
     }
 }
+
+//internal ref struct VariableByteIntegerRecorder
+//{
+//    private int m_dataPosition;
+//    private int m_minimumCount;
+//    private int m_startPosition;
+
+//    public void CheckOut<TWriter>(ref TWriter writer, int minimum = 0)
+//        where TWriter : IByteBlockWriter
+//#if AllowsRefStruct
+//,allows ref struct
+//#endif
+//    {
+//        this.m_minimumCount = MqttExtension.GetVariableByteIntegerCount(minimum);
+//        this.m_startPosition = writer.Position;
+//        writer.Position += this.m_minimumCount;
+//        this.m_dataPosition = writer.Position;
+//    }
+
+//    public readonly int CheckIn<TWriter>(ref TWriter writer)
+//        where TWriter : IByteBlockWriter
+//#if AllowsRefStruct
+//,allows ref struct
+//#endif
+//    {
+//        var endPosition = writer.Position;
+
+//        var len = endPosition - this.m_dataPosition;
+//        var lenCount = MqttExtension.GetVariableByteIntegerCount((int)len);
+//        if (lenCount > this.m_minimumCount)
+//        {
+//            var moveCount = lenCount - this.m_minimumCount;
+//            writer.ExtendSize(moveCount);
+//            var span = writer.TotalMemory.Span.Slice(this.m_dataPosition);
+//            ShiftWithRight(span, moveCount);
+
+//            writer.Position = this.m_startPosition;
+//            MqttExtension.WriteVariableByteInteger(ref writer, (uint)len);
+//            writer.SetLength(endPosition + moveCount);
+//            writer.SeekToEnd();
+//        }
+//        else
+//        {
+//            writer.Position = this.m_startPosition;
+//            MqttExtension.WriteVariableByteInteger(ref writer, (uint)len);
+//            writer.SeekToEnd();
+//        }
+//        return len;
+//    }
+
+//    private static void ShiftWithRight(Span<byte> span, int shiftCount)
+//    {
+//        var length = span.Length;
+//        for (var i = length - 1; i >= shiftCount; i--)
+//        {
+//            span[i] = span[i - shiftCount];
+//        }
+//    }
+//}

@@ -226,7 +226,7 @@ public static partial class FilePool
 
     private static void DelayRunReleaseFile(string path, int time)
     {
-        Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             await Task.Delay(time).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (GetReferenceCount(path) == 0)

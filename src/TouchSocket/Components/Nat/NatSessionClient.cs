@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -75,7 +76,6 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         {
             if (!client.StandBy)
             {
-                client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
                 client.SafeDispose();
             }
 
@@ -183,7 +183,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
 
             try
             {
-                await this.ProtectedSendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.ByteBlock.Memory,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -196,7 +196,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             // 转发数据到当前客户端
             try
             {
-                await this.ProtectedSendAsync(e.RequestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.RequestInfo,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {

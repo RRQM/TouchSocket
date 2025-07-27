@@ -19,8 +19,8 @@ TouchSocket.Http 是一个基于 Http1.1 协议的组件库，为开发者提供
 
 
 ## 支持的目标框架
+
 - net481
-- net45
 - net462
 - net472
 - netstandard2.0

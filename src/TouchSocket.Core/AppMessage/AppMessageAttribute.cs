@@ -31,7 +31,7 @@ public sealed class AppMessageAttribute : Attribute
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     public AppMessageAttribute(string token)
     {
         this.Token = token;

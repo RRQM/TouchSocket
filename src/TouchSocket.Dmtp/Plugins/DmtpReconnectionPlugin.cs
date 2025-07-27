@@ -50,7 +50,7 @@ internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ID
             return;
         }
 
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             if (e.Manual)
             {

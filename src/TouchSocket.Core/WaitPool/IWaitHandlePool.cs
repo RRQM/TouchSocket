@@ -26,33 +26,19 @@ public interface IWaitHandlePool<TWaitData, TWaitDataAsync, T> : IDisposableObje
     where TWaitDataAsync : IWaitDataAsync<T>
 {
     /// <summary>
-    /// 获取或设置最大标志值。
+    /// 获取最大标志值。
     /// </summary>
-    int MaxSign { get; set; }
+    int MaxSign { get;}
 
     /// <summary>
-    /// 获取或设置最小标志值。
+    /// 获取最小标志值。
     /// </summary>
-    int MinSign { get; set; }
+    int MinSign { get;}
 
     /// <summary>
     /// 取消池中的所有等待句柄。
     /// </summary>
     void CancelAll();
-
-    /// <summary>
-    /// 销毁指定的等待数据。
-    /// </summary>
-    /// <param name="waitData">要销毁的等待数据。</param>
-    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(int sign)的重载函数直接代替", true)]
-    void Destroy(TWaitData waitData);
-
-    /// <summary>
-    /// 销毁指定的异步等待数据。
-    /// </summary>
-    /// <param name="waitData">要销毁的异步等待数据。</param>
-    [Obsolete("此方法在调用时，可能导致不可控bug，已被弃用，请使用Destroy(int sign)的重载函数直接代替", true)]
-    void Destroy(TWaitDataAsync waitData);
 
     /// <summary>
     /// 销毁指定的等待数据。

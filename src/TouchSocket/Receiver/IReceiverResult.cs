@@ -22,7 +22,7 @@ public interface IReceiverResult : IBlockResult
     /// <summary>
     /// 获取接收到的数据字节块
     /// </summary>
-    ByteBlock ByteBlock { get; }
+    IByteBlockReader ByteBlock { get; }
 
     /// <summary>
     /// 获取与接收数据相关的请求信息

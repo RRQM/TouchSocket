@@ -221,14 +221,12 @@ public static class WebSocketExtension
                             //收到的是中继包
                             if (dataFrame.FIN)//判断是否为最终包
                             {
-                                var segment = data.Memory.GetArray();
-                                await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
+                                await stream.WriteAsync(data,CancellationToken.None);
                                 return;
                             }
                             else
                             {
-                                var segment = data.Memory.GetArray();
-                                await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
+                                await stream.WriteAsync(data, CancellationToken.None);
                             }
                         }
                         break;
@@ -237,14 +235,12 @@ public static class WebSocketExtension
                         {
                             if (dataFrame.FIN)//判断是不是最后的包
                             {
-                                var segment = data.Memory.GetArray();
-                                await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
+                                await stream.WriteAsync(data,CancellationToken.None);
                                 return;
                             }
                             else
                             {
-                                var segment = data.Memory.GetArray();
-                                await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
+                                await stream.WriteAsync(data, CancellationToken.None);
                             }
                         }
                         break;

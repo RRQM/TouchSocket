@@ -26,7 +26,7 @@ public class ReceivedDataEventArgs : ByteBlockEventArgs
     /// </summary>
     /// <param name="byteBlock">接收到的数据块</param>
     /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
-    public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock)
+    public ReceivedDataEventArgs(IByteBlockReader byteBlock, IRequestInfo requestInfo) : base(byteBlock)
     {
         this.RequestInfo = requestInfo;
     }

@@ -83,24 +83,27 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
     public string TopicName { get; private set; }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.TopicName = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        this.TopicName = MqttExtension.ReadMqttInt16String(ref reader);
         if (this.QosLevel != QosLevel.AtMostOnce)
         {
-            this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
+            this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         }
 
-        this.Payload = this.ReadPayload(ref byteBlock);
+        this.Payload = this.ReadPayload(ref reader);
     }
 
-    private ReadOnlyMemory<byte> ReadPayload<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock
+    private ReadOnlyMemory<byte> ReadPayload<TReader>(ref TReader reader)
+        where TReader : IBytesReader
     {
-        var payloadLength = this.EndPosition - byteBlock.Position;
-        var payload = byteBlock.Memory.Slice(byteBlock.Position, payloadLength);
-        byteBlock.Position = this.EndPosition;
-        return payload;
+        var payloadLength = (int)(this.EndPosition - reader.BytesRead);
+        byte[] payloadArray = new byte[payloadLength];
+        var span = reader.GetSpan((int)payloadLength).Slice(0, (int)payloadLength);
+        span.CopyTo(payloadArray);
+        reader.Advance((int)payloadLength);
+
+        return payloadArray;
     }
 
 
@@ -114,19 +117,19 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
     }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.TopicName);
+        MqttExtension.WriteMqttInt16String(ref writer, this.TopicName);
         if (this.QosLevel != QosLevel.AtMostOnce)
         {
-            byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         }
-        byteBlock.Write(this.Payload.Span);
+        writer.Write(this.Payload.Span);
     }
 
     /// <inheritdoc/>
     protected override int GetMinimumRemainingLength()
     {
-        return 0;
+        return this.Payload.Length;
     }
 }

@@ -16,16 +16,20 @@ namespace TouchSocket.Core;
 
 internal class VersionFastBinaryConverter : FastBinaryConverter<Version>
 {
-    protected override Version Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    protected override Version Read<TReader>(ref TReader reader, Type type)
     {
-        return new Version(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
+        var major = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        var minor = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        var build = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        var revision = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        return new Version(major, minor, build, revision);
     }
 
-    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Version obj)
+    protected override void Write<TWriter>(ref TWriter writer, in Version obj)
     {
-        byteBlock.WriteInt32(obj.Major);
-        byteBlock.WriteInt32(obj.Minor);
-        byteBlock.WriteInt32(obj.Build);
-        byteBlock.WriteInt32(obj.Revision);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, obj.Major);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, obj.Minor);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, obj.Build);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, obj.Revision);
     }
 }

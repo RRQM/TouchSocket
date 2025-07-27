@@ -31,11 +31,14 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private readonly InternalClientCollection<TClient> m_clients = new InternalClientCollection<TClient>();
     private readonly List<NamedPipeMonitor> m_monitors = new List<NamedPipeMonitor>();
+    CancellationTokenSource m_cancellationTokenSource;
     private ServerState m_serverState;
-
     #endregion 字段
 
     #region 属性
+
+    /// <inheritdoc/>
+    public override IClientCollection<TClient> Clients => this.m_clients;
 
     /// <inheritdoc/>
     public override int Count => this.m_clients.Count;
@@ -45,10 +48,6 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     /// <inheritdoc/>
     public override ServerState ServerState => this.m_serverState;
-
-    /// <inheritdoc/>
-    public override IClientCollection<TClient> Clients => this.m_clients;
-
     #endregion 属性
 
 
@@ -60,7 +59,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
         var networkMonitor = new NamedPipeMonitor(option);
 
-        _ = EasyTask.Run(this.ThreadBegin, networkMonitor);
+        _ = EasyTask.SafeRun(this.ThreadBegin, networkMonitor);
         this.m_monitors.Add(networkMonitor);
     }
 
@@ -78,6 +77,12 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     }
 
     /// <inheritdoc/>
+    public override bool ClientExists(string id)
+    {
+        return this.m_clients.ClientExist(id);
+    }
+
+    /// <inheritdoc/>
     public override IEnumerable<string> GetIds()
     {
         return this.m_clients.GetIds();
@@ -91,7 +96,8 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
         if (this.m_monitors.Remove(monitor))
         {
-            throw new Exception();
+            monitor.Dispose();
+            return true;
         }
         return false;
     }
@@ -116,13 +122,6 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(sourceId));
         }
     }
-
-    /// <inheritdoc/>
-    public override bool ClientExists(string id)
-    {
-        return this.m_clients.ClientExist(id);
-    }
-
     /// <inheritdoc/>
     public override async Task StartAsync()
     {
@@ -141,7 +140,6 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             {
                 Name = pipeName,
                 Adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty),
-                SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
             };
 
             optionList.Add(option);
@@ -220,38 +218,45 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private async Task OnClientSocketInit(NamedPipeServerStream namedPipe, NamedPipeMonitor monitor)
     {
-        var client = this.NewClient();
-
-        client.InternalSetConfig(this.Config);
-        client.InternalSetContainer(this.Resolver);
-        client.InternalSetListenOption(monitor.Option);
-        client.InternalSetService(this);
-        client.InternalSetNamedPipe(namedPipe);
-        client.InternalSetPluginManager(this.PluginManager);
-        client.InternalSetAction(this.TryAdd, this.TryRemove, this.TryGet);
-
-        this.ClientInitialized(client);
-
-        await client.InternalInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        var args = new ConnectingEventArgs()
+        try
         {
-            Id = this.GetNextNewId()
-        };
-        await client.InternalNamedPipeConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
-        if (args.IsPermitOperation)
-        {
+            var client = this.NewClient();
+
+            this.ClientInitialized(client);
+
+            await client.InternalInitialized(this.Config,
+                monitor.Option,
+                namedPipe,
+                this.Resolver,
+                this.PluginManager,
+                this,
+                this.TryAdd,
+                this.TryRemove,
+                this.TryGet).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            var args = new ConnectingEventArgs()
+            {
+                Id = this.GetNextNewId()
+            };
+            await client.InternalNamedPipeConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
+            if (!args.IsPermitOperation)
+            {
+                return;
+            }
+
             client.InternalSetId(args.Id);
-            if (this.m_clients.TryAdd(client))
+            if (!this.m_clients.TryAdd(client))
             {
-                await client.InternalNamedPipeConnected(new ConnectedEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.Logger?.Error(this, TouchSocketResource.IdAlreadyExists.Format(args.Id));
+                return;
             }
-            else
-            {
-                ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(args.Id));
-            }
+            await client.InternalNamedPipeConnected(new NamedPipeTransport(namedPipe, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty))).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        else
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
         {
             namedPipe.SafeDispose();
         }
@@ -259,8 +264,9 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private async Task ThreadBegin(NamedPipeMonitor monitor)
     {
+        var token = monitor.MonitorToken;
         var option = monitor.Option;
-        while (true)
+        while (!token.IsCancellationRequested)
         {
             try
             {
@@ -270,11 +276,11 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 }
                 var namedPipe = new NamedPipeServerStream(option.Name, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
 
-                namedPipe.WaitForConnection();
+                await namedPipe.WaitForConnectionAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                await this.OnClientSocketInit(namedPipe, monitor).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                _ = EasyTask.SafeRun(this.OnClientSocketInit, namedPipe, monitor);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 this.Logger?.Debug(this, ex);
             }

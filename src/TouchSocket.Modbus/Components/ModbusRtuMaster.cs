@@ -59,6 +59,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
                 byteBlock.Dispose();
             }
 
+            this.m_waitDataAsync.Reset();
             this.m_waitDataAsync.SetCancellationToken(token);
             var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();

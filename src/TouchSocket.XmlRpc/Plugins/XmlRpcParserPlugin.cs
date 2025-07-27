@@ -17,6 +17,7 @@ using System.Xml;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.XmlRpc;
 
@@ -152,7 +153,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     if (!e.Context.Request.KeepAlive)
                     {
-                        await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 finally

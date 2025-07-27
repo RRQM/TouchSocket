@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
@@ -19,7 +20,7 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
 {
-    private int m_endPosition;
+    private long m_endPosition;
 
     /// <summary>
     /// 获取消息的最大长度。
@@ -39,7 +40,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     /// <summary>
     /// 获取结束位置。
     /// </summary>
-    protected int EndPosition => this.m_endPosition;
+    protected long EndPosition => this.m_endPosition;
 
     /// <summary>
     /// 获取或设置标志位。
@@ -80,28 +81,50 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         };
     }
 
+    protected BytesWriter CreateVariableWriter<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+    {
+        return new BytesWriter(writer.GetMemory(this.GetMinimumRemainingLength()+1024));
+    }
+
     #region Build
 
     /// <summary>
     /// 构建Mqtt消息。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块类型。</typeparam>
-    /// <param name="byteBlock">字节块引用。</param>
-    public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">字节块类型。</typeparam>
+    /// <param name="writer">字节块引用。</param>
+    public void Build<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
     {
-        MqttExtension.WriteMqttFixedHeader(ref byteBlock, this.MessageType, this.Flags);
+        MqttExtension.WriteMqttFixedHeader(ref writer, this.MessageType, this.Flags);
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock, this.GetMinimumRemainingLength());
 
-        this.BuildVariableBody(ref byteBlock);
-        this.RemainingLength = (uint)variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter, this.GetMinimumRemainingLength());
+
+        this.BuildVariableBody(ref byteBlockWriter);
+        this.RemainingLength = (uint)variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+
+        writer.Advance(byteBlockWriter.Position);
     }
 
-    protected abstract void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock;
+    protected abstract void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 
-    protected abstract void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock;
+    protected abstract void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
+        ;
 
     /// <summary>
     /// 获取最小剩余长度。
@@ -109,17 +132,21 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     /// <returns>剩余长度。</returns>
     protected abstract int GetMinimumRemainingLength();
 
-    private void BuildVariableBody<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    private void BuildVariableBody<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
     {
         switch (this.Version)
         {
             case MqttProtocolVersion.V310:
             case MqttProtocolVersion.V311:
-                this.BuildVariableBodyWithMqtt3(ref byteBlock);
+                this.BuildVariableBodyWithMqtt3(ref writer);
                 break;
 
             case MqttProtocolVersion.V500:
-                this.BuildVariableBodyWithMqtt5(ref byteBlock);
+                this.BuildVariableBodyWithMqtt5(ref writer);
                 break;
 
             case MqttProtocolVersion.Unknown:
@@ -136,24 +163,24 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     /// <summary>
     /// 解包Mqtt消息。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块类型。</typeparam>
-    /// <param name="byteBlock">字节块引用。</param>
-    public virtual void Unpack<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock
+    /// <typeparam name="TReader">字节块类型。</typeparam>
+    /// <param name="reader">字节块引用。</param>
+    public virtual void Unpack<TReader>(ref TReader reader)
+        where TReader : IBytesReader
     {
-        var firstByte = byteBlock.ReadByte();
+        var firstByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         this.SetFlags((byte)firstByte.GetLow4());
-        this.RemainingLength = MqttExtension.ReadVariableByteInteger(ref byteBlock);
-        this.m_endPosition = (int)(byteBlock.Position + this.RemainingLength);
+        this.RemainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
+        this.m_endPosition = (reader.BytesRead + this.RemainingLength);
         switch (this.Version)
         {
             case MqttProtocolVersion.V310:
             case MqttProtocolVersion.V311:
-                this.UnpackWithMqtt3(ref byteBlock);
+                this.UnpackWithMqtt3(ref reader);
                 break;
 
             case MqttProtocolVersion.V500:
-                this.UnpackWithMqtt5(ref byteBlock);
+                this.UnpackWithMqtt5(ref reader);
                 break;
 
             case MqttProtocolVersion.Unknown:
@@ -163,17 +190,17 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         }
     }
 
-    protected bool EndOfByteBlock<TByteBlock>(in TByteBlock byteBlock)
-        where TByteBlock : IByteBlock
+    protected bool EndOfByteBlock<TReader>(in TReader reader)
+        where TReader : IBytesReader
     {
-        return this.m_endPosition == byteBlock.Position;
+        return this.m_endPosition == reader.BytesRead;
     }
 
-    protected abstract void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock;
+    protected abstract void UnpackWithMqtt3<TReader>(ref TReader reader)
+        where TReader : IBytesReader;
 
-    protected abstract void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
-        where TByteBlock : IByteBlock;
+    protected abstract void UnpackWithMqtt5<TReader>(ref TReader reader)
+        where TReader : IBytesReader;
 
     #endregion Unpack
 

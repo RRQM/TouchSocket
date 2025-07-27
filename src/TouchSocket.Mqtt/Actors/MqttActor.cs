@@ -12,6 +12,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
+using System.IO.Pipes;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -25,13 +28,13 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     private readonly Dictionary<ushort, MqttArrivedMessage> m_qos2MqttArrivedMessage = new();
     private readonly CancellationTokenSource m_tokenSource = new();
-    private readonly WaitHandlePool<MqttIdentifierMessage> m_waitHandlePool = new();
+    private readonly WaitHandlePool<MqttIdentifierMessage> m_waitHandlePool = new(1, ushort.MaxValue);
 
     #endregion 字段
 
     public MqttActor()
     {
-        this.m_waitHandlePool.MaxSign = 1;
+
     }
 
     protected override void Dispose(bool disposing)
@@ -76,34 +79,27 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #region Publish
 
-    public async Task PublishAsync(MqttPublishMessage message)
+    public Task PublishAsync(MqttPublishMessage message, CancellationToken token)
     {
         switch (message.QosLevel)
         {
-            case QosLevel.AtMostOnce:
-                await this.PublishAtMostOnceMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                break;
-
             case QosLevel.AtLeastOnce:
-                await this.PublishAtLeastOnceMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                break;
-
+                return this.PublishAtLeastOnceMessageAsync(message, token);
             case QosLevel.ExactlyOnce:
-                await this.PublishExactlyOnceMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                break;
-
+                return this.PublishExactlyOnceMessageAsync(message, token);
+            case QosLevel.AtMostOnce:
             default:
-                break;
+                return this.PublishAtMostOnceMessageAsync(message, token);
         }
     }
 
-    private async Task PublishAtLeastOnceMessageAsync(MqttPublishMessage message)
+    private async Task PublishAtLeastOnceMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
         var waitDataAsync = this.m_waitHandlePool.GetWaitDataAsync(message);
 
         try
         {
-            await this.ProtectedOutputSendAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             var waitDataStatus = await waitDataAsync.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
@@ -119,18 +115,18 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
-    private async Task PublishAtMostOnceMessageAsync(MqttPublishMessage message)
+    private async Task PublishAtMostOnceMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
-        await this.ProtectedOutputSendAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PublishExactlyOnceMessageAsync(MqttPublishMessage message)
+    private async Task PublishExactlyOnceMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
         var waitData_1_Async = this.m_waitHandlePool.GetWaitDataAsync(message);
 
         try
         {
-            await this.ProtectedOutputSendAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             var waitDataStatus = await waitData_1_Async.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
         }
@@ -148,7 +144,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
         try
         {
-            await this.ProtectedOutputSendAsync(mqttPubRelMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(mqttPubRelMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             var waitDataStatus = await waitData_2_Async.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
         }
@@ -162,64 +158,65 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #region InputMqttMessage
 
-    public async Task InputMqttMessageAsync(MqttMessage mqttMessage)
+    public async Task InputMqttMessageAsync(MqttMessage mqttMessage, CancellationToken token)
     {
         switch (mqttMessage)
         {
             case MqttConnectMessage message:
-                await this.InputMqttConnectMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.Version = message.Version;
+                await this.InputMqttConnectMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttConnAckMessage message:
-                await this.InputMqttConnAckMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttConnAckMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPingReqMessage message:
-                await this.InputMqttPingReqMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPingReqMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPingRespMessage message:
-                await this.InputMqttPingRespMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPingRespMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPublishMessage message:
-                await this.InputMqttPublishMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPublishMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPubAckMessage message:
-                await this.InputMqttPubAckMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPubAckMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPubRecMessage message:
-                await this.InputMqttPubRecMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPubRecMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPubRelMessage message:
-                await this.InputMqttPubRelMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPubRelMessageAsync(message, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttPubCompMessage message:
-                await this.InputMqttPubCompMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttPubCompMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttSubscribeMessage message:
-                await this.InputMqttSubscribeMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttSubscribeMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttSubAckMessage message:
-                await this.InputMqttSubAckMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttSubAckMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttUnsubscribeMessage message:
-                await this.InputMqttUnsubscribeMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttUnsubscribeMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttUnsubAckMessage message:
-                await this.InputMqttUnsubAckMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttUnsubAckMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             case MqttDisconnectMessage message:
-                await this.InputMqttDisconnectMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InputMqttDisconnectMessageAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 break;
 
             default:
@@ -231,43 +228,49 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理连接确认消息
     /// </summary>
     /// <param name="message">连接确认消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttConnAckMessageAsync(MqttConnAckMessage message);
+    protected abstract Task InputMqttConnAckMessageAsync(MqttConnAckMessage message, CancellationToken token);
 
     /// <summary>
     /// 处理连接消息
     /// </summary>
     /// <param name="message">连接消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttConnectMessageAsync(MqttConnectMessage message);
+    protected abstract Task InputMqttConnectMessageAsync(MqttConnectMessage message, CancellationToken token);
 
     /// <summary>
     /// 处理PING响应消息
     /// </summary>
     /// <param name="message">PING响应消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttPingRespMessageAsync(MqttPingRespMessage message);
+    protected abstract Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken token);
 
     /// <summary>
     /// 处理订阅消息
     /// </summary>
     /// <param name="message">订阅消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message);
+    protected abstract Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message, CancellationToken token);
 
     /// <summary>
     /// 处理取消订阅消息
     /// </summary>
     /// <param name="message">取消订阅消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message);
+    protected abstract Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message, CancellationToken token);
 
     /// <summary>
     /// 处理断开连接消息
     /// </summary>
     /// <param name="message">断开连接消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttDisconnectMessageAsync(MqttDisconnectMessage message)
+    private Task InputMqttDisconnectMessageAsync(MqttDisconnectMessage message, CancellationToken token)
     {
         return this.ProtectedMqttOnClosing(message);
     }
@@ -276,19 +279,21 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理PING请求消息
     /// </summary>
     /// <param name="message">PING请求消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private async Task InputMqttPingReqMessageAsync(MqttPingReqMessage message)
+    private async Task InputMqttPingReqMessageAsync(MqttPingReqMessage message, CancellationToken token)
     {
         var contentForAck = new MqttPingRespMessage();
-        await this.ProtectedOutputSendAsync(contentForAck).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(contentForAck, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 处理发布确认消息
     /// </summary>
     /// <param name="message">发布确认消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttPubAckMessageAsync(MqttPubAckMessage message)
+    private Task InputMqttPubAckMessageAsync(MqttPubAckMessage message, CancellationToken token)
     {
         this.m_waitHandlePool.SetRun(message);
         return EasyTask.CompletedTask;
@@ -298,8 +303,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理发布完成消息
     /// </summary>
     /// <param name="message">发布完成消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttPubCompMessageAsync(MqttPubCompMessage message)
+    private Task InputMqttPubCompMessageAsync(MqttPubCompMessage message, CancellationToken token)
     {
         this.m_waitHandlePool.SetRun(message);
         return EasyTask.CompletedTask;
@@ -309,8 +315,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理发布消息
     /// </summary>
     /// <param name="message">发布消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private async Task InputMqttPublishMessageAsync(MqttPublishMessage message)
+    private async Task InputMqttPublishMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
         //Console.WriteLine($"TopicName:{message.TopicName}");
         //Console.WriteLine($"Payload:{Encoding.UTF8.GetString(message.Payload.ToArray())}");
@@ -326,7 +333,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
             {
                 MessageId = message.MessageId
             };
-            await this.ProtectedOutputSendAsync(pubAckMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(pubAckMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else if (message.QosLevel == QosLevel.ExactlyOnce)
         {
@@ -335,7 +342,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
             {
                 MessageId = message.MessageId
             };
-            await this.ProtectedOutputSendAsync(pubRecMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(pubRecMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -343,8 +350,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理发布接收消息
     /// </summary>
     /// <param name="message">发布接收消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttPubRecMessageAsync(MqttPubRecMessage message)
+    private Task InputMqttPubRecMessageAsync(MqttPubRecMessage message, CancellationToken token)
     {
         this.m_waitHandlePool.SetRun(message);
         return EasyTask.CompletedTask;
@@ -354,8 +362,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理发布释放消息
     /// </summary>
     /// <param name="message">发布释放消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private async Task InputMqttPubRelMessageAsync(MqttPubRelMessage message)
+    private async Task InputMqttPubRelMessageAsync(MqttPubRelMessage message, CancellationToken token)
     {
         if (this.m_qos2MqttArrivedMessage.TryGetValue(message.MessageId, out var mqttArrivedMessage))
         {
@@ -365,7 +374,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
             {
                 MessageId = message.MessageId
             };
-            await this.ProtectedOutputSendAsync(pubCompMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(pubCompMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -373,8 +382,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理订阅确认消息
     /// </summary>
     /// <param name="message">订阅确认消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttSubAckMessageAsync(MqttSubAckMessage message)
+    private Task InputMqttSubAckMessageAsync(MqttSubAckMessage message, CancellationToken token)
     {
         this.m_waitHandlePool.SetRun(message);
         return EasyTask.CompletedTask;
@@ -384,8 +394,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// 处理取消订阅确认消息
     /// </summary>
     /// <param name="message">取消订阅确认消息</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>任务</returns>
-    private Task InputMqttUnsubAckMessageAsync(MqttUnsubAckMessage message)
+    private Task InputMqttUnsubAckMessageAsync(MqttUnsubAckMessage message, CancellationToken token)
     {
         this.m_waitHandlePool.SetRun(message);
         return EasyTask.CompletedTask;
@@ -399,7 +410,8 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     public Func<MqttActor, MqttConnectedEventArgs, Task> Connected { get; set; }
     public Func<MqttActor, MqttConnectingEventArgs, Task> Connecting { get; set; }
     public Func<MqttActor, MqttReceivedEventArgs, Task> MessageArrived { get; set; }
-    public Func<MqttActor, MqttMessage, Task> OutputSendAsync { get; set; }
+    public Func<MqttActor, MqttMessage, CancellationToken, Task> OutputSendAsync { get; set; }
+    public MqttProtocolVersion Version { get; protected set; }
 
     #endregion 委托
 
@@ -430,9 +442,17 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
-    protected Task ProtectedOutputSendAsync(MqttMessage message)
+    protected Task ProtectedOutputSendAsync(MqttMessage message, CancellationToken token)
     {
-        return this.OutputSendAsync(this, message);
+        if (message.MessageType == MqttMessageType.Connect)
+        {
+            this.Version = message.Version;
+        }
+        else
+        {
+            message.InternalSetVersion(this.Version);
+        }
+        return this.OutputSendAsync(this, message, token);
     }
 
     #endregion 委托方法

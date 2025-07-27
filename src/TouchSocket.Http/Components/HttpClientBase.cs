@@ -33,13 +33,13 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     private HttpClientDataHandlingAdapter m_dataHandlingAdapter;
     #endregion 字段
 
-    internal Task InternalSendAsync(ReadOnlyMemory<byte> memory)
+    internal Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.ProtectedDefaultSendAsync(memory);
+        return this.ProtectedDefaultSendAsync(memory, token);
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
@@ -47,7 +47,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             //this.m_waitRelease.Dispose();
             this.m_waitResponseDataAsync.Dispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             {
                 request.BuildHeader(ref byteBlock);
                 // 异步发送请求
-                await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedDefaultSendAsync(byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -139,7 +139,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
                 var result = content.InternalBuildingContent(ref byteBlock);
 
                 // 异步发送请求
-                await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedDefaultSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (!result)
                 {

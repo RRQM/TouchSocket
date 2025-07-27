@@ -25,9 +25,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
 {
     #region 属性
 
-    /// <inheritdoc/>
-    public SerialPort MainSerialPort => this.ProtectedMainSerialPort;
-
     #endregion 属性
 
     #region 事件
@@ -182,23 +179,16 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     #region 异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(memory);
+        return this.ProtectedSendAsync(memory, token);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(requestInfo);
+        return this.ProtectedSendAsync(requestInfo, token);
     }
-
-    /// <inheritdoc/>
-    public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(transferBytes);
-    }
-
     #endregion 异步发送
 
     /// <inheritdoc/>

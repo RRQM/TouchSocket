@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -21,9 +22,10 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
+
 /// <summary>
-/// TcpClientBase类是作为一个抽象基类设计的，它继承自SetupConfigObject，并实现了ITcpSession接口。
-/// 这个类的主要目的是为TCP会话相关的操作提供一个基础框架，同时整合了配置设定的功能。
+/// TcpClientBase 抽象基类，封装了TCP客户端的核心功能，包括连接、断开、数据收发、适配器设置、事件触发等。
+/// 该类实现了 ITcpSession 接口，并继承自 SetupConfigObject。
 /// </summary>
 public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 {
@@ -38,17 +40,16 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #region 变量
 
-    private readonly Lock m_lockForAbort = new Lock();
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private readonly TcpCore m_tcpCore = new TcpCore();
-    private Task m_receiveTask;
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_iP;
     private Socket m_mainSocket;
     private volatile bool m_online;
     private int m_port;
     private InternalReceiver m_receiver;
-    private CancellationTokenSource m_tokenSourceForReceive;
+    private Task m_runTask;
+    private TcpTransport m_transport;
 
     #endregion 变量
 
@@ -106,30 +107,26 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateOnTcpClosed((Task receiveTask, ClosedEventArgs e, InternalReceiver receiver) tuple)
-    {
-        var receiveTask = tuple.receiveTask;
-        var e = tuple.e;
-        var receiver = tuple.receiver;
-
-        await EasyTask.SafeWaitAsync(receiveTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        if (receiver != null)
-        {
-            await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        await this.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
     {
         return this.OnTcpClosing(e);
     }
-
-    private async Task PrivateOnTcpConnected(ConnectedEventArgs e, CancellationToken token)
+    
+    private async Task PrivateOnTcpConnected(TcpTransport transport)
     {
-        this.m_receiveTask = EasyTask.SafeRun(this.BeginReceive, token);
-        await this.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
+        var socket = this.m_mainSocket;
+        var e_connected = new ConnectedEventArgs();
+        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var e_closed = transport.ClosedEventArgs;
+        this.m_online = false;
+        socket.SafeDispose();
+        var adapter = this.m_dataHandlingAdapter;
+        this.m_dataHandlingAdapter = default;
+        adapter.SafeDispose();
+
+        await this.OnTcpClosed(e_closed).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private async Task PrivateOnTcpConnecting(ConnectingEventArgs e)
@@ -150,6 +147,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     #region 属性
 
     /// <inheritdoc/>
+    public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
+
+    /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
 
     /// <inheritdoc/>
@@ -159,10 +159,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTimeOffset LastReceivedTime => this.m_tcpCore.ReceiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_transport == null ? default : this.m_transport.ReceiveCounter.LastIncrement;
 
     /// <inheritdoc/>
-    public DateTimeOffset LastSentTime => this.m_tcpCore.SendCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_transport == null ? default : this.m_transport.SendCounter.LastIncrement;
 
     /// <inheritdoc/>
     public Socket MainSocket => this.m_mainSocket;
@@ -184,6 +184,11 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <inheritdoc/>
     public bool UseSsl => this.m_tcpCore.UseSsl;
 
+    /// <summary>
+    /// 获取当前TCP传输层对象。
+    /// </summary>
+    protected ITransport Transport => this.m_transport;
+
     #endregion 属性
 
     #region 断开操作
@@ -193,17 +198,18 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         try
         {
-            if (this.m_online)
+            if (!this.m_online)
             {
-                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                lock (this.m_lockForAbort)
-                {
-                    //https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A
-                    this.MainSocket.TryClose();
-                    this.Abort(true, msg);
-                }
+                return Result.Success;
             }
 
+            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var transport = this.m_transport;
+            if (transport != null)
+            {
+                await transport.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -213,64 +219,18 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
-            this.Abort(true, TouchSocketResource.DisposeClose);
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
             this.m_tcpCore.SafeDispose();
         }
 
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     #endregion 断开操作
-
-    /// <inheritdoc/>
-    public async Task<Result> ShutdownAsync(SocketShutdown how)
-    {
-        if (!this.m_online)
-        {
-            return Result.FromFail(TouchSocketResource.ClientNotConnected);
-        }
-
-        var tcpCore = this.m_tcpCore;
-        if (tcpCore == null)
-        {
-            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(tcpCore)));
-        }
-
-        return await tcpCore.ShutdownAsync(how).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 中止连接。
-    /// </summary>
-    /// <param name="manual">是否为手动中止。</param>
-    /// <param name="msg">中止的消息。</param>
-    protected void Abort(bool manual, string msg)
-    {
-        // 锁定对象以确保线程安全
-        lock (this.m_lockForAbort)
-        {
-            // 检查是否在线状态
-            if (this.m_online)
-            {
-                // 将在线状态设置为false
-                this.m_online = false;
-                // 安全地释放主套接字资源
-                this.MainSocket.SafeDispose();
-
-                // 安全地释放数据处理适配器资源
-                var adapter = this.m_dataHandlingAdapter;
-                this.m_dataHandlingAdapter = default;
-                adapter.SafeDispose();
-                this.CancelReceive();
-                // 启动一个新任务来处理连接关闭事件
-                _ = EasyTask.SafeRun(this.PrivateOnTcpClosed, (this.m_receiveTask, new ClosedEventArgs(manual, msg), this.m_receiver));
-            }
-        }
-    }
 
     /// <summary>
     /// 当收到适配器处理的数据时。
@@ -289,9 +249,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <returns>
     /// 如果返回<see langword="true"/>，则表示数据已被处理，且不会再向下传递。
     /// </returns>
-    protected virtual ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
+    protected virtual ValueTask<bool> OnTcpReceiving(IByteBlockReader byteBlock)
     {
-        // 提交异步事件，通知所有实现了ITcpReceivingPlugin接口的插件进行数据处理。
         return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
     }
 
@@ -307,6 +266,77 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     }
 
     /// <summary>
+    /// 数据接收主循环，负责从传输层读取数据并分发给适配器或插件。
+    /// </summary>
+    /// <param name="transport">TCP传输层对象</param>
+    protected virtual async Task ReceiveLoopAsync(ITransport transport)
+    {
+        var token = transport.ClosedToken;
+        try
+        {
+            while (true)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                if (this.DisposedValue || token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (result.IsCanceled || result.IsCompleted)
+                {
+                    return;
+                }
+
+                foreach (var item in result.Buffer)
+                {
+                    var reader = new ByteBlockReader(item);
+                    try
+                    {
+                        if (await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        {
+                            continue;
+                        }
+
+                        if (this.m_dataHandlingAdapter == null)
+                        {
+                            await this.PrivateHandleReceivedData(reader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                        else
+                        {
+                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.Exception(this, ex);
+                    }
+                }
+                transport.Input.AdvanceTo(result.Buffer.End);
+            }
+        }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+            return;
+        }
+        finally
+        {
+            var receiver = this.m_receiver;
+            var e_closed = transport.ClosedEventArgs;
+            if (receiver != null)
+            {
+                await receiver.Complete(e_closed.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+    }
+
+    /// <summary>
     /// 设置适配器。
     /// </summary>
     /// <param name="adapter">要设置的适配器实例。</param>
@@ -315,7 +345,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
 
-        // 如果适配器参数为<see langword="null"/>，抛出ArgumentNullException异常
         ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
 
         // 如果当前实例的配置对象不为空，则将配置应用到适配器上
@@ -324,15 +353,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             adapter.Config(this.Config);
         }
 
-        // 设置适配器的日志记录器为当前实例的日志记录器
         adapter.Logger = this.Logger;
-        // 通知适配器当前实例已加载
         adapter.OnLoaded(this);
-        // 设置适配器接收到数据时的回调方法
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-        // 设置适配器发送数据时的异步回调方法
         adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
-        // 将当前适配器设置为实例的适配器
         this.m_dataHandlingAdapter = adapter;
     }
 
@@ -344,103 +368,21 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
     }
 
-    private void CancelReceive()
-    {
-        var tokenSourceForReceive = this.m_tokenSourceForReceive;
-        if (tokenSourceForReceive != null)
-        {
-            tokenSourceForReceive.Cancel();
-            tokenSourceForReceive.Dispose();
-        }
-        this.m_tokenSourceForReceive = null;
-    }
-
-    private async Task BeginReceive(CancellationToken token)
-    {
-        var byteBlock = new ByteBlock(this.m_tcpCore.ReceiveBufferSize);
-        while (true)
-        {
-            try
-            {
-                var result = await this.m_tcpCore.ReadAsync(byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                if (this.DisposedValue || token.IsCancellationRequested)
-                {
-                    byteBlock.Dispose();
-                    return;
-                }
-
-                if (result.BytesTransferred > 0)
-                {
-                    byteBlock.SetLength(result.BytesTransferred);
-                    try
-                    {
-                        if (await this.OnTcpReceiving(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            continue;
-                        }
-
-                        if (this.m_dataHandlingAdapter == null)
-                        {
-                            await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        else
-                        {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger?.Exception(this, ex);
-                    }
-                    finally
-                    {
-                        if (byteBlock.Holding || byteBlock.DisposedValue)
-                        {
-                            byteBlock.Dispose();//释放上个内存
-                            byteBlock = new ByteBlock(this.m_tcpCore.ReceiveBufferSize);
-                        }
-                        else
-                        {
-                            byteBlock.Reset();
-                            if (this.m_tcpCore.ReceiveBufferSize > byteBlock.Capacity)
-                            {
-                                byteBlock.SetCapacity(this.m_tcpCore.ReceiveBufferSize);
-                            }
-                        }
-                    }
-                }
-                else if (result.SocketError != null)
-                {
-                    byteBlock.Dispose();
-                    this.Abort(false, result.SocketError.Message);
-                    return;
-                }
-                else
-                {
-                    byteBlock.Dispose();
-                    this.Abort(false, TouchSocketResource.RemoteDisconnects);
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                byteBlock.Dispose();
-                this.Abort(false, ex.Message);
-                return;
-            }
-        }
-    }
-
     #region Receiver
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 清除内部接收器。
+    /// </summary>
     protected void ProtectedClearReceiver()
     {
         this.m_receiver = null;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 创建内部接收器。
+    /// </summary>
+    /// <param name="receiverObject">接收器客户端对象</param>
+    /// <returns>接收器实例</returns>
     protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
     {
         return this.m_receiver ??= new InternalReceiver(receiverObject);
@@ -448,7 +390,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #endregion Receiver
 
-    private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
         var receiver = this.m_receiver;
         if (receiver != null)
@@ -472,17 +414,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.m_port = socket.RemoteEndPoint.GetPort();
         this.m_mainSocket = socket;
         this.m_tcpCore.Reset(socket);
-        //this.m_tcpCore.OnReceived = this.HandleReceived;
-        //this.m_tcpCore.OnAbort = this.TcpCoreAbort;
-        if (this.Config.GetValue(TouchSocketConfigExtension.MinBufferSizeProperty) is int minValue)
-        {
-            this.m_tcpCore.MinBufferSize = minValue;
-        }
-
-        if (this.Config.GetValue(TouchSocketConfigExtension.MaxBufferSizeProperty) is int maxValue)
-        {
-            this.m_tcpCore.MaxBufferSize = maxValue;
-        }
     }
 
     #region Throw
@@ -522,19 +453,29 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 最后通过TCP核心发送数据。
     /// </summary>
     /// <param name="memory">要发送的数据，存储在只读内存区中。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>一个Task对象，表示异步操作的结果。</returns>
     /// <exception cref="ObjectDisposedException">如果当前实例已被弃用，则抛出此异常。</exception>
     /// <exception cref="InvalidOperationException">如果客户端未连接，则抛出此异常。</exception>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
+    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        // 检查当前实例是否已被弃用
         this.ThrowIfDisposed();
-        // 检查客户端是否已连接
         this.ThrowIfTcpClientNotConnected();
-        // 调用OnTcpSending事件处理程序进行预发送处理
+
+        var transport = this.m_transport;
+
         await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        // 通过TCP核心发送数据
-        await this.m_tcpCore.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        await transport.SemaphoreSlimForWriter.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            transport.SemaphoreSlimForWriter.Release();
+        }
+
     }
 
     #endregion 直接发送
@@ -545,18 +486,19 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
     /// <param name="memory">待发送的只读字节内存块。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>一个异步任务，表示发送操作。</returns>
-    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
+    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         // 如果数据处理适配器未设置，则使用默认发送方式。
         if (this.m_dataHandlingAdapter == null)
         {
-            return this.ProtectedDefaultSendAsync(memory);
+            return this.ProtectedDefaultSendAsync(memory, token);
         }
         else
         {
             // 否则，使用适配器的发送方法进行数据发送。
-            return this.m_dataHandlingAdapter.SendInputAsync(memory);
+            return this.m_dataHandlingAdapter.SendInputAsync(memory, token);
         }
     }
 
@@ -567,61 +509,15 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
     /// </summary>
     /// <param name="requestInfo">要发送的请求信息。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
-    protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
+    protected Task ProtectedSendAsync(in IRequestInfo requestInfo, CancellationToken token)
     {
         // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
 
         // 使用数据处理适配器异步发送输入请求
-        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
+        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo, token);
     }
-
-    /// <summary>
-    /// 异步发送数据。
-    /// 如果数据处理适配器不存在或无法拼接发送，则将所有传输字节合并到一个连续的内存块中发送。
-    /// 如果数据处理适配器存在且支持拼接发送，则直接发送传输字节列表。
-    /// </summary>
-    /// <param name="transferBytes">要发送的字节数据列表，每个项代表一个字节片段。</param>
-    /// <returns>发送任务。</returns>
-    protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        // 检查数据处理适配器是否存在且支持拼接发送
-        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
-        {
-            // 如果不支持拼接发送，则计算所有字节片段的总长度
-            var length = 0;
-            foreach (var item in transferBytes)
-            {
-                length += item.Count;
-            }
-            // 使用计算出的总长度创建一个连续的内存块
-            using (var byteBlock = new ByteBlock(length))
-            {
-                // 将每个字节片段写入连续的内存块
-                foreach (var item in transferBytes)
-                {
-                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
-                }
-                // 根据数据处理适配器的存在与否，选择不同的发送方式
-                if (this.m_dataHandlingAdapter == null)
-                {
-                    // 如果没有数据处理适配器，则使用默认方式发送
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                else
-                {
-                    // 如果有数据处理适配器，则通过适配器发送
-                    await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-        }
-        else
-        {
-            // 如果数据处理适配器支持拼接发送，则直接发送字节列表
-            await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
-
     #endregion 异步发送
 }

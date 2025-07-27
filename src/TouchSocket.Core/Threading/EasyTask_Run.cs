@@ -11,7 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
@@ -136,22 +135,24 @@ public static partial class EasyTask
     /// <param name="func">要运行的异步方法。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>表示异步操作的任务。</returns>
-    public static async Task SafeRun(Func<Task> func, CancellationToken ct = default)
+    public static async Task<Result> SafeRun(Func<Task> func, CancellationToken ct = default)
     {
         if (func is null)
         {
-            return;
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
         }
         if (ct.IsCancellationRequested)
         {
-            return;
+            return Result.Canceled;
         }
         try
         {
             await Task.Run(() => func(), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
 
@@ -165,22 +166,24 @@ public static partial class EasyTask
     /// <param name="status2">传递给方法的第二个状态。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>表示异步操作的任务。</returns>
-    public static async Task SafeRun<T1, T2>(Func<T1, T2, Task> func, T1 status1, T2 status2, CancellationToken ct = default)
+    public static async Task<Result> SafeRun<T1, T2>(Func<T1, T2, Task> func, T1 status1, T2 status2, CancellationToken ct = default)
     {
         if (func is null)
         {
-            return;
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
         }
         if (ct.IsCancellationRequested)
         {
-            return;
+            return Result.Canceled;
         }
         try
         {
             await Task.Run(() => func(status1, status2), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
 

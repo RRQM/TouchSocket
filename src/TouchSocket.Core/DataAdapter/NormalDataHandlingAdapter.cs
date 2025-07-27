@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -21,35 +22,21 @@ namespace TouchSocket.Core;
 public sealed class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
     /// <inheritdoc/>
-    public override bool CanSplicingSend => false;
-
-    /// <inheritdoc/>
     public override bool CanSendRequestInfo => false;
 
     /// <summary>
     /// 当接收到数据时处理数据
     /// </summary>
     /// <param name="byteBlock">数据流</param>
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
     {
         await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    ///// <summary>
-    ///// <inheritdoc/>
-    ///// </summary>
-    ///// <param name="buffer">数据</param>
-    ///// <param name="offset">偏移</param>
-    ///// <param name="length">长度</param>
-    //protected override void PreviewSend(byte[] buffer, int offset, int length)
-    //{
-    //    this.GoSend(buffer, offset, length);
-    //}
-
     /// <inheritdoc/>
-    protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
+    protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.GoSendAsync(memory);
+        return this.GoSendAsync(memory, token);
     }
 
     /// <inheritdoc/>

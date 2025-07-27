@@ -22,7 +22,7 @@ namespace TouchSocket.SerialPorts;
 /// <summary>
 /// Serial核心
 /// </summary>
-internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationResult>
+internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOperationResult>
 {
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
     private readonly SemaphoreSlim m_receiveLock = new(0, 1);
@@ -46,17 +46,9 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
     /// </summary>
     public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, bool streamAsync)
     {
-        this.m_receiveCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnReceivePeriod
-        };
+        this.m_receiveCounter = new ValueCounter(TimeSpan.FromSeconds(1),this.OnReceivePeriod);
 
-        this.m_sendCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnSendPeriod
-        };
+        this.m_sendCounter = new ValueCounter(TimeSpan.FromSeconds(1), this.OnSendPeriod);
 
         this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
 
@@ -115,12 +107,12 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         this.m_core.OnCompleted(continuation, state, token, flags);
     }
 
-    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
+    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock,CancellationToken token)
     {
         if (this.m_streamAsync)
         {
+            this.m_cancellationTokenSource.Token.ThrowIfCancellationRequested();
             // 如果是异步流，则使用异步读取方式
-            var token = this.m_cancellationTokenSource.Token;
             var stream = this.m_serialPort.BaseStream;
             var memory = byteBlock.TotalMemory;
             var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -133,9 +125,9 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         }
     }
 
-    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        var token = this.m_cancellationTokenSource.Token;
+        this.m_cancellationTokenSource.Token.ThrowIfCancellationRequested();
         await this.m_semaphoreForSend.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
@@ -149,7 +141,7 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         }
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -160,18 +152,17 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
             try
             {
                 // 取消未完成的任务源
-                this.m_cancellationTokenSource.Cancel();
-                this.m_cancellationTokenSource.Dispose();
+                this.m_cancellationTokenSource.SafeCancel();
+                this.m_cancellationTokenSource.SafeDispose();
                 this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
                 this.m_serialPort.Close();
-                this.m_serialPort.Dispose();
+                this.m_serialPort.SafeDispose();
                 this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
             }
             catch
             {
             }
         }
-        base.Dispose(disposing);
     }
 
     private void OnReceivePeriod(long value)

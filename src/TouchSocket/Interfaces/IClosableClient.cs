@@ -16,15 +16,21 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
-/// <summary>
-/// 具有关闭动作的对象。
-/// </summary>
+/// <summary>  
+/// 具有关闭动作的对象。  
+/// </summary>  
 public interface IClosableClient
 {
-    /// <summary>
-    /// 关闭客户端。
-    /// </summary>
-    /// <param name="msg">关闭时的提示信息。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <summary>  
+    /// 获取一个 <see cref="CancellationToken"/>，用于指示客户端是否已关闭。  
+    /// </summary>  
+    CancellationToken ClosedToken { get; }
+
+    /// <summary>  
+    /// 关闭客户端。  
+    /// </summary>  
+    /// <param name="msg">关闭时的提示信息。</param>  
+    /// <param name="token">可取消令箭。</param>  
+    /// <returns>表示异步操作结果的 <see cref="Task{Result}"/>。</returns>  
     Task<Result> CloseAsync(string msg, CancellationToken token = default);
 }

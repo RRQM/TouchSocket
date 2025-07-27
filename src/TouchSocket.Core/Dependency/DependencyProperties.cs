@@ -33,11 +33,9 @@ internal class DependencyProperties : Dictionary<int, object>
         {
             get
             {
-                if (this.m_instance is null)
-                {
-                    return [];
-                }
-                return this.m_instance
+                return this.m_instance is null
+                    ? []
+                    : this.m_instance
                  .Select(kvp => new KeyValuePair<string, object>(
                      DependencyPropertyBase.s_keyNameMap.TryGetValue(kvp.Key, out var name)
                          ? name

@@ -148,15 +148,15 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     }
 
     /// <inheritdoc/>
-    public Task<Result> PingAsync()
+    public Task<Result> PingAsync(CancellationToken token = default)
     {
-        return this.WebSocket.PingAsync();
+        return this.WebSocket.PingAsync(token);
     }
 
     /// <inheritdoc/>
-    public Task<Result> PongAsync()
+    public Task<Result> PongAsync(CancellationToken token = default)
     {
-        return this.WebSocket.PongAsync();
+        return this.WebSocket.PongAsync(token);
     }
 
     /// <inheritdoc/>
@@ -166,20 +166,20 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
+    public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(dataFrame, endOfMessage);
+        return this.WebSocket.SendAsync(dataFrame, endOfMessage,token);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string text, bool endOfMessage = true)
+    public Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(text, endOfMessage);
+        return this.WebSocket.SendAsync(text, endOfMessage,token);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true)
+    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(memory, endOfMessage);
+        return this.WebSocket.SendAsync(memory, endOfMessage, token);
     }
 }

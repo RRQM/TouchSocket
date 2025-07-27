@@ -30,7 +30,7 @@ public class UdpDataAdapterTester : IDisposable
     private int m_count;
     private bool m_dispose;
     private int m_expectedCount;
-    private Func<ByteBlock, IRequestInfo, Task> m_receivedCallBack;
+    private Func<IByteBlockReader, IRequestInfo, Task> m_receivedCallBack;
     private Stopwatch m_stopwatch;
     private int m_millisecondsTimeout;
 
@@ -39,7 +39,7 @@ public class UdpDataAdapterTester : IDisposable
         this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
         for (var i = 0; i < multiThread; i++)
         {
-            Task.Run(this.BeginSend);
+            _=EasyTask.SafeRun(this.BeginSend);
         }
     }
 
@@ -50,7 +50,7 @@ public class UdpDataAdapterTester : IDisposable
     /// <param name="multiThread">并发多线程数量</param>
     /// <param name="receivedCallBack">收到数据回调</param>
     /// <returns></returns>
-    public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<ByteBlock, IRequestInfo, Task> receivedCallBack = default)
+    public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<IByteBlockReader, IRequestInfo, Task> receivedCallBack = default)
     {
         var tester = new UdpDataAdapterTester(multiThread);
         tester.m_adapter = adapter;
@@ -83,11 +83,11 @@ public class UdpDataAdapterTester : IDisposable
         this.m_millisecondsTimeout = millisecondsTimeout;
         this.m_stopwatch = new Stopwatch();
         this.m_stopwatch.Start();
-        Task.Run(async () =>
+        EasyTask.SafeRun(async () =>
         {
             for (var i = 0; i < testCount; i++)
             {
-                await this.m_adapter.SendInputAsync(null, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_adapter.SendInputAsync(null, memory,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         });
         if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_millisecondsTimeout))
@@ -125,7 +125,7 @@ public class UdpDataAdapterTester : IDisposable
         }
     }
 
-    private async Task OnReceived(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
+    private async Task OnReceived(EndPoint endPoint, IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
         if (this.m_receivedCallBack != null)
         {
@@ -134,7 +134,7 @@ public class UdpDataAdapterTester : IDisposable
         Interlocked.Increment(ref this.m_count);
     }
 
-    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory,CancellationToken token)
     {
         var array = memory.ToArray();
         var asyncByte = new QueueDataBytes(array, 0, array.Length);

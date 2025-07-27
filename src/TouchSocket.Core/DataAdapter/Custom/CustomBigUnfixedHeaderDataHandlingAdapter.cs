@@ -26,22 +26,22 @@ public abstract class CustomBigUnfixedHeaderDataHandlingAdapter<TFixedHeaderRequ
     /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
     /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
     /// </summary>
-    /// <param name="byteBlock">字节块</param>
+    /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
     /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
     {
         if (beCached)
         {
-            while (this.m_surLen > 0 && byteBlock.CanReadLength > 0)
+            while (this.m_surLen > 0 && reader.BytesRemaining > 0)
             {
-                var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                var bytes = byteBlock.Span.Slice(byteBlock.Position, r);
+                var r = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
+                var bytes = reader.GetSpan(r);
                 request.OnAppendBody(bytes);
                 this.m_surLen -= r;
-                byteBlock.Position += r;
+                reader.Advance(r);
                 if (this.m_surLen == 0)
                 {
                     if (request.OnFinished())
@@ -57,7 +57,7 @@ public abstract class CustomBigUnfixedHeaderDataHandlingAdapter<TFixedHeaderRequ
         else
         {
             var requestInfo = this.GetInstance();
-            if (requestInfo.OnParsingHeader(ref byteBlock))
+            if (requestInfo.OnParsingHeader(ref reader))
             {
                 request = requestInfo;
                 if (requestInfo.BodyLength == 0)
@@ -71,13 +71,13 @@ public abstract class CustomBigUnfixedHeaderDataHandlingAdapter<TFixedHeaderRequ
                 }
                 this.m_surLen = request.BodyLength;
 
-                while (this.m_surLen > 0 && byteBlock.CanReadLength > 0)
+                while (this.m_surLen > 0 && reader.BytesRemaining > 0)
                 {
-                    var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                    var bytes = byteBlock.Span.Slice(byteBlock.Position, r);
+                    var r = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
+                    var bytes = reader.GetSpan(r);
                     request.OnAppendBody(bytes);
                     this.m_surLen -= r;
-                    byteBlock.Position += r;
+                    reader.Advance(r);
                     if (this.m_surLen == 0)
                     {
                         if (request.OnFinished())
@@ -128,9 +128,9 @@ public interface IBigUnfixedHeaderRequestInfo : IRequestInfo
     /// <para>如果返回<see langword="false"/>，意味着缓存剩余数据，此时如果仅仅是因为长度不足，则不必修改其他。</para>
     /// <para>但是如果是因为数据错误，则需要修改<see cref="ByteBlock.Position"/>到正确位置，如果都不正确，则设置<see cref="ByteBlock.Position"/>等于<see cref="ByteBlock.Length"/></para>
     /// </summary>
-    /// <param name="byteBlock"></param>
+    /// <param name="reader"></param>
     /// <returns>是否满足解析包头</returns>
-    bool OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    bool OnParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader;
 
     /// <summary>
     /// 当收到数据，由框架封送数据。

@@ -43,7 +43,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest> : DisposableObjec
         this.m_bufferLength = bufferLength;
         this.m_receivedCallBack = receivedCallBack;
         adapter.SendAsyncCallBack = this.SendCallback;
-        Task.Run(this.BeginSend);
+        _ = EasyTask.SafeRun(this.BeginSend);
     }
 
 
@@ -64,11 +64,11 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest> : DisposableObjec
         this.m_timeout = millisecondsTimeout;
         this.m_stopwatch = new Stopwatch();
         this.m_stopwatch.Start();
-        Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             for (var i = 0; i < testCount; i++)
             {
-                await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length), CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         });
 
@@ -104,7 +104,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest> : DisposableObjec
                     try
                     {
                         var byteBlock = block;
-                        while (byteBlock.CanRead)
+                        while (byteBlock.CanReadLength>0)
                         {
                             if (this.m_adapter.TryParseRequest(ref byteBlock, out var request))
                             {
@@ -130,7 +130,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest> : DisposableObjec
         }
     }
 
-    private Task SendCallback(ReadOnlyMemory<byte> memory)
+    private Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var array = memory.ToArray();
         var asyncByte = new QueueDataBytes(array, 0, array.Length);

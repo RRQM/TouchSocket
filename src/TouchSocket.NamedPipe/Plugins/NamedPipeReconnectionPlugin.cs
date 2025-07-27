@@ -53,7 +53,7 @@ public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TC
             return;
         }
 
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             if (e.Manual)
             {

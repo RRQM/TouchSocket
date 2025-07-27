@@ -19,8 +19,4 @@ namespace TouchSocket.NamedPipe;
 /// </summary>
 public interface INamedPipeStreamClient
 {
-    /// <summary>
-    /// 用于通讯的管道流。
-    /// </summary>
-    PipeStream PipeStream { get; }
 }

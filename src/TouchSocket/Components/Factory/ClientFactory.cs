@@ -87,14 +87,14 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     protected abstract Task<TClient> CreateClient();
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_cts.Cancel();
             this.Clear();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>

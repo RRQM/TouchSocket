@@ -182,4 +182,7 @@
   <data name="PollingEnd" xml:space="preserve">
     <value>轮询重新连接已结束</value>
   </data>
+  <data name="TransportIsNull" xml:space="preserve">
+    <value>Transport意外为空。</value>
+  </data>
 </root>

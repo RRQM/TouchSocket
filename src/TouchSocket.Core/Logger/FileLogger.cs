@@ -139,14 +139,7 @@ public sealed class FileLogger : LoggerBase, IDisposable
                     writer.SeekToEnd();
                     writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
 
-                    if (this.m_writers.TryAdd(dirPath, writer))
-                    {
-                        return writer;
-                    }
-                    else
-                    {
-                        return this.GetFileStorageWriter(dirPath);
-                    }
+                    return this.m_writers.TryAdd(dirPath, writer) ? writer : this.GetFileStorageWriter(dirPath);
                 }
                 count++;
             }
@@ -157,15 +150,15 @@ public sealed class FileLogger : LoggerBase, IDisposable
     {
         var dirPath = this.CreateLogFolder(logLevel);
 
-        var writer = this.GetFileStorageWriter(dirPath);
+        var writer1 = this.GetFileStorageWriter(dirPath);
 
-        lock (writer)
+        lock (writer1)
         {
             try
             {
-                writer.Write(Encoding.UTF8.GetBytes(logString));
-                writer.FileStorage.Flush();
-                if (writer.FileStorage.Length > this.MaxSize)
+                writer1.Write((Encoding.UTF8.GetBytes(logString)));
+                writer1.FileStorage.Flush();
+                if (writer1.FileStorage.Length > this.MaxSize)
                 {
                     if (this.m_writers.TryRemove(dirPath, out var fileStorageWriter))
                     {

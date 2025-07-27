@@ -14,22 +14,11 @@ using System;
 
 namespace TouchSocket.Core;
 
-/// <summary>
-/// 数据压缩机接口
-/// </summary>
 public interface IDataCompressor
 {
-    /// <summary>
-    /// 压缩数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    byte[] Compress(ArraySegment<byte> data);
 
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    byte[] Decompress(ArraySegment<byte> data);
+    void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter;
+
+
+    void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter;
 }

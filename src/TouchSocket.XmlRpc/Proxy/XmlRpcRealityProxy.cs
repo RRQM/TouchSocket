@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET45_OR_GREATER
+#if NET462_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.Linq;

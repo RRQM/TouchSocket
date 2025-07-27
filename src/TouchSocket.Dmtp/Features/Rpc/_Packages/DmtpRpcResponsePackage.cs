@@ -70,35 +70,35 @@ internal class DmtpRpcResponsePackage : WaitRouterPackage
     }
 
     /// <inheritdoc/>
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
+        base.PackageBody(ref writer);
 
-        this.m_selector.SerializeParameter(ref byteBlock, this.m_serializationType, this.ReturnParameter);
+        this.m_selector.SerializeParameter(ref writer, this.m_serializationType, this.ReturnParameter);
     }
 
     /// <inheritdoc/>
-    public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageRouter<TWriter>(ref TWriter writer)
     {
-        base.PackageRouter(ref byteBlock);
-        byteBlock.WriteByte((byte)this.m_serializationType);
+        base.PackageRouter(ref writer);
+        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.m_serializationType);
     }
 
     /// <inheritdoc/>
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
+        base.UnpackageBody(ref reader);
         if (this.m_returnType != null)
         {
-            this.m_returnParameter = this.m_selector.DeserializeParameter(ref byteBlock, this.m_serializationType, this.m_returnType);
+            this.m_returnParameter = this.m_selector.DeserializeParameter(ref reader, this.m_serializationType, this.m_returnType);
         }
     }
 
     /// <inheritdoc/>
-    public override void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageRouter<TReader>(ref TReader reader)
     {
-        base.UnpackageRouter(ref byteBlock);
-        this.m_serializationType = (SerializationType)byteBlock.ReadByte();
+        base.UnpackageRouter(ref reader);
+        this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader,byte>(ref reader);
     }
 
     internal void ThrowStatus()
