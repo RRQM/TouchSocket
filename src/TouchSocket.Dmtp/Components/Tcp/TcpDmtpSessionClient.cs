@@ -59,7 +59,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        base.Abort(false, msg);
+        //base.Abort(false, msg);
         return EasyTask.CompletedTask;
     }
 
@@ -205,7 +205,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
@@ -221,10 +221,10 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_dmtpActor?.SafeDispose();
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     #endregion 断开
@@ -265,14 +265,14 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     #endregion Internal
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
 
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedDefaultSendAsync(memory, token);
     }
 
     private async Task ThisOnResetId(DmtpActor rpcActor, IdChangedEventArgs e)
@@ -300,12 +300,11 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     protected override async Task OnTcpConnected(ConnectedEventArgs e)
     {
         this.m_dmtpActor.Id = this.Id;
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             await Task.Delay(this.VerifyTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (!this.Online)
             {
-                await this.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
                 await base.CloseAsync("握手验证超时").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         });
@@ -331,18 +330,22 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
+    protected override async ValueTask<bool> OnTcpReceiving(IByteBlockReader byteBlock)
     {
-        while (byteBlock.CanRead)
+        while (byteBlock.CanReadLength>0)
         {
             if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
             {
-                using (message)
+                try
                 {
                     if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
+                }
+                finally
+                {
+                    message.Dispose();
                 }
             }
         }

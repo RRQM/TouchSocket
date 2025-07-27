@@ -1,12 +1,13 @@
 ﻿<Project>
 
 	<Import Project="$../../../TouchSocketVersion.props" />
+	<Import Project="Props\*.props" />
 
 	<PropertyGroup>
 		<Version>$(TouchSocketVersion)</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>preview</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2025 若汝棋茗</Copyright>
 		<PackageProjectUrl>https://touchsocket.net/</PackageProjectUrl>
@@ -15,11 +16,12 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Authors>若汝棋茗</Authors>
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
-		<DocumentationFile></DocumentationFile>
 		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300;IDE0130;IDE0057</NoWarn>
 		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
 		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Packages</PackageOutputPath>
+		<LogoFile>logo.png</LogoFile>
+		<ReadmeFile>Readme.md</ReadmeFile>
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
@@ -39,8 +41,6 @@
 		<IsSourceGenerator>True</IsSourceGenerator>
 	</PropertyGroup>
 
-	<Import Project="Props\*.props" />
-
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
 		<EnableDynamicLoading>true</EnableDynamicLoading>
 	</PropertyGroup>
@@ -51,23 +51,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="$(SolutionDir)\Src\Resources\logo.png" Pack="true" PackagePath="\" />
+		<None Include="$(SolutionDir)Src\Resources\$(LogoFile)" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
+	<!-- TargetFramework相关常量定义，保持分组简洁 -->
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;AsyncLocal</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;AsyncLocal;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
-		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemMemory;AsyncLocal;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;AsyncLocal</DefineConstants>
@@ -80,16 +78,72 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net9.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;AsyncLocal</DefineConstants>
+		<!--<DefineConstants>AllowsRefStruct</DefineConstants>-->
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;AsyncLocal</DefineConstants>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(IsSourceGenerator)'!='True'">
-		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<PackageReadmeFile>$(ReadmeFile)</PackageReadmeFile>
 	</PropertyGroup>
 	<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
-		<None Include="Readme.md" Pack="true" PackagePath="\"/>
+		<None Include="$(ReadmeFile)" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 
+
+	<!-- 优化：统一LICENSE文件变量，合并重复配置，简化条件 -->
+	<PropertyGroup>
+		<LicenseFile Condition="'$(IsPro)'=='True'">LICENSEPRO.txt</LicenseFile>
+		<LicenseFile Condition="'$(IsPro)'!='True'">LICENSE.txt</LicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'!$(MSBuildProjectName.EndsWith(`SourceGenerator`))'">
+		<ProjectReference Include="..\TouchSocket.Core.SourceGenerator\TouchSocket.Core.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(SolutionDir)Src\Resources\$(LicenseFile)" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<!--全部配置相关-->
+	<PropertyGroup Condition="'$(IsSourceGenerator)'!='True'">
+		<PackageIcon>logo.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+	
+	<!--Release发布配置相关-->
+	<PropertyGroup Condition="'$(Configuration)'=='Release' And '$(IsSourceGenerator)'!='True'">
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>$(LicenseFile)</PackageLicenseFile>
+	</PropertyGroup>
+
+	<!--Release-开源版-发布配置相关-->
+	<PropertyGroup Condition="'$(IsPro)'!='True' And '$(Configuration)' == 'Release' And '$(IsSourceGenerator)'!='True'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+
+	<!--Debug-开源版-发布配置相关，此处不嵌入源码主要为了直接调试开发源码-->
+	<PropertyGroup Condition="'$(IsPro)'!='True' And '$(Configuration)' == 'Debug' And '$(IsSourceGenerator)'!='True'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+	</PropertyGroup>
+
+	<!--Release-专业版-发布配置相关-->
+	<PropertyGroup Condition="'$(IsPro)'=='True' And '$(Configuration)' == 'Release' And '$(IsSourceGenerator)'!='True'">
+	</PropertyGroup>
+
+	<!--Debug-专业版-发布配置相关，此处只嵌入调试符号，不嵌入源码主要为了直接调试开发源码-->
+	<PropertyGroup Condition="'$(IsPro)'=='True' And '$(Configuration)' == 'Debug' And '$(IsSourceGenerator)'!='True'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+	</PropertyGroup>
+
+	<Target Name="CopyNuGetPackage" AfterTargets="Pack">
+		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg"
+              DestinationFolder="D:\Nuget\local"
+              Condition="Exists('D:\Nuget\local')" />
+	</Target>
 </Project>

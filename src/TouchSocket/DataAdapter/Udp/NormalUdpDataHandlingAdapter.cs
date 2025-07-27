@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -24,70 +25,13 @@ namespace TouchSocket.Sockets;
 public class NormalUdpDataHandlingAdapter : UdpDataHandlingAdapter
 {
     /// <inheritdoc/>
-    public override bool CanSplicingSend => true;
-
-    /// <inheritdoc/>
     public override bool CanSendRequestInfo => false;
 
     /// <inheritdoc/>
     /// <param name="remoteEndPoint"></param>
     /// <param name="byteBlock"></param>
-    protected override Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+    protected override Task PreviewReceived(EndPoint remoteEndPoint, IByteBlockReader byteBlock)
     {
         return this.GoReceived(remoteEndPoint, byteBlock, null);
-    }
-
-    ///// <summary>
-    ///// <inheritdoc/>
-    ///// </summary>
-    ///// <param name="endPoint"></param>
-    ///// <param name="buffer"></param>
-    ///// <param name="offset"></param>
-    ///// <param name="length"></param>
-    //protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
-    //{
-    //    this.GoSend(endPoint, buffer, offset, length);
-    //}
-
-    ///// <inheritdoc/>
-    //protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-    //{
-    //    var length = 0;
-    //    foreach (var item in transferBytes)
-    //    {
-    //        length += item.Count;
-    //    }
-
-    //    this.ThrowIfMoreThanMaxPackageSize(length);
-
-    //    using (var byteBlock = new ByteBlock(length))
-    //    {
-    //        foreach (var item in transferBytes)
-    //        {
-    //            byteBlock.Write(item.Array, item.Offset, item.Count);
-    //        }
-    //        this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-    //    }
-    //}
-
-    /// <inheritdoc/>
-    protected override async Task PreviewSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-    {
-        var length = 0;
-        foreach (var item in transferBytes)
-        {
-            length += item.Count;
-        }
-
-        this.ThrowIfMoreThanMaxPackageSize(length);
-
-        using (var byteBlock = new ByteBlock(length))
-        {
-            foreach (var item in transferBytes)
-            {
-                byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
-            }
-            await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
     }
 }

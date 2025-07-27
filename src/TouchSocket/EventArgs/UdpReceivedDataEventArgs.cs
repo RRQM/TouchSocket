@@ -28,7 +28,7 @@ public class UdpReceivedDataEventArgs : ReceivedDataEventArgs
     /// <param name="endPoint">接收数据的终结点</param>
     /// <param name="byteBlock">接收到的数据块</param>
     /// <param name="requestInfo">请求信息，提供关于此次接收请求的元数据</param>
-    public UdpReceivedDataEventArgs(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock, requestInfo)
+    public UdpReceivedDataEventArgs(EndPoint endPoint, IByteBlockReader byteBlock, IRequestInfo requestInfo) : base(byteBlock, requestInfo)
     {
         this.EndPoint = endPoint;
     }

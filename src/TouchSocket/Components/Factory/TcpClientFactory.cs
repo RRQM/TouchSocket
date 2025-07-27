@@ -22,15 +22,6 @@ namespace TouchSocket.Sockets;
 /// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
 public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
 {
-    /// <summary>
-    /// 处理Tcp客户端的释放操作。
-    /// </summary>
-    /// <param name="client">要释放的Tcp客户端。</param>
-    public override void DisposeClient(TClient client)
-    {
-        client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
-        base.DisposeClient(client);
-    }
 }
 
 /// <summary>

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.IO;
+using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer;
 
@@ -54,18 +55,18 @@ public class RemoteFileInfo : RemoteFileSystemInfo
     public string MD5 { get; set; }
 
     /// <inheritdoc/>
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        base.Package(ref byteBlock);
-        byteBlock.WriteString(this.MD5);
-        byteBlock.WriteInt64(this.Length);
+        base.Package(ref writer);
+        WriterExtension.WriteString(ref writer,this.MD5);
+        WriterExtension.WriteValue<TWriter,long>(ref writer,this.Length);
     }
 
     /// <inheritdoc/>
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        base.Unpackage(ref byteBlock);
-        this.MD5 = byteBlock.ReadString();
-        this.Length = byteBlock.ReadInt64();
+        base.Unpackage(ref reader);
+        this.MD5 = ReaderExtension.ReadString(ref reader);
+        this.Length = ReaderExtension.ReadValue<TReader,long>(ref reader);
     }
 }

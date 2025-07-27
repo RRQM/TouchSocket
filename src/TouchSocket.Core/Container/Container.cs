@@ -115,26 +115,16 @@ public sealed class Container : IContainer
                         }
                         else
                         {
-                            if (descriptor.ToType.IsGenericType)
-                            {
-                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                            }
-                            else
-                            {
-                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
-                            }
+                            return descriptor.ToType.IsGenericType
+                                ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                                : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
                 }
 
-                if (descriptor.ToType.IsGenericType)
-                {
-                    return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                }
-                else
-                {
-                    return this.Create(descriptor, descriptor.ToType);
-                }
+                return descriptor.ToType.IsGenericType
+                    ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
+                    : this.Create(descriptor, descriptor.ToType);
             }
         }
         k = $"{fromType.FullName}{key}";
@@ -190,26 +180,16 @@ public sealed class Container : IContainer
                         }
                         else
                         {
-                            if (descriptor.ToType.IsGenericType)
-                            {
-                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                            }
-                            else
-                            {
-                                return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
-                            }
+                            return descriptor.ToType.IsGenericType
+                                ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                                : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
                 }
 
-                if (descriptor.ToType.IsGenericType)
-                {
-                    return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                }
-                else
-                {
-                    return this.Create(descriptor, descriptor.ToType);
-                }
+                return descriptor.ToType.IsGenericType
+                    ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
+                    : this.Create(descriptor, descriptor.ToType);
             }
         }
         k = fromType.FullName;

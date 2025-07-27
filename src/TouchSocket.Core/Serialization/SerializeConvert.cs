@@ -442,7 +442,7 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <returns></returns>
-    public static byte[] JsonSerializeToBytes(object obj)
+    public static ReadOnlyMemory<byte> JsonSerializeToBytes(object obj)
     {
         return ToJsonString(obj).ToUtf8Bytes();
     }
@@ -457,7 +457,7 @@ public static partial class SerializeConvert
         using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
             var date = JsonSerializeToBytes(obj);
-            fileStream.Write(date, 0, date.Length);
+            fileStream.Write(date.Span);
             fileStream.Close();
         }
     }
@@ -466,22 +466,22 @@ public static partial class SerializeConvert
     /// Json反序列化
     /// </summary>
     /// <typeparam name="T">反序列化类型</typeparam>
-    /// <param name="dataBytes">数据</param>
+    /// <param name="memory">数据</param>
     /// <returns></returns>
-    public static T JsonDeserializeFromBytes<T>(byte[] dataBytes)
+    public static T JsonDeserializeFromBytes<T>(ReadOnlyMemory<byte> memory)
     {
-        return (T)JsonDeserializeFromBytes(dataBytes, typeof(T));
+        return (T)JsonDeserializeFromBytes(memory, typeof(T));
     }
 
     /// <summary>
     /// Xml反序列化
     /// </summary>
-    /// <param name="dataBytes"></param>
+    /// <param name="memory"></param>
     /// <param name="type"></param>
     /// <returns></returns>
-    public static object JsonDeserializeFromBytes(byte[] dataBytes, Type type)
+    public static object JsonDeserializeFromBytes(ReadOnlyMemory<byte> memory, Type type)
     {
-        return FromJsonString(Encoding.UTF8.GetString(dataBytes), type);
+        return FromJsonString(memory.Span.ToUtf8String(), type);
     }
 
     /// <summary>

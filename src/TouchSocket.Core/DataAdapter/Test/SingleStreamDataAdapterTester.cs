@@ -28,7 +28,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
     private int m_bufferLength;
     private int m_count;
     private int m_expectedCount;
-    private Func<ByteBlock, IRequestInfo, Task> m_receivedCallBack;
+    private Func<IByteBlockReader, IRequestInfo, Task> m_receivedCallBack;
     private Stopwatch m_stopwatch;
     private int m_timeout;
 
@@ -39,7 +39,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
     {
         this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
 
-        Task.Run(this.BeginSend);
+        _ = EasyTask.SafeRun(this.BeginSend);
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
     /// <param name="receivedCallBack">收到数据回调</param>
     /// <param name="bufferLength">缓存数据长度</param>
     /// <returns></returns>
-    public static SingleStreamDataAdapterTester CreateTester(SingleStreamDataHandlingAdapter adapter, int bufferLength = 1024, Func<ByteBlock, IRequestInfo, Task> receivedCallBack = default)
+    public static SingleStreamDataAdapterTester CreateTester(SingleStreamDataHandlingAdapter adapter, int bufferLength = 1024, Func<IByteBlockReader, IRequestInfo, Task> receivedCallBack = default)
     {
         var tester = new SingleStreamDataAdapterTester
         {
@@ -79,11 +79,11 @@ public class SingleStreamDataAdapterTester : DisposableObject
         this.m_timeout = millisecondsTimeout;
         this.m_stopwatch = new Stopwatch();
         this.m_stopwatch.Start();
-        Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             for (var i = 0; i < testCount; i++)
             {
-                await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length), CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         });
 
@@ -117,6 +117,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
                 {
                     try
                     {
+                        block.SeekToStart();
                         await this.m_adapter.ReceivedInputAsync(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     finally
@@ -132,7 +133,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
         }
     }
 
-    private async Task OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
+    private async Task OnReceived(IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
         this.m_count++;
         if (this.m_receivedCallBack != null)
@@ -141,7 +142,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
         }
     }
 
-    private Task SendCallback(ReadOnlyMemory<byte> memory)
+    private Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var array = memory.ToArray();
         var asyncByte = new QueueDataBytes(array, 0, array.Length);

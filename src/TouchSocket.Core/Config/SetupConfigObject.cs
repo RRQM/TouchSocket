@@ -48,14 +48,14 @@ public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObje
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_scopedResolver.SafeDispose();
             this.ClearConfig();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>

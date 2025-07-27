@@ -42,11 +42,7 @@ public abstract class RateLimiterPolicy<TPartitionKey> : IRateLimiterPolicy
     {
         // 初始化一个值计数器实例，并设置其周期为最大生命周期（m_maxLifetime），
         // 同时指定周期事件处理方法为当前实例的OnPeriod方法。
-        this.m_valueCounter = new ValueCounter()
-        {
-            Period = this.m_maxLifetime,
-            OnPeriod = this.OnPeriod
-        };
+        this.m_valueCounter = new ValueCounter(this.m_maxLifetime, this.OnPeriod);
     }
 
     /// <summary>

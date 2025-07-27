@@ -170,8 +170,6 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
                     };
                     option.Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty) ?? option.Backlog;
-                    option.SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty);
-
                     optionList.Add(option);
                 }
             }
@@ -236,7 +234,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -248,7 +246,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             this.StopAsync().GetFalseAwaitResult();
             this.m_tcpCorePool.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>
@@ -320,7 +318,6 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             var socket = e.AcceptSocket;
             if (this.Count < this.MaxCount)
             {
-                //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
                 _ = EasyTask.SafeRun(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
             }
             else
@@ -362,32 +359,33 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         var socket = tuple.Item1;
         var monitor = tuple.Item2;
 
+        var tcpCore = this.RentTcpCore();
+
+        TClient client = default;
+
         try
         {
+            client = this.NewClient();
             if (monitor.Option.NoDelay.HasValue)
             {
                 socket.NoDelay = monitor.Option.NoDelay.Value;
             }
 
-            socket.SendTimeout = monitor.Option.SendTimeout;
-
-            var tcpCore = this.RentTcpCore();
-
             tcpCore.Reset(socket);
-
-            var client = this.NewClient();
-
-            client.InternalSetService(this);
-            client.InternalSetResolver(this.Resolver);
-            client.InternalSetListenOption(monitor.Option);
-            client.InternalSetTcpCore(tcpCore);
-            client.InternalSetPluginManager(this.PluginManager);
-            client.InternalSetReturnTcpCore(this.ReturnTcpCore);
-            client.InternalSetAction(this.TryAdd, this.TryRemove, this.TryGet);
 
             this.ClientInitialized(client);
 
-            await client.InternalInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.InternalInitialized(
+                this,
+                this.Resolver,
+                monitor.Option,
+                tcpCore,
+                this.PluginManager,
+                this.TryAdd,
+                this.TryRemove,
+                this.TryGet
+                )
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             var args = new ConnectingEventArgs()
             {
@@ -407,7 +405,8 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                 {
                     try
                     {
-                        await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption)
+                            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -415,25 +414,27 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         throw;
                     }
                 }
-
                 if (this.m_clients.TryAdd(client))
                 {
-                    await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                   var  transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+                    await client.InternalConnected(transport).SafeWaitAsync()
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
                     ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(args.Id));
                 }
             }
-            else
-            {
-                socket.SafeDispose();
-            }
         }
         catch (Exception ex)
         {
-            socket.SafeDispose();
             this.Logger?.Exception(this, ex);
+        }
+        finally
+        {
+            socket.SafeDispose();
+            client.SafeDispose();
+            this.ReturnTcpCore(tcpCore);
         }
     }
 

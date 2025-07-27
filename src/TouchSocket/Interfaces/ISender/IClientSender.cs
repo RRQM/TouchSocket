@@ -22,14 +22,4 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public interface IClientSender : ISender, IRequestInfoSender
 {
-
-    /// <summary>
-    /// 异步组合发送数据。
-    /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
-    /// </summary>
-    /// <param name="transferBytes">组合数据</param>
-    /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
-    /// <exception cref="OverlengthException">发送数据超长</exception>
-    /// <exception cref="Exception">其他异常</exception>
-    Task SendAsync(IList<ArraySegment<byte>> transferBytes);
 }

@@ -53,7 +53,7 @@ public static class AppMessengerExtensions
     /// </summary>
     /// <param name="appMessenger"></param>
     /// <param name="messageObject"></param>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <param name="methodInfo"></param>
     /// <exception cref="MessageRegisteredException"></exception>
     public static void Register(this AppMessenger appMessenger, IMessageObject messageObject, string token, MethodInfo methodInfo)
@@ -69,7 +69,7 @@ public static class AppMessengerExtensions
     ///// <typeparam name="TReturn"></typeparam>
     ///// <param name="appMessenger"></param>
     ///// <param name="func"></param>
-    ///// <param name="token"></param>
+    ///// <param name="token">可取消令箭</param>
     //public static void Register(this AppMessenger appMessenger, Delegate func, string token = default)
     //{
     //    RegisterDelegate(appMessenger, token, func);
@@ -127,7 +127,7 @@ public static class AppMessengerExtensions
     /// 移除注册
     /// </summary>
     /// <param name="appMessenger"></param>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <exception cref="ArgumentNullException"></exception>
     public static void Unregister(this AppMessenger appMessenger, string token)
     {

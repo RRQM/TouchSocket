@@ -21,13 +21,23 @@ public interface IPackage
     /// 打包。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    /// <param name="writer"></param>
+    void Package<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+, allows ref struct
+#endif
+        ;
 
     /// <summary>
     /// 解包。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    /// <param name="reader"></param>
+    void Unpackage<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+#if AllowsRefStruct
+, allows ref struct
+#endif
+        ;
 }

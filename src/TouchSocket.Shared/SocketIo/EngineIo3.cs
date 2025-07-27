@@ -29,7 +29,7 @@ namespace TouchSocket.SocketIo
 
         public void EncodeToBinary(EngineIoMessage message, ByteBlock byteBlock)
         {
-            byteBlock.WriteByte((byte)message.MessageType);
+            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)message.MessageType);
             byteBlock.Write(message.GetRawData());
         }
 

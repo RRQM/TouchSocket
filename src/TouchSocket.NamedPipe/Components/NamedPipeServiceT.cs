@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -159,15 +160,15 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     //}
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
+    public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(memory);
+        return this.GetClientOrThrow(id).SendAsync(memory,token);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, IRequestInfo requestInfo)
+    public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken token = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(requestInfo);
+        return this.GetClientOrThrow(id).SendAsync(requestInfo,token);
     }
 
     private NamedPipeSessionClient GetClientOrThrow(string id)

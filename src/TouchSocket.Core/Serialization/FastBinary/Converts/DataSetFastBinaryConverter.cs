@@ -17,14 +17,14 @@ namespace TouchSocket.Core;
 
 internal class DataSetFastBinaryConverter : FastBinaryConverter<DataSet>
 {
-    protected override DataSet Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    protected override DataSet Read<TReader>(ref TReader reader, Type type)
     {
-        return SerializeConvert.BinaryDeserialize<DataSet>(byteBlock.ReadBytesPackage());
+        return SerializeConvert.BinaryDeserialize<DataSet>(ReaderExtension.ReadByteSpan(ref reader).ToArray());
     }
 
-    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in DataSet obj)
+    protected override void Write<TWriter>(ref TWriter writer, in DataSet obj)
     {
         var bytes = SerializeConvert.BinarySerialize(obj);
-        byteBlock.WriteBytesPackage(bytes);
+        WriterExtension.WriteByteSpan(ref writer, bytes);
     }
 }

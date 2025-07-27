@@ -12,8 +12,8 @@ TouchSocket.SerialPorts 是一个适用于 .Net（涵盖 C#、VB.Net、F#）的�
 详细的说明文档请访问：[https://touchsocket.net/](https://touchsocket.net/)
 
 ## 支持的目标框架
+
 - net481
-- net45
 - net462
 - net472
 - netstandard2.0

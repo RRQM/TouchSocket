@@ -10,140 +10,85 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 
 namespace TouchSocket.Core;
 
-/// <summary>
-/// Gzip操作类
-/// </summary>
 public static partial class GZip
 {
-    /// <summary>
-    /// 压缩数据
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static void Compress(Stream stream, byte[] buffer, int offset, int length)
+    public static void Compress(Stream stream, ReadOnlySpan<byte> span)
     {
         using (var gZipStream = new GZipStream(stream, CompressionMode.Compress, true))
         {
-            gZipStream.Write(buffer, offset, length);
+            gZipStream.Write(span);
             gZipStream.Close();
         }
     }
-
-    /// <summary>
-    /// 压缩数据
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="buffer"></param>
-    /// <returns></returns>
-    public static void Compress(Stream stream, byte[] buffer)
+    public static void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> span)
+        where TWriter : IBytesWriter
     {
-        Compress(stream, buffer, 0, buffer.Length);
+        using (var byteBlock = new ByteBlock(span.Length))
+        {
+            Compress(byteBlock.AsStream(), span);
+            writer.Write(byteBlock.Span);
+        }
     }
 
-    /// <summary>
-    /// 压缩数据
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static byte[] Compress(byte[] buffer, int offset, int length)
+    public static void Compress(ByteBlock byteBlock, ReadOnlySpan<byte> span)
     {
-        using (var byteBlock = new ByteBlock(length))
+        Compress(byteBlock.AsStream(), span);
+    }
+    public static ReadOnlyMemory<byte> Compress(ReadOnlySpan<byte> span)
+    {
+        using (var byteBlock = new ByteBlock(span.Length))
         {
-            Compress(byteBlock.AsStream(), buffer, offset, length);
+            Compress(byteBlock.AsStream(), span);
             return byteBlock.ToArray();
         }
     }
 
-    /// <summary>
-    /// 压缩数据
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <returns></returns>
-    public static byte[] Compress(byte[] buffer)
+    public static void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> span)
+        where TWriter : IBytesWriter
     {
-        return Compress(buffer, 0, buffer.Length);
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <param name="data"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data, int offset, int length)
-        where TByteBlock : IByteBlock
-    {
-        using (var gZipStream = new GZipStream(new MemoryStream(data, offset, length), CompressionMode.Decompress))
+        using (var streamByteBlock = new ByteBlock(span.Length))
         {
-            var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
-            try
+            streamByteBlock.Write(span);
+            streamByteBlock.SeekToStart();
+
+            using (var gZipStream = new GZipStream(streamByteBlock.AsStream(), CompressionMode.Decompress))
             {
-                int r;
-                while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
+                var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
+                try
                 {
-                    byteBlock.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
+                    int r;
+                    while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
+                    {
+                        writer.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
+                    }
+                    gZipStream.Close();
                 }
-                gZipStream.Close();
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(bytes);
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(bytes);
+                }
             }
         }
     }
 
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <param name="data"></param>
-    public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data)
-        where TByteBlock : IByteBlock
+    public static ReadOnlyMemory<byte> Decompress(ReadOnlySpan<byte> span)
     {
-        Decompress(ref byteBlock, data, 0, data.Length);
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static byte[] Decompress(byte[] data, int offset, int length)
-    {
-        var byteBlock = new ByteBlock(length);
+        var byteBlock = new ByteBlock(span.Length);
         try
         {
-            Decompress(ref byteBlock, data, offset, length);
+            Decompress(ref byteBlock, span);
             return byteBlock.ToArray();
         }
         finally
         {
             byteBlock.Dispose();
         }
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    public static byte[] Decompress(byte[] data)
-    {
-        return Decompress(data, 0, data.Length);
     }
 }

@@ -22,6 +22,8 @@ namespace TouchSocket.Core;
 /// <typeparam name="TState">状态类型。</typeparam>
 public class TouchSocketSerializerConverter<TSource, TState>
 {
+    private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
+
     /// <summary>
     /// 初始化 TouchSocketSerializerConverter 类的新实例。
     /// </summary>
@@ -37,9 +39,8 @@ public class TouchSocketSerializerConverter<TSource, TState>
     /// <summary>
     /// 初始化 TouchSocketSerializerConverter 类的新实例。
     /// </summary>
-    public TouchSocketSerializerConverter() { }
-
-    private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
+    public TouchSocketSerializerConverter()
+    { }
 
     /// <summary>
     /// 添加插件
@@ -92,25 +93,6 @@ public class TouchSocketSerializerConverter<TSource, TState>
     }
 
     /// <summary>
-    /// 将目标类型对象转换源数据
-    /// </summary>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    public virtual TSource Serialize(TState state, in object target)
-    {
-        foreach (var item in this.m_converters)
-        {
-            if (item.TrySerialize(state, target, out var source))
-            {
-                return source;
-            }
-        }
-
-        throw new Exception($"{target}无法转换为{typeof(TSource)}类型。");
-    }
-
-    /// <summary>
     /// 移除插件
     /// </summary>
     /// <param name="converter"></param>
@@ -137,5 +119,24 @@ public class TouchSocketSerializerConverter<TSource, TState>
                 this.m_converters.RemoveAt(i);
             }
         }
+    }
+
+    /// <summary>
+    /// 将目标类型对象转换源数据
+    /// </summary>
+    /// <param name="state"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual TSource Serialize(TState state, in object target)
+    {
+        foreach (var item in this.m_converters)
+        {
+            if (item.TrySerialize(state, target, out var source))
+            {
+                return source;
+            }
+        }
+
+        throw new Exception($"{target}无法转换为{typeof(TSource)}类型。");
     }
 }

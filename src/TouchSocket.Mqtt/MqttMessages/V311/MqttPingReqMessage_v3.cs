@@ -21,7 +21,7 @@ public sealed partial class MqttPingReqMessage : MqttMessage
     public override MqttMessageType MessageType => MqttMessageType.PingReq;
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
 
     }
@@ -33,7 +33,7 @@ public sealed partial class MqttPingReqMessage : MqttMessage
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
 
     }

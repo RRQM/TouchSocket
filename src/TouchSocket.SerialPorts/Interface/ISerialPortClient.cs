@@ -43,11 +43,6 @@ public interface ISerialPortClient : ISerialPortSession, IConnectableClient, ICl
     ClosingEventHandler<ISerialPortClient> Closing { get; set; }
 
     /// <summary>
-    /// 主通信器
-    /// </summary>
-    SerialPort MainSerialPort { get; }
-
-    /// <summary>
     /// 接收到数据
     /// </summary>
     ReceivedEventHandler<ISerialPortClient> Received { get; set; }

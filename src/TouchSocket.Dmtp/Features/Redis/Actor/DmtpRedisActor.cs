@@ -39,7 +39,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     public IDmtpActor DmtpActor { get; }
 
     /// <inheritdoc/>
-    public ICache<string, byte[]> ICache { get; set; }
+    public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; }
 
     /// <inheritdoc/>
     public int Timeout { get; set; } = 30 * 1000;
@@ -47,11 +47,11 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     /// <inheritdoc/>
     public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000)
     {
-        var cache = new CacheEntry<string, byte[]>(key)
+        var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
             Duration = TimeSpan.FromSeconds(duration)
         };
-        if (!(value is byte[]))
+        if (value is not ReadOnlyMemory<byte>)
         {
             cache.Value = this.Converter.Serialize(null, value);
         }
@@ -59,7 +59,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity)
+    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity)
     {
         return !await this.ContainsCacheAsync(entity.Key).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -160,7 +160,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
 
         if (cache != null)
         {
-            if (cache.Value is null)
+            if (cache.Value.IsEmpty)
             {
                 return default;
             }
@@ -175,7 +175,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<ICacheEntry<string, byte[]>> GetCacheAsync(string key)
+    public async Task<ICacheEntry<string, ReadOnlyMemory<byte>>> GetCacheAsync(string key)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -191,7 +191,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);
@@ -203,11 +203,11 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                     {
                         var responsePackage = (RedisResponseWaitPackage)waitData.WaitResult;
                         return responsePackage.Status == 1
-                            ? new CacheEntry<string, byte[]>(key)
+                            ? new CacheEntry<string, ReadOnlyMemory<byte>>(key)
                             {
                                 Value = responsePackage.value
                             }
-                            : responsePackage.Status == byte.MaxValue ? new CacheEntry<string, byte[]>(key) : (ICacheEntry<string, byte[]>)default;
+                            : responsePackage.Status == byte.MaxValue ? new CacheEntry<string, ReadOnlyMemory<byte>>(key) : (ICacheEntry<string, ReadOnlyMemory<byte>>)default;
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
                 case WaitDataStatus.Canceled:
@@ -236,15 +236,15 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             try
             {
                 var package = new RedisRequestWaitPackage();
-                var block = message.BodyByteBlock;
-                package.Unpackage(ref block);
+                var reader = new BytesReader(message.Memory);
+                package.Unpackage(ref reader);
                 waitResult.Sign = package.Sign;
 
                 switch (package.packageType)
                 {
                     case RedisPackageType.Set:
                         {
-                            var success = this.ICache.SetCache(new CacheEntry<string, byte[]>(package.key)
+                            var success = this.ICache.SetCache(new CacheEntry<string, ReadOnlyMemory<byte>>(package.key)
                             {
                                 Duration = package.timeSpan.Value,
                                 Value = package.value
@@ -307,8 +307,8 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         else if (message.ProtocolFlags == this.m_redis_Response)
         {
             var waitResult = new RedisResponseWaitPackage();
-            var block = message.BodyByteBlock;
-            waitResult.Unpackage(ref block);
+            var reader = new BytesReader(message.Memory);
+            waitResult.Unpackage(ref reader);
             this.DmtpActor.WaitHandlePool.SetRun(waitResult);
             return true;
         }
@@ -332,7 +332,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);
@@ -363,16 +363,16 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     /// <inheritdoc/>
     public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000)
     {
-        var cache = new CacheEntry<string, byte[]>(key)
+        var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
             Duration = TimeSpan.FromSeconds(duration),
-            Value = value is byte[] bytes ? bytes : this.Converter.Serialize(null, value)
+            Value = value is ReadOnlyMemory<byte> bytes ? bytes : this.Converter.Serialize(null, value)
         };
         return await this.SetCacheAsync(cache).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> SetCacheAsync(ICacheEntry<string, byte[]> cache)
+    public async Task<bool> SetCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> cache)
     {
         if (string.IsNullOrEmpty(cache.Key))
         {
@@ -395,7 +395,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);

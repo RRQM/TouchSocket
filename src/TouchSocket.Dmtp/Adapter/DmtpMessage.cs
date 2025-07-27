@@ -22,9 +22,10 @@ namespace TouchSocket.Dmtp;
 /// <para>|dm|ProtocolFlags|Length|Data|</para>
 /// <para>|head|ushort|int32|bytes|</para>
 /// </summary>
-public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, IRequestInfoBuilder
+public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
 {
     private int m_bodyLength;
+    private ByteBlock m_bodyByteBlock;
 
     /// <summary>
     /// Dmtp协议的消息。
@@ -32,14 +33,20 @@ public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, I
     /// <para>|Head|ProtocolFlags|Length|Data|</para>
     /// <para>|dm|ushort|int32|bytes|</para>
     /// </summary>
-    public DmtpMessage()
+    internal DmtpMessage()
     {
+    }
+
+    public DmtpMessage(ReadOnlyMemory<byte> memory)
+    {
+        this.m_memory = memory;
     }
 
     /// <summary>
     /// Head
     /// </summary>
     public static readonly byte[] Head = "dm"u8.ToArray();
+    private readonly ReadOnlyMemory<byte> m_memory;
 
     /// <summary>
     /// Dmtp协议的消息。
@@ -53,37 +60,37 @@ public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, I
         this.ProtocolFlags = protocolFlags;
     }
 
-    /// <summary>
-    /// 实际使用的Body数据。
-    /// </summary>
-    public ByteBlock BodyByteBlock { get; set; }
-
-    int IFixedHeaderByteBlockRequestInfo.BodyLength => this.m_bodyLength;
-
+    public ReadOnlyMemory<byte> Memory => this.m_bodyByteBlock?.Memory ?? this.m_memory;
     /// <summary>
     /// 协议标识
     /// </summary>
     public ushort ProtocolFlags { get; set; }
 
     /// <inheritdoc/>
-    public int MaxLength => this.BodyByteBlock == null ? 6 : this.BodyByteBlock.Length + 6;
+    public int MaxLength => this.Memory.Length + 8;
+
+    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
 
     /// <summary>
     /// 构建数据到<see cref="ByteBlock"/>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <param name="writer"></param>
+    public void Build<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+,allows ref struct
+#endif
     {
-        byteBlock.Write(Head);
-        byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.ProtocolFlags));
-        if (this.BodyByteBlock == null)
+        writer.Write(Head);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ProtocolFlags, EndianType.Big);
+        if (this.Memory.IsEmpty)
         {
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(0));
+            WriterExtension.WriteValue<TWriter, int>(ref writer, 0, EndianType.Big);
         }
         else
         {
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.BodyByteBlock.Length));
-            byteBlock.Write(this.BodyByteBlock.Span);
+            WriterExtension.WriteValue<TWriter, int>(ref writer, this.Memory.Length, EndianType.Big);
+            writer.Write(this.Memory.Span);
         }
     }
 
@@ -114,46 +121,36 @@ public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, I
         return new DmtpMessage()
         {
             m_bodyLength = bodyLength,
-            BodyByteBlock = byteBlock,
+            m_bodyByteBlock = byteBlock,
             ProtocolFlags = protocolFlags
         };
     }
 
     /// <summary>
-    /// 将<see cref="BodyByteBlock"/>的有效数据转换为utf-8的字符串。
+    /// 将<see cref="Memory"/>的有效数据转换为utf-8的字符串。
     /// </summary>
     /// <returns></returns>
     public string GetBodyString()
     {
-        if (this.BodyByteBlock == null || this.BodyByteBlock.Length == 0)
-        {
-            return default;
-        }
-        else
-        {
-            return this.BodyByteBlock.Span.ToString(Encoding.UTF8);
-        }
+        return this.Memory.Span.ToString(Encoding.UTF8);
     }
 
-    bool IFixedHeaderByteBlockRequestInfo.OnParsingBody(ByteBlock byteBlock)
+    /// <inheritdoc/>
+    /// <param name="disposing"></param>
+    internal void Dispose()
     {
-        if (byteBlock.Length == this.m_bodyLength)
-        {
-            this.BodyByteBlock = byteBlock;
-            return true;
-        }
-
-        return false;
+        this.m_bodyByteBlock.SafeDispose();
     }
 
-    bool IFixedHeaderByteBlockRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+    bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
     {
         if (header.Length == 8)
         {
             var offset = 0;
             if (header[offset++] != Head[0] || header[offset++] != Head[1])
             {
-                throw new Exception("这可能不是Dmtp协议数据");
+                //throw new Exception("这可能不是Dmtp协议数据");
+                return false;
             }
             this.ProtocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(offset));
             offset += 2;
@@ -163,19 +160,16 @@ public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, I
         return false;
     }
 
-    /// <inheritdoc/>
-    /// <param name="disposing"></param>
-    protected override void Dispose(bool disposing)
+    bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
     {
-        if (this.DisposedValue)
+        if (body.IsEmpty)
         {
-            return;
-        }
-        if (disposing)
-        {
-            this.BodyByteBlock.SafeDispose();
+            return true;
         }
 
-        base.Dispose(disposing);
+        this.m_bodyByteBlock = new ByteBlock(body.Length);
+        this.m_bodyByteBlock.Write(body);
+        this.m_bodyByteBlock.SeekToStart();
+        return true;
     }
 }

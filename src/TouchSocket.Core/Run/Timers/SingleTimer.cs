@@ -18,7 +18,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 不可重入的Timer
 /// </summary>
-public class SingleTimer : DisposableObject
+public class SingleTimer : SafetyDisposableObject
 {
     private readonly Action<SingleTimer> m_action1;
     private readonly Action<SingleTimer, object> m_action2;
@@ -164,9 +164,8 @@ public class SingleTimer : DisposableObject
 
     /// <inheritdoc/>
     /// <param name="disposing"></param>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_timer.SafeDispose();
-        base.Dispose(disposing);
     }
 }

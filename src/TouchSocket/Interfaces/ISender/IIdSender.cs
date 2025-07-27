@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets;
@@ -25,8 +26,9 @@ public interface IIdSender
     /// </summary>
     /// <param name="id">目标客户端的唯一标识符</param>
     /// <param name="memory">要发送的数据，以字节形式存储在内存中</param>
+    /// <param name="token">可取消令箭</param>
     /// <exception cref="ClientNotConnectedException">如果目标客户端未连接，则抛出此异常</exception>
     /// <exception cref="ClientNotFindException">如果无法根据Id找到对应的客户端，则抛出此异常</exception>
     /// <exception cref="Exception">如果发生其他异常情况</exception>
-    Task SendAsync(string id, ReadOnlyMemory<byte> memory);
+    Task SendAsync(string id, ReadOnlyMemory<byte> memory,CancellationToken token=default);
 }

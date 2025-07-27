@@ -46,7 +46,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 
     #region JsonRpcActor
 
-    private async Task SendAction(ReadOnlyMemory<byte> memory)
+    private async Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var request = new HttpRequest();
         request.Method = HttpMethod.Post;
@@ -59,7 +59,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 
             if (response.IsSuccess())
             {
-                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
+                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
             }
         }
     }
@@ -91,13 +91,13 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_jsonRpcActor.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>

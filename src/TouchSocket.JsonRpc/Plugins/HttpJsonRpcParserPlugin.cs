@@ -60,12 +60,12 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                     jsonRpcActor = new JsonRpcActor()
                     {
                         Resolver = client.Resolver,
-                        SendAction = async (data) =>
+                        SendAction = async (data, token) =>
                         {
                             var response = e.Context.Response;
                             response.SetContent(data);
                             response.SetStatusWithSuccess();
-                            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await response.AnswerAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         },
                         SerializerConverter = this.SerializerConverter,
                         RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()

@@ -29,7 +29,7 @@ public readonly struct WebSocketMessage : IDisposable
     /// <param name="opcode">消息的数据类型，使用WSDataType枚举表示。</param>
     /// <param name="payloadData">消息的负载数据，使用ByteBlock结构表示。</param>
     /// <param name="disposeAction">在消息释放时需要调用的动作。</param>
-    public WebSocketMessage(WSDataType opcode, ByteBlock payloadData, Action disposeAction)
+    public WebSocketMessage(WSDataType opcode, ReadOnlyMemory<byte> payloadData, Action disposeAction)
     {
         this.Opcode = opcode;
         this.PayloadData = payloadData;
@@ -44,7 +44,7 @@ public readonly struct WebSocketMessage : IDisposable
     /// <summary>
     /// 获取消息的负载数据。
     /// </summary>
-    public ByteBlock PayloadData { get; }
+    public ReadOnlyMemory<byte> PayloadData { get; }
 
     /// <summary>
     /// 释放消息资源。
@@ -84,7 +84,7 @@ public sealed class WebSocketMessageCombinator
                     //判断中继包
                     if (dataFrame.FIN)//判断是否为最终包
                     {
-                        webSocketMessage = new WebSocketMessage(this.m_wSDataType, this.m_byteBlock, this.PrivateClear);
+                        webSocketMessage = new WebSocketMessage(this.m_wSDataType, this.m_byteBlock.Memory, this.PrivateClear);
                         return true;
                     }
                     else

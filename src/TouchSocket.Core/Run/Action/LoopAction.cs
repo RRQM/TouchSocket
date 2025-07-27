@@ -20,7 +20,7 @@ namespace TouchSocket.Core;
 /// LoopAction 类用于在指定循环次数和间隔下执行异步操作。
 /// 它支持暂停、恢复和重新运行操作。
 /// </summary>
-public sealed class LoopAction : DisposableObject
+public sealed class LoopAction : SafetyDisposableObject
 {
     /// <summary>
     /// 异步自动重置事件，用于控制循环执行的同步点。
@@ -164,7 +164,7 @@ public sealed class LoopAction : DisposableObject
     {
         return this.RunStatus != RunStatus.None
             ? EasyTask.CompletedTask
-            : Task.Run(async () =>
+            : EasyTask.SafeRun(async () =>
          {
              this.RunStatus = RunStatus.Running;
              if (this.LoopCount >= 0)
@@ -212,7 +212,6 @@ public sealed class LoopAction : DisposableObject
     {
         if (this.RunStatus == RunStatus.Running)
         {
-            this.m_waitHandle.Reset();
             this.RunStatus = RunStatus.Paused;
         }
     }
@@ -233,14 +232,16 @@ public sealed class LoopAction : DisposableObject
     /// 处置 LoopAction 实例，释放所有资源。
     /// </summary>
     /// <param name="disposing">是否为托管资源。</param>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
             return;
         }
-        this.m_waitHandle.Dispose();
-        this.RunStatus = RunStatus.Disposed;
-        base.Dispose(disposing);
+        if (disposing)
+        {
+            this.RunStatus = RunStatus.Disposed;
+            this.m_waitHandle.SetAll();
+        }
     }
 }

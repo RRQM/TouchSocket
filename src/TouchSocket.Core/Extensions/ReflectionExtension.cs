@@ -189,12 +189,7 @@ public static class ReflectionExtension
         }
 
         // 判断属性的获取方法是否为公共的且无参数
-        if (propertyInfo.GetMethod.IsPublic && propertyInfo.GetMethod.GetParameters().Length == 0)
-        {
-            return true;
-        }
-
-        return false;
+        return propertyInfo.GetMethod.IsPublic && propertyInfo.GetMethod.GetParameters().Length == 0;
     }
 
     #endregion FieldInfo

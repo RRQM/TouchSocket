@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -23,27 +24,27 @@ public static class DmtpActorExtension
 {
     #region Ping
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
+    /// <inheritdoc cref="IDmtpActor.PingAsync(int, CancellationToken)"/>
     [AsyncToSyncWarning]
     public static bool Ping(this IDmtpActorObject client, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(millisecondsTimeout).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(string, int)"/>
+    /// <inheritdoc cref="IDmtpActor.PingAsync(string, int, CancellationToken)"/>
     [AsyncToSyncWarning]
     public static bool Ping(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(targetId, millisecondsTimeout).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
+    /// <inheritdoc cref="IDmtpActor.PingAsync(int, CancellationToken)"/>
     public static Task<bool> PingAsync(this IDmtpActorObject client, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(millisecondsTimeout);
     }
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(string,int)"/>
+    /// <inheritdoc cref="IDmtpActor.PingAsync(string,int,CancellationToken)"/>
     public static Task<bool> PingAsync(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
     {
         return client.DmtpActor.PingAsync(targetId, millisecondsTimeout);
@@ -59,53 +60,53 @@ public static class DmtpActorExtension
         return client.DmtpActor.ChannelExisted(id);
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(metadata).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(id, metadata).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, id, metadata).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
     public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, metadata).GetFalseAwaitResult();
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata,CancellationToken)"/>
     public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(metadata);
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata,CancellationToken)"/>
     public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(id, metadata);
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata,CancellationToken)"/>
     public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, id, metadata);
     }
 
-    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata)"/>
+    /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata,CancellationToken)"/>
     public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, Metadata metadata = default)
     {
         return client.DmtpActor.CreateChannelAsync(targetId, metadata);
@@ -177,7 +178,8 @@ public static class DmtpActorExtension
     /// <param name="protocol">发送数据包所使用的协议。</param>
     /// <param name="package">要发送的数据包实例。</param>
     /// <param name="maxSize">数据包的预估最大大小，用于指导<see cref="ByteBlock"/>内存的分配。</param>
-    public static async Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
+    /// <param name="token">可取消令箭</param>
+    public static async Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize, CancellationToken token = default)
     {
         // 使用ByteBlock管理内存，根据预估的最大大小来分配内存。
         using (var byteBlock = new ByteBlock(maxSize))
@@ -187,7 +189,7 @@ public static class DmtpActorExtension
             // 准备数据包，将数据写入到block中。
             package.Package(ref block);
             // 使用异步方法发送数据包和协议。
-            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -198,11 +200,12 @@ public static class DmtpActorExtension
     /// <param name="client">要发送包的客户端对象。</param>
     /// <param name="protocol">发送包所使用的协议。</param>
     /// <param name="package">要发送的包实例。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个Task对象，表示异步操作的结果。</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, CancellationToken token = default)
     {
         // 调用重载的SendAsync方法，使用默认的最大传输单元大小64K
-        return SendAsync(client, protocol, package, 1024 * 64);
+        return SendAsync(client, protocol, package, 1024 * 64,token);
     }
 
     #endregion 发送Package
@@ -267,10 +270,11 @@ public static class DmtpActorExtension
     /// <param name="client">客户端对象，实现IDmtpActorObject接口</param>
     /// <param name="protocol">协议标识符</param>
     /// <param name="memory">待发送的数据，以只读内存块形式提供</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个Task对象，标识异步操作</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return client.DmtpActor.SendAsync(protocol, memory);
+        return client.DmtpActor.SendAsync(protocol, memory,token);
     }
 
     /// <summary>
@@ -278,10 +282,11 @@ public static class DmtpActorExtension
     /// </summary>
     /// <param name="client">客户端对象，实现IDmtpActorObject接口</param>
     /// <param name="protocol">协议标识符</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个Task对象，标识异步操作</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, CancellationToken token = default)
     {
-        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty);
+        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty,token);
     }
 
     #endregion 发送

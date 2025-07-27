@@ -27,10 +27,11 @@ namespace TouchSocket.WebApi;
 [PluginOption(Singleton = true)]
 public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlugin
 {
+    private static readonly DependencyProperty<WebApiCallContext> s_webApiCallContextProperty = new DependencyProperty<WebApiCallContext>("WebApiCallContext", default);
     private readonly InternalWebApiMapping m_mapping = new InternalWebApiMapping();
     private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
     private readonly IRpcServerProvider m_rpcServerProvider;
-    private static readonly DependencyProperty<WebApiCallContext> s_webApiCallContextProperty = new DependencyProperty<WebApiCallContext>("WebApiCallContext", default);
+
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -48,22 +49,11 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
     /// </summary>
     public WebApiSerializerConverter Converter { get; private set; }
 
-    /// <summary>
-    /// 获取Get函数路由映射图
-    /// </summary>
-    [Obsolete("此配置已被弃用，请使用Mapping属性代替", true)]
-    public ActionMap GetRouteMap { get; private set; }
-
+    
     /// <summary>
     /// 获取WebApi映射
     /// </summary>
     public IWebApiMapping Mapping => this.m_mapping;
-
-    /// <summary>
-    /// 获取Post函数路由映射图
-    /// </summary>
-    [Obsolete("此配置已被弃用，请使用Mapping属性代替", true)]
-    public ActionMap PostRouteMap { get; private set; }
 
     /// <summary>
     /// 配置转换器。可以实现json序列化或者xml序列化。
@@ -125,6 +115,16 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 callContext.Dispose();
                 client.RemoveValue(s_webApiCallContextProperty);
             }
+        }
+        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    /// <inheritdoc/>
+    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+    {
+        if (client.TryRemoveValue(s_webApiCallContextProperty, out var webApiCallContext))
+        {
+            webApiCallContext.Cancel();
         }
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -309,17 +309,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
 
         if (!httpContext.Request.KeepAlive)
         {
-            await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-    }
-
-    /// <inheritdoc/>
-    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
-    {
-        if (client.TryRemoveValue(s_webApiCallContextProperty, out var webApiCallContext))
-        {
-            webApiCallContext.Cancel();
-        }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

@@ -27,7 +27,7 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
     private int m_dataCount;
 
     /// <inheritdoc/>
-    protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
+    protected override Task PreviewReceivedAsync(IByteBlockReader byteBlock)
     {
         var dataLength = byteBlock.Length;
         var valueByteBlock = new ValueByteBlock(dataLength);

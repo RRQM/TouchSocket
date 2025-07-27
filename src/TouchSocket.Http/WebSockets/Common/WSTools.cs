@@ -27,71 +27,6 @@ internal static class WSTools
     /// </summary>
     public const string AcceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-    public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
-    {
-        int payloadLength;
-
-        byte[] extLen;
-
-        var length = memory.Length;
-
-        if (length < 126)
-        {
-            payloadLength = length;
-            extLen = new byte[0];
-        }
-        else if (length < 65536)
-        {
-            payloadLength = 126;
-            extLen = TouchSocketBitConverter.BigEndian.GetBytes((ushort)length);
-        }
-        else
-        {
-            payloadLength = 127;
-            extLen = TouchSocketBitConverter.BigEndian.GetBytes((ulong)length);
-        }
-
-        var header = dataFrame.FIN ? 1 : 0;
-        header = (header << 1) + (dataFrame.RSV1 ? 1 : 0);
-        header = (header << 1) + (dataFrame.RSV2 ? 1 : 0);
-        header = (header << 1) + (dataFrame.RSV3 ? 1 : 0);
-        header = (header << 4) + (ushort)dataFrame.Opcode;
-
-        header = dataFrame.Mask ? (header << 1) + 1 : (header << 1) + 0;
-
-        header = (header << 7) + payloadLength;
-
-        byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)header));
-
-        if (payloadLength > 125)
-        {
-            byteBlock.Write(new ReadOnlySpan<byte>(extLen, 0, extLen.Length));
-        }
-
-        if (dataFrame.Mask)
-        {
-            byteBlock.Write(new ReadOnlySpan<byte>(dataFrame.MaskingKey, 0, 4));
-        }
-
-        if (payloadLength > 0)
-        {
-            if (dataFrame.Mask)
-            {
-                if (byteBlock.Capacity < byteBlock.Position + length)
-                {
-                    byteBlock.SetCapacity(byteBlock.Position + length, true);
-                }
-                WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, dataFrame.MaskingKey);
-                byteBlock.SetLength(byteBlock.Position + length);
-            }
-            else
-            {
-                byteBlock.Write(memory.Span);
-            }
-        }
-        return true;
-    }
-
     /// <summary>
     /// 计算Base64值
     /// </summary>
@@ -114,7 +49,7 @@ internal static class WSTools
     }
 
 
-    public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
+    public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, ReadOnlySpan<byte> masks)
     {
         for (var i = 0; i < memorySpan.Length; i++)
         {

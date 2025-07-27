@@ -225,11 +225,6 @@ public class Method
 
         var methodName = $"{this.Info.GetDeterminantName()}ClassProperty";
         var property = type.GetProperty(methodName, BindingFlags.Public | BindingFlags.Static);
-        if (property == null)
-        {
-            return default;
-        }
-
-        return (IDynamicMethodInfo)property.GetValue(null);
+        return property == null ? default : (IDynamicMethodInfo)property.GetValue(null);
     }
 }

@@ -27,18 +27,18 @@ public class WaitPackage : PackageBase, IWaitResult
     public byte Status { get; set; }
 
     /// <inheritdoc/>
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteInt32(this.Sign);
-        byteBlock.WriteByte(this.Status);
-        byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Sign);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.Status);
+        WriterExtension.WriteString(ref writer, this.Message, FixedHeaderType.Ushort);
     }
 
     /// <inheritdoc/>
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.Sign = byteBlock.ReadInt32();
-        this.Status = byteBlock.ReadByte();
-        this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
+        this.Sign = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Status = ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.Message = ReaderExtension.ReadString(ref reader, FixedHeaderType.Ushort);
     }
 }

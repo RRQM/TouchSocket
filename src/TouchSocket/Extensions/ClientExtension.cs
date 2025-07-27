@@ -147,7 +147,7 @@ public static class ClientExtension
             }
             else
             {
-                // 异步调用CloseAsync方法关闭客户端，传递关闭消息，并指定ConfigureAwait为false以避免同步上下文。
+                // 异步调用CloseAsync方法关闭客户端，传递关闭消息，并指定ConfigureAwait为<see langword="false"/>以避免同步上下文。
                 await client.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }

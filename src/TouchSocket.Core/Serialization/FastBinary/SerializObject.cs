@@ -199,11 +199,7 @@ public sealed class SerializObject
                               return false;
                           }
 
-                          if (p.CanPublicRead() && p.CanPublicWrite())
-                          {
-                              return true;
-                          }
-                          return false;
+                          return p.CanPublicRead() && p.CanPublicWrite();
                       })
                       .ToArray();
     }

@@ -59,7 +59,7 @@ public static class CollectionsExtension
         return count;
     }
 
-#if NET45_OR_GREATER || NETSTANDARD2_0
+#if NET462_OR_GREATER || NETSTANDARD2_0
 
     /// <summary>
     /// 尝试向字典中添加键值对。

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Text;
 
 namespace TouchSocket.Core;
@@ -75,7 +76,7 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
     /// <inheritdoc/>
     protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TJsonRequestInfo request, ref int tempCapacity)
     {
-        var stringSpan = byteBlock.Span.Slice(byteBlock.Position);
+        var stringSpan = byteBlock.Sequence;
 
         var myEnum = this.GetJsonPackageKind(stringSpan);
         if (myEnum == JsonPackageKind.None)
@@ -113,7 +114,7 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
             this.m_startCount += GetIndexCount(searchSpan, startSpan);
             this.m_endCount++;
 
-            index += (endIndex + endSpan.Length);
+            index += (int)(endIndex + endSpan.Length);
 
             if (this.m_startCount == this.m_endCount)
             {
@@ -121,13 +122,13 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
                 this.m_startCount = 0;
                 this.m_endCount = 0;
 
-                var memory = byteBlock.Memory.Slice(byteBlock.Position, index);
+                var memory = byteBlock.GetMemory(index);
                 var r = myEnum == JsonPackageKind.Object ? memory.Span.IndexOf(this.m_openBrace) : memory.Span.IndexOf(this.m_leftSquareBracket);
                 var dataMemory = memory.Slice(r);
                 var impurityMemory = memory.Slice(0, r);
 
                 request = this.GetInstance(myEnum, this.Encoding, dataMemory, impurityMemory);
-                byteBlock.Position += index;
+                byteBlock.Advance(index);
                 return FilterResult.Success;
             }
         }
@@ -143,35 +144,30 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
     /// <returns>请求信息实例。</returns>
     protected abstract TJsonRequestInfo GetInstance(JsonPackageKind packageKind, Encoding encoding, ReadOnlyMemory<byte> dataMemory, ReadOnlyMemory<byte> impurityMemory);
 
-    private static int GetIndexCount(ReadOnlySpan<byte> span, ReadOnlySpan<byte> searchSpan)
+    private static int GetIndexCount(ReadOnlySequence<byte> sequence, ReadOnlySpan<byte> searchSpan)
     {
         var count = 0;
         while (true)
         {
-            var index = span.IndexOf(searchSpan);
+            var index = sequence.IndexOf(searchSpan);
             if (index < 0)
             {
                 return count;
             }
 
             count++;
-            span = span.Slice(index + searchSpan.Length);
+            sequence = sequence.Slice(index + searchSpan.Length);
         }
     }
 
-    private JsonPackageKind GetJsonPackageKind(ReadOnlySpan<byte> span)
+    private JsonPackageKind GetJsonPackageKind(ReadOnlySequence<byte> sequence)
     {
-        var openBraceIndex = span.IndexOf(this.m_openBrace);
-        var leftSquareBracketIndex = span.IndexOf(this.m_leftSquareBracket);
+        var openBraceIndex = sequence.IndexOf(this.m_openBrace);
+        var leftSquareBracketIndex = sequence.IndexOf(this.m_leftSquareBracket);
 
         if (openBraceIndex < 0)
         {
-            if (leftSquareBracketIndex < 0)
-            {
-                return JsonPackageKind.None;
-            }
-
-            return JsonPackageKind.Array;
+            return leftSquareBracketIndex < 0 ? JsonPackageKind.None : JsonPackageKind.Array;
         }
         else
         {
@@ -179,13 +175,9 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
             {
                 return JsonPackageKind.Object;
             }
-            else if (openBraceIndex < leftSquareBracketIndex)
-            {
-                return JsonPackageKind.Object;
-            }
             else
             {
-                return JsonPackageKind.Array;
+                return openBraceIndex < leftSquareBracketIndex ? JsonPackageKind.Object : JsonPackageKind.Array;
             }
         }
     }

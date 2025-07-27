@@ -74,7 +74,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     /// <returns>返回一个异步任务，指示处理是否成功</returns>
     public async Task<bool> InputReceivedData(DmtpMessage message)
     {
-        var byteBlock = message.BodyByteBlock;
+        var reader = new BytesReader(message.Memory);
 
         if (message.ProtocolFlags == this.m_invoke_Request)
         {
@@ -82,14 +82,14 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
             {
                 var rpcPackage = new DmtpRpcRequestPackage();
 
-                rpcPackage.UnpackageRouter(ref byteBlock);
+                rpcPackage.UnpackageRouter(ref reader);
                 if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                 {
                     if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await actor.SendAsync(this.m_invoke_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             return true;
                         }
                         else
@@ -102,13 +102,8 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                         rpcPackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                     }
 
-                    byteBlock.Reset();
                     rpcPackage.SwitchId();
-
-                    var block = byteBlock;
-                    rpcPackage.Package(ref block);
-
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
@@ -125,7 +120,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     }
 
                     rpcPackage.LoadInfo(callContext, this.m_serializationSelector);
-                    rpcPackage.UnpackageBody(ref byteBlock);
+                    rpcPackage.UnpackageBody(ref reader);
                     //await this.InvokeThisAsync(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     //await EasyTask.Run(this.InvokeThisAsync, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -143,12 +138,12 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
             {
                 var rpcPackage = new DmtpRpcResponsePackage();
 
-                rpcPackage.UnpackageRouter(ref byteBlock);
+                rpcPackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                 {
                     if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_invoke_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 else
@@ -157,7 +152,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     {
                         var sourcePackage = (DmtpRpcRequestPackage)waitDataAsync.WaitResult;
                         rpcPackage.LoadInfo(sourcePackage.ReturnType, this.m_serializationSelector, sourcePackage.SerializationType);
-                        rpcPackage.UnpackageBody(ref byteBlock);
+                        rpcPackage.UnpackageBody(ref reader);
 
                         waitDataAsync.Set(rpcPackage);
                     }
@@ -175,17 +170,17 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
             {
                 var canceledPackage = new CanceledPackage();
 
-                canceledPackage.UnpackageRouter(ref byteBlock);
+                canceledPackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && canceledPackage.Route)
                 {
                     if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_cancelInvoke, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 else
                 {
-                    canceledPackage.UnpackageBody(ref byteBlock);
+                    canceledPackage.UnpackageBody(ref reader);
                     if (this.m_callContextDic.TryGetValue(canceledPackage.Sign, out var context))
                     {
                         context.Cancel();

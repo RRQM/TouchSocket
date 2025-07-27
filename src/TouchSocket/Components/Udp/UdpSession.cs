@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -48,15 +49,15 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向默认远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(memory);
+        return this.ProtectedSendAsync(memory, token);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(requestInfo);
+        return this.ProtectedSendAsync(requestInfo, token);
     }
 
     #endregion 向默认远程异步发送
@@ -64,34 +65,18 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向设置的远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(endPoint, memory);
+        return this.ProtectedSendAsync(endPoint, memory,token);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo)
+    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(endPoint, requestInfo);
+        return this.ProtectedSendAsync(endPoint, requestInfo, token);
     }
 
     #endregion 向设置的远程异步发送
-
-    #region 组合发送
-
-    /// <inheritdoc/>
-    public Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(transferBytes);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(endPoint, transferBytes);
-    }
-
-    #endregion 组合发送
 
     #region Receiver
 

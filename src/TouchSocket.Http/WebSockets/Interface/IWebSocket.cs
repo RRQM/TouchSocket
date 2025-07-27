@@ -57,13 +57,13 @@ public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IReso
     /// 异步发送Ping请求。
     /// </summary>
     /// <returns>任务完成时返回。</returns>
-    Task<Result> PingAsync();
+    Task<Result> PingAsync(CancellationToken token = default);
 
     /// <summary>
     /// 异步执行Pong操作。
     /// </summary>
     /// <returns>一个任务对象，表示异步操作的完成。</returns>
-    Task<Result> PongAsync();
+    Task<Result> PongAsync(CancellationToken token = default);
 
     /// <summary>
     /// 异步等待读取数据
@@ -76,25 +76,28 @@ public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IReso
     /// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>
     /// </summary>
     /// <param name="dataFrame">要发送的数据帧</param>
-    /// <param name="endOfMessage">是否是消息的结束标志，默认为true</param>
+    /// <param name="endOfMessage">是否是消息的结束标志，默认为<see langword="true"/></param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个异步任务，用于指示发送操作的完成状态</returns>
-    Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true);
+    Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default);
 
     /// <summary>
     /// 异步发送文本消息。
     /// </summary>
     /// <param name="text">要发送的文本内容。</param>
-    /// <param name="endOfMessage">指示是否是消息的结束。默认为true。</param>
+    /// <param name="endOfMessage">指示是否是消息的结束。默认为<see langword="true"/>。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务对象，表示异步操作的结果。</returns>
-    Task SendAsync(string text, bool endOfMessage = true);
+    Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default);
 
     /// <summary>
     /// 异步发送指定的字节内存数据。
     /// </summary>
     /// <param name="memory">要发送的字节数据，作为只读内存块。</param>
-    /// <param name="endOfMessage">指示当前数据是否为消息的结束。默认为true。</param>
+    /// <param name="endOfMessage">指示当前数据是否为消息的结束。默认为<see langword="true"/>。</param>
+    /// <param name="token">可取消令箭</param>
     /// <remarks>
     /// 此方法允许异步发送数据，通过指定是否为消息的结束来控制数据流。
     /// </remarks>
-    Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true);
+    Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default);
 }

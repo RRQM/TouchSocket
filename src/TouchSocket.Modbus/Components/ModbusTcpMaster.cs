@@ -30,10 +30,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     public ModbusTcpMaster()
     {
         this.Protocol = TouchSocketModbusUtility.ModbusTcp;
-        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
-        {
-            MaxSign = ushort.MaxValue
-        };
+        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0, ushort.MaxValue);
     }
 
     /// <inheritdoc/>
@@ -49,7 +46,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
             try
             {
                 modbusTcpRequest.Build(ref valueByteBlock);
-                await this.ProtectedSendAsync(valueByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(valueByteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {

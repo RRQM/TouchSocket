@@ -30,12 +30,11 @@ public abstract class SafetyDisposableObject : DisposableObject
             return;
         }
 
-        base.Dispose(disposing);
-
         if (Interlocked.Increment(ref this.m_count) == 1)
         {
             this.SafetyDispose(disposing);
         }
+        base.Dispose(disposing);
     }
 
     /// <summary>

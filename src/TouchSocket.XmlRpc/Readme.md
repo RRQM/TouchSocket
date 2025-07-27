@@ -12,8 +12,8 @@ TouchSocket.XmlRpc 是一个提供 XmlRpc 服务器和客户端的组件库。�
 详细的说明文档请访问：[https://touchsocket.net/](https://touchsocket.net/)
 
 ## 支持的目标框架
+
 - net481
-- net45
 - net462
 - net472
 - netstandard2.0

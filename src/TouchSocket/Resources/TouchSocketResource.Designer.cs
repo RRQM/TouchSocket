@@ -196,6 +196,15 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Transport is null. 的本地化字符串。
+        /// </summary>
+        public static string TransportIsNull {
+            get {
+                return ResourceManager.GetString("TransportIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Udp is not running. 的本地化字符串。
         /// </summary>
         public static string UdpStopped {

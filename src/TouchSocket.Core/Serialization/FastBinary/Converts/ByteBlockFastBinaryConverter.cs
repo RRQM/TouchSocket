@@ -16,13 +16,13 @@ namespace TouchSocket.Core;
 
 internal class ByteBlockFastBinaryConverter : FastBinaryConverter<ByteBlock>
 {
-    protected override ByteBlock Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    protected override ByteBlock Read<TReader>(ref TReader reader, Type type)
     {
-        return byteBlock.ReadByteBlock();
+        return ReaderExtension.ReadByteBlock(ref reader);
     }
 
-    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in ByteBlock obj)
+    protected override void Write<TWriter>(ref TWriter writer, in ByteBlock obj)
     {
-        byteBlock.WriteByteBlock(obj);
+        WriterExtension.WriteByteBlock(ref writer, obj);
     }
 }

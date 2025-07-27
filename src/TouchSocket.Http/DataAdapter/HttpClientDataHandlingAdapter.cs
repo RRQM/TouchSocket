@@ -22,17 +22,14 @@ namespace TouchSocket.Http;
 /// </summary>
 internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    private readonly AsyncAutoResetEvent m_autoResetEvent = new AsyncAutoResetEvent(false);
+    private readonly AsyncAutoResetEvent m_autoResetEvent = new AsyncAutoResetEvent();
     private HttpResponse m_httpResponse;
     private HttpResponse m_httpResponseRoot;
     private long m_surLen;
     private Task m_task;
     private ByteBlock m_tempByteBlock;
-    private string s;
 
     /// <inheritdoc/>
-    public override bool CanSplicingSend => false;
-
     public SingleStreamDataHandlingAdapter WarpAdapter { get; set; }
 
     /// <inheritdoc/>
@@ -51,22 +48,10 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
         this.m_autoResetEvent.Set();
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_autoResetEvent.Set();
-            this.m_autoResetEvent.Dispose();
-        }
-        base.Dispose(disposing);
-    }
-
     /// <inheritdoc/>
     /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
     {
-        this.s = byteBlock.ToString();
-
         if (this.m_tempByteBlock == null)
         {
             byteBlock.Position = 0;
@@ -85,7 +70,17 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
         }
     }
 
-    private void Cache(ByteBlock byteBlock)
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_autoResetEvent.SetAll();
+            //this.m_autoResetEvent.Dispose();
+        }
+        base.SafetyDispose(disposing);
+    }
+
+    private void Cache(IByteBlockReader byteBlock)
     {
         if (byteBlock.CanReadLength > 0)
         {
@@ -98,7 +93,7 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
         }
     }
 
-    private async Task<FilterResult> ReadChunk(ByteBlock byteBlock)
+    private async Task<FilterResult> ReadChunk(IByteBlockReader byteBlock)
     {
         var position = byteBlock.Position;
         var index = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(TouchSocketHttpUtility.CRLF);
@@ -137,35 +132,38 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
         }
     }
 
-    private Task RunGoReceived(HttpResponse response)
+    private Task<Result> RunGoReceived(HttpResponse response)
     {
-        return Task.Run(() => this.GoReceivedAsync(null, response));
+        return EasyTask.SafeRun(() => this.GoReceivedAsync(null, response));
     }
 
-    private async Task Single(ByteBlock byteBlock)
+    private async Task Single(IByteBlockReader reader)
     {
-        while (byteBlock.CanReadLength > 0)
+        while (reader.CanReadLength > 0)
         {
             var adapter = this.WarpAdapter;
             if (adapter != null)
             {
-                await adapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             if (this.m_httpResponse == null)
             {
                 this.m_httpResponseRoot.ResetHttp();
                 this.m_httpResponse = this.m_httpResponseRoot;
-                if (this.m_httpResponse.ParsingHeader(ref byteBlock))
+                if (this.m_httpResponse.ParsingHeader(ref reader))
                 {
-                    if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
+                    if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > reader.CanReadLength)
                     {
                         this.m_surLen = this.m_httpResponse.ContentLength;
                         this.m_task = this.RunGoReceived(this.m_httpResponse);
                     }
                     else
                     {
-                        this.m_httpResponse.InternalSetContent(byteBlock.ReadToSpan((int)this.m_httpResponse.ContentLength).ToArray());
+                        var len = (int)this.m_httpResponse.ContentLength;
+                        var content = reader.GetSpan(len).Slice(0, len);
+                        reader.Advance(len);
+                        this.m_httpResponse.InternalSetContent(content.ToArray());
                         await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         this.m_httpResponse = null;
@@ -173,7 +171,7 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
                 }
                 else
                 {
-                    this.Cache(byteBlock);
+                    this.Cache(reader);
                     this.m_httpResponse = null;
 
                     if (this.m_task != null)
@@ -189,10 +187,10 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
             {
                 if (this.m_httpResponse.IsChunk)
                 {
-                    switch (await this.ReadChunk(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    switch (await this.ReadChunk(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         case FilterResult.Cache:
-                            this.Cache(byteBlock);
+                            this.Cache(reader);
                             return;
 
                         case FilterResult.Success:
@@ -216,12 +214,12 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
                 }
                 else if (this.m_surLen > 0)
                 {
-                    if (byteBlock.CanRead)
+                    if (reader.CanReadLength>0)
                     {
-                        var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                        await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var len = (int)Math.Min(this.m_surLen, reader.CanReadLength);
+                        await this.m_httpResponse.InternalInputAsync(reader.Memory.Slice(reader.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         this.m_surLen -= len;
-                        byteBlock.Position += len;
+                        reader.Position += len;
                         if (this.m_surLen == 0)
                         {
                             await this.m_httpResponse.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);

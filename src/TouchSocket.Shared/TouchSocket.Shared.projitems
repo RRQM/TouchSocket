@@ -15,10 +15,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)SocketIo\EngineIo3.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SocketIo\EngineIo4.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SocketIo\InternalSocketIoResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\BaseTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalClientCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalReceiverResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalSocketIoCore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\StreamTransport.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Sockets\ThrowHelperSockets.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WebApi\WebApiParameterInfo.cs" />
   </ItemGroup>

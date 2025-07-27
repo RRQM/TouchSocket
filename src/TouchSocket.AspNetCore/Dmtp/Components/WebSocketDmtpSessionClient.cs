@@ -31,16 +31,8 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     /// </summary>
     public WebSocketDmtpSessionClient()
     {
-        this.m_receiveCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnReceivePeriod
-        };
-        this.m_sentCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnSendPeriod
-        };
+        this.m_receiveCounter = new ValueCounter(TimeSpan.FromSeconds(1), this.OnReceivePeriod);
+        this.m_sentCounter = new ValueCounter(TimeSpan.FromSeconds(1), this.OnSendPeriod);
     }
 
     #region 字段
@@ -103,6 +95,9 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
     /// <inheritdoc/>
     public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
+
+    /// <inheritdoc/>
+    public CancellationToken ClosedToken => this.m_httpContext.RequestAborted;
 
     /// <inheritdoc/>
     public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
@@ -285,7 +280,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
@@ -399,9 +394,9 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     //    }
     //}
 
-    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
     {
-        await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_sentCounter.Increment(memory.Length);
     }
 
@@ -464,7 +459,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
     #endregion 事件
 
-    private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
         var message = (DmtpMessage)requestInfo;
         if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))

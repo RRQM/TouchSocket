@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if SystemTextJson
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,4 +23,3 @@ namespace TouchSocket.WebApi;
 internal partial class WebApiSystemTextJsonSerializerContext : JsonSerializerContext
 {
 }
-#endif

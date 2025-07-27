@@ -57,7 +57,7 @@ public class PullSmallFileResult : ResultBase
     /// 将拉取的数据保存为文件。
     /// </summary>
     /// <param name="path">要保存文件的路径。</param>
-    /// <param name="overwrite">是否覆盖同名文件，默认为true。</param>
+    /// <param name="overwrite">是否覆盖同名文件，默认为<see langword="true"/>。</param>
     /// <returns>返回保存结果。</returns>
     public Result Save(string path, bool overwrite = true)
     {

@@ -46,11 +46,4 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     /// 使用Ssl加密
     /// </summary>
     bool UseSsl { get; }
-
-    /// <summary>
-    /// 异步关闭TCP会话。此操作相比于<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>,会等待缓存中的数据发送完成后再关闭会话。
-    /// </summary>
-    /// <param name="how">指定如何关闭套接字。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    Task<Result> ShutdownAsync(SocketShutdown how);
 }

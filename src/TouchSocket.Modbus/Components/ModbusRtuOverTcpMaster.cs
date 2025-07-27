@@ -45,18 +45,19 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
             {
                 modbusRequest.Build(ref byteBlock);
 
-                await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
                 byteBlock.Dispose();
             }
 
+            this.m_waitDataAsync.Reset();
             this.m_waitDataAsync.SetCancellationToken(token);
             var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            var response = this.m_waitData.WaitResult;
+            var response = this.m_waitDataAsync.WaitResult;
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -77,7 +78,6 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
     private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
 
     #endregion 字段
@@ -87,16 +87,10 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     {
         if (e.RequestInfo is ModbusRtuResponse response)
         {
-            this.SetRun(response);
+            this.m_waitDataAsync.Set(response);
         }
 
         return EasyTask.CompletedTask;
-    }
-
-    private void SetRun(ModbusRtuResponse response)
-    {
-        this.m_waitData.Set(response);
-        this.m_waitDataAsync.Set(response);
     }
 
     /// <inheritdoc/>

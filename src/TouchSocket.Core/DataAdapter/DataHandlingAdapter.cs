@@ -19,17 +19,12 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 数据处理适配器
 /// </summary>
-public abstract class DataHandlingAdapter : DisposableObject
+public abstract class DataHandlingAdapter : SafetyDisposableObject
 {
     /// <summary>
     /// 是否允许发送<see cref="IRequestInfo"/>对象。
     /// </summary>
     public abstract bool CanSendRequestInfo { get; }
-
-    /// <summary>
-    /// 拼接发送
-    /// </summary>
-    public abstract bool CanSplicingSend { get; }
 
     /// <summary>
     /// 日志记录器。
@@ -39,7 +34,7 @@ public abstract class DataHandlingAdapter : DisposableObject
     /// <summary>
     /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
     /// </summary>
-    public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
+    public long MaxPackageSize { get; set; } = 1024 * 1024 * 10;
 
     /// <summary>
     /// 如果指定的长度超过最大包大小，则抛出异常。
@@ -50,7 +45,7 @@ public abstract class DataHandlingAdapter : DisposableObject
     /// 以避免处理过大的数据包导致的性能问题或内存溢出等问题。
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void ThrowIfMoreThanMaxPackageSize(int length)
+    protected void ThrowIfMoreThanMaxPackageSize(long length)
     {
         if (length > this.MaxPackageSize)
         {

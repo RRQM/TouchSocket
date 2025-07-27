@@ -33,7 +33,6 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
     private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
 
     #endregion 字段
@@ -54,12 +53,14 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
         {
             var modbusTcpRequest = new ModbusRtuRequest(request);
 
-            await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(modbusTcpRequest, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            this.m_waitDataAsync.Reset();
             this.m_waitDataAsync.SetCancellationToken(token);
             var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            var response = this.m_waitData.WaitResult;
+            var response = this.m_waitDataAsync.WaitResult;
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -75,14 +76,8 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     {
         if (e.RequestInfo is ModbusRtuResponse response)
         {
-            this.SetRun(response);
+            this.m_waitDataAsync.Set(response);
         }
         await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    private void SetRun(ModbusRtuResponse response)
-    {
-        this.m_waitData.Set(response);
-        this.m_waitDataAsync.Set(response);
     }
 }

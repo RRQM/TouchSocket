@@ -10,12 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// TouchSocketUtility
+/// TouchSocketUtility 提供实用方法。
 /// </summary>
-public class TouchSocketUtility
+public static class TouchSocketUtility
 {
-
 }

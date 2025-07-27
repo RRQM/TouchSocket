@@ -300,8 +300,9 @@ public static class StringExtension
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static byte[] ToUtf8Bytes(this string value)
+    public static ReadOnlyMemory<byte> ToUtf8Bytes(this string value)
     {
+        ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(value));
         return Encoding.UTF8.GetBytes(value);
     }
 

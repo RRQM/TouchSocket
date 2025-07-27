@@ -148,4 +148,7 @@
   <data name="PollingEnd" xml:space="preserve">
     <value>Polling reconnection has ended</value>
   </data>
+  <data name="TransportIsNull" xml:space="preserve">
+    <value>Transport is null.</value>
+  </data>
 </root>

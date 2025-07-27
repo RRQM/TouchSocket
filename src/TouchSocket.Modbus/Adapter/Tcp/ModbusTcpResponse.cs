@@ -52,7 +52,7 @@ internal sealed class ModbusTcpResponse : ModbusTcpBase, IFixedHeaderRequestInfo
         {
             this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
             this.Quantity = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(2));
-            this.Data = new byte[0];
+            this.Data = ReadOnlyMemory<byte>.Empty;
             return true;
         }
         return false;

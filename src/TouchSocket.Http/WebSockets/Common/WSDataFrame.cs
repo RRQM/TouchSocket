@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Text;
 using TouchSocket.Core;
 
@@ -19,10 +20,21 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// WebSocket数据帧
 /// </summary>
-public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, IBigUnfixedHeaderRequestInfo
+public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixedHeaderRequestInfo
 {
+    private readonly ReadOnlyMemory<byte> m_payloadData;
     private int m_headerLength;
+    private ByteBlock m_payloadDataBlock;
     private int m_payloadLength;
+
+    public WSDataFrame(ReadOnlyMemory<byte> payloadData)
+    {
+        this.m_payloadData = payloadData;
+    }
+
+    internal WSDataFrame()
+    {
+    }
 
     /// <summary>
     /// 是否为最后数据帧。
@@ -62,10 +74,10 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
     /// <summary>
     /// 掩码值
     /// </summary>
-    public byte[] MaskingKey { get; set; }
+    public ReadOnlyMemory<byte> MaskingKey { get; set; }
 
     /// <inheritdoc/>
-    public int MaxLength => this.PayloadLength + 100;
+    public int MaxLength => this.PayloadData.Length + 100;
 
     /// <summary>
     /// 数据类型
@@ -75,17 +87,7 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
     /// <summary>
     /// 有效数据
     /// </summary>
-    public ByteBlock PayloadData { get; set; }
-
-    /// <summary>
-    /// 有效载荷数据长度
-    /// </summary>
-    public int PayloadLength
-    {
-        get => this.m_payloadLength != 0 ? this.m_payloadLength : this.PayloadData != null ? this.PayloadData.Length : 0;
-
-        set => this.m_payloadLength = value;
-    }
+    public ReadOnlyMemory<byte> PayloadData => this.m_payloadDataBlock?.Memory ?? m_payloadData;
 
     /// <summary>
     /// 标识RSV-1。
@@ -103,9 +105,14 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
     public bool RSV3 { get; set; }
 
     /// <inheritdoc/>
-    public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public void Build<TWriter>(ref TWriter writer1) where TWriter : IBytesWriter
     {
-        var memory = this.PayloadData == null ? ReadOnlyMemory<byte>.Empty : this.PayloadData.Memory;
+        var memory = this.PayloadData;
+
+        var rawMemory = writer1.GetMemory(memory.Length + 1024);
+
+        var rawWriter = new BytesWriter(rawMemory);
+
         int payloadLength;
 
         Span<byte> extLen = stackalloc byte[8];
@@ -115,7 +122,7 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
         if (length < 126)
         {
             payloadLength = length;
-            extLen = Span<byte>.Empty;
+            extLen = [];
         }
         else if (length < 65536)
         {
@@ -140,34 +147,42 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
 
         header = (header << 7) + payloadLength;
 
-        byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)header));
+        WriterExtension.WriteValue<BytesWriter, ushort>(ref rawWriter, (ushort)header, EndianType.Big);
 
         if (payloadLength > 125)
         {
-            byteBlock.Write(extLen);
+            rawWriter.Write(extLen);
         }
 
         if (this.Mask)
         {
-            byteBlock.Write(new ReadOnlySpan<byte>(this.MaskingKey, 0, 4));
+            rawWriter.Write(this.MaskingKey.Span.Slice(0, 4));
         }
 
         if (payloadLength > 0)
         {
             if (this.Mask)
             {
-                if (byteBlock.Capacity < byteBlock.Position + length)
-                {
-                    byteBlock.SetCapacity(byteBlock.Position + length, true);
-                }
-                WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, this.MaskingKey);
-                byteBlock.SetLength(byteBlock.Position + length);
+                WSTools.DoMask(rawMemory.Span.Slice((int)rawWriter.WrittenCount), memory.Span, this.MaskingKey.Span);
+                rawWriter.Advance(length);
             }
             else
             {
-                byteBlock.Write(memory.Span);
+                rawWriter.Write(memory.Span);
             }
         }
+
+        writer1.Advance((int)rawWriter.WrittenCount);
+    }
+
+    public void SetMask(ReadOnlyMemory<byte> mask)
+    {
+        if (mask.Length != 4)
+        {
+            throw new OverlengthException("Mask只能为四位。");
+        }
+        this.MaskingKey = mask;
+        this.Mask = true;
     }
 
     /// <summary>
@@ -187,13 +202,10 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    internal void Dispose()
     {
-        if (disposing)
-        {
-            this.PayloadData.SafeDispose();
-        }
-        base.Dispose(disposing);
+        this.m_payloadDataBlock.SafeDispose();
+        this.m_payloadDataBlock = default;
     }
 
     #region UnfixedHeader
@@ -203,7 +215,7 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
 
     void IBigUnfixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
     {
-        this.PayloadData.Write(buffer);
+        this.m_payloadDataBlock.Write(buffer);
     }
 
     bool IBigUnfixedHeaderRequestInfo.OnFinished()
@@ -217,18 +229,17 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
 
             if (this.Mask)
             {
-                WSTools.DoMask(this.PayloadData.TotalMemory.Span, this.PayloadData.Memory.Span, this.MaskingKey);
+                WSTools.DoMask(this.m_payloadDataBlock.TotalMemory.Span, this.m_payloadDataBlock.Memory.Span, this.MaskingKey.Span);
             }
         }
 
         return true;
     }
 
-    bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock)
+    bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TReader>(ref TReader reader)
     {
-        var offset = byteBlock.Position;
-        var index = offset;
-        var dataBuffer = byteBlock.Span.Slice(offset);
+        var offset =0;
+        var dataBuffer = reader.GetSpan((int)reader.BytesRemaining);
         var length = dataBuffer.Length;
         if (length < 2)
         {
@@ -251,8 +262,6 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
         {
             if (length < 4)
             {
-                //offset = index;
-                //cache
                 return false;
             }
             payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(dataBuffer.Slice(++offset));
@@ -272,7 +281,7 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
 
         if (this.Mask)
         {
-            if (length < (offset - index) + 4)
+            if (length < (offset) + 4)
             {
                 return false;
             }
@@ -284,30 +293,15 @@ public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, 
             this.MaskingKey = maskingKey;
         }
 
-        this.m_headerLength = offset - index;
-        byteBlock.Position += this.m_headerLength;
+        this.m_headerLength = offset;
+        reader.Advance(this.m_headerLength);
 
         if (payloadLength > 0)
         {
-            this.PayloadData = new ByteBlock(payloadLength);
+            this.m_payloadDataBlock = new ByteBlock(payloadLength);
         }
 
         return true;
-
-        //var block = new ByteBlock(payloadLength);
-        //dataFrame.PayloadData = block;
-
-        //var surlen = length - (offset - index);
-        //if (payloadLength <= surlen)
-        //{
-        //    block.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
-        //    offset += payloadLength;
-        //}
-        //else
-        //{
-        //    block.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surlen));
-        //    offset += surlen;
-        //}
     }
 
     #endregion UnfixedHeader

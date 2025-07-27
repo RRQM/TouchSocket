@@ -11,12 +11,12 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.IO.Ports;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts;
@@ -36,13 +36,12 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     #region 变量
 
-    private readonly Lock m_lockForAbort = new Lock();
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private bool m_online;
     private InternalReceiver m_receiver;
-    private SerialCore m_serialCore;
-    private Task m_taskReceive;
+    private Task m_runTask;
+    private SerialPortTransport m_transport;
 
     #endregion 变量
 
@@ -102,7 +101,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。
     /// 返回<see langword="false"/>则表示数据未被处理，可能会继续向下传递。
     /// </returns>
-    protected virtual ValueTask<bool> OnSerialReceiving(ByteBlock byteBlock)
+    protected virtual ValueTask<bool> OnSerialReceiving(IByteBlockReader byteBlock)
     {
         return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
     }
@@ -121,37 +120,25 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
         return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
     }
 
-    private async Task PrivateOnClosing(ClosingEventArgs e)
+    private async Task PrivateConnected(SerialPortTransport transport)
     {
-        await this.OnSerialClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
+
+        var e_connected = new ConnectedEventArgs();
+        await this.OnSerialConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var e_closed = transport.ClosedEventArgs;
+        this.m_online = false;
+        var adapter = this.m_dataHandlingAdapter;
+        this.m_dataHandlingAdapter = default;
+        adapter.SafeDispose();
+
+        await this.OnSerialClosed(e_closed).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateOnSerialClosed(object obj)
+    private Task PrivateOnClosing(ClosingEventArgs e)
     {
-        try
-        {
-            var e = (ClosedEventArgs)obj;
-            var receiver = this.m_receiver;
-            if (receiver != null)
-            {
-                await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            await this.OnSerialClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
-    }
-
-    private async Task PrivateOnSerialConnected(object o)
-    {
-        try
-        {
-            await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
+        return this.OnSerialClosing(e);
     }
 
     private async Task PrivateOnSerialConnecting(ConnectingEventArgs e)
@@ -172,25 +159,25 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     #region 属性
 
     /// <inheritdoc/>
+    public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
+
+    /// <inheritdoc/>
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public DateTimeOffset LastReceivedTime => this.m_serialCore.ReceiveCounter.LastIncrement;
+    public DateTimeOffset LastReceivedTime => this.m_transport?.ReceiveCounter.LastIncrement ?? default;
 
     /// <inheritdoc/>
-    public DateTimeOffset LastSentTime => this.m_serialCore.SendCounter.LastIncrement;
+    public DateTimeOffset LastSentTime => this.m_transport?.SendCounter.LastIncrement ?? default;
 
     /// <inheritdoc/>
-    public bool Online => this.m_online && this.m_serialCore != null && this.m_serialCore.SerialPort.IsOpen;
+    public bool Online => this.m_online && this.m_transport != null && this.m_transport.IsOpen;
 
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
 
     /// <inheritdoc/>
     protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
-
-    /// <inheritdoc/>
-    protected SerialPort ProtectedMainSerialPort => this.m_serialCore?.SerialPort;
 
     #endregion 属性
 
@@ -201,12 +188,18 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     {
         try
         {
-            if (this.m_online)
+            if (!this.m_online)
             {
-                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.Abort(true, msg);
+                return Result.Success;
             }
 
+            await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var transport = this.m_transport;
+            if (transport != null)
+            {
+                await transport.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -216,13 +209,13 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
-            this.Abort(true, $"{nameof(Dispose)}主动断开");
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     #endregion 断开操作
@@ -247,23 +240,25 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
             {
                 return;
             }
+
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
             var serialPortOption = this.Config.GetValue(SerialPortConfigExtension.SerialPortOptionProperty) ?? throw new ArgumentNullException("串口配置不能为空。");
 
-            this.m_serialCore.SafeDispose();
-
-            var serialCore = CreateSerial(serialPortOption);
+            var serialPort = CreateSerial(serialPortOption);
             await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            serialCore.SerialPort.Open();
+            serialPort.Open();
 
+            if (!serialPort.IsOpen)
+            {
+                ThrowHelper.ThrowException(TouchSocketCoreResource.UnknownError);
+            }
+
+            this.m_transport = new SerialPortTransport(serialPort, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
             this.m_online = true;
-
-            this.m_serialCore = serialCore;
-
-            this.m_taskReceive = EasyTask.Run(this.BeginReceive);
-            this.m_taskReceive.FireAndForget();
-
-            _ = EasyTask.Run(this.PrivateOnSerialConnected, new ConnectedEventArgs());
+            // 启动新任务，处理连接后的操作
+            this.m_runTask = EasyTask.SafeRun(this.PrivateConnected, this.m_transport);
         }
         finally
         {
@@ -273,32 +268,71 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     #endregion Connect
 
-    /// <summary>
-    /// 中止连接方法
-    /// </summary>
-    /// <param name="manual">是否为手动断开连接</param>
-    /// <param name="msg">断开连接的原因</param>
-    protected void Abort(bool manual, string msg)
+    protected async Task ReceiveLoopAsync(ITransport transport)
     {
-        // 锁定连接操作，确保线程安全
-        lock (this.m_lockForAbort)
+        var token = transport.ClosedToken;
+        try
         {
-            // 检查是否当前处于在线状态
-            if (this.m_online)
+            while (true)
             {
-                // 将状态设置为离线
-                this.m_online = false;
-                // 安全释放串口核心资源
-                this.m_serialCore.SafeDispose();
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                // 安全释放数据处理适配器资源
-                this.m_dataHandlingAdapter.SafeDispose();
-                this.m_dataHandlingAdapter = default;
+                if (this.DisposedValue || token.IsCancellationRequested)
+                {
+                    return;
+                }
 
-                // 启动一个新的任务，用于处理串口关闭事件
-                _ = EasyTask.Run(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
+                if (result.IsCanceled || result.IsCompleted)
+                {
+                    return;
+                }
+
+                foreach (var item in result.Buffer)
+                {
+                    var reader = new ByteBlockReader(item);
+                    try
+                    {
+                        if (await this.OnSerialReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        {
+                            continue;
+                        }
+
+                        if (this.m_dataHandlingAdapter == null)
+                        {
+                            await this.PrivateHandleReceivedData(reader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                        else
+                        {
+                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.Exception(this, ex);
+                    }
+                }
+                transport.Input.AdvanceTo(result.Buffer.End);
             }
         }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            var receiver = this.m_receiver;
+            var e_closed = transport.ClosedEventArgs;
+            if (receiver != null)
+            {
+                await receiver.Complete(e_closed.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+       
     }
 
     /// <summary>
@@ -333,66 +367,35 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private static SerialCore CreateSerial(SerialPortOption option)
+    private static SerialPort CreateSerial(SerialPortOption option)
     {
-        var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits, option.StreamAsync);
-        serialPort.SerialPort.Handshake = option.Handshake;
-        serialPort.SerialPort.RtsEnable = option.RtsEnable;
-        serialPort.SerialPort.DtrEnable = option.DtrEnable;
+        var serialPort = new SerialPort(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits)
+        {
+            Handshake = option.Handshake,
+            RtsEnable = option.RtsEnable,
+            DtrEnable = option.DtrEnable
+        };
         return serialPort;
     }
 
-    private async Task BeginReceive()
+    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
-        while (true)
+        var receiver = this.m_receiver;
+        if (receiver != null)
         {
-            try
-            {
-                using (var byteBlock = new ByteBlock(1024 * 64))
-                {
-                    var result = await this.m_serialCore.ReceiveAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                    if (result.BytesTransferred > 0)
-                    {
-                        byteBlock.SetLength(result.BytesTransferred);
-                        await this.HandleReceivingData(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                this.Abort(false, ex.Message);
-                break;
-            }
+            await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
         }
+        await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task HandleReceivingData(ByteBlock byteBlock)
+    private async Task WaitClearConnect()
     {
-        try
+        // 确保上次接收任务已经结束
+        var runTask = this.m_runTask;
+        if (runTask != null)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-
-            if (await this.OnSerialReceiving(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-            {
-                return;
-            }
-
-            if (this.m_dataHandlingAdapter == null)
-            {
-                await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        }
-        catch (Exception ex)
-        {
-            this.Logger?.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
+            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -425,17 +428,6 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     #endregion Receiver
 
-    private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-    {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return;
-        }
-        await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
     #region Throw
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -466,39 +458,44 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 异步发送数据，保护方法。
     /// </summary>
     /// <param name="memory">待发送的字节数据内存。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>异步任务。</returns>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
+    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        // 检查实例是否已被处置，确保资源正确管理。
         this.ThrowIfDisposed();
-        // 检查客户端是否已连接，防止在未连接状态下尝试发送数据。
         this.ThrowIfClientNotConnected();
-        // 触发序列发送事件之前置处理，为实际数据发送做准备。
         await this.OnSerialSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        // 通过序列核心发送数据，实际的数据发送操作。
-        await this.m_serialCore.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        var transport = this.m_transport;
+
+        await transport.SemaphoreSlimForWriter.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            transport.SemaphoreSlimForWriter.Release();
+        }
     }
-
-    #endregion 发送
-
-    #region 异步发送
 
     /// <summary>
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
     /// <param name="memory">待发送的只读字节内存块。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>一个异步任务，表示发送操作。</returns>
-    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
+    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         // 如果数据处理适配器未设置，则使用默认发送方式。
         if (this.m_dataHandlingAdapter == null)
         {
-            return this.ProtectedDefaultSendAsync(memory);
+            return this.ProtectedDefaultSendAsync(memory, token);
         }
         else
         {
             // 否则，使用适配器的发送方法进行数据发送。
-            return this.m_dataHandlingAdapter.SendInputAsync(memory);
+            return this.m_dataHandlingAdapter.SendInputAsync(memory, token);
         }
     }
 
@@ -509,61 +506,16 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
     /// </summary>
     /// <param name="requestInfo">要发送的请求信息。</param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
-    protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
+    protected Task ProtectedSendAsync(in IRequestInfo requestInfo, CancellationToken token)
     {
         // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
 
         // 使用数据处理适配器异步发送输入请求
-        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
+        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo, token);
     }
 
-    /// <summary>
-    /// 异步发送数据。
-    /// 如果数据处理适配器不存在或无法拼接发送，则将所有传输字节合并到一个连续的内存块中发送。
-    /// 如果数据处理适配器存在且支持拼接发送，则直接发送传输字节列表。
-    /// </summary>
-    /// <param name="transferBytes">要发送的字节数据列表，每个项代表一个字节片段。</param>
-    /// <returns>发送任务。</returns>
-    protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        // 检查数据处理适配器是否存在且支持拼接发送
-        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
-        {
-            // 如果不支持拼接发送，则计算所有字节片段的总长度
-            var length = 0;
-            foreach (var item in transferBytes)
-            {
-                length += item.Count;
-            }
-            // 使用计算出的总长度创建一个连续的内存块
-            using (var byteBlock = new ByteBlock(length))
-            {
-                // 将每个字节片段写入连续的内存块
-                foreach (var item in transferBytes)
-                {
-                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
-                }
-                // 根据数据处理适配器的存在与否，选择不同的发送方式
-                if (this.m_dataHandlingAdapter == null)
-                {
-                    // 如果没有数据处理适配器，则使用默认方式发送
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                else
-                {
-                    // 如果有数据处理适配器，则通过适配器发送
-                    await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-        }
-        else
-        {
-            // 如果数据处理适配器支持拼接发送，则直接发送字节列表
-            await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
-
-    #endregion 异步发送
+    #endregion 发送
 }

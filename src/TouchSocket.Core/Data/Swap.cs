@@ -25,7 +25,7 @@ public static class Swap
     /// <param name="y"></param>
     public static void Execute<T>(ref T x, ref T y)
     {
-#if NET45_OR_GREATER
+#if NET462_OR_GREATER
         var temp = x;
         x = y;
         y = temp;

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
@@ -35,15 +36,15 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     #region Send
 
-    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
+    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.ProtectedDefaultSendAsync(memory);
+        return this.ProtectedDefaultSendAsync(memory, token);
     }
 
     #endregion Send
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -55,7 +56,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
             this.m_webSocket.Dispose();
         }
 
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>

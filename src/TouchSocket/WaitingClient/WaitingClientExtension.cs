@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 using System.Threading;
@@ -113,20 +114,26 @@ public static class WaitingClientExtension
     /// 发送数据并等待
     /// </summary>
     /// <param name="client">等待客户端接口</param>
-    /// <param name="msg">要发送的消息</param>
+    /// <param name="value">要发送的消息</param>
     /// <param name="token">取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据</returns>
-    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, CancellationToken token)
+    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string value, CancellationToken token)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
-        using (var byteBlock = new ByteBlock(1024))
+        var byteBlock = new ByteBlock(1024);
+
+        try
         {
-            byteBlock.WriteNormalString(msg, Encoding.UTF8);
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
             return await client.SendThenResponseAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
 
@@ -134,21 +141,27 @@ public static class WaitingClientExtension
     /// 发送数据并等待
     /// </summary>
     /// <param name="client">等待客户端接口</param>
-    /// <param name="msg">要发送的消息</param>
+    /// <param name="value">要发送的消息</param>
     /// <param name="millisecondsTimeout">超时时间，默认为5000毫秒</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接时抛出的异常</exception>
     /// <exception cref="OverlengthException">发送数据超长时抛出的异常</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回从客户端接收到的数据</returns>
-    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
+    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string value, int millisecondsTimeout = 5000)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
 
-        using (var byteBlock = new ByteBlock(1024))
+        var byteBlock = new ByteBlock(1024);
+
+        try
         {
-            byteBlock.WriteNormalString(msg, Encoding.UTF8);
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
             return await client.SendThenResponseAsync(byteBlock.Memory, millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
 
     }
@@ -226,7 +239,7 @@ public static class WaitingClientExtension
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据</returns>
-    public static Task<byte[]> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
+    public static Task<ReadOnlyMemory<byte>> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
@@ -242,7 +255,7 @@ public static class WaitingClientExtension
     /// <param name="millisecondsTimeout">操作超时的时间，以毫秒为单位，默认为5000毫秒（5秒）。</param>
     /// <returns>返回发送操作的响应数据，以byte数组形式。</returns>
     /// <exception cref="TimeoutException">当操作超时时，此异常被抛出。</exception>
-    public static async Task<byte[]> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, int millisecondsTimeout = 5000)
+    public static async Task<ReadOnlyMemory<byte>> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, int millisecondsTimeout = 5000)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
@@ -272,7 +285,7 @@ public static class WaitingClientExtension
     /// <param name="millisecondsTimeout">操作超时时间（以毫秒为单位），默认为5000毫秒</param>
     /// <returns>返回一个任务，该任务结果是一个字节数组，包含响应数据</returns>
     /// <exception cref="TimeoutException">当操作超时时，抛出此异常</exception>
-    public static async Task<byte[]> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, IRequestInfo requestInfo, int millisecondsTimeout = 5000)
+    public static async Task<ReadOnlyMemory<byte>> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, IRequestInfo requestInfo, int millisecondsTimeout = 5000)
        where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
        where TResult : IReceiverResult
     {
@@ -282,7 +295,7 @@ public static class WaitingClientExtension
             try
             {
                 // 使用client对象的SendThenReturnAsync方法发送数据并返回响应
-                return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).ByteBlock?.ToArray();
+                return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).ByteBlock?.Memory.ToArray();
             }
             catch (OperationCanceledException)
             {
@@ -301,12 +314,18 @@ public static class WaitingClientExtension
     /// <param name="memory">要发送的数据。</param>
     /// <param name="token">用于取消操作的取消令牌。</param>
     /// <returns>一个异步任务，该任务的结果是返回的响应数据。</returns>
-    public static async Task<byte[]> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static async Task<ReadOnlyMemory<byte>> SendThenReturnAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
-        // 使用client对象的SendThenResponseAsync方法发送数据并返回响应
-        return (await client.SendThenResponseAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)).ByteBlock?.ToArray();
+        using (var response = (await client.SendThenResponseAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext)))
+        {
+            if (response.ByteBlock == null)
+            {
+                return ReadOnlyMemory<byte>.Empty;
+            }
+            return response.ByteBlock.Span.ToArray();
+        }
     }
 
     #endregion SendThenReturnAsync
@@ -415,7 +434,7 @@ public static class WaitingClientExtension
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据</returns>
     [AsyncToSyncWarning]
-    public static byte[] SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
+    public static ReadOnlyMemory<byte> SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
@@ -434,7 +453,7 @@ public static class WaitingClientExtension
     /// <returns>操作成功时返回字节数组，包含响应数据。</returns>
     /// <exception cref="TimeoutException">当操作超时时，会抛出此异常。</exception>
     [AsyncToSyncWarning]
-    public static byte[] SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, int millisecondsTimeout = 5000)
+    public static ReadOnlyMemory<byte> SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, int millisecondsTimeout = 5000)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
@@ -466,7 +485,7 @@ public static class WaitingClientExtension
     /// <typeparam name="TResult">接收结果类型，必须实现<see cref="IReceiverResult"/>接口。</typeparam>
     /// <returns>返回发送后的结果数据，类型为<see cref="byte"/>数组。</returns>
     [AsyncToSyncWarning]
-    public static byte[] SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static ReadOnlyMemory<byte> SendThenReturn<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {

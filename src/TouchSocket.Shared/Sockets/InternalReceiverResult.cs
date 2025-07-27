@@ -34,7 +34,7 @@ internal class InternalReceiverResult : IReceiverResult
     /// <summary>
     /// 字节块
     /// </summary>
-    public ByteBlock ByteBlock { get; set; }
+    public IByteBlockReader ByteBlock { get; set; }
 
     /// <summary>
     /// 数据对象

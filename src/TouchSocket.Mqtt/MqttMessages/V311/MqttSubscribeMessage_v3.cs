@@ -45,13 +45,13 @@ public sealed partial class MqttSubscribeMessage : MqttIdentifierMessage
     public IReadOnlyList<SubscribeRequest> SubscribeRequests => this.m_subscribeRequests;
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
         foreach (var item in this.m_subscribeRequests)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, item.Topic);
-            byteBlock.WriteByte((byte)item.QosLevel);
+            MqttExtension.WriteMqttInt16String(ref writer, item.Topic);
+            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)item.QosLevel);
         }
     }
 
@@ -70,14 +70,14 @@ public sealed partial class MqttSubscribeMessage : MqttIdentifierMessage
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 
-        while (!this.EndOfByteBlock(byteBlock))
+        while (!this.EndOfByteBlock(reader))
         {
-            var topic = MqttExtension.ReadMqttInt16String(ref byteBlock);
-            var options = byteBlock.ReadByte();
+            var topic = MqttExtension.ReadMqttInt16String(ref reader);
+            var options = ReaderExtension.ReadValue<TReader,byte>(ref reader);
             this.m_subscribeRequests.Add(new SubscribeRequest(topic, options));
         }
     }

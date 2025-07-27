@@ -124,20 +124,6 @@ public static partial class HttpExtensions
         return string.Empty;
     }
 
-    /// <summary>
-    /// 同步获取一次性内容。
-    /// </summary>
-    /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
-    /// <param name="httpBase"></param>
-    /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
-    [Obsolete("该方法已被弃用，请使用GetContentAsync异步方法")]
-    public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase, CancellationToken cancellationToken = default)
-    {
-        // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
-        // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-        return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), cancellationToken).GetFalseAwaitResult();
-    }
-
     #region 设置内容
 
     /// <summary>
@@ -307,9 +293,19 @@ public static partial class HttpExtensions
         }
         else
         {
-            var boundary = $"--{boundaryString}".ToUtf8Bytes();
+            boundaryString = $"--{boundaryString}";
 
-            return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), boundary);
+            var valueByteBlock = new ValueByteBlock(Encoding.UTF8.GetMaxByteCount(boundaryString.Length));
+
+            try
+            {
+                WriterExtension.WriteNormalString(ref valueByteBlock, boundaryString, Encoding.UTF8);
+                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), valueByteBlock.Span);
+            }
+            finally
+            {
+                valueByteBlock.Dispose();
+            }
         }
     }
 

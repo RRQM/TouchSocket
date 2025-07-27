@@ -25,17 +25,33 @@ internal class WaitFileSection : WaitRouterPackage, IDisposable
         this.Value?.Dispose();
     }
 
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
-        byteBlock.WritePackage(this.FileSection);
-        byteBlock.WriteByteBlock(this.Value);
+        base.PackageBody(ref writer);
+        if (this.FileSection is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+             WriterExtension.WriteNotNull(ref writer);
+            this.FileSection.Package(ref writer);
+        }
+        WriterExtension.WriteByteBlock(ref writer,this.Value);
     }
 
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
-        this.FileSection = byteBlock.ReadPackage<FileSection>();
-        this.Value = byteBlock.ReadByteBlock();
+        base.UnpackageBody(ref reader);
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.FileSection = null;
+        }
+        else
+        {
+            this.FileSection = new FileSection();
+            this.FileSection.Unpackage(ref reader);
+        }
+        this.Value = ReaderExtension.ReadByteBlock(ref reader);
     }
 }

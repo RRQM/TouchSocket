@@ -16,13 +16,14 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
+
 /// <summary>
 /// 等待数据对象
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
 {
-    private readonly AsyncAutoResetEvent m_asyncWaitHandle;
+    private readonly AsyncManualResetEvent m_asyncWaitHandle;
     private volatile WaitDataStatus m_status;
     private CancellationTokenRegistration m_tokenRegistration;
 
@@ -31,7 +32,7 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
     /// </summary>
     public WaitDataAsync()
     {
-        this.m_asyncWaitHandle = new AsyncAutoResetEvent(false);
+        this.m_asyncWaitHandle = new AsyncManualResetEvent(false);
     }
 
     /// <inheritdoc/>
@@ -53,21 +54,22 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
         this.m_status = WaitDataStatus.Default;
         this.WaitResult = default;
         this.m_asyncWaitHandle.Reset();
+        this.m_tokenRegistration.Dispose();
     }
 
     /// <inheritdoc/>
-    public bool Set()
+    public void Set()
     {
         this.m_status = WaitDataStatus.SetRunning;
-        return this.m_asyncWaitHandle.Set();
+        this.m_asyncWaitHandle.Set();
     }
 
     /// <inheritdoc/>
-    public bool Set(T waitResult)
+    public void Set(T waitResult)
     {
         this.WaitResult = waitResult;
         this.m_status = WaitDataStatus.SetRunning;
-        return this.m_asyncWaitHandle.Set();
+        this.m_asyncWaitHandle.Set();
     }
 
     /// <inheritdoc/>
@@ -117,7 +119,7 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
         {
             this.m_status = WaitDataStatus.Disposed;
             this.WaitResult = default;
-            this.m_asyncWaitHandle.SafeDispose();
+
             this.m_tokenRegistration.Dispose();
         }
 

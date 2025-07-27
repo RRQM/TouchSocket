@@ -11,132 +11,90 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 终止字符数据包处理适配器，支持以任意字符、字节数组结尾的数据包。
+/// 终止符数据包处理适配器，支持以指定终止符（字符或字节数组）结尾的数据包解析。
+/// 适用于流式数据协议，自动分包并处理缓存，支持保留终止符选项。
 /// </summary>
-public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
+public class TerminatorPackageAdapter : CacheDataHandlingAdapter
 {
-    private readonly byte[] m_terminatorCode;
-    private ByteBlock m_tempByteBlock;
+    /// <summary>
+    /// 终止符字节序列。
+    /// </summary>
+    private readonly ReadOnlyMemory<byte> m_terminatorCode;
 
     /// <summary>
-    /// 构造函数
+    /// 使用UTF8编码的终止符构造适配器。
     /// </summary>
-    /// <param name="terminator"></param>
+    /// <param name="terminator">终止符字符串。</param>
     public TerminatorPackageAdapter(string terminator) : this(0, Encoding.UTF8.GetBytes(terminator))
     {
     }
 
     /// <summary>
-    /// 构造函数
+    /// 使用指定编码的终止符构造适配器。
     /// </summary>
-    /// <param name="terminator"></param>
-    /// <param name="encoding"></param>
+    /// <param name="terminator">终止符字符串。</param>
+    /// <param name="encoding">编码方式。</param>
     public TerminatorPackageAdapter(string terminator, Encoding encoding)
         : this(0, encoding.GetBytes(terminator))
     {
     }
 
     /// <summary>
-    /// 构造函数
+    /// 使用指定最小包长度和终止符字节数组构造适配器。
     /// </summary>
-    /// <param name="minSize"></param>
-    /// <param name="terminatorCode"></param>
+    /// <param name="minSize">最小包长度。</param>
+    /// <param name="terminatorCode">终止符字节数组。</param>
     public TerminatorPackageAdapter(int minSize, byte[] terminatorCode)
     {
         this.MinSize = minSize;
         this.m_terminatorCode = terminatorCode;
     }
 
-    /// <inheritdoc/>
-    public override bool CanSendRequestInfo => false;
-
-    /// <inheritdoc/>
-    public override bool CanSplicingSend => true;
-
     /// <summary>
-    /// 即使找到了终止因子，也不会结束，默认0
+    /// 最小包长度，默认为0。
     /// </summary>
-    public int MinSize { get; set; } = 0;
+    public int MinSize { get; }
 
     /// <summary>
-    /// 保留终止因子
+    /// 是否保留终止符在解析后的数据包中。
     /// </summary>
     public bool ReserveTerminatorCode { get; set; }
 
     /// <summary>
-    /// 预处理
+    /// 预处理接收到的数据，自动分包并处理缓存。
     /// </summary>
-    /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    /// <param name="reader">数据读取器。</param>
+    protected override async Task PreviewReceivedAsync(IByteBlockReader reader)
     {
-        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        ReaderExtension.SeekToStart(ref reader);
+        var canReadSpan = reader.Span.Slice(reader.Position);
+        if (this.TryCombineCache(canReadSpan, out var byteBlock))
         {
-            this.Reset();
-        }
-        var array = byteBlock.Memory.GetArray();
-        var buffer = array.Array;
-        var cacheLength = byteBlock.Length;
-        if (this.m_tempByteBlock != null)
-        {
-            this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
-            buffer = this.m_tempByteBlock.Memory.GetArray().Array;
-            cacheLength = this.m_tempByteBlock.Position;
+            using (byteBlock)
+            {
+                await this.ProcessReader(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                return;
+            }
         }
 
-        var indexes = buffer.IndexOfInclude(0, cacheLength, this.m_terminatorCode);
-        if (indexes.Count == 0)
-        {
-            if (cacheLength > this.MaxPackageSize)
-            {
-                throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(cacheLength), this.MaxPackageSize));
-            }
-            else if (this.m_tempByteBlock == null)
-            {
-                this.m_tempByteBlock = new ByteBlock(cacheLength * 2);
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
-                if (this.UpdateCacheTimeWhenRev)
-                {
-                    this.LastCacheTime = DateTimeOffset.UtcNow;
-                }
-            }
-        }
-        else
-        {
-            var startIndex = 0;
-            foreach (var lastIndex in indexes)
-            {
-                var length = this.ReserveTerminatorCode ? lastIndex - startIndex + 1 : lastIndex - startIndex - this.m_terminatorCode.Length + 1;
-                var packageByteBlock = new ByteBlock(length);
-                packageByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, length));
-
-                //var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Position);
-
-                await this.PreviewHandle(packageByteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                startIndex = lastIndex + 1;
-            }
-            this.Reset();
-            if (startIndex < cacheLength)
-            {
-                this.m_tempByteBlock = new ByteBlock((cacheLength - startIndex) * 2);
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, cacheLength - startIndex));
-                if (this.UpdateCacheTimeWhenRev)
-                {
-                    this.LastCacheTime = DateTimeOffset.UtcNow;
-                }
-            }
-        }
+        await this.ProcessReader(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    /// <inheritdoc/>
-    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
+    /// <summary>
+    /// 预处理发送的数据，自动添加终止符。
+    /// </summary>
+    /// <param name="memory">待发送数据。</param>
+    /// <param name="token">取消令牌。</param>
+    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         if (memory.Length > this.MaxPackageSize)
         {
@@ -145,11 +103,11 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
         var dataLen = memory.Length + this.m_terminatorCode.Length;
         var byteBlock = new ByteBlock(dataLen);
         byteBlock.Write(memory.Span);
-        byteBlock.Write(this.m_terminatorCode);
+        byteBlock.Write(this.m_terminatorCode.Span);
 
         try
         {
-            await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -157,55 +115,31 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
         }
     }
 
-    /// <inheritdoc/>
-    protected override async Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
+    /// <summary>
+    /// 处理数据读取，查找终止符并分包。
+    /// </summary>
+    /// <param name="reader">数据读取器。</param>
+    private async Task ProcessReader(IByteBlockReader reader)
     {
-        var length = 0;
-        foreach (var item in transferBytes)
+        while (true)
         {
-            length += item.Count;
-        }
-        if (length > this.MaxPackageSize)
-        {
-            throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(length), this.MaxPackageSize));
-        }
-        var dataLen = length + this.m_terminatorCode.Length;
-        var byteBlock = new ByteBlock(dataLen);
-        foreach (var item in transferBytes)
-        {
-            byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
-        }
+            var canReadMemory = reader.Memory.Slice(reader.Position);
+            if (canReadMemory.IsEmpty)
+            {
+                return;
+            }
 
-        byteBlock.Write(this.m_terminatorCode);
+            var index = canReadMemory.Span.IndexOf(this.m_terminatorCode.Span);
+            if (index < 0)
+            {
+                this.Cache(canReadMemory.Span);
+                return;
+            }
+            var length = index + this.m_terminatorCode.Length;
+            var byteBlockReader = new ByteBlockReader(canReadMemory.Slice(0, this.ReserveTerminatorCode ? length : index));
 
-        try
-        {
-            await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    /// <inheritdoc/>
-    protected override void Reset()
-    {
-        this.m_tempByteBlock.SafeDispose();
-        this.m_tempByteBlock = null;
-        base.Reset();
-    }
-
-    private async Task PreviewHandle(ByteBlock byteBlock)
-    {
-        try
-        {
-            byteBlock.Position = 0;
-            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
+            await this.GoReceivedAsync(byteBlockReader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            reader.Advance(length);
         }
     }
 }

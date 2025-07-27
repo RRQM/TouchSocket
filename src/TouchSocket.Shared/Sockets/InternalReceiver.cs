@@ -26,7 +26,7 @@ internal sealed class InternalReceiver : BlockSegment<IReceiverResult>, IReceive
 
     private readonly IReceiverClient<IReceiverResult> m_client;
     private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
-    private ByteBlock m_byteBlock;
+    private IByteBlockReader m_byteBlock;
     private IRequestInfo m_requestInfo;
     private bool m_cacheMode;
     private int m_maxCacheSize = 1024 * 64;
@@ -62,7 +62,7 @@ internal sealed class InternalReceiver : BlockSegment<IReceiverResult>, IReceive
     }
 
     /// <inheritdoc/>
-    public async Task InputReceiveAsync(ByteBlock byteBlock, IRequestInfo requestInfo)
+    public async Task InputReceiveAsync(IByteBlockReader byteBlock, IRequestInfo requestInfo)
     {
         if (this.DisposedValue)
         {
@@ -140,8 +140,8 @@ internal sealed class InternalReceiver : BlockSegment<IReceiverResult>, IReceive
         if (disposing)
         {
             this.m_client.ClearReceiver();
-            this.m_resetEventForComplateRead.Set();
-            this.m_resetEventForComplateRead.SafeDispose();
+            this.m_resetEventForComplateRead.SetAll();
+            //this.m_resetEventForComplateRead.SafeDispose();
         }
         this.m_byteBlock = null;
         this.m_requestInfo = null;

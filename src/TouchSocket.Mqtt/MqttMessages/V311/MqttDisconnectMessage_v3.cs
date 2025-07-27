@@ -18,7 +18,7 @@ public sealed partial class MqttDisconnectMessage : MqttUserPropertiesMessage
     public override MqttMessageType MessageType => MqttMessageType.Disconnect;
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
 
     }
@@ -30,7 +30,7 @@ public sealed partial class MqttDisconnectMessage : MqttUserPropertiesMessage
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
 
     }

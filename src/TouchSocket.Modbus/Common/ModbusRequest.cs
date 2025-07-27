@@ -135,10 +135,9 @@ public class ModbusRequest : IModbusRequest
     /// 设置<see cref="Data"/>的值为 bool数组，同时设置<see cref="Quantity"/>的数量（即数组长度）。
     /// </summary>
     /// <param name="values">要设置的 bool数组</param>
-    public void SetValue(bool[] values)
+    public void SetValue(ReadOnlySpan<bool> values)
     {
-        // 将 bool数组转换为字节，并赋值给Data属性
-        this.Data = TouchSocketBitConverter.BigEndian.GetBytes(values);
+        this.Data = TouchSocketBitConverter.ConvertValues<bool, byte>(values);
         // 设置Quantity属性为数组的长度，以记录 bool值的数量
         this.Quantity = (ushort)values.Length;
     }

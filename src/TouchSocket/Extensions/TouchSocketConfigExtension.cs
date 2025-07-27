@@ -18,20 +18,34 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
+
+
 /// <summary>
 /// 触摸套接字配置扩展类
 /// </summary>
 public static class TouchSocketConfigExtension
 {
+    #region Extension
+    //extension(TouchSocketConfig config)
+    //{ 
+
+    //   public int Available { get=>1; set=>value=10; }
+    //}
+    //extension(TouchSocketConfig config)
+    //{
+
+    //    public int Available3 { get => 1; set => value = 10; }
+    //}
+    #endregion
     #region 数据
 
-    /// <summary>
-    /// 发送超时设定，默认为0。
-    /// 所需类型<see cref="int"/>
-    /// </summary>
-    public static readonly DependencyProperty<int> SendTimeoutProperty =
-        new("SendTimeout", 0);
+    public static readonly DependencyProperty<TransportOption> TransportOptionProperty = new("TransportOption", new TransportOption());
 
+    public static TouchSocketConfig SetTransportOption(this TouchSocketConfig config, TransportOption value)
+    {
+        config.SetValue(TransportOptionProperty, value);
+        return config;
+    }
     /// <summary>
     /// 数据处理适配器
     /// 所需类型<see cref="Func{TResult}"/>
@@ -48,13 +62,13 @@ public static class TouchSocketConfigExtension
     /// 最小缓存池尺寸
     /// 所需类型<see cref="int"/>
     /// </summary>
-    public static readonly DependencyProperty<int?> MinBufferSizeProperty = new("MinBufferSize", default);
+    public static readonly DependencyProperty<int> MinBufferSizeProperty = new("MinBufferSize", 1024);
 
     /// <summary>
     /// 最大缓存池尺寸
     /// 所需类型<see cref="int"/>
     /// </summary>
-    public static readonly DependencyProperty<int?> MaxBufferSizeProperty = new("MaxBufferSize", default);
+    public static readonly DependencyProperty<int> MaxBufferSizeProperty = new("MaxBufferSize", 1024*1024*10);
 
     /// <summary>
     /// 最小缓存容量，默认缺省。
@@ -90,18 +104,6 @@ public static class TouchSocketConfigExtension
         }
 
         config.SetValue(MaxBufferSizeProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 发送超时设定，单位毫秒，默认为0。意为禁用该配置。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetSendTimeout(this TouchSocketConfig config, int value)
-    {
-        config.SetValue(SendTimeoutProperty, value);
         return config;
     }
 
@@ -190,7 +192,7 @@ public static class TouchSocketConfigExtension
     /// 设置Socket不使用Delay算法，
     /// 所需类型<see cref="bool"/>
     /// </summary>
-    public static readonly DependencyProperty<bool?> NoDelayProperty = new("NoDelay", null);
+    public static readonly DependencyProperty<bool?> NoDelayProperty = new("NoDelay", true);
 
     /// <summary>
     /// 远程目标地址，所需类型<see cref="IPHost"/>
@@ -265,7 +267,7 @@ public static class TouchSocketConfigExtension
             config.SetClientSslOption(new ClientSslOption()
             {
                 TargetHost = value.Authority,
-#if NET45 || NETSTANDARD2_0
+#if NETSTANDARD2_0
                 SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12
 #elif NET481_OR_GREATER
                 SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13
@@ -280,7 +282,7 @@ public static class TouchSocketConfigExtension
     }
 
     /// <summary>
-    /// 设置Socket的NoDelay属性，默认不做处理。
+    /// 设置Socket的NoDelay属性，默认<see langword="true"/>
     /// </summary>
     /// <param name="config"></param>
     /// <param name="value"></param>
@@ -321,7 +323,7 @@ public static class TouchSocketConfigExtension
     public static readonly DependencyProperty<int> MaxCountProperty = new("MaxCount", 10000);
 
     /// <summary>
-    /// 端口复用，默认为false，所需类型<see cref="bool"/>
+    /// 端口复用，默认为<see langword="false"/>，所需类型<see cref="bool"/>
     /// </summary>
     public static readonly DependencyProperty<bool> ReuseAddressProperty = new("ReuseAddress", false);
 

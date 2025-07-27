@@ -26,7 +26,7 @@ public static partial class EasyTask
     /// </summary>
     static EasyTask()
     {
-#if NET45_OR_GREATER
+#if NET462_OR_GREATER
         // 在 .NET 4.5 或更高版本中，直接使用 Task.FromResult 方法创建已完成的任务。
         CompletedTask = Task.FromResult(0);
 #else
@@ -47,15 +47,7 @@ public static partial class EasyTask
     /// <returns>一个表示已取消任务的 Task 对象。</returns>
     public static Task FromCanceled(CancellationToken cancellationToken)
     {
-#if NET45
-        // 在 .NET 4.5 版本中，使用 TaskCompletionSource 来创建并标记一个任务为已取消。
-        var tcs = new TaskCompletionSource<bool>();
-        tcs.TrySetCanceled();
-        return tcs.Task;
-#else
-        // 在 .NET 4.5 以上版本中，直接使用 Task.FromCanceled 方法创建已取消的任务。
         return Task.FromCanceled(cancellationToken);
-#endif
     }
 
     /// <summary>
@@ -66,15 +58,7 @@ public static partial class EasyTask
     /// <returns>一个表示已取消任务的 Task 对象，带有指定类型的结果。</returns>
     public static Task<T> FromCanceled<T>(CancellationToken cancellationToken)
     {
-#if NET45
-        // 在 .NET 4.5 版本中，使用 TaskCompletionSource 来创建并标记一个带有结果类型的已取消任务。
-        var tcs = new TaskCompletionSource<T>();
-        tcs.TrySetCanceled();
-        return tcs.Task;
-#else
-        // 在 .NET 4.5 以上版本中，直接使用 Task.FromCanceled 方法创建带有结果类型的已取消任务。
         return Task.FromCanceled<T>(cancellationToken);
-#endif
     }
 
     /// <summary>

@@ -62,11 +62,9 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
         if (result is Task task)
         {
             await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (this.ReturnKind == MethodReturnKind.AwaitableObject)
-            {
-                return DynamicMethodMemberAccessor.Default.GetValue(task, nameof(Task<object>.Result));
-            }
-            return null;
+            return this.ReturnKind == MethodReturnKind.AwaitableObject
+                ? DynamicMethodMemberAccessor.Default.GetValue(task, nameof(Task<object>.Result))
+                : null;
         }
         ThrowHelper.ThrowException("当源生成无法使用时，无法处理非Task的Awaitable对象。");
         return null;
@@ -115,14 +113,7 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
         }
 
         // 6. 检查GetResult方法的返回类型
-        if (getResultMethod.ReturnType == typeof(void))
-        {
-            returnType = null;
-        }
-        else
-        {
-            returnType = getResultMethod.ReturnType;
-        }
+        returnType = getResultMethod.ReturnType == typeof(void) ? null : getResultMethod.ReturnType;
 
         return true;
     }

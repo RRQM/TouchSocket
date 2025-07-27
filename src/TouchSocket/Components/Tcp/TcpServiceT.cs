@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -158,13 +159,13 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
     #region 发送
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
+    public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         return this.GetClientOrThrow(id).SendAsync(memory);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, IRequestInfo requestInfo)
+    public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken token = default)
     {
         return this.GetClientOrThrow(id).SendAsync(requestInfo);
     }

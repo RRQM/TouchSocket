@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
@@ -24,7 +25,7 @@ public partial class MqttConnAckMessage
     /// <summary>
     /// 获取或设置认证数据。
     /// </summary>
-    public byte[] AuthenticationData { get; set; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; set; }
 
     /// <summary>
     /// 获取或设置认证方法。
@@ -102,131 +103,134 @@ public partial class MqttConnAckMessage
     public bool WildcardSubscriptionAvailable { get; set; }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteByte(this.m_connectAcknowledgeFlags);
-        byteBlock.WriteByte((byte)this.ReturnCode);
+        WriterExtension.WriteValue<TWriter,byte>(ref writer,this.m_connectAcknowledgeFlags);
+        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.ReturnCode);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock);
 
-        MqttExtension.WriteSessionExpiryInterval(ref byteBlock, this.SessionExpiryInterval);
-        MqttExtension.WriteReceiveMaximum(ref byteBlock, this.ReceiveMaximum);
-        MqttExtension.WriteMaximumQoS(ref byteBlock, this.MaximumQoS);
-        MqttExtension.WriteRetainAvailable(ref byteBlock, this.RetainAvailable);
-        MqttExtension.WriteMaximumPacketSize(ref byteBlock, this.MaximumPacketSize);
-        MqttExtension.WriteAssignedClientIdentifier(ref byteBlock, this.AssignedClientIdentifier);
-        MqttExtension.WriteTopicAliasMaximum(ref byteBlock, this.TopicAliasMaximum);
-        MqttExtension.WriteReasonString(ref byteBlock, this.ReasonString);
-        MqttExtension.WriteWildcardSubscriptionAvailable(ref byteBlock, this.WildcardSubscriptionAvailable);
-        MqttExtension.WriteSubscriptionIdentifiersAvailable(ref byteBlock, this.SubscriptionIdentifiersAvailable);
-        MqttExtension.WriteSharedSubscriptionAvailable(ref byteBlock, this.SharedSubscriptionAvailable);
-        MqttExtension.WriteServerKeepAlive(ref byteBlock, this.ServerKeepAlive);
-        MqttExtension.WriteResponseInformation(ref byteBlock, this.ResponseInformation);
-        MqttExtension.WriteServerReference(ref byteBlock, this.ServerReference);
-        MqttExtension.WriteAuthenticationMethod(ref byteBlock, this.AuthenticationMethod);
-        MqttExtension.WriteAuthenticationData(ref byteBlock, this.AuthenticationData);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
-        variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        MqttExtension.WriteSessionExpiryInterval(ref byteBlockWriter, this.SessionExpiryInterval);
+        MqttExtension.WriteReceiveMaximum(ref byteBlockWriter, this.ReceiveMaximum);
+        MqttExtension.WriteMaximumQoS(ref byteBlockWriter, this.MaximumQoS);
+        MqttExtension.WriteRetainAvailable(ref byteBlockWriter, this.RetainAvailable);
+        MqttExtension.WriteMaximumPacketSize(ref byteBlockWriter, this.MaximumPacketSize);
+        MqttExtension.WriteAssignedClientIdentifier(ref byteBlockWriter, this.AssignedClientIdentifier);
+        MqttExtension.WriteTopicAliasMaximum(ref byteBlockWriter, this.TopicAliasMaximum);
+        MqttExtension.WriteReasonString(ref byteBlockWriter, this.ReasonString);
+        MqttExtension.WriteWildcardSubscriptionAvailable(ref byteBlockWriter, this.WildcardSubscriptionAvailable);
+        MqttExtension.WriteSubscriptionIdentifiersAvailable(ref byteBlockWriter, this.SubscriptionIdentifiersAvailable);
+        MqttExtension.WriteSharedSubscriptionAvailable(ref byteBlockWriter, this.SharedSubscriptionAvailable);
+        MqttExtension.WriteServerKeepAlive(ref byteBlockWriter, this.ServerKeepAlive);
+        MqttExtension.WriteResponseInformation(ref byteBlockWriter, this.ResponseInformation);
+        MqttExtension.WriteServerReference(ref byteBlockWriter, this.ServerReference);
+        MqttExtension.WriteAuthenticationMethod(ref byteBlockWriter, this.AuthenticationMethod);
+        MqttExtension.WriteAuthenticationData(ref byteBlockWriter, this.AuthenticationData.Span);
+        MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
+
+        variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+        writer.Advance(byteBlockWriter.Position);
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.m_connectAcknowledgeFlags = byteBlock.ReadByte();
-        this.ReturnCode = (MqttReasonCode)byteBlock.ReadByte();
+        this.m_connectAcknowledgeFlags = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.ReturnCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
 
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.SessionExpiryInterval:
                     {
-                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref byteBlock);
+                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref reader);
                         break;
                     }
                 case MqttPropertyId.ReceiveMaximum:
                     {
-                        this.ReceiveMaximum = propertiesReader.ReadReceiveMaximum(ref byteBlock);
+                        this.ReceiveMaximum = propertiesReader.ReadReceiveMaximum(ref reader);
                         break;
                     }
                 case MqttPropertyId.MaximumQoS:
                     {
-                        this.MaximumQoS = propertiesReader.ReadMaximumQoS(ref byteBlock);
+                        this.MaximumQoS = propertiesReader.ReadMaximumQoS(ref reader);
                         break;
                     }
                 case MqttPropertyId.RetainAvailable:
                     {
-                        this.RetainAvailable = propertiesReader.ReadRetainAvailable(ref byteBlock);
+                        this.RetainAvailable = propertiesReader.ReadRetainAvailable(ref reader);
                         break;
                     }
                 case MqttPropertyId.MaximumPacketSize:
                     {
-                        this.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize(ref byteBlock);
+                        this.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize(ref reader);
                         break;
                     }
                 case MqttPropertyId.AssignedClientIdentifier:
                     {
-                        this.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier(ref byteBlock);
+                        this.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier( ref reader);
                         break;
                     }
                 case MqttPropertyId.TopicAliasMaximum:
                     {
-                        this.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum(ref byteBlock);
+                        this.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum(ref reader);
                         break;
                     }
                 case MqttPropertyId.ReasonString:
                     {
-                        this.ReasonString = propertiesReader.ReadReasonString(ref byteBlock);
+                        this.ReasonString = propertiesReader.ReadReasonString(ref reader);
                         break;
                     }
                 case MqttPropertyId.WildcardSubscriptionAvailable:
                     {
-                        this.WildcardSubscriptionAvailable = propertiesReader.ReadWildcardSubscriptionAvailable(ref byteBlock);
+                        this.WildcardSubscriptionAvailable = propertiesReader.ReadWildcardSubscriptionAvailable(ref reader);
                         break;
                     }
                 case MqttPropertyId.SubscriptionIdentifiersAvailable:
                     {
-                        this.SubscriptionIdentifiersAvailable = propertiesReader.ReadSubscriptionIdentifiersAvailable(ref byteBlock);
+                        this.SubscriptionIdentifiersAvailable = propertiesReader.ReadSubscriptionIdentifiersAvailable(ref reader);
                         break;
                     }
                 case MqttPropertyId.SharedSubscriptionAvailable:
                     {
-                        this.SharedSubscriptionAvailable = propertiesReader.ReadSharedSubscriptionAvailable(ref byteBlock);
+                        this.SharedSubscriptionAvailable = propertiesReader.ReadSharedSubscriptionAvailable(ref reader);
                         break;
                     }
 
                 case MqttPropertyId.ServerKeepAlive:
                     {
-                        this.ServerKeepAlive = propertiesReader.ReadServerKeepAlive(ref byteBlock);
+                        this.ServerKeepAlive = propertiesReader.ReadServerKeepAlive(ref reader);
                         break;
                     }
                 case MqttPropertyId.ResponseInformation:
                     {
-                        this.ResponseInformation = propertiesReader.ReadResponseInformation(ref byteBlock);
+                        this.ResponseInformation = propertiesReader.ReadResponseInformation(ref reader);
                         break;
                     }
                 case MqttPropertyId.ServerReference:
                     {
-                        this.ServerReference = propertiesReader.ReadServerReference(ref byteBlock);
+                        this.ServerReference = propertiesReader.ReadServerReference(ref reader);
                         break;
                     }
                 case MqttPropertyId.AuthenticationMethod:
                     {
-                        this.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod(ref byteBlock);
+                        this.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod(ref reader);
                         break;
                     }
                 case MqttPropertyId.AuthenticationData:
                     {
-                        this.AuthenticationData = propertiesReader.ReadAuthenticationData(ref byteBlock);
+                        this.AuthenticationData = propertiesReader.ReadAuthenticationData(ref reader);
                         break;
                     }
                 case MqttPropertyId.UserProperty:
                     {
-                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                         break;
                     }
                 default:

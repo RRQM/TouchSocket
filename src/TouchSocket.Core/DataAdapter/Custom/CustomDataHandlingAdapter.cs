@@ -21,10 +21,9 @@ namespace TouchSocket.Core;
 /// </summary>
 public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : IRequestInfo
 {
-
-    private ValueByteBlock m_tempByteBlock;
-
     private readonly Type m_requestType;
+    private ValueByteBlock m_tempByteBlock;
+    private TRequest m_tempRequest;
 
     /// <summary>
     /// 初始化自定义数据处理适配器。
@@ -37,30 +36,22 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
         this.m_requestType = typeof(TRequest);
     }
 
-
-    private TRequest m_tempRequest;
-
     /// <inheritdoc/>
     public override bool CanSendRequestInfo => false;
 
     /// <summary>
-    /// 默认不支持拼接发送
-    /// </summary>
-    public override bool CanSplicingSend => false;
-
-    /// <summary>
     /// 指示需要解析当前包的剩余长度。如果不能得知，请赋值<see cref="int.MaxValue"/>。
     /// </summary>
-    protected int SurLength { get; set; }
+    protected long SurLength { get; set; }
 
     /// <summary>
     /// 尝试解析请求数据块。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块类型，必须实现IByteBlock接口。</typeparam>
-    /// <param name="byteBlock">待解析的字节块。</param>
+    /// <typeparam name="TReader">字节块类型，必须实现IByteBlock接口。</typeparam>
+    /// <param name="reader">待解析的字节块。</param>
     /// <param name="request">解析出的请求对象。</param>
     /// <returns>解析是否成功。</returns>
-    public bool TryParseRequest<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
+    public bool TryParseRequest<TReader>(ref TReader reader, out TRequest request) where TReader : IBytesReader
     {
         // 检查缓存是否超时，如果超时则清除缓存。
         if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
@@ -71,7 +62,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
         // 如果临时字节块为空，则尝试直接解析。
         if (this.m_tempByteBlock.IsEmpty)
         {
-            return this.Single(ref byteBlock, out request) == FilterResult.Success;
+            return this.Single(ref reader, out request) == FilterResult.Success;
         }
         else
         {
@@ -82,16 +73,16 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
             }
 
             // 计算本次可以读取的长度。
-            var len = Math.Min(this.SurLength, byteBlock.CanReadLength);
+            var len = Math.Min(this.SurLength, reader.BytesRemaining);
 
             // 从输入字节块中读取数据到临时字节块中。
             var block = this.m_tempByteBlock;
-            block.Write(byteBlock.Span.Slice(byteBlock.Position, len));
-            byteBlock.Position += len;
+            block.Write(reader.GetSpan((int)len));
+            reader.Advance((int)len);
             this.SurLength -= len;
 
             // 重置临时字节块并准备下一次使用。
-            this.m_tempByteBlock = ValueByteBlock.Empty;
+            this.m_tempByteBlock = default;
 
             // 回到字节块的起始位置。
             block.SeekToStart();
@@ -106,7 +97,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                             // 如果临时字节块不为空，则继续缓存。
                             if (!this.m_tempByteBlock.IsEmpty)
                             {
-                                byteBlock.Position += this.m_tempByteBlock.Length;
+                                reader.Advance(this.m_tempByteBlock.Length);
                             }
                             return false;
                         }
@@ -115,7 +106,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                             // 如果字节块中还有剩余数据，则回退指针。
                             if (block.CanReadLength > 0)
                             {
-                                byteBlock.Position -= block.CanReadLength;
+                                reader.Advance(-block.CanReadLength);
                             }
                             return true;
                         }
@@ -124,7 +115,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                         // 对于需要继续解析的情况，也回退指针。
                         if (block.CanReadLength > 0)
                         {
-                            byteBlock.Position -= block.CanReadLength;
+                            reader.Advance(-block.CanReadLength);
                         }
                         return false;
                 }
@@ -143,13 +134,23 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
     /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
     /// </summary>
-    /// <param name="byteBlock">字节块</param>
+    /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
     /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected abstract FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TRequest request, ref int tempCapacity)
-        where TByteBlock : IByteBlock;
+    protected abstract FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TRequest request, ref int tempCapacity)
+        where TReader : IBytesReader;
+
+    /// <summary>
+    /// 判断请求对象是否应该被缓存。
+    /// </summary>
+    /// <param name="request">请求对象。</param>
+    /// <returns>返回布尔值，指示请求对象是否应该被缓存。</returns>
+    protected virtual bool IsBeCached(in TRequest request)
+    {
+        return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
+    }
 
     /// <summary>
     /// 成功执行接收以后。
@@ -171,7 +172,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
 
     /// <inheritdoc/>
     /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
+    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
     {
         if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
         {
@@ -179,14 +180,17 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
         }
         if (this.m_tempByteBlock.IsEmpty)
         {
-            await this.SingleAsync(byteBlock, false).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SingleAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
             this.m_tempByteBlock.Write(byteBlock.Span);
-            var block = this.m_tempByteBlock;
-            this.m_tempByteBlock = ValueByteBlock.Empty;
-            await this.SingleAsync(block, true).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            using (var block = this.m_tempByteBlock)
+            {
+                this.m_tempByteBlock = default;
+                block.SeekToStart();
+                await this.SingleAsync(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
     }
 
@@ -194,37 +198,25 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     protected override void Reset()
     {
         this.m_tempByteBlock.SafeDispose();
-        this.m_tempByteBlock = ValueByteBlock.Empty;
+        this.m_tempByteBlock = default;
         this.m_tempRequest = default;
         this.SurLength = 0;
         base.Reset();
     }
 
     /// <summary>
-    /// 判断请求对象是否应该被缓存。
-    /// </summary>
-    /// <param name="request">请求对象。</param>
-    /// <returns>返回布尔值，指示请求对象是否应该被缓存。</returns>
-    protected virtual bool IsBeCached(in TRequest request)
-    {
-        // 如果请求对象类型是值类型，则判断其哈希码是否与默认值不同；
-        // 如果是引用类型，则判断对象本身是否为<see langword="null"/>。
-        return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
-    }
-
-    /// <summary>
     /// 处理单个字节块，提取请求对象。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块类型，需要实现IByteBlock接口。</typeparam>
-    /// <param name="byteBlock">字节块，将被解析以提取请求对象。</param>
+    /// <typeparam name="TReader">字节块类型，需要实现IByteBlock接口。</typeparam>
+    /// <param name="reader">字节块，将被解析以提取请求对象。</param>
     /// <param name="request">输出参数，提取出的请求对象。</param>
     /// <returns>返回过滤结果，指示处理的状态。</returns>
-    protected FilterResult Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
+    protected FilterResult Single<TReader>(ref TReader reader, out TRequest request) where TReader : IBytesReader
     {
         // 初始化临时缓存容量。
         var tempCapacity = 1024 * 64;
         // 执行过滤操作，根据是否应该缓存来决定如何处理字节块和请求对象。
-        var filterResult = this.Filter(ref byteBlock, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
+        var filterResult = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
         switch (filterResult)
         {
             case FilterResult.Success:
@@ -235,10 +227,10 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
 
             case FilterResult.Cache:
                 // 如果过滤结果需要缓存，则创建一个新的字节块来缓存数据。
-                if (byteBlock.CanReadLength > 0)
+                if (reader.BytesRemaining > 0)
                 {
                     this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
-                    this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
+                    this.m_tempByteBlock.Write(reader.GetSpan((int)reader.BytesRemaining));
 
                     // 如果缓存的数据长度超过设定的最大包大小，则抛出异常。
                     if (this.m_tempByteBlock.Length > this.MaxPackageSize)
@@ -247,7 +239,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                     }
 
                     // 将字节块指针移到末尾。
-                    byteBlock.SeekToEnd();
+                    reader.Advance((int)reader.BytesRemaining);
                 }
                 // 更新缓存时间。
                 if (this.UpdateCacheTimeWhenRev)
@@ -269,17 +261,16 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
         }
     }
 
-    private async Task SingleAsync<TByteBlock>(TByteBlock byteBlock, bool temp) where TByteBlock : IByteBlock
+    private async Task SingleAsync<TReader>(TReader reader) where TReader : IBytesReader
     {
-        byteBlock.Position = 0;
-        while (byteBlock.Position < byteBlock.Length)
+        while (reader.BytesRemaining>0)
         {
             if (this.DisposedValue)
             {
                 return;
             }
             var tempCapacity = 1024 * 64;
-            var filterResult = this.Filter(ref byteBlock, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
+            var filterResult = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
 
             switch (filterResult)
             {
@@ -293,19 +284,10 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
                     break;
 
                 case FilterResult.Cache:
-                    if (byteBlock.CanReadLength > 0)
+                    if (reader.BytesRemaining > 0)
                     {
-                        if (temp)
-                        {
-                            this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
-                            this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
-                            byteBlock.Dispose();
-                        }
-                        else
-                        {
-                            this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
-                            this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
-                        }
+                        this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
+                        this.m_tempByteBlock.Write(reader.GetSpan((int)reader.BytesRemaining));
 
                         if (this.m_tempByteBlock.Length > this.MaxPackageSize)
                         {

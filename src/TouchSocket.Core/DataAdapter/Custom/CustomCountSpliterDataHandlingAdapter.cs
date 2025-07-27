@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 
 namespace TouchSocket.Core;
 
@@ -28,7 +29,7 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     /// <summary>
     /// 获取分隔符。
     /// </summary>
-    public byte[] Spliter { get; }
+    public ReadOnlyMemory<byte> Spliter { get; }
 
     /// <summary>
     /// 初始化 <see cref="CustomCountSpliterDataHandlingAdapter{TCountSpliterRequestInfo}"/> 类的新实例。
@@ -37,15 +38,12 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     /// <param name="spliter">分隔符。</param>
     /// <exception cref="ArgumentOutOfRangeException">当计数小于2时抛出。</exception>
     /// <exception cref="ArgumentNullException">当分隔符为空时抛出。</exception>
-    public CustomCountSpliterDataHandlingAdapter(int count, byte[] spliter)
+    public CustomCountSpliterDataHandlingAdapter(int count, ReadOnlyMemory<byte> spliter)
     {
         if (count < 2)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(count), count, 2);
         }
-
-        ThrowHelper.ThrowArgumentNullExceptionIf(spliter, nameof(spliter));
-
         this.Count = count;
         this.Spliter = spliter;
     }
@@ -53,27 +51,24 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     /// <inheritdoc/>
     protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TCountSpliterRequestInfo request, ref int tempCapacity)
     {
-        var position = byteBlock.Position;
         var count = 0;
 
-        var spanAll = byteBlock.Span.Slice(position);
-        var startIndex = 0;
-        var length = 0;
+        var spanAll = byteBlock.Sequence;
+        var startIndex = 0L;
+        var length = 0L;
 
-        var spliterSpan = new ReadOnlySpan<byte>(this.Spliter);
+        var spliterSpan = this.Spliter.Span;
 
         while (true)
         {
             if (spanAll.Length <= startIndex + length)
             {
-                byteBlock.Position = position;
                 return FilterResult.Cache;
             }
             var currentSpan = spanAll.Slice(startIndex + length);
             var r = currentSpan.IndexOf(spliterSpan);
             if (r < 0)
             {
-                byteBlock.Position = position;
                 return FilterResult.Cache;
             }
 
@@ -91,7 +86,7 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
                 var span = spanAll.Slice(startIndex, length);
 
                 request = this.GetInstance(span);
-                byteBlock.Position += length;
+                byteBlock.Advance((int)length);
                 return FilterResult.Success;
             }
         }
@@ -103,17 +98,11 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     /// <param name="dataSpan">数据跨度。</param>
     /// <returns>请求信息实例。</returns>
     protected abstract TCountSpliterRequestInfo GetInstance(in ReadOnlySpan<byte> dataSpan);
-}
-
-/// <summary>
-/// 计数分隔符请求信息接口。
-/// </summary>
-public interface ICountSpliterRequestInfo : IRequestInfo
-{
-    /// <summary>
-    /// 解析开始代码。
-    /// </summary>
-    /// <param name="startCode">开始代码。</param>
-    /// <returns>是否成功解析。</returns>
-    bool OnParsing(ReadOnlySpan<byte> startCode);
+    protected virtual TCountSpliterRequestInfo GetInstance(in ReadOnlySequence<byte> dataSequence)
+    {
+        using (var memoryBuffer = new ContiguousMemoryBuffer(dataSequence))
+        {
+            return this.GetInstance(memoryBuffer.Memory.Span);
+        }
+    }
 }

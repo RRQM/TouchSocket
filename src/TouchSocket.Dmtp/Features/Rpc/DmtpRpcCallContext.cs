@@ -49,7 +49,7 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -60,6 +60,6 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
         {
             this.m_scopedResolver?.Dispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 }

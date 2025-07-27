@@ -59,18 +59,18 @@ public class WaitData<T> : DisposableObject, IWaitData<T>
     }
 
     /// <inheritdoc/>
-    public bool Set()
+    public void Set()
     {
         this.m_status = WaitDataStatus.SetRunning;
-        return this.m_waitHandle.Set();
+        this.m_waitHandle.Set();
     }
 
     /// <inheritdoc/>
-    public bool Set(T waitResult)
+    public void Set(T waitResult)
     {
         this.WaitResult = waitResult;
         this.m_status = WaitDataStatus.SetRunning;
-        return this.m_waitHandle.Set();
+        this.m_waitHandle.Set();
     }
 
     /// <inheritdoc/>

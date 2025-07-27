@@ -88,18 +88,13 @@ public partial class TcpClientBase
             this.SetSocket(socket);
             // 进行身份验证
             await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            
+            await WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            this.m_tokenSourceForReceive = new CancellationTokenSource();
-
-            // 确保上次接收任务已经结束
-            var receiveTask = this.m_receiveTask;
-            if (receiveTask != null)
-            {
-                await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
 
             // 触发连接成功的事件
-            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
+            m_runTask = EasyTask.SafeRun(this.PrivateOnTcpConnected, m_transport);
         }
         finally
         {
@@ -150,17 +145,11 @@ public partial class TcpClientBase
             // 进行身份验证
             await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            this.m_tokenSourceForReceive = new CancellationTokenSource();
-
-            // 确保上次接收任务已经结束
-            var receiveTask = this.m_receiveTask;
-            if (receiveTask != null)
-            {
-                await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
 
             // 启动新任务，处理连接后的操作
-            _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
+            m_runTask = EasyTask.SafeRun(this.PrivateOnTcpConnected, this.m_transport);
         }
         finally
         {
@@ -174,27 +163,31 @@ public partial class TcpClientBase
     #endregion Connect
 
 
+    private async Task WaitClearConnect()
+    {
+        // 确保上次接收任务已经结束
+        var runTask = this.m_runTask;
+        if (runTask != null)
+        {
+            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+    }
+
     private Socket CreateSocket(IPHost iPHost)
     {
         Socket socket;
         if (iPHost.HostNameType == UriHostNameType.Dns)
         {
-            socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-            {
-                SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
-            };
+            socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
         }
         else
         {
-            socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
-            {
-                SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
-            };
+            socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 
         if (this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty) is KeepAliveValue keepAliveValue)
         {
-#if NET45_OR_GREATER
+#if NET462_OR_GREATER
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
             socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);

@@ -16,19 +16,19 @@ namespace TouchSocket.Modbus;
 
 internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
 {
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref ModbusRtuResponse request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref ModbusRtuResponse request, ref int tempCapacity)
     {
-        if (byteBlock.CanReadLength < 3)
+        if (reader.BytesRemaining < 3)
         {
             return FilterResult.Cache;
         }
 
-        var pos = byteBlock.Position;
+        var pos = reader.BytesRead;
 
-        var slaveId = byteBlock.ReadByte();
+        var slaveId = ReaderExtension.ReadValue<TReader,byte>(ref reader);
         FunctionCode functionCode;
         var isError = false;
-        var code = byteBlock.ReadByte();
+        var code = ReaderExtension.ReadValue<TReader,byte>(ref reader);
         if ((code & 0x80) == 0)
         {
             functionCode = (FunctionCode)code;
@@ -47,17 +47,17 @@ internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
         int bodyLength;
         if (isError)
         {
-            errorCode = (ModbusErrorCode)byteBlock.ReadByte();
+            errorCode = (ModbusErrorCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
             bodyLength = 2;
 
-            if (byteBlock.CanReadLength < bodyLength)
+            if (reader.BytesRemaining < bodyLength)
             {
-                byteBlock.Position = pos;
+                reader.BytesRead = pos;
                 return FilterResult.Cache;
             }
 
-            var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-            var crc = byteBlock.ReadUInt16(EndianType.Big);
+            var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(reader.TotalSequence.Slice(pos, reader.BytesRead - pos));
+            var crc = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 
             //下面crc验证失败时，不再抛出错误，而是返回错误码。
             //https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2
@@ -89,18 +89,20 @@ internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
         {
             if ((byte)functionCode <= 4 || functionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                bodyLength = byteBlock.ReadByte() + 2;
+                bodyLength = ReaderExtension.ReadValue<TReader,byte>(ref reader) + 2;
 
-                if (byteBlock.CanReadLength < bodyLength)
+                if (reader.BytesRemaining < bodyLength)
                 {
-                    byteBlock.Position = pos;
+                    reader.BytesRead = pos;
                     return FilterResult.Cache;
                 }
 
-                data = byteBlock.ReadToSpan(bodyLength - 2).ToArray();
+                var len = bodyLength - 2;
+                data = reader.GetSpan(len).Slice(0, len).ToArray();
+                reader.Advance(len);
 
-                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                var crc = byteBlock.ReadUInt16(EndianType.Big);
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(reader.TotalSequence.Slice(pos, reader.BytesRead - pos));
+                var crc = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 
                 if (crc == newCrc)
                 {
@@ -127,15 +129,18 @@ internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
             else if (functionCode == FunctionCode.WriteSingleCoil || functionCode == FunctionCode.WriteSingleRegister)
             {
                 bodyLength = 6;
-                if (byteBlock.CanReadLength < bodyLength)
+                if (reader.BytesRemaining < bodyLength)
                 {
-                    byteBlock.Position = pos;
+                    reader.BytesRead = pos;
                     return FilterResult.Cache;
                 }
-                startingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                data = byteBlock.ReadToSpan(bodyLength - 4).ToArray();
-                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                var crc = byteBlock.ReadUInt16(EndianType.Big);
+                startingAddress = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+
+                var len = bodyLength - 4;
+                data = reader.GetSpan(len).Slice(0, len).ToArray();
+                reader.Advance(len);
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(reader.TotalSequence.Slice(pos, reader.BytesRead - pos));
+                var crc = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 
                 if (crc == newCrc)
                 {
@@ -167,17 +172,17 @@ internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
             else if (functionCode == FunctionCode.WriteMultipleCoils || functionCode == FunctionCode.WriteMultipleRegisters)
             {
                 bodyLength = 6;
-                if (byteBlock.CanReadLength < bodyLength)
+                if (reader.BytesRemaining < bodyLength)
                 {
-                    byteBlock.Position = pos;
+                    reader.BytesRead = pos;
                     return FilterResult.Cache;
                 }
-                startingAddress = byteBlock.ReadUInt16(EndianType.Big);
-                var quantity = byteBlock.ReadUInt16(EndianType.Big);
+                startingAddress = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+                var quantity = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
                 data = new byte[0];
 
-                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
-                var crc = byteBlock.ReadUInt16(EndianType.Big);
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(reader.TotalSequence.Slice(pos, reader.BytesRead - pos));
+                var crc = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
 
                 if (crc == newCrc)
                 {

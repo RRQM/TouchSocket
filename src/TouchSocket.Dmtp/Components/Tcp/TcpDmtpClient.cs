@@ -58,7 +58,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token"></param>
+    /// <param name="token">可取消令箭</param>
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
@@ -141,20 +141,20 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
     #region 内部委托绑定
 
-    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         this.ThrowIfTcpClientNotConnected();
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedDefaultSendAsync(memory, token);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
         await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.Abort(false, msg);
+        //this.Abort(false, msg);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -286,10 +286,10 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #region Override
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_dmtpActor?.SafeDispose();
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -326,23 +326,78 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
+    protected override async ValueTask<bool> OnTcpReceiving(IByteBlockReader reader)
     {
-        while (byteBlock.CanRead)
+        while (reader.CanReadLength>0)
         {
-            if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
+            if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
             {
-                using (message)
+                try
                 {
                     if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
+                finally
+                {
+                    message.Dispose();
+                }
             }
         }
         return true;
     }
 
+    protected async Task ReceiveLoopAsync1111(ITransport transport)
+    {
+        DmtpAdapter2 dmtpAdapter2 = new DmtpAdapter2();
+        var token = transport.ClosedToken;
+        while (!token.IsCancellationRequested)
+        {
+            try
+            {
+                // 等待接收数据
+                var readResult = await transport.Input.ReadAsync(token);
+
+                var sequence = readResult.Buffer;
+                var reader = new BytesReader(sequence);
+                try
+                {
+                    while (true)
+                    {
+                        if (!dmtpAdapter2.TryParseRequest(ref reader, out var dmtpMessage))
+                        {
+                            break;
+                        }
+
+                        await ProcessDmtpMessageAsync(dmtpMessage);
+                    }
+                }
+                finally
+                {
+                    transport.Input.AdvanceTo(sequence.GetPosition(reader.BytesRead));
+                    reader.Dispose();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 如果操作被取消，则退出循环
+                break;
+            }
+            catch (Exception ex)
+            {
+                // 处理接收过程中发生的异常
+                this.Logger.Error(ex, "接收数据时发生错误");
+                break;
+            }
+        }
+    }
+
+    private Task ProcessDmtpMessageAsync(DmtpMessage2 message)
+    {
+        // 处理Dmtp消息的逻辑
+        // 这里可以根据需要实现具体的处理逻辑
+        return Task.CompletedTask;
+    }
     #endregion Override
 }

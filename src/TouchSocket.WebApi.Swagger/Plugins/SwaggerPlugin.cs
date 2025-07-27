@@ -34,7 +34,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
 {
     private readonly ILog m_logger;
     private readonly IResolver m_resolver;
-    private readonly Dictionary<string, byte[]> m_swagger = new Dictionary<string, byte[]>();
+    private readonly Dictionary<string, ReadOnlyMemory<byte>> m_swagger = new ();
 
     /// <summary>
     /// SwaggerPlugin
@@ -76,7 +76,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             using (var stream = assembly.GetManifestResourceStream(item))
             {
-                var bytes = stream.ReadAllToByteArray();
+                ReadOnlyMemory<byte> bytes = stream.ReadAllToByteArray();
                 var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
                 var name = item.Replace("TouchSocket.WebApi.Swagger.api.", string.Empty);
                 if (name == "openapi.json")
@@ -234,7 +234,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         }
     }
 
-    private byte[] BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
+    private ReadOnlyMemory<byte> BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
     {
         var openApiRoot = new OpenApiRoot();
         openApiRoot.Info = new OpenApiInfo();

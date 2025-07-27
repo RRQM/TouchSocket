@@ -131,13 +131,15 @@ internal static partial class ThrowHelper
     #region InvalidEnumArgumentException
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalidEnumArgumentException(Enum @enum)
+    public static void ThrowInvalidEnumArgumentException<TEnum>(TEnum @enum)
+        where TEnum : Enum
     {
         throw CreateInvalidEnumArgumentException(@enum);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static InvalidEnumArgumentException CreateInvalidEnumArgumentException(Enum @enum)
+    public static InvalidEnumArgumentException CreateInvalidEnumArgumentException<TEnum>(TEnum @enum)
+        where TEnum : Enum
     {
         return new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
     }
