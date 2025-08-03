@@ -1,4 +1,4 @@
-﻿using FastEndpoints;
+using FastEndpoints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +17,10 @@ namespace HttpPerformanceConsoleApp.Controllers
 
         public override async Task HandleAsync(MyRequest req, CancellationToken ct)
         {
-            await SendAsync(new()
+            await this.Send.OkAsync(new MyResponse
             {
                 Result = req.A + req.B
-            });
+            }, ct);
         }
     }
 
