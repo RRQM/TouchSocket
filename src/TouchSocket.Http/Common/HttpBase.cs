@@ -130,11 +130,12 @@ public abstract class HttpBase : IRequestInfo
 
     internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(StringExtension.Default_RNRN_Utf8Span);
+        var unreadSpan = byteBlock.Span.Slice(byteBlock.Position);
+        var index = unreadSpan.IndexOf(StringExtension.Default_RNRN_Utf8Span);
         if (index > 0)
         {
-            var headerLength = index - byteBlock.Position + 2;
-            this.ReadHeaders(byteBlock.Span.Slice(byteBlock.Position, headerLength));
+            var headerLength = index + 2;
+            this.ReadHeaders(unreadSpan.Slice(0, headerLength));
             byteBlock.Position += headerLength;
             byteBlock.Position += 2;
             return true;
