@@ -16,7 +16,7 @@ using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
-using TouchSocket.Rpc.Generators;
+using TouchSocket.Rpc.DmtpRpc.Generators;
 
 namespace RpcDispatcherConsoleApp;
 

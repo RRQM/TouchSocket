@@ -16,7 +16,7 @@ using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.Generators;
+using TouchSocket.Rpc.DmtpRpc.Generators;
 using TouchSocket.Sockets;
 
 namespace SerializationSelectorConsoleApp;

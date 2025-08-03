@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.Generators;
+using TouchSocket.Rpc.DmtpRpc.Generators;
 using TouchSocket.Sockets;
 
 namespace DmtpRpcConsoleApp
