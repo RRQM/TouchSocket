@@ -930,7 +930,9 @@ public static class SystemExtension
     public static async Task WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var segment = memory.GetArray();
-        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token);
+
+        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token)
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
