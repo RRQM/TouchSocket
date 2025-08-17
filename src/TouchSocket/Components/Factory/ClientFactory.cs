@@ -84,7 +84,7 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     /// 创建客户端
     /// </summary>
     /// <returns>返回一个异步任务，该任务结果为创建的客户端对象。</returns>
-    protected abstract Task<TClient> CreateClient();
+    protected abstract Task<TClient> CreateClient(CancellationToken token);
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
@@ -100,9 +100,9 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     /// <summary>
     /// 租赁客户端
     /// </summary>
-    /// <param name="waitTime">等待时间</param>
+    /// <param name="token"></param>
     /// <returns>客户端实例</returns>
-    protected virtual async ValueTask<TClient> RentClient(TimeSpan waitTime)
+    protected virtual async ValueTask<TClient> RentClient(CancellationToken token)
     {
         // 从空闲客户端队列中尝试取出一个客户端
         while (this.FreeClients.TryDequeue(out var client))
@@ -117,15 +117,27 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
         // 如果已创建的客户端数量超过最大数量
         if (this.CreatedClients.Count > this.MaxCount)
         {
-            // 等待指定时间，然后递归尝试租赁客户端
-            if (SpinWait.SpinUntil(this.Wait, waitTime))
+            var startTime = DateTimeOffset.UtcNow;
+            while (true)
             {
-                return await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                // 检查是否超过最大等待时间
+                if (DateTimeOffset.UtcNow - startTime > this.MaxWaitTime)
+                {
+                    // 如果超过最大等待时间，创建一个新的客户端
+                    break;
+                }
+                token.ThrowIfCancellationRequested();
+                if (!this.FreeClients.IsEmpty)
+                {
+                    return await this.RentClient(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+
+                await Task.Delay(10, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
         // 创建一个新的客户端
-        var clientRes = await this.CreateClient().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var clientRes = await this.CreateClient(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         // 将新创建的客户端添加到已创建的客户端列表中
         this.m_createdClients.Add(clientRes);
         // 返回新创建的客户端
@@ -176,7 +188,7 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
             var clients = new List<TClient>();
             while (this.CreatedCount < this.MinCount)
             {
-                var client = await this.RentClient(TimeSpan.FromSeconds(1)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var client = await this.RentClient(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 clients.Add(client);
             }
@@ -213,6 +225,11 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     public int AvailableCount => Math.Max(0, this.MaxCount - this.CreatedClients.Count) + this.FreeClients.Count;
 
     /// <summary>
+    /// 获取或设置客户端池等待可用客户端的最大时间。默认1秒。
+    /// </summary>
+    public TimeSpan MaxWaitTime { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
     /// 获取已经创建的客户端数量。
     /// </summary>
     public int CreatedCount => this.CreatedClients.Count;
@@ -247,30 +264,14 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     #region GetClient
 
     /// <summary>
-    /// 获取用于传输的客户端结果。可以支持<see cref="IDisposable"/>。
+    /// 获取一个客户端实例，并在使用完成后自动归还到客户端池。
     /// </summary>
-    /// <param name="waitTime">等待时间，超过此时间则取消获取客户端的操作。</param>
-    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
-    public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(TimeSpan waitTime)
+    /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
+    /// <returns>包含客户端实例和归还方法的 <see cref="ClientFactoryResult{TClient}"/>。</returns>
+    public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(CancellationToken token = default)
     {
         // 租用客户端，并配置不等待主线程
-        return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
+        return new ClientFactoryResult<TClient>(await this.RentClient(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
     }
-
-    /// <summary>
-    /// 获取一个指定客户端，默认情况下等待1秒。
-    /// </summary>
-    /// <returns>返回一个<see cref="ClientFactoryResult{TClient}"/>对象，包含租用的客户端和归还客户端的方法。</returns>
-    public ValueTask<ClientFactoryResult<TClient>> GetClient()
-    {
-        // 使用默认等待时间1秒来获取客户端
-        return this.GetClient(TimeSpan.FromSeconds(1));
-    }
-
     #endregion GetClient
-
-    private bool Wait()
-    {
-        return !this.FreeClients.IsEmpty;
-    }
 }

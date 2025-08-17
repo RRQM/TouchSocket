@@ -168,13 +168,13 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     /// <inheritdoc/>
     public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(dataFrame, endOfMessage,token);
+        return this.WebSocket.SendAsync(dataFrame, endOfMessage, token);
     }
 
     /// <inheritdoc/>
     public Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(text, endOfMessage,token);
+        return this.WebSocket.SendAsync(text, endOfMessage, token);
     }
 
     /// <inheritdoc/>

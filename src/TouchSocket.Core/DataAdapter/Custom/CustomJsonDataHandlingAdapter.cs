@@ -74,7 +74,7 @@ public abstract class CustomJsonDataHandlingAdapter<TJsonRequestInfo> : CustomDa
     public Encoding Encoding { get; }
 
     /// <inheritdoc/>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TJsonRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TJsonRequestInfo request)
     {
         var stringSpan = byteBlock.Sequence;
 

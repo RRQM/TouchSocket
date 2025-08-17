@@ -43,7 +43,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
     {
         if (e.ConnAckMessage.ReturnCode == MqttReasonCode.ConnectionAccepted)
         {
-            await this.ResetIdAsync(e.ConnectMessage.ClientId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ResetIdAsync(e.ConnectMessage.ClientId, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

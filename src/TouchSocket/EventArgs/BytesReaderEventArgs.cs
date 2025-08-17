@@ -17,19 +17,19 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 字节事件参数类，用于在插件之间传递字节块数据
 /// </summary>
-public class ByteBlockEventArgs : PluginEventArgs
+public class BytesReaderEventArgs : PluginEventArgs
 {
     /// <summary>
     /// 初始化字节事件参数对象
     /// </summary>
-    /// <param name="byteBlock">需要传递的字节块数据</param>
-    public ByteBlockEventArgs(IByteBlockReader byteBlock)
+    /// <param name="reader">需要传递的字节块数据</param>
+    public BytesReaderEventArgs(IBytesReader reader)
     {
-        this.ByteBlock = byteBlock;
+        this.Reader = reader;
     }
 
     /// <summary>
     /// 获取字节块数据
     /// </summary>
-    public IByteBlockReader ByteBlock { get;}
+    public IBytesReader Reader { get; }
 }

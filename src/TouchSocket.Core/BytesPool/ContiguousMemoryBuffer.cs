@@ -12,11 +12,7 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 public struct ContiguousMemoryBuffer : IDisposable
@@ -28,10 +24,10 @@ public struct ContiguousMemoryBuffer : IDisposable
     public ContiguousMemoryBuffer(ReadOnlySequence<byte> sequence)
     {
         // 尝试直接获取单段内存
-        if (SequenceMarshal.TryGetReadOnlyMemory(sequence, out m_memory))
+        if (SequenceMarshal.TryGetReadOnlyMemory(sequence, out this.m_memory))
         {
-            m_isSingleSegment = true;
-            m_memoryOwner = null;
+            this.m_isSingleSegment = true;
+            this.m_memoryOwner = null;
             return;
         }
 
@@ -41,7 +37,7 @@ public struct ContiguousMemoryBuffer : IDisposable
         this.m_memoryOwner = MemoryPool<byte>.Shared.Rent(totalLength);
 
         // 分段复制数据
-        var destSpan = m_memoryOwner.Memory.Span;
+        var destSpan = this.m_memoryOwner.Memory.Span;
         foreach (var segment in sequence)
         {
             segment.Span.CopyTo(destSpan);

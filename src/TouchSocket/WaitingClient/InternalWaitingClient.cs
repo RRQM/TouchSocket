@@ -51,8 +51,8 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                     {
                         using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            var byteBlock = receiverResult.ByteBlock;
-                            
+                            var byteBlock = receiverResult.Memory;
+
                             var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
@@ -85,8 +85,8 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                                 ThrowHelper.ThrowClientNotConnectedException();
                             }
 
-                            var byteBlock = receiverResult.ByteBlock;
-                           
+                            var byteBlock = receiverResult.Memory;
+
                             var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
@@ -128,7 +128,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                     {
                         using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+                            var response = new ResponsedData(receiverResult.Memory, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)
@@ -159,7 +159,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             {
                                 ThrowHelper.ThrowClientNotConnectedException();
                             }
-                            var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+                            var response = new ResponsedData(receiverResult.Memory, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)

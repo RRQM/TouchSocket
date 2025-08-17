@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
 
@@ -21,7 +20,7 @@ namespace TouchSocket.Core;
 /// 固定长度包适配器。
 /// 用于处理每个数据包长度固定的场景。
 /// </summary>
-public class FixedSizePackageAdapter : CacheDataHandlingAdapter
+public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
 {
     /// <summary>
     /// 构造函数，指定固定包长度。
@@ -41,61 +40,28 @@ public class FixedSizePackageAdapter : CacheDataHandlingAdapter
     /// 预处理接收到的数据。
     /// </summary>
     /// <param name="reader">数据读取器。</param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader reader)
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        ReaderExtension.SeekToStart(ref reader);
-        var canReadSpan = reader.Span.Slice(reader.Position);
-        if (this.TryCombineCache(canReadSpan, out var byteBlock))
+        while (reader.BytesRemaining > 0)
         {
-            using (byteBlock)
+            if (reader.BytesRemaining < this.FixedSize)
             {
-                await this.ProcessReader(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-        }
 
-        await this.ProcessReader(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var memory = reader.GetMemory(this.FixedSize);
+            await this.GoReceivedAsync(memory, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            reader.Advance(this.FixedSize);
+        }
     }
 
-    /// <summary>
-    /// 预处理发送的数据。
-    /// </summary>
-    /// <param name="memory">待发送的数据。</param>
-    /// <param name="token">取消令牌。</param>
-    /// <exception cref="OverlengthException">数据长度不等于固定长度时抛出异常。</exception>
-    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         var dataLen = memory.Length;
         if (dataLen != this.FixedSize)
         {
             throw new OverlengthException(TouchSocketCoreResource.ValueMoreThan.Format(nameof(memory.Length), this.FixedSize));
         }
-        await this.GoSendAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 处理读取器中的数据，按固定长度分包。
-    /// </summary>
-    /// <param name="reader">数据读取器。</param>
-    private async Task ProcessReader(IByteBlockReader reader)
-    {
-        while (true)
-        {
-            var canReadMemory = reader.Memory.Slice(reader.Position);
-            if (canReadMemory.IsEmpty)
-            {
-                return;
-            }
-
-            if (canReadMemory.Length < this.FixedSize)
-            {
-                this.Cache(canReadMemory.Span);
-                return;
-            }
-
-            var byteBlock = new ByteBlockReader(canReadMemory.Slice(0, this.FixedSize));
-            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            reader.Position += this.FixedSize;
-        }
+        base.SendInput(ref writer, memory);
     }
 }

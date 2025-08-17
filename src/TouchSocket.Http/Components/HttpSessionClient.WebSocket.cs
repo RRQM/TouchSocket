@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
@@ -67,7 +68,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
@@ -84,7 +85,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
         this.m_webSocket.Online = false;
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_webSocket.Complete(e.Message);
         }
         await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

@@ -13,11 +13,21 @@
 using System.IO.Pipelines;
 
 namespace TouchSocket.Sockets;
+
 /// <summary>
 /// 表示传输相关的配置选项。
 /// </summary>
 public class TransportOption
 {
+    /// <summary>
+    /// 初始化 <see cref="TransportOption"/> 类的新实例。
+    /// </summary>
+    public TransportOption()
+    {
+        this.ReceivePipeOptions = this.GetDefaultReceive();
+        this.SendPipeOptions = this.GetDefaultSend();
+    }
+
     /// <summary>
     /// 获取或设置最大缓冲区大小（字节）。
     /// </summary>
@@ -38,12 +48,27 @@ public class TransportOption
     /// </summary>
     public PipeOptions SendPipeOptions { get; set; }
 
-    /// <summary>
-    /// 初始化 <see cref="TransportOption"/> 类的新实例。
-    /// </summary>
-    public TransportOption()
+    private PipeOptions GetDefaultReceive()
     {
-        this.ReceivePipeOptions = PipeOptions.Default;
-        this.SendPipeOptions = PipeOptions.Default;
+        return new PipeOptions(
+                pool: null,
+                readerScheduler: null,
+                writerScheduler: null,
+                pauseWriterThreshold: 1024 * 1024 * 1024,
+                resumeWriterThreshold: 1024 * 1024 * 512,
+                minimumSegmentSize: -1,
+                useSynchronizationContext: true);
+    }
+
+    private PipeOptions GetDefaultSend()
+    {
+        return new PipeOptions(
+                pool: null,
+                readerScheduler: null,
+                writerScheduler: null,
+                pauseWriterThreshold: -1,
+                resumeWriterThreshold: -1,
+                minimumSegmentSize: -1,
+                useSynchronizationContext: true);
     }
 }

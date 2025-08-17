@@ -22,7 +22,7 @@ internal class RedisResponseWaitPackage : WaitPackage
     public override void Package<TWriter>(ref TWriter writer)
     {
         base.Package(ref writer);
-        WriterExtension.WriteByteSpan(ref writer,this.value.Span);
+        WriterExtension.WriteByteSpan(ref writer, this.value.Span);
     }
 
     public override void Unpackage<TReader>(ref TReader reader)

@@ -162,13 +162,13 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <inheritdoc/>
     public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(memory,token);
+        return this.GetClientOrThrow(id).SendAsync(memory, token);
     }
 
     /// <inheritdoc/>
     public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken token = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(requestInfo,token);
+        return this.GetClientOrThrow(id).SendAsync(requestInfo, token);
     }
 
     private NamedPipeSessionClient GetClientOrThrow(string id)

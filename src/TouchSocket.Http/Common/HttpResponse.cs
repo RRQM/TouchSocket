@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,14 +40,14 @@ public class HttpResponse : HttpBase
     /// Http响应
     /// </summary>
     /// <param name="httpClientBase"></param>
-    internal HttpResponse(HttpClientBase httpClientBase)
+    internal HttpResponse(HttpClientBase httpClientBase) : base(true)
     {
         this.m_isServer = false;
         this.m_canWrite = false;
         this.m_httpClientBase = httpClientBase;
     }
 
-    internal HttpResponse(HttpRequest request, HttpSessionClient httpSessionClient)
+    internal HttpResponse(HttpRequest request, HttpSessionClient httpSessionClient) : base(false)
     {
         this.m_canWrite = true;
         this.m_isServer = true;
@@ -169,7 +168,7 @@ public class HttpResponse : HttpBase
     /// <summary>
     /// 当传输模式是Chunk时，用于结束传输。
     /// </summary>
-    public async Task CompleteChunkAsync(CancellationToken token=default)
+    public async Task CompleteChunkAsync(CancellationToken token = default)
     {
         if (!this.m_canWrite)
         {
@@ -198,12 +197,11 @@ public class HttpResponse : HttpBase
     }
 
     /// <inheritdoc/>
-    /// <returns></returns>
     public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
         if (!this.ContentCompleted.HasValue)
         {
-            var contentLength= this.ContentLength;
+            var contentLength = this.ContentLength;
             if (!this.IsChunk && contentLength == 0)
             {
                 this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
@@ -217,7 +215,7 @@ public class HttpResponse : HttpBase
 
             try
             {
-                using (var memoryStream = new MemoryStream((int)contentLength))
+                using (var byteBlock = new ValueByteBlock((int)contentLength))
                 {
                     while (true)
                     {
@@ -227,16 +225,16 @@ public class HttpResponse : HttpBase
                             {
                                 break;
                             }
-                            memoryStream.Write(blockResult.Memory.Span);
+                            byteBlock.Write(blockResult.Memory.Span);
                         }
 
-                        if (memoryStream.Length > MaxCacheSize)
+                        if (byteBlock.Length > MaxCacheSize)
                         {
                             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(contentLength), contentLength, MaxCacheSize);
                         }
                     }
                     this.ContentCompleted = true;
-                    this.m_contentMemory = memoryStream.ToArray();
+                    this.m_contentMemory = byteBlock.Span.ToArray();
                     return this.m_contentMemory;
                 }
             }
@@ -246,9 +244,6 @@ public class HttpResponse : HttpBase
                 this.m_contentMemory = null;
                 return this.m_contentMemory;
             }
-            finally
-            {
-            }
         }
         else
         {
@@ -257,7 +252,7 @@ public class HttpResponse : HttpBase
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (this.ContentLength == 0 && !this.IsChunk)
         {
@@ -266,14 +261,25 @@ public class HttpResponse : HttpBase
 
         if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
         {
-            return HttpReadOnlyMemoryBlockResult.FromResult(this.m_contentMemory);
+            return new HttpReadOnlyMemoryBlockResult(this.m_contentMemory);
         }
-        var blockResult = await base.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (blockResult.IsCompleted)
+        var readLeaseTask = base.ReadExchangeAsync(cancellationToken);
+
+        ReadLease<ReadOnlyMemory<byte>> readLease;
+        if (readLeaseTask.IsCompleted)
+        {
+            readLease = readLeaseTask.Result;
+        }
+        else
+        {
+            readLease = await readLeaseTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        if (readLease.IsCompleted)
         {
             this.ContentCompleted = true;
         }
-        return blockResult;
+
+        return new HttpReadOnlyMemoryBlockResult(readLease.Dispose, readLease.Value, readLease.IsCompleted);
     }
 
     /// <inheritdoc/>
@@ -292,7 +298,7 @@ public class HttpResponse : HttpBase
     /// <param name="memory">要写入的只读内存数据。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>一个任务，表示异步写入操作。</returns>
-    public async Task WriteAsync(ReadOnlyMemory<byte> memory,CancellationToken token=default)
+    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         this.ThrowIfResponsed();
 
@@ -357,6 +363,15 @@ public class HttpResponse : HttpBase
 
     internal override void ResetHttp()
     {
+        if (this.m_isServer)
+        {
+            this.m_canWrite = true;
+            this.CompleteInput();
+        }
+        else
+        {
+            this.m_canWrite = false;
+        }
         base.ResetHttp();
         this.m_sentHeader = false;
         this.m_sentLength = 0;
@@ -365,14 +380,6 @@ public class HttpResponse : HttpBase
         this.StatusCode = 200;
         this.StatusMessage = "Success";
         this.Content = default;
-        if (this.m_isServer)
-        {
-            this.m_canWrite = true;
-        }
-        else
-        {
-            this.m_canWrite = false;
-        }
     }
 
     /// <inheritdoc/>
@@ -407,26 +414,6 @@ public class HttpResponse : HttpBase
             this.StatusMessage = responseLineSpan.Slice(index).ToString(Encoding.UTF8);
         }
     }
-
-    //private static bool TryParseStatusCode(ReadOnlySpan<byte> span, out int code)
-    //{
-    //    code = 0;
-    //    if (span.Length != 3)
-    //    {
-    //        return false;
-    //    }
-
-    //    for (var i = 0; i < 3; i++)
-    //    {
-    //        if (span[i] < (byte)'0' || span[i] > (byte)'9')
-    //        {
-    //            return false;
-    //        }
-    //    }
-
-    //    code = 100 * (span[0] - '0') + 10 * (span[1] - '0') + (span[2] - '0');
-    //    return true;
-    //}
 
     private static bool TryParseStatusCode(ReadOnlySpan<byte> span, out int code)
     {
@@ -513,9 +500,9 @@ public class HttpResponse : HttpBase
         //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    private Task InternalSendAsync(ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory,token) : this.m_httpClientBase.InternalSendAsync(memory, token);
+        return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory, token) : this.m_httpClientBase.InternalSendAsync(memory, token);
     }
 
     private void ParseProtocol(ReadOnlySpan<byte> protocolSpan)

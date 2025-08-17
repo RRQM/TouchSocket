@@ -103,7 +103,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     }
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
         if (this.Online)
         {
@@ -117,17 +117,17 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
 
-        await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task PingAsync(int timeout = 5000, CancellationToken token = default)
+    public ValueTask<Result> PingAsync(CancellationToken token = default)
     {
-        await this.m_mqttActor.PingAsync(timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.PingAsync(token);
     }
 
     /// <inheritdoc/>
@@ -137,16 +137,16 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     }
 
     /// <inheritdoc/>
-    public async Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, int timeout = 5000, CancellationToken token = default)
+    public Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken token = default)
     {
         //订阅
-        return await this.m_mqttActor.SubscribeAsync(message, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.SubscribeAsync(message, token);
     }
 
     /// <inheritdoc/>
-    public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, int timeout = 5000, CancellationToken token = default)
+    public Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken token = default)
     {
-        return await this.m_mqttActor.UnsubscribeAsync(message, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.UnsubscribeAsync(message, token);
     }
 
     /// <inheritdoc/>
@@ -160,8 +160,8 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        m_mqttAdapter = new MqttAdapter();
-        this.SetAdapter(m_mqttAdapter);
+        this.m_mqttAdapter = new MqttAdapter();
+        this.SetAdapter(this.m_mqttAdapter);
     }
 
     /// <inheritdoc/>

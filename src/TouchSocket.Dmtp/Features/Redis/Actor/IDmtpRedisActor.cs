@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -32,11 +33,6 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     ICache<string, ReadOnlyMemory<byte>> ICache { get; set; }
 
     /// <summary>
-    /// 超时设定。默认30000ms
-    /// </summary>
-    int Timeout { get; set; }
-
-    /// <summary>
     /// 添加一个缓存项到缓存中，如果键已经存在，则不进行任何操作。
     /// 该方法用于异步地添加缓存项。
     /// </summary>
@@ -48,7 +44,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <exception cref="ArgumentNullException">如果键或值为<see langword="null"/>，则抛出该异常。</exception>
     /// <exception cref="TimeoutException">如果异步操作超时，则抛出该异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出该异常。</exception>
-    Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000);
+    Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken token = default);
 
     /// <summary>
     /// 异步获取缓存的键值对。
@@ -59,7 +55,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <exception cref="ArgumentNullException">如果 <paramref name="key"/> 为空或为 null，则抛出此异常。</exception>
     /// <exception cref="TimeoutException">如果获取操作超时，则抛出此异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出此异常。</exception>
-    Task<TValue> GetAsync<TValue>(string key);
+    Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default);
 
     /// <summary>
     /// 设置缓存值
@@ -73,5 +69,5 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000);
+    Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken token = default);
 }

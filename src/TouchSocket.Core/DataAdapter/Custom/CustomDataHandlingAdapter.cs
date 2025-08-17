@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -19,114 +19,55 @@ namespace TouchSocket.Core;
 /// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为<see langword="null"/>，
 /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
 /// </summary>
-public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : IRequestInfo
+public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter
+    where TRequest : IRequestInfo
 {
-    private readonly Type m_requestType;
-    private ValueByteBlock m_tempByteBlock;
     private TRequest m_tempRequest;
 
+    #region ParseRequest
     /// <summary>
-    /// 初始化自定义数据处理适配器。
+    /// 尝试从字节读取器中解析出请求信息。
     /// </summary>
-    /// <remarks>
-    /// 该构造函数在创建<see cref="CustomDataHandlingAdapter{TRequest}"/>实例时，会指定请求类型。
-    /// </remarks>
-    public CustomDataHandlingAdapter()
+    /// <typeparam name="TReader">字节读取器类型。</typeparam>
+    /// <param name="reader">字节读取器的引用。</param>
+    /// <param name="request">解析出的请求信息。</param>
+    /// <returns>解析成功返回 true，否则返回 false。</returns>
+    public bool TryParseRequest<TReader>(ref TReader reader, out TRequest request)
+        where TReader : IBytesReader
     {
-        this.m_requestType = typeof(TRequest);
+        this.CacheVerify(ref reader);
+        return this.ParseRequestCore(ref reader, out request);
     }
+
+    protected virtual bool ParseRequestCore<TReader>(ref TReader reader, out TRequest request)
+       where TReader : IBytesReader
+    {
+        var result = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest);
+        switch (result)
+        {
+            case FilterResult.Success:
+                {
+                    request = this.m_tempRequest;
+                    this.m_tempRequest = default;
+                    return true;
+                }
+            case FilterResult.Cache:
+                {
+                    request = this.m_tempRequest;
+                    return false;
+                }
+            case FilterResult.GoOn:
+            default:
+                {
+                    return this.ParseRequestCore(ref reader, out request);
+                }
+        }
+    }
+
+    #endregion
 
     /// <inheritdoc/>
     public override bool CanSendRequestInfo => false;
-
-    /// <summary>
-    /// 指示需要解析当前包的剩余长度。如果不能得知，请赋值<see cref="int.MaxValue"/>。
-    /// </summary>
-    protected long SurLength { get; set; }
-
-    /// <summary>
-    /// 尝试解析请求数据块。
-    /// </summary>
-    /// <typeparam name="TReader">字节块类型，必须实现IByteBlock接口。</typeparam>
-    /// <param name="reader">待解析的字节块。</param>
-    /// <param name="request">解析出的请求对象。</param>
-    /// <returns>解析是否成功。</returns>
-    public bool TryParseRequest<TReader>(ref TReader reader, out TRequest request) where TReader : IBytesReader
-    {
-        // 检查缓存是否超时，如果超时则清除缓存。
-        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
-        {
-            this.Reset();
-        }
-
-        // 如果临时字节块为空，则尝试直接解析。
-        if (this.m_tempByteBlock.IsEmpty)
-        {
-            return this.Single(ref reader, out request) == FilterResult.Success;
-        }
-        else
-        {
-            // 如果剩余长度小于等于0，则抛出异常。
-            if (this.SurLength <= 0)
-            {
-                throw new Exception();
-            }
-
-            // 计算本次可以读取的长度。
-            var len = Math.Min(this.SurLength, reader.BytesRemaining);
-
-            // 从输入字节块中读取数据到临时字节块中。
-            var block = this.m_tempByteBlock;
-            block.Write(reader.GetSpan((int)len));
-            reader.Advance((int)len);
-            this.SurLength -= len;
-
-            // 重置临时字节块并准备下一次使用。
-            this.m_tempByteBlock = default;
-
-            // 回到字节块的起始位置。
-            block.SeekToStart();
-            try
-            {
-                // 尝试解析字节块。
-                var filterResult = this.Single(ref block, out request);
-                switch (filterResult)
-                {
-                    case FilterResult.Cache:
-                        {
-                            // 如果临时字节块不为空，则继续缓存。
-                            if (!this.m_tempByteBlock.IsEmpty)
-                            {
-                                reader.Advance(this.m_tempByteBlock.Length);
-                            }
-                            return false;
-                        }
-                    case FilterResult.Success:
-                        {
-                            // 如果字节块中还有剩余数据，则回退指针。
-                            if (block.CanReadLength > 0)
-                            {
-                                reader.Advance(-block.CanReadLength);
-                            }
-                            return true;
-                        }
-                    case FilterResult.GoOn:
-                    default:
-                        // 对于需要继续解析的情况，也回退指针。
-                        if (block.CanReadLength > 0)
-                        {
-                            reader.Advance(-block.CanReadLength);
-                        }
-                        return false;
-                }
-            }
-            finally
-            {
-                // 释放字节块资源。
-                block.Dispose();
-            }
-        }
-    }
 
     /// <summary>
     /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
@@ -137,9 +78,8 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected abstract FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TRequest request, ref int tempCapacity)
+    protected abstract FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TRequest request)
         where TReader : IBytesReader;
 
     /// <summary>
@@ -149,47 +89,41 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     /// <returns>返回布尔值，指示请求对象是否应该被缓存。</returns>
     protected virtual bool IsBeCached(in TRequest request)
     {
-        return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
-    }
-
-    /// <summary>
-    /// 成功执行接收以后。
-    /// </summary>
-    /// <param name="request"></param>
-    protected virtual void OnReceivedSuccess(TRequest request)
-    {
-    }
-
-    /// <summary>
-    /// 即将执行<see cref="SingleStreamDataHandlingAdapter.GoReceivedAsync(ByteBlock, IRequestInfo)"/>。
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns>返回值标识是否继续执行</returns>
-    protected virtual bool OnReceivingSuccess(TRequest request)
-    {
-        return true;
-    }
-
-    /// <inheritdoc/>
-    /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
-    {
-        if (this.CacheTimeoutEnable && DateTimeOffset.UtcNow - this.LastCacheTime > this.CacheTimeout)
+        if (typeof(TRequest).IsValueType)
         {
-            this.Reset();
-        }
-        if (this.m_tempByteBlock.IsEmpty)
-        {
-            await this.SingleAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            // 判断值类型是否为默认值
+            return !EqualityComparer<TRequest>.Default.Equals(request, default);
         }
         else
         {
-            this.m_tempByteBlock.Write(byteBlock.Span);
-            using (var block = this.m_tempByteBlock)
+            // 判断引用类型是否为null
+            return request != null;
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
+    {
+        while (reader.BytesRemaining > 0)
+        {
+            if (this.DisposedValue)
             {
-                this.m_tempByteBlock = default;
-                block.SeekToStart();
-                await this.SingleAsync(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return;
+            }
+            var filterResult = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest);
+
+            switch (filterResult)
+            {
+                case FilterResult.Success:
+                    {
+                        await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_tempRequest = default;
+                        break;
+                    }
+                case FilterResult.Cache:
+                    return;//缓存数据，等待下次接收
+                case FilterResult.GoOn:
+                    break;//继续处理数据
             }
         }
     }
@@ -197,116 +131,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
     /// <inheritdoc/>
     protected override void Reset()
     {
-        this.m_tempByteBlock.SafeDispose();
-        this.m_tempByteBlock = default;
         this.m_tempRequest = default;
-        this.SurLength = 0;
         base.Reset();
-    }
-
-    /// <summary>
-    /// 处理单个字节块，提取请求对象。
-    /// </summary>
-    /// <typeparam name="TReader">字节块类型，需要实现IByteBlock接口。</typeparam>
-    /// <param name="reader">字节块，将被解析以提取请求对象。</param>
-    /// <param name="request">输出参数，提取出的请求对象。</param>
-    /// <returns>返回过滤结果，指示处理的状态。</returns>
-    protected FilterResult Single<TReader>(ref TReader reader, out TRequest request) where TReader : IBytesReader
-    {
-        // 初始化临时缓存容量。
-        var tempCapacity = 1024 * 64;
-        // 执行过滤操作，根据是否应该缓存来决定如何处理字节块和请求对象。
-        var filterResult = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
-        switch (filterResult)
-        {
-            case FilterResult.Success:
-                // 如果过滤结果是成功，则设置请求对象并重置临时请求对象为默认值。
-                request = this.m_tempRequest;
-                this.m_tempRequest = default;
-                return filterResult;
-
-            case FilterResult.Cache:
-                // 如果过滤结果需要缓存，则创建一个新的字节块来缓存数据。
-                if (reader.BytesRemaining > 0)
-                {
-                    this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
-                    this.m_tempByteBlock.Write(reader.GetSpan((int)reader.BytesRemaining));
-
-                    // 如果缓存的数据长度超过设定的最大包大小，则抛出异常。
-                    if (this.m_tempByteBlock.Length > this.MaxPackageSize)
-                    {
-                        throw new Exception("缓存的数据长度大于设定值的情况下未收到解析信号");
-                    }
-
-                    // 将字节块指针移到末尾。
-                    reader.Advance((int)reader.BytesRemaining);
-                }
-                // 更新缓存时间。
-                if (this.UpdateCacheTimeWhenRev)
-                {
-                    this.LastCacheTime = DateTimeOffset.UtcNow;
-                }
-                request = default;
-                return filterResult;
-
-            case FilterResult.GoOn:
-            default:
-                // 对于继续或默认的过滤结果，更新缓存时间。
-                if (this.UpdateCacheTimeWhenRev)
-                {
-                    this.LastCacheTime = DateTimeOffset.UtcNow;
-                }
-                request = default;
-                return filterResult;
-        }
-    }
-
-    private async Task SingleAsync<TReader>(TReader reader) where TReader : IBytesReader
-    {
-        while (reader.BytesRemaining>0)
-        {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-            var tempCapacity = 1024 * 64;
-            var filterResult = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
-
-            switch (filterResult)
-            {
-                case FilterResult.Success:
-                    if (this.OnReceivingSuccess(this.m_tempRequest))
-                    {
-                        await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.OnReceivedSuccess(this.m_tempRequest);
-                    }
-                    this.m_tempRequest = default;
-                    break;
-
-                case FilterResult.Cache:
-                    if (reader.BytesRemaining > 0)
-                    {
-                        this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
-                        this.m_tempByteBlock.Write(reader.GetSpan((int)reader.BytesRemaining));
-
-                        if (this.m_tempByteBlock.Length > this.MaxPackageSize)
-                        {
-                            this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
-                        }
-                    }
-                    if (this.UpdateCacheTimeWhenRev)
-                    {
-                        this.LastCacheTime = DateTimeOffset.UtcNow;
-                    }
-                    return;
-
-                case FilterResult.GoOn:
-                    if (this.UpdateCacheTimeWhenRev)
-                    {
-                        this.LastCacheTime = DateTimeOffset.UtcNow;
-                    }
-                    break;
-            }
-        }
     }
 }

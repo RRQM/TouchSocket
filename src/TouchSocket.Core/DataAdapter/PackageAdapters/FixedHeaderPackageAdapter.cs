@@ -12,7 +12,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
 
@@ -23,7 +22,7 @@ namespace TouchSocket.Core;
 /// 按照指定的包头类型（Byte、Ushort、Int）进行数据包的长度解析和组包。
 /// 支持最小包长度校验，自动处理半包、粘包等情况。
 /// </summary>
-public class FixedHeaderPackageAdapter : CacheDataHandlingAdapter
+public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
 {
     /// <summary>
     /// 固定包头类型，决定包头长度（1/2/4字节），默认Int。
@@ -35,136 +34,98 @@ public class FixedHeaderPackageAdapter : CacheDataHandlingAdapter
     /// </summary>
     public int MinPackageSize { get; set; } = 0;
 
-    /// <summary>
-    /// 收到数据的预处理入口。自动处理缓存合并、半包等情况。
-    /// </summary>
-    /// <param name="reader">数据读取器</param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader reader)
-    {
-        ReaderExtension.SeekToStart(ref reader);
-        var canReadSpan = reader.Span.Slice(reader.Position);
-        if (this.TryCombineCache(canReadSpan, out var byteBlock))
-        {
-            using (byteBlock)
-            {
-                await this.ProcessReader(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return;
-            }
-        }
-        await this.ProcessReader(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 发送数据的预处理入口。自动添加包头并校验长度。
-    /// </summary>
-    /// <param name="memory">待发送数据</param>
-    /// <param name="token">取消令牌</param>
-    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         this.ThrowIfLengthValidationFailed(memory.Length);
-
-        ByteBlock byteBlock;
-        Span<byte> lenBytes;
+        Span<byte> lenBytes = stackalloc byte[4];
 
         switch (this.FixedHeaderType)
         {
             case FixedHeaderType.Byte:
                 {
                     var dataLen = (byte)(memory.Length);
-                    byteBlock = new ByteBlock(dataLen + 1);
-                    lenBytes = new byte[] { dataLen };
+                    lenBytes[0] = dataLen;
+                    lenBytes = lenBytes.Slice(0, 1);
                     break;
                 }
             case FixedHeaderType.Ushort:
                 {
                     var dataLen = (ushort)(memory.Length);
-                    byteBlock = new ByteBlock(dataLen + 2);
-                    lenBytes = new byte[2];
                     TouchSocketBitConverter.Default.WriteBytes(lenBytes, dataLen);
+                    lenBytes = lenBytes.Slice(0, 2);
                     break;
                 }
             case FixedHeaderType.Int:
                 {
                     var dataLen = memory.Length;
-                    byteBlock = new ByteBlock(dataLen + 4);
-                    lenBytes = new byte[4];
                     TouchSocketBitConverter.Default.WriteBytes(lenBytes, dataLen);
                     break;
                 }
             default: throw new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidParameter.Format(nameof(this.FixedHeaderType)));
         }
 
-        try
-        {
-            byteBlock.Write(lenBytes);
-            byteBlock.Write(memory.Span);
-            await this.GoSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
+        writer.Write(lenBytes);
+        writer.Write(memory.Span);
     }
 
     /// <summary>
-    /// 处理接收到的数据，根据包头类型解析包体长度，自动处理半包、粘包。
+    /// 收到数据的预处理入口。自动处理缓存合并、半包等情况。
     /// </summary>
     /// <param name="reader">数据读取器</param>
-    private async Task ProcessReader(IByteBlockReader reader)
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        while (true)
+        while (reader.BytesRemaining > 0)
         {
-            var canReadMemory = reader.Memory.Slice(reader.Position);
-
-            if (canReadMemory.IsEmpty)
-            {
-                return;
-            }
             var index = 0;
-            var canReadSpan = canReadMemory.Span;
             int length;
             switch (this.FixedHeaderType)
             {
                 case FixedHeaderType.Byte:
-                    length = canReadSpan[index];
-                    index += 1;
-                    break;
+                    {
+                        var headerSpan = reader.GetSpan(1);
+                        length = headerSpan[index];
+                        index += 1;
+                        break;
+                    }
 
                 case FixedHeaderType.Ushort:
-                    if (canReadSpan.Length < 2)
                     {
-                        this.Cache(canReadSpan);
-                        return;
+                        if (reader.BytesRemaining < 2)
+                        {
+                            return;
+                        }
+                        var headerSpan = reader.GetSpan(2);
+                        length = TouchSocketBitConverter.Default.To<ushort>(headerSpan);
+                        index += 2;
+                        break;
                     }
-                    length = TouchSocketBitConverter.Default.To<ushort>(canReadSpan.Slice(index, 2));
-                    index += 2;
-                    break;
 
                 case FixedHeaderType.Int:
-                    if (canReadSpan.Length < 4)
                     {
-                        this.Cache(canReadSpan);
-                        return;
+                        if (reader.BytesRemaining < 4)
+                        {
+                            return;
+                        }
+                        var headerSpan = reader.GetSpan(4);
+                        length = TouchSocketBitConverter.Default.To<int>(headerSpan);
+                        index += 4;
+                        break;
                     }
-                    length = TouchSocketBitConverter.Default.To<int>(canReadSpan.Slice(index, 4));
-                    index += 4;
-                    break;
 
                 default:
                     throw ThrowHelper.CreateInvalidEnumArgumentException(this.FixedHeaderType);
             }
 
             this.ThrowIfLengthValidationFailed(length);
-            var recedSurPlusLength = canReadSpan.Length - index;
+            var recedSurPlusLength = (int)(reader.BytesRemaining - index);
             if (recedSurPlusLength >= length)
             {
-                var byteBlockReader = new ByteBlockReader(canReadMemory.Slice(index, length));
-                await this.GoReceivedAsync(byteBlockReader, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                reader.Position += (length + index);
+                var memory = reader.GetMemory(index + length).Slice(index, length);
+                await this.GoReceivedAsync(memory, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                reader.Advance(index + length);
             }
             else //半包
             {
-                this.Cache(canReadSpan);
                 return;
             }
         }

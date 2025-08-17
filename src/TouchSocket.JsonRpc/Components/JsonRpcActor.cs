@@ -28,7 +28,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 {
     private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
     private readonly JsonRpcWaitResultConverter m_jsonRpcWaitResultConverter = new JsonRpcWaitResultConverter();
-    private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new WaitHandlePool<JsonRpcWaitResult>();
+    private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new();
     private IRpcServerProvider m_rpcServerProvider;
 
     /// <summary>
@@ -117,7 +117,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             else if (this.TryParseResponse(str, out var internalJsonRpcWaitResult))
             {
                 internalJsonRpcWaitResult.Status = 1;
-                this.m_waitHandle.SetRun(internalJsonRpcWaitResult);
+                this.m_waitHandle.Set(internalJsonRpcWaitResult);
             }
             else
             {
@@ -183,16 +183,11 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 case FeedbackType.WaitInvoke:
                 default:
                     {
-                        if (invokeOption.Token.CanBeCanceled)
+                        switch (await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            waitData.SetCancellationToken(invokeOption.Token);
-                        }
-
-                        switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            case WaitDataStatus.SetRunning:
+                            case WaitDataStatus.Success:
                                 {
-                                    var resultContext = waitData.WaitResult;
+                                    var resultContext = waitData.CompletedData;
                                     if (resultContext.ErrorCode != 0)
                                     {
                                         throw new RpcException(resultContext.ErrorMessage);
@@ -222,7 +217,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
         }
         finally
         {
-            this.m_waitHandle.Destroy(sign);
+            waitData.Dispose();
         }
     }
 

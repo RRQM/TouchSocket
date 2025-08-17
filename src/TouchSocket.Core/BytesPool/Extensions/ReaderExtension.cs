@@ -11,8 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -172,5 +170,55 @@ public static partial class ReaderExtension
             }
         }
         return value;
+    }
+
+    public static Enum ReadEnum<TReader>(ref TReader reader, Type enumType)
+       where TReader : IBytesReader
+    {
+        var underlyingType = Enum.GetUnderlyingType(enumType);
+        if (underlyingType == typeof(byte))
+        {
+            var value = ReadValue<TReader, byte>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(sbyte))
+        {
+            var value = ReadValue<TReader, sbyte>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(short))
+        {
+            var value = ReadValue<TReader, short>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(ushort))
+        {
+            var value = ReadValue<TReader, ushort>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(int))
+        {
+            var value = ReadValue<TReader, int>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(uint))
+        {
+            var value = ReadValue<TReader, uint>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(long))
+        {
+            var value = ReadValue<TReader, long>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else if (underlyingType == typeof(ulong))
+        {
+            var value = ReadValue<TReader, ulong>(ref reader);
+            return (Enum)Enum.ToObject(enumType, value);
+        }
+        else
+        {
+            throw new NotSupportedException($"不支持枚举的底层类型{underlyingType}。");
+        }
     }
 }

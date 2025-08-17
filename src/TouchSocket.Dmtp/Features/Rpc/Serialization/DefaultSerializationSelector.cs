@@ -13,9 +13,9 @@
 using Newtonsoft.Json;
 using System;
 using System.Runtime.Serialization;
+using System.Text.Json;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
-using System.Text.Json;
 
 namespace TouchSocket.Dmtp.Rpc;
 
@@ -63,9 +63,7 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
     /// <returns>反序列化后的对象。</returns>
     /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
     public object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType) where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         // 根据序列化类型选择不同的反序列化方式
         switch (serializationType)
@@ -128,9 +126,7 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
     /// <param name="parameter">待序列化的参数对象</param>
     /// <typeparam name="TWriter">字节块类型，必须实现IByteBlock接口</typeparam>
     public void SerializeParameter<TWriter>(ref TWriter writer, SerializationType serializationType, in object parameter) where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         // 根据序列化类型选择不同的序列化方法
         switch (serializationType)
@@ -151,13 +147,13 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                     else
                     {
                         // 参数不为<see langword="null"/>时，标记并序列化参数
-                         WriterExtension.WriteNotNull(ref writer);
+                        WriterExtension.WriteNotNull(ref writer);
                         using (var block = new ByteBlock(1024 * 64))
                         {
                             // 使用System.Runtime.Serialization.BinaryFormatter进行序列化
                             SerializeConvert.BinarySerialize(block.AsStream(), parameter);
                             // 将序列化后的字节块写入byteBlock
-                            WriterExtension.WriteByteBlock(ref writer,block);
+                            WriterExtension.WriteByteBlock(ref writer, block);
                         }
                     }
                     break;
@@ -187,8 +183,8 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                     else
                     {
                         // 参数不为<see langword="null"/>时，标记并转换为JSON字符串
-                         WriterExtension.WriteNotNull(ref writer);
-                        WriterExtension.WriteString(ref writer,JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
+                        WriterExtension.WriteNotNull(ref writer);
+                        WriterExtension.WriteString(ref writer, JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
                     }
                     break;
                 }
@@ -202,8 +198,8 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                     else
                     {
                         // 参数不为<see langword="null"/>时，标记并转换为Xml字节
-                         WriterExtension.WriteNotNull(ref writer);
-                        WriterExtension.WriteByteSpan(ref writer,SerializeConvert.XmlSerializeToBytes(parameter));
+                        WriterExtension.WriteNotNull(ref writer);
+                        WriterExtension.WriteByteSpan(ref writer, SerializeConvert.XmlSerializeToBytes(parameter));
                     }
                     break;
                 }

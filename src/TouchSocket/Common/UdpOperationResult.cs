@@ -10,16 +10,11 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets;
-public readonly struct UdpOperationResult
+internal readonly struct UdpOperationResult
 {
     public UdpOperationResult(int bytesTransferred, EndPoint remoteEndPoint, SocketError socketError, IPPacketInformation receiveMessageFromPacketInfo)
     {

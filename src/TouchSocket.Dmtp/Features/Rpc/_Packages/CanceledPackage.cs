@@ -20,11 +20,11 @@ internal class CanceledPackage : RouterPackage
 
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,long>(ref writer,this.Sign);
+        WriterExtension.WriteValue<TWriter, long>(ref writer, this.Sign);
     }
 
     public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        this.Sign = ReaderExtension.ReadValue<TReader,long>(ref reader);
+        this.Sign = ReaderExtension.ReadValue<TReader, long>(ref reader);
     }
 }

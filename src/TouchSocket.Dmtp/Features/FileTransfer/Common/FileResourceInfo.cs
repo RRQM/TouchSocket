@@ -118,7 +118,7 @@ public class FileResourceInfo : PackageBase
     {
         var fileResourceInfo = new FileResourceInfo();
         // 读取文件区块大小
-        fileResourceInfo.FileSectionSize =ReaderExtension.ReadValue<TReader,int>(ref reader);
+        fileResourceInfo.FileSectionSize = ReaderExtension.ReadValue<TReader, int>(ref reader);
         // 读取资源句柄
         fileResourceInfo.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
         // 读取文件信息
@@ -204,14 +204,14 @@ public class FileResourceInfo : PackageBase
     /// <inheritdoc/>
     public override void Package<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ResourceHandle);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
         if (this.FileInfo is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.FileInfo.Package(ref writer);
         }
     }
@@ -237,10 +237,10 @@ public class FileResourceInfo : PackageBase
     /// <param name="writer">用于存储文件资源信息的字节块参数。</param>
     public void Save<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.FileSectionSize);
-        
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ResourceHandle);
-        
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.FileSectionSize);
+
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+
         if (this.FileInfo is null)
         {
             WriterExtension.WriteNull(ref writer);
@@ -250,12 +250,12 @@ public class FileResourceInfo : PackageBase
             WriterExtension.WriteNotNull(ref writer);
             this.FileInfo.Package(ref writer);
         }
-       
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.m_fileSections.Length);
-        
+
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.m_fileSections.Length);
+
         foreach (var item in this.m_fileSections)
         {
-           
+
             if (item is null)
             {
                 WriterExtension.WriteNull(ref writer);
@@ -294,7 +294,7 @@ public class FileResourceInfo : PackageBase
     /// <inheritdoc/>
     public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.ResourceHandle = ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
         if (ReaderExtension.ReadIsNull(ref reader))
         {
             this.FileInfo = null;

@@ -10,36 +10,41 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
-public class BufferedTcpClient : TcpClientBase, IBufferedTcpClient
+public class PipeTcpClient : TcpClientBase, IPipeTcpClient
 {
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
+    /// <inheritdoc/>
     public PipeReader Input => base.Transport.Input;
 
+    /// <inheritdoc/>
     public PipeWriter Output => base.Transport.Output;
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     /// <inheritdoc/>
     protected sealed override async Task ReceiveLoopAsync(ITransport transport)
     {
         var token = transport.ClosedToken;
-        await Task.Delay(-1,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await Task.Delay(-1, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

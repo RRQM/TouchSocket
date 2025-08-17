@@ -122,7 +122,7 @@ public static class TouchSocketHttpUtility
     /// <param name="value">要追加的字符串。</param>
     public static void AppendUtf8String<TWriter>(ref TWriter writer, string value) where TWriter : IBytesWriter
     {
-        WriterExtension.WriteNormalString(ref writer,value, Encoding.UTF8);
+        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
     }
 
     /// <summary>

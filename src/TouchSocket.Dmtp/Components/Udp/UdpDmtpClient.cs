@@ -87,21 +87,14 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     /// <summary>
     /// 不支持该操作
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
     /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
-    public override Task ResetIdAsync(string id)
+    public override Task ResetIdAsync(string id, CancellationToken token)
     {
         throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
     }
 
-    //private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-    //{
-    //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
-    //}
-
-    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory,token);
+        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory, token);
     }
 }

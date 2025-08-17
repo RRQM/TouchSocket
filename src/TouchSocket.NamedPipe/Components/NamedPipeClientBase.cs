@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
@@ -86,74 +84,6 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    protected virtual async Task ReceiveLoopAsync(ITransport transport)
-    {
-        var token = transport.ClosedToken;
-
-        try
-        {
-            while (true)
-            {
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                if (this.DisposedValue || token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (result.IsCanceled || result.IsCompleted)
-                {
-                    return;
-                }
-
-                foreach (var item in result.Buffer)
-                {
-                    var reader = new ByteBlockReader(item);
-                    try
-                    {
-                        if (await this.OnNamedPipeReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            continue;
-                        }
-
-                        if (this.m_dataHandlingAdapter == null)
-                        {
-                            await this.PrivateHandleReceivedData(reader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        else
-                        {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger?.Exception(this, ex);
-                    }
-                }
-                transport.Input.AdvanceTo(result.Buffer.End);
-            }
-        }
-        catch (Exception ex)
-        {
-            // 如果发生异常，记录日志并退出接收循环
-            this.Logger?.Debug(this, ex);
-            return;
-        }
-        finally
-        {
-            var receiver = this.m_receiver;
-            var e_closed = transport.ClosedEventArgs;
-            if (receiver != null)
-            {
-                await receiver.Complete(e_closed.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        }
-    }
-
     private async Task PrivateConnected(NamedPipeTransport transport)
     {
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
@@ -161,6 +91,9 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         var e_connected = new ConnectedEventArgs();
         await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        transport.SafeDispose();
+
         var e_closed = transport.ClosedEventArgs;
         this.m_online = false;
         var adapter = this.m_dataHandlingAdapter;
@@ -259,15 +192,14 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     /// <summary>
     /// 建立管道的连接。
     /// </summary>
-    /// <param name="millisecondsTimeout"></param>
     /// <param name="token">可取消令箭</param>
     /// <exception cref="ObjectDisposedException"></exception>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="Exception"></exception>
     /// <exception cref="TimeoutException"></exception>
-    protected async Task PipeConnectAsync(int millisecondsTimeout, CancellationToken token)
+    protected async Task PipeConnectAsync(CancellationToken token)
     {
-        await this.m_semaphoreSlimForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (this.m_online)
@@ -287,7 +219,7 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
             var namedPipe = CreatePipeClient(serverName, pipeName);
             await this.PrivateOnNamedPipeConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await namedPipe.ConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await namedPipe.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (!namedPipe.IsConnected)
             {
@@ -349,9 +281,9 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     /// </summary>
     /// <param name="reader"></param>
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-    protected virtual ValueTask<bool> OnNamedPipeReceiving(IByteBlockReader reader)
+    protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(reader));
+        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(reader));
     }
 
     /// <summary>
@@ -365,6 +297,72 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
     }
 
+    protected virtual async Task ReceiveLoopAsync(ITransport transport)
+    {
+        var token = transport.ClosedToken;
+
+        try
+        {
+            while (true)
+            {
+                if (this.DisposedValue || token.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
+                {
+                    break;
+                }
+                var reader = new ClassBytesReader(result.Buffer);
+                if (!await this.OnNamedPipeReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    try
+                    {
+                        if (this.m_dataHandlingAdapter == null)
+                        {
+                            foreach (var item in reader.Sequence)
+                            {
+                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                reader.Advance(item.Length);
+                            }
+                        }
+                        else
+                        {
+                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.Exception(this, ex);
+                    }
+                }
+                var position = result.Buffer.GetPosition(reader.BytesRead);
+                transport.Input.AdvanceTo(position);
+
+                if (result.IsCanceled || result.IsCompleted)
+                {
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+            return;
+        }
+        finally
+        {
+            var receiver = this.m_receiver;
+            var e_closed = transport.ClosedEventArgs;
+            if (receiver != null)
+            {
+                receiver.Complete(e_closed.Message);
+            }
+        }
+    }
+
     /// <summary>
     /// 设置适配器
     /// </summary>
@@ -376,21 +374,13 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
 
         ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
 
-        // 如果当前实例已有配置，则将配置应用到新适配器上
         if (this.Config != null)
         {
             adapter.Config(this.Config);
         }
 
-        // 将当前实例的日志记录器设置到适配器上
-        adapter.Logger = this.Logger;
-        // 调用适配器的OnLoaded方法，通知适配器已被加载
         adapter.OnLoaded(this);
-        // 设置适配器接收数据时的回调方法
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-        // 设置适配器发送数据时的异步回调方法
-        adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
-        // 将适配器实例设置为当前数据处理适配器
         this.m_dataHandlingAdapter = adapter;
     }
 
@@ -400,15 +390,15 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         return pipeClient;
     }
 
-    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #region Throw
@@ -435,69 +425,79 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
 
     #endregion Throw
 
-    #region 直接发送
+    #region 发送
 
-    /// <inheritdoc/>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    /// <summary>
+    /// 异步发送数据，通过适配器模式灵活处理数据发送。
+    /// </summary>
+    /// <param name="memory">待发送的只读字节内存块。</param>
+    /// <param name="token">可取消令箭</param>
+    /// <returns>一个异步任务，表示发送操作。</returns>
+    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
+
         await this.OnNamedPipeSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
 
-        await transport.SemaphoreSlimForWriter.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            // 如果数据处理适配器未设置，则使用默认发送方式。
+            if (adapter == null)
+            {
+                await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            else
+            {
+                var writer = new PipeBytesWriter(transport.Output);
+                adapter.SendInput(ref writer, in memory);
+                await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
         finally
         {
-            transport.SemaphoreSlimForWriter.Release();
-        }
-    }
-
-    #endregion 直接发送
-
-    #region 异步发送
-
-    /// <summary>
-    /// 异步发送数据，根据是否配置了数据处理适配器来决定数据的发送方式。
-    /// </summary>
-    /// <param name="memory">待发送的字节内存。</param>
-    /// <param name="token">可取消令箭</param>
-    /// <returns>一个异步任务，表示发送操作。</returns>
-    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
-    {
-        // 如果未配置数据处理适配器，则使用默认的发送方式。
-        if (this.m_dataHandlingAdapter == null)
-        {
-            return this.ProtectedDefaultSendAsync(memory, token);
-        }
-        else
-        {
-            // 如果配置了数据处理适配器，则使用适配器指定的发送方式。
-            return this.m_dataHandlingAdapter.SendInputAsync(memory, token);
+            locker.Release();
         }
     }
 
     /// <summary>
-    /// 异步安全发送请求信息。
+    /// 异步发送请求信息的受保护方法。
+    ///
+    /// 此方法首先检查当前对象是否能够发送请求信息，如果不能，则抛出异常。
+    /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
     /// </summary>
-    /// <param name="requestInfo">请求信息对象，包含要发送的数据。</param>
+    /// <param name="requestInfo">要发送的请求信息。</param>
     /// <param name="token">可取消令箭</param>
-    /// <returns>返回一个任务，表示异步操作的结果。</returns>
-    /// <remarks>
-    /// 此方法用于在发送请求之前验证是否可以发送请求信息，
-    /// 并通过<see cref="DataHandlingAdapter"/>适配器安全处理发送过程。
-    /// </remarks>
-    protected Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
+    /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
+    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
     {
-        // 验证当前状态是否允许发送请求信息，如果不允许则抛出异常。
+        // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
-        // 调用ProtectedDataHandlingAdapter的SendInputAsync方法异步发送请求信息。
-        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo, token);
+
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+
+        var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
+
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            var writer = new PipeBytesWriter(transport.Output);
+            adapter.SendInput(ref writer, requestInfo);
+            await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            locker.Release();
+        }
     }
 
-    #endregion 异步发送
+    #endregion 发送
 }

@@ -62,15 +62,13 @@ public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderReque
     /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TUnfixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TUnfixedHeaderRequestInfo request)
     {
         if (beCached)
         {
             if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
             {
-                this.SurLength = request.BodyLength - reader.BytesRemaining;
                 return FilterResult.Cache;
             }
 
@@ -94,8 +92,6 @@ public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderReque
                 request = requestInfo;
                 if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
                 {
-                    tempCapacity = request.BodyLength + request.HeaderLength;
-                    this.SurLength = request.BodyLength - reader.BytesRemaining;
                     return FilterResult.Cache;
                 }
 
@@ -113,7 +109,6 @@ public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderReque
             }
             else
             {
-                this.SurLength = int.MaxValue;
                 return FilterResult.Cache;
             }
         }

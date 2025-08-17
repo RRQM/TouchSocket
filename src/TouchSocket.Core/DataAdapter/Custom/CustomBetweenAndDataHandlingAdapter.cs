@@ -44,9 +44,8 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<T>(ref T reader, bool beCached, ref TBetweenAndRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<T>(ref T reader, bool beCached, ref TBetweenAndRequestInfo request)
     {
         var startCode = this.StartCode.Span;
         var endCode = this.EndCode.Span;
@@ -110,7 +109,7 @@ public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo
     /// <returns>泛型实例</returns>
     protected virtual TBetweenAndRequestInfo GetInstance(ReadOnlySequence<byte> body)
     {
-        using (var memoryBuffer=new ContiguousMemoryBuffer(body))
+        using (var memoryBuffer = new ContiguousMemoryBuffer(body))
         {
             return this.GetInstance(memoryBuffer.Memory.Span);
         }

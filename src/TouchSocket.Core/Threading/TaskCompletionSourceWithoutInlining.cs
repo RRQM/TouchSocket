@@ -36,7 +36,7 @@ internal class TaskCompletionSourceWithoutInlining<T> : TaskCompletionSource<T>
     /// TaskCreationOptions to pass on to the base constructor.
     /// </param>
     /// <param name="state">The state to set on the Task.</param>
-    internal TaskCompletionSourceWithoutInlining(bool allowInliningContinuations, TaskCreationOptions options = TaskCreationOptions.None, object? state = null)
+    internal TaskCompletionSourceWithoutInlining(bool allowInliningContinuations, TaskCreationOptions options = TaskCreationOptions.None, object state = null)
         : base(state, AdjustFlags(options, allowInliningContinuations))
     {
         this.exposedTask = base.Task;

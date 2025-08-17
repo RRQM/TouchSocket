@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,15 +24,24 @@ namespace TouchSocket.Core;
 public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 {
     private readonly ConcurrentQueue<ValueByteBlock> m_bytes = new ConcurrentQueue<ValueByteBlock>();
-    private long m_fireCount;
     private int m_dataCount;
+    private ExceptionDispatchInfo m_exceptionDispatchInfo;
+    private long m_fireCount;
 
     /// <inheritdoc/>
-    protected override Task PreviewReceivedAsync(IByteBlockReader byteBlock)
+    protected override Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        var dataLength = byteBlock.Length;
+        this.m_exceptionDispatchInfo?.Throw();
+
+        var dataLength = (int)reader.Sequence.Length;
         var valueByteBlock = new ValueByteBlock(dataLength);
-        valueByteBlock.Write(byteBlock.Span);
+
+        foreach (var item in reader.Sequence)
+        {
+            valueByteBlock.Write(item.Span);
+            reader.Advance(item.Length);
+        }
+
         this.m_bytes.Enqueue(valueByteBlock);
         Interlocked.Increment(ref this.m_fireCount);
         Interlocked.Add(ref this.m_dataCount, dataLength);
@@ -47,7 +57,7 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
         await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         if (Interlocked.Decrement(ref this.m_fireCount) == 0)
         {
-            using (var byteBlock = new ByteBlock(this.m_dataCount))
+            using (var byteBlock = new ValueByteBlock(this.m_dataCount))
             {
                 while (this.m_bytes.TryDequeue(out var valueByteBlock))
                 {
@@ -62,11 +72,11 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
                 try
                 {
-                    await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.GoReceivedAsync(byteBlock.Memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
-                    this.OnError(ex, ex.Message, true, true);
+                    this.m_exceptionDispatchInfo = ExceptionDispatchInfo.Capture(ex);
                 }
             }
         }

@@ -11,26 +11,29 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 
-internal class DmtpAdapter2 : CacheDataHandlingAdapterSlim<DmtpMessage2>
+/// <summary>
+/// DmtpAdapter 类，继承自 CustomFixedHeaderByteBlockDataHandlingAdapter&lt;DmtpMessage&gt;
+/// 该类用于特定地处理 DmtpMessage，通过自定义的固定头部字节块数据处理适配器实现。
+/// </summary>
+public sealed class DmtpAdapter : CustomDataHandlingAdapter<DmtpMessage>
 {
-    public static readonly byte[] Head = "dm"u8.ToArray();
+    /// <inheritdoc/>
+    public override bool CanSendRequestInfo => true;
 
-    protected override bool TryParseRequestAfterCacheVerification<TReader>(ref TReader reader, out DmtpMessage2 request)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref DmtpMessage request)
     {
         if (reader.BytesRemaining < 8)
         {
             request = default;
-            return false;
+            return FilterResult.Cache;
         }
         var header = reader.GetSpan(8);
         var offset = 0;
-        if (header[offset++] != Head[0] || header[offset++] != Head[1])
+        if (header[offset++] != DmtpMessage.Head[0] || header[offset++] != DmtpMessage.Head[1])
         {
             throw new Exception("这可能不是Dmtp协议数据");
         }
@@ -41,64 +44,24 @@ internal class DmtpAdapter2 : CacheDataHandlingAdapterSlim<DmtpMessage2>
         if (reader.BytesRemaining < m_bodyLength + 8)
         {
             request = default;
-            return false;
+            return FilterResult.Cache;
         }
 
         reader.Advance(8);
         var bodyMemory = reader.GetMemory(m_bodyLength);
         reader.Advance(m_bodyLength);
 
-        request = new DmtpMessage2(protocolFlags, bodyMemory);
-        return true;
-    }
-}
-
-internal class DmtpMessage2 : IRequestInfo
-{
-    public DmtpMessage2(ushort protocolFlags, ReadOnlyMemory<byte> body)
-    {
-    }
-}
-
-/// <summary>
-/// DmtpAdapter 类，继承自 CustomFixedHeaderByteBlockDataHandlingAdapter&lt;DmtpMessage&gt;
-/// 该类用于特定地处理 DmtpMessage，通过自定义的固定头部字节块数据处理适配器实现。
-/// </summary>
-public class DmtpAdapter : CustomFixedHeaderDataHandlingAdapter<DmtpMessage>
-{
-    /// <inheritdoc/>
-    public override bool CanSendRequestInfo => true;
-
-    /// <inheritdoc/>
-    public override int HeaderLength => 8;
-
-    /// <inheritdoc/>
-    protected override DmtpMessage GetInstance()
-    {
-        return new DmtpMessage();
+        request = new DmtpMessage(protocolFlags, bodyMemory);
+        return FilterResult.Success;
     }
 
-    /// <inheritdoc/>
-    protected override void OnReceivedSuccess(DmtpMessage request)
-    {
-        request.Dispose();
-    }
-
-    /// <inheritdoc/>
-    protected override async Task PreviewSendAsync(IRequestInfo requestInfo, CancellationToken token)
+    public override void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
     {
         if (requestInfo is not DmtpMessage message)
         {
             throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
         }
-
         this.ThrowIfMoreThanMaxPackageSize(message.MaxLength);
-
-        using (var byteBlock = new ByteBlock(message.MaxLength))
-        {
-            var block = byteBlock;
-            message.Build(ref block);
-            await this.GoSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+        message.Build(ref writer);
     }
 }

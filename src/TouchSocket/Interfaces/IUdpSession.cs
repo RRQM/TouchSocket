@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>

@@ -25,7 +25,7 @@ public partial class MqttUnsubAckMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
         var byteBlockWriter = this.CreateVariableWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
@@ -36,14 +36,14 @@ public partial class MqttUnsubAckMessage
 
         foreach (var item in this.ReasonCodes)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)item);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item);
         }
     }
 
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
 
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
@@ -68,7 +68,7 @@ public partial class MqttUnsubAckMessage
 
         while (!this.EndOfByteBlock(reader))
         {
-            this.m_reasonCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader));
+            this.m_reasonCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader));
         }
     }
 }

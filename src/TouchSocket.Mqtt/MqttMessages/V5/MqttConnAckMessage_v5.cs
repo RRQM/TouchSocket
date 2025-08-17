@@ -105,8 +105,8 @@ public partial class MqttConnAckMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,this.m_connectAcknowledgeFlags);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.ReturnCode);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectAcknowledgeFlags);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReturnCode);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
 
@@ -138,8 +138,8 @@ public partial class MqttConnAckMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.m_connectAcknowledgeFlags = ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        this.ReturnCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.m_connectAcknowledgeFlags = ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.ReturnCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
@@ -174,7 +174,7 @@ public partial class MqttConnAckMessage
                     }
                 case MqttPropertyId.AssignedClientIdentifier:
                     {
-                        this.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier( ref reader);
+                        this.AssignedClientIdentifier = propertiesReader.ReadAssignedClientIdentifier(ref reader);
                         break;
                     }
                 case MqttPropertyId.TopicAliasMaximum:

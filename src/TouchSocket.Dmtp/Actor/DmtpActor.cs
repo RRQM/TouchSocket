@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO.Pipelines;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,7 +96,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public ILog Logger { get; set; }
 
     /// <inheritdoc/>
-    public WaitHandlePool<IWaitResult> WaitHandlePool { get; protected set; }
+    public WaitHandlePool<IWaitResult> WaitHandlePool { get; }
 
     /// <inheritdoc/>
     public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
@@ -141,7 +140,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <exception cref="Exception"></exception>
     /// <exception cref="TokenVerifyException"></exception>
     /// <exception cref="TimeoutException"></exception>
-    public virtual async Task HandshakeAsync(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
+    public virtual async Task HandshakeAsync(string verifyToken, string id, Metadata metadata, CancellationToken token)
     {
         if (this.m_online)
         {
@@ -164,17 +163,15 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             Id = args.Id,
             Metadata = args.Metadata
         };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify);
-        waitData.SetCancellationToken(token);
 
-        try
+        using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify))
         {
-            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        var verifyResult = (WaitVerify)waitData.WaitResult;
+                        var verifyResult = (WaitVerify)waitData.CompletedData;
                         if (verifyResult.Status == 1)
                         {
                             this.Id = verifyResult.Id;
@@ -204,10 +201,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 default:
                     throw new OperationCanceledException();
             }
-        }
-        finally
-        {
-            this.WaitHandlePool.Destroy(waitVerify.Sign);
         }
     }
 
@@ -449,7 +442,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     try
                     {
                         var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
-                        this.WaitHandlePool.SetRun(waitVerify);
+                        this.WaitHandlePool.Set(waitVerify);
                         await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
@@ -487,7 +480,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 {
                     try
                     {
-                        this.WaitHandlePool.SetRun(ResolveJsonObject<WaitSetId>(message.GetBodyString()));
+                        this.WaitHandlePool.Set(ResolveJsonObject<WaitSetId>(message.GetBodyString()));
                     }
                     catch (Exception ex)
                     {
@@ -548,7 +541,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         }
                         else
                         {
-                            this.WaitHandlePool.SetRun(waitPing);
+                            this.WaitHandlePool.Set(waitPing);
                         }
                     }
                     catch (Exception ex)
@@ -636,7 +629,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         else
                         {
                             waitCreateChannel.UnpackageBody(ref reader);
-                            this.WaitHandlePool.SetRun(waitCreateChannel);
+                            this.WaitHandlePool.Set(waitCreateChannel);
                         }
                     }
                     catch (Exception ex)
@@ -663,8 +656,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                                 channelPackage.UnpackageBody(ref reader);
                                 channelPackage.Message = TouchSocketDmtpStatus.ClientNotFind.GetDescription(channelPackage.TargetId);
                                 channelPackage.SwitchId();
-                                channelPackage.RunNow = true;
-                                channelPackage.DataType = ChannelDataType.DisposeOrder;
+                                channelPackage.DataType = ChannelDataType.Canceled;
                                 await this.SendAsync(P9_ChannelPackage, channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
@@ -692,45 +684,45 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <inheritdoc/>
-    public virtual Task<bool> PingAsync(int millisecondsTimeout = 5000, CancellationToken token = default)
+    public virtual Task<Result> PingAsync(CancellationToken token = default)
     {
-        return this.PrivatePingAsync(default, millisecondsTimeout, token);
+        return this.PrivatePingAsync(default, token);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000, CancellationToken token = default)
+    public virtual async Task<Result> PingAsync(string targetId, CancellationToken token = default)
     {
         if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
         {
-            return await actor.PingAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.PingAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
-            return await this.PrivatePingAsync(targetId, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivatePingAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
     /// <inheritdoc/>
-    public virtual async Task ResetIdAsync(string newId)
+    public virtual async Task ResetIdAsync(string newId, CancellationToken token)
     {
         var waitSetId = new WaitSetId(this.Id, newId);
 
         var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
-        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        switch (await waitData.WaitAsync(5000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
-            case WaitDataStatus.SetRunning:
+            case WaitDataStatus.Success:
                 {
-                    if (waitData.WaitResult.Status == 1)
+                    if (waitData.CompletedData.Status == 1)
                     {
                         await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         this.Id = newId;
                     }
                     else
                     {
-                        throw new Exception(waitData.WaitResult.Message);
+                        throw new Exception(waitData.CompletedData.Message);
                     }
                     break;
                 }
@@ -793,31 +785,28 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private async Task<bool> PrivatePingAsync(string targetId, int millisecondsTimeout, CancellationToken token = default)
+    private async Task<Result> PrivatePingAsync(string targetId, CancellationToken token = default)
     {
         if (!this.Online)
         {
-            return false;
+            return Result.FromFail(TouchSocketResource.ClientNotConnected);
         }
         var waitPing = new WaitPing
         {
             TargetId = targetId,
             SourceId = this.Id
         };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
-        try
+        using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing))
         {
-            waitData.SetCancellationToken(token);
-
             await this.SendJsonObjectAsync(P5_Ping_Request, waitPing, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        return waitData.WaitResult.Status.ToStatus() switch
+                        return waitData.CompletedData.Status.ToStatus() switch
                         {
-                            TouchSocketDmtpStatus.Success => true,
-                            _ => false,
+                            TouchSocketDmtpStatus.Success => Result.Success,
+                            _ => Result.UnknownFail,
                         };
                     }
                 case WaitDataStatus.Default:
@@ -825,16 +814,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 case WaitDataStatus.Canceled:
                 case WaitDataStatus.Disposed:
                 default:
-                    return false;
+                    return Result.UnknownFail;
             }
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            this.WaitHandlePool.Destroy(waitPing.Sign);
         }
     }
 
@@ -911,11 +892,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     item.Value.SafeDispose();
                 }
 
-                m_handshakeFinished.Set();
+                this.m_handshakeFinished.Set();
 
                 this.m_actors.Clear();
                 this.WaitHandlePool.CancelAll();
-                this.WaitHandlePool.SafeDispose();
             }
         }
 
@@ -940,8 +920,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// 异步发送关闭消息
     /// </summary>
     /// <param name="msg"></param>
+    /// <param name="token"></param>
     /// <returns></returns>
-    public async Task<Result> SendCloseAsync(string msg)
+    public async Task<Result> SendCloseAsync(string msg, CancellationToken token = default)
     {
         if (!this.m_online)
         {
@@ -949,7 +930,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         try
         {
-            await this.SendAsync(0, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(0, msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -1030,6 +1011,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         var writer = new SegmentedBytesWriter(memory.Length + 8);
+        await this.m_semaphoreSlim.WaitAsync(token);
         try
         {
             writer.Write(DmtpMessage.Head);
@@ -1045,9 +1027,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         finally
         {
             writer.Dispose();
+            this.m_semaphoreSlim.Release();
         }
     }
-
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
     public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken token = default)
         where TPackage : IPackage
     {
@@ -1069,7 +1052,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         var byteBlock = new ByteBlock(1024 * 64);
         try
         {
-            WriterExtension.WriteNormalString(ref byteBlock,value,Encoding.UTF8);
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
             await this.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
@@ -1191,68 +1174,68 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 throw new Exception(TouchSocketDmtpStatus.ChannelExisted.GetDescription(id));
             }
         }
-
         var byteBlock = new ByteBlock(1024 * 64);
-        var waitCreateChannel = new WaitCreateChannelPackage()
-        {
-            Random = random,
-            ChannelId = id,
-            SourceId = this.Id,
-            TargetId = targetId,
-            Metadata = metadata
-        };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitCreateChannel);
-
         try
         {
-            waitCreateChannel.Package(ref byteBlock);
-
-            await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            var waitCreateChannel = new WaitCreateChannelPackage()
             {
-                case WaitDataStatus.SetRunning:
-                    {
-                        var result = (WaitCreateChannelPackage)waitData.WaitResult;
-                        switch (result.Status.ToStatus())
+                Random = random,
+                ChannelId = id,
+                SourceId = this.Id,
+                TargetId = targetId,
+                Metadata = metadata
+            };
+
+            using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitCreateChannel))
+            {
+                waitCreateChannel.Package(ref byteBlock);
+
+                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    case WaitDataStatus.Success:
                         {
-                            case TouchSocketDmtpStatus.Success:
-                                {
-                                    var channel = new InternalChannel(this, targetId, result.Metadata);
-                                    channel.SetId(result.ChannelId);
-                                    channel.MakeUsing();
-                                    if (this.m_userChannels.TryAdd(result.ChannelId, channel))
+                            var result = (WaitCreateChannelPackage)waitData.CompletedData;
+                            switch (result.Status.ToStatus())
+                            {
+                                case TouchSocketDmtpStatus.Success:
                                     {
-                                        return channel;
+                                        var channel = new InternalChannel(this, targetId, result.Metadata);
+                                        channel.SetId(result.ChannelId);
+                                        channel.MakeUsing();
+                                        if (this.m_userChannels.TryAdd(result.ChannelId, channel))
+                                        {
+                                            return channel;
+                                        }
+                                        else
+                                        {
+                                            throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                                        }
                                     }
-                                    else
+                                case TouchSocketDmtpStatus.ClientNotFind:
                                     {
-                                        throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                                        throw new Exception(TouchSocketDmtpStatus.ClientNotFind.GetDescription(targetId));
                                     }
-                                }
-                            case TouchSocketDmtpStatus.ClientNotFind:
-                                {
-                                    throw new Exception(TouchSocketDmtpStatus.ClientNotFind.GetDescription(targetId));
-                                }
-                            case TouchSocketDmtpStatus.RoutingNotAllowed:
-                            default:
-                                {
-                                    throw new Exception(result.Status.ToStatus().GetDescription(result.Message));
-                                }
+                                case TouchSocketDmtpStatus.RoutingNotAllowed:
+                                default:
+                                    {
+                                        throw new Exception(result.Status.ToStatus().GetDescription(result.Message));
+                                    }
+                            }
                         }
-                    }
-                case WaitDataStatus.Overtime:
-                    {
-                        throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
-                    }
-                default:
-                    {
-                        throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
-                    }
+                    case WaitDataStatus.Overtime:
+                        {
+                            throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
+                        }
+                    default:
+                        {
+                            throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                        }
+                }
             }
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitCreateChannel.Sign);
             byteBlock.Dispose();
         }
     }
@@ -1278,7 +1261,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             }
             else
             {
-                channel.SafeDispose();
                 return false;
             }
         }

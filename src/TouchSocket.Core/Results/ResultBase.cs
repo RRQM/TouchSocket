@@ -10,16 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Resources;
-
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 结果返回
 /// </summary>
-public class ResultBase : IResult
+public class ResultBase
 {
-
     /// <summary>
     /// 初始化 ResultBase 类的新实例。
     /// </summary>
@@ -30,7 +27,6 @@ public class ResultBase : IResult
         this.ResultCode = resultCode;
         this.Message = message;
     }
-
 
     /// <summary>
     /// 初始化 ResultBase 类的新实例。
@@ -58,7 +54,6 @@ public class ResultBase : IResult
         this.Message = result.Message;
     }
 
-
     /// <summary>
     /// ResultBase 类的构造函数。
     /// </summary>
@@ -67,17 +62,11 @@ public class ResultBase : IResult
     }
 
     /// <inheritdoc/>
-    public ResultCode ResultCode { get; protected set; }
+    public bool IsSuccess => this.ResultCode == ResultCode.Success;
 
     /// <inheritdoc/>
     public string Message { get; protected set; }
 
     /// <inheritdoc/>
-    public bool IsSuccess => this.ResultCode == ResultCode.Success;
-
-    /// <inheritdoc/>
-    public override string ToString()
-    {
-        return TouchSocketCoreResource.ResultToString.Format(this.ResultCode, this.Message);
-    }
+    public ResultCode ResultCode { get; protected set; }
 }

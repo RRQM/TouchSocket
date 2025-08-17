@@ -11,8 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,183 +21,133 @@ namespace TouchSocket.Core;
 /// <summary>
 ///单线程状况的流式数据处理适配器测试
 /// </summary>
-public class SingleStreamDataAdapterTester<TAdapter, TRequest> : DisposableObject where TAdapter : CustomDataHandlingAdapter<TRequest>
+public class SingleStreamDataAdapterTester<TAdapter, TRequest>
+    where TAdapter : CustomDataHandlingAdapter<TRequest>
     where TRequest : class, IRequestInfo
 {
-    private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
     private readonly TAdapter m_adapter;
-    private readonly int m_bufferLength;
+    private readonly Pipe m_pipe = new Pipe(new PipeOptions(default, default, default, 1024 * 1024 * 1024, 1024 * 1024 * 512, -1));
     private readonly Action<TRequest> m_receivedCallBack;
+    private int m_bufferLength;
     private int m_count;
     private int m_expectedCount;
-    private Stopwatch m_stopwatch;
-    private int m_timeout;
 
     /// <summary>
     /// Tcp数据处理适配器测试
     /// </summary>
-    public SingleStreamDataAdapterTester(TAdapter adapter, int bufferLength = 1024, Action<TRequest> receivedCallBack = default)
+    public SingleStreamDataAdapterTester(TAdapter adapter, Action<TRequest> receivedCallBack = default)
     {
         this.m_adapter = adapter;
-        this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
-        this.m_bufferLength = bufferLength;
         this.m_receivedCallBack = receivedCallBack;
-        adapter.SendAsyncCallBack = this.SendCallback;
-        _ = EasyTask.SafeRun(this.BeginSend);
     }
 
-
-    /// <summary>
-    /// 模拟测试运行发送
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="testCount">测试次数</param>
-    /// <param name="expectedCount">期待测试次数</param>
-    /// <param name="millisecondsTimeout">超时</param>
-    /// <returns></returns>
-    public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int millisecondsTimeout)
+    public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, CancellationToken token)
     {
         this.m_count = 0;
         this.m_expectedCount = expectedCount;
-        this.m_timeout = millisecondsTimeout;
-        this.m_stopwatch = new Stopwatch();
-        this.m_stopwatch.Start();
-        _ = EasyTask.SafeRun(async () =>
-        {
-            for (var i = 0; i < testCount; i++)
-            {
-                await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length), CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        });
+        this.m_bufferLength = bufferLength;
+        var receivedTask = EasyTask.SafeRun(this.ReceivedLoopAsync, token);
 
-        if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_timeout))
+        var m_stopwatch = new Stopwatch();
+        m_stopwatch.Start();
+
+        for (var i = 0; i < testCount; i++)
         {
-            this.m_stopwatch.Stop();
-            return this.m_stopwatch.Elapsed;
+            token.ThrowIfCancellationRequested();
+            var valueByteBlock = new ValueByteBlock(memory.Length + 1024);
+            try
+            {
+                this.m_adapter.SendInput(ref valueByteBlock, memory);
+
+                await this.SendCallback(valueByteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            finally
+            {
+                valueByteBlock.Dispose();
+            }
         }
-        throw new TimeoutException();
-    }
 
-    /// <summary>
-    /// 模拟发送
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="testCount">测试次数</param>
-    /// <param name="expectedCount">期待测试次数</param>
-    /// <param name="millisecondsTimeout">超时</param>
-    public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
-    {
-        return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
-    }
+        await this.m_pipe.Writer.CompleteAsync();
 
-    private async Task BeginSend()
-    {
-        while (!this.DisposedValue)
+        await receivedTask.WithCancellation(token);
+
+        if (this.m_count != this.m_expectedCount)
         {
-            if (this.TryGet(out var byteBlocks))
-            {
-                foreach (var block in byteBlocks)
-                {
-                    block.SeekToStart();
-                    try
-                    {
-                        var byteBlock = block;
-                        while (byteBlock.CanReadLength>0)
-                        {
-                            if (this.m_adapter.TryParseRequest(ref byteBlock, out var request))
-                            {
-                                this.m_count++;
-                                this.m_receivedCallBack?.Invoke(request);
-                            }
-                        }
-                    }
-                    catch
-                    {
+            throw new Exception($"实际接收次数：{this.m_count}，预期接收次数：{this.m_expectedCount}");
+        }
 
-                    }
-                    finally
-                    {
-                        block.Dispose();
-                    }
-                }
-            }
-            else
+        m_stopwatch.Stop();
+
+        await this.m_pipe.Reader.CompleteAsync();
+        this.m_pipe.Reset();
+
+        var elapsed = m_stopwatch.Elapsed;
+        return elapsed;
+    }
+
+    public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, int millisecondsTimeout)
+    {
+        using (var cancellationToken = new CancellationTokenSource(millisecondsTimeout))
+        {
+            try
             {
-                await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return await this.RunAsync(memory, testCount, expectedCount, bufferLength, cancellationToken.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new TimeoutException();
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }
 
-    private Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private async Task ReceivedLoopAsync(CancellationToken token)
     {
-        var array = memory.ToArray();
-        var asyncByte = new QueueDataBytes(array, 0, array.Length);
-        this.m_asyncBytes.Enqueue(asyncByte);
-        return EasyTask.CompletedTask;
-    }
-
-    private bool TryGet(out List<ByteBlock> byteBlocks)
-    {
-        byteBlocks = new List<ByteBlock>();
-        ByteBlock block = null;
-        while (true)
+        while (!token.IsCancellationRequested)
         {
-            if (this.m_asyncBytes.TryDequeue(out var asyncByte))
-            {
-                if (block == null)
-                {
-                    block = new ByteBlock(this.m_bufferLength);
-                    byteBlocks.Add(block);
-                }
-                var surLen = this.m_bufferLength - block.Position;
-                if (surLen < asyncByte.Length)//不能完成写入
-                {
-                    block.Write(new ReadOnlySpan<byte>(asyncByte.Buffer, asyncByte.Offset, surLen));
-                    var offset = surLen;
-                    while (offset < asyncByte.Length)
-                    {
-                        block = this.Write(asyncByte, ref offset);
-                        byteBlocks.Add(block);
-                    }
+            var readResult = await this.m_pipe.Reader.ReadAsync(token);
 
-                    if (byteBlocks.Count > 10)
-                    {
-                        break;
-                    }
-                }
-                else//本次能完成写入
-                {
-                    block.Write(new ReadOnlySpan<byte>(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length));
-                    if (byteBlocks.Count > 10)
-                    {
-                        break;
-                    }
-                }
-            }
-            else
+            var reader = new BytesReader(readResult.Buffer);
+
+            while (reader.BytesRemaining > 0)
             {
-                if (byteBlocks.Count > 0)
+                if (!this.m_adapter.TryParseRequest(ref reader, out var request))
                 {
                     break;
                 }
-                else
-                {
-                    return false;
-                }
+
+                this.m_count++;
+                this.m_receivedCallBack?.Invoke(request);
+            }
+
+            var position = readResult.Buffer.GetPosition(reader.BytesRead);
+            this.m_pipe.Reader.AdvanceTo(position);
+
+            if (readResult.IsCanceled || readResult.IsCompleted)
+            {
+                return;
             }
         }
-        return true;
     }
 
-    private ByteBlock Write(QueueDataBytes transferByte, ref int offset)
+    private async Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        var block = new ByteBlock(this.m_bufferLength);
-        var len = Math.Min(transferByte.Length - offset, this.m_bufferLength);
-        block.Write(new ReadOnlySpan<byte>(transferByte.Buffer, offset, len));
-        offset += len;
+        var offset = 0;
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
 
-        return block;
+            var remainingLength = memory.Length - offset;
+            if (remainingLength <= 0)
+            {
+                break;
+            }
+            var sliceMemory = memory.Slice(offset, Math.Min(remainingLength, this.m_bufferLength));
+            await this.m_pipe.Writer.WriteAsync(sliceMemory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            offset += sliceMemory.Length;
+        }
     }
 }

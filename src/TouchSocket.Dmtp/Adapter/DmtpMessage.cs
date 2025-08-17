@@ -22,10 +22,14 @@ namespace TouchSocket.Dmtp;
 /// <para>|dm|ProtocolFlags|Length|Data|</para>
 /// <para>|head|ushort|int32|bytes|</para>
 /// </summary>
-public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
+public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
 {
-    private int m_bodyLength;
-    private ByteBlock m_bodyByteBlock;
+    /// <summary>
+    /// Head
+    /// </summary>
+    public static readonly byte[] Head = "dm"u8.ToArray();
+
+    private readonly ReadOnlyMemory<byte> m_memory;
 
     /// <summary>
     /// Dmtp协议的消息。
@@ -33,20 +37,11 @@ public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
     /// <para>|Head|ProtocolFlags|Length|Data|</para>
     /// <para>|dm|ushort|int32|bytes|</para>
     /// </summary>
-    internal DmtpMessage()
+    public DmtpMessage(ushort protocolFlags, ReadOnlyMemory<byte> body)
     {
+        this.ProtocolFlags = protocolFlags;
+        this.m_memory = body;
     }
-
-    public DmtpMessage(ReadOnlyMemory<byte> memory)
-    {
-        this.m_memory = memory;
-    }
-
-    /// <summary>
-    /// Head
-    /// </summary>
-    public static readonly byte[] Head = "dm"u8.ToArray();
-    private readonly ReadOnlyMemory<byte> m_memory;
 
     /// <summary>
     /// Dmtp协议的消息。
@@ -60,16 +55,40 @@ public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
         this.ProtocolFlags = protocolFlags;
     }
 
-    public ReadOnlyMemory<byte> Memory => this.m_bodyByteBlock?.Memory ?? this.m_memory;
-    /// <summary>
-    /// 协议标识
-    /// </summary>
-    public ushort ProtocolFlags { get; set; }
-
     /// <inheritdoc/>
     public int MaxLength => this.Memory.Length + 8;
 
-    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+    public ReadOnlyMemory<byte> Memory => this.m_memory;
+
+    /// <summary>
+    /// 协议标识
+    /// </summary>
+    public ushort ProtocolFlags { get; private set; }
+
+    /// <summary>
+    /// 从当前内存中解析出一个<see cref="DmtpMessage"/>
+    /// <para>注意：
+    /// <list type="number">
+    /// <item>本解析只能解析一个完整消息。所以使用该方法时，请确认是否已经接收完成一个完整的<see cref="DmtpMessage"/>包。</item>
+    /// <item>本解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，所以需要手动释放。</item>
+    /// </list>
+    /// </para>
+    /// </summary>
+    /// <returns></returns>
+    public static DmtpMessage CreateFrom(ReadOnlyMemory<byte> memory)
+    {
+        var offset = 0;
+        var span = memory.Span;
+        if (span[offset++] != Head[0] || span[offset++] != Head[1])
+        {
+            throw new Exception("这可能不是Dmtp协议数据");
+        }
+        var protocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(span.Slice(offset));
+        offset += 2;
+        var bodyLength = TouchSocketBitConverter.BigEndian.To<int>(span.Slice(offset));
+        offset += 4;
+        return new DmtpMessage(protocolFlags, memory.Slice(offset, bodyLength));
+    }
 
     /// <summary>
     /// 构建数据到<see cref="ByteBlock"/>
@@ -77,9 +96,7 @@ public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
     /// <param name="writer"></param>
     public void Build<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         writer.Write(Head);
         WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ProtocolFlags, EndianType.Big);
@@ -95,81 +112,11 @@ public class DmtpMessage : IFixedHeaderRequestInfo, IRequestInfoBuilder
     }
 
     /// <summary>
-    /// 从当前内存中解析出一个<see cref="DmtpMessage"/>
-    /// <para>注意：
-    /// <list type="number">
-    /// <item>本解析只能解析一个完整消息。所以使用该方法时，请确认是否已经接收完成一个完整的<see cref="DmtpMessage"/>包。</item>
-    /// <item>本解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，所以需要手动释放。</item>
-    /// </list>
-    /// </para>
-    /// </summary>
-    /// <returns></returns>
-    public static DmtpMessage CreateFrom(ReadOnlySpan<byte> span)
-    {
-        var offset = 0;
-        if (span[offset++] != Head[0] || span[offset++] != Head[1])
-        {
-            throw new Exception("这可能不是Dmtp协议数据");
-        }
-        var protocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(span.Slice(offset));
-        offset += 2;
-        var bodyLength = TouchSocketBitConverter.BigEndian.To<int>(span.Slice(offset));
-        offset += 4;
-        var byteBlock = new ByteBlock(bodyLength);
-        byteBlock.Write(span.Slice(offset, bodyLength));
-        byteBlock.SeekToStart();
-        return new DmtpMessage()
-        {
-            m_bodyLength = bodyLength,
-            m_bodyByteBlock = byteBlock,
-            ProtocolFlags = protocolFlags
-        };
-    }
-
-    /// <summary>
     /// 将<see cref="Memory"/>的有效数据转换为utf-8的字符串。
     /// </summary>
     /// <returns></returns>
     public string GetBodyString()
     {
         return this.Memory.Span.ToString(Encoding.UTF8);
-    }
-
-    /// <inheritdoc/>
-    /// <param name="disposing"></param>
-    internal void Dispose()
-    {
-        this.m_bodyByteBlock.SafeDispose();
-    }
-
-    bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
-    {
-        if (header.Length == 8)
-        {
-            var offset = 0;
-            if (header[offset++] != Head[0] || header[offset++] != Head[1])
-            {
-                //throw new Exception("这可能不是Dmtp协议数据");
-                return false;
-            }
-            this.ProtocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(offset));
-            offset += 2;
-            this.m_bodyLength = TouchSocketBitConverter.BigEndian.To<int>(header.Slice(offset));
-            return true;
-        }
-        return false;
-    }
-
-    bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
-    {
-        if (body.IsEmpty)
-        {
-            return true;
-        }
-
-        this.m_bodyByteBlock = new ByteBlock(body.Length);
-        this.m_bodyByteBlock.Write(body);
-        this.m_bodyByteBlock.SeekToStart();
-        return true;
     }
 }

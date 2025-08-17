@@ -67,7 +67,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
 
     internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(m_endPoint, memory,token);
+        return this.ProtectedSendAsync(m_endPoint, memory, token);
     }
 
     /// <inheritdoc/>
@@ -93,7 +93,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
             return;
         }
 
-        var message = DmtpMessage.CreateFrom(e.ByteBlock.Span);
+        var message = DmtpMessage.CreateFrom(e.Memory);
         if (!await client.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             if (this.PluginManager.Enable)

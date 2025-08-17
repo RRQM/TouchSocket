@@ -56,27 +56,27 @@ public class FileTransferRouterPackage : WaitRouterPackage
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
         base.PackageBody(ref writer);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ContinuationIndex);
-        WriterExtension.WriteString(ref writer,this.Path);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ResourceHandle);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.FileSectionSize);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ContinuationIndex);
+        WriterExtension.WriteString(ref writer, this.Path);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.FileSectionSize);
         if (this.FileInfo is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.FileInfo.Package(ref writer);
         }
-        
+
         if (this.Metadata is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.Metadata.Package(ref writer);
         }
     }
@@ -85,10 +85,10 @@ public class FileTransferRouterPackage : WaitRouterPackage
     public override void UnpackageBody<TReader>(ref TReader reader)
     {
         base.UnpackageBody(ref reader);
-        this.ContinuationIndex = ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.ContinuationIndex = ReaderExtension.ReadValue<TReader, int>(ref reader);
         this.Path = ReaderExtension.ReadString(ref reader);
-        this.ResourceHandle = ReaderExtension.ReadValue<TReader,int>(ref reader);
-        this.FileSectionSize = ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.FileSectionSize = ReaderExtension.ReadValue<TReader, int>(ref reader);
 
         if (ReaderExtension.ReadIsNull(ref reader))
         {
@@ -99,7 +99,7 @@ public class FileTransferRouterPackage : WaitRouterPackage
             this.FileInfo = new RemoteFileInfo();
             this.FileInfo.Unpackage(ref reader);
         }
-        
+
         if (ReaderExtension.ReadIsNull(ref reader))
         {
             this.Metadata = null;

@@ -38,7 +38,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.ProtectedDefaultSendAsync(memory, token);
+        return this.ProtectedSendAsync(memory, token);
     }
 
     #endregion Send

@@ -97,7 +97,7 @@ public class StreamHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token)
     {
         // 创建一个缓冲区，用于存储读取的数据
 
@@ -159,7 +159,7 @@ public class StreamHttpContent : HttpContent
                     {
                         break;
                     }
-                    await writeFunc.Invoke(memory.Slice(0, r),token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writeFunc.Invoke(memory.Slice(0, r), token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }

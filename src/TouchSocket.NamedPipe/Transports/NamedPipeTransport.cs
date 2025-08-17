@@ -10,25 +10,15 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe;
 
 internal sealed class NamedPipeTransport : StreamTransport
 {
-    public NamedPipeTransport(PipeStream stream, TransportOption option) : base(stream,option)
+    public NamedPipeTransport(PipeStream stream, TransportOption option) : base(stream, option)
     {
-        
+
     }
 }

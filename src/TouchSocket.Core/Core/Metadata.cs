@@ -55,9 +55,7 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
     /// <inheritdoc/>
     public void Package<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriterExtension.WriteValue<TWriter, int>(ref writer, this.Count);
         foreach (var item in this)

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -699,4 +698,33 @@ public static class ModbusMasterExtension
     }
 
     #endregion ReadWrite
+
+    #region SendModbusRequestAsync
+    public static async Task<IModbusResponse> SendModbusRequestAsync(this IModbusMaster master, ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    {
+        if (millisecondsTimeout == Timeout.Infinite)
+        {
+            return await master.SendModbusRequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+
+        using (var timeoutCts = new CancellationTokenSource(millisecondsTimeout))
+        {
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCts.Token))
+            {
+                try
+                {
+                    return await master.SendModbusRequestAsync(request, linkedCts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (timeoutCts.IsCancellationRequested && !token.IsCancellationRequested)
+                    {
+                        throw new TimeoutException("The operation has timed out.");
+                    }
+                    throw;
+                }
+            }
+        }
+    }
+    #endregion
 }

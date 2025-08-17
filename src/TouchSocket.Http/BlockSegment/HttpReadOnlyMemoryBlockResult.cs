@@ -11,33 +11,33 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
-class HttpReadOnlyMemoryBlockResult : IReadOnlyMemoryBlockResult
+
+public readonly struct HttpReadOnlyMemoryBlockResult : IDisposable
 {
+    public static readonly HttpReadOnlyMemoryBlockResult Completed = new HttpReadOnlyMemoryBlockResult(ReadOnlyMemory<byte>.Empty);
+    private readonly Action m_disposeAction;
 
-    public static readonly IReadOnlyMemoryBlockResult Completed = new HttpReadOnlyMemoryBlockResult(() => { }) { IsCompleted = true };
-
-    public static IReadOnlyMemoryBlockResult FromResult(ReadOnlyMemory<byte> memory)
+    public HttpReadOnlyMemoryBlockResult(Action disposeAction, ReadOnlyMemory<byte> memory, bool isCompleted)
     {
-        return new HttpReadOnlyMemoryBlockResult(() => { }) { IsCompleted = true, Memory = memory };
+        this.m_disposeAction = disposeAction;
+        this.Memory = memory;
+        this.IsCompleted = isCompleted;
     }
 
-    private readonly Action m_actionForDispose;
-
-    public HttpReadOnlyMemoryBlockResult(Action actionForDispose)
+    public HttpReadOnlyMemoryBlockResult(ReadOnlyMemory<byte> memory)
     {
-        this.m_actionForDispose = actionForDispose;
+        this.Memory = memory;
+        this.IsCompleted = true;
+        this.m_disposeAction = default;
     }
-    public ReadOnlyMemory<byte> Memory { get; set; }
 
-    public bool IsCompleted { get; set; }
-
-    public string Message { get; set; }
+    public bool IsCompleted { get; }
+    public ReadOnlyMemory<byte> Memory { get; }
 
     public void Dispose()
     {
-        this.m_actionForDispose.Invoke();
+        this.m_disposeAction?.Invoke();
     }
 }

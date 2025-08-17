@@ -81,7 +81,7 @@ internal class DmtpRpcResponsePackage : WaitRouterPackage
     public override void PackageRouter<TWriter>(ref TWriter writer)
     {
         base.PackageRouter(ref writer);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.m_serializationType);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_serializationType);
     }
 
     /// <inheritdoc/>
@@ -98,7 +98,7 @@ internal class DmtpRpcResponsePackage : WaitRouterPackage
     public override void UnpackageRouter<TReader>(ref TReader reader)
     {
         base.UnpackageRouter(ref reader);
-        this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 
     internal void ThrowStatus()

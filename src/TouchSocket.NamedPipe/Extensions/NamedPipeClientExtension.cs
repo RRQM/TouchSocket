@@ -29,9 +29,9 @@ public static class NamedPipeClientExtension
     /// <typeparam name="TClient"></typeparam>
     /// <param name="client"></param>
     /// <param name="pipeName">管道名称</param>
-    /// <param name="millisecondsTimeout">超时设定</param>
+    /// <param name="token"></param>
     /// <returns></returns>
-    public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
+    public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, CancellationToken token) where TClient : INamedPipeClient
     {
         TouchSocketConfig config;
         if (client.Config == null)
@@ -45,7 +45,7 @@ public static class NamedPipeClientExtension
             config = client.Config;
             config.SetPipeName(pipeName);
         }
-        await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return client;
     }
 

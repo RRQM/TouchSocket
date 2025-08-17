@@ -84,7 +84,7 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
         }
         try
         {
-            var strs = e.ByteBlock.ToString().Split(' ');
+            var strs = e.Memory.Span.ToUtf8String().Split(' ');
             if (strs.Length > 0 && this.m_pairs.TryGetValue(strs[0], out var method))
             {
                 var ps = method.Info.GetParameters();

@@ -61,9 +61,7 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// </summary>
     public virtual void PackageRouter<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriterExtension.WriteString(ref writer, this.SourceId, FixedHeaderType.Byte);
         WriterExtension.WriteString(ref writer, this.TargetId, FixedHeaderType.Byte);
@@ -93,9 +91,7 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <param name="reader"></param>
     public virtual void UnpackageBody<TReader>(ref TReader reader)
         where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
     }
 
@@ -106,9 +102,7 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <param name="reader"></param>
     public virtual void UnpackageRouter<TReader>(ref TReader reader)
         where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         this.SourceId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
         this.TargetId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);

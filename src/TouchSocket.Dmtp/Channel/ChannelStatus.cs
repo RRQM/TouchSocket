@@ -45,10 +45,5 @@ public enum ChannelStatus : byte
     /// <summary>
     /// 完成
     /// </summary>
-    Completed = 5,
-
-    /// <summary>
-    /// 已释放
-    /// </summary>
-    Disposed = 6
+    Completed = 5
 }

@@ -10,21 +10,27 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 
 namespace TouchSocket.Core;
 
-public class DataHandlingAdapterSlimGroup<TRequest> : DataHandlingAdapterSlim<TRequest>
+public class CustomDataHandlingAdapterGroup<TRequest> : CustomDataHandlingAdapter<TRequest>
     where TRequest : IRequestInfo
 {
-    private readonly List<DataHandlingAdapterSlim<TRequest>> m_dataHandlingAdapterSlims;
+    private readonly List<CustomDataHandlingAdapterGroup<TRequest>> m_dataHandlingAdapterSlims;
 
-    public DataHandlingAdapterSlimGroup(IEnumerable<DataHandlingAdapterSlim<TRequest>> adapters)
+    public CustomDataHandlingAdapterGroup(params CustomDataHandlingAdapterGroup<TRequest>[] adapters)
     {
-        m_dataHandlingAdapterSlims = new(adapters);
+        this.m_dataHandlingAdapterSlims = new(adapters);
     }
 
-    public override bool TryParseRequest<TReader>(ref TReader reader, out TRequest request)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override bool ParseRequestCore<TReader>(ref TReader reader, out TRequest request)
     {
         foreach (var item in this.m_dataHandlingAdapterSlims)
         {

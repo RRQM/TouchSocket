@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Channels;
@@ -45,7 +44,7 @@ public class MqttSessionActor : MqttActor
     public MqttSessionActor(MqttBroker messageCenter)
     {
         this.m_mqttBroker = messageCenter;
-        _=EasyTask.SafeRun(this.WaitForReadAsync);
+        _ = EasyTask.SafeRun(this.WaitForReadAsync);
     }
 
     /// <summary>
@@ -202,7 +201,7 @@ public class MqttSessionActor : MqttActor
         await base.PublishMessageArrivedAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage,CancellationToken token)
+    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage, CancellationToken token)
     {
         if (token.IsCancellationRequested)
         {
@@ -231,7 +230,7 @@ public class MqttSessionActor : MqttActor
     private async Task WaitForReadAsync()
     {
         var token = this.TokenSource.Token;
-        var reader=this.m_mqttArrivedMessageQueue.Reader;
+        var reader = this.m_mqttArrivedMessageQueue.Reader;
         while (true)
         {
             try
@@ -241,8 +240,8 @@ public class MqttSessionActor : MqttActor
                     Console.WriteLine("WaitForReadAsync IsCancellationRequested");
                     return;
                 }
-                
-               var b=await reader.WaitToReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                var b = await reader.WaitToReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (!b)
                 {
                     return;

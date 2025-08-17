@@ -12,6 +12,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -21,5 +22,5 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public interface IMqttClient : IMqttSession, IConnectableClient
 {
-    Task PingAsync(int timeout = 5000, CancellationToken token = default);
+    ValueTask<Result> PingAsync(CancellationToken token = default);
 }

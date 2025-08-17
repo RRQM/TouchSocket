@@ -23,7 +23,7 @@ internal static class NullableHelpers
     /// <typeparam name="T">The type of argument to be passed to the delegate.</typeparam>
     /// <param name="action">The delegate which, according to the signature, does not expect <see langword="null"/>.</param>
     /// <returns>The exact same referenced delegate, but with a signature that may expect <see langword="null"/>.</returns>
-    internal static Action<T?> AsNullableArgAction<T>(Action<T> action)
+    internal static Action<T> AsNullableArgAction<T>(Action<T> action)
         where T : class
     {
         return action!;
@@ -37,7 +37,7 @@ internal static class NullableHelpers
     /// <typeparam name="TReturn">The type of value returned from the delegate.</typeparam>
     /// <param name="func">The delegate which, according to the signature, does not expect <see langword="null"/>.</param>
     /// <returns>The exact same referenced delegate, but with a signature that may expect <see langword="null"/>.</returns>
-    internal static Func<TArg?, TReturn> AsNullableArgFunc<TArg, TReturn>(Func<TArg, TReturn> func)
+    internal static Func<TArg, TReturn> AsNullableArgFunc<TArg, TReturn>(Func<TArg, TReturn> func)
         where TArg : class
     {
         return func!;

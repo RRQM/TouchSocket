@@ -33,7 +33,7 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+    private TaskCompletionSource<ModbusRtuResponse> m_waitDataAsync;
 
     #endregion 字段
 
@@ -45,9 +45,9 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
     {
-        await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -55,12 +55,9 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
 
             await this.ProtectedSendAsync(modbusTcpRequest, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            this.m_waitDataAsync.Reset();
-            this.m_waitDataAsync.SetCancellationToken(token);
-            var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            waitDataStatus.ThrowIfNotRunning();
+            this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            var response = this.m_waitDataAsync.WaitResult;
+            var response = await this.m_waitDataAsync.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -76,7 +73,7 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     {
         if (e.RequestInfo is ModbusRtuResponse response)
         {
-            this.m_waitDataAsync.Set(response);
+            this.m_waitDataAsync?.TrySetResult(response);
         }
         await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

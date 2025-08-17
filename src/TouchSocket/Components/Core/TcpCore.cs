@@ -44,9 +44,9 @@ internal sealed class TcpCore : SafetyDisposableObject
 
     #endregion 字段
 
-    public bool SendRunContinuationsAsynchronously { get=>this.m_socketSender.RunContinuationsAsynchronously; set=> this.m_socketSender.RunContinuationsAsynchronously=value; }
+    public bool SendRunContinuationsAsynchronously { get => this.m_socketSender.RunContinuationsAsynchronously; set => this.m_socketSender.RunContinuationsAsynchronously = value; }
 
-    public bool ReceiveRunContinuationsAsynchronously { get=>this.m_socketReceiver.RunContinuationsAsynchronously; set=> this.m_socketReceiver.RunContinuationsAsynchronously=value; }
+    public bool ReceiveRunContinuationsAsynchronously { get => this.m_socketReceiver.RunContinuationsAsynchronously; set => this.m_socketReceiver.RunContinuationsAsynchronously = value; }
 
     public Socket Socket => this.m_socket;
 
@@ -127,25 +127,6 @@ internal sealed class TcpCore : SafetyDisposableObject
     }
 
     #endregion Receive
-
-    public Result Close()
-    {
-        try
-        {
-            var socket = this.m_socket;
-            if (!socket.Connected)
-            {
-                return Result.Success;
-            }
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
-    }
 
     /// <summary>
     /// 重置环境，并设置新的<see cref="Socket"/>。

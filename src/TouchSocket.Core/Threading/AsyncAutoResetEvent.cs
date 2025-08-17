@@ -21,6 +21,9 @@ namespace TouchSocket.Core;
 /// <summary>
 /// An asynchronous implementation of an AutoResetEvent.
 /// </summary>
+/// <remarks>
+/// 此代码摘抄自微软VS相关库。
+/// </remarks>
 [DebuggerDisplay("Signaled: {signaled}")]
 public class AsyncAutoResetEvent
 {

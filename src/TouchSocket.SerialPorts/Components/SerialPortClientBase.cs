@@ -101,9 +101,9 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// 如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。
     /// 返回<see langword="false"/>则表示数据未被处理，可能会继续向下传递。
     /// </returns>
-    protected virtual ValueTask<bool> OnSerialReceiving(IByteBlockReader byteBlock)
+    protected virtual ValueTask<bool> OnSerialReceiving(IBytesReader byteBlock)
     {
-        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
+        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(byteBlock));
     }
 
     /// <summary>
@@ -127,6 +127,9 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
         var e_connected = new ConnectedEventArgs();
         await this.OnSerialConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        transport.SafeDispose();
+
         var e_closed = transport.ClosedEventArgs;
         this.m_online = false;
         var adapter = this.m_dataHandlingAdapter;
@@ -225,14 +228,13 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// <summary>
     /// 异步连接到串口设备。
     /// </summary>
-    /// <param name="millisecondsTimeout">连接操作的超时时间（以毫秒为单位）。</param>
     /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示异步操作的任务。</returns>
-    protected async Task SerialPortConnectAsync(int millisecondsTimeout, CancellationToken token)
+    protected async Task SerialPortConnectAsync(CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -275,35 +277,28 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
         {
             while (true)
             {
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
                 if (this.DisposedValue || token.IsCancellationRequested)
                 {
                     return;
                 }
-
-                if (result.IsCanceled || result.IsCompleted)
+                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
                 {
-                    return;
+                    break;
                 }
-
-                foreach (var item in result.Buffer)
+                var reader = new ClassBytesReader(result.Buffer);
+                if (!await this.OnSerialReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    var reader = new ByteBlockReader(item);
                     try
                     {
-                        if (await this.OnSerialReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            continue;
-                        }
-
                         if (this.m_dataHandlingAdapter == null)
                         {
-                            await this.PrivateHandleReceivedData(reader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            foreach (var item in reader.Sequence)
+                            {
+                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                reader.Advance(item.Length);
+                            }
+
                         }
                         else
                         {
@@ -315,7 +310,13 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
                         this.Logger?.Exception(this, ex);
                     }
                 }
-                transport.Input.AdvanceTo(result.Buffer.End);
+                var position = result.Buffer.GetPosition(reader.BytesRead);
+                transport.Input.AdvanceTo(position);
+
+                if (result.IsCanceled || result.IsCompleted)
+                {
+                    return;
+                }
             }
         }
         catch (Exception ex)
@@ -329,10 +330,10 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
             var e_closed = transport.ClosedEventArgs;
             if (receiver != null)
             {
-                await receiver.Complete(e_closed.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                receiver.Complete(e_closed.Message);
             }
         }
-       
+
     }
 
     /// <summary>
@@ -342,28 +343,17 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// <exception cref="ArgumentNullException">如果提供的适配器实例为<see langword="null"/>，则抛出此异常。</exception>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
-        // 检查当前实例是否已被释放，如果是，则抛出异常。
-        this.ThrowIfDisposed();
-        // 检查adapter参数是否为<see langword="null"/>，如果是，则抛出ArgumentNullException异常。
-        if (adapter is null)
-        {
-            throw new ArgumentNullException(nameof(adapter));
-        }
 
-        // 如果当前实例的配置不为空，则将配置应用到适配器上。
+        this.ThrowIfDisposed();
+
         if (this.Config != null)
         {
             adapter.Config(this.Config);
         }
 
-        // 设置适配器的日志记录器和加载、接收数据的回调方法。
-        adapter.Logger = this.Logger;
         adapter.OnLoaded(this);
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-        //adapter.SendCallBack = this.ProtectedDefaultSend;
-        adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
 
-        // 将提供的适配器实例设置为当前实例的数据处理适配器。
         this.m_dataHandlingAdapter = adapter;
     }
 
@@ -378,15 +368,15 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
         return serialPort;
     }
 
-    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private async Task WaitClearConnect()
@@ -454,30 +444,6 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
     #region 发送
 
-    /// <summary>
-    /// 异步发送数据，保护方法。
-    /// </summary>
-    /// <param name="memory">待发送的字节数据内存。</param>
-    /// <param name="token">可取消令箭</param>
-    /// <returns>异步任务。</returns>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
-    {
-        this.ThrowIfDisposed();
-        this.ThrowIfClientNotConnected();
-        await this.OnSerialSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        var transport = this.m_transport;
-
-        await transport.SemaphoreSlimForWriter.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            transport.SemaphoreSlimForWriter.Release();
-        }
-    }
 
     /// <summary>
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
@@ -485,17 +451,36 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// <param name="memory">待发送的只读字节内存块。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>一个异步任务，表示发送操作。</returns>
-    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        // 如果数据处理适配器未设置，则使用默认发送方式。
-        if (this.m_dataHandlingAdapter == null)
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+
+
+        await this.OnSerialSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
+
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
         {
-            return this.ProtectedDefaultSendAsync(memory, token);
+            // 如果数据处理适配器未设置，则使用默认发送方式。
+            if (adapter == null)
+            {
+                await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            else
+            {
+                var writer = new PipeBytesWriter(transport.Output);
+                adapter.SendInput(ref writer, in memory);
+                await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
-        else
+        finally
         {
-            // 否则，使用适配器的发送方法进行数据发送。
-            return this.m_dataHandlingAdapter.SendInputAsync(memory, token);
+            locker.Release();
         }
     }
 
@@ -508,14 +493,29 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
     /// <param name="requestInfo">要发送的请求信息。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
-    protected Task ProtectedSendAsync(in IRequestInfo requestInfo, CancellationToken token)
+    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
     {
         // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
 
-        // 使用数据处理适配器异步发送输入请求
-        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo, token);
-    }
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
 
+        var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
+
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            var writer = new PipeBytesWriter(transport.Output);
+            adapter.SendInput(ref writer, requestInfo);
+            await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            locker.Release();
+        }
+    }
     #endregion 发送
 }

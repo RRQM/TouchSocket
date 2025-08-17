@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,24 +39,24 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private ClientWebSocket m_client;
-    private Task m_receiveTask;
-    private bool m_isOnline;
-    private int m_receiveBufferSize = 1024 * 10;
+    private Task m_runTask;
+    private bool m_online;
     private ValueCounter m_receiveCounter;
     private ValueCounter m_sendCounter;
     private CancellationTokenSource m_tokenSourceForOnline;
-
+    private ClosedEventArgs m_closedEventArgs;
     #endregion 字段
 
     #region 连接
 
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken token)
     {
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.ThrowIfDisposed();
+        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            if (this.m_isOnline)
+            if (this.m_online)
             {
                 return;
             }
@@ -70,15 +71,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
             this.m_tokenSourceForOnline = new CancellationTokenSource();
 
-            //// 确保上次接收任务已经结束
-            //var receiveTask = this.m_receiveTask;
-            //if (receiveTask != null)
-            //{
-            //    await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            //}
-            this.m_receiveTask = EasyTask.Run(this.BeginReceive, this.m_tokenSourceForOnline.Token);
+            this.m_runTask = EasyTask.Run(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
 
-            this.m_isOnline = true;
+            this.m_online = true;
         }
         finally
         {
@@ -86,6 +81,24 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         }
     }
 
+    private async Task PrivateOnConnected(CancellationToken token)
+    {
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, token);
+
+        await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_online = false;
+        await this.OnWebSocketClosed(this.m_closedEventArgs).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    private async Task WaitClearConnect()
+    {
+        // 确保上次接收任务已经结束
+        var runTask = this.m_runTask;
+        if (runTask != null)
+        {
+            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+    }
     #endregion 连接
 
     /// <inheritdoc/>
@@ -106,7 +119,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     protected ClientWebSocket ClientWebSocket => this.m_client;
 
     /// <inheritdoc/>
-    public virtual bool Online => this.m_client != null && this.m_client.State == WebSocketState.Open && this.m_client.CloseStatus == null && this.m_isOnline;
+    public virtual bool Online => this.m_client != null && this.m_client.State == WebSocketState.Open && this.m_client.CloseStatus == null && this.m_online;
 
     /// <inheritdoc/>
     public CancellationToken ClosedToken => this.m_tokenSourceForOnline.GetTokenOrCanceled();
@@ -116,13 +129,15 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     {
         try
         {
-            var client = this.m_client;
-            if (client != null && client.State == WebSocketState.Open)
+            if (!this.m_online)
             {
-                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return Result.Success;
             }
-            this.Abort(true, msg);
 
+            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
+            await this.m_client.SafeCloseClientAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.CancelReceive();
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -131,40 +146,15 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         }
     }
 
-    /// <summary>
-    /// 中断连接
-    /// </summary>
-    /// <param name="msg"></param>
-    /// <param name="manual"></param>
-    protected void Abort(bool manual, string msg)
-    {
-        lock (this.m_semaphoreForConnect)
-        {
-            if (this.m_isOnline)
-            {
-                this.m_isOnline = false;
-                this.m_client.Abort();
-                this.m_client.SafeDispose();
-                this.CancelReceive();
 
-                _ = EasyTask.SafeRun(this.PrivateOnClosed, this.m_receiveTask, new ClosedEventArgs(manual, msg));
-            }
-        }
-    }
-
-    private async Task PrivateOnClosed(Task receiveTask, ClosedEventArgs e)
-    {
-        //await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
 
     private void CancelReceive()
     {
         var tokenSourceForReceive = this.m_tokenSourceForOnline;
         if (tokenSourceForReceive != null)
         {
-            tokenSourceForReceive.Cancel();
-            tokenSourceForReceive.Dispose();
+            tokenSourceForReceive.SafeCancel();
+            tokenSourceForReceive.SafeDispose();
         }
         this.m_tokenSourceForOnline = null;
     }
@@ -172,13 +162,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
         if (disposing)
         {
-            this.Abort(true, $"调用{nameof(Dispose)}");
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
         }
 
         base.SafetyDispose(disposing);
@@ -193,13 +179,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         return EasyTask.CompletedTask;
     }
 
-    /// <summary>
-    /// 收到数据
-    /// </summary>
-    /// <param name="result"></param>
-    /// <param name="byteBlock"></param>
-    /// <returns></returns>
-    protected abstract Task OnReceived(WebSocketReceiveResult result, IByteBlockReader byteBlock);
+    protected abstract Task OnWebSocketReceived(WebSocketReceiveResult result, ReadOnlySequence<byte> sequence);
 
     /// <summary>
     /// 发送数据
@@ -221,12 +201,12 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         this.m_sendCounter.Increment(memory.Length);
     }
 
-    private async Task BeginReceive(CancellationToken token)
+    private async Task ReceiveLoopAsync(CancellationToken token)
     {
-        var byteBlock = new ByteBlock(this.m_receiveBufferSize);
         try
         {
-            while (true)
+            SegmentedBytesWriter writer = default;
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
@@ -236,8 +216,8 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     {
                         break;
                     }
-
-                    var segment = byteBlock.TotalMemory.GetArray();
+                    writer ??= new SegmentedBytesWriter(1024 * 64);
+                    var segment = writer.GetMemory(1024 * 64).GetArray();
                     var result = await client.ReceiveAsync(segment, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (result.MessageType == WebSocketMessageType.Close)
@@ -259,49 +239,34 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     {
                         break;
                     }
-                    byteBlock.SetLength(result.Count);
                     this.m_receiveCounter.Increment(result.Count);
-
-                    //处理数据
-                    await this.OnReceived(result, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    writer.Advance(result.Count);
+                    if (result.EndOfMessage)
+                    {
+                        //处理数据
+                        await this.OnWebSocketReceived(result, writer.Sequence).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        writer.Dispose();
+                        writer = null;
+                    }
                 }
                 catch (Exception ex)
                 {
                     this.Logger?.Debug(this, ex);
                     break;
                 }
-                finally
-                {
-                    if (!byteBlock.Using)
-                    {
-                        byteBlock = new ByteBlock(this.m_receiveBufferSize);
-                    }
-                    else
-                    {
-                        byteBlock.Reset();
-                        if (this.m_receiveBufferSize > byteBlock.Capacity)
-                        {
-                            byteBlock.ExtendSize(this.m_receiveBufferSize);
-                        }
-                    }
-                }
             }
-
-            this.Abort(false, TouchSocketResource.RemoteDisconnects);
+            this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
         }
         catch (Exception ex)
         {
-            this.Abort(false, ex.Message);
-        }
-        finally
-        {
-            byteBlock.Dispose();
+            this.m_closedEventArgs = new ClosedEventArgs(false, ex.Message);
+            this.Logger?.Debug(this, ex);
         }
     }
 
     private void OnReceivePeriod(long value)
     {
-        this.m_receiveBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
+        //this.m_receiveBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
     }
 
     private void OnSendPeriod(long value)

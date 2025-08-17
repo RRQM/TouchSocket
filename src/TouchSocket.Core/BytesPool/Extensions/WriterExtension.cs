@@ -126,7 +126,7 @@ public static partial class WriterExtension
 
     public static void WritePackage<TWriter, TPackage>(ref TWriter writer, TPackage package)
         where TWriter : IBytesWriter
-        where TPackage :class, IPackage
+        where TPackage : class, IPackage
     {
         if (package is null)
         {
@@ -281,5 +281,47 @@ public static partial class WriterExtension
 
         writer.Advance(byteLength);
         return byteLength;
+    }
+
+    public static void WriteEnum<TWriter>(ref TWriter writer, Enum value)
+        where TWriter : IBytesWriter
+    {
+        var underlyingType = Enum.GetUnderlyingType(value.GetType());
+        if (underlyingType == typeof(byte))
+        {
+            WriteValue(ref writer, Convert.ToByte(value));
+        }
+        else if (underlyingType == typeof(sbyte))
+        {
+            WriteValue(ref writer, Convert.ToSByte(value));
+        }
+        else if (underlyingType == typeof(short))
+        {
+            WriteValue(ref writer, Convert.ToInt16(value));
+        }
+        else if (underlyingType == typeof(ushort))
+        {
+            WriteValue(ref writer, Convert.ToUInt16(value));
+        }
+        else if (underlyingType == typeof(int))
+        {
+            WriteValue(ref writer, Convert.ToInt32(value));
+        }
+        else if (underlyingType == typeof(uint))
+        {
+            WriteValue(ref writer, Convert.ToUInt32(value));
+        }
+        else if (underlyingType == typeof(long))
+        {
+            WriteValue(ref writer, Convert.ToInt64(value));
+        }
+        else if (underlyingType == typeof(ulong))
+        {
+            WriteValue(ref writer, Convert.ToUInt64(value));
+        }
+        else
+        {
+            ThrowHelper.ThrowNotSupportedException($"Unsupported enum underlying type: {underlyingType}");
+        }
     }
 }

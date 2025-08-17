@@ -54,7 +54,7 @@ public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         foreach (var topicFilter in this.TopicFilters)
         {
             MqttExtension.WriteMqttInt16String(ref writer, topicFilter);
@@ -77,7 +77,7 @@ public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         while (!this.EndOfByteBlock(reader))
         {
             this.m_topicFilters.Add(MqttExtension.ReadMqttInt16String(ref reader));

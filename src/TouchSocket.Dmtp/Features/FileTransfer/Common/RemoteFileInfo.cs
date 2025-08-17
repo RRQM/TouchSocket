@@ -58,8 +58,8 @@ public class RemoteFileInfo : RemoteFileSystemInfo
     public override void Package<TWriter>(ref TWriter writer)
     {
         base.Package(ref writer);
-        WriterExtension.WriteString(ref writer,this.MD5);
-        WriterExtension.WriteValue<TWriter,long>(ref writer,this.Length);
+        WriterExtension.WriteString(ref writer, this.MD5);
+        WriterExtension.WriteValue<TWriter, long>(ref writer, this.Length);
     }
 
     /// <inheritdoc/>
@@ -67,6 +67,6 @@ public class RemoteFileInfo : RemoteFileSystemInfo
     {
         base.Unpackage(ref reader);
         this.MD5 = ReaderExtension.ReadString(ref reader);
-        this.Length = ReaderExtension.ReadValue<TReader,long>(ref reader);
+        this.Length = ReaderExtension.ReadValue<TReader, long>(ref reader);
     }
 }

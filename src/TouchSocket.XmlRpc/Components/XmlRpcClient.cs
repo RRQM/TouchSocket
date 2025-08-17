@@ -26,9 +26,9 @@ namespace TouchSocket.XmlRpc;
 public class XmlRpcClient : HttpClientBase, IXmlRpcClient
 {
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 
     /// <inheritdoc/>
@@ -40,7 +40,7 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
         {
             var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
 
-            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
 

@@ -10,7 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +25,31 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public static class WebSocketExtension
 {
+    #region WebSocket
+    public static async Task<Result> SafeCloseClientAsync(this WebSocket webSocket, string msg, CancellationToken token)
+    {
+        if (webSocket is null)
+        {
+            return Result.Success;
+        }
+
+        if (webSocket.State != WebSocketState.Open)
+        {
+            return Result.Success;
+        }
+
+        try
+        {
+            await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, token);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+    #endregion
+
     #region string
 
     /// <summary>
@@ -221,7 +248,7 @@ public static class WebSocketExtension
                             //收到的是中继包
                             if (dataFrame.FIN)//判断是否为最终包
                             {
-                                await stream.WriteAsync(data,CancellationToken.None);
+                                await stream.WriteAsync(data, CancellationToken.None);
                                 return;
                             }
                             else
@@ -235,7 +262,7 @@ public static class WebSocketExtension
                         {
                             if (dataFrame.FIN)//判断是不是最后的包
                             {
-                                await stream.WriteAsync(data,CancellationToken.None);
+                                await stream.WriteAsync(data, CancellationToken.None);
                                 return;
                             }
                             else
@@ -260,7 +287,7 @@ public static class WebSocketExtension
     /// <summary>
     /// WebSocketMessageCombinatorProperty
     /// </summary>
-    public readonly static DependencyProperty<WebSocketMessageCombinator> WebSocketMessageCombinatorProperty =
+    public static readonly DependencyProperty<WebSocketMessageCombinator> WebSocketMessageCombinatorProperty =
              new DependencyProperty<WebSocketMessageCombinator>("WebSocketMessageCombinator", (obj) =>
              {
                  var combinator = new WebSocketMessageCombinator();

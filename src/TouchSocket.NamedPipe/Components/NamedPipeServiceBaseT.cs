@@ -31,7 +31,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private readonly InternalClientCollection<TClient> m_clients = new InternalClientCollection<TClient>();
     private readonly List<NamedPipeMonitor> m_monitors = new List<NamedPipeMonitor>();
-    CancellationTokenSource m_cancellationTokenSource;
+    private readonly CancellationTokenSource m_cancellationTokenSource;
     private ServerState m_serverState;
     #endregion 字段
 
@@ -103,7 +103,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
     {
         this.ThrowIfDisposed();
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
@@ -115,7 +115,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -226,7 +226,6 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
             await client.InternalInitialized(this.Config,
                 monitor.Option,
-                namedPipe,
                 this.Resolver,
                 this.PluginManager,
                 this,

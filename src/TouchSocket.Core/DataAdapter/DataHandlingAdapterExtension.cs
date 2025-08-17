@@ -44,12 +44,29 @@ public static class DataHandlingAdapterExtension
         {
             adapter.CacheTimeoutEnable = option.CacheTimeoutEnable.Value;
         }
-
-        if (option.UpdateCacheTimeWhenRev.HasValue)
-        {
-            adapter.UpdateCacheTimeWhenRev = option.UpdateCacheTimeWhenRev.Value;
-        }
     }
+    //    public static void Config<TRequest>(this DataHandlingAdapterSlim<TRequest> adapter, TouchSocketConfig config)
+    //#if NET9_0_OR_GREATER
+    //    where TRequest : allows ref struct
+    //#endif
+    //    {
+    //        var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
+
+    //        if (option.MaxPackageSize.HasValue)
+    //        {
+    //            adapter.MaxPackageSize = option.MaxPackageSize.Value;
+    //        }
+
+    //        if (option.CacheTimeout.HasValue)
+    //        {
+    //            adapter.CacheTimeout = option.CacheTimeout.Value;
+    //        }
+
+    //        if (option.CacheTimeoutEnable.HasValue)
+    //        {
+    //            adapter.CacheTimeoutEnable = option.CacheTimeoutEnable.Value;
+    //        }
+    //    }
 
     /// <summary>
     /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
@@ -84,27 +101,4 @@ public static class DataHandlingAdapterExtension
         config.SetValue(AdapterOptionProperty, value);
         return config;
     }
-
-    #region BuildAsBytes
-
-    /// <summary>
-    /// 将对象构建到字节数组
-    /// </summary>
-    /// <param name="requestInfo"></param>
-    /// <returns></returns>
-    public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
-    {
-        var byteBlock = new ByteBlock(requestInfo.MaxLength);
-        try
-        {
-            requestInfo.Build(ref byteBlock);
-            return byteBlock.ToArray();
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    #endregion BuildAsBytes
 }

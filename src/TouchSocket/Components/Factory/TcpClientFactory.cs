@@ -30,11 +30,11 @@ public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClie
 public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
 {
     /// <inheritdoc/>
-    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
+    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config, CancellationToken token)
     {
         var client = new TcpClient();
         await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return client;
     }
 }

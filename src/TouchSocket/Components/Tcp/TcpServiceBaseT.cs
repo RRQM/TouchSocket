@@ -123,7 +123,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
@@ -135,7 +135,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         if (this.m_clients.TryGetClient(sourceId, out var client))
         {
-            await client.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -416,7 +416,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                 }
                 if (this.m_clients.TryAdd(client))
                 {
-                   var  transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+                    var transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
                     await client.InternalConnected(transport).SafeWaitAsync()
                         .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }

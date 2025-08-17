@@ -89,7 +89,7 @@ public static class SystemThreadingExtension
     /// <param name="semaphoreSlim">要等待的信号量。</param>  
     /// <param name="token">用于取消操作的取消令牌。</param>  
     /// <returns>一个 <see cref="Result"/> 对象，表示操作的结果。</returns>  
-    public static async Task<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken token)
+    public static async ValueTask<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken token)
     {
         try
         {
@@ -391,7 +391,7 @@ public static class SystemThreadingExtension
     /// <see langword="false" /> if the location's value remained the same because the last invocation of <paramref name="applyChange"/> returned the existing value.
     /// </returns>
     public static bool ApplyChangeOptimistically<T>(ref T hotLocation, Func<T, T> applyChange)
-        where T : class?
+        where T : class
     {
 
         bool successful;
@@ -432,7 +432,7 @@ public static class SystemThreadingExtension
     /// <see langword="false" /> if the location's value remained the same because the last invocation of <paramref name="applyChange"/> returned the existing value.
     /// </returns>
     public static bool ApplyChangeOptimistically<T, TArg>(ref T hotLocation, TArg applyChangeArgument, Func<T, TArg, T> applyChange)
-        where T : class?
+        where T : class
     {
         bool successful;
         do

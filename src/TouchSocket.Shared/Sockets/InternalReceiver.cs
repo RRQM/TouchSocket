@@ -17,161 +17,80 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
-/// <summary>
-/// Receiver
-/// </summary>
-internal sealed class InternalReceiver : BlockSegment<IReceiverResult>, IReceiver<IReceiverResult>
+internal class InternalReceiver : SafetyDisposableObject, IReceiver<IReceiverResult>
 {
-    #region 字段
-
     private readonly IReceiverClient<IReceiverResult> m_client;
-    private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
-    private IByteBlockReader m_byteBlock;
-    private IRequestInfo m_requestInfo;
-    private bool m_cacheMode;
-    private int m_maxCacheSize = 1024 * 64;
-    private ByteBlock m_cacheByteBlock;
-    private InternalReceiverResult m_receiverResult;
 
-    #endregion 字段
+    private readonly AsyncExchange<(ReadOnlyMemory<byte>, IRequestInfo)> m_asyncExchange = new();
 
-    public bool CacheMode { get => this.m_cacheMode; set => this.m_cacheMode = value; }
+    private string m_msg;
 
-    public int MaxCacheSize { get => this.m_maxCacheSize; set => this.m_maxCacheSize = value; }
-
-    /// <summary>
-    /// Receiver
-    /// </summary>
-    /// <param name="client"></param>
-    public InternalReceiver(IReceiverClient<IReceiverResult> client) : base(true)
+    public InternalReceiver(IReceiverClient<IReceiverResult> client)
     {
         this.m_client = client;
     }
 
-    /// <inheritdoc/>
-    public ValueTask<IReceiverResult> ReadAsync(CancellationToken token)
+    public void Complete(string msg)
     {
-        if (this.m_receiverResult.IsCompleted)
-        {
-            return EasyValueTask.FromResult<IReceiverResult>(this.m_receiverResult);
-        }
-        else
-        {
-            return base.ProtectedReadAsync(token);
-        }
+        this.m_msg = msg;
+        this.m_asyncExchange.Complete();
     }
 
-    /// <inheritdoc/>
-    public async Task InputReceiveAsync(IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    public ValueTask InputReceiveAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken token)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-
-        if (this.m_cacheMode && byteBlock != null)
-        {
-            ByteBlock bytes;
-            if (this.m_cacheByteBlock == null)
-            {
-                bytes = new ByteBlock(byteBlock.Length);
-                bytes.Write(byteBlock.Span);
-            }
-            else if (this.m_cacheByteBlock.CanReadLength > 0)
-            {
-                bytes = new ByteBlock(byteBlock.Length + this.m_cacheByteBlock.CanReadLength);
-                bytes.Write(this.m_cacheByteBlock.Span.Slice(this.m_cacheByteBlock.Position, this.m_cacheByteBlock.CanReadLength));
-                bytes.Write(byteBlock.Span);
-
-                this.m_cacheByteBlock.Dispose();
-            }
-            else
-            {
-                bytes = new ByteBlock(byteBlock.Length);
-                bytes.Write(byteBlock.Span);
-                this.m_cacheByteBlock.Dispose();
-            }
-
-            bytes.SeekToStart();
-            this.m_cacheByteBlock = bytes;
-            this.m_requestInfo = requestInfo;
-        }
-        else
-        {
-            this.m_byteBlock = byteBlock;
-            this.m_requestInfo = requestInfo;
-        }
-
-        if (this.m_cacheMode)
-        {
-            this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
-            this.m_receiverResult.RequestInfo = this.m_requestInfo;
-        }
-        else
-        {
-            this.m_receiverResult.ByteBlock = this.m_byteBlock;
-            this.m_receiverResult.RequestInfo = this.m_requestInfo;
-        }
-
-        await base.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_asyncExchange.WriteAsync((memory, requestInfo), token);
     }
 
-    public async Task Complete(string msg)
+    public async ValueTask<IReceiverResult> ReadAsync(CancellationToken token)
     {
-        try
+        var readLease = await this.m_asyncExchange.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var (memory, requestInfo) = readLease.Value;
+        return new Sockets.InternalReceiverResult(readLease.Dispose)
         {
-            this.m_receiverResult.IsCompleted = true;
-            this.m_receiverResult.Message = msg;
-            await this.InputReceiveAsync(default, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch
-        {
-        }
+            IsCompleted = readLease.IsCompleted,
+            Memory = memory,
+            RequestInfo = requestInfo,
+            Message = this.m_msg
+        };
     }
 
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-
         if (disposing)
         {
             this.m_client.ClearReceiver();
-            this.m_resetEventForComplateRead.SetAll();
-            //this.m_resetEventForComplateRead.SafeDispose();
         }
-        this.m_byteBlock = null;
-        this.m_requestInfo = null;
-        base.Dispose(disposing);
     }
 
-    protected override void CompleteRead()
+    #region Class
+
+    internal class InternalReceiverResult : IReceiverResult
     {
-        var byteBlock = this.m_cacheByteBlock;
-        if (this.m_cacheMode)
+        private readonly Action m_disAction;
+
+        /// <summary>
+        /// ReceiverResult
+        /// </summary>
+        /// <param name="disAction"></param>
+        public InternalReceiverResult(Action disAction)
         {
-            if (byteBlock != null)
-            {
-                if (byteBlock.CanReadLength > this.m_maxCacheSize)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.m_cacheByteBlock.CanReadLength), this.m_cacheByteBlock.CanReadLength, this.m_maxCacheSize);
-                }
-            }
+            this.m_disAction = disAction;
         }
-        this.m_byteBlock = default;
-        this.m_requestInfo = default;
-        this.m_receiverResult.RequestInfo = default;
-        this.m_receiverResult.ByteBlock = default;
-        base.CompleteRead();
+
+        public bool IsCompleted { get; set; }
+
+        public ReadOnlyMemory<byte> Memory { get; set; }
+
+        public string Message { get; set; }
+
+        public IRequestInfo RequestInfo { get; set; }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            this.m_disAction.Invoke();
+        }
     }
 
-
-    protected override IReceiverResult CreateResult(Action actionForDispose)
-    {
-        this.m_receiverResult = new InternalReceiverResult(actionForDispose);
-        return this.m_receiverResult;
-    }
+    #endregion Class
 }

@@ -10,28 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
-/// 常规UDP数据处理适配器
+/// Udp数据处理适配器测试
 /// </summary>
-public class NormalUdpDataHandlingAdapter : UdpDataHandlingAdapter
+public class UdpDataAdapterTester : MultithreadingDataAdapterTester
 {
-    /// <inheritdoc/>
-    public override bool CanSendRequestInfo => false;
-
-    /// <inheritdoc/>
-    /// <param name="remoteEndPoint"></param>
-    /// <param name="byteBlock"></param>
-    protected override Task PreviewReceived(EndPoint remoteEndPoint, IByteBlockReader byteBlock)
+    protected UdpDataAdapterTester(int multiThread) : base(multiThread)
     {
-        return this.GoReceived(remoteEndPoint, byteBlock, null);
     }
 }

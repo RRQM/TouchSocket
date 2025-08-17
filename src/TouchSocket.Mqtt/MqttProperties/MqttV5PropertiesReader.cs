@@ -47,7 +47,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
             identifier = MqttPropertyId.None;
             return false;
         }
-        identifier = (MqttPropertyId)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        identifier = (MqttPropertyId)ReaderExtension.ReadValue<TReader, byte>(ref reader);
         Debug.WriteLine($"PropertyId:{identifier}");
         return true;
     }
@@ -59,7 +59,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>有效载荷格式指示符。</returns>
     public MqttPayloadFormatIndicator ReadPayloadFormatIndicator(ref TReader reader)
     {
-        return (MqttPayloadFormatIndicator)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        return (MqttPayloadFormatIndicator)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>消息过期间隔。</returns>
     public uint ReadMessageExpiryInterval(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, uint>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -119,7 +119,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>会话过期间隔。</returns>
     public uint ReadSessionExpiryInterval(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, uint>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>服务器保持连接时间。</returns>
     public ushort ReadServerKeepAlive(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -169,7 +169,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>请求问题信息标志。</returns>
     public bool ReadRequestProblemInformation(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>遗嘱延迟间隔。</returns>
     public uint ReadWillDelayInterval(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, uint>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>请求响应信息标志。</returns>
     public bool ReadRequestResponseInformation(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 
     /// <summary>
@@ -229,7 +229,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>接收最大值。</returns>
     public ushort ReadReceiveMaximum(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -239,7 +239,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>主题别名最大值。</returns>
     public ushort ReadTopicAliasMaximum(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>主题别名。</returns>
     public ushort ReadTopicAlias(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -259,7 +259,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>最大服务质量。</returns>
     public QosLevel ReadMaximumQoS(ref TReader reader)
     {
-        return (QosLevel)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        return (QosLevel)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 
     /// <summary>
@@ -269,7 +269,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>保留可用标志。</returns>
     public bool ReadRetainAvailable(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 
     /// <summary>
@@ -291,7 +291,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>最大数据包大小。</returns>
     public uint ReadMaximumPacketSize(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,uint>(ref reader,EndianType.Big);
+        return ReaderExtension.ReadValue<TReader, uint>(ref reader, EndianType.Big);
     }
 
     /// <summary>
@@ -301,7 +301,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>通配符订阅可用标志。</returns>
     public bool ReadWildcardSubscriptionAvailable(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 
     /// <summary>
@@ -311,7 +311,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>订阅标识符可用标志。</returns>
     public bool ReadSubscriptionIdentifiersAvailable(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ public readonly ref struct MqttV5PropertiesReader<TReader> where TReader : IByte
     /// <returns>共享订阅可用标志。</returns>
     public bool ReadSharedSubscriptionAvailable(ref TReader reader)
     {
-        return ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1;
+        return ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1;
     }
 }
 

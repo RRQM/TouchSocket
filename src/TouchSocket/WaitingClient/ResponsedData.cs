@@ -16,46 +16,43 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// 响应数据。
+/// 表示响应数据的结构体，包含响应的字节数据和请求信息。
 /// </summary>
 public readonly struct ResponsedData : IDisposable
 {
     private readonly ByteBlock m_byteBlock;
 
     /// <summary>
-    /// 构造函数
+    /// 初始化 <see cref="ResponsedData"/> 结构体的新实例。
     /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <param name="requestInfo">请求信息</param>
-    public ResponsedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    /// <param name="memory">响应的字节数据。</param>
+    /// <param name="requestInfo">请求信息。</param>
+    public ResponsedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        if (byteBlock != null)
+        if (!memory.IsEmpty)
         {
-            ReadOnlySpan<byte> data = byteBlock.Span;
-            m_byteBlock = new ByteBlock(data.Length);
-            m_byteBlock.Write(data);
-            m_byteBlock.SeekToStart();
+            var data = memory.Span;
+            this.m_byteBlock = new ByteBlock(data.Length);
+            this.m_byteBlock.Write(data);
+            this.m_byteBlock.SeekToStart();
         }
-       
+
         this.RequestInfo = requestInfo;
     }
 
     /// <summary>
-    /// ByteBlock
+    /// 获取响应的字节数据。
     /// </summary>
-    public IByteBlockReader ByteBlock => m_byteBlock;
+    public ReadOnlyMemory<byte> Memory => this.m_byteBlock?.Memory ?? ReadOnlyMemory<byte>.Empty;
 
     /// <summary>
-    /// 数据
-    /// </summary>
-    [Obsolete($"使用此属性可能带来不必要的性能消耗，请使用{nameof(ByteBlock)}代替")]
-    public byte[] Data => this.ByteBlock?.Span.ToArray();
-
-    /// <summary>
-    /// RequestInfo
+    /// 获取请求信息。
     /// </summary>
     public IRequestInfo RequestInfo { get; }
 
+    /// <summary>
+    /// 释放资源。
+    /// </summary>
     public void Dispose()
     {
         this.m_byteBlock.SafeDispose();

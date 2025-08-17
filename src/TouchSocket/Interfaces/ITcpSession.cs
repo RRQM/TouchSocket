@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
@@ -31,11 +29,6 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     /// IP地址
     /// </summary>
     string IP { get; }
-
-    /// <summary>
-    /// 主通信器
-    /// </summary>
-    Socket MainSocket { get; }
 
     /// <summary>
     /// 端口号

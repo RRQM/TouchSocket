@@ -141,19 +141,17 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <summary>
     /// 向当前对点发送一个Ping报文，并且等待回应。
     /// </summary>
-    /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为5000毫秒。用于控制等待回应的最大时长。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/>。该方法主要用于检测对端点的可达性。</returns>
-    Task<bool> PingAsync(int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PingAsync(CancellationToken token = default);
 
     /// <summary>
     /// 向指定路由点发送一个Ping报文，并且等待回应。
     /// </summary>
     /// <param name="targetId">目标路由点的标识符。</param>
-    /// <param name="millisecondsTimeout">等待回应的超时时间，单位为毫秒。默认为5000毫秒。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-    Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PingAsync(string targetId, CancellationToken token = default);
 
     /// <summary>
     /// 异步发送数据。

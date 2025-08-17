@@ -11,9 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,7 +53,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     private string m_id;
     private string m_iP;
     private TcpListenOption m_listenOption;
-    private Socket m_mainSocket;
     private volatile bool m_online;
     private IPluginManager m_pluginManager;
     private int m_port;
@@ -79,7 +76,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
 
     /// <inheritdoc/>
-    public override sealed TouchSocketConfig Config => this.Service?.Config;
+    public sealed override TouchSocketConfig Config => this.Service?.Config;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -101,9 +98,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
     /// <inheritdoc/>
     public TcpListenOption ListenOption => this.m_listenOption;
-
-    /// <inheritdoc/>
-    public Socket MainSocket => this.m_mainSocket;
 
     /// <inheritdoc/>
     public virtual bool Online => this.m_online;
@@ -178,7 +172,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         this.m_listenOption = option;
 
         var socket = tcpCore.Socket;
-        this.m_mainSocket = socket;
         this.m_iP = socket.RemoteEndPoint.GetIP();
         this.m_port = socket.RemoteEndPoint.GetPort();
         this.m_serviceIp = socket.LocalEndPoint.GetIP();
@@ -202,10 +195,13 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     private async Task PrivateConnected(TcpTransport transport)
     {
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        var socket = this.m_mainSocket;
+
         var e_connected = new ConnectedEventArgs();
         await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        transport.SafeDispose();
+
         var e_closed = transport.ClosedEventArgs;
         this.m_online = false;
         var adapter = this.m_dataHandlingAdapter;
@@ -313,7 +309,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     }
 
     /// <inheritdoc/>
-    public virtual Task ResetIdAsync(string newId)
+    public virtual Task ResetIdAsync(string newId, CancellationToken token)
     {
         return this.ProtectedResetIdAsync(newId);
     }
@@ -345,10 +341,10 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// </summary>
     /// <param name="byteBlock">包含收到的原始数据。</param>
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-    protected virtual ValueTask<bool> OnTcpReceiving(IByteBlockReader byteBlock)
+    protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader byteBlock)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
+        return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(byteBlock));
     }
 
     /// <summary>
@@ -431,35 +427,28 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         {
             while (true)
             {
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
                 if (this.DisposedValue || token.IsCancellationRequested)
                 {
                     return;
                 }
 
-                if (result.IsCanceled || result.IsCompleted)
+                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
                 {
-                    return;
+                    break;
                 }
-
-                foreach (var item in result.Buffer)
+                var reader = new ClassBytesReader(result.Buffer);
+                if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    var reader = new ByteBlockReader(item);
                     try
                     {
-                        if (await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            continue;
-                        }
-
                         if (this.m_dataHandlingAdapter == null)
                         {
-                            await this.PrivateHandleReceivedData(reader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            foreach (var item in reader.Sequence)
+                            {
+                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                reader.Advance(item.Length);
+                            }
                         }
                         else
                         {
@@ -471,7 +460,13 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
                         this.Logger?.Exception(this, ex);
                     }
                 }
-                transport.Input.AdvanceTo(result.Buffer.End);
+                var position = result.Buffer.GetPosition(reader.BytesRead);
+                transport.Input.AdvanceTo(position);
+
+                if (result.IsCanceled || result.IsCompleted)
+                {
+                    return;
+                }
             }
         }
         catch (Exception ex)
@@ -486,7 +481,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
             var e_closed = transport.ClosedEventArgs;
             if (receiver != null)
             {
-                await receiver.Complete(e_closed.Message).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                receiver.Complete(e_closed.Message);
             }
         }
     }
@@ -520,28 +515,24 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
             adapter.Config(this.Config);
         }
 
-        // 将当前实例的日志记录器和加载回调设置到适配器中
-        adapter.Logger = this.Logger;
         adapter.OnLoaded(this);
 
         // 将接收到数据时的异步回调和发送数据时的异步回调设置到适配器中
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-        //adapter.SendCallBack = this.ProtectedDefaultSend;
-        adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
 
         // 将当前的数据处理适配器设置为传入的适配器实例
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private async Task PrivateHandleReceivedData(IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.OnTcpReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private async Task WaitClearConnect()
@@ -578,78 +569,83 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
     #endregion Throw
 
-    #region 直接发送
+    #region 发送
 
     /// <summary>
-    /// 异步发送数据，保护方法。
-    /// 此方法用于在已建立的TCP连接上异步发送数据。
-    /// 它首先检查当前实例是否已被处置，然后检查客户端是否已连接。
-    /// 如果这些检查通过，它将调用OnTcpSending事件处理程序进行预发送处理，
-    /// 最后通过TCP核心组件实际发送数据。
+    /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
-    /// <param name="memory">要发送的数据，存储在内存中。</param>
+    /// <param name="memory">待发送的只读字节内存块。</param>
     /// <param name="token">可取消令箭</param>
-    /// <returns>一个Task对象，表示异步操作的结果。</returns>
-    /// <exception cref="ObjectDisposedException">如果调用此方法的实例已被处置。</exception>
-    /// <exception cref="InvalidOperationException">如果客户端未连接时抛出此异常。</exception>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    /// <returns>一个异步任务，表示发送操作。</returns>
+    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
+
+
         await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
 
-        await transport.SemaphoreSlimForWriter.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            // 如果数据处理适配器未设置，则使用默认发送方式。
+            if (adapter == null)
+            {
+                await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            else
+            {
+                var writer = new PipeBytesWriter(transport.Output);
+                adapter.SendInput(ref writer, in memory);
+                await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
         finally
         {
-            transport.SemaphoreSlimForWriter.Release();
-        }
-    }
-
-    #endregion 直接发送
-
-    #region 异步发送
-
-    /// <summary>
-    /// 异步发送只读内存数据。
-    /// </summary>
-    /// <param name="memory">要发送的只读内存块。</param>
-    /// <param name="token">可取消令箭</param>
-    /// <returns>异步操作任务。</returns>
-    protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
-    {
-        // 如果数据处理适配器未初始化，则调用默认发送方法。
-        if (this.m_dataHandlingAdapter == null)
-        {
-            return this.ProtectedDefaultSendAsync(memory, token);
-        }
-        else
-        {
-            // 否则，使用数据处理适配器发送数据。
-            return this.m_dataHandlingAdapter.SendInputAsync(memory, token);
+            locker.Release();
         }
     }
 
     /// <summary>
-    /// 异步发送请求信息。
+    /// 异步发送请求信息的受保护方法。
+    ///
+    /// 此方法首先检查当前对象是否能够发送请求信息，如果不能，则抛出异常。
+    /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
     /// </summary>
     /// <param name="requestInfo">要发送的请求信息。</param>
     /// <param name="token">可取消令箭</param>
-    /// <returns>异步操作任务。</returns>
-    protected Task ProtectedSendAsync(in IRequestInfo requestInfo, CancellationToken token)
+    /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
+    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
     {
-        // 在发送前验证是否能够发送请求信息。
+        // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
-        // 使用数据处理适配器发送请求信息。
-        return this.m_dataHandlingAdapter.SendInputAsync(requestInfo, token);
+
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+
+        var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.SemaphoreSlimForWriter;
+
+        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            var writer = new PipeBytesWriter(transport.Output);
+            adapter.SendInput(ref writer, requestInfo);
+            await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            locker.Release();
+        }
     }
 
-    #endregion 异步发送
+
+    #endregion 发送
 
     #region Receiver
 

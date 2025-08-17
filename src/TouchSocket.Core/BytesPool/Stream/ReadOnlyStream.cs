@@ -22,7 +22,7 @@ internal sealed class ReadOnlyStream : Stream
     {
         this.m_reader = reader;
     }
-    public override bool CanRead => this.m_reader.CanReadLength>0;
+    public override bool CanRead => this.m_reader.CanReadLength > 0;
 
     public override bool CanSeek => true;
 

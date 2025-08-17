@@ -1,14 +1,14 @@
-//------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
@@ -16,30 +16,31 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
-/// <summary>
-/// Udp数据处理适配器测试
-/// </summary>
-public class UdpDataAdapterTester : IDisposable
+public class MultithreadingDataAdapterTester : SafetyDisposableObject
 {
     private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
+
     private UdpDataHandlingAdapter m_adapter;
-    private int m_count;
-    private bool m_dispose;
+
+    private volatile int m_count;
+
     private int m_expectedCount;
-    private Func<IByteBlockReader, IRequestInfo, Task> m_receivedCallBack;
-    private Stopwatch m_stopwatch;
+
     private int m_millisecondsTimeout;
 
-    private UdpDataAdapterTester(int multiThread)
+    private Func<ReadOnlyMemory<byte>, IRequestInfo, Task> m_receivedCallBack;
+
+    private Stopwatch m_stopwatch;
+
+    protected MultithreadingDataAdapterTester(int multiThread)
     {
         this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
         for (var i = 0; i < multiThread; i++)
         {
-            _=EasyTask.SafeRun(this.BeginSend);
+            _ = EasyTask.SafeRun(this.BeginSend);
         }
     }
 
@@ -50,22 +51,14 @@ public class UdpDataAdapterTester : IDisposable
     /// <param name="multiThread">并发多线程数量</param>
     /// <param name="receivedCallBack">收到数据回调</param>
     /// <returns></returns>
-    public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<IByteBlockReader, IRequestInfo, Task> receivedCallBack = default)
+    public static MultithreadingDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<ReadOnlyMemory<byte>, IRequestInfo, Task> receivedCallBack = default)
     {
-        var tester = new UdpDataAdapterTester(multiThread);
+        var tester = new MultithreadingDataAdapterTester(multiThread);
         tester.m_adapter = adapter;
         adapter.SendCallBackAsync = tester.SendCallback;
         adapter.ReceivedCallBack = tester.OnReceived;
         tester.m_receivedCallBack = receivedCallBack;
         return tester;
-    }
-
-    /// <summary>
-    /// 释放
-    /// </summary>
-    public void Dispose()
-    {
-        this.m_dispose = true;
     }
 
     /// <summary>
@@ -76,20 +69,17 @@ public class UdpDataAdapterTester : IDisposable
     /// <param name="expectedCount">期待测试次数</param>
     /// <param name="millisecondsTimeout">超时时间（毫秒）</param>
     /// <returns>测试运行的时间差</returns>
-    public TimeSpan Run(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int millisecondsTimeout)
+    public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int millisecondsTimeout)
     {
         this.m_count = 0;
         this.m_expectedCount = expectedCount;
         this.m_millisecondsTimeout = millisecondsTimeout;
         this.m_stopwatch = new Stopwatch();
         this.m_stopwatch.Start();
-        EasyTask.SafeRun(async () =>
+        for (var i = 0; i < testCount; i++)
         {
-            for (var i = 0; i < testCount; i++)
-            {
-                await this.m_adapter.SendInputAsync(null, memory,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        });
+            await this.m_adapter.SendInputAsync(null, memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
         if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_millisecondsTimeout))
         {
             this.m_stopwatch.Stop();
@@ -99,10 +89,13 @@ public class UdpDataAdapterTester : IDisposable
         throw new TimeoutException();
     }
 
+    protected override void SafetyDispose(bool disposing)
+    {
+    }
 
     private async Task BeginSend()
     {
-        while (!this.m_dispose)
+        while (!this.DisposedValue)
         {
             if (this.TryGet(out var byteBlocks))
             {
@@ -110,7 +103,7 @@ public class UdpDataAdapterTester : IDisposable
                 {
                     try
                     {
-                        await this.m_adapter.ReceivedInput(null, block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_adapter.ReceivedInputAsync(null, block.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     finally
                     {
@@ -120,21 +113,21 @@ public class UdpDataAdapterTester : IDisposable
             }
             else
             {
-                Thread.Sleep(1);
+                await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }
 
-    private async Task OnReceived(EndPoint endPoint, IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    private async Task OnReceived(EndPoint endPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         if (this.m_receivedCallBack != null)
         {
-            await this.m_receivedCallBack(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_receivedCallBack(memory, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         Interlocked.Increment(ref this.m_count);
     }
 
-    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         var array = memory.ToArray();
         var asyncByte = new QueueDataBytes(array, 0, array.Length);

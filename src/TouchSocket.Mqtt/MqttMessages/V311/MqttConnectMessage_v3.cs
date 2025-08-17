@@ -124,15 +124,15 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     /// <inheritdoc/>
     public override void Unpack<TReader>(ref TReader reader)
     {
-        var firstByte = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        var firstByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         this.SetFlags((byte)firstByte.GetLow4());
         this.RemainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
 
         this.ProtocolName = MqttExtension.ReadMqttInt16String(ref reader);
 
-        this.Version = (MqttProtocolVersion)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.Version = (MqttProtocolVersion)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
-        this.m_connectFlags = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.m_connectFlags = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         this.KeepAlive = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
 
         switch (this.Version)
@@ -157,9 +157,9 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
         MqttExtension.WriteMqttInt16String(ref writer, this.ProtocolName);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.Version);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,this.m_connectFlags);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.KeepAlive, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Version);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectFlags);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.KeepAlive, EndianType.Big);
 
         MqttExtension.WriteMqttInt16String(ref writer, this.ClientId);
         if (this.WillFlag)

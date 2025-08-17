@@ -18,7 +18,7 @@ namespace TouchSocket.Mqtt;
 
 public sealed class MqttClientActor : MqttActor
 {
-    private readonly WaitDataAsync<MqttConnAckMessage> m_waitForConnect = new();
+    private TaskCompletionSource<MqttConnAckMessage> m_waitForConnect;
     private readonly WaitDataAsync<MqttPingRespMessage> m_waitForPing = new();
 
     public async Task DisconnectAsync(CancellationToken token)
@@ -29,7 +29,7 @@ public sealed class MqttClientActor : MqttActor
         }
         try
         {
-            await this.ProtectedOutputSendAsync(new MqttDisconnectMessage(),token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(new MqttDisconnectMessage(), token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch
         {
@@ -40,37 +40,43 @@ public sealed class MqttClientActor : MqttActor
         }
     }
 
-    public async Task PingAsync(int timeout, CancellationToken token)
+    public async ValueTask<Result> PingAsync(CancellationToken token)
     {
         var contentForAck = new MqttPingReqMessage();
         this.m_waitForPing.Reset();
-        this.m_waitForPing.SetCancellationToken(token);
-        await this.ProtectedOutputSendAsync(contentForAck,token);
-        var waitDataStatus = await this.m_waitForPing.WaitAsync(timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        waitDataStatus.ThrowIfNotRunning();
+        await this.ProtectedOutputSendAsync(contentForAck, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var waitDataStatus = await this.m_waitForPing.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        return waitDataStatus switch
+        {
+            WaitDataStatus.Default => Result.UnknownFail,
+            WaitDataStatus.Success => Result.Success,
+            WaitDataStatus.Overtime => Result.Overtime,
+            WaitDataStatus.Canceled => Result.Canceled,
+            WaitDataStatus.Disposed => Result.Disposed,
+            _ => Result.UnknownFail,
+        };
     }
 
     #region 连接
 
-    public async Task<MqttConnAckMessage> ConnectAsync(MqttConnectMessage message, int millisecondsTimeout, CancellationToken token)
+    public async Task<MqttConnAckMessage> ConnectAsync(MqttConnectMessage message, CancellationToken token)
     {
-        this.m_waitForConnect.Reset();
-        this.m_waitForConnect.SetCancellationToken(token);
+        this.m_waitForConnect = new TaskCompletionSource<MqttConnAckMessage>();
 
-        await this.ProtectedOutputSendAsync(message,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        var waitDataStatus = await this.m_waitForConnect.WaitAsync(millisecondsTimeout);
-        waitDataStatus.ThrowIfNotRunning();
+        await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var connAckMessage = await this.m_waitForConnect.Task.WithCancellation(token);
         this.Online = true;
-        return this.m_waitForConnect.WaitResult;
+        return connAckMessage;
     }
 
     #endregion 连接
 
     #region 重写
 
-    protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message,CancellationToken token)
+    protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message, CancellationToken token)
     {
-        this.m_waitForConnect.Set(message);
+        this.m_waitForConnect?.SetResult(message);
         return EasyTask.CompletedTask;
     }
 
@@ -97,47 +103,29 @@ public sealed class MqttClientActor : MqttActor
 
     #endregion 重写
 
-    public async Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, int timeout = 5000, CancellationToken token = default)
+    public async Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken token = default)
     {
-        var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message);
-
-        try
+        using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))
         {
-            waitDataAsync.SetCancellationToken(token);
+            await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await this.ProtectedOutputSendAsync(message,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            var waitDataStatus = await waitDataAsync.WaitAsync(timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitDataAsync.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
-            var subAckMessage = (MqttSubAckMessage)waitDataAsync.WaitResult;
+            var subAckMessage = (MqttSubAckMessage)waitDataAsync.CompletedData;
             return subAckMessage;
         }
-        finally
-        {
-            this.WaitHandlePool.Destroy(message.MessageId);
-        }
-
     }
 
-    public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, int timeout = 5000, CancellationToken token = default)
+    public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken token = default)
     {
-        var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message);
-
-        try
+        using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))
         {
-            waitDataAsync.SetCancellationToken(token);
+            await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await this.ProtectedOutputSendAsync(message,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            var waitDataStatus = await waitDataAsync.WaitAsync(timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitDataAsync.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
-            var subAckMessage = (MqttUnsubAckMessage)waitDataAsync.WaitResult;
+            var subAckMessage = (MqttUnsubAckMessage)waitDataAsync.CompletedData;
             return subAckMessage;
         }
-        finally
-        {
-            this.WaitHandlePool.Destroy(message.MessageId);
-        }
-
     }
 }

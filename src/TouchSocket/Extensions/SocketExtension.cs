@@ -68,7 +68,7 @@ public static class SocketExtension
             }
             return Result.Success;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return Result.FromException(ex.Message);
         }

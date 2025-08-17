@@ -80,9 +80,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #region 连接
 
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken token)
     {
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -92,10 +92,10 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             }
             if (!base.Online)
             {
-                await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -108,9 +108,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #region ResetId
 
     ///<inheritdoc/>
-    public Task ResetIdAsync(string newId)
+    public Task ResetIdAsync(string newId, CancellationToken token)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId);
+        return this.m_dmtpActor.ResetIdAsync(newId, token);
     }
 
     #endregion ResetId
@@ -143,12 +143,12 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
     private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        this.ThrowIfTcpClientNotConnected();
+        this.ThrowIfClientNotConnected();
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
-        return base.ProtectedDefaultSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, token);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
@@ -310,39 +310,38 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <inheritdoc/>
     protected sealed override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
-        this.m_dmtpAdapter = new DmtpAdapter();
-        this.SetAdapter(this.m_dmtpAdapter);
+        var adapter = new DmtpAdapter();
+        adapter.Config(this.Config);
+        this.SetAdapter(adapter);
+        this.m_dmtpAdapter = adapter;
         await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    /// <inheritdoc/>
-    protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    {
-        var message = (DmtpMessage)e.RequestInfo;
-        if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-        {
-            await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
+    ///// <inheritdoc/>
+    //protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    //{
+    //    var message = (DmtpMessage)e.RequestInfo;
+    //    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+    //    {
+    //        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    }
+    //}
 
     /// <inheritdoc/>
-    protected override async ValueTask<bool> OnTcpReceiving(IByteBlockReader reader)
+    protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
-        while (reader.CanReadLength>0)
+        while (reader.BytesRemaining > 0)
         {
             if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
             {
-                try
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
-                finally
-                {
-                    message.Dispose();
-                }
+            }
+            else
+            {
+                break;
             }
         }
         return true;
@@ -350,7 +349,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
     protected async Task ReceiveLoopAsync1111(ITransport transport)
     {
-        DmtpAdapter2 dmtpAdapter2 = new DmtpAdapter2();
+        var dmtpAdapter2 = new DmtpAdapter();
         var token = transport.ClosedToken;
         while (!token.IsCancellationRequested)
         {
@@ -370,7 +369,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
                             break;
                         }
 
-                        await ProcessDmtpMessageAsync(dmtpMessage);
+                        await this.ProcessDmtpMessageAsync(dmtpMessage);
                     }
                 }
                 finally
@@ -393,7 +392,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         }
     }
 
-    private Task ProcessDmtpMessageAsync(DmtpMessage2 message)
+    private Task ProcessDmtpMessageAsync(DmtpMessage message)
     {
         // 处理Dmtp消息的逻辑
         // 这里可以根据需要实现具体的处理逻辑

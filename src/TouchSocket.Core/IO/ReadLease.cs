@@ -11,29 +11,31 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 
 namespace TouchSocket.Core;
 
-public abstract class DataHandlingAdapterSlim<TRequest> : SafetyDisposableObject
-     where TRequest : IRequestInfo
+/// <summary>
+/// 读取租约的只读结构体。Dispose 表示消费完成。
+/// </summary>
+public readonly struct ReadLease<T> : IDisposable
 {
+    private readonly Action m_owner;
 
-    /// <summary>
-    /// 缓存超时时间。默认1秒。
-    /// </summary>
-    public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(1);
-
-    /// <summary>
-    /// 是否启用缓存超时。默认<see langword="false"/>。
-    /// </summary>
-    public bool CacheTimeoutEnable { get; set; } = false;
-
-    protected override void SafetyDispose(bool disposing)
+    internal ReadLease(Action disposeAction, T value, bool isCompleted)
     {
-
+        this.m_owner = disposeAction;
+        this.Value = value;
+        this.IsCompleted = isCompleted;
     }
 
-    public abstract bool TryParseRequest<TReader>(ref TReader reader, out TRequest request)
-        where TReader : IBytesReader;
+    public bool IsCompleted { get; }
+    public T Value { get; }
+
+    public void Dispose()
+    {
+        if (!this.IsCompleted && this.m_owner != null)
+        {
+            this.m_owner.Invoke();
+        }
+    }
 }

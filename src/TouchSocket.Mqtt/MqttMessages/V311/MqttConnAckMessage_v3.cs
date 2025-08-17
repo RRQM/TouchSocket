@@ -64,8 +64,8 @@ public sealed partial class MqttConnAckMessage : MqttUserPropertiesMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,this.m_connectAcknowledgeFlags);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.ReturnCode);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectAcknowledgeFlags);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReturnCode);
     }
 
     /// <inheritdoc/>
@@ -77,7 +77,7 @@ public sealed partial class MqttConnAckMessage : MqttUserPropertiesMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.m_connectAcknowledgeFlags = ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        this.ReturnCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.m_connectAcknowledgeFlags = ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.ReturnCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 }

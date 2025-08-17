@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -192,8 +190,8 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     #endregion 异步发送
 
     /// <inheritdoc/>
-    public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual Task ConnectAsync(CancellationToken token)
     {
-        return base.SerialPortConnectAsync(millisecondsTimeout, token);
+        return base.SerialPortConnectAsync(token);
     }
 }

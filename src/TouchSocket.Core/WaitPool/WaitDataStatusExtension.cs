@@ -21,14 +21,14 @@ namespace TouchSocket.Core;
 public static class WaitDataStatusExtension
 {
     /// <summary>
-    /// 当状态不是<see cref="WaitDataStatus.SetRunning"/>时抛出异常。
+    /// 当状态不是<see cref="WaitDataStatus.Success"/>时抛出异常。
     /// </summary>
     /// <param name="status"></param>
     public static void ThrowIfNotRunning(this WaitDataStatus status)
     {
         switch (status)
         {
-            case WaitDataStatus.SetRunning:
+            case WaitDataStatus.Success:
                 return;
 
             case WaitDataStatus.Canceled: throw new OperationCanceledException();

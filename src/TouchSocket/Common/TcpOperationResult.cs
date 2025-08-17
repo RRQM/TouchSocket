@@ -10,16 +10,11 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets;
-public readonly struct TcpOperationResult
+
+internal readonly struct TcpOperationResult
 {
     public TcpOperationResult(int bytesTransferred, SocketError socketError)
     {
@@ -28,7 +23,6 @@ public readonly struct TcpOperationResult
     }
 
     public int BytesTransferred { get; }
-   
-    public SocketError SocketError { get; }
 
+    public SocketError SocketError { get; }
 }

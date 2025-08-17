@@ -61,31 +61,31 @@ public class ModbusRequest : IModbusRequest
         this.FunctionCode = functionCode;
     }
 
-   
+
     /// <inheritdoc/>
     public ReadOnlyMemory<byte> Data { get; set; }
 
-    
+
     /// <inheritdoc/>
     public FunctionCode FunctionCode { get; set; }
 
-   
+
     /// <inheritdoc/>
     public ushort Quantity { get; set; }
 
-    
+
     /// <inheritdoc/>
     public ushort ReadQuantity { get; set; }
 
-   
+
     /// <inheritdoc/>
     public ushort ReadStartAddress { get; set; }
 
-    
+
     /// <inheritdoc/>
     public byte SlaveId { get; set; }
 
-    
+
     /// <inheritdoc/>
     public ushort StartingAddress { get; set; }
 

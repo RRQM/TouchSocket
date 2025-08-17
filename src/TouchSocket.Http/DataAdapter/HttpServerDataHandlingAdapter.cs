@@ -16,16 +16,12 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
-/// <summary>
-/// Http服务器数据处理适配器
-/// </summary>
-public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
+internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
     private HttpRequest m_currentRequest;
     private HttpRequest m_requestRoot;
     private long m_surLen;
     private Task m_task;
-    private ByteBlock m_tempByteBlock;
 
     /// <inheritdoc/>
     public override void OnLoaded(object owner)
@@ -40,54 +36,9 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
     }
 
     /// <inheritdoc/>
-    protected override void SafetyDispose(bool disposing)
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        if (disposing)
-        {
-            //this.m_requestRoot.SafeDispose();
-            this.m_tempByteBlock.SafeDispose();
-        }
-        base.SafetyDispose(disposing);
-    }
-
-    /// <inheritdoc/>
-    /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
-    {
-        if (this.m_tempByteBlock == null)
-        {
-            byteBlock.Position = 0;
-            await this.Single(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            this.m_tempByteBlock.Write(byteBlock.Span);
-            using (var block = this.m_tempByteBlock)
-            {
-                this.m_tempByteBlock = null;
-                block.Position = 0;
-                await this.Single(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        }
-    }
-
-    private void Cache(IByteBlockReader byteBlock)
-    {
-        if (byteBlock.CanReadLength > 0)
-        {
-            this.m_tempByteBlock = new ByteBlock(1024 * 64);
-            this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
-            if (this.m_tempByteBlock.Length > this.MaxPackageSize)
-            {
-                this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
-            }
-        }
-    }
-
-    
-    private async Task Single(IByteBlockReader byteBlock)
-    {
-        while (byteBlock.CanReadLength > 0)
+        while (reader.BytesRemaining > 0)
         {
             if (this.DisposedValue)
             {
@@ -103,31 +54,29 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
 
                 this.m_requestRoot.ResetHttp();
                 this.m_currentRequest = this.m_requestRoot;
-                if (this.m_currentRequest.ParsingHeader(ref byteBlock))
+                if (this.m_currentRequest.ParsingHeader(ref reader))
                 {
-                    //byteBlock.Position++;
-                    if (this.m_currentRequest.ContentLength > byteBlock.CanReadLength)
+                    if (this.m_currentRequest.ContentLength > reader.BytesRemaining)
                     {
                         this.m_surLen = this.m_currentRequest.ContentLength;
 
-                        this.m_task = this.TaskRunGoReceived(this.m_currentRequest);
+                        this.m_task = this.GoReceivedAsync(null, this.m_currentRequest);
                     }
                     else
                     {
                         var contentLength = (int)this.m_currentRequest.ContentLength;
-                        var content = byteBlock.Memory.Slice(byteBlock.Position, contentLength);
-                        byteBlock.Position += contentLength;
+                        var content = reader.GetMemory(contentLength);
+                        reader.Advance(contentLength);
 
                         this.m_currentRequest.InternalSetContent(content);
-
-                        this.m_task = this.TaskRunGoReceived(this.m_currentRequest);
+                        this.m_currentRequest.CompleteInput();
+                        this.m_task = this.GoReceivedAsync(null, this.m_currentRequest);
 
                         this.m_currentRequest = null;
                     }
                 }
                 else
                 {
-                    this.Cache(byteBlock);
                     this.m_currentRequest = null;
                     return;
                 }
@@ -135,16 +84,16 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
 
             if (this.m_surLen > 0)
             {
-                if (byteBlock.CanReadLength>0)
+                if (reader.BytesRemaining > 0)
                 {
-                    var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
+                    var len = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
 
-                    await this.m_currentRequest.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_currentRequest.InternalInputAsync(reader.GetMemory(len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     this.m_surLen -= len;
-                    byteBlock.Position += len;
+                    reader.Advance(len);
                     if (this.m_surLen == 0)
                     {
-                        await this.m_currentRequest.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_currentRequest.CompleteInput();
                         this.m_currentRequest = null;
                     }
                 }
@@ -154,10 +103,5 @@ public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdap
                 this.m_currentRequest = null;
             }
         }
-    }
-
-    private Task<Result> TaskRunGoReceived(HttpRequest request)
-    {
-        return EasyTask.SafeRun<ByteBlock, IRequestInfo>(this.GoReceivedAsync, null, request);
     }
 }

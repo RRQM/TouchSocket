@@ -114,7 +114,7 @@ public static class DmtpFileTransferActorExtension
             var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (!resourceInfoResult.IsSuccess)
             {
-                return fileOperator.SetResult(new Result(resourceInfoResult));
+                return fileOperator.SetResult(new Result(resourceInfoResult.ResultCode, resourceInfoResult.Message));
             }
             var resourceInfo = resourceInfoResult.FileResourceInfo;
             if (fileOperator.ResourceInfo == null)
@@ -179,7 +179,7 @@ public static class DmtpFileTransferActorExtension
                              }
                              else
                              {
-                                 failResult = new Result(result);
+                                 failResult = new Result(result.ResultCode, result.Message);
                                  if (result.ResultCode == ResultCode.Canceled)
                                  {
                                      return;
@@ -304,7 +304,7 @@ public static class DmtpFileTransferActorExtension
                         }
                         else
                         {
-                            failResult = new Result(result);
+                            failResult = new Result(result.ResultCode, result.Message);
                             if (result.ResultCode == ResultCode.Canceled)
                             {
                                 return;
@@ -331,7 +331,7 @@ public static class DmtpFileTransferActorExtension
             else
             {
                 var res = await actor.FinishedFileResourceInfoAsync(targetId, fileOperator.ResourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                return fileOperator.SetResult(res.ToResult());
+                return fileOperator.SetResult(new Result(res.ResultCode, res.Message));
             }
         }
         catch (Exception ex)

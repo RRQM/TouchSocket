@@ -11,10 +11,7 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -22,18 +19,20 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
-internal abstract class BaseTransport : ITransport
+internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 {
-    private readonly int m_maxBufferSize;
-    private readonly int m_minBufferSize;
     protected readonly Pipe m_pipeReceive;
     protected readonly Pipe m_pipeSend;
+    protected ClosedEventArgs m_closedEventArgs;
+    protected ValueCounter m_receiveCounter;
+    protected ValueCounter m_sentCounter;
+    private static readonly ClosedEventArgs s_defaultClosedEventArgs = new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+    private readonly int m_maxBufferSize;
+    private readonly int m_minBufferSize;
+    private readonly SemaphoreSlim m_semaphoreSlimForWriter = new SemaphoreSlim(1, 1);
     private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
     private int m_receiveBufferSize = 1024 * 10;
-    protected ValueCounter m_receiveCounter;
-    private readonly SemaphoreSlim m_semaphoreSlimForWriter = new SemaphoreSlim(1, 1);
     private int m_sendBufferSize = 1024 * 10;
-    protected ValueCounter m_sentCounter;
 
     public BaseTransport(TransportOption option)
     {
@@ -51,13 +50,7 @@ internal abstract class BaseTransport : ITransport
         this.m_minBufferSize = minBufferSize;
     }
 
-    protected void Start()
-    {
-        _ = EasyTask.SafeRun(this.RunReceive, this.m_tokenSource.Token);
-        _ = EasyTask.SafeRun(this.RunSend, this.m_tokenSource.Token);
-    }
-
-    public ClosedEventArgs ClosedEventArgs { get; protected set; }
+    public ClosedEventArgs ClosedEventArgs => this.m_closedEventArgs ?? s_defaultClosedEventArgs;
 
     public CancellationToken ClosedToken => this.m_tokenSource.Token;
 
@@ -81,6 +74,8 @@ internal abstract class BaseTransport : ITransport
     /// </summary>
     public ValueCounter ReceiveCounter => this.m_receiveCounter;
 
+    public SemaphoreSlim SemaphoreSlimForWriter => this.m_semaphoreSlimForWriter;
+
     /// <summary>
     /// 发送缓存池，运行时的值会根据流速自动调整
     /// </summary>
@@ -91,8 +86,6 @@ internal abstract class BaseTransport : ITransport
     /// </summary>
     public ValueCounter SendCounter => this.m_sentCounter;
 
-    public SemaphoreSlim SemaphoreSlimForWriter => this.m_semaphoreSlimForWriter;
-
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         try
@@ -101,7 +94,7 @@ internal abstract class BaseTransport : ITransport
             {
                 return Result.Success;
             }
-            this.ClosedEventArgs ??= new ClosedEventArgs(true, msg);
+            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
             // 停止所有后台任务
             this.m_tokenSource.SafeCancel();
 
@@ -124,6 +117,15 @@ internal abstract class BaseTransport : ITransport
         }
     }
 
+    protected abstract Task RunReceive(CancellationToken token);
+
+    protected abstract Task RunSend(CancellationToken token);
+
+    protected void Start()
+    {
+        _ = EasyTask.SafeRun(this.RunReceive, this.m_tokenSource.Token);
+        _ = EasyTask.SafeRun(this.RunSend, this.m_tokenSource.Token);
+    }
 
     private void OnReceivePeriod(long value)
     {
@@ -135,7 +137,9 @@ internal abstract class BaseTransport : ITransport
         this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.m_minBufferSize);
     }
 
-    protected abstract Task RunReceive(CancellationToken token);
-
-    protected abstract Task RunSend(CancellationToken token);
+    protected override void SafetyDispose(bool disposing)
+    {
+        this.m_tokenSource.Cancel();
+        this.m_tokenSource.Dispose();
+    }
 }

@@ -43,7 +43,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
@@ -54,7 +54,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {

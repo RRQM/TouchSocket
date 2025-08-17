@@ -23,11 +23,11 @@ public partial class MqttPubRelMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
 
         if (this.ReasonCode != MqttReasonCode.Success || this.ReasonString.HasValue() || this.UserProperties.Count > 0)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.ReasonCode);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReasonCode);
 
             var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
             var byteBlockWriter = this.CreateVariableWriter(ref writer);
@@ -42,14 +42,14 @@ public partial class MqttPubRelMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
 
         if (this.EndOfByteBlock(reader))
         {
             return;
         }
 
-        this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
         if (this.EndOfByteBlock(reader))
         {

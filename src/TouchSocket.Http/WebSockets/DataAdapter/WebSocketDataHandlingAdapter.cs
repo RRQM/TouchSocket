@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets;
@@ -25,9 +27,12 @@ public sealed class WebSocketDataHandlingAdapter : CustomBigUnfixedHeaderDataHan
         return new WSDataFrame();
     }
 
-    protected override void OnReceivedSuccess(WSDataFrame request)
+    protected override async Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        request.Dispose();
-        base.OnReceivedSuccess(request);
+        await base.GoReceivedAsync(memory, requestInfo);
+        if (requestInfo is WSDataFrame wsDataFrame)
+        {
+            wsDataFrame.Dispose();
+        }
     }
 }

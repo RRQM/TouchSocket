@@ -10,19 +10,23 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.IO.Pipelines;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets;
 
+/// <summary>
+/// 表示传输层接口，继承自 <see cref="IDuplexPipe"/> 和 <see cref="IClosableClient"/>，用于数据的双向传输和关闭操作。
+/// </summary>
 public interface ITransport : IDuplexPipe, IClosableClient
 {
+    /// <summary>
+    /// 获取用于写入操作的信号量。
+    /// </summary>
     SemaphoreSlim SemaphoreSlimForWriter { get; }
+
+    /// <summary>
+    /// 获取连接关闭时的事件参数。
+    /// </summary>
     ClosedEventArgs ClosedEventArgs { get; }
 }
