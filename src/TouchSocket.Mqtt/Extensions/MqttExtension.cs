@@ -34,9 +34,7 @@ public static class MqttExtension
     /// <returns>读取的字符串。</returns>
     public static string ReadMqttInt16String<TReader>(ref TReader reader)
         where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         return ReadMqttInt16String(ref reader, out _);
     }
@@ -50,18 +48,16 @@ public static class MqttExtension
     /// <returns>读取的字符串。</returns>
     public static string ReadMqttInt16String<TReader>(ref TReader reader, out ushort length)
         where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
-        length = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        length = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         if (length == 0)
         {
             return string.Empty;
         }
-        var span=reader.GetSpan(length).Slice(0,length);
+        var span = reader.GetSpan(length).Slice(0, length);
 
-        var str=span.ToString(Encoding.UTF8);
+        var str = span.ToString(Encoding.UTF8);
         reader.Advance(length);
         return str;
     }
@@ -74,9 +70,7 @@ public static class MqttExtension
     /// <returns>读取的可变字节整数。</returns>
     public static uint ReadVariableByteInteger<TReader>(ref TReader reader)
         where TReader : IBytesReader
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         var multiplier = 1;
         var value = 0;
@@ -84,7 +78,7 @@ public static class MqttExtension
 
         do
         {
-            encodedByte = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+            encodedByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
             value += (encodedByte & 0x7F) * multiplier;
             multiplier *= 128;
         } while ((encodedByte & 0x80) == 0x80);
@@ -101,13 +95,11 @@ public static class MqttExtension
     /// <param name="flags">要写入的标志。</param>
     public static void WriteMqttFixedHeader<TWriter>(ref TWriter writer, MqttMessageType packetType, byte flags = 0)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         var fixedHeader = (int)packetType << 4;
         fixedHeader |= flags;
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)fixedHeader);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)fixedHeader);
     }
 
     /// <summary>
@@ -119,15 +111,13 @@ public static class MqttExtension
     /// <returns>写入的字符串长度。</returns>
     public static ushort WriteMqttInt16String<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         var pos = writer.WrittenCount;
-        var span=writer.GetSpan(2);
+        var span = writer.GetSpan(2);
         writer.Advance(2);
-       
-        WriterExtension.WriteNormalString(ref writer,value, Encoding.UTF8);
+
+        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
         var lastPos = writer.WrittenCount;
         var len = writer.WrittenCount - pos - 2;
         span.WriteValue<ushort>((ushort)len, EndianType.Big);
@@ -142,9 +132,7 @@ public static class MqttExtension
     /// <param name="value">要写入的值。</param>
     public static void WriteVariableByteInteger<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value > VariableByteIntegerMaxValue)
         {
@@ -158,7 +146,7 @@ public static class MqttExtension
             {
                 encodedByte |= 128;
             }
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,encodedByte);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, encodedByte);
         } while (value > 0);
     }
 
@@ -270,9 +258,9 @@ public static class MqttExtension
     /// <returns>读取的二进制数据。</returns>
     public static ReadOnlyMemory<byte> ReadMqttBinaryData<TReader>(ref TReader reader) where TReader : IBytesReader
     {
-        var length = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        var length = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         var data = new byte[length];
-        var r =reader.Read(data);
+        var r = reader.Read(data);
         if (r != length)
         {
             throw new Exception($"Expected {length} bytes, but received {r} bytes.");
@@ -321,11 +309,9 @@ public static class MqttExtension
 
     #region MqttV5Properties
 
-    public static void WriteAssignedClientIdentifier<TWriter>(ref TWriter writer, string value) 
+    public static void WriteAssignedClientIdentifier<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.AssignedClientIdentifier, value);
     }
@@ -338,16 +324,14 @@ public static class MqttExtension
     /// <param name="value">认证数据的值。</param>
     public static void WriteAuthenticationData<TWriter>(ref TWriter writer, ReadOnlySpan<byte> value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value.IsEmpty)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.AuthenticationData);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,(ushort)value.Length, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.AuthenticationData);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)value.Length, EndianType.Big);
         writer.Write(value);
     }
 
@@ -359,9 +343,7 @@ public static class MqttExtension
     /// <param name="value">认证方法的值。</param>
     public static void WriteAuthenticationMethod<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.AuthenticationMethod, value);
     }
@@ -374,9 +356,7 @@ public static class MqttExtension
     /// <param name="value">内容类型的值。</param>
     public static void WriteContentType<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.ContentType, value);
     }
@@ -389,16 +369,14 @@ public static class MqttExtension
     /// <param name="value">相关性数据的值。</param>
     public static void WriteCorrelationData<TWriter>(ref TWriter writer, ReadOnlySpan<byte> value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value.IsEmpty)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.CorrelationData);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,(ushort)value.Length, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.CorrelationData);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)value.Length, EndianType.Big);
         writer.Write(value);
     }
 
@@ -410,30 +388,26 @@ public static class MqttExtension
     /// <param name="value">最大数据包大小的值。</param>
     public static void WriteMaximumPacketSize<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.MaximumPacketSize);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.MaximumPacketSize);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
-    public static void WriteMaximumQoS<TWriter>(ref TWriter writer, QosLevel value) 
+    public static void WriteMaximumQoS<TWriter>(ref TWriter writer, QosLevel value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == QosLevel.ExactlyOnce)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.MaximumQoS);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)value);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.MaximumQoS);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)value);
     }
 
     /// <summary>
@@ -444,16 +418,14 @@ public static class MqttExtension
     /// <param name="value">消息过期间隔的值。</param>
     public static void WriteMessageExpiryInterval<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.MessageExpiryInterval);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.MessageExpiryInterval);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
     /// <summary>
@@ -464,23 +436,19 @@ public static class MqttExtension
     /// <param name="value">负载格式指示符的值。</param>
     public static void WritePayloadFormatIndicator<TWriter>(ref TWriter writer, MqttPayloadFormatIndicator value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == MqttPayloadFormatIndicator.Unspecified)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.PayloadFormatIndicator);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)value);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.PayloadFormatIndicator);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)value);
     }
 
-    public static void WriteReasonString<TWriter>(ref TWriter writer, string value) 
+    public static void WriteReasonString<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.ReasonString, value);
     }
@@ -493,16 +461,14 @@ public static class MqttExtension
     /// <param name="value">接收最大值的值。</param>
     public static void WriteReceiveMaximum<TWriter>(ref TWriter writer, ushort value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.ReceiveMaximum);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.ReceiveMaximum);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, value, EndianType.Big);
     }
 
     /// <summary>
@@ -513,14 +479,12 @@ public static class MqttExtension
     /// <param name="value">请求问题信息的值。</param>
     public static void WriteRequestProblemInformation<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.RequestProblemInformation);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,1);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.RequestProblemInformation);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 1);
         }
     }
 
@@ -532,16 +496,14 @@ public static class MqttExtension
     /// <param name="value">请求问题信息的值。</param>
     public static void WriteRequestProblemInformation<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.RequestProblemInformation);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.RequestProblemInformation);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
     /// <summary>
@@ -552,14 +514,12 @@ public static class MqttExtension
     /// <param name="value">请求响应信息的值。</param>
     public static void WriteRequestResponseInformation<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.RequestResponseInformation);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,1);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.RequestResponseInformation);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 1);
         }
     }
 
@@ -571,23 +531,19 @@ public static class MqttExtension
     /// <param name="value">请求响应信息的值。</param>
     public static void WriteRequestResponseInformation<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.RequestResponseInformation);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.RequestResponseInformation);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
-    public static void WriteResponseInformation<TWriter>(ref TWriter writer, string value) 
+    public static void WriteResponseInformation<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.ResponseInformation, value);
     }
@@ -600,46 +556,38 @@ public static class MqttExtension
     /// <param name="value">响应主题的值。</param>
     public static void WriteResponseTopic<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.ResponseTopic, value);
     }
 
     public static void WriteRetainAvailable<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.RetainAvailable);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.RetainAvailable);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
     }
 
-    public static void WriteServerKeepAlive<TWriter>(ref TWriter writer, ushort value) 
+    public static void WriteServerKeepAlive<TWriter>(ref TWriter writer, ushort value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.ServerKeepAlive);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,value);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.ServerKeepAlive);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, value);
     }
 
-    public static void WriteServerReference<TWriter>(ref TWriter writer, string value) 
+    public static void WriteServerReference<TWriter>(ref TWriter writer, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         WriteStringProperty(ref writer, MqttPropertyId.ServerReference, value);
     }
@@ -652,54 +600,46 @@ public static class MqttExtension
     /// <param name="value">会话过期间隔的值。</param>
     public static void WriteSessionExpiryInterval<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.SessionExpiryInterval);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.SessionExpiryInterval);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
     public static void WriteSharedSubscriptionAvailable<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.SharedSubscriptionAvailable);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.SharedSubscriptionAvailable);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
     }
 
-    public static void WriteSubscriptionIdentifier<TWriter>(ref TWriter writer, uint subscriptionIdentifier) 
+    public static void WriteSubscriptionIdentifier<TWriter>(ref TWriter writer, uint subscriptionIdentifier)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.SubscriptionIdentifier);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.SubscriptionIdentifier);
         WriteVariableByteInteger(ref writer, subscriptionIdentifier);
     }
 
     public static void WriteSubscriptionIdentifiersAvailable<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.SubscriptionIdentifiersAvailable);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.SubscriptionIdentifiersAvailable);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
     }
 
     /// <summary>
@@ -710,22 +650,18 @@ public static class MqttExtension
     /// <param name="value">主题别名最大值的值。</param>
     public static void WriteTopicAliasMaximum<TWriter>(ref TWriter writer, ushort value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.TopicAliasMaximum);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.TopicAliasMaximum);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, value, EndianType.Big);
     }
 
     public static void WriteUserProperties<TWriter>(ref TWriter writer, IReadOnlyList<MqttUserProperty> userProperties) where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (userProperties is null)
         {
@@ -746,31 +682,27 @@ public static class MqttExtension
     /// <param name="value">用户属性的值。</param>
     public static void WriteUserProperty<TWriter>(ref TWriter writer, string name, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (name.IsNullOrEmpty() || value.IsNullOrEmpty())
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.UserProperty);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.UserProperty);
         WriteMqttInt16String(ref writer, name);
         WriteMqttInt16String(ref writer, value);
     }
 
     public static void WriteWildcardSubscriptionAvailable<TWriter>(ref TWriter writer, bool value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.WildcardSubscriptionAvailable);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.WildcardSubscriptionAvailable);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
     }
 
     /// <summary>
@@ -781,44 +713,38 @@ public static class MqttExtension
     /// <param name="value">遗嘱延迟时间间隔的值。</param>
     public static void WriteWillDelayInterval<TWriter>(ref TWriter writer, uint value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.WillDelayInterval);
-        WriterExtension.WriteValue<TWriter,uint>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.WillDelayInterval);
+        WriterExtension.WriteValue<TWriter, uint>(ref writer, value, EndianType.Big);
     }
 
     private static void WriteStringProperty<TWriter>(ref TWriter writer, MqttPropertyId propertyId, string value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value.IsNullOrEmpty())
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)propertyId);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)propertyId);
         WriteMqttInt16String(ref writer, value);
     }
 
-    public static void WriteTopicAlias<TWriter>(ref TWriter writer, ushort value) 
+    public static void WriteTopicAlias<TWriter>(ref TWriter writer, ushort value)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         if (value == 0)
         {
             return;
         }
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)MqttPropertyId.TopicAlias);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,value, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)MqttPropertyId.TopicAlias);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, value, EndianType.Big);
     }
 
     #endregion MqttV5Properties

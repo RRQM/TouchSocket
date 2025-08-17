@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
@@ -84,7 +83,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     protected BytesWriter CreateVariableWriter<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
     {
-        return new BytesWriter(writer.GetMemory(this.GetMinimumRemainingLength()+1024));
+        return new BytesWriter(writer.GetMemory(this.GetMinimumRemainingLength() + 1024));
     }
 
     #region Build
@@ -96,9 +95,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
     /// <param name="writer">字节块引用。</param>
     public void Build<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         MqttExtension.WriteMqttFixedHeader(ref writer, this.MessageType, this.Flags);
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
@@ -114,16 +111,12 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
 
     protected abstract void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
         ;
 
     protected abstract void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
         ;
 
     /// <summary>
@@ -134,9 +127,7 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
 
     private void BuildVariableBody<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         switch (this.Version)
         {

@@ -50,7 +50,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
         {
             return true;//直接构建成功，也不用调用后续的WriteContent
         }
-        if (byteBlock.FreeLength > this.m_memory.Length)
+        if (this.m_memory.Length < 1024 * 1024)
         {
             //如果空闲空间足够，构建成功，也不用调用后续的WriteContent
             byteBlock.Write(this.m_memory.Span);
@@ -76,9 +76,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token)
     {
-        await writeFunc(this.m_memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writeFunc(this.m_memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

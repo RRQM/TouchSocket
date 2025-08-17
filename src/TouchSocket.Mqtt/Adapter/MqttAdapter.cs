@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
@@ -72,7 +69,7 @@ internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
 
     public MqttProtocolVersion Version { get; set; } = MqttProtocolVersion.Unknown;
 
-    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MqttMessage request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MqttMessage request)
     {
         if (reader.BytesRemaining < 2)
         {
@@ -81,7 +78,7 @@ internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
         var position = reader.BytesRead;
         var firstByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         var mqttControlPacketType = (MqttMessageType)firstByte.GetHeight4();
-      
+
         var remainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
         if (reader.BytesRemaining < remainingLength)
         {

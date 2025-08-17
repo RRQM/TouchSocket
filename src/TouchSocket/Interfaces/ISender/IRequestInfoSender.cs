@@ -31,5 +31,5 @@ public interface IRequestInfoSender
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
-    Task SendAsync(IRequestInfo requestInfo,CancellationToken token=default);
+    Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default);
 }

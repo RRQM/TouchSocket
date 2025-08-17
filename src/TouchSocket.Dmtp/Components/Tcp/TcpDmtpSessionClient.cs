@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp;
 /// </summary>
 public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessionClient
 {
-    private readonly DmtpAdapter m_dmtpAdapter = new DmtpAdapter();
+    private readonly DmtpAdapter m_dmtpAdapter = new();
     private DmtpActor m_dmtpActor;
     private Func<TcpDmtpSessionClient, ConnectingEventArgs, Task> m_privateConnecting;
 
@@ -232,9 +232,9 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     #region ResetId
 
     ///<inheritdoc/>
-    public override Task ResetIdAsync(string newId)
+    public override Task ResetIdAsync(string newId, CancellationToken token)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId);
+        return this.m_dmtpActor.ResetIdAsync(newId, token);
     }
 
     #endregion ResetId
@@ -259,8 +259,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
         actor.CreatedChannel = this.OnDmtpActorCreateChannel;
         actor.Logger = this.Logger;
         this.m_dmtpActor = actor;
-
-        this.SetAdapter(this.m_dmtpAdapter);
+        this.m_dmtpAdapter.Config(this.Config);
     }
 
     #endregion Internal
@@ -272,7 +271,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
 
-        return base.ProtectedDefaultSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, token);
     }
 
     private async Task ThisOnResetId(DmtpActor rpcActor, IdChangedEventArgs e)
@@ -330,23 +329,21 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     }
 
     /// <inheritdoc/>
-    protected override async ValueTask<bool> OnTcpReceiving(IByteBlockReader byteBlock)
+    protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
-        while (byteBlock.CanReadLength>0)
+        while (reader.BytesRemaining > 0)
         {
-            if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
+            //Console.WriteLine(reader.BytesRemaining);
+            if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
             {
-                try
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
-                finally
-                {
-                    message.Dispose();
-                }
+            }
+            else
+            {
+                break;
             }
         }
         return true;

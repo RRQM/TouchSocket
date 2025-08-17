@@ -26,17 +26,7 @@ public interface IHttpClient : IHttpSession, ISetupConfigObject, IOnlineClient, 
     /// 发起请求
     /// </summary>
     /// <param name="request">请求体</param>
-    /// <param name="millisecondsTimeout">等待超时时间</param>
     /// <param name="token">结束等待令箭</param>
     /// <returns></returns>
-    Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default);
-
-    /// <summary>
-    /// 发起请求，并获取数据体
-    /// </summary>
-    /// <param name="request">请求体</param>
-    /// <param name="millisecondsTimeout">等待超时时间</param>
-    /// <param name="token">结束等待令箭</param>
-    /// <returns></returns>
-    Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default);
+    ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token = default);
 }

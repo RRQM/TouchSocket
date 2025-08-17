@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -49,7 +48,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
     /// </summary>
     public WebApiSerializerConverter Converter { get; private set; }
 
-    
+
     /// <summary>
     /// 获取WebApi映射
     /// </summary>

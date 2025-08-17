@@ -19,10 +19,11 @@ namespace TouchSocket.Sockets;
 /// <typeparam name="TResult">接收结果的类型，必须继承自<see cref="IReceiverResult"/>接口</typeparam>
 public interface IReceiverClient<TResult> where TResult : IReceiverResult
 {
-    /// <summary>
-    /// 获取一个同步数据接收器
+
+    ///<summary>
+    /// 创建一个同步数据接收器实例。
     /// </summary>
-    /// <returns>返回一个IReceiver接口实例，用于接收类型为TResult的数据</returns>
+    /// <returns>返回一个实现了<see cref="IReceiver{TResult}"/>接口的接收器对象。</returns>
     IReceiver<TResult> CreateReceiver();
 
     /// <summary>

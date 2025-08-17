@@ -28,13 +28,13 @@ internal sealed partial class InternalWebSocket : IWebSocket
     private bool m_allowAsyncRead;
     private bool m_isCont;
 
-    public InternalWebSocket(HttpClientBase httpClientBase) : base(true)
+    public InternalWebSocket(HttpClientBase httpClientBase)
     {
         this.m_isServer = false;
         this.m_httpClientBase = httpClientBase;
     }
 
-    public InternalWebSocket(HttpSessionClient httpSocketClient) : base(true)
+    public InternalWebSocket(HttpSessionClient httpSocketClient)
     {
         this.m_isServer = true;
         this.m_httpSocketClient = httpSocketClient;
@@ -52,6 +52,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
     public Protocol Protocol => Protocol.WebSocket;
     public IResolver Resolver => this.m_isServer ? this.m_httpSocketClient.Resolver : this.m_httpClientBase.Resolver;
     public string Version { get; set; }
+
     public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         try
@@ -91,7 +92,6 @@ internal sealed partial class InternalWebSocket : IWebSocket
                 byteBlock.Dispose();
             }
 
-           
             if (this.m_isServer)
             {
                 await this.m_httpSocketClient.CloseAsync(statusDescription, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -112,7 +112,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
     {
         try
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping },token:token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, token: token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -125,33 +125,30 @@ internal sealed partial class InternalWebSocket : IWebSocket
     {
         try
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong },token:token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, token: token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
         {
-
             return Result.FromException(ex);
         }
-
     }
 
     #region 发送
 
-    public async Task SendAsync(string text, bool endOfMessage = true,CancellationToken token=default)
+    public async Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
     {
         var byteBlock = new ByteBlock(1024);
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, text, Encoding.UTF8);
             var frame = new WSDataFrame(byteBlock.Memory) { FIN = endOfMessage, Opcode = WSDataType.Text };
-             await this.SendAsync(frame, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(frame, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
             byteBlock.Dispose();
         }
-        
     }
 
     public async Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
@@ -187,7 +184,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
             if (this.m_isServer)
             {
                 dataFrame.BuildResponse(ref byteBlock);
-                await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -203,25 +200,15 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
     #endregion 发送
 
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
+        if (this.m_isServer)
         {
-            return;
+            this.m_httpSocketClient.SafeDispose();
         }
-
-        base.Dispose(disposing);
-
-        if (disposing)
+        else
         {
-            if (this.m_isServer)
-            {
-                this.m_httpSocketClient.SafeDispose();
-            }
-            else
-            {
-                this.m_httpClientBase.SafeDispose();
-            }
+            this.m_httpClientBase.SafeDispose();
         }
     }
 }

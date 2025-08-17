@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -40,9 +39,17 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
+    private readonly AsyncExchange<ReadOnlyMemory<byte>> m_asyncExchange;
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
 
-    private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
+    public HttpBase(bool initBlockSegment)
+    {
+        if (initBlockSegment)
+        {
+            this.m_asyncExchange = new AsyncExchange<ReadOnlyMemory<byte>>();
+            this.m_asyncExchange.Complete();
+        }
+    }
 
     /// <summary>
     /// 可接受MIME类型
@@ -114,19 +121,14 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public string ProtocolVersion { get; set; } = "1.1";
 
-    ///// <summary>
-    ///// 请求行
-    ///// </summary>
-    //public string RequestLine { get; private set; }
-
-    internal Task CompleteInput()
+    internal void CompleteInput()
     {
-        return this.m_httpBlockSegment.InternalComplete(string.Empty);
+        this.m_asyncExchange?.Complete();
     }
 
-    internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+    internal ValueTask InternalInputAsync(in ReadOnlyMemory<byte> memory)
     {
-        return this.m_httpBlockSegment.InternalInputAsync(memory);
+        return this.m_asyncExchange.WriteAsync(memory, CancellationToken.None);
     }
 
     internal bool ParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
@@ -136,8 +138,8 @@ public abstract class HttpBase : IRequestInfo
         if (index >= 0)
         {
             var headerLength = (int)(index - reader.BytesRead + 2);
-            var headerSpan= reader.GetSpan(headerLength).Slice(0, headerLength);
-           
+            var headerSpan = reader.GetSpan(headerLength).Slice(0, headerLength);
+
             this.ReadHeaders(headerSpan);
             reader.Advance(headerLength + 2);
             return true;
@@ -152,9 +154,7 @@ public abstract class HttpBase : IRequestInfo
     {
         this.m_headers.Clear();
         this.ContentCompleted = null;
-        //this.RequestLine = default;
-
-        this.m_httpBlockSegment.InternalReset();
+        this.m_asyncExchange?.Reset();
     }
 
     /// <summary>
@@ -251,11 +251,7 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
     /// <returns>返回一个<see cref="IReadOnlyMemoryBlockResult"/>，表示异步读取操作的结果。</returns>
-    public virtual ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
-    {
-        // 调用m_httpBlockSegment的InternalValueWaitAsync方法，等待HTTP块段的内部值。
-        return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
-    }
+    public abstract ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// 异步读取并复制流数据
@@ -270,7 +266,7 @@ public abstract class HttpBase : IRequestInfo
             using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                if (!blockResult.Memory.IsEmpty)
                 {
                     var memory = blockResult.Memory;
                     await stream.WriteAsync(memory, cancellationToken);
@@ -301,7 +297,7 @@ public abstract class HttpBase : IRequestInfo
                 using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                    if (!blockResult.Memory.IsEmpty)
                     {
                         var memory = blockResult.Memory;
                         await stream.WriteAsync(memory, cancellationToken);
@@ -323,6 +319,11 @@ public abstract class HttpBase : IRequestInfo
         {
             return flowOperator.SetResult(Result.FromException(ex));
         }
+    }
+
+    protected ValueTask<ReadLease<ReadOnlyMemory<byte>>> ReadExchangeAsync(CancellationToken token)
+    {
+        return this.m_asyncExchange.ReadAsync(token);
     }
 
     #endregion Read

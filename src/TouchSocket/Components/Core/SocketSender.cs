@@ -104,7 +104,7 @@ internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult
         this.BufferList = buffer;
     }
 
- 
+
     protected override TcpOperationResult GetResult()
     {
         return new TcpOperationResult(this.BytesTransferred, this.SocketError);

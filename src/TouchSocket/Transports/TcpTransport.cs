@@ -11,7 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.IO.Pipelines;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,11 +22,12 @@ namespace TouchSocket.Sockets;
 internal sealed class TcpTransport : BaseTransport
 {
     private readonly TcpCore m_tcpCore;
+    private readonly Socket m_socket;
 
     public TcpTransport(TcpCore tcpCore, TransportOption option) : base(option)
     {
         this.m_tcpCore = tcpCore ?? throw new ArgumentNullException(nameof(tcpCore));
-
+        this.m_socket = tcpCore.Socket;
         this.Start();
     }
 
@@ -36,7 +36,7 @@ internal sealed class TcpTransport : BaseTransport
         try
         {
             await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_tcpCore.Close();
+            this.Close();
             return Result.Success;
         }
         catch (Exception ex)
@@ -44,6 +44,26 @@ internal sealed class TcpTransport : BaseTransport
             return Result.FromException(ex.Message);
         }
     }
+
+    public Result Close()
+    {
+        try
+        {
+            var socket = this.m_socket;
+            if (!socket.Connected)
+            {
+                return Result.Success;
+            }
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
 
     protected override async Task RunReceive(CancellationToken token)
     {
@@ -57,7 +77,7 @@ internal sealed class TcpTransport : BaseTransport
                 {
                     if (result.BytesTransferred == 0)
                     {
-                        this.ClosedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                        this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
                         await this.m_pipeReceive.Writer.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return;
                     }
@@ -74,7 +94,7 @@ internal sealed class TcpTransport : BaseTransport
                 else
                 {
                     // 处理接收失败的情况
-                    this.ClosedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                    this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
                     await this.m_pipeReceive.Writer.CompleteAsync(new SocketException((int)result.SocketError)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     break;
                 }
@@ -82,7 +102,7 @@ internal sealed class TcpTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.ClosedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+            this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
             await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }

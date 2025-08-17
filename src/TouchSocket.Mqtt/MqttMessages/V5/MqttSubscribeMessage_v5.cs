@@ -21,7 +21,7 @@ public partial class MqttSubscribeMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
         var byteBlockWriter = this.CreateVariableWriter(ref writer);
@@ -34,15 +34,15 @@ public partial class MqttSubscribeMessage
         foreach (var item in this.m_subscribeRequests)
         {
             MqttExtension.WriteMqttInt16String(ref writer, item.Topic);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)item.QosLevel);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item.QosLevel);
         }
     }
 
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
         while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
@@ -65,7 +65,7 @@ public partial class MqttSubscribeMessage
         while (!this.EndOfByteBlock(reader))
         {
             var topic = MqttExtension.ReadMqttInt16String(ref reader);
-            var options = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+            var options = ReaderExtension.ReadValue<TReader, byte>(ref reader);
             this.m_subscribeRequests.Add(new SubscribeRequest(topic, options));
         }
     }

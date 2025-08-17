@@ -202,10 +202,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_receiveTasks.Clear();
 
-            if (this.m_receiver != null)
-            {
-                await this.m_receiver.Complete(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            this.m_receiver?.Complete(default);
             await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
@@ -283,8 +280,6 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         {
             adapter.Config(this.Config);
         }
-        // 设置适配器的日志记录器
-        adapter.Logger = this.Logger;
         // 通知适配器当前实例的状态
         adapter.OnLoaded(this);
         // 设置适配器接收到数据时的回调方法
@@ -375,9 +370,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                         if (result.BytesTransferred > 0)
                         {
                             byteBlock.SetLength(result.BytesTransferred);
-                            await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.HandleReceivingData(byteBlock.Memory, result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
-                        else if (result.SocketError !=  SocketError.Success)
+                        else if (result.SocketError != SocketError.Success)
                         {
                             this.Logger?.Debug(this, result.SocketError.ToString());
                             return;
@@ -398,7 +393,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         }
     }
 
-    private async Task HandleReceivingData(IByteBlockReader byteBlock, EndPoint remoteEndPoint)
+    private async Task HandleReceivingData(ReadOnlyMemory<byte> memory, EndPoint remoteEndPoint)
     {
         try
         {
@@ -409,18 +404,18 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
             this.m_lastReceivedTime = DateTimeOffset.UtcNow;
 
-            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, memory)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 return;
             }
 
             if (this.m_dataHandlingAdapter == null)
             {
-                await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateHandleReceivedData(remoteEndPoint, memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_dataHandlingAdapter.ReceivedInputAsync(remoteEndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
         catch (Exception ex)
@@ -443,14 +438,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
     }
 
-    private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         if (this.m_receiver != null)
         {
             await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
-                await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_receiver.InputReceive(remoteEndPoint, memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             finally
@@ -458,7 +453,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                 this.m_semaphoreSlimForReceiver.Release();
             }
         }
-        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #region Throw
@@ -501,7 +496,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传递目的端点和内存数据。
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory,token);
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory, token);
     }
 
     /// <summary>
@@ -533,7 +528,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         // 根据m_dataHandlingAdapter是否已设置，选择不同的发送方式
         return this.m_dataHandlingAdapter == null
             ? this.ProtectedDefaultSendAsync(endPoint, memory, token) // 使用默认发送方式
-            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory,token); // 通过适配器发送数据
+            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory, token); // 通过适配器发送数据
     }
 
     /// <summary>
@@ -563,14 +558,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <param name="memory">要发送的只读字节内存。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>一个等待任务，表示异步操作。</returns>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token=default)
+    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         // 如果不能发送数据，则抛出异常。
         this.ThrowIfCannotSend();
         // 如果远程IP主机为空，则抛出异常。
         this.ThrowIfRemoteIPHostNull();
         // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
-        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
 #if NET6_0_OR_GREATER
@@ -597,7 +592,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         this.ThrowIfDisposed();
         this.ThrowIfCannotSend();
         await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint,token);
+        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint, token);
         this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
 #else

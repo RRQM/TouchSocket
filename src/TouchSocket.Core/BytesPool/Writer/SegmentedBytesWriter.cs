@@ -63,6 +63,7 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
 
     public Memory<byte> GetMemory(int sizeHint = 0)
     {
+        sizeHint = Math.Max(sizeHint, 16);
         this.EnsureCapacity(sizeHint);
         return this.m_currentSegment.GetMemory();
     }
@@ -74,8 +75,7 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
 
     public Span<byte> GetSpan(int sizeHint = 0)
     {
-        this.EnsureCapacity(sizeHint);
-        return this.m_currentSegment.GetSpan();
+        return this.GetMemory(sizeHint).Span;
     }
 
     public void Write(scoped ReadOnlySpan<byte> span)

@@ -45,7 +45,7 @@ public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
                     continue;
                 }
 
-                if (await client.DmtpActor.PingAsync())
+                if ((await client.DmtpActor.PingAsync()).IsSuccess)
                 {
                     failedCount = 0;
                 }

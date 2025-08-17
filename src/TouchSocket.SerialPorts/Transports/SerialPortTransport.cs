@@ -10,15 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts;
@@ -33,19 +25,9 @@ internal sealed class SerialPortTransport : StreamTransport
 
     public bool IsOpen => this.m_serialPort.IsOpen;
 
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    protected override void SafetyDispose(bool disposing)
     {
-        try
-        {
-            return await base.CloseAsync(msg, token);
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex.Message);
-        }
-        finally
-        {
-            this.m_serialPort.Dispose();
-        }
+        this.m_serialPort.Dispose();
+        base.SafetyDispose(disposing);
     }
 }

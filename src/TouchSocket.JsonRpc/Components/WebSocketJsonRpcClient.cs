@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,7 +51,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         return base.ProtectedSendAsync(memory, WebSocketMessageType.Text, true, token);
     }
@@ -88,19 +89,22 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     }
 
     /// <inheritdoc/>
-    protected override async Task OnReceived(WebSocketReceiveResult result, IByteBlockReader byteBlock)
+    protected override async Task OnWebSocketReceived(WebSocketReceiveResult result, ReadOnlySequence<byte> sequence)
     {
         if (result.MessageType == WebSocketMessageType.Text)
         {
-            var jsonMemory = byteBlock.Memory;
-
-            if (jsonMemory.IsEmpty)
+            using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
-                return;
-            }
+                var jsonMemory = buffer.Memory;
 
-            var callContext = new WebSocketJsonRpcCallContext(this);
-            await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (jsonMemory.IsEmpty)
+                {
+                    return;
+                }
+
+                var callContext = new WebSocketJsonRpcCallContext(this);
+                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
     }
 }

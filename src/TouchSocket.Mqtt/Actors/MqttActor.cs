@@ -12,9 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.IO.Pipes;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -95,23 +92,17 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     private async Task PublishAtLeastOnceMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
-        var waitDataAsync = this.m_waitHandlePool.GetWaitDataAsync(message);
-
-        try
+        using (var waitDataAsync = this.m_waitHandlePool.GetWaitDataAsync(message))
         {
             await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            var waitDataStatus = await waitDataAsync.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitDataAsync.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            if (waitDataAsync.WaitResult is MqttPubAckMessage pubAckMessage)
+            if (waitDataAsync.CompletedData is MqttPubAckMessage pubAckMessage)
             {
                 return;
             }
-        }
-        finally
-        {
-            this.m_waitHandlePool.Destroy(message.MessageId);
         }
     }
 
@@ -122,35 +113,24 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     private async Task PublishExactlyOnceMessageAsync(MqttPublishMessage message, CancellationToken token)
     {
-        var waitData_1_Async = this.m_waitHandlePool.GetWaitDataAsync(message);
-
-        try
+        using (var waitData_1_Async = this.m_waitHandlePool.GetWaitDataAsync(message))
         {
             await this.ProtectedOutputSendAsync(message, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var waitDataStatus = await waitData_1_Async.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData_1_Async.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
         }
-        finally
-        {
-            this.m_waitHandlePool.Destroy(message.MessageId);
-        }
+
 
         var mqttPubRelMessage = new MqttPubRelMessage()
         {
             MessageId = message.MessageId
         };
 
-        var waitData_2_Async = this.m_waitHandlePool.GetWaitDataAsync(mqttPubRelMessage, false);
-
-        try
+        using (var waitData_2_Async = this.m_waitHandlePool.GetWaitDataAsync(mqttPubRelMessage, false))
         {
             await this.ProtectedOutputSendAsync(mqttPubRelMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var waitDataStatus = await waitData_2_Async.WaitAsync(1000 * 10).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData_2_Async.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
-        }
-        finally
-        {
-            this.m_waitHandlePool.Destroy(mqttPubRelMessage.MessageId);
         }
     }
 
@@ -295,7 +275,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private Task InputMqttPubAckMessageAsync(MqttPubAckMessage message, CancellationToken token)
     {
-        this.m_waitHandlePool.SetRun(message);
+        this.m_waitHandlePool.Set(message);
         return EasyTask.CompletedTask;
     }
 
@@ -307,7 +287,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private Task InputMqttPubCompMessageAsync(MqttPubCompMessage message, CancellationToken token)
     {
-        this.m_waitHandlePool.SetRun(message);
+        this.m_waitHandlePool.Set(message);
         return EasyTask.CompletedTask;
     }
 
@@ -354,7 +334,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private Task InputMqttPubRecMessageAsync(MqttPubRecMessage message, CancellationToken token)
     {
-        this.m_waitHandlePool.SetRun(message);
+        this.m_waitHandlePool.Set(message);
         return EasyTask.CompletedTask;
     }
 
@@ -386,7 +366,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private Task InputMqttSubAckMessageAsync(MqttSubAckMessage message, CancellationToken token)
     {
-        this.m_waitHandlePool.SetRun(message);
+        this.m_waitHandlePool.Set(message);
         return EasyTask.CompletedTask;
     }
 
@@ -398,7 +378,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private Task InputMqttUnsubAckMessageAsync(MqttUnsubAckMessage message, CancellationToken token)
     {
-        this.m_waitHandlePool.SetRun(message);
+        this.m_waitHandlePool.Set(message);
         return EasyTask.CompletedTask;
     }
 

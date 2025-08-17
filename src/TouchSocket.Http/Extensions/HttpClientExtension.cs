@@ -44,7 +44,7 @@ public static class HttpClientExtension
         request.URL = (url);
 
         // 使用指定的超时时间和取消令牌发起HTTP请求
-        using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             // 获取HTTP响应
             var response = responseResult.Response;
@@ -88,7 +88,7 @@ public static class HttpClientExtension
     public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
     {
         // 使用using语句确保响应对象正确地被释放
-        using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             // 提取HTTP响应
             var response = responseResult.Response;
@@ -111,7 +111,7 @@ public static class HttpClientExtension
         var token = flowOperator.Token;
         var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
         // 使用using语句确保响应对象正确地被释放
-        using (var responseResult = await httpClient.RequestAsync(request, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             // 提取HTTP响应
             var response = responseResult.Response;
@@ -187,7 +187,7 @@ public static class HttpClientExtension
             request.SetHost(client.RemoteIPHost.Host);
             request.AsPost();
 
-            using (var responseResult = await client.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await client.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
                 if (response.IsSuccess())
@@ -219,7 +219,7 @@ public static class HttpClientExtension
             //创建一个请求
             request.SetContent(new StreamHttpContent(stream, flowOperator));
 
-            using (var responseResult = await client.RequestAsync(request, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await client.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
                 if (response.IsSuccess())

@@ -47,21 +47,21 @@ public class FileSection : PackageBase
     /// <inheritdoc/>
     public override void Package<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.Status);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ResourceHandle);
-        WriterExtension.WriteValue<TWriter,long>(ref writer,this.Offset);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.Length);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.Index);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Status);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+        WriterExtension.WriteValue<TWriter, long>(ref writer, this.Offset);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Length);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Index);
     }
 
     /// <inheritdoc/>
     public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.Status = (FileSectionStatus)ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        this.ResourceHandle = ReaderExtension.ReadValue<TReader,int>(ref reader);
-        this.Offset = ReaderExtension.ReadValue<TReader,long>(ref reader);
-        this.Length = ReaderExtension.ReadValue<TReader,int>(ref reader);
-        this.Index = ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.Status = (FileSectionStatus)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Offset = ReaderExtension.ReadValue<TReader, long>(ref reader);
+        this.Length = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Index = ReaderExtension.ReadValue<TReader, int>(ref reader);
     }
 
     /// <summary>

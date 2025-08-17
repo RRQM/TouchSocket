@@ -41,50 +41,48 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
     public int MaxLength => 1024;
 
     /// <inheritdoc/>
-    public void Build<TWriter>(ref TWriter writer) 
+    public void Build<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.TransactionId, EndianType.Big);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.ProtocolId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.TransactionId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ProtocolId, EndianType.Big);
         if ((byte)this.FunctionCode <= 4)
         {
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,6, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,this.SlaveId);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.Quantity, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, 6, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
         }
         else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
         {
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,6, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,this.SlaveId);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.StartingAddress, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, 6, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
             writer.Write(this.Data.Span);
         }
         else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
         {
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,(ushort)(this.Data.Length + 7), EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,this.SlaveId);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.Quantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.Data.Length);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)(this.Data.Length + 7), EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Data.Length);
             writer.Write(this.Data.Span);
         }
         else if (this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
         {
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,(ushort)(this.Data.Length + 11), EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,this.SlaveId);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.ReadStartAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.ReadQuantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.Quantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.Data.Length);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)(this.Data.Length + 11), EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ReadStartAddress, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ReadQuantity, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Data.Length);
             writer.Write(this.Data.Span);
         }
         else

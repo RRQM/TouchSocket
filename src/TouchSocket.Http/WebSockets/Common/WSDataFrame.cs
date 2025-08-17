@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.Text;
 using TouchSocket.Core;
 
@@ -87,7 +86,7 @@ public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixed
     /// <summary>
     /// 有效数据
     /// </summary>
-    public ReadOnlyMemory<byte> PayloadData => this.m_payloadDataBlock?.Memory ?? m_payloadData;
+    public ReadOnlyMemory<byte> PayloadData => this.m_payloadDataBlock?.Memory ?? this.m_payloadData;
 
     /// <summary>
     /// 标识RSV-1。
@@ -238,7 +237,7 @@ public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixed
 
     bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TReader>(ref TReader reader)
     {
-        var offset =0;
+        var offset = 0;
         var dataBuffer = reader.GetSpan((int)reader.BytesRemaining);
         var length = dataBuffer.Length;
         if (length < 2)

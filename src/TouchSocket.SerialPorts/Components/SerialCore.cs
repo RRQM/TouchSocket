@@ -46,7 +46,7 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
     /// </summary>
     public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, bool streamAsync)
     {
-        this.m_receiveCounter = new ValueCounter(TimeSpan.FromSeconds(1),this.OnReceivePeriod);
+        this.m_receiveCounter = new ValueCounter(TimeSpan.FromSeconds(1), this.OnReceivePeriod);
 
         this.m_sendCounter = new ValueCounter(TimeSpan.FromSeconds(1), this.OnSendPeriod);
 
@@ -107,7 +107,7 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
         this.m_core.OnCompleted(continuation, state, token, flags);
     }
 
-    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock,CancellationToken token)
+    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock, CancellationToken token)
     {
         if (this.m_streamAsync)
         {

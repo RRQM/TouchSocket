@@ -14,7 +14,6 @@ using System;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Core;
 

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +66,7 @@ public class UdpSession : UdpSessionBase, IUdpSession
     /// <inheritdoc/>
     public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(endPoint, memory,token);
+        return this.ProtectedSendAsync(endPoint, memory, token);
     }
 
     /// <inheritdoc/>

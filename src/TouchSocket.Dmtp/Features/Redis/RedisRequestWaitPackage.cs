@@ -24,16 +24,16 @@ internal class RedisRequestWaitPackage : RedisResponseWaitPackage
     public override void Package<TWriter>(ref TWriter writer)
     {
         base.Package(ref writer);
-        WriterExtension.WriteString(ref writer,this.key);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.packageType);
+        WriterExtension.WriteString(ref writer, this.key);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.packageType);
         if (this.timeSpan.HasValue)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,1);
-            WriterExtension.WriteValue<TWriter,TimeSpan>(ref writer,this.timeSpan.Value);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 1);
+            WriterExtension.WriteValue<TWriter, TimeSpan>(ref writer, this.timeSpan.Value);
         }
         else
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
         }
     }
 
@@ -41,10 +41,10 @@ internal class RedisRequestWaitPackage : RedisResponseWaitPackage
     {
         base.Unpackage(ref reader);
         this.key = ReaderExtension.ReadString(ref reader);
-        this.packageType = (RedisPackageType)ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        if (ReaderExtension.ReadValue<TReader,byte>(ref reader) == 1)
+        this.packageType = (RedisPackageType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        if (ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1)
         {
-            this.timeSpan = ReaderExtension.ReadValue<TReader,TimeSpan>(ref reader);
+            this.timeSpan = ReaderExtension.ReadValue<TReader, TimeSpan>(ref reader);
         }
     }
 }

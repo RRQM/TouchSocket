@@ -160,9 +160,9 @@ public partial class MqttConnectMessage
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
         MqttExtension.WriteMqttInt16String(ref writer, this.ProtocolName);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.Version);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,this.m_connectFlags);
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.KeepAlive, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Version);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectFlags);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.KeepAlive, EndianType.Big);
 
         #region Properties
 

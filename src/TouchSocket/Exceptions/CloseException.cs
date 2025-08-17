@@ -10,16 +10,16 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets;
-public interface IBufferedTcpClient : ISetupConfigObject, ITcpSession, IDuplexPipe, ITcpConnectableClient
-{
-}
+//namespace TouchSocket.Sockets;
+//public sealed class CloseException:Exception
+//{
+//    public CloseException(string msg):base(msg)
+//    {
+//    }
+//}

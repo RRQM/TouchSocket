@@ -37,8 +37,8 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
         base.PackageBody(ref writer);
-        WriterExtension.WriteValue<TWriter,bool>(ref writer,this.Random);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,this.ChannelId);
+        WriterExtension.WriteValue<TWriter, bool>(ref writer, this.Random);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ChannelId);
 
         if (this.Metadata is null)
         {
@@ -46,7 +46,7 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.Metadata.Package(ref writer);
         }
     }
@@ -54,8 +54,8 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
     public override void UnpackageBody<TReader>(ref TReader reader)
     {
         base.UnpackageBody(ref reader);
-        this.Random = ReaderExtension.ReadValue<TReader,bool>(ref reader);
-        this.ChannelId = ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.Random = ReaderExtension.ReadValue<TReader, bool>(ref reader);
+        this.ChannelId = ReaderExtension.ReadValue<TReader, int>(ref reader);
         if (ReaderExtension.ReadIsNull(ref reader))
         {
             this.Metadata = null;

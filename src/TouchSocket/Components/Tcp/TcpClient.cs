@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -110,10 +109,19 @@ public class TcpClient : TcpClientBase, ITcpClient
 
     #region Connect
 
+    private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     /// <inheritdoc/>
-    public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreForConnect.Release();
+        }
     }
 
     #endregion Connect

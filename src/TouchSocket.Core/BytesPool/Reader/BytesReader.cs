@@ -49,15 +49,15 @@ public struct BytesReader : IDisposable, IBytesReader
 
     public ReadOnlyMemory<byte> GetMemory(int count)
     {
-        var memories = this.m_sequence.Slice(this.m_position);
-        var memory = memories.First;
-        if (count <= memory.Length)
+        var sequence = this.m_sequence.Slice(this.m_position, count);
+
+        if (sequence.IsSingleSegment)
         {
-            return memory.Slice(0, count); // 零拷贝切片
+            return sequence.First; // 零拷贝切片
         }
 
         var cacheMemory = this.GetCacheMemory(count);
-        memories.CopyTo(cacheMemory.Span);
+        sequence.CopyTo(cacheMemory.Span);
         return cacheMemory;
     }
 

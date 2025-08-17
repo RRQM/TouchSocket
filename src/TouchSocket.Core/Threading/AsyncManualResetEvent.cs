@@ -22,18 +22,21 @@ namespace TouchSocket.Core;
 /// <summary>
 /// A flavor of <see cref="ManualResetEvent"/> that can be asynchronously awaited on.
 /// </summary>
+/// <remarks>
+/// 此代码摘抄自微软VS相关库。
+/// </remarks>
 [DebuggerDisplay("Signaled: {IsSet}")]
 public class AsyncManualResetEvent
 {
     /// <summary>
     /// Whether the task completion source should allow executing continuations synchronously.
     /// </summary>
-    private readonly bool allowInliningAwaiters;
+    private readonly bool m_allowInliningAwaiters;
 
     /// <summary>
     /// The object to lock when accessing fields.
     /// </summary>
-    private readonly Lock syncObject = new();
+    private readonly Lock m_syncObject = new();
 
     /// <summary>
     /// The source of the task to return from <see cref="WaitOneAsync()"/>.
@@ -42,12 +45,12 @@ public class AsyncManualResetEvent
     /// This should not need the volatile modifier because it is
     /// always accessed within a lock.
     /// </devremarks>
-    private TaskCompletionSourceWithoutInlining<EmptyStruct> taskCompletionSource;
+    private TaskCompletionSourceWithoutInlining<EmptyStruct> m_taskCompletionSource;
 
     /// <summary>
     /// A flag indicating whether the event is signaled.
     /// When this is set to true, it's possible that
-    /// <see cref="taskCompletionSource"/>.Task.IsCompleted is still false
+    /// <see cref="m_taskCompletionSource"/>.Task.IsCompleted is still false
     /// if the completion has been scheduled asynchronously.
     /// Thus, this field should be the definitive answer as to whether
     /// the event is signaled because it is synchronously updated.
@@ -56,7 +59,7 @@ public class AsyncManualResetEvent
     /// This should not need the volatile modifier because it is
     /// always accessed within a lock.
     /// </devremarks>
-    private bool isSet;
+    private bool m_isSet;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncManualResetEvent"/> class.
@@ -71,13 +74,13 @@ public class AsyncManualResetEvent
     /// </param>
     public AsyncManualResetEvent(bool initialState = false, bool allowInliningAwaiters = false)
     {
-        this.allowInliningAwaiters = allowInliningAwaiters;
+        this.m_allowInliningAwaiters = allowInliningAwaiters;
 
-        this.taskCompletionSource = this.CreateTaskSource();
-        this.isSet = initialState;
+        this.m_taskCompletionSource = this.CreateTaskSource();
+        this.m_isSet = initialState;
         if (initialState)
         {
-            this.taskCompletionSource.SetResult(EmptyStruct.Instance);
+            this.m_taskCompletionSource.SetResult(EmptyStruct.Instance);
         }
     }
 
@@ -88,9 +91,9 @@ public class AsyncManualResetEvent
     {
         get
         {
-            lock (this.syncObject)
+            lock (this.m_syncObject)
             {
-                return this.isSet;
+                return this.m_isSet;
             }
         }
     }
@@ -100,13 +103,13 @@ public class AsyncManualResetEvent
     /// </summary>
     public Task WaitOneAsync()
     {
-        lock (this.syncObject)
+        lock (this.m_syncObject)
         {
-            return this.taskCompletionSource.Task;
+            return this.m_taskCompletionSource.Task;
         }
     }
 
-    public async Task<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
+    public async ValueTask<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
     {
         try
         {
@@ -129,31 +132,15 @@ public class AsyncManualResetEvent
     /// <returns>A task that completes when the event is set, or cancels with the <paramref name="cancellationToken"/>.</returns>
     public Task WaitOneAsync(CancellationToken cancellationToken) => this.WaitOneAsync().WithCancellation(cancellationToken);
 
-    /// <summary>
-    /// Sets this event to unblock callers of <see cref="WaitOneAsync()"/>.
-    /// </summary>
-    /// <returns>A task that completes when the signal has been set.</returns>
-    /// <remarks>
-    /// <para>
-    /// On .NET versions prior to 4.6:
-    /// This method may return before the signal set has propagated (so <see cref="IsSet"/> may return <see langword="false" /> for a bit more if called immediately).
-    /// The returned task completes when the signal has definitely been set.
-    /// </para>
-    /// <para>
-    /// On .NET 4.6 and later:
-    /// This method is not asynchronous. The returned Task is always completed.
-    /// </para>
-    /// </remarks>
-    [Obsolete("Use Set() instead."), EditorBrowsable(EditorBrowsableState.Never)]
-    public Task SetAsync()
+    private Task SetAsync()
     {
-        TaskCompletionSourceWithoutInlining<EmptyStruct>? tcs = null;
+        TaskCompletionSourceWithoutInlining<EmptyStruct> tcs = null;
         var transitionRequired = false;
-        lock (this.syncObject)
+        lock (this.m_syncObject)
         {
-            transitionRequired = !this.isSet;
-            tcs = this.taskCompletionSource;
-            this.isSet = true;
+            transitionRequired = !this.m_isSet;
+            tcs = this.m_taskCompletionSource;
+            this.m_isSet = true;
         }
 
         // Snap the Task that is exposed to the outside so we return that one.
@@ -175,9 +162,7 @@ public class AsyncManualResetEvent
     /// </summary>
     public void Set()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
         this.SetAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     /// <summary>
@@ -185,45 +170,29 @@ public class AsyncManualResetEvent
     /// </summary>
     public void Reset()
     {
-        lock (this.syncObject)
+        lock (this.m_syncObject)
         {
-            if (this.isSet)
+            if (this.m_isSet)
             {
-                this.taskCompletionSource = this.CreateTaskSource();
-                this.isSet = false;
+                this.m_taskCompletionSource = this.CreateTaskSource();
+                this.m_isSet = false;
             }
         }
     }
 
-    /// <summary>
-    /// Sets and immediately resets this event, allowing all current waiters to unblock.
-    /// </summary>
-    /// <returns>A task that completes when the signal has been set.</returns>
-    /// <remarks>
-    /// <para>
-    /// On .NET versions prior to 4.6:
-    /// This method may return before the signal set has propagated (so <see cref="IsSet"/> may return <see langword="false" /> for a bit more if called immediately).
-    /// The returned task completes when the signal has definitely been set.
-    /// </para>
-    /// <para>
-    /// On .NET 4.6 and later:
-    /// This method is not asynchronous. The returned Task is always completed.
-    /// </para>
-    /// </remarks>
-    [Obsolete("Use PulseAll() instead."), EditorBrowsable(EditorBrowsableState.Never)]
-    public Task PulseAllAsync()
+    private Task PulseAllAsync()
     {
-        TaskCompletionSourceWithoutInlining<EmptyStruct>? tcs = null;
-        lock (this.syncObject)
+        TaskCompletionSourceWithoutInlining<EmptyStruct> tcs = null;
+        lock (this.m_syncObject)
         {
             // Atomically replace the completion source with a new, uncompleted source
             // while capturing the previous one so we can complete it.
             // This ensures that we don't leave a gap in time where WaitAsync() will
             // continue to return completed Tasks due to a Pulse method which should
             // execute instantaneously.
-            tcs = this.taskCompletionSource;
-            this.taskCompletionSource = this.CreateTaskSource();
-            this.isSet = false;
+            tcs = this.m_taskCompletionSource;
+            this.m_taskCompletionSource = this.CreateTaskSource();
+            this.m_isSet = false;
         }
 
         // Snap the Task that is exposed to the outside so we return that one.
@@ -240,9 +209,7 @@ public class AsyncManualResetEvent
     /// </summary>
     public void PulseAll()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
         this.PulseAllAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     /// <summary>
@@ -259,6 +226,6 @@ public class AsyncManualResetEvent
     /// </summary>
     private TaskCompletionSourceWithoutInlining<EmptyStruct> CreateTaskSource()
     {
-        return new TaskCompletionSourceWithoutInlining<EmptyStruct>(this.allowInliningAwaiters);
+        return new TaskCompletionSourceWithoutInlining<EmptyStruct>(this.m_allowInliningAwaiters);
     }
 }

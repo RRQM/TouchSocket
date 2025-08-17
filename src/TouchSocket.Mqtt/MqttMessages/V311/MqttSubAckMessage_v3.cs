@@ -74,20 +74,20 @@ public sealed partial class MqttSubAckMessage : MqttIdentifierMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         foreach (var item in this.ReturnCodes)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)item);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item);
         }
     }
 
     /// <inheritdoc/>
     protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = ReaderExtension.ReadValue<TReader,ushort>(ref reader,EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         while (!this.EndOfByteBlock(reader))
         {
-            this.m_returnCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader));
+            this.m_returnCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader));
         }
     }
 }

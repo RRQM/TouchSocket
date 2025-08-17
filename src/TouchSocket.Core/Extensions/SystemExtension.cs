@@ -576,9 +576,9 @@ public static class SystemExtension
     /// <returns></returns>
     public static bool IsNullableType(this Type type)
     {
-        return (type.IsGenericType && type.
-          GetGenericTypeDefinition().Equals
-          (TouchSocketCoreUtility.NullableType));
+        return type != null
+            && type.IsGenericType
+            && type.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 
     /// <summary>
@@ -643,16 +643,9 @@ public static class SystemExtension
     /// <returns></returns>
     public static string GetDeterminantName(this Type type)
     {
-        IEnumerable<Type> types;
-        if (type.IsGenericType)
-        {
-            types = type.GetGenericArguments();
-        }
-        else
-        {
-            types = type.IsArray ? (new Type[] { type.GetElementType() }) : (IEnumerable<Type>)[];
-        }
-
+        var types = type.IsGenericType
+            ? type.GetGenericArguments()
+            : type.IsArray ? (new Type[] { type.GetElementType() }) : (IEnumerable<Type>)[];
         var stringBuilder = new StringBuilder();
         stringBuilder.Append(type.Namespace);
         stringBuilder.Append(type.Name);
@@ -753,6 +746,29 @@ public static class SystemExtension
     /// 检查字节是否为 HTTP 规范允许的空白字符（空格或制表符）
     /// </summary>
     private static bool IsWhitespace(byte b) => b == 0x20 || b == 0x09;
+
+    /// <summary>
+    /// 判断指定的 <see cref="ReadOnlySpan{T}"/> 是否包含指定的字节值。
+    /// </summary>
+    /// <param name="span">要检查的字节范围。</param>
+    /// <param name="value">要查找的字节值。</param>
+    /// <returns>如果包含指定字节值，则返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+    public static bool Contains(this ReadOnlySpan<byte> span, byte value)
+    {
+        if (span.IsEmpty)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            if (span[i] == value)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     #endregion
 
     #region Memory
@@ -1024,39 +1040,89 @@ public static class SystemExtension
     #endregion
 
     #region ReadOnlySequence
+
+    /// <summary>
+    /// 将 <see cref="ReadOnlySequence{T}"/> 按 UTF-8 编码转换为字符串。
+    /// </summary>
+    /// <param name="sequence">要转换的字节序列。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToUtf8String(this ReadOnlySequence<byte> sequence)
+    {
+        return ToString(sequence, Encoding.UTF8);
+    }
+
+    /// <summary>
+    /// 将 <see cref="ReadOnlySequence{T}"/> 按指定编码转换为字符串。
+    /// </summary>
+    /// <param name="sequence">要转换的字节序列。</param>
+    /// <param name="encoding">用于解码字节的编码。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToString(this ReadOnlySequence<byte> sequence, Encoding encoding)
+    {
+#if NET6_0_OR_GREATER
+        return encoding.GetString(sequence);
+#else
+        using (var buffer = new ContiguousMemoryBuffer(sequence))
+        {
+            return buffer.Memory.Span.ToString(encoding);
+        }
+#endif
+    }
+
+    /// <summary>
+    /// 在 <see cref="ReadOnlySequence{T}"/> 中查找第一个与指定 <see cref="ReadOnlySpan{T}"/> 匹配的子序列的起始索引。
+    /// <para>如果未找到则返回 -1。</para>
+    /// </summary>
+    /// <param name="sequence">要搜索的字节序列。</param>
+    /// <param name="value">要查找的字节子序列。</param>
+    /// <returns>匹配子序列的起始索引，未找到则返回 -1。</returns>
     public static long IndexOf(this ReadOnlySequence<byte> sequence, ReadOnlySpan<byte> value)
     {
         // 处理空值或空序列
-        if (value.Length == 0) return 0;
-        if (sequence.Length < value.Length) return -1;
+        if (value.Length == 0)
+        {
+            return 0;
+        }
 
-        byte firstByte = value[0];
+        if (sequence.Length < value.Length)
+        {
+            return -1;
+        }
+
+        var firstByte = value[0];
         long globalPosition = 0;
         var enumerator = sequence.GetEnumerator();
 
         // 遍历每个内存段
         while (enumerator.MoveNext())
         {
-            ReadOnlySpan<byte> currentSpan = enumerator.Current.Span;
-            int localIndex = 0;
+            var currentSpan = enumerator.Current.Span;
+            var localIndex = 0;
 
             // 在当前段中搜索首字节
             while (localIndex < currentSpan.Length)
             {
                 // 查找首字节匹配位置
-                int matchIndex = currentSpan.Slice(localIndex).IndexOf(firstByte);
-                if (matchIndex == -1) break;
+                var matchIndex = currentSpan.Slice(localIndex).IndexOf(firstByte);
+                if (matchIndex == -1)
+                {
+                    break;
+                }
 
                 localIndex += matchIndex;
-                long globalIndex = globalPosition + localIndex;
+                var globalIndex = globalPosition + localIndex;
 
                 // 检查剩余长度是否足够
                 if (sequence.Length - globalIndex < value.Length)
+                {
                     return -1;
+                }
 
                 // 检查完整匹配
                 if (IsMatch(sequence, globalIndex, value))
+                {
                     return globalIndex;
+                }
 
                 localIndex++; // 继续搜索下一个位置
             }
@@ -1069,18 +1135,23 @@ public static class SystemExtension
     {
         // 切片目标长度的子序列
         var slice = sequence.Slice(start, value.Length);
-        int valueIndex = 0;
+        var valueIndex = 0;
 
         // 遍历子序列的所有段
         foreach (var segment in slice)
         {
-            ReadOnlySpan<byte> segmentSpan = segment.Span;
-            for (int i = 0; i < segmentSpan.Length; i++)
+            var segmentSpan = segment.Span;
+            for (var i = 0; i < segmentSpan.Length; i++)
             {
                 if (segmentSpan[i] != value[valueIndex++])
+                {
                     return false;
+                }
+
                 if (valueIndex >= value.Length)
+                {
                     return true; // 已匹配所有字节
+                }
             }
         }
         return valueIndex == value.Length;

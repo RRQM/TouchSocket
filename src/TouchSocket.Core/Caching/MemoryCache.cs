@@ -61,7 +61,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity)
+    public Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken token = default)
     {
         return Task.FromResult(this.AddCache(entity));
     }
@@ -73,7 +73,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task ClearCacheAsync()
+    public Task ClearCacheAsync(CancellationToken token = default)
     {
         this.ClearCache();
         return EasyTask.CompletedTask;
@@ -105,7 +105,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> ContainsCacheAsync(TKey key)
+    public Task<bool> ContainsCacheAsync(TKey key, CancellationToken token = default)
     {
         return Task.FromResult(this.ContainsCache(key));
     }
@@ -136,7 +136,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key)
+    public Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key, CancellationToken token = default)
     {
         return Task.FromResult(this.GetCache(key));
     }
@@ -165,7 +165,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> RemoveCacheAsync(TKey key)
+    public Task<bool> RemoveCacheAsync(TKey key, CancellationToken token = default)
     {
         return Task.FromResult(this.RemoveCache(key));
     }
@@ -181,7 +181,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity)
+    public Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken token = default)
     {
         return Task.FromResult(this.SetCache(entity));
     }

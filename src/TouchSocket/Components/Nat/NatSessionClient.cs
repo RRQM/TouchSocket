@@ -127,13 +127,13 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
                 continue;
             }
 
-            if (e.ByteBlock != null)
+            if (!e.Memory.IsEmpty)
             {
                 // 转发数据到目标客户端
 
                 try
                 {
-                    await client.SendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await client.SendAsync(e.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
@@ -177,13 +177,13 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             return;
         }
 
-        if (e.ByteBlock != null)
+        if (!e.Memory.IsEmpty)
         {
             // 转发数据到当前客户端
 
             try
             {
-                await this.ProtectedSendAsync(e.ByteBlock.Memory,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -196,7 +196,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             // 转发数据到当前客户端
             try
             {
-                await this.ProtectedSendAsync(e.RequestInfo,CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.RequestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {

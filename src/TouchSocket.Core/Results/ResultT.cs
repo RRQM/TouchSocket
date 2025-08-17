@@ -21,7 +21,7 @@ namespace TouchSocket.Core;
 /// </summary>
 /// <typeparam name="T">结果值的类型。</typeparam>
 [DebuggerDisplay("ResultCode = {ResultCode}, Message = {Message}, Value={Value}")]
-public readonly struct Result<T> : IResult<T>
+public readonly struct Result<T>
 {
     /// <summary>
     /// 结果消息，提供操作的描述信息。

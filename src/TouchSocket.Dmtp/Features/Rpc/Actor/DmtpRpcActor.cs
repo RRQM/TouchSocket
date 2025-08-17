@@ -150,7 +150,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                 {
                     if (this.DmtpActor.WaitHandlePool.TryGetDataAsync(rpcPackage.Sign, out var waitDataAsync))
                     {
-                        var sourcePackage = (DmtpRpcRequestPackage)waitDataAsync.WaitResult;
+                        var sourcePackage = (DmtpRpcRequestPackage)waitDataAsync.PendingData;
                         rpcPackage.LoadInfo(sourcePackage.ReturnType, this.m_serializationSelector, sourcePackage.SerializationType);
                         rpcPackage.UnpackageBody(ref reader);
 
@@ -217,7 +217,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     {
         switch (status)
         {
-            case WaitDataStatus.SetRunning:
+            case WaitDataStatus.Success:
                 return;
 
             case WaitDataStatus.Canceled: throw new OperationCanceledException();
@@ -399,11 +399,6 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
         try
         {
-            if (invokeOption.Token.CanBeCanceled)
-            {
-                waitData.SetCancellationToken(invokeOption.Token);
-            }
-
             var byteBlock = new ByteBlock(1024 * 64);
             try
             {
@@ -424,18 +419,18 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     }
                 case FeedbackType.WaitSend:
                     {
-                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                         return returnType?.GetDefault();
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var waitDataStatus = await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
                             await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         ThrowExceptionIfNotSetRunning(waitDataStatus);
-                        var resultRpcPackage = (DmtpRpcResponsePackage)waitData.WaitResult;
+                        var resultRpcPackage = (DmtpRpcResponsePackage)waitData.CompletedData;
                         resultRpcPackage.ThrowStatus();
                         return resultRpcPackage.ReturnParameter;
                     }
@@ -445,7 +440,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(rpcPackage.Sign);
+            waitData.Dispose();
         }
     }
 
@@ -479,11 +474,6 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
         try
         {
-            if (invokeOption.Token.CanBeCanceled)
-            {
-                waitData.SetCancellationToken(invokeOption.Token);
-            }
-
             var byteBlock = new ByteBlock(1024 * 64);
             try
             {
@@ -504,12 +494,12 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     }
                 case FeedbackType.WaitSend:
                     {
-                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                         return returnType?.GetDefault();
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        var waitDataStatus = await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var waitDataStatus = await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
                             await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -517,7 +507,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
                         ThrowExceptionIfNotSetRunning(waitDataStatus);
 
-                        var resultRpcPackage = (DmtpRpcResponsePackage)waitData.WaitResult;
+                        var resultRpcPackage = (DmtpRpcResponsePackage)waitData.CompletedData;
                         resultRpcPackage.ThrowStatus();
 
                         return resultRpcPackage.ReturnParameter;
@@ -528,7 +518,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(rpcPackage.Sign);
+            waitData.Dispose();
         }
     }
 

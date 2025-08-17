@@ -27,15 +27,14 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreForRequest = new SemaphoreSlim(1, 1);
-    //private readonly AsyncAutoResetEvent m_waitRelease = new AsyncAutoResetEvent();
-    private readonly WaitDataAsync<HttpResponse> m_waitResponseDataAsync = new WaitDataAsync<HttpResponse>();
-    private bool m_getContent;
     private HttpClientDataHandlingAdapter m_dataHandlingAdapter;
+    private TaskCompletionSource<HttpResponse> m_responseTaskSource;
+
     #endregion 字段
 
     internal Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.ProtectedDefaultSendAsync(memory, token);
+        return this.ProtectedSendAsync(memory, token);
     }
 
     /// <inheritdoc/>
@@ -44,8 +43,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         if (disposing)
         {
             this.m_semaphoreForRequest.Dispose();
-            //this.m_waitRelease.Dispose();
-            this.m_waitResponseDataAsync.Dispose();
+            this.m_responseTaskSource.TrySetException(new ObjectDisposedException(nameof(HttpClientBase)));
         }
         base.SafetyDispose(disposing);
     }
@@ -62,145 +60,86 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
     #region Request
 
-    private void ReleaseLock()
-    {
-        this.m_semaphoreForRequest.Release();
-        this.m_dataHandlingAdapter.SetCompleteLock();
-        //this.m_waitRelease.Set();
-    }
-
     /// <summary>
     /// 异步发送Http请求，并仅等待响应头
     /// </summary>
     /// <param name="request">要发送的HttpRequest对象</param>
-    /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为10秒</param>
     /// <param name="token">用于取消操作的CancellationToken</param>
     /// <returns>返回HttpResponseResult对象，包含响应结果和释放锁的方法</returns>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    protected async Task<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken token = default)
     {
-        // 等待信号量，以控制并发请求的数量，超时和取消策略
-        await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            // 标记不获取响应内容
-            this.m_getContent = false;
-            // 重置状态，为发送请求做准备
-            this.Reset(token);
+            this.m_responseTaskSource = new TaskCompletionSource<HttpResponse>();
             request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
-            await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.BuildAndSendAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             // 等待响应状态，超时设定
-            var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var response = await this.m_responseTaskSource.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            // 如果响应状态不是运行中，抛出异常
-            status.ThrowIfNotRunning();
-
-            // 返回响应结果对象
-            return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
-
+            return new HttpResponseResult(response, this.ReleaseLock);
         }
         catch
         {
-            // 发生异常时，释放信号量
             this.m_semaphoreForRequest.Release();
             throw;
         }
     }
 
-    private async Task BuildAndSend(HttpRequest request, CancellationToken token)
+    private async Task BuildAndSendAsync(HttpRequest request, CancellationToken token)
     {
         var content = request.Content;
+        var writer = new PipeBytesWriter(this.Transport.Output);
         if (content == null)
         {
-            var byteBlock = new ValueByteBlock(1024);
-            try
-            {
-                request.BuildHeader(ref byteBlock);
-                // 异步发送请求
-                await this.ProtectedDefaultSendAsync(byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            request.BuildHeader(ref writer);
+            await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return;
         }
-        else
+
+        content.InternalTryComputeLength(out var contentLength);
+        content.InternalBuildingHeader(request.Headers);
+        request.BuildHeader(ref writer);
+
+        var result = content.InternalBuildingContent(ref writer);
+
+        await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (!result)
         {
-            content.InternalTryComputeLength(out var contentLength);
-            var byteBlock = new ValueByteBlock((int)Math.Min(contentLength + 1024, 1024 * 64));
-            content.InternalBuildingHeader(request.Headers);
-            try
-            {
-                request.BuildHeader(ref byteBlock);
-
-                var result = content.InternalBuildingContent(ref byteBlock);
-
-                // 异步发送请求
-                await this.ProtectedDefaultSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                if (!result)
-                {
-                    await content.InternalWriteContent(this.ProtectedDefaultSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            await content.InternalWriteContent(this.UnsafeSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
-
-    /// <summary>
-    /// 异步发送Http请求，并等待全部响应
-    /// </summary>
-    /// <param name="request">Http请求对象</param>
-    /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为10秒</param>
-    /// <param name="token">取消令牌</param>
-    /// <returns>返回Http响应结果</returns>
-    /// <exception cref="TimeoutException">当操作超时时抛出</exception>
-    /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
-    /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    protected async Task<HttpResponseResult> ProtectedRequestContentAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    private void ReleaseLock()
     {
-        // 使用信号量控制并发，确保系统稳定性
-        await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            // 标记为获取内容状态
-            this.m_getContent = true;
+        this.m_semaphoreForRequest.Release();
+        this.m_dataHandlingAdapter.SetCompleteLock();
+    }
 
-            // 重置状态，为发送请求做准备
-            this.Reset(token);
+    private async Task UnsafeSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    {
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+        var transport = this.Transport;
 
-            request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
-
-            await this.BuildAndSend(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            // 等待响应状态，超时设定
-            var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            // 如果响应状态不是运行中，抛出异常
-            status.ThrowIfNotRunning();
-
-            // 返回响应结果对象
-            return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
-
-        }
-        catch
-        {
-            // 发生异常时，释放信号量
-            this.m_semaphoreForRequest.Release();
-            throw;
-        }
+        await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion Request
 
     #region override
+
+    /// <inheritdoc/>
+    protected override async Task OnTcpClosed(ClosedEventArgs e)
+    {
+        this.m_responseTaskSource.TrySetException(new ClientNotConnectedException());
+        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
     /// <inheritdoc/>
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
@@ -212,32 +151,16 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     }
 
     /// <inheritdoc/>
-    protected override async Task OnTcpClosed(ClosedEventArgs e)
-    {
-        this.m_waitResponseDataAsync.Cancel();
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <inheritdoc/>
-    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    protected override Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         if (e.RequestInfo is HttpResponse response)
         {
-            if (this.m_getContent)
-            {
-                await response.GetContentAsync(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            this.m_waitResponseDataAsync.Set(response);
-            //await this.SetAsync(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var taskSource = this.m_responseTaskSource;
+            taskSource?.TrySetResult(response);
         }
+
+        return EasyTask.CompletedTask;
     }
 
     #endregion override
-
-    private void Reset(in CancellationToken token)
-    {
-        //this.m_waitRelease.Reset();
-        this.m_waitResponseDataAsync.Reset();
-        this.m_waitResponseDataAsync.SetCancellationToken(token);
-    }
 }

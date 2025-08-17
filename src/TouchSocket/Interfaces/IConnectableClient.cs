@@ -25,9 +25,8 @@ public interface IConnectableClient
     /// <summary>
     /// 异步连接
     /// </summary>
-    /// <param name="millisecondsTimeout">最大等待时间</param>
     /// <param name="token">可取消令箭</param>
     /// <exception cref="TimeoutException">当连接超时时抛出</exception>
     /// <exception cref="Exception">当连接过程中发生错误时抛出</exception>
-    Task ConnectAsync(int millisecondsTimeout, CancellationToken token);
+    Task ConnectAsync(CancellationToken token);
 }

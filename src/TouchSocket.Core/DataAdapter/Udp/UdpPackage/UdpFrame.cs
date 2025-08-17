@@ -12,9 +12,8 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using TouchSocket.Core;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// UDP数据帧

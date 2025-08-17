@@ -33,9 +33,4 @@ public class AdapterOption
     /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="DataHandlingAdapter.MaxPackageSize"/>
     /// </summary>
     public int? MaxPackageSize { get; set; }
-
-    /// <summary>
-    ///  适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="SingleStreamDataHandlingAdapter.UpdateCacheTimeWhenRev"/>
-    /// </summary>
-    public bool? UpdateCacheTimeWhenRev { get; set; }
 }

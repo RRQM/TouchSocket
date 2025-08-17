@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -70,45 +69,6 @@ public static class ClientExtension
     {
         // 使用LINQ查询方法，从服务器获取所有客户端id，并筛选出不等于当前客户端id的其他客户端id
         return client.Service.GetIds().Where(id => id != client.Id);
-    }
-
-    /// <summary>
-    /// 安全性发送关闭报文
-    /// </summary>
-    /// <typeparam name="TClient">客户端类型，必须是ITcpSession接口的实现</typeparam>
-    /// <param name="client">要关闭的客户端对象</param>
-    /// <param name="how">关闭的方式，默认值为SocketShutdown.Both，即读写都关闭</param>
-    /// <returns>操作是否成功</returns>
-    [Obsolete("此操作已被弃用，请使用ShutdownAsync代替", true)]
-    public static bool TryShutdown<TClient>(this TClient client, SocketShutdown how = SocketShutdown.Both) where TClient : class, ITcpSession
-    {
-        // 检查客户端对象是否为<see langword="null"/>或默认值
-        if (client == default)
-        {
-            return false;
-        }
-        try
-        {
-            // 获取客户端的主要Socket对象
-            var socket = client.MainSocket;
-            // 检查Socket对象是否为空
-            if (socket == null)
-            {
-                return false;
-            }
-            // 检查Socket连接是否已经建立
-            if (!socket.Connected)
-            {
-                return false;
-            }
-            // 发送关闭报文
-            socket.Shutdown(how);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     #region CloseAsync
@@ -260,10 +220,21 @@ public static class ClientExtension
 
     #region ConnectAsync
 
-    /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>
+    /// <inheritdoc cref="IConnectableClient.ConnectAsync(CancellationToken)"/>
     public static async Task ConnectAsync(this IConnectableClient client, int millisecondsTimeout = 5000)
     {
-        await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        using (var cancellationTokenSource = new CancellationTokenSource(millisecondsTimeout))
+        {
+            try
+            {
+                await client.ConnectAsync(cancellationTokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            catch (OperationCanceledException)
+            {
+                ThrowHelper.ThrowTimeoutException();
+            }
+        }
+
     }
 
     /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, System.Threading.CancellationToken)"/>
@@ -338,21 +309,20 @@ public static class ClientExtension
     /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>，所以请谨慎使用。
     /// </remarks>
     /// <param name="client">要连接的客户端对象。</param>
-    /// <param name="millisecondsTimeout">连接超时时间，以毫秒为单位。默认为5000毫秒。</param>
     /// <param name="cancellationToken">用于取消操作的令牌。</param>
     [AsyncToSyncWarning]
-    public static void Connect(this IConnectableClient client, int millisecondsTimeout = 5000, CancellationToken cancellationToken = default)
+    public static void Connect(this IConnectableClient client, CancellationToken cancellationToken = default)
     {
         // 使用GetFalseAwaitResult()方法直接等待异步操作完成，以实现同步执行。
         // 这种方法适用于不需要处理异步操作结果的场景。
-        client.ConnectAsync(millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
+        client.ConnectAsync(cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
     /// 同步执行连接操作。
     /// </summary>
     /// <remarks>
-    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>，所以请谨慎使用。
+    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(CancellationToken)"/>，所以请谨慎使用。
     /// </remarks>
     /// <typeparam name="TClient">要连接的客户端类型，必须实现<see cref="ISetupConfigObject"/>和<see cref="IConnectableClient"/>接口。</typeparam>
     /// <param name="client">要进行连接的客户端实例。</param>
@@ -368,7 +338,7 @@ public static class ClientExtension
     /// 同步执行连接操作。不会抛出异常。
     /// </summary>
     /// <remarks>
-    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>，所以请谨慎使用。
+    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(CancellationToken)"/>，所以请谨慎使用。
     /// </remarks>
     /// <param name="client">要执行连接操作的客户端对象。</param>
     /// <param name="millisecondsTimeout">连接超时时间，以毫秒为单位。默认值为5000毫秒。</param>
@@ -394,7 +364,7 @@ public static class ClientExtension
     /// 同步执行连接操作。不会抛出异常。
     /// </summary>
     /// <remarks>
-    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>，所以请谨慎使用。
+    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(CancellationToken)"/>，所以请谨慎使用。
     /// </remarks>
     /// <typeparam name="TClient">要连接的客户端类型，必须实现<see cref="ISetupConfigObject"/>和<see cref="IConnectableClient"/>.</typeparam>
     /// <param name="client">要执行连接操作的客户端实例。</param>

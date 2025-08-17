@@ -14,10 +14,6 @@ using System;
 
 namespace TouchSocket.Core;
 
-/// <summary>
-/// GZip压缩算法的压缩机
-/// </summary>
-
 public sealed partial class GZipDataCompressor : IDataCompressor
 {
     public void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter

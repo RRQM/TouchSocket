@@ -98,10 +98,10 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
         where TReader : IBytesReader
     {
         var payloadLength = (int)(this.EndPosition - reader.BytesRead);
-        byte[] payloadArray = new byte[payloadLength];
-        var span = reader.GetSpan((int)payloadLength).Slice(0, (int)payloadLength);
+        var payloadArray = new byte[payloadLength];
+        var span = reader.GetSpan(payloadLength).Slice(0, payloadLength);
         span.CopyTo(payloadArray);
-        reader.Advance((int)payloadLength);
+        reader.Advance(payloadLength);
 
         return payloadArray;
     }

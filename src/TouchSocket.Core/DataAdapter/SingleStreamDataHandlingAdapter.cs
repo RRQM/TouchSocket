@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
@@ -22,6 +20,10 @@ namespace TouchSocket.Core;
 /// </summary>
 public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
 {
+    private long m_cacheSize;
+
+    private volatile bool m_needReset = false;
+
     /// <summary>
     /// 缓存超时时间。默认1秒。
     /// </summary>
@@ -38,21 +40,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 当接收数据处理完成后，回调该函数执行接收
     /// </summary>
-    public Func<IByteBlockReader, IRequestInfo, Task> ReceivedAsyncCallBack { get; set; }
-
-    /// <summary>
-    /// 当发送数据处理完成后，回调该函数执行异步发送
-    /// </summary>
-    public Func<ReadOnlyMemory<byte>, CancellationToken, Task> SendAsyncCallBack { get; set; }
-
-    /// <summary>
-    /// 是否在收到数据时，即刷新缓存时间。默认<see langword="true"/>。
-    /// <list type="number">
-    /// <item>当设为<see langword="true"/>时，将弱化<see cref="CacheTimeout"/>的作用，只要一直有数据，则缓存不会过期。</item>
-    /// <item>当设为<see langword="false"/>时，则在<see cref="CacheTimeout"/>的时效内。必须完成单个缓存的数据。</item>
-    /// </list>
-    /// </summary>
-    public bool UpdateCacheTimeWhenRev { get; set; } = true;
+    public Func<ReadOnlyMemory<byte>, IRequestInfo, Task> ReceivedAsyncCallBack { get; set; }
 
     /// <summary>
     /// 最后缓存的时间
@@ -63,109 +51,83 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// 收到数据的切入点，该方法由框架自动调用。
     /// </summary>
     /// <param name="reader"></param>
-    public async Task ReceivedInputAsync(IByteBlockReader reader)
+    public async Task ReceivedInputAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
     {
-        try
+        this.CacheVerify(ref reader);
+        await this.PreviewReceivedAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_cacheSize = reader.BytesRemaining;
+        this.LastCacheTime = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// 校验并处理缓存数据的有效性。
+    /// </summary>
+    /// <typeparam name="TReader">实现了 <see cref="IBytesReader"/> 接口的类型。</typeparam>
+    /// <param name="reader">字节读取器的引用。</param>
+    protected void CacheVerify<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+    {
+        if (this.m_cacheSize > 0)
         {
-            await this.PreviewReceivedAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch (Exception ex)
-        {
-            this.OnError(ex, ex.Message, true, true);
+            if (this.CacheTimeoutEnable && this.LastCacheTime + this.CacheTimeout > DateTimeOffset.UtcNow)
+            {
+                reader.Advance((int)this.m_cacheSize);
+            }
+            else if (this.m_needReset)
+            {
+                this.m_needReset = false;
+                reader.Advance((int)this.m_cacheSize);
+            }
         }
     }
 
     #region SendInput
 
-    /// <summary>
-    /// 发送数据的切入点，该方法由框架自动调用。
-    /// </summary>
-    /// <param name="requestInfo"></param>
-    /// <param name="token">可取消令箭</param>
-    /// <returns></returns>
-    public Task SendInputAsync(IRequestInfo requestInfo, CancellationToken token)
+    public virtual void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+        where TWriter : IBytesWriter
     {
-        return this.PreviewSendAsync(requestInfo, token);
+        writer.Write(memory.Span);
     }
 
-    /// <summary>
-    /// 发送数据的切入点，该方法由框架自动调用。
-    /// </summary>
-    public Task SendInputAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    public virtual void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
+        where TWriter : IBytesWriter
     {
-        return this.PreviewSendAsync(memory, token);
-    }
-
-    /// <summary>
-    /// 当发送数据前预先处理数据
-    /// </summary>
-    /// <param name="requestInfo"></param>
-    /// <param name="token">可取消令箭</param>
-    protected virtual async Task PreviewSendAsync(IRequestInfo requestInfo, CancellationToken token = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
-
-        var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-
-        var byteBlock = new ValueByteBlock(requestInfoBuilder.MaxLength);
-        try
+        if (requestInfo is not IRequestInfoBuilder requestInfoBuilder)
         {
-            requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            throw new Exception();
         }
-        finally
-        {
-            byteBlock.Dispose();
-        }
+        requestInfoBuilder.Build(ref writer);
     }
 
-    /// <summary>
-    /// 当发送数据前预先处理数据
-    /// </summary>
-    protected virtual Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
-    {
-        return this.GoSendAsync(memory, token);
-    }
     #endregion SendInput
 
     /// <summary>
     /// 处理已经经过预先处理后的数据
     /// </summary>
-    /// <param name="reader">以二进制形式传递</param>
+    /// <param name="memory">以二进制形式传递</param>
     /// <param name="requestInfo">以解析实例传递</param>
-    protected virtual Task GoReceivedAsync(IByteBlockReader reader, IRequestInfo requestInfo)
+    protected virtual Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(reader, requestInfo);
-    }
-
-    /// <summary>
-    /// 异步发送已经经过预先处理后的数据
-    /// </summary>
-    /// <param name="memory">数据</param>
-    /// <param name="token">可取消令箭</param>
-    /// <returns></returns>
-    protected virtual Task GoSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
-    {
-        return this.SendAsyncCallBack == null ? EasyTask.CompletedTask : this.SendAsyncCallBack.Invoke(memory, token);
+        return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(memory, requestInfo);
     }
 
     /// <summary>
     /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(IByteBlockReader, IRequestInfo)"/>处理数据
     /// </summary>
     /// <param name="reader"></param>
-    protected abstract Task PreviewReceivedAsync(IByteBlockReader reader);
+    protected abstract Task PreviewReceivedAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader;
 
-    /// <summary>
-    /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
-    /// </summary>
+
+    /// <inheritdoc/>
     protected override void Reset()
     {
-        this.LastCacheTime = DateTimeOffset.UtcNow;
+        this.m_needReset = true;
     }
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-
     }
 }

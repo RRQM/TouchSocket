@@ -29,7 +29,7 @@ public abstract class DataHandlingAdapter : SafetyDisposableObject
     /// <summary>
     /// 日志记录器。
     /// </summary>
-    public ILog Logger { get; set; }
+    public ILog Logger { get; private set; }
 
     /// <summary>
     /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
@@ -69,30 +69,16 @@ public abstract class DataHandlingAdapter : SafetyDisposableObject
         {
             throw new Exception(TouchSocketCoreResource.AdapterAlreadyUsed);
         }
+
+        if (owner is ILoggerObject loggerObject)
+        {
+            this.Logger = loggerObject.Logger;
+        }
         this.Owner = owner;
     }
 
     /// <summary>
-    /// 在解析时发生错误。
-    /// </summary>
-    /// <param name="ex">异常</param>
-    /// <param name="error">错误异常</param>
-    /// <param name="reset">是否调用<see cref="Reset"/></param>
-    /// <param name="log">是否记录日志</param>
-    protected virtual void OnError(Exception ex, string error, bool reset, bool log)
-    {
-        if (reset)
-        {
-            this.Reset();
-        }
-        if (log)
-        {
-            this.Logger?.Exception(this, error, ex);
-        }
-    }
-
-    /// <summary>
-    /// 重置解析器到初始状态，一般在<see cref="OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
+    /// 重置解析器到初始状态。
     /// </summary>
     protected abstract void Reset();
 }

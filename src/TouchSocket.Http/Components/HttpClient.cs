@@ -21,21 +21,14 @@ namespace TouchSocket.Http;
 public class HttpClient : HttpClientBase, IHttpClient
 {
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
-    }
-
-
-    /// <inheritdoc/>
-    public Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-    {
-        return this.ProtectedRequestAsync(request, millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 
     /// <inheritdoc/>
-    public Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
+    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token = default)
     {
-        return this.ProtectedRequestContentAsync(request, millisecondsTimeout, token);
+        return this.ProtectedRequestAsync(request, token);
     }
 }

@@ -57,7 +57,7 @@ public abstract class ConnectableService : ServiceBase, IConnectableService
     public abstract IEnumerable<string> GetIds();
 
     /// <inheritdoc/>
-    public abstract Task ResetIdAsync(string sourceId, string targetId);
+    public abstract Task ResetIdAsync(string sourceId, string targetId, CancellationToken token);
 
     /// <inheritdoc cref="IConnectableService.GetClients"/>
     protected abstract IEnumerable<IClient> GetClients();

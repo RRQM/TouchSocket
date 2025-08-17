@@ -68,7 +68,7 @@ public static class TouchSocketConfigExtension
     /// 最大缓存池尺寸
     /// 所需类型<see cref="int"/>
     /// </summary>
-    public static readonly DependencyProperty<int> MaxBufferSizeProperty = new("MaxBufferSize", 1024*1024*10);
+    public static readonly DependencyProperty<int> MaxBufferSizeProperty = new("MaxBufferSize", 1024 * 1024 * 10);
 
     /// <summary>
     /// 最小缓存容量，默认缺省。

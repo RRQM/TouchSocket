@@ -32,9 +32,9 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
 
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
     {
-        await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -52,12 +52,8 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
                 byteBlock.Dispose();
             }
 
-            this.m_waitDataAsync.Reset();
-            this.m_waitDataAsync.SetCancellationToken(token);
-            var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            waitDataStatus.ThrowIfNotRunning();
-
-            var response = this.m_waitDataAsync.WaitResult;
+            this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -78,7 +74,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+    private TaskCompletionSource<ModbusRtuResponse> m_waitDataAsync;
 
     #endregion 字段
 
@@ -87,15 +83,15 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     {
         if (e.RequestInfo is ModbusRtuResponse response)
         {
-            this.m_waitDataAsync.Set(response);
+            this.m_waitDataAsync.TrySetResult(response);
         }
 
         return EasyTask.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 }

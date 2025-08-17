@@ -33,6 +33,5 @@ public class NamedPipeListenOption
     /// <summary>
     /// 配置适配器
     /// </summary>
-    public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; } =
-        () => new NormalDataHandlingAdapter();
+    public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; }
 }

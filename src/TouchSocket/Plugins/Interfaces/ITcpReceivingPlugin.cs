@@ -29,5 +29,5 @@ public interface ITcpReceivingPlugin : IPlugin
     /// <param name="client">发送数据的客户端会话对象。</param>
     /// <param name="e">包含接收数据事件相关的参数。</param>
     /// <returns>一个Task对象，代表异步操作的结果。</returns>
-    Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e);
+    Task OnTcpReceiving(ITcpSession client, BytesReaderEventArgs e);
 }

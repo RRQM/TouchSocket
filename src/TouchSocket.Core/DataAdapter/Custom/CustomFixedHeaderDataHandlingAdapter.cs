@@ -35,14 +35,12 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
     /// <param name="request">对象。</param>
     /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request)
     {
         if (beCached)
         {
             if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
             {
-                tempCapacity = request.BodyLength + this.HeaderLength;
-                this.SurLength = request.BodyLength - reader.BytesRemaining;
                 return FilterResult.Cache;
             }
 
@@ -62,7 +60,6 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
         {
             if (this.HeaderLength > reader.BytesRemaining)
             {
-                this.SurLength = this.HeaderLength - reader.BytesRemaining;
                 return FilterResult.Cache;
             }
 
@@ -74,8 +71,6 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
                 request = requestInfo;
                 if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
                 {
-                    tempCapacity = request.BodyLength + this.HeaderLength;
-                    this.SurLength = request.BodyLength - reader.BytesRemaining;
                     return FilterResult.Cache;
                 }
 

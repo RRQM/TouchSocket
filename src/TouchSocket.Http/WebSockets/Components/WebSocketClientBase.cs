@@ -37,15 +37,15 @@ public abstract class WebSocketClientBase : HttpClientBase
     #region Connect
 
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken token)
     {
-        await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
             if (!base.Online)
             {
-                await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             var option = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
@@ -54,7 +54,7 @@ public abstract class WebSocketClientBase : HttpClientBase
 
             await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request, default))).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await this.ProtectedRequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
                 if (response.StatusCode != 101)
@@ -64,7 +64,7 @@ public abstract class WebSocketClientBase : HttpClientBase
                 var accept = response.Headers.Get("sec-websocket-accept").Trim();
                 if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    this.MainSocket.SafeDispose();
+                    await base.CloseAsync("WS服务器返回的应答码不正确", token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
 
@@ -148,7 +148,7 @@ public abstract class WebSocketClientBase : HttpClientBase
         this.m_webSocket.Online = false;
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_webSocket.Complete(e.Message);
         }
         await this.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -169,7 +169,7 @@ public abstract class WebSocketClientBase : HttpClientBase
         }
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.IO.Ports;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts;

@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// Tcp数据处理适配器测试

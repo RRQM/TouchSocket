@@ -49,14 +49,13 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// <summary>
     /// 异步使用基于Http升级的协议，连接Dmtp服务器
     /// </summary>
-    /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒</param>
     /// <param name="token">用于取消异步操作的取消令牌</param>
     /// <returns>异步操作任务</returns>
     /// <exception cref="Exception">在连接过程中遇到错误时抛出异常</exception>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
         // 等待信号量，以确保同时只有一个连接操作
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -68,7 +67,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 如果基础连接不在状态，则尝试建立TCP连接
             if (!base.Online)
             {
-                await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             // 创建并配置HttpRequest，为升级到Dmtp协议做准备
@@ -80,9 +79,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             request.AsMethod(DmtpUtility.Dmtp);
 
             // 发送请求并处理响应
-            using (var responseResult = await this.ProtectedRequestContentAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await this.ProtectedRequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
+                await response.GetContentAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 如果状态码为101，则切换协议为Dmtp
                 if (response.StatusCode == 101)
                 {
@@ -96,7 +96,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             }
 
             // 与Dmtp服务器进行握手操作，完成连接
-            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -190,9 +190,9 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     #region ResetId
 
     ///<inheritdoc/>
-    public Task ResetIdAsync(string newId)
+    public Task ResetIdAsync(string newId, CancellationToken token)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId);
+        return this.m_dmtpActor.ResetIdAsync(newId, token);
     }
 
     #endregion ResetId
@@ -222,7 +222,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
 
     private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return base.ProtectedDefaultSendAsync(memory,token);
+        return base.ProtectedSendAsync(memory, token);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)

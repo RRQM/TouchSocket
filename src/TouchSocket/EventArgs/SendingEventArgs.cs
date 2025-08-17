@@ -11,26 +11,20 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
 /// <summary>
 /// SendingEventArgs 类，继承自 PluginEventArgs，用于封装待发送数据的内存块。
 /// </summary>
-public class SendingEventArgs : PluginEventArgs
+public class SendingEventArgs : MemoryEventArgs
 {
     /// <summary>
     /// 初始化 SendingEventArgs 类的新实例。
     /// </summary>
     /// <param name="memory">待发送数据的只读内存块。</param>
-    public SendingEventArgs(in ReadOnlyMemory<byte> memory)
+    public SendingEventArgs(in ReadOnlyMemory<byte> memory) : base(memory)
     {
-        this.Memory = memory;
-    }
 
-    /// <summary>
-    /// 数据缓存区，该属性可能获取来自于内存池，所以最好不要引用该对象，可以同步使用该对象
-    /// </summary>
-    public ReadOnlyMemory<byte> Memory { get; }
+    }
 }

@@ -12,9 +12,8 @@
 
 using System.Collections.Concurrent;
 using System.Threading;
-using TouchSocket.Core;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// UDP数据包

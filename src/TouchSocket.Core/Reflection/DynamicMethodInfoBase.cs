@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
-abstract class DynamicMethodInfoBase : IDynamicMethodInfo
+internal abstract class DynamicMethodInfoBase : IDynamicMethodInfo
 {
     public DynamicMethodInfoBase(MethodInfo method)
     {

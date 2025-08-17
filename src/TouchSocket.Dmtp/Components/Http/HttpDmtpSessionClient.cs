@@ -76,14 +76,14 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region ResetId
 
     ///<inheritdoc/>
-    public override async Task ResetIdAsync(string newId)
+    public override async Task ResetIdAsync(string newId, CancellationToken token)
     {
         if (this.m_dmtpActor == null)
         {
-            await base.ResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.ResetIdAsync(newId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.m_dmtpActor.ResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_dmtpActor.ResetIdAsync(newId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion ResetId
@@ -111,9 +111,9 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         this.SetAdapter(new DmtpAdapter());
     }
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return base.ProtectedDefaultSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, token);
     }
 
     #region Override

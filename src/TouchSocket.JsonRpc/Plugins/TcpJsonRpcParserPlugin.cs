@@ -108,9 +108,9 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
             {
                 jsonRpcMemory = jsonPackage.Data;
             }
-            else if (e.ByteBlock != null)
+            else if (!e.Memory.IsEmpty)
             {
-                jsonRpcMemory = e.ByteBlock.Memory;
+                jsonRpcMemory = e.Memory;
             }
 
             if (jsonRpcMemory.IsEmpty)

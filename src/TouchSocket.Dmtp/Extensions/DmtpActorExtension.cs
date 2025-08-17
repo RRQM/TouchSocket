@@ -24,30 +24,16 @@ public static class DmtpActorExtension
 {
     #region Ping
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(int, CancellationToken)"/>
-    [AsyncToSyncWarning]
-    public static bool Ping(this IDmtpActorObject client, int millisecondsTimeout = 5000)
+    /// <inheritdoc cref="IDmtpActor.PingAsync(CancellationToken)"/>
+    public static Task<Result> PingAsync(this IDmtpActorObject client, CancellationToken token = default)
     {
-        return client.DmtpActor.PingAsync(millisecondsTimeout).GetFalseAwaitResult();
+        return client.DmtpActor.PingAsync(token);
     }
 
-    /// <inheritdoc cref="IDmtpActor.PingAsync(string, int, CancellationToken)"/>
-    [AsyncToSyncWarning]
-    public static bool Ping(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
+    /// <inheritdoc cref="IDmtpActor.PingAsync(string,CancellationToken)"/>
+    public static Task<Result> PingAsync(this IDmtpActorObject client, string targetId, CancellationToken token = default)
     {
-        return client.DmtpActor.PingAsync(targetId, millisecondsTimeout).GetFalseAwaitResult();
-    }
-
-    /// <inheritdoc cref="IDmtpActor.PingAsync(int, CancellationToken)"/>
-    public static Task<bool> PingAsync(this IDmtpActorObject client, int millisecondsTimeout = 5000)
-    {
-        return client.DmtpActor.PingAsync(millisecondsTimeout);
-    }
-
-    /// <inheritdoc cref="IDmtpActor.PingAsync(string,int,CancellationToken)"/>
-    public static Task<bool> PingAsync(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
-    {
-        return client.DmtpActor.PingAsync(targetId, millisecondsTimeout);
+        return client.DmtpActor.PingAsync(targetId, token);
     }
 
     #endregion Ping
@@ -189,7 +175,7 @@ public static class DmtpActorExtension
             // 准备数据包，将数据写入到block中。
             package.Package(ref block);
             // 使用异步方法发送数据包和协议。
-            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -205,7 +191,7 @@ public static class DmtpActorExtension
     public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, CancellationToken token = default)
     {
         // 调用重载的SendAsync方法，使用默认的最大传输单元大小64K
-        return SendAsync(client, protocol, package, 1024 * 64,token);
+        return SendAsync(client, protocol, package, 1024 * 64, token);
     }
 
     #endregion 发送Package
@@ -274,7 +260,7 @@ public static class DmtpActorExtension
     /// <returns>返回一个Task对象，标识异步操作</returns>
     public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return client.DmtpActor.SendAsync(protocol, memory,token);
+        return client.DmtpActor.SendAsync(protocol, memory, token);
     }
 
     /// <summary>
@@ -286,7 +272,7 @@ public static class DmtpActorExtension
     /// <returns>返回一个Task对象，标识异步操作</returns>
     public static Task SendAsync(this IDmtpActorObject client, ushort protocol, CancellationToken token = default)
     {
-        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty,token);
+        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty, token);
     }
 
     #endregion 发送

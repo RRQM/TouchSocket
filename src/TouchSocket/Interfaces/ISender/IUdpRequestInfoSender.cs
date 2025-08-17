@@ -36,5 +36,5 @@ public interface IUdpRequestInfoSender
     /// <remarks>
     /// 此方法为异步非阻塞方式，调用后立即返回，不保证数据发送成功。
     /// </remarks>
-    Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo,CancellationToken token = default);
+    Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token = default);
 }

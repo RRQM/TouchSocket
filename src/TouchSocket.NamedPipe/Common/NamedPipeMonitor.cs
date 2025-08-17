@@ -18,7 +18,7 @@ namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 命名管道监听器
 /// </summary>
-public class NamedPipeMonitor:DisposableObject
+public class NamedPipeMonitor : DisposableObject
 {
     /// <summary>
     /// 命名管道监听器
@@ -34,9 +34,9 @@ public class NamedPipeMonitor:DisposableObject
     /// </summary>
     public NamedPipeListenOption Option { get; }
 
-    private CancellationTokenSource m_cancellationTokenSource=new CancellationTokenSource();
+    private readonly CancellationTokenSource m_cancellationTokenSource = new CancellationTokenSource();
 
-    public CancellationToken MonitorToken => m_cancellationTokenSource.Token;
+    public CancellationToken MonitorToken => this.m_cancellationTokenSource.Token;
 
     protected override void Dispose(bool disposing)
     {

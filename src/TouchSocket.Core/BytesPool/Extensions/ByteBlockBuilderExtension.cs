@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -42,5 +44,26 @@ public static class ByteBlockBuilderExtension
         builder.Build(ref byteBlock);
     }
 
-    
+    #region BuildAsBytes
+
+    /// <summary>
+    /// 将对象构建到字节数组
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <returns></returns>
+    public static ReadOnlyMemory<byte> BuildAsBytes(this IBytesBuilder builder)
+    {
+        var byteBlock = new ByteBlock(builder.MaxLength);
+        try
+        {
+            builder.Build(ref byteBlock);
+            return byteBlock.ToArray();
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
+    #endregion BuildAsBytes
 }

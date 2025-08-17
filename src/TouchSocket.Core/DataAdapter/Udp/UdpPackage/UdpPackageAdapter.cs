@@ -12,15 +12,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Resources;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// UDP数据包的适配器
@@ -56,10 +52,10 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
     public int Timeout { get; set; } = 5000;
 
     /// <inheritdoc/>
-    protected override async Task PreviewReceived(EndPoint remoteEndPoint, IByteBlockReader byteBlock)
+    protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
         var udpFrame = new UdpFrame();
-        if (udpFrame.Parse(byteBlock.Span))
+        if (udpFrame.Parse(memory.Span))
         {
             var udpPackage = this.m_revStore.GetOrAdd(udpFrame.Id, (i) => new UdpPackage(i, this.Timeout, this.m_revStore));
             udpPackage.Add(udpFrame);
@@ -67,7 +63,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
             {
                 this.m_revStore.TryRemove(udpPackage.Id, out _);
 
-                this.OnError(default, TouchSocketCoreResource.ValueMoreThan.Format(nameof(udpPackage.Length), udpPackage.Length, this.MaxPackageSize), true, true);
+                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(udpPackage.Length), udpPackage.Length, this.MaxPackageSize);
                 return;
             }
             if (udpPackage.IsComplated)
@@ -78,7 +74,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     {
                         if (udpPackage.TryGetData(block))
                         {
-                            await this.GoReceived(remoteEndPoint, block, null);
+                            await this.GoReceived(remoteEndPoint, block.Memory, null);
                         }
                     }
                 }
@@ -105,7 +101,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
             {
                 WriterExtension.WriteValue<ByteBlock, long>(ref byteBlock, id);
                 WriterExtension.WriteValue<ByteBlock, ushort>(ref byteBlock, sn++);
-                
+
                 if (surLen > freeRoom)//有余
                 {
                     WriterExtension.WriteValue<ByteBlock, byte>(ref byteBlock, 0);
@@ -124,7 +120,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     byteBlock.Write(memory.Span.Slice(off, surLen));
                     //Buffer.BlockCopy(buffer, off, data, 11, surLen);
 
-                    WriterExtension.WriteValue<ByteBlock, ushort>(ref byteBlock, Crc.Crc16Value(memory.Span),EndianType.Big);
+                    WriterExtension.WriteValue<ByteBlock, ushort>(ref byteBlock, Crc.Crc16Value(memory.Span), EndianType.Big);
                     //Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
 
                     //Buffer.BlockCopy(Crc.Crc16(memory.Span), 0, data, 11 + surLen, 2);
@@ -165,7 +161,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
             finally
             {
                 byteBlock.Dispose();
-            } 
+            }
         }
     }
 }

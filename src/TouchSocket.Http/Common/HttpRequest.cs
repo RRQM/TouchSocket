@@ -37,23 +37,12 @@ public class HttpRequest : HttpBase
     /// <remarks>
     /// 初始化HttpRequest对象的基本属性。
     /// </remarks>
-    public HttpRequest()
+    public HttpRequest() : base(false)
     {
-        // 初始化时，设置m_isServer为<see langword="false"/>，表示当前请求不是由服务器发起的。
         this.m_isServer = false;
-        // 初始化时，设置m_canRead为<see langword="false"/>，表示当前请求不能读取数据。
     }
 
-    /// <summary>
-    /// 初始化 HttpRequest 实例。
-    /// </summary>
-    /// <param name="httpClientBase">提供底层 HTTP 通信功能的 HttpClientBase 实例。</param>
-    [Obsolete("此构造函数已被弃用，请使用无参构造函数代替", true)]
-    public HttpRequest(HttpClientBase httpClientBase)
-    {
-    }
-
-    internal HttpRequest(HttpSessionClient httpSessionClient)
+    internal HttpRequest(HttpSessionClient httpSessionClient) : base(true)
     {
         this.m_isServer = true;
     }
@@ -205,7 +194,7 @@ public class HttpRequest : HttpBase
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (this.ContentLength == 0)
         {
@@ -213,16 +202,29 @@ public class HttpRequest : HttpBase
         }
         if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
         {
-            return HttpReadOnlyMemoryBlockResult.FromResult(this.m_contentMemory);
+            return new HttpReadOnlyMemoryBlockResult(this.m_contentMemory);
         }
 
-        var blockResult = await base.ReadAsync(cancellationToken);
-        if (blockResult.IsCompleted)
+        var readLeaseTask = base.ReadExchangeAsync(cancellationToken);
+
+        ReadLease<ReadOnlyMemory<byte>> readLease;
+        if (readLeaseTask.IsCompleted)
+        {
+            readLease = readLeaseTask.Result;
+        }
+        else
+        {
+            readLease = await readLeaseTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+
+        var memory = readLease.Value;
+
+        if (readLease.IsCompleted)
         {
             this.ContentCompleted = true;
         }
 
-        return blockResult;
+        return new HttpReadOnlyMemoryBlockResult(readLease.Dispose, memory, readLease.IsCompleted);
     }
 
     /// <summary>
@@ -240,7 +242,7 @@ public class HttpRequest : HttpBase
 
     internal void BuildHeader<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        WriterExtension.WriteNormalString(ref writer,this.Method.ToString(), Encoding.UTF8);//Get
+        WriterExtension.WriteNormalString(ref writer, this.Method.ToString(), Encoding.UTF8);//Get
         TouchSocketHttpUtility.AppendSpace(ref writer);//空格
         TouchSocketHttpUtility.AppendUtf8String(ref writer, this.RelativeURL);
         if (this.m_query.Count > 0)
@@ -249,12 +251,12 @@ public class HttpRequest : HttpBase
             var i = 0;
             foreach (var item in this.m_query.Keys)
             {
-                WriterExtension.WriteNormalString(ref writer,item, Encoding.UTF8);
+                WriterExtension.WriteNormalString(ref writer, item, Encoding.UTF8);
                 TouchSocketHttpUtility.AppendEqual(ref writer);
                 var value = this.m_query[item];
                 if (value.HasValue())
                 {
-                    WriterExtension.WriteNormalString(ref writer,Uri.EscapeDataString(value), Encoding.UTF8);
+                    WriterExtension.WriteNormalString(ref writer, Uri.EscapeDataString(value), Encoding.UTF8);
                 }
 
                 if (++i < this.m_query.Count)
@@ -266,15 +268,15 @@ public class HttpRequest : HttpBase
         TouchSocketHttpUtility.AppendSpace(ref writer);//空格
         TouchSocketHttpUtility.AppendHTTP(ref writer);//HTTP
         TouchSocketHttpUtility.AppendSlash(ref writer);//斜杠
-        WriterExtension.WriteNormalString(ref writer,this.ProtocolVersion, Encoding.UTF8);//1.1
+        WriterExtension.WriteNormalString(ref writer, this.ProtocolVersion, Encoding.UTF8);//1.1
         TouchSocketHttpUtility.AppendRn(ref writer);//换行
 
         foreach (var headerKey in this.Headers.Keys)
         {
-            WriterExtension.WriteNormalString(ref writer,headerKey, Encoding.UTF8);//key
+            WriterExtension.WriteNormalString(ref writer, headerKey, Encoding.UTF8);//key
             TouchSocketHttpUtility.AppendColon(ref writer);//冒号
             TouchSocketHttpUtility.AppendSpace(ref writer);//空格
-            WriterExtension.WriteNormalString(ref writer,this.Headers[headerKey], Encoding.UTF8);//value
+            WriterExtension.WriteNormalString(ref writer, this.Headers[headerKey], Encoding.UTF8);//value
             TouchSocketHttpUtility.AppendRn(ref writer);//换行
         }
 

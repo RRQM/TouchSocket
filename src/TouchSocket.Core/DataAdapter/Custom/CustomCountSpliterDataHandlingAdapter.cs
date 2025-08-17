@@ -49,7 +49,7 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     }
 
     /// <inheritdoc/>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TCountSpliterRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TCountSpliterRequestInfo request)
     {
         var count = 0;
 

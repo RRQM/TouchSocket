@@ -54,21 +54,21 @@ public abstract class RemoteFileSystemInfo : PackageBase
     /// <inheritdoc/>
     public override void Package<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,DateTime>(ref writer,this.LastWriteTime);
-        WriterExtension.WriteValue<TWriter,DateTime>(ref writer,this.LastAccessTime);
-        WriterExtension.WriteValue<TWriter,DateTime>(ref writer,this.CreationTime);
-        WriterExtension.WriteValue<TWriter,int>(ref writer,(int)this.Attributes);
-        WriterExtension.WriteString(ref writer,this.FullName);
-        WriterExtension.WriteString(ref writer,this.Name);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.LastWriteTime);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.LastAccessTime);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.CreationTime);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, (int)this.Attributes);
+        WriterExtension.WriteString(ref writer, this.FullName);
+        WriterExtension.WriteString(ref writer, this.Name);
     }
 
     /// <inheritdoc/>
     public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.LastWriteTime = ReaderExtension.ReadValue<TReader,DateTime>(ref reader);
-        this.LastAccessTime = ReaderExtension.ReadValue<TReader,DateTime>(ref reader);
-        this.CreationTime = ReaderExtension.ReadValue<TReader,DateTime>(ref reader);
-        this.Attributes = (FileAttributes)ReaderExtension.ReadValue<TReader,int>(ref reader);
+        this.LastWriteTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.LastAccessTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.CreationTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.Attributes = (FileAttributes)ReaderExtension.ReadValue<TReader, int>(ref reader);
         this.FullName = ReaderExtension.ReadString(ref reader);
         this.Name = ReaderExtension.ReadString(ref reader);
     }

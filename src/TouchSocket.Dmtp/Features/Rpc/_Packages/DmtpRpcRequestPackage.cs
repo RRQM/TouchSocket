@@ -105,7 +105,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
 
         if (this.m_parameters != null && this.m_parameters.Length > 0)
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.m_parameters.Length);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_parameters.Length);
             foreach (var item in this.m_parameters)
             {
                 this.m_selector.SerializeParameter(ref writer, this.SerializationType, item);
@@ -113,7 +113,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
         }
         else
         {
-            WriterExtension.WriteValue<TWriter,byte>(ref writer,0);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
         }
     }
 
@@ -121,16 +121,16 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
     public override void PackageRouter<TWriter>(ref TWriter writer)
     {
         base.PackageRouter(ref writer);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.m_serializationType);
-        WriterExtension.WriteString(ref writer,this.InvokeKey, FixedHeaderType.Byte);
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.m_feedback);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_serializationType);
+        WriterExtension.WriteString(ref writer, this.InvokeKey, FixedHeaderType.Byte);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_feedback);
         if (this.Metadata is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.Metadata.Package(ref writer);
         }
     }
@@ -139,7 +139,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
     public override void UnpackageBody<TReader>(ref TReader reader)
     {
         base.UnpackageBody(ref reader);
-        var countPar = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        var countPar = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         var ps = new object[this.RpcParameters.Length];
 
         var index = 0;
@@ -177,9 +177,9 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
     public override void UnpackageRouter<TReader>(ref TReader reader)
     {
         base.UnpackageRouter(ref reader);
-        this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        this.m_invokeKey = ReaderExtension.ReadString(ref reader,FixedHeaderType.Byte);
-        this.m_feedback = (FeedbackType)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.m_invokeKey = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
+        this.m_feedback = (FeedbackType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
         if (!ReaderExtension.ReadIsNull(ref reader))
         {
             var package = new Metadata();

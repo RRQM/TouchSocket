@@ -27,12 +27,12 @@ public abstract class HttpContent
     /// <summary>
     /// 内部方法，用于构建HTTP响应的内容
     /// </summary>
-    /// <typeparam name="TByteBlock">实现IByteBlock接口的类型</typeparam>
-    /// <param name="byteBlock">字节块的引用</param>
+    /// <typeparam name="TWriter">实现IByteBlock接口的类型</typeparam>
+    /// <param name="writer">字节块的引用</param>
     /// <returns>返回一个布尔值，表示构建内容是否成功</returns>
-    internal bool InternalBuildingContent<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    internal bool InternalBuildingContent<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        return this.OnBuildingContent(ref byteBlock);
+        return this.OnBuildingContent(ref writer);
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public abstract class HttpContent
     /// <param name="func">一个函数，用于处理字节块的写入操作</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> func, CancellationToken token)
+    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> func, CancellationToken token)
     {
         return this.WriteContent(func, token);
     }
@@ -67,10 +67,10 @@ public abstract class HttpContent
     /// <summary>
     /// 抽象方法，由子类实现，用于构建HTTP响应的内容
     /// </summary>
-    /// <typeparam name="TByteBlock">实现IByteBlock接口的类型</typeparam>
-    /// <param name="byteBlock">字节块的引用</param>
+    /// <typeparam name="TWriter">实现IByteBlock接口的类型</typeparam>
+    /// <param name="writer">字节块的引用</param>
     /// <returns>返回一个布尔值，表示构建内容是否成功</returns>
-    protected abstract bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    protected abstract bool OnBuildingContent<TWriter>(ref TWriter writer) where TWriter : IBytesWriter;
 
     /// <summary>
     /// 抽象方法，由子类实现，用于构建HTTP头
@@ -91,7 +91,7 @@ public abstract class HttpContent
     /// <param name="writeFunc">一个函数，用于处理字节块的写入操作</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>,CancellationToken, Task> writeFunc, CancellationToken token);
+    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token);
 
     #region implicit
 

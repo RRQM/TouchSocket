@@ -30,11 +30,11 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     public ModbusUdpMaster()
     {
         this.Protocol = TouchSocketModbusUtility.ModbusUdp;
-        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0,ushort.MaxValue);
+        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0, ushort.MaxValue);
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
     {
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
@@ -42,18 +42,18 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
             var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
             await this.ProtectedSendAsync(modbusTcpRequest, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            waitData.SetCancellationToken(token);
-            var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            var waitDataStatus = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            var response = waitData.WaitResult;
+            var response = waitData.CompletedData;
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(sign);
+            waitData.Dispose();
         }
     }
 
@@ -69,7 +69,7 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     {
         if (e.RequestInfo is ModbusTcpResponse response)
         {
-            this.m_waitHandlePool.SetRun(response);
+            this.m_waitHandlePool.Set(response);
         }
         await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

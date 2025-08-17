@@ -342,7 +342,7 @@ public class FileResourceLocator : DisposableObject
             // 如果文件部分的结果不成功，则返回该结果
             if (!fileSectionResult.IsSuccess)
             {
-                return new Result(fileSectionResult);
+                return new Result(fileSectionResult.ResultCode, fileSectionResult.Message);
             }
             else
             {

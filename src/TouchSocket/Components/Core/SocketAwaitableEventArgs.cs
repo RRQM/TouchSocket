@@ -11,10 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Sockets;
@@ -25,7 +22,7 @@ internal abstract class SocketAwaitableEventArgs<TResult> : SocketAsyncEventArgs
 
     protected ManualResetValueTaskSourceCore<TResult> m_valueTaskSourceCore = new ManualResetValueTaskSourceCore<TResult>();
 
-    public bool RunContinuationsAsynchronously { get=> this.m_valueTaskSourceCore.RunContinuationsAsynchronously; set=> this.m_valueTaskSourceCore.RunContinuationsAsynchronously=value; }
+    public bool RunContinuationsAsynchronously { get => this.m_valueTaskSourceCore.RunContinuationsAsynchronously; set => this.m_valueTaskSourceCore.RunContinuationsAsynchronously = value; }
 
     TResult IValueTaskSource<TResult>.GetResult(short token)
     {

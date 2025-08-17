@@ -14,33 +14,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 提供一个基于Dmtp协议的，可以独立读写的通道。
 /// </summary>
-public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
+public partial interface IDmtpChannel : ISender, IDisposableObject, IAsyncEnumerable<ReadOnlyMemory<byte>>, IOnlineClient
 {
-    /// <summary>
-    /// 通道传输速度限制
-    /// </summary>
-    long MaxSpeed { get; set; }
-
     /// <summary>
     /// 具有可读数据的条目数
     /// </summary>
     int Available { get; }
-
-    /// <summary>
-    /// 判断当前通道能否调用<see cref="MoveNext()"/>
-    /// </summary>
-    bool CanMoveNext { get; }
-
-    /// <summary>
-    /// 能否写入
-    /// </summary>
-    bool CanWrite { get; }
 
     /// <summary>
     /// 通道Id
@@ -68,16 +54,6 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     string TargetId { get; }
 
     /// <summary>
-    /// 超时时间，默认1000*10ms。
-    /// </summary>
-    TimeSpan Timeout { get; set; }
-
-    /// <summary>
-    /// 是否被使用
-    /// </summary>
-    bool Using { get; }
-
-    /// <summary>
     /// 获取上次操作的时间。
     /// </summary>
     DateTimeOffset LastOperationTime { get; }
@@ -97,34 +73,10 @@ public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     Task<Result> CompleteAsync(string operationMes = null);
 
     /// <summary>
-    /// 获取当前的有效数据。在使用之后，请进行显式的<see cref="IDisposable.Dispose"/>调用。
-    /// </summary>
-    ByteBlock GetCurrent();
-
-    /// <summary>
     /// 异步调用继续
     /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
     /// </summary>
     /// <param name="operationMes"></param>
     /// <returns></returns>
     Task<Result> HoldOnAsync(string operationMes = null);
-
-    /// <summary>
-    /// 转向下个元素
-    /// </summary>
-    /// <returns></returns>
-    bool MoveNext();
-
-    /// <summary>
-    /// 转向下个元素
-    /// </summary>
-    /// <returns></returns>
-    Task<bool> MoveNextAsync();
-
-    /// <summary>
-    /// 异步写入通道
-    /// </summary>
-    /// <param name="memory">待写入的字节内存块</param>
-    /// <returns>一个代表写入操作的Task对象</returns>
-    Task WriteAsync(ReadOnlyMemory<byte> memory);
 }

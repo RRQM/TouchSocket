@@ -41,9 +41,9 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     public StringSerializerConverter<HttpRequest> Converter { get; }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 
     #region Rpc调用
@@ -105,7 +105,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
 
         await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
 
-        using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             var response = responseResult.Response;
             await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));

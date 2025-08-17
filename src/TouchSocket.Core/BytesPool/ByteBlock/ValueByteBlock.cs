@@ -61,7 +61,7 @@ public struct ValueByteBlock : IByteBlock, IBytesReader, IBytesWriter
         this.m_memory = this.m_onRent(capacity);
     }
 
-   public long BytesRead { readonly get => this.Position; set => this.Position = (int)value; }
+    public long BytesRead { readonly get => this.Position; set => this.Position = (int)value; }
     public readonly long BytesRemaining => this.Length - this.Position;
     public readonly int CanReadLength => this.Length - this.Position;
     public readonly int Capacity => this.m_memory.Length;
@@ -119,7 +119,7 @@ public struct ValueByteBlock : IByteBlock, IBytesReader, IBytesWriter
     {
         this.Position = 0;
     }
-    public readonly override string ToString()
+    public override readonly string ToString()
     {
         return this.Span.ToString(Encoding.UTF8);
     }
@@ -206,7 +206,7 @@ public struct ValueByteBlock : IByteBlock, IBytesReader, IBytesWriter
 
     ReadOnlySpan<byte> IBytesReader.GetSpan(int count)
     {
-        return this.GetSpan(count).Slice(0,count);
+        return this.GetSpan(count).Slice(0, count);
     }
 
     public void SetLength(int value)

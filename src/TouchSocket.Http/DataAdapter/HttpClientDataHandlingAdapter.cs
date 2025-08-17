@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -22,12 +21,16 @@ namespace TouchSocket.Http;
 /// </summary>
 internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    private readonly AsyncAutoResetEvent m_autoResetEvent = new AsyncAutoResetEvent();
+    private readonly AsyncManualResetEvent m_resetEvent = new AsyncManualResetEvent();
     private HttpResponse m_httpResponse;
     private HttpResponse m_httpResponseRoot;
     private long m_surLen;
     private Task m_task;
-    private ByteBlock m_tempByteBlock;
+
+    // 优化：预分配的状态变量，避免重复计算
+    private bool m_isProcessingChunk;
+
+    private bool m_isWaitingForContent;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter WarpAdapter { get; set; }
@@ -45,27 +48,36 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
 
     public void SetCompleteLock()
     {
-        this.m_autoResetEvent.Set();
+        this.m_resetEvent.Set();
     }
 
     /// <inheritdoc/>
-    /// <param name="byteBlock"></param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader byteBlock)
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        if (this.m_tempByteBlock == null)
+        while (reader.BytesRemaining > 0)
         {
-            byteBlock.Position = 0;
-            await this.Single(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            this.m_tempByteBlock.Write(byteBlock.Span);
-            var block = this.m_tempByteBlock;
-            this.m_tempByteBlock = null;
-            block.Position = 0;
-            using (block)
+            // 优化：提前检查包装适配器，减少重复访问
+            var adapter = this.WarpAdapter;
+            if (adapter != null)
             {
-                await this.Single(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return;
+            }
+
+            // 优化：使用状态标记减少条件判断
+            if (this.m_httpResponse == null)
+            {
+                if (!await this.ProcessNewResponseAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (!await this.ProcessExistingResponseAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    return;
+                }
             }
         }
     }
@@ -74,178 +86,251 @@ internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAd
     {
         if (disposing)
         {
-            this.m_autoResetEvent.SetAll();
-            //this.m_autoResetEvent.Dispose();
+            this.m_resetEvent.Set();
+            // 优化：重置状态标记
+            this.m_isProcessingChunk = false;
+            this.m_isWaitingForContent = false;
         }
         base.SafetyDispose(disposing);
     }
 
-    private void Cache(IByteBlockReader byteBlock)
+    /// <summary>
+    /// 处理新的HTTP响应
+    /// </summary>
+    private async ValueTask<bool> ProcessNewResponseAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
     {
-        if (byteBlock.CanReadLength > 0)
+        this.m_httpResponseRoot.ResetHttp();
+        this.m_httpResponse = this.m_httpResponseRoot;
+
+        if (!this.m_httpResponse.ParsingHeader(ref reader))
         {
-            this.m_tempByteBlock = new ByteBlock(1024 * 64);
-            this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
-            if (this.m_tempByteBlock.Length > this.MaxPackageSize)
+            this.m_httpResponse = null;
+
+            // 优化：等待之前的任务完成
+            if (this.m_task != null)
             {
-                this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
+                await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.m_task = null;
             }
+            return false;
         }
-    }
 
-    private async Task<FilterResult> ReadChunk(IByteBlockReader byteBlock)
-    {
-        var position = byteBlock.Position;
-        var index = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(TouchSocketHttpUtility.CRLF);
-        if (index > 0)
+        // 优化：预先计算状态，减少后续判断
+        var contentLength = this.m_httpResponse.ContentLength;
+        this.m_isProcessingChunk = this.m_httpResponse.IsChunk;
+        this.m_isWaitingForContent = this.m_isProcessingChunk || contentLength > reader.BytesRemaining;
+
+        if (this.m_isWaitingForContent)
         {
-            //var headerLength = index - byteBlock.Position;
-            var headerLength = index;
-            var hex = byteBlock.Span.Slice(byteBlock.Position, headerLength).ToString(Encoding.UTF8);
-            var count = hex.ByHexStringToInt32();
-            //byteBlock.Position += headerLength + 1;
-            byteBlock.Position += headerLength;
-            byteBlock.Position += 2;
-
-            if (count > 0)
-            {
-                if (count > byteBlock.CanReadLength)
-                {
-                    byteBlock.Position = position;
-                    return FilterResult.Cache;
-                }
-
-                await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                byteBlock.Position += count;
-                byteBlock.Position += 2;
-                return FilterResult.GoOn;
-            }
-            else
-            {
-                byteBlock.Position += 2;
-                return FilterResult.Success;
-            }
+            this.m_surLen = contentLength;
+            this.m_task = this.GoReceivedAsync(ReadOnlyMemory<byte>.Empty, this.m_httpResponse);
         }
         else
         {
-            return FilterResult.Cache;
+            // 优化：直接读取内容，避免数组分配
+            await this.ProcessCompleteContentAsync(reader, contentLength).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 处理现有的HTTP响应
+    /// </summary>
+    private async ValueTask<bool> ProcessExistingResponseAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
+    {
+        if (this.m_isProcessingChunk)
+        {
+            return await this.ProcessChunkedContentAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else if (this.m_surLen > 0)
+        {
+            return await this.ProcessRemainingContentAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        else
+        {
+            await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return true;
         }
     }
 
-    private Task<Result> RunGoReceived(HttpResponse response)
+    /// <summary>
+    /// 处理完整内容（内容长度已知且数据充足）
+    /// </summary>
+    private async Task ProcessCompleteContentAsync<TReader>(TReader reader, long contentLength)
+        where TReader : class, IBytesReader
     {
-        return EasyTask.SafeRun(() => this.GoReceivedAsync(null, response));
+        var len = (int)contentLength;
+        var content = reader.GetMemory(len);
+        reader.Advance(len);
+        this.m_httpResponse.InternalSetContent(content);
+
+        this.m_httpResponse.CompleteInput();
+        await this.GoReceivedAsync(ReadOnlyMemory<byte>.Empty, this.m_httpResponse).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_httpResponse = null;
+        this.m_isProcessingChunk = false;
+        this.m_isWaitingForContent = false;
     }
 
-    private async Task Single(IByteBlockReader reader)
+    /// <summary>
+    /// 处理分块传输内容
+    /// </summary>
+    private async ValueTask<bool> ProcessChunkedContentAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
     {
-        while (reader.CanReadLength > 0)
-        {
-            var adapter = this.WarpAdapter;
-            if (adapter != null)
-            {
-                await adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                return;
-            }
-            if (this.m_httpResponse == null)
-            {
-                this.m_httpResponseRoot.ResetHttp();
-                this.m_httpResponse = this.m_httpResponseRoot;
-                if (this.m_httpResponse.ParsingHeader(ref reader))
-                {
-                    if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > reader.CanReadLength)
-                    {
-                        this.m_surLen = this.m_httpResponse.ContentLength;
-                        this.m_task = this.RunGoReceived(this.m_httpResponse);
-                    }
-                    else
-                    {
-                        var len = (int)this.m_httpResponse.ContentLength;
-                        var content = reader.GetSpan(len).Slice(0, len);
-                        reader.Advance(len);
-                        this.m_httpResponse.InternalSetContent(content.ToArray());
-                        await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.m_httpResponse = null;
-                    }
-                }
-                else
-                {
-                    this.Cache(reader);
-                    this.m_httpResponse = null;
+        var result = await this.ReadChunk(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                    if (this.m_task != null)
-                    {
-                        await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.m_task = null;
-                    }
-                    return;
-                }
+        switch (result)
+        {
+            case FilterResult.Cache:
+                return false;
+
+            case FilterResult.Success:
+                this.m_httpResponse.CompleteInput();
+                await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                break;
+
+            case FilterResult.GoOn:
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 处理剩余内容
+    /// </summary>
+    private async ValueTask<bool> ProcessRemainingContentAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
+    {
+        if (reader.BytesRemaining <= 0)
+        {
+            return true;
+        }
+
+        var len = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
+        await this.m_httpResponse.InternalInputAsync(reader.GetMemory(len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_surLen -= len;
+        reader.Advance(len);
+
+        if (this.m_surLen == 0)
+        {
+            this.m_httpResponse.CompleteInput();
+            await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 完成响应处理
+    /// </summary>
+    private async Task CompleteResponseAsync()
+    {
+        this.m_httpResponse = null;
+        this.m_isProcessingChunk = false;
+        this.m_isWaitingForContent = false;
+
+        if (this.m_task != null)
+        {
+            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_task = null;
+        }
+
+        await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    private async ValueTask<FilterResult> ReadChunk<TReader>(TReader reader)
+        where TReader : class, IBytesReader
+    {
+        var position = reader.BytesRead;
+
+        // 优化：使用ReadOnlySpan直接查找，避免重复的IndexOf调用
+        var crlfIndex = (int)reader.Sequence.IndexOf(TouchSocketHttpUtility.CRLF);
+        if (crlfIndex <= 0)
+        {
+            return FilterResult.Cache;
+        }
+
+        var headerLength = crlfIndex;
+
+        // 优化：直接使用Span进行十六进制解析，避免字符串分配
+        var hexSpan = reader.GetSpan(headerLength);
+        if (!TryParseHexLength(hexSpan, out var count))
+        {
+            reader.Advance(1); // 跳过无效字符
+            return FilterResult.GoOn;
+        }
+
+        reader.Advance(headerLength + 2); // 跳过长度和CRLF
+
+        if (count > 0)
+        {
+            if (count > reader.BytesRemaining)
+            {
+                reader.BytesRead = position;
+                return FilterResult.Cache;
+            }
+
+            await this.m_httpResponse.InternalInputAsync(reader.GetMemory(count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            reader.Advance(count + 2); // 跳过内容和结尾CRLF
+            return FilterResult.GoOn;
+        }
+        else
+        {
+            reader.Advance(2); // 跳过结尾CRLF
+            return FilterResult.Success;
+        }
+    }
+
+    /// <summary>
+    /// 优化：直接从字节解析十六进制，避免字符串分配
+    /// </summary>
+    private static bool TryParseHexLength(ReadOnlySpan<byte> hexBytes, out int result)
+    {
+        result = 0;
+
+        if (hexBytes.Length == 0)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < hexBytes.Length; i++)
+        {
+            var b = hexBytes[i];
+            int digit;
+
+            if (b >= '0' && b <= '9')
+            {
+                digit = b - '0';
+            }
+            else if (b >= 'A' && b <= 'F')
+            {
+                digit = b - 'A' + 10;
+            }
+            else if (b >= 'a' && b <= 'f')
+            {
+                digit = b - 'a' + 10;
             }
             else
             {
-                if (this.m_httpResponse.IsChunk)
-                {
-                    switch (await this.ReadChunk(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                    {
-                        case FilterResult.Cache:
-                            this.Cache(reader);
-                            return;
-
-                        case FilterResult.Success:
-
-                            await this.m_httpResponse.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                            this.m_httpResponse = null;
-                            if (this.m_task != null)
-                            {
-                                await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                this.m_task = null;
-                            }
-
-                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            break;
-
-                        case FilterResult.GoOn:
-                        default:
-                            break;
-                    }
-                }
-                else if (this.m_surLen > 0)
-                {
-                    if (reader.CanReadLength>0)
-                    {
-                        var len = (int)Math.Min(this.m_surLen, reader.CanReadLength);
-                        await this.m_httpResponse.InternalInputAsync(reader.Memory.Slice(reader.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.m_surLen -= len;
-                        reader.Position += len;
-                        if (this.m_surLen == 0)
-                        {
-                            await this.m_httpResponse.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.m_httpResponse = null;
-                            if (this.m_task != null)
-                            {
-                                await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                this.m_task = null;
-                            }
-
-                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                }
-                else
-                {
-                    this.m_httpResponse = null;
-                    if (this.m_task != null)
-                    {
-                        await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.m_task = null;
-
-                        await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
-                }
+                return false; // 无效字符
             }
+
+            // 检查溢出
+            if (result > (int.MaxValue - digit) / 16)
+            {
+                return false;
+            }
+
+            result = result * 16 + digit;
         }
+
+        return true;
     }
 }

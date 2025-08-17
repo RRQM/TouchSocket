@@ -42,7 +42,7 @@ public partial class MqttDisconnectMessage
     /// <inheritdoc/>
     protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        WriterExtension.WriteValue<TWriter,byte>(ref writer,(byte)this.ReasonCode);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReasonCode);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
 
@@ -61,7 +61,7 @@ public partial class MqttDisconnectMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 

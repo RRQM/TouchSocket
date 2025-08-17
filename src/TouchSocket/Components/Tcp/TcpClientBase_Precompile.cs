@@ -29,133 +29,85 @@ public partial class TcpClientBase
     /// <summary>
     /// 异步连接服务器
     /// </summary>
-    /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒</param>
     /// <param name="token">用于取消操作的令牌</param>
     /// <returns>返回一个异步任务</returns>
     /// <exception cref="ObjectDisposedException">如果对象已被处置，则抛出此异常</exception>
     /// <exception cref="ArgumentNullException">如果必要参数为空，则抛出此异常</exception>
     /// <exception cref="TimeoutException">如果连接超时，则抛出此异常</exception>
-    protected async Task TcpConnectAsync(int millisecondsTimeout, CancellationToken token)
+    protected async Task TcpConnectAsync(CancellationToken token)
     {
-        // 检查对象是否已被处置
+
         this.ThrowIfDisposed();
-        // 检查配置是否为空
+
         this.ThrowIfConfigIsNull();
-        // 等待信号量，以控制并发连接
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
+
+        if (this.m_online)
         {
-            // 如果已经在线，则无需再次连接
-            if (this.m_online)
-            {
-                return;
-            }
-
-            // 确保远程IP和端口已设置
-            var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
-            // 释放之前的Socket资源
-            this.MainSocket.SafeDispose();
-            // 创建新的Socket连接
-            var socket = this.CreateSocket(iPHost);
-            // 触发连接前的事件
-            var args = new ConnectingEventArgs();
-            await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            // 根据取消令牌决定是否支持异步取消
-            if (token.CanBeCanceled)
-            {
-                await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                // 使用信号量控制超时
-                using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
-                {
-                    try
-                    {
-                        // 尝试连接
-                        await socket.ConnectAsync(iPHost.Host, iPHost.Port, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // 超时处理
-                        throw new TimeoutException();
-                    }
-                }
-            }
-            // 更新在线状态
-            this.m_online = true;
-            // 设置当前Socket
-            this.SetSocket(socket);
-            // 进行身份验证
-            await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            
-            await WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-
-            // 触发连接成功的事件
-            m_runTask = EasyTask.SafeRun(this.PrivateOnTcpConnected, m_transport);
+            return;
         }
-        finally
+
+
+        var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
+
+        var socket = this.CreateSocket(iPHost);
+
+        var args = new ConnectingEventArgs();
+        await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (token.CanBeCanceled)
         {
-            // 释放信号量
-            this.m_semaphoreForConnect.Release();
+            await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+        else
+        {
+            await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        this.m_online = true;
+
+        this.SetSocket(socket);
+
+        await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+
+        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
 #else
 
     /// <summary>
     /// 异步连接服务器
     /// </summary>
-    /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒</param>
     /// <param name="token">取消令牌</param>
     /// <returns>返回任务</returns>
-    protected async Task TcpConnectAsync(int millisecondsTimeout, CancellationToken token)
+    protected async Task TcpConnectAsync(CancellationToken token)
     {
-        // 检查对象是否已释放
         this.ThrowIfDisposed();
-        // 检查配置是否为空
         this.ThrowIfConfigIsNull();
-        // 等待信号量，以确保同时只有一个连接操作
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        try
+        if (this.m_online)
         {
-            // 如果已经在线，则无需进行连接操作
-            if (this.m_online)
-            {
-                return;
-            }
-            // 获取远程IP和端口信息
-            var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
-            // 释放之前的Socket资源
-            this.MainSocket.SafeDispose();
-            // 创建新的Socket连接
-            var socket = this.CreateSocket(iPHost);
-            // 触发连接前的事件
-            await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            // 异步开始连接
-            var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
-            // 等待连接完成，设置超时时间
-            await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            // 更新在线状态
-            this.m_online = true;
-            // 设置新的Socket为当前使用
-            this.SetSocket(socket);
-            // 进行身份验证
-            await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-
-            // 启动新任务，处理连接后的操作
-            m_runTask = EasyTask.SafeRun(this.PrivateOnTcpConnected, this.m_transport);
+            return;
         }
-        finally
-        {
-            // 释放信号量，允许其他连接操作
-            this.m_semaphoreForConnect.Release();
-        }
+        var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
+
+        var socket = this.CreateSocket(iPHost);
+        await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
+
+        await task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        this.m_online = true;
+
+        this.SetSocket(socket);
+
+        await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+
+
+        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
 
 #endif

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
@@ -773,7 +772,7 @@ public sealed class TouchSocketBitConverter
         {
             var writerSpan = new Span<byte>(buffer);
 
-            for (var i = 0; i < bytesToConvert/ sourceSize; i++)
+            for (var i = 0; i < bytesToConvert / sourceSize; i++)
             {
                 var size = sourceConverter.WriteBytes(writerSpan, sourceSpan[i]);
                 writerSpan = writerSpan.Slice(size);

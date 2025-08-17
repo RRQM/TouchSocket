@@ -10,14 +10,10 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.IO.Pipelines;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
-public static class TransportExtension
+public interface IPipeTcpClient : ISetupConfigObject, ITcpSession, IDuplexPipe, ITcpConnectableClient
 {
 }

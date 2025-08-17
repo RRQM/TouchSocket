@@ -34,7 +34,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
 {
     private readonly ILog m_logger;
     private readonly IResolver m_resolver;
-    private readonly Dictionary<string, ReadOnlyMemory<byte>> m_swagger = new ();
+    private readonly Dictionary<string, ReadOnlyMemory<byte>> m_swagger = new();
 
     /// <summary>
     /// SwaggerPlugin

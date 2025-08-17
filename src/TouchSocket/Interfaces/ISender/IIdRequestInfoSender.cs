@@ -29,5 +29,5 @@ public interface IIdRequestInfoSender
     /// <param name="requestInfo">请求信息对象，包含发送的具体内容</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的完成</returns>
-    Task SendAsync(string id, IRequestInfo requestInfo,CancellationToken token=default);
+    Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken token = default);
 }

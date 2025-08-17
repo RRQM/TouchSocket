@@ -41,7 +41,7 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory,CancellationToken token)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         return base.ProtectedSendAsync(memory, token);
     }
@@ -57,9 +57,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 
     /// <inheritdoc/>
@@ -103,9 +103,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
         {
             jsonRpcMemory = jsonPackage.Data;
         }
-        else if (e.ByteBlock != null)
+        else if (!e.Memory.IsEmpty)
         {
-            jsonRpcMemory = e.ByteBlock.Memory;
+            jsonRpcMemory = e.Memory;
         }
 
         if (jsonRpcMemory.IsEmpty)

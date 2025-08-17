@@ -11,13 +11,11 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
 /// <summary>
 /// Udp数据处理适配器
@@ -30,28 +28,21 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 当接收数据处理完成后，回调该函数执行接收
     /// </summary>
-    public Func<EndPoint, IByteBlockReader, IRequestInfo, Task> ReceivedCallBack { get; set; }
+    public Func<EndPoint, ReadOnlyMemory<byte>, IRequestInfo, Task> ReceivedCallBack { get; set; }
 
     /// <summary>
     /// 当接收数据处理完成后，异步回调该函数执行发送
     /// </summary>
-    public Func<EndPoint, ReadOnlyMemory<byte>,CancellationToken, Task> SendCallBackAsync { get; set; }
+    public Func<EndPoint, ReadOnlyMemory<byte>, CancellationToken, Task> SendCallBackAsync { get; set; }
 
     /// <summary>
     /// 收到数据的切入点，该方法由框架自动调用。
     /// </summary>
     /// <param name="remoteEndPoint"></param>
-    /// <param name="byteBlock"></param>
-    public virtual async Task ReceivedInput(EndPoint remoteEndPoint, IByteBlockReader byteBlock)
+    /// <param name="memory"></param>
+    public Task ReceivedInputAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
-        try
-        {
-            await this.PreviewReceived(remoteEndPoint, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch (Exception ex)
-        {
-            this.OnError(ex, ex.Message, true, true);
-        }
+        return this.PreviewReceivedAsync(remoteEndPoint, memory);
     }
 
     #region SendInputAsync
@@ -69,7 +60,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </remarks>
     public Task SendInputAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        return this.PreviewSendAsync(endPoint, memory,token);
+        return this.PreviewSendAsync(endPoint, memory, token);
     }
 
     /// <summary>
@@ -80,7 +71,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <param name="token">可取消令箭</param>
     public Task SendInputAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token)
     {
-        return this.PreviewSendAsync(endPoint, requestInfo,token);
+        return this.PreviewSendAsync(endPoint, requestInfo, token);
     }
     #endregion SendInputAsync
 
@@ -88,13 +79,13 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// 处理已经经过预先处理后的数据
     /// </summary>
     /// <param name="remoteEndPoint">远程端点，标识数据来源</param>
-    /// <param name="byteBlock">接收到的二进制数据块</param>
+    /// <param name="memory">接收到的二进制数据块</param>
     /// <param name="requestInfo">解析后的请求信息</param>
     /// <returns>一个异步任务，代表处理过程</returns>
-    protected Task GoReceived(EndPoint remoteEndPoint, IByteBlockReader byteBlock, IRequestInfo requestInfo)
+    protected Task GoReceived(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         // 调用接收回调，继续处理接收到的数据
-        return this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
+        return this.ReceivedCallBack.Invoke(remoteEndPoint, memory, requestInfo);
     }
 
     /// <summary>
@@ -104,7 +95,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <param name="memory">已经经过预先处理的字节数据，以 ReadOnlyMemory 方式传递以提高性能</param>
     /// <param name="token">可取消令箭</param>
     /// <returns>返回一个 Task 对象，表示异步操作的完成</returns>
-    protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory,CancellationToken token)
+    protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
     {
         return this.SendCallBackAsync.Invoke(endPoint, memory, token);
     }
@@ -112,10 +103,10 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(EndPoint,IByteBlockReader, IRequestInfo)"/>处理数据
     /// </summary>
     /// <param name="remoteEndPoint"></param>
-    /// <param name="byteBlock"></param>
-    protected virtual async Task PreviewReceived(EndPoint remoteEndPoint, IByteBlockReader byteBlock)
+    /// <param name="memory"></param>
+    protected virtual async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
-        await this.GoReceived(remoteEndPoint, byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.GoReceived(remoteEndPoint, memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -134,7 +125,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
         try
         {
             requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(endPoint, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoSendAsync(endPoint, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -163,6 +154,6 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        
+
     }
 }

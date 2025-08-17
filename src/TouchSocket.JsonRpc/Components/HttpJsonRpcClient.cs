@@ -69,12 +69,11 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// <summary>
     /// 异步连接到服务器。
     /// </summary>
-    /// <param name="millisecondsTimeout">超时时间（毫秒）。</param>
     /// <param name="token">取消令牌。</param>
     /// <returns>表示异步操作的任务。</returns>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(token);
     }
 
     /// <summary>

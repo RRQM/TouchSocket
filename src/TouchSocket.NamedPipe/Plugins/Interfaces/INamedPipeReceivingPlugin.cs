@@ -28,5 +28,5 @@ public interface INamedPipeReceivingPlugin : IPlugin
     /// <param name="client">触发事件的命名管道会话客户端。</param>
     /// <param name="e">包含收到的数据及其他相关信息的事件参数。</param>
     /// <returns>一个任务对象，表示异步操作。</returns>
-    Task OnNamedPipeReceiving(INamedPipeSession client, ByteBlockEventArgs e);
+    Task OnNamedPipeReceiving(INamedPipeSession client, BytesReaderEventArgs e);
 }

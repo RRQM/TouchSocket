@@ -11,16 +11,15 @@
 // ------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
-class StreamTransport : BaseTransport
+internal class StreamTransport : BaseTransport
 {
     private readonly Stream m_stream;
 
@@ -37,7 +36,6 @@ class StreamTransport : BaseTransport
         {
             await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_stream.Close();
-            this.m_stream.Dispose();
             return Result.Success;
         }
         catch (Exception ex)
@@ -50,22 +48,24 @@ class StreamTransport : BaseTransport
     {
         try
         {
+            var pipeWriter = this.m_pipeReceive.Writer;
             while (!token.IsCancellationRequested)
             {
-                var memory = this.m_pipeReceive.Writer.GetMemory(this.ReceiveBufferSize);
+                var memory = pipeWriter.GetMemory(this.ReceiveBufferSize);
+                Debug.WriteLine($"StreamTransport RunReceive GetMemory Size:{memory.Length}");
                 var result = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (result == 0)
                 {
-                    this.ClosedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                    await this.m_pipeReceive.Writer.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                    await pipeWriter.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return;
                 }
 
                 this.m_receiveCounter.Increment(result);
 
-                this.m_pipeReceive.Writer.Advance(result);
-                var flushResult = await this.m_pipeReceive.Writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                pipeWriter.Advance(result);
+                var flushResult = await pipeWriter.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (flushResult.IsCompleted)
                 {
                     break;
@@ -74,7 +74,7 @@ class StreamTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.ClosedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+            this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
             await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
@@ -128,5 +128,11 @@ class StreamTransport : BaseTransport
         {
             this.m_pipeSend.Reader.Complete();
         }
+    }
+
+    protected override void SafetyDispose(bool disposing)
+    {
+        this.m_stream.Dispose();
+        base.SafetyDispose(disposing);
     }
 }

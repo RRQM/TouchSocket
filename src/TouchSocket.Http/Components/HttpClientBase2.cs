@@ -11,12 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
 
@@ -25,55 +21,50 @@ namespace TouchSocket.Http;
 /// </summary>
 internal abstract class HttpClientBase2 : HttpClientBase, IHttpSession
 {
-    protected override async Task ReceiveLoopAsync(ITransport transport)
+    public HttpClientBase2()
     {
-        var adapter = new MyHttpClientDataHandlingAdapter(this);
-        var token = transport.ClosedToken;
-        HttpResponse response;
-        while (!token.IsCancellationRequested)
+        this.adapter = new MyHttpClientDataHandlingAdapter(this);
+    }
+
+    private readonly MyHttpClientDataHandlingAdapter adapter;
+
+    protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
+    {
+        while (reader.BytesRemaining > 0)
         {
-           var readResult=await transport.Input.ReadAsync(token);
-            if (readResult.IsCanceled)
+            if (!this.adapter.TryParseRequest(ref reader, out var response))
             {
                 break;
             }
-            if (readResult.IsCompleted)
-            {
-                break;
-            }
-            
-            var reader=new BytesReader(readResult.Buffer);
-
-            while (reader.BytesRemaining>0)
-            {
-                if (!adapter.TryParseRequest(ref reader, out response))
-                {
-                    break;
-                }
-
-                //response.InternalInputAsync();
-            }
-
-            transport.Input.AdvanceTo(reader.TotalSequence.End);
+            await EasyTask.CompletedTask;
+            //response.InternalInputAsync();
         }
+        return true;
     }
 }
 
-class MyHttpClientDataHandlingAdapter : CacheDataHandlingAdapterSlim<HttpResponse>
+internal class MyHttpClientDataHandlingAdapter : CustomDataHandlingAdapter<HttpResponse>
 {
     public MyHttpClientDataHandlingAdapter(HttpClientBase httpClientBase)
     {
         this.m_httpResponse = new HttpResponse(httpClientBase);
     }
-    private readonly HttpResponse m_httpResponse ;
-    protected override bool TryParseRequestAfterCacheVerification<TReader>(ref TReader reader, out HttpResponse request)
+
+    protected override bool ParseRequestCore<TReader>(ref TReader reader, out HttpResponse request)
     {
         if (this.m_httpResponse.ParsingHeader(ref reader))
         {
-            request= this.m_httpResponse;
+            request = this.m_httpResponse;
             return true;
         }
         request = null;
         return false;
     }
+
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref HttpResponse request)
+    {
+        throw new NotImplementedException();
+    }
+
+    private readonly HttpResponse m_httpResponse;
 }

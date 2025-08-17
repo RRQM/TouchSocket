@@ -84,7 +84,7 @@ public static class TouchSocketModbusUtility
         ushort wCrc = 0xFFFF;
         for (var i = 0; i < sourceSpan.Length; i++)
         {
-            wCrc ^= (ushort)sourceSpan[i];
+            wCrc ^= sourceSpan[i];
             for (var j = 0; j < 8; j++)
             {
                 if ((wCrc & 0x0001) == 1)

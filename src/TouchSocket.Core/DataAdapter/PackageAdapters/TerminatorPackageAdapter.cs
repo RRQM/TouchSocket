@@ -12,7 +12,6 @@
 
 using System;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
 
@@ -22,7 +21,7 @@ namespace TouchSocket.Core;
 /// 终止符数据包处理适配器，支持以指定终止符（字符或字节数组）结尾的数据包解析。
 /// 适用于流式数据协议，自动分包并处理缓存，支持保留终止符选项。
 /// </summary>
-public class TerminatorPackageAdapter : CacheDataHandlingAdapter
+public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
 {
     /// <summary>
     /// 终止符字节序列。
@@ -68,78 +67,35 @@ public class TerminatorPackageAdapter : CacheDataHandlingAdapter
     /// </summary>
     public bool ReserveTerminatorCode { get; set; }
 
-    /// <summary>
-    /// 预处理接收到的数据，自动分包并处理缓存。
-    /// </summary>
-    /// <param name="reader">数据读取器。</param>
-    protected override async Task PreviewReceivedAsync(IByteBlockReader reader)
-    {
-        ReaderExtension.SeekToStart(ref reader);
-        var canReadSpan = reader.Span.Slice(reader.Position);
-        if (this.TryCombineCache(canReadSpan, out var byteBlock))
-        {
-            using (byteBlock)
-            {
-                await this.ProcessReader(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
+    protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
+    {
+        while (reader.BytesRemaining > 0)
+        {
+            var sequence = reader.Sequence;
+            var index = sequence.IndexOf(this.m_terminatorCode.Span);
+            if (index < 0)
+            {
                 return;
             }
+            var length = (int)(index + this.m_terminatorCode.Length);
+            var memory = reader.GetMemory(length);
+            if (!this.ReserveTerminatorCode)
+            {
+                memory = memory.Slice(0, (int)index);
+            }
+            await this.GoReceivedAsync(memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            reader.Advance(length);
         }
-
-        await this.ProcessReader(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    /// <summary>
-    /// 预处理发送的数据，自动添加终止符。
-    /// </summary>
-    /// <param name="memory">待发送数据。</param>
-    /// <param name="token">取消令牌。</param>
-    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         if (memory.Length > this.MaxPackageSize)
         {
             throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(memory.Length), this.MaxPackageSize));
         }
-        var dataLen = memory.Length + this.m_terminatorCode.Length;
-        var byteBlock = new ByteBlock(dataLen);
-        byteBlock.Write(memory.Span);
-        byteBlock.Write(this.m_terminatorCode.Span);
-
-        try
-        {
-            await this.GoSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// 处理数据读取，查找终止符并分包。
-    /// </summary>
-    /// <param name="reader">数据读取器。</param>
-    private async Task ProcessReader(IByteBlockReader reader)
-    {
-        while (true)
-        {
-            var canReadMemory = reader.Memory.Slice(reader.Position);
-            if (canReadMemory.IsEmpty)
-            {
-                return;
-            }
-
-            var index = canReadMemory.Span.IndexOf(this.m_terminatorCode.Span);
-            if (index < 0)
-            {
-                this.Cache(canReadMemory.Span);
-                return;
-            }
-            var length = index + this.m_terminatorCode.Length;
-            var byteBlockReader = new ByteBlockReader(canReadMemory.Slice(0, this.ReserveTerminatorCode ? length : index));
-
-            await this.GoReceivedAsync(byteBlockReader, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            reader.Advance(length);
-        }
+        writer.Write(memory.Span);
+        writer.Write(this.m_terminatorCode.Span);
     }
 }

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -156,9 +155,9 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     #region Connect
 
     /// <inheritdoc/>
-    public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual Task ConnectAsync(CancellationToken token)
     {
-        return this.PipeConnectAsync(millisecondsTimeout, token);
+        return this.PipeConnectAsync(token);
     }
 
     #endregion Connect
@@ -182,13 +181,13 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     #region 异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token=default)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
-        return this.ProtectedSendAsync(memory,token);
+        return this.ProtectedSendAsync(memory, token);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token=default)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
     {
         return this.ProtectedSendAsync(requestInfo, token);
     }

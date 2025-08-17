@@ -26,28 +26,28 @@ internal class WaitSmallFilePackage : WaitRouterPackage
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
         base.PackageBody(ref writer);
-        WriterExtension.WriteString(ref writer,this.Path);
+        WriterExtension.WriteString(ref writer, this.Path);
         if (this.Metadata is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.Metadata.Package(ref writer);
         }
-       
+
         if (this.FileInfo is null)
         {
             WriterExtension.WriteNull(ref writer);
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.FileInfo.Package(ref writer);
         }
-        
-        WriterExtension.WriteByteSpan(ref writer,new System.ReadOnlySpan<byte>(this.Data, 0, this.Len));
+
+        WriterExtension.WriteByteSpan(ref writer, new System.ReadOnlySpan<byte>(this.Data, 0, this.Len));
     }
 
     public override void UnpackageBody<TReader>(ref TReader reader)

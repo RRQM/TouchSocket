@@ -34,10 +34,10 @@ internal class WaitFileSection : WaitRouterPackage, IDisposable
         }
         else
         {
-             WriterExtension.WriteNotNull(ref writer);
+            WriterExtension.WriteNotNull(ref writer);
             this.FileSection.Package(ref writer);
         }
-        WriterExtension.WriteByteBlock(ref writer,this.Value);
+        WriterExtension.WriteByteBlock(ref writer, this.Value);
     }
 
     public override void UnpackageBody<TReader>(ref TReader reader)

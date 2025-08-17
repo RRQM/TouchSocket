@@ -22,9 +22,7 @@ internal ref struct VariableByteIntegerRecorder
     private int m_startPosition;
 
     public void CheckOut(ref BytesWriter writer, int minimum = 0)
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         this.m_minimumCount = MqttExtension.GetVariableByteIntegerCount(minimum);
         this.m_startPosition = writer.Position;
@@ -33,14 +31,12 @@ internal ref struct VariableByteIntegerRecorder
     }
 
     public readonly int CheckIn(ref BytesWriter writer)
-#if AllowsRefStruct
-,allows ref struct
-#endif
+
     {
         var endPosition = writer.Position;
 
         var len = endPosition - this.m_dataPosition;
-        var lenCount = MqttExtension.GetVariableByteIntegerCount((int)len);
+        var lenCount = MqttExtension.GetVariableByteIntegerCount(len);
         if (lenCount > this.m_minimumCount)
         {
             var moveCount = lenCount - this.m_minimumCount;
@@ -49,7 +45,7 @@ internal ref struct VariableByteIntegerRecorder
 
             writer.Position = this.m_startPosition;
             MqttExtension.WriteVariableByteInteger(ref writer, (uint)len);
-            writer.Position=(endPosition+ moveCount);
+            writer.Position = (endPosition + moveCount);
         }
         else
         {

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,5 +33,5 @@ public interface IUdpClientSender : ISender, IUdpRequestInfoSender
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>一个表示异步操作的Task对象</returns>
-    Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory,CancellationToken token = default);
+    Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default);
 }

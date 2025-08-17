@@ -20,7 +20,7 @@ namespace TouchSocket.Core;
 /// 结果返回
 /// </summary>
 [DebuggerDisplay("ResultCode = {ResultCode}, Message = {Message}")]
-public record struct Result : IResult
+public record struct Result
 {
     /// <summary>
     /// 成功
@@ -61,16 +61,6 @@ public record struct Result : IResult
     {
         this.ResultCode = resultCode;
         this.Message = message;
-    }
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="result">传入的结果对象，用于初始化当前结果对象的属性</param>
-    public Result(IResult result)
-    {
-        this.ResultCode = result.ResultCode; // 初始化结果代码
-        this.Message = result.Message; // 初始化结果消息
     }
 
     /// <summary>

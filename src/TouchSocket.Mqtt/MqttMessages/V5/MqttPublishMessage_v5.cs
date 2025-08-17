@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using TouchSocket.Core;
 
@@ -41,7 +40,7 @@ public partial class MqttPublishMessage
         MqttExtension.WriteMqttInt16String(ref writer, this.TopicName);
         if (this.QosLevel != QosLevel.AtMostOnce)
         {
-            WriterExtension.WriteValue<TWriter,ushort>(ref writer,this.MessageId, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         }
 
         #region properties
@@ -117,7 +116,7 @@ public partial class MqttPublishMessage
             }
         }
 
-      
+
         #endregion properties
 
         this.Payload = this.ReadPayload(ref reader);

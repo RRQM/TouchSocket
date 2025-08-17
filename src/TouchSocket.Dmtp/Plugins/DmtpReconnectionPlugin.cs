@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -37,8 +38,12 @@ internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ID
         {
             return null;
         }
+        using (var cancellationTokenSource = new CancellationTokenSource(5000))
+        {
+            var res = await client.PingAsync(cancellationTokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return res.IsSuccess;
+        }
 
-        return await client.PingAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)

@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -54,13 +52,13 @@ public sealed class NatTargetClient : TcpClientBase, ITcpConnectableClient, ICli
     public bool StandBy { get; }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken token)
     {
-        return base.TcpConnectAsync(millisecondsTimeout, token);
+        return base.TcpConnectAsync(token);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory,CancellationToken token=default)
+    public Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
         return base.ProtectedSendAsync(memory, token);
     }
