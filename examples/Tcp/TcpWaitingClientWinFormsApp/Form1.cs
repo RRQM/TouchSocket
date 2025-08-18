@@ -84,7 +84,7 @@ public partial class Form1 : Form
                 {
                     a.Add(typeof(ITcpReceivedPlugin), (ReceivedDataEventArgs e) =>
                     {
-                        Console.WriteLine($"PluginReceivedData:{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+                        Console.WriteLine($"PluginReceivedData:{e.Memory.Span.ToString(Encoding.UTF8)}");
                     });
                 })
                  .SetRemoteIPHost(this.textBox1.Text));
@@ -205,11 +205,11 @@ internal class MyPlugin1 : PluginBase, ITcpReceivedPlugin
 
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
-        this.m_logger.Info($"Plugin:{e.ByteBlock.ToString()}");
+        this.m_logger.Info($"Plugin:{e.Memory.Span.ToUtf8String()}");
 
         if (client is ITcpSessionClient sessionClient)
         {
-            await sessionClient.SendAsync(e.ByteBlock.Memory);
+            await sessionClient.SendAsync(e.Memory.Memory);
         }
     }
 }

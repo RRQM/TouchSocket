@@ -92,7 +92,7 @@ internal class Program
 //    protected override void OnReceivingData(ITcpSession client, ByteBlockEventArgs e)
 //    {
 //        client.SetValue(TrafficCounterEx.ReceivedTempTrafficCounterProperty,
-//            e.ByteBlock.Length + +client.GetValue<int>(TrafficCounterEx.ReceivedTempTrafficCounterProperty));
+//            e.Memory.Length + +client.GetValue<int>(TrafficCounterEx.ReceivedTempTrafficCounterProperty));
 //        base.OnReceivingData(client, e);
 //    }
 //}

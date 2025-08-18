@@ -87,11 +87,11 @@ internal class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamed
 
     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
-        this.m_logger.Info(e.ByteBlock.ToString());
+        this.m_logger.Info(e.Memory.Span.ToUtf8String());
 
         if (client is INamedPipeSessionClient sessionClient)
         {
-            await sessionClient.SendAsync(e.ByteBlock.Memory);
+            await sessionClient.SendAsync(e.Memory.Memory);
         }
 
         await e.InvokeNext();

@@ -63,7 +63,7 @@ internal class Program
 
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
-            Console.WriteLine($"消息{e.ByteBlock.Span.ToString(Encoding.UTF8)}，插件HashCode={this.GetHashCode()}");
+            Console.WriteLine($"消息{e.Memory.Span.ToString(Encoding.UTF8)}，插件HashCode={this.GetHashCode()}");
             await e.InvokeNext();
         }
     }

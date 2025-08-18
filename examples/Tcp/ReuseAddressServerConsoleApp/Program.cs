@@ -64,7 +64,7 @@ internal class MyClassPlugin : PluginBase, ITcpConnectedPlugin, ITcpClosedPlugin
 
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
-        this.m_logger.Info($"收到数据，信息：{e.ByteBlock.ToString()}");
+        this.m_logger.Info($"收到数据，信息：{e.Memory.Span.ToUtf8String()}");
         await e.InvokeNext();
     }
 }

@@ -33,7 +33,7 @@ internal class Program
                  a.Add<MyPluginClass2>();
                  a.Add<MyPluginClass3>();
              })
-             .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+             );
         await udpService.StartAsync();
 
         //加入组播组
@@ -44,7 +44,7 @@ internal class Program
               //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
               .SetBindIPHost(new IPHost(7788))
               .UseBroadcast()//该配置在广播时是必须的
-              .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+             );
         await udpClient.StartAsync();
 
         while (true)
@@ -64,7 +64,7 @@ internal class Program
     {
         public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
         {
-            var msg = e.ByteBlock.ToString();
+            var msg = e.Memory.Span.ToUtf8String();
             if (msg == "hello")
             {
                 Console.WriteLine("已处理Hello");
@@ -81,7 +81,7 @@ internal class Program
     {
         public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
         {
-            var msg = e.ByteBlock.ToString();
+            var msg = e.Memory.Span.ToUtf8String();
             if (msg == "hi")
             {
                 Console.WriteLine("已处理Hi");
@@ -98,7 +98,7 @@ internal class Program
     {
         public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
         {
-            var msg = e.ByteBlock.ToString();
+            var msg = e.Memory.Span.ToUtf8String();
             Console.WriteLine(msg);
             await Task.CompletedTask;
         }

@@ -46,7 +46,7 @@ internal class Program
         {
             //从客户端收到信息
 
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
             //client.Send(mes);//将收到的信息直接返回给发送方

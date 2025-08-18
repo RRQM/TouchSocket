@@ -6,7 +6,7 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.Generators;
+using TouchSocket.Rpc.JsonRpc.Generators;
 using TouchSocket.Sockets;
 
 namespace JsonRpcAotConsoleApp;
