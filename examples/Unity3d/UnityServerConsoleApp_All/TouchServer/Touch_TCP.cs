@@ -48,11 +48,11 @@ internal class Touch_TCP_Log_Plguin : PluginBase, ITcpConnectedPlugin, ITcpClose
 
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
-        client.Logger.Info($"TCP:接收到信息：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+        client.Logger.Info($"TCP:接收到信息：{e.Memory.Span.ToString(Encoding.UTF8)}");
 
         if (client is ITcpSessionClient sessionClient)
         {
-            await sessionClient.SendAsync($"TCP:服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
+            await sessionClient.SendAsync($"TCP:服务器已收到你发送的消息：{e.Memory.Span.ToUtf8String()}");
         }
         await e.InvokeNext();
     }

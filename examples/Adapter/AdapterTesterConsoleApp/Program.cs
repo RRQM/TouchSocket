@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace AdapterTesterConsoleApp;
@@ -31,7 +32,7 @@ internal class Program
         Console.WriteLine(obj.Message);
     }
 
-    private static void TcpDataAdapterTester()
+    private static async Task TcpDataAdapterTester()
     {
         //Tcp适配器测试
         //bufferLength的作用是模拟tcp接收缓存区，例如：
@@ -45,8 +46,8 @@ internal class Program
         {
             var isSuccess = true;
             var data = new byte[] { 0, 1, 2, 3, 4 };
-            var tester = TouchSocket.Sockets.TcpDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
-             , bufferLength, async (byteBlock, requestInfo) =>
+            var tester = TouchSocket.Core.TcpDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
+             , async (byteBlock, requestInfo) =>
              {
                  //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
                  if (byteBlock.Length != 5 || (!byteBlock.ToArray().SequenceEqual(data)))
@@ -63,8 +64,7 @@ internal class Program
             //随后的两个参数，10,10是测试次数，和期望次数，一般这两个值是相等的。
             //意为：本次数据将循环发送10次，且会接收10次。不然此处会一直阻塞。
             //最后一个参数是测试的最大超时时间。
-            var time = tester.Run(data, 10, 10, 1000 * 10);
-            Thread.Sleep(1000);
+            var time = await tester.RunAsync(data, 10, 10, bufferLength, 1000 * 10);
             Console.WriteLine($"测试结束，状态:{isSuccess}，用时：{time}");
         }
         Console.WriteLine("测试结束");

@@ -63,7 +63,7 @@ internal class Program
         service.Received = (client, e) =>
         {
             //从客户端收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);//注意：数据长度是byteBlock.Length
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);//注意：数据长度是byteBlock.Length
             client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             return EasyTask.CompletedTask;
         };

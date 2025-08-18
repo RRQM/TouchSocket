@@ -36,7 +36,7 @@ internal class Program
         client.Received = (client, e) =>
         {
             //从服务器收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             client.Logger.Info($"客户端接收到信息：{mes}");
 
             return Task.CompletedTask;

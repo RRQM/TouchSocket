@@ -28,7 +28,7 @@ internal class Program
         client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从端口断开连接，当连接不成功时不会触发。
         client.Received = async (c, e) =>
         {
-            await Console.Out.WriteLineAsync(e.ByteBlock.Span.ToString(Encoding.UTF8));
+            await Console.Out.WriteLineAsync(e.Memory.Span.ToString(Encoding.UTF8));
         };
 
         await client.SetupAsync(new TouchSocketConfig()
@@ -93,8 +93,8 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin
     public async Task OnSerialReceived(ISerialPortSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
-        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        var byteBlock = e.ByteBlock;
+        //根据适配器类型，e.Memory与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+        var byteBlock = e.Memory;
         var requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。

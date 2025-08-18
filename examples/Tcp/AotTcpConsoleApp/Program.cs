@@ -46,7 +46,7 @@ namespace TcpConsoleApp
             tcpClient.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+                var mes = e.Memory.Span.ToString(Encoding.UTF8);
 
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
                 return EasyTask.CompletedTask;
@@ -104,7 +104,7 @@ namespace TcpConsoleApp
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             //从客户端收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             if (mes == "close")
             {
                 throw new CloseException(mes);

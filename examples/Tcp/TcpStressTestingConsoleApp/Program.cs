@@ -92,8 +92,8 @@ namespace TcpStressTestingConsoleApp
             var service = new TcpService();
             service.Received = async (client, e) =>
             {
-                e.ByteBlock.SetHolding(true);
-                await m_channel.Writer.WriteAsync(e.ByteBlock);
+                e.Memory.SetHolding(true);
+                await m_channel.Writer.WriteAsync(e.Memory);
                 //client.Send(byteBlock);
             };
 

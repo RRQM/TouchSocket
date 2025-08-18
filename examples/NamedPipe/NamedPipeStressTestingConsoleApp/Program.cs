@@ -66,7 +66,7 @@ namespace NamedPipeStressTestingConsoleApp
             };
             service.Received = (client, e) =>
             {
-                counter.Increment(e.ByteBlock.Length);
+                counter.Increment(e.Memory.Length);
                 return EasyTask.CompletedTask;
             };
             await service.SetupAsync(new TouchSocketConfig()//载入配置

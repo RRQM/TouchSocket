@@ -33,14 +33,14 @@ public partial class Form1 : Form
     {
         this.m_udpSession.Received = async (remote, e) =>
         {
-            if (e.ByteBlock.Length > 1024)
+            if (e.Memory.Length > 1024)
             {
-                this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Length}长度的数据。");
+                this.m_udpSession.Logger.Info($"收到：{e.Memory.Length}长度的数据。");
                 await this.m_udpSession.SendAsync("收到");
             }
             else
             {
-                this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+                this.m_udpSession.Logger.Info($"收到：{e.Memory.Span.ToString(Encoding.UTF8)}");
             }
             var endPoint = e.EndPoint;
         };

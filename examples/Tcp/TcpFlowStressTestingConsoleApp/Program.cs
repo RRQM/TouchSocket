@@ -40,7 +40,7 @@ namespace TcpFlowStressTestingConsoleApp
             service.Received = async (client, e) =>
             {
                 //await Task.Delay(10);
-                counter.Increment(e.ByteBlock.Length);
+                counter.Increment(e.Memory.Length);
                 await Task.CompletedTask;
             };
             await service.StartAsync(7789);

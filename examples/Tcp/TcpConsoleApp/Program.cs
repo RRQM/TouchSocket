@@ -74,7 +74,7 @@ internal class Program
         client.Received = (client, e) =>
         {
             //从服务器收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             client.Logger.Info($"客户端接收到信息：{mes}");
             return EasyTask.CompletedTask;
         };
@@ -108,7 +108,7 @@ internal class Program
         client.Received = (client, e) =>
         {
             //从服务器收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             client.Logger.Info($"客户端接收到信息：{mes}");
             return EasyTask.CompletedTask;
         };
@@ -185,7 +185,7 @@ internal class MyTcpClient : TcpClientBase
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
 
         return EasyTask.CompletedTask;
@@ -273,7 +273,7 @@ internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
         if (mes == "close")
         {
             throw new CloseException(mes);

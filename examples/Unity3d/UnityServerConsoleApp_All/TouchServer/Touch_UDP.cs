@@ -36,10 +36,10 @@ public class Touch_UDP : BaseTouchServer
     {
         public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
         {
-            client.Logger.Info($"UDP:收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+            client.Logger.Info($"UDP:收到：{e.Memory.Span.ToString(Encoding.UTF8)}");
             if (client is UdpSession session)
             {
-                await session.SendAsync(e.EndPoint, "UDP:" + e.EndPoint.ToString() + "收到了你的消息：" + e.ByteBlock.Span.ToString(Encoding.UTF8));
+                await session.SendAsync(e.EndPoint, "UDP:" + e.EndPoint.ToString() + "收到了你的消息：" + e.Memory.Span.ToString(Encoding.UTF8));
             }
             await e.InvokeNext();
         }
