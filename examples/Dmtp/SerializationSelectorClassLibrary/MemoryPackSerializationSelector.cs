@@ -24,7 +24,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
 {
     public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
     {
-        var len = byteBlock.ReadInt32();
+        var len = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
         var span = byteBlock.ReadToSpan(len);
         return MemoryPackSerializer.Deserialize(parameterType, span);
     }
@@ -39,7 +39,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
 
         var newPos = byteBlock.Position;
         byteBlock.Position = pos;
-        byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
+        WriterExtension.WriteValue(ref byteBlock,(int)memoryPackWriter.WrittenCount);
         byteBlock.Position = newPos;
     }
 }
@@ -64,7 +64,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType);
             case SerializationType.SystemBinary:
                 // 检查字节块是否为null
-                if (byteBlock.ReadIsNull())
+                if (ReaderExtension.ReadIsNull<TReader>(ref byteBlock))
                 {
                     // 如果为null，则返回该类型的默认值
                     return parameterType.GetDefault();
@@ -78,18 +78,18 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.Json:
                 // 检查字节块是否为null
-                if (byteBlock.ReadIsNull())
+                if (ReaderExtension.ReadIsNull<TReader>(ref byteBlock))
                 {
                     // 如果为null，则返回该类型的默认值
                     return parameterType.GetDefault();
                 }
 
                 // 使用Json格式进行反序列化
-                return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType);
+                return JsonConvert.DeserializeObject(ReaderExtension.ReadString<TReader>(ref byteBlock), parameterType);
 
             case SerializationType.Xml:
                 // 检查字节块是否为null
-                if (byteBlock.ReadIsNull())
+                if (ReaderExtension.ReadIsNull<TReader>(ref byteBlock))
                 {
                     // 如果为null，则返回该类型的默认值
                     return parameterType.GetDefault();
@@ -98,7 +98,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 return SerializeConvert.XmlDeserializeFromBytes(byteBlock.ReadBytesPackage(), parameterType);
             case (SerializationType)4:
                 {
-                    var len = byteBlock.ReadInt32();
+                    var len = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
                     var span = byteBlock.ReadToSpan(len);
                     return MemoryPackSerializer.Deserialize(parameterType, span);
                 }
@@ -158,7 +158,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                     {
                         // 参数不为null时，标记并转换为JSON字符串
                         byteBlock.WriteNotNull();
-                        byteBlock.WriteString(JsonConvert.SerializeObject(parameter));
+                        WriterExtension.WriteString(ref byteBlock,(string)JsonConvert.SerializeObject(parameter));
                     }
                     break;
                 }
@@ -187,7 +187,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
 
                     var newPos = byteBlock.Position;
                     byteBlock.Position = pos;
-                    byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
+                    WriterExtension.WriteValue(ref byteBlock,(int)memoryPackWriter.WrittenCount);
                     byteBlock.Position = newPos;
 
                     break;

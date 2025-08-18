@@ -44,7 +44,7 @@ internal class Program
 
     private static void IPackageWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             byteBlock.WritePackage(new MyPackage()
             {
@@ -58,7 +58,7 @@ internal class Program
 
     private static void BytesPackageWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
 
@@ -76,25 +76,25 @@ internal class Program
 
     private static void PrimitiveWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
-            byteBlock.WriteByte(byte.MaxValue);//写入byte类型
-            byteBlock.WriteInt32(int.MaxValue);//写入int类型
-            byteBlock.WriteInt64(long.MaxValue);//写入long类型
-            byteBlock.WriteString("RRQM");//写入字符串类型
+            WriterExtension.WriteValue(ref byteBlock,(byte)byte.MaxValue);//写入byte类型
+            WriterExtension.WriteValue(ref byteBlock,(int)int.MaxValue);//写入int类型
+            WriterExtension.WriteValue(ref byteBlock,(long)long.MaxValue);//写入long类型
+            WriterExtension.WriteString(ref byteBlock,(string)"RRQM");//写入字符串类型
 
             byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
-            var byteValue = byteBlock.ReadByte();
-            var intValue = byteBlock.ReadInt32();
-            var longValue = byteBlock.ReadInt64();
-            var stringValue = byteBlock.ReadString();
+            var byteValue = ReaderExtension.ReadValue<TReader,byte>(ref byteBlock);
+            var intValue = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+            var longValue = ReaderExtension.ReadValue<TReader,long>(ref byteBlock);
+            var stringValue = ReaderExtension.ReadString<TReader>(ref byteBlock);
         }
     }
 
     private static void BufferWriterWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             var span = byteBlock.GetSpan(4);
             span[0] = 0;
@@ -116,7 +116,7 @@ internal class Program
 
     private static void BaseWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
 
@@ -156,27 +156,16 @@ internal class MyPackage : PackageBase
 {
     public int Property { get; set; }
 
-    /*新写法*/
+
     public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        byteBlock.WriteInt32(this.Property);
+        WriterExtension.WriteValue<TByteBlock, int>(ref byteBlock, this.Property);
     }
 
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
-        this.Property = byteBlock.ReadInt32();
+        this.Property = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
     }
-
-    /*旧写法*/
-    //public override void Package(in ByteBlock byteBlock)
-    //{
-    //    byteBlock.Write(this.Property);
-    //}
-    //public override void Unpackage(in ByteBlock byteBlock)
-    //{
-    //    this.Property = byteBlock.ReadInt32();
-    //}
-
 }
 
 internal class MyClass
@@ -186,9 +175,9 @@ internal class MyClass
 
 internal static class MyByteBlockExtension
 {
-    public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IBytesWriter
     {
-        byteBlock.WriteInt16(10);
-        byteBlock.WriteInt32(10);
+        WriterExtension.WriteValue(ref byteBlock,(short)10);
+        WriterExtension.WriteValue(ref byteBlock,(int)10);
     }
 }

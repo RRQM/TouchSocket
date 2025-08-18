@@ -199,8 +199,8 @@ public sealed class MyClass5FastBinaryConverter : FastBinaryConverter<MyClass5>
         //我们只需要把有效信息按写入的顺序，读取即可。
 
         var myClass5 = new MyClass5();
-        myClass5.P1 = byteBlock.ReadInt32();
-        myClass5.P2 = byteBlock.ReadInt32();
+        myClass5.P1 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+        myClass5.P2 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
 
         return myClass5;
     }
@@ -212,8 +212,8 @@ public sealed class MyClass5FastBinaryConverter : FastBinaryConverter<MyClass5>
         //对于MyClass5类，只有两个属性是有效的。
 
         //所以，依次写入属性值即可
-        byteBlock.WriteInt32(obj.P1);
-        byteBlock.WriteInt32(obj.P2);
+        WriterExtension.WriteValue(ref byteBlock,(int)obj.P1);
+        WriterExtension.WriteValue(ref byteBlock,(int)obj.P2);
 
     }
 }

@@ -102,12 +102,12 @@ internal class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandl
         this.m_endCode = Encoding.UTF8.GetBytes("##");//必须为有效值。
     }
 
-    private readonly byte[] m_startCode;
-    private readonly byte[] m_endCode;
+    private readonly ReadOnlyMemory<byte> m_startCode;
+    private readonly ReadOnlyMemory<byte> m_endCode;
 
-    public override byte[] StartCode => this.m_startCode;
+    public override ReadOnlyMemory<byte> StartCode => this.m_startCode;
 
-    public override byte[] EndCode => this.m_endCode;
+    public override ReadOnlyMemory<byte> EndCode => this.m_endCode;
 
     protected override MyBetweenAndRequestInfo GetInstance(ReadOnlySpan<byte> body)
     {

@@ -150,7 +150,7 @@
 //        //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
 //        using (var byteBlock = new ByteBlock(1024))
 //        {
-//            byteBlock.WriteByte((byte)length);//先写长度
+//            WriterExtension.WriteValue(ref byteBlock,(byte)(byte)length);//先写长度
 //            byteBlock.Write(memory.Span);//再写数据
 //            await this.GoSendAsync(byteBlock.Memory);
 //        }
@@ -174,9 +174,9 @@
 //            //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
 //            using (var byteBlock = new ByteBlock(1024))
 //            {
-//                byteBlock.WriteByte((byte)data.Length);//先写长度
-//                byteBlock.WriteByte((byte)myClass.DataType);//然后数据类型
-//                byteBlock.WriteByte((byte)myClass.OrderType);//然后指令类型
+//                WriterExtension.WriteValue(ref byteBlock,(byte)(byte)data.Length);//先写长度
+//                WriterExtension.WriteValue(ref byteBlock,(byte)(byte)myClass.DataType);//然后数据类型
+//                WriterExtension.WriteValue(ref byteBlock,(byte)(byte)myClass.OrderType);//然后指令类型
 //                byteBlock.Write(data);//再写数据
 //                await this.GoSendAsync(byteBlock.Memory);
 //            }

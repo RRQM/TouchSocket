@@ -38,13 +38,13 @@ internal class Program
 
         using (var valueByteBlock = new ValueByteBlock(1024))
         {
-            valueByteBlock.WriteUInt16(2, EndianType.Big);//ABCD端序
-            valueByteBlock.WriteUInt16(2000, EndianType.Little);//DCBA端序
-            valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
-            valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+            WriterExtension.WriteValue(ref valueByteBlock,(ushort)2, EndianType.Big);//ABCD端序
+            WriterExtension.WriteValue(ref valueByteBlock,(ushort)2000, EndianType.Little);//DCBA端序
+            WriterExtension.WriteValue(ref valueByteBlock,(int)int.MaxValue, EndianType.BigSwap);//BADC端序
+            WriterExtension.WriteValue(ref valueByteBlock,(long)long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
             //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-            valueByteBlock.WriteString("Hello1");
+            WriterExtension.WriteString(ref valueByteBlock,(string)"Hello1");
 
             //如果想要直接写入字符串，可以使用WriteNormalString方法
             //valueByteBlock.WriteNormalString("Hello1", System.Text.Encoding.UTF8);

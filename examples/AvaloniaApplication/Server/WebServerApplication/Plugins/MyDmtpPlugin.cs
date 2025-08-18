@@ -1,4 +1,4 @@
-﻿using TouchSocket.Core;
+using TouchSocket.Core;
 
 namespace WebServerApplication.Plugins
 {

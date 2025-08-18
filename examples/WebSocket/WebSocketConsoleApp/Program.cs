@@ -493,7 +493,7 @@ internal class Program
 
                         //var byteBlock = e.DataFrame.PayloadData;
                         //byteBlock.SeekToStart();
-                        //var ss = byteBlock.ReadUInt16(EndianType.Big);
+                        //var ss = ReaderExtension.ReadValue<TReader,ushort>(ref byteBlockEndianType.Big);
                         //using (var frame = new WSDataFrame())
                         //{
                         //    frame.Opcode = WSDataType.Close;

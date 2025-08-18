@@ -27,9 +27,9 @@ internal class Program
                 //构建发送数据
                 using (var byteBlock = new ByteBlock(1024))
                 {
-                    byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    byteBlock.WriteByte(myRequestInfo.DataType);//然后数据类型
-                    byteBlock.WriteByte(myRequestInfo.OrderType);//然后指令类型
+                    WriterExtension.WriteValue(ref byteBlock,(byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.OrderType);//然后指令类型
                     byteBlock.Write(myRequestInfo.Body);//再写数据
 
                     await client.SendAsync(byteBlock.Memory);
@@ -138,19 +138,19 @@ internal class MyBigUnfixedHeaderRequestInfo : IBigUnfixedHeaderRequestInfo
         return false;
     }
 
-    bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock)
+    bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TReader>(ref TReader reader)
     {
-        if (byteBlock.CanReadLength < 3)//判断可读数据是否满足一定长度
+        if (reader.BytesRemaining < 3)//判断可读数据是否满足一定长度
         {
             return false;
         }
 
-        var pos = byteBlock.Position;//可以先记录游标位置，当解析不能进行时回退游标
+        var pos = reader.BytesRead;//可以先记录游标位置，当解析不能进行时回退游标
 
         //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.m_bodyLength = byteBlock.ReadByte() - 2;
-        this.DataType = byteBlock.ReadByte();
-        this.OrderType = byteBlock.ReadByte();
+        this.m_bodyLength = ReaderExtension.ReadValue<TReader,byte>(ref reader) - 2;
+        this.DataType = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        this.OrderType = ReaderExtension.ReadValue<TReader,byte>(ref reader);
 
 
         //当执行到这里时，byteBlock.Position已经递增了3个长度。

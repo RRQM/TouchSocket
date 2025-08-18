@@ -1,3 +1,3 @@
-﻿using TouchSocket.Rpc;
+using TouchSocket.Rpc;
 
 [assembly: GeneratorRpcServerRegister]

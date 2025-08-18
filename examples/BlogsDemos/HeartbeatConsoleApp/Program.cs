@@ -131,8 +131,8 @@ internal class MyRequestInfo : IFixedHeaderRequestInfo
 
     public void Package(ByteBlock byteBlock)
     {
-        byteBlock.WriteUInt16((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
-        byteBlock.WriteByte((byte)this.DataType);
+        WriterExtension.WriteValue(ref byteBlock,(ushort)(ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
+        WriterExtension.WriteValue(ref byteBlock,(byte)(byte)this.DataType);
         if (this.Data != null)
         {
             byteBlock.Write(this.Data);
