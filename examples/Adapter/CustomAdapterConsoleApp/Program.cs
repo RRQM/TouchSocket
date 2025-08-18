@@ -39,9 +39,9 @@ internal class Program
                 //构建发送数据
                 using (var byteBlock = new ByteBlock(1024))
                 {
-                    byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    byteBlock.WriteByte(myRequestInfo.DataType);//然后数据类型
-                    byteBlock.WriteByte(myRequestInfo.OrderType);//然后指令类型
+                    WriterExtension.WriteValue(ref byteBlock,(byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.OrderType);//然后指令类型
                     byteBlock.Write(myRequestInfo.Body);//再写数据
                     await client.SendAsync(byteBlock.Memory);
                 }

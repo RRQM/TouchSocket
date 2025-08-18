@@ -33,7 +33,7 @@ namespace WebServerApplication
                     .ConfigurePlugins(a =>
                     {
                         a.UseDmtpRpc();
-                        //Ìí¼Ó²å¼þ
+                        //ï¿½ï¿½Ó²ï¿½ï¿½
                         a.Add<MyDmtpPlugin>();
                     });
             });
@@ -41,7 +41,7 @@ namespace WebServerApplication
             var app = builder.Build();
 
             app.UseWebSockets();
-            app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp±ØÐëÔÚUseWebSocketsÖ®ºóÊ¹ÓÃ¡£
+            app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UseWebSocketsÖ®ï¿½ï¿½Ê¹ï¿½Ã¡ï¿½
 
             app.Run("http://localhost:5043");
         }
