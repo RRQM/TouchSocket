@@ -16,7 +16,7 @@ using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.Generators;
+using TouchSocket.Rpc.DmtpRpc.Generators;
 using TouchSocket.Sockets;
 
 namespace SerializationSelectorConsoleApp;
@@ -29,11 +29,10 @@ internal class Program
 
         var client = await CreateClient();
 
-        InvokeOption invokeOption = new DmtpInvokeOption()
+        InvokeOption invokeOption = new DmtpInvokeOption(1000 * 10)
         {
             FeedbackType = FeedbackType.WaitInvoke,
-            SerializationType = (SerializationType)4,
-            Timeout = 1000 * 10
+            SerializationType = (SerializationType)4
         };
 
         var msg = await client.GetDmtpRpcActor().LoginAsync(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);

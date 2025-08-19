@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Mqtt" Version="3.7.2.40" />
+    <PackageReference Include="TouchSocket.Mqtt" Version="3.7.2.41" />
   </ItemGroup>
 
 </Project>
