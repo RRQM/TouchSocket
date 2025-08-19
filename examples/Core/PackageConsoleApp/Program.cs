@@ -42,7 +42,7 @@ internal class Program
             {
                 myClass.Package(ref byteBlock);//打包，相当于序列化
 
-                byteBlock.Seek(0);//将流位置重置为0
+                byteBlock.SeekToStart();//将流位置重置为0
 
                 var myNewClass = new MyPackage();
                 myNewClass.Unpackage(ref byteBlock);//解包，相当于反序列化
@@ -75,7 +75,7 @@ internal class Program
             {
                 myClass.Package(ref byteBlock);//打包，相当于序列化
 
-                byteBlock.Seek(0);//将流位置重置为0
+                byteBlock.SeekToStart();//将流位置重置为0
 
                 var myNewClass = new MyGeneratorPackage();
                 myNewClass.Unpackage(ref byteBlock);//解包，相当于反序列化
@@ -163,11 +163,11 @@ internal class MyPackage : PackageBase
         //基础类型直接写入。
         WriterExtension.WriteValue(ref byteBlock,(int)this.P1);
         WriterExtension.WriteString(ref byteBlock,(string)this.P2);
-        byteBlock.WriteChar(this.P3);
+        WriterExtension.WriteValue(ref byteBlock, (char)this.P3);
         WriterExtension.WriteValue(ref byteBlock,(double)this.P4);
 
         //集合类型，可以先判断是否为null
-        WriterExtension.WriteIsNull(ref byteBlock,)this.P5);
+        WriterExtension.WriteIsNull(ref byteBlock,this.P5);
         if (this.P5 != null)
         {
             //如果不为null
@@ -181,7 +181,7 @@ internal class MyPackage : PackageBase
         }
 
         //字典类型，可以先判断是否为null
-        WriterExtension.WriteIsNull(ref byteBlock,)this.P6);
+        WriterExtension.WriteIsNull(ref byteBlock,this.P6);
         if (this.P6 != null)
         {
             //如果不为null
@@ -191,7 +191,7 @@ internal class MyPackage : PackageBase
             foreach (var item in this.P6)
             {
                 WriterExtension.WriteValue(ref byteBlock,(int)item.Key);
-                byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
+                WriterExtension.WritePackage(ref byteBlock,item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
             }
         }
     }
@@ -199,31 +199,34 @@ internal class MyPackage : PackageBase
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
         //基础类型按序读取。
-        this.P1 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
-        this.P2 = ReaderExtension.ReadString<TReader>(ref byteBlock);
-        this.P3 = ReaderExtension.ReadValue<TReader,char>(ref byteBlock);
-        this.P4 = ReaderExtension.ReadValue<TReader,double>(ref byteBlock);
+        this.P1 = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
+        this.P2 = ReaderExtension.ReadString<TByteBlock>(ref byteBlock);
+        this.P3 = ReaderExtension.ReadValue<TByteBlock, char>(ref byteBlock);
+        this.P4 = ReaderExtension.ReadValue<TByteBlock, double>(ref byteBlock);
 
-        var isNull = ReaderExtension.ReadIsNull<TReader>(ref byteBlock);
+        var isNull = ReaderExtension.ReadIsNull<TByteBlock>(ref byteBlock);
         if (!isNull)
         {
-            var count = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+            var count = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
             var list = new List<int>(count);
             for (var i = 0; i < count; i++)
             {
-                list.Add(ReaderExtension.ReadValue<TReader,int>(ref byteBlock));
+                list.Add(ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock));
             }
             this.P5 = list;
         }
 
-        isNull = ReaderExtension.ReadIsNull<TReader>(ref byteBlock);//复用前面的变量，省的重新声明
+        isNull = ReaderExtension.ReadIsNull<TByteBlock>(ref byteBlock);//复用前面的变量，省的重新声明
         if (!isNull)
         {
-            var count = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+            var count = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
             var dic = new Dictionary<int, MyClassModel>(count);
             for (var i = 0; i < count; i++)
             {
-                dic.Add(ReaderExtension.ReadValue<TReader,int>(ref byteBlock), byteBlock.ReadPackage<MyClassModel>());
+                var key = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
+                //因为值MyClassModel实现了IPackage，所以可以直接读取
+                var value = ReaderExtension.ReadPackage<TByteBlock, MyClassModel>(ref byteBlock);
+                dic.Add(key, value);
             }
             this.P6 = dic;
         }
@@ -279,7 +282,7 @@ internal class RectangleConverter : FastBinaryConverter<Rectangle>
 {
     protected override Rectangle Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
     {
-        var rectangle = new Rectangle(ReaderExtension.ReadValue<TReader,int>(ref byteBlock), ReaderExtension.ReadValue<TReader,int>(ref byteBlock), ReaderExtension.ReadValue<TReader,int>(ref byteBlock), ReaderExtension.ReadValue<TReader,int>(ref byteBlock));
+        var rectangle = new Rectangle(ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock), ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock), ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock), ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock));
         return rectangle;
     }
 
@@ -303,7 +306,7 @@ public class MyClassModel : PackageBase
 
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
-        this.P1 = ReaderExtension.ReadValue<TReader,DateTime>(ref byteBlock);
+        this.P1 = ReaderExtension.ReadValue<TByteBlock, DateTime>(ref byteBlock);
     }
 }
 
@@ -322,8 +325,8 @@ public class MyClass : PackageBase
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
         //将P1与P2属性按类型依次读取
-        this.P1 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
-        this.P2 = ReaderExtension.ReadString<TReader>(ref byteBlock);
+        this.P1 = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
+        this.P2 = ReaderExtension.ReadString<TByteBlock>(ref byteBlock);
     }
 }
 
@@ -334,7 +337,7 @@ public class MyArrayClass : PackageBase
     public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
         //集合类型，可以先判断集合是否为null
-        WriterExtension.WriteIsNull(ref byteBlock,)this.P5);
+        WriterExtension.WriteIsNull(ref byteBlock,this.P5);
         if (this.P5 != null)
         {
             //如果不为null
@@ -350,15 +353,15 @@ public class MyArrayClass : PackageBase
 
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
-        var isNull_P5 = ReaderExtension.ReadIsNull<TReader>(ref byteBlock);
+        var isNull_P5 = ReaderExtension.ReadIsNull<TByteBlock>(ref byteBlock);
         if (!isNull_P5)
         {
             //有值
-            var count = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+            var count = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
             var array = new int[count];
             for (var i = 0; i < count; i++)
             {
-                array[i] = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+                array[i] = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
             }
 
             //赋值
@@ -374,7 +377,7 @@ public class MyDictionaryClass : PackageBase
     public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
         //字典类型，可以先判断是否为null
-        WriterExtension.WriteIsNull(ref byteBlock,)this.P6);
+        WriterExtension.WriteIsNull(ref byteBlock,this.P6);
         if (this.P6 != null)
         {
             //如果不为null
@@ -384,21 +387,22 @@ public class MyDictionaryClass : PackageBase
             foreach (var item in this.P6)
             {
                 WriterExtension.WriteValue(ref byteBlock,(int)item.Key);
-                byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
+                //因为值MyClassModel实现了IPackage，所以可以直接写入
+                WriterExtension.WritePackage(ref byteBlock,item.Value);
             }
         }
     }
 
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
-        var isNull_6 = ReaderExtension.ReadIsNull<TReader>(ref byteBlock);
+        var isNull_6 = ReaderExtension.ReadIsNull<TByteBlock>(ref byteBlock);
         if (!isNull_6)
         {
-            var count = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+            var count = ReaderExtension.ReadValue<TByteBlock,int>(ref byteBlock);
             var dic = new Dictionary<int, MyClassModel>(count);
             for (var i = 0; i < count; i++)
             {
-                dic.Add(ReaderExtension.ReadValue<TReader,int>(ref byteBlock), byteBlock.ReadPackage<MyClassModel>());
+                dic.Add(ReaderExtension.ReadValue<TByteBlock,int>(ref byteBlock), ReaderExtension.ReadPackage<TByteBlock, MyClassModel>(ref byteBlock));
             }
             this.P6 = dic;
         }

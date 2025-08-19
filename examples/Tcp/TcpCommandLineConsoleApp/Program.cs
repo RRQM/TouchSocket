@@ -25,8 +25,7 @@ internal class Program
         config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
               .SetTcpDataHandlingAdapter(() =>
               {
-                  //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾
-                  return new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
+                  return new TerminatorPackageAdapter("\r\n");//命令行中使用\r\n结尾
               })
               .ConfigureContainer(a =>
               {

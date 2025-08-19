@@ -29,10 +29,9 @@ internal class Program
         await TestHttpClient();
 
         //此处预设一个30秒超时的请求设定。
-        var invokeOption_30s = new InvokeOption()
+        var invokeOption_30s = new InvokeOption(30 * 1000)
         {
-            FeedbackType = FeedbackType.WaitInvoke,
-            Timeout = 30 * 1000
+            FeedbackType = FeedbackType.WaitInvoke
         };
 
         {
@@ -42,7 +41,7 @@ internal class Program
             request.Method = HttpMethodType.Get;
             request.Querys = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("a", "10"), new KeyValuePair<string, string>("b", "20") };
 
-            var sum1 =await client.InvokeTAsync<int>("/ApiServer/Sum", invokeOption_30s, request);
+            var sum1 = await client.InvokeTAsync<int>("/ApiServer/Sum", invokeOption_30s, request);
             Console.WriteLine($"Get调用成功，结果：{sum1}");
 
 
@@ -50,7 +49,7 @@ internal class Program
             requestForPost.Method = HttpMethodType.Post;
             requestForPost.Body = new MyClass() { A = 10, B = 20 };
 
-            var sum2 =await client.InvokeTAsync<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
+            var sum2 = await client.InvokeTAsync<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
             var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
@@ -60,10 +59,10 @@ internal class Program
         {
             var client = await CreateWebApiClientSlim();
 
-            var sum1 =await client.InvokeTAsync<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
+            var sum1 = await client.InvokeTAsync<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
             Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-            var sum2 =await client.InvokeTAsync<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
+            var sum2 = await client.InvokeTAsync<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
             var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);

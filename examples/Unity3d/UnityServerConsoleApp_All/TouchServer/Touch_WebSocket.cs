@@ -62,7 +62,7 @@ internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlug
         switch (e.DataFrame.Opcode)
         {
             case WSDataType.Cont:
-                m_logger.Info($"TCP_WebSocket:收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                m_logger.Info($"TCP_WebSocket:收到中间数据，长度为：{e.DataFrame.PayloadData.Length}");
 
                 return;
 
@@ -78,11 +78,11 @@ internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlug
             case WSDataType.Binary:
                 if (e.DataFrame.FIN)
                 {
-                    m_logger.Info($"TCP_WebSocket:收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"TCP_WebSocket:收到二进制数据，长度为：{e.DataFrame.PayloadData.Length}");
                 }
                 else
                 {
-                    m_logger.Info($"TCP_WebSocket:收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"TCP_WebSocket:收到未结束的二进制数据，长度为：{e.DataFrame.PayloadData.Length}");
                 }
                 return;
 

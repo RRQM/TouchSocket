@@ -53,11 +53,13 @@ internal class Program
                 .SetHost(client.RemoteIPHost.Host)
                 .AsPost();
 
-            using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            var cts = new CancellationTokenSource(1000 * 10);
+            using (var responseResult = await client.RequestAsync(request, cts.Token))
             {
                 var response = responseResult.Response;
             }
             Console.WriteLine("完成");
+
         }
     }
 
@@ -73,7 +75,8 @@ internal class Program
             .SetHost(client.RemoteIPHost.Host)
             .AsPost();
 
-        using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+        var cts = new CancellationTokenSource(1000 * 10);
+        using (var responseResult = await client.RequestAsync(request, cts.Token))
         {
             var response = responseResult.Response;
         }
@@ -90,8 +93,8 @@ internal class Program
             .SetHost(client.RemoteIPHost.Host)
             .AsGet();
 
-
-        using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+        var cts = new CancellationTokenSource(1000 * 10);
+        using (var responseResult = await client.RequestAsync(request, cts.Token))
         {
             var response = responseResult.Response;
 
@@ -123,8 +126,8 @@ internal class Program
             .SetHost(client.RemoteIPHost.Host)
             .AsGet();
 
-
-        using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+        var cts = new CancellationTokenSource(1000 * 10);
+        using (var responseResult = await client.RequestAsync(request, cts.Token))
         {
             var response = responseResult.Response;
             Console.WriteLine(await response.GetBodyAsync());//将接收的数据，一次性转为utf8编码的字符串
@@ -192,12 +195,12 @@ internal class BigDataHttpContent : HttpContent
         return true;
     }
 
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token)
     {
         var buffer = new byte[this.bufferLength];
         for (var i = 0; i < this.count; i++)
         {
-            await writeFunc.Invoke(buffer);
+            await writeFunc.Invoke(buffer,token);
             //Console.WriteLine(i);
         }
     }

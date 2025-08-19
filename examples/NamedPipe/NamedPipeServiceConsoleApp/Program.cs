@@ -38,13 +38,13 @@ internal class Program
                 //如果想实现多个命名管道的监听，即可这样设置，一直Add即可。
                 list.Add(new NamedPipeListenOption()
                 {
-                    Adapter = () => new NormalDataHandlingAdapter(),
+                    //Adapter = () => new DataHandlingAdapter(),
                     Name = "TouchSocketPipe2"//管道名称
                 });
 
                 list.Add(new NamedPipeListenOption()
                 {
-                    Adapter = () => new NormalDataHandlingAdapter(),
+                    Adapter = () => new FixedHeaderPackageAdapter(),
                     Name = "TouchSocketPipe3"//管道名称
                 });
             })
