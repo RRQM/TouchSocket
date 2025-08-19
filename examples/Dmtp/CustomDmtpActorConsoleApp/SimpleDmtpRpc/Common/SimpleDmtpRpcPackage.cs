@@ -30,7 +30,7 @@ internal class SimpleDmtpRpcPackage : WaitRouterPackage
     public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
         base.UnpackageBody(ref byteBlock);
-        this.MethodName = ReaderExtension.ReadString<TReader>(ref byteBlock);
+        this.MethodName = ReaderExtension.ReadString<TByteBlock>(ref byteBlock);
     }
 
     public void CheckStatus()

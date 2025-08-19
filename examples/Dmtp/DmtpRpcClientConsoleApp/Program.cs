@@ -68,11 +68,10 @@ internal class Program
         //创建一个指定时间可取消令箭源，可用于取消Rpc的调用。
         using (var tokenSource = new CancellationTokenSource(5000))
         {
-            var invokeOption = new DmtpInvokeOption()//调用配置
+            var invokeOption = new DmtpInvokeOption(5000)//调用配置
             {
                 FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
                 SerializationType = SerializationType.FastBinary,//序列化类型
-                Timeout = 5000,//调用超时设置
                 Token = tokenSource.Token//配置可取消令箭
             };
 
@@ -112,11 +111,10 @@ internal class Program
 
         //设置调用配置
         var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
-        var invokeOption = new DmtpInvokeOption()//调用配置
+        var invokeOption = new DmtpInvokeOption(5000)//调用配置
         {
             FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
             SerializationType = SerializationType.FastBinary,//序列化类型
-            Timeout = 5000,//调用超时设置
             Token = tokenSource.Token//配置可取消令箭
         };
 
@@ -129,12 +127,12 @@ internal class Program
         using var client = await GetTcpDmtpClient();
         var status = ChannelStatus.Default;
         var size = 0;
-        var channel =await client.CreateChannelAsync();//创建通道
-        var task = Task.Run(() =>//这里必须用异步
+        var channel = await client.CreateChannelAsync();//创建通道
+        var task = Task.Run(async () =>//这里必须用异步
         {
             using (channel)
             {
-                foreach (var currentByteBlock in channel)
+                await foreach (var currentByteBlock in channel)
                 {
                     size += currentByteBlock.Length;//此处可以处理传递来的流数据
                 }
@@ -158,7 +156,7 @@ internal class Program
             for (var i = 0; i < 1024; i++)
             {
                 size += package;
-                await channel.WriteAsync(new byte[package]);
+                await channel.SendAsync(new byte[package]);
             }
             await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
 
@@ -243,12 +241,12 @@ internal partial class MyClientRpcServer : SingletonRpcServer
 /// </summary>
 public class MySerializationSelector : ISerializationSelector
 {
-    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
         throw new NotImplementedException();
     }
 
-    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IBytesWriter
     {
         throw new NotImplementedException();
     }

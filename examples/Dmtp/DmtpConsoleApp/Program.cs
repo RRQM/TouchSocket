@@ -53,7 +53,7 @@ internal class Program
                  //此处使用委托注册插件。和类插件功能一样
                  a.AddDmtpReceivedPlugin(async (c, e) =>
                  {
-                     var msg = e.DmtpMessage.BodyByteBlock.ToString();
+                     var msg = e.DmtpMessage.Memory.Span.ToString(Encoding.UTF8);
                      await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
                      await e.InvokeNext();
                  });

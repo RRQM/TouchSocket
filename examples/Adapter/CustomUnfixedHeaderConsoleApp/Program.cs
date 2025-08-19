@@ -25,14 +25,19 @@ internal class Program
                 };
 
                 //构建发送数据
-                using (var byteBlock = new ByteBlock(1024))
+                var byteBlock = new ByteBlock(1024);
+                try
                 {
-                    WriterExtension.WriteValue(ref byteBlock,(byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.DataType);//然后数据类型
-                    WriterExtension.WriteValue(ref byteBlock,(byte)myRequestInfo.OrderType);//然后指令类型
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.OrderType);//然后指令类型
                     byteBlock.Write(myRequestInfo.Body);//再写数据
 
                     await client.SendAsync(byteBlock.Memory);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
         }
@@ -131,26 +136,21 @@ public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
     }
 
 
-    public bool OnParsingHeader<TReader>(ref TReader reader) where TByteBlock : IByteBlock
+    public bool OnParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
     {
         //在使用不固定包头解析时
 
         //【首先】需要先解析包头
-        if (byteBlock.CanReadLength < 3)
+        if (reader.BytesRemaining < 3)
         {
             //即直接缓存
             return false;
         }
 
-        //先保存一下初始游标，如果解析时还需要缓存，可能需要回退游标
-        var position = byteBlock.Position;
-
         //【然后】ReadToSpan会递增游标，所以不需要再递增游标
-        var header = byteBlock.ReadToSpan(3);
+        var header = reader.GetSpan(3);
 
-        //如果使用Span自行裁剪的话，就需要手动递增游标
-        //var header=byteBlock.Span.Slice(position,3);
-        //byteBlock.Position += 3;
+        reader.Advance(3); //推进游标到包头结束位置
 
         //【然后】解析包头，和BodyLength
         //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。

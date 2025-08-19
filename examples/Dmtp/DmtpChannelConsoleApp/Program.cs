@@ -38,7 +38,7 @@ internal class Program
         //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel =await client.CreateChannelAsync())
+        using (var channel = await client.CreateChannelAsync())
         {
             //设置限速
             //channel.MaxSpeed = 1024 * 1024;
@@ -51,7 +51,7 @@ internal class Program
                 for (var j = 0; j < 10; j++)
                 {
                     //2.持续写入数据
-                    await channel.WriteAsync(bytes);
+                    await channel.SendAsync(bytes);
                 }
                 //3.在某个阶段完成数据传输时，可以调用HoldOn
                 await channel.HoldOnAsync("等一下下");
@@ -68,7 +68,7 @@ internal class Program
         var count = 1024 * 1;//测试1Gb数据
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel =await client.CreateChannelAsync())
+        using (var channel = await client.CreateChannelAsync())
         {
             //设置限速
             //channel.MaxSpeed = 1024 * 1024;
@@ -78,7 +78,7 @@ internal class Program
             for (var i = 0; i < count; i++)
             {
                 //2.持续写入数据
-                await channel.WriteAsync(bytes);
+                await channel.SendAsync(bytes);
             }
 
             //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
@@ -95,7 +95,6 @@ internal class Program
                {
                    VerifyToken = "Channel"
                })
-               .SetSendTimeout(0)
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
@@ -114,7 +113,7 @@ internal class Program
                        //return c.Online;//判断是否在握手状态
 
                        //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
-                       if (await c.PingAsync())
+                       if ((await c.PingAsync()).IsSuccess)
                        {
                            return true;
                        }
@@ -184,10 +183,10 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
                 this.m_logger.Info("通道开始接收");
 
                 //此判断主要是探测是否有Hold操作
-                while (channel.CanMoveNext)
+                while (channel.CanRead)
                 {
                     long count = 0;
-                    foreach (var byteBlock in channel)
+                   await foreach (var byteBlock in channel)
                     {
                         //这里处理数据
                         count += byteBlock.Length;
