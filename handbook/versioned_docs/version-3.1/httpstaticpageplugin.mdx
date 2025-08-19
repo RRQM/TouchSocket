@@ -1,0 +1,118 @@
+---
+id: httpstaticpageplugin
+title: 静态页面插件
+---
+
+import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketHttpDefinition />
+
+
+## 一、说明
+
+静态页面功能是指`Web`服务器通过`HTTP`（超文本传输协议）或`HTTPS`（安全的超文本传输协议）向客户端（通常是浏览器）提供预定义的内容。这些内容通常包括HTML文件、CSS样式表、JavaScript脚本以及图片等多媒体资源。与动态页面不同，静态页面在服务器端不会进行任何处理或计算；它们是以文件形式存储在服务器上的，并且当用户请求时，服务器直接将这些文件发送给客户端。
+
+## 二、静态页面的特点
+
+1. **加载速度快**：由于服务器不需要执行任何脚本来生成页面内容，因此响应速度通常更快。
+2. **易于维护**：对于内容不经常变化的网站，使用静态页面可以减少维护成本，因为无需担心后端逻辑的更新和数据库管理等问题。
+3. **成本效益**：对于访问量较小的站点，使用静态页面可以节省服务器资源和带宽，降低运营成本。
+
+## 三、静态页面的使用场景
+
+- **个人博客**：如果博主主要发布文字内容，且更新频率不高，那么采用静态页面构建个人博客是一个不错的选择。
+- **企业介绍**：对于那些只需要展示公司信息、联系方式等基本内容的企业网站来说，静态页面能够满足需求同时保持简洁高效。
+- **项目展示**：艺术家、设计师等可以通过静态页面来创建个人作品集，以直观地向潜在客户展示自己的能力和风格。
+
+总之，静态页面因其简单、快速和安全的特性，在特定的应用场景下具有明显优势。然而，对于需要频繁更新内容或实现复杂交互功能的网站，则可能更适合选择动态页面技术。
+
+## 四、使用
+
+### 4.1 常规使用
+
+在创建`HttpService`实例后，只需要使用`UseHttpStaticPage`插件，然后指定根文件夹路径即可。
+
+```csharp showLineNumbers
+var service = new HttpService();
+
+var config = new TouchSocketConfig();
+config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigurePlugins(a =>
+    {
+        a.UseHttpStaticPage()//添加静态页面文件夹
+        .AddFolder("../../../../../api");
+
+    });
+
+await service.SetupAsync(config);
+
+await service.StartAsync();
+
+Console.WriteLine("Http服务器已启动");
+```
+
+:::tip 提示
+
+`UseHttpStaticPage`插件可以多次添加，也可以添加多个文件夹。
+
+:::  
+
+### 4.2 请求资源定向
+
+在使用`UseHttpStaticPage`插件时，可以指定请求资源定向。例如，当请求的`URL`为`/api`时，将重定向到`/api/index.html`。
+
+```csharp {4-7} showLineNumbers
+a.UseHttpStaticPage()
+.SetNavigateAction(request =>
+{
+    if (request.RelativeURL.EndsWith("/"))
+    {
+        return $"{request.RelativeURL}/index.html";
+    }
+    //此处可以设置重定向
+    return request.RelativeURL;
+})
+.AddFolder("api/");
+```
+
+:::info 信息
+
+默认情况下，会将`/`、`/index`都定向到`/index.html`。
+
+:::  
+
+### 4.3 响应配置
+
+可以通过配置响应头，例如添加自定义头。
+
+```csharp {2-5} showLineNumbers
+a.UseHttpStaticPage()
+.SetResponseAction(response =>
+{
+    //可以设置响应头
+})
+.AddFolder("api/");
+```
+
+### 4.4 配置ContentType
+
+默认情况下，会将常见的文件后缀名映射到对应的`ContentType`。例如，`.html`文件会被映射为`text/html`。详情请见[ContentTypeMapper](https://gitee.com/RRQM_Home/TouchSocket/blob/master/src/TouchSocket.Http/StaticPage/FileExtensionContentTypeProvider.cs)。
+
+但是，也可以通过配置`ContentTypeMapper`来覆盖默认的映射关系。
+
+```csharp {2-5} showLineNumbers
+a.UseHttpStaticPage()
+.SetContentTypeProvider(mapper =>
+{
+    mapper.Add(".txt", "text/plain");
+})
+.AddFolder("api/");
+```
+
+:::info 信息
+
+在一些浏览器中，可能会出现编码错误的问题，可以通过设置`ContentTypeMapper`来修正。例如，将`.txt`文件映射为`text/plain; charset=UTF-8`，这样就不会出现乱码了。
+
+:::  

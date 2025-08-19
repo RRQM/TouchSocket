@@ -1,0 +1,538 @@
+---
+id: ipackage
+title: 包序列化模式
+---
+
+import CardLink from "@site/src/components/CardLink.js";
+import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketCoreDefinition />
+
+
+## 一、说明
+
+包序列化模式是为了解决**极限序列化**的问题。常规序列化的瓶颈，主要是反射、表达式树、创建对象等几个方面，这几个问题在运行时阶段，都没有一个好的解决方案。目前在`net6`以后，微软大力支持源生成，这使得这类问题得到了很大程度的解决。所以，这时候包序列化模式就显得非常需要了。
+
+## 二、特点
+
+### 2.1 优点
+
+1. 简单、可靠、高效
+2. 可以支持所有类型（需要自己编写代码）
+3. 数据量最少（从理论来说这是占数据量最轻量的设计）
+
+### 2.2 缺点
+
+1. 不支持跨语言。
+2. 类型版本兼容性比较差，简单来说就是高版本只能新增属性，不能删除属性，不能修改属性类型（如果类型长度一致，则可以修改类型，例如：`int` -> `float`）。
+
+## 三、使用
+
+### 3.1 简单类型
+
+例如：
+
+下列类型`MyClass`，有一个`int`类属性和一个`string`类属性。
+
+```csharp showLineNumbers
+public class MyClass
+{
+    public int P1 { get; set; }
+    public string P2 { get; set; }
+}
+```
+
+我们可以使用包序列化模式，将`MyClass`序列化成二进制流，或者反序列化成`MyClass`。
+
+那么首先需要实现`IPackage`接口（或者继承`PackageBase`），然后依次将属性写入到`ByteBlock`中，或者从`ByteBlock`中读取属性。
+
+```csharp {9-10,16-17} showLineNumbers
+public class MyClass:PackageBase
+{
+    public int P1 { get; set; }
+    public string P2 { get; set; }
+
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        //将P1与P2属性按类型依次写入
+        byteBlock.WriteInt32(this.P1);
+        byteBlock.WriteString(this.P2);
+    }
+
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        //将P1与P2属性按类型依次读取
+        this.P1 = byteBlock.ReadInt32();
+        this.P2 = byteBlock.ReadString();
+    }
+}
+```
+
+### 3.2 数组（列表）类型
+
+对于数组、列表等类型，需要先判断是否为`null`，然后再写入有效值。
+
+如果有效值是自定义类型，则也需要实现`IPackage`接口，然后依次写入。
+
+```csharp {5,22} showLineNumbers
+public class MyArrayClass : PackageBase
+{
+    public int[] P5 { get; set; }
+
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        //集合类型，可以先判断集合是否为null
+        byteBlock.WriteIsNull(P5);
+        if (P5 != null)
+        {
+            //如果不为null
+            //就先写入集合长度
+            //然后遍历将每个项写入
+            byteBlock.WriteInt32(P5.Length);
+            foreach (var item in P5)
+            {
+                byteBlock.WriteInt32(item);
+            }
+        }
+    }
+
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        var isNull_P5 = byteBlock.ReadIsNull();
+        if (!isNull_P5)
+        {
+            //有值
+            var count = byteBlock.ReadInt32();
+            var array = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                array[i]=byteBlock.ReadInt32();
+            }
+
+            //赋值
+            this.P5 = array;
+        }
+    }
+}
+```
+
+### 3.3 字典类型
+
+字典类型基本上和数组类似，也是先判断是否为`null`，然后再写入有效值。
+
+```csharp {5,23} showLineNumbers
+public class MyDictionaryClass : PackageBase
+{
+    public Dictionary<int, MyClassModel> P6 { get; set; }
+
+    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        //字典类型，可以先判断是否为null
+        byteBlock.WriteIsNull(P6);
+        if (P6 != null)
+        {
+            //如果不为null
+            //就先写入字典长度
+            //然后遍历将每个项，按键、值写入
+            byteBlock.WriteInt32(P6.Count);
+            foreach (var item in P6)
+            {
+                byteBlock.WriteInt32(item.Key);
+                byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
+            }
+        }
+    }
+
+    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    {
+        var isNull_6 = byteBlock.ReadIsNull();
+        if (!isNull_6)
+        {
+            int count = byteBlock.ReadInt32();
+            var dic = new Dictionary<int, MyClassModel>(count);
+            for (int i = 0; i < count; i++)
+            {
+                dic.Add(byteBlock.ReadInt32(), byteBlock.ReadPackage<MyClassModel>());
+            }
+            this.P6 = dic;
+        }
+    }
+}
+```
+
+:::tip 提示
+
+属性的读取和写入时，没有先后顺序，只要保证读取的顺序与写入的顺序一致即可。
+
+:::  
+
+
+## 四、打包和解包
+
+### 4.1 使用内存块
+
+使用内存块，使用`ByteBlock`类。
+
+```csharp {12,20} showLineNumbers
+//声明内存大小。
+//在打包时，一般会先估算一下包的最大尺寸，避免内存块扩张带来的性能损失。
+using (var byteBlock = new ByteBlock(1024 * 64))
+{
+    //初始化对象
+    var myClass = new MyClass()
+    {
+        P1 = 10,
+        P2 = "RRQM"
+    };
+
+    myClass.Package(byteBlock);
+    Console.WriteLine($"打包完成，长度={byteBlock.Length}");
+
+    //在解包时，需要把游标移动至正确位置，此处为0.
+    byteBlock.SeekToStart();
+
+    //先新建对象
+    var newMyClass = new MyClass();
+    newMyClass.Unpackage(byteBlock);
+    Console.WriteLine($"解包完成，{newMyClass.ToJsonString()}");
+}
+```
+
+### 4.2 使用值类型内存块
+
+使用值类型内存块，使用`ValueByteBlock`类。
+
+```csharp {15,23} showLineNumbers
+//声明内存大小。
+//在打包时，一般会先估算一下包的最大尺寸，避免内存块扩张带来的性能损失。
+
+var byteBlock = new ValueByteBlock(1024 * 64);
+
+try
+{
+    //初始化对象
+    var myClass = new MyClass()
+    {
+        P1 = 10,
+        P2 = "RRQM"
+    };
+
+    myClass.Package(ref byteBlock);
+    Console.WriteLine($"打包完成，长度={byteBlock.Length}");
+
+    //在解包时，需要把游标移动至正确位置，此处为0.
+    byteBlock.SeekToStart();
+
+    //先新建对象
+    var newMyClass = new MyClass();
+    newMyClass.Unpackage(ref byteBlock);
+    Console.WriteLine($"解包完成，{newMyClass.ToJsonString()}");
+}
+finally
+{
+    byteBlock.Dispose();
+}
+```
+
+
+## 五、使用源生成
+
+如果源生成可用（一般指`vs2019`最新版和`vs2022`，`Rider`），使用源代码生成方式，可以实现**自动**的打包和解包。
+
+例如上述类型，我们只需要使用`GeneratorPackage`特性标记即可。
+
+### 5.1 生成特性
+
+```csharp {5} showLineNumbers
+/// <summary>
+/// 使用源生成包序列化。
+/// 也就是不需要手动Package和Unpackage
+/// </summary>
+[GeneratorPackage]
+internal partial class MyGeneratorPackage : PackageBase
+{
+    public int P1 { get; set; }
+    public string P2 { get; set; }
+    public char P3 { get; set; }
+    public double P4 { get; set; }
+    public List<int> P5 { get; set; }
+    public Dictionary<int, MyClassModel> P6 { get; set; }
+}
+```
+
+<details>
+<summary>源生成的代码</summary>
+<div>
+
+```csharp showLineNumbers
+/*
+此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
+using System;
+using System.Diagnostics;
+using TouchSocket.Core;
+using System.Threading.Tasks;
+
+namespace PackageConsoleApp
+{
+    [global::System.CodeDom.Compiler.GeneratedCode("TouchSocket.SourceGenerator", "2.1.1.0")]
+    partial class MyGeneratorPackage
+    {
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            byteBlock.WriteInt32(P1);
+            byteBlock.WriteString(P2);
+            byteBlock.WriteChar(P3);
+            byteBlock.WriteDouble(P4);
+            byteBlock.WriteIsNull(P5);
+            if (P5 != null)
+            {
+                byteBlock.WriteVarUInt32((uint)P5.Count);
+                foreach (var item0 in P5)
+                {
+                    byteBlock.WriteInt32(item0);
+                }
+            }
+
+            byteBlock.WriteIsNull(P6);
+            if (P6 != null)
+            {
+                byteBlock.WriteVarUInt32((uint)P6.Count);
+                foreach (var item1 in P6)
+                {
+                    byteBlock.WriteInt32(item1.Key);
+                    byteBlock.WritePackage(item1.Value);
+                }
+            }
+        }
+
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            P1 = byteBlock.ReadInt32();
+            P2 = byteBlock.ReadString();
+            P3 = byteBlock.ReadChar();
+            P4 = byteBlock.ReadDouble();
+            if (!byteBlock.ReadIsNull())
+            {
+                var item0 = (int)byteBlock.ReadVarUInt32();
+                var item1 = new System.Collections.Generic.List<int>(item0);
+                for (var item2 = 0; item2 < item0; item2++)
+                {
+                    item1.Add(byteBlock.ReadInt32());
+                }
+
+                P5 = item1;
+            }
+
+            if (!byteBlock.ReadIsNull())
+            {
+                var item3 = (int)byteBlock.ReadVarUInt32();
+                var item4 = new System.Collections.Generic.Dictionary<int, PackageConsoleApp.MyClassModel>(item3);
+                for (var item5 = 0; item5 < item3; item5++)
+                {
+                    var item6 = byteBlock.ReadInt32();
+                    PackageConsoleApp.MyClassModel item7 = default;
+                    if (!byteBlock.ReadIsNull())
+                    {
+                        item7 = new PackageConsoleApp.MyClassModel();
+                        item7.Unpackage(ref byteBlock);
+                    }
+
+                    item4.Add(item6, item7);
+                }
+
+                P6 = item4;
+            }
+        }
+    }
+}
+```
+
+</div>
+</details>
+
+:::tip 注意
+
+使用源代码生成方式时，当包类型是结构体时，才可以直接实现`IPackage`接口。如果是实例类，则需要直接或间接使用`PackageBase`作为基类。
+
+:::  
+
+## 六、源生成Member配置
+
+### 6.1 成员可见性
+
+默认情况下，使用源代码生成方式时，只会将公共成员（公共属性、private set属性和公共字段）进行打包和解包。如果需要对某些成员进行过滤，或者对私有成员进行强制，可以使用`PackageMember`特性进行配置。
+
+【忽略成员】
+
+```csharp {4} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorPackage : PackageBase
+{
+    [PackageMember(Behavior = PackageBehavior.Ignore)]
+    public int P1 { get; set; }
+    ...
+}
+```
+
+【强制成员】
+
+```csharp {5} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorPackage : PackageBase
+{
+    ...
+    [PackageMember(Behavior = PackageBehavior.Include)]
+    private int P8;
+}
+```
+
+### 6.2 成员顺序
+
+`Package`的工作逻辑是读取成员，然后按照成员名**顺序**进行打包。
+
+但是有时候希望可以自定义顺序，目的是为了更好的兼容性。
+
+则可以先使用`PackageMember`特性对成员进行排序。
+
+
+```csharp {4,7,10} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorIndexPackage : PackageBase
+{
+    [PackageMember(Index = 2)]
+    public int P1 { get; private set; }
+
+    [PackageMember(Index = 0)]
+    public string P2 { get; set; }
+
+    [PackageMember(Index = 1)]
+    public char P3 { get; set; }
+}
+```
+
+<details>
+<summary>源生成的代码</summary>
+<div>
+
+```csharp showLineNumbers
+/*
+此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
+using System;
+using System.Diagnostics;
+using TouchSocket.Core;
+using System.Threading.Tasks;
+
+namespace PackageConsoleApp
+{
+    partial class MyGeneratorIndexPackage
+    {
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            byteBlock.WriteString(P2);
+            byteBlock.WriteChar(P3);
+            byteBlock.WriteInt32(P1);
+        }
+
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            P2 = byteBlock.ReadString();
+            P3 = byteBlock.ReadChar();
+            P1 = byteBlock.ReadInt32();
+        }
+    }
+}
+```
+
+</div>
+</details>
+
+
+### 6.3 自定义类型转换
+
+`Package`在源生成打包时，是支持自定义类型的，但是要求是自定义的类型也必须实现`IPackage`接口。
+
+但是，有时候，有些成员类型是已存在的第三方类型，所以就需要使用自定义转换器来实现。
+
+例如：对于`Rectangle`类型，这是一个在`System.Drawing`中记录矩形的数据类型。
+
+```csharp {4} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorConvertPackage : PackageBase
+{
+    public Rectangle P1 { get; set; }
+}
+```
+
+默认情况下，是无法使用源生成打包的。
+
+这时候就需要自定转换器。
+
+首先，新建一个类，继承`FastBinaryConverter<T>`，指定泛型为`Rectangle`，然后实现`Read`和`Write`方法。
+
+```csharp showLineNumbers
+class RectangleConverter : FastBinaryConverter<Rectangle>
+{
+    protected override Rectangle Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    {
+        var rectangle = new Rectangle(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
+        return rectangle;
+    }
+
+    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Rectangle obj)
+    {
+        byteBlock.WriteInt32(obj.X);
+        byteBlock.WriteInt32(obj.Y);
+        byteBlock.WriteInt32(obj.Width);
+        byteBlock.WriteInt32(obj.Height);
+    }
+}
+```
+
+:::info 信息
+
+在实现时，不需要考虑对象为`null`的情况，无论是类还是结构体，都会自动判断。所以，触发到转换器时，一定是不为`null`。
+
+:::  
+
+然后，在成员中，添加`[PackageMember(Converter =typeof(RectangleConverter))]`即可。
+
+```csharp {4} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorConvertPackage : PackageBase
+{
+    [PackageMember(Converter =typeof(RectangleConverter))]
+    public Rectangle P1 { get; set; }
+}
+```
+
+
+## 七、性能评测
+
+基准测试表明：
+
+包序列化模式比`MemoryPack`快30%。
+比`json`方式快了20倍多。
+比微软的`json`快了近10倍。
+比微软的二进制快了近100倍。
+
+```csharp showLineNumbers
+| Method                | Job      | Runtime  | Mean       | Error     | StdDev    | Ratio  | RatioSD | Gen0       | Gen1      | Allocated | Alloc Ratio |
+|---------------------- |--------- |--------- |-----------:|----------:|----------:|-------:|--------:|-----------:|----------:|----------:|------------:|
+| DirectNew             | .NET 6.0 | .NET 6.0 |   1.647 ms | 0.0099 ms | 0.0088 ms |   1.00 |    0.00 |   509.7656 |         - |   7.63 MB |        1.00 |
+| MemoryPack            | .NET 6.0 | .NET 6.0 |   4.495 ms | 0.0135 ms | 0.0113 ms |   2.73 |    0.02 |   484.3750 |         - |   7.25 MB |        0.95 |
+| Package               | .NET 6.0 | .NET 6.0 |   3.832 ms | 0.0344 ms | 0.0322 ms |   2.33 |    0.03 |   390.6250 |         - |   5.88 MB |        0.77 |
+| NewtonsoftJson        | .NET 6.0 | .NET 6.0 |  64.311 ms | 0.2367 ms | 0.1848 ms |  39.04 |    0.26 |  4875.0000 |         - |  73.93 MB |        9.69 |
+| SystemTextJson        | .NET 6.0 | .NET 6.0 |  33.841 ms | 0.1921 ms | 0.1797 ms |  20.55 |    0.18 |  1533.3333 |         - |   23.5 MB |        3.08 |
+| FastBinarySerialize   | .NET 6.0 | .NET 6.0 |   7.531 ms | 0.0194 ms | 0.0162 ms |   4.57 |    0.03 |   578.1250 |         - |    8.7 MB |        1.14 |
+| SystemBinarySerialize | .NET 6.0 | .NET 6.0 | 253.637 ms | 1.5709 ms | 1.3118 ms | 153.95 |    1.04 | 28000.0000 | 1000.0000 | 420.51 MB |       55.11 |
+```
+
+## 八、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/PackageConsoleApp"/>

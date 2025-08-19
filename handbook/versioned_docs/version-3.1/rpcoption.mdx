@@ -1,0 +1,115 @@
+---
+id: rpcoption
+title: 调用配置
+---
+
+import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketRpcDefinition />
+
+
+## 一、调用反馈类型
+
+RPC在调用时，的调用状态有三种状态可选，分别为：`OnlySend`、`WaitSend`、`WaitInvoke`。区别是：
+
+| OnlySend | WaitSend | WaitInvoke |
+| --- | --- | --- |
+| 仅发送RPC请求，在TCP底层协议下，能保证发送成功，但是不反馈服务器**任何状态**，也不会取得**返回值**、**异常**等信息。在UDP底层协议下，不保证发送成功，仅仅是具有请求动作而已。 | 发送RPC请求，并且等待收到状态返回，能保证RPC请求顺利到达服务，但是不能得知RPC服务是否成功执行，也不会取得**返回值**、**异常**等信息 | 发送RPC请求，且返回所有信息，包括是否成功调用，执行后的**返回值**或**异常**等信息。 |
+
+### 1.1 使用
+
+同样的，在InvokeOption中可以直接赋值使用。
+
+```csharp showLineNumbers
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.FeedbackType = FeedbackType.WaitInvoke;
+//invokeOption.FeedbackType = FeedbackType.OnlySend;
+//invokeOption.FeedbackType = FeedbackType.WaitSend;
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+:::caution 注意
+
+假如IInvokeOption使用的是InvokeOption的话，在new的时候，应该对其他参数也进行设置（因为它是结构体）。
+
+:::  
+
+## 二、调用超时设置
+
+调用RPC，不能无限制等待，必须要有计时器，或者任务取消的功能。 <a name="bt54x"></a>
+
+### 2.1 计时器设置
+
+直接对`InvokeOption`的`Timeout` 属性赋值即可，单位为`毫秒`。
+
+```csharp showLineNumbers
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.Timeout = 1000 * 10;//10秒后无反应，则抛出RRQMTimeoutException异常
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+### 2.2 任务取消
+
+在RPC调用时，计时器是一个好的选择，但是还不够完美，有时候我们希望能手动终结某个调用任务。这时候，计时器就不堪重任，需要能主动取消任务的功能。熟悉.net的小伙伴都知道，CancellationToken是具备这个功能的。同样的，只需要对`InvokeOption`的`CancellationToken` 赋值即可。
+
+```csharp showLineNumbers
+InvokeOption invokeOption = new InvokeOption();
+CancellationTokenSource tokenSource = new CancellationTokenSource();
+invokeOption.CancellationToken = tokenSource.Token;
+//tokenSource.Cancel();//调用时取消任务
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+### 2.3 服务任务取消
+
+实际上7.2的取消任务，仅仅能实现让客户端取消请求，但是服务器并不知道，如果想让服务器也感知任务消息，就必须依托于调用上下文。
+
+此处的取消，有可能是调用者主动取消。也有可能是调用者已经掉线。
+
+```csharp showLineNumbers
+public class ElapsedTimeRpcServer : ServerProvider
+{
+    [Description("测试可取消的调用")]
+    [DmtpRpc]
+    public bool DelayInvoke(ICallContext serverCallContext,int tick)//同步服务
+    {
+        for (int i = 0; i < tick; i++)
+        {
+            Thread.Sleep(100);
+            if (serverCallContext.TokenSource.IsCancellationRequested)
+            {
+                Console.WriteLine("客户端已经取消该任务！");
+                return false;//实际上在取消时，客户端得不到该值
+            }
+        }
+        return true;
+    }
+}
+```
+
+:::tip 提示
+
+当**InvokeOption**不涉及Token赋值时，对象是可以复用的。例如：你可以用一个静态类存贮很多配置，然后直接使用即可。
+
+```csharp {3,10}
+public static class ShareUtility
+{
+    public static InvokeOption Fast_WaitInvoke_10s = new InvokeOption()
+    {
+        FeedbackType = FeedbackType.WaitInvoke,
+        SerializationType = TouchSocket.Core.SerializationType.FastBinary,
+        Timeout = 10 * 1000
+    };
+
+    public static InvokeOption Fast_WaitInvoke_30s = new InvokeOption()
+    {
+        FeedbackType = FeedbackType.WaitInvoke,
+        SerializationType = TouchSocket.Core.SerializationType.FastBinary,
+        Timeout = 30 * 1000
+    };
+}
+```
+
+:::  

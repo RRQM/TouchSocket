@@ -42,15 +42,15 @@ const config = {
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
           sidebarCollapsed: true,
-          lastVersion: 'current',
+          lastVersion: '3.1',
           versions: {
             current: {
-              label: '3.1',
+              label: '4.0-beta',
               path: '/current',
             },
             // next: {
-            //   label: '2.1-rc',
-            //   path: '/next',
+            //   label: '4.0-beta',
+            //   path: '/current',
             //   banner: 'none'
             // }
           },

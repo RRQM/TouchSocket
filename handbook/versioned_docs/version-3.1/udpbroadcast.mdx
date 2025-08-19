@@ -1,0 +1,98 @@
+---
+id: udpbroadcast
+title: 组播、广播
+---
+
+import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketDefinition />
+
+
+## 一、说明
+
+- 广播BroadCast：主机之间“一对所有”的通讯模式，广播者可以向网络中所有主机发送信息。广播禁止在Internet宽带网上传输（广播风暴）。
+- 多播MultiCast：主机之间“一对一组”的通讯模式，也就是加入了同一个组的主机可以接受到此组内的所有数据。
+
+## 二、组播使用
+
+组播使用非常简单，
+
+1. 配置中启用广播**UseBroadcast**重要
+2. 在UdpSession**启动**后。调用**JoinMulticastGroup**即可加入组播。调用**DropMulticastGroup**，退出组播。
+
+### 2.1 创建组播服务器
+
+```csharp {9}
+//创建udpService
+UdpSession udpService = new UdpSession();
+udpService.Received = (remote, e) =>
+{
+    Console.WriteLine(e.ByteBlock.ToString());
+    return EasyTask.CompletedTask;
+};
+udpService.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7789))
+    .UseBroadcast()
+    .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+udpService.Start();
+
+//加入组播组
+udpService.JoinMulticastGroup(IPAddress.Parse("224.5.6.7"));
+```
+
+### 2.2 发送组播数据
+
+```csharp {7}
+UdpSession udpClient = new UdpSession();
+udpClient.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7788))
+    .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+udpClient.Start();
+
+udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
+```
+
+## 三、广播
+
+广播使用非常简单，
+
+1. 配置中启用广播**UseBroadcast**重要
+
+### 3.1 创建广播服务器
+
+广播接收时，是不需要加入组播组的。
+
+```csharp {9}
+//创建udpService
+UdpSession udpService = new UdpSession();
+udpService.Received = (remote, e) =>
+{
+    Console.WriteLine(e.ByteBlock.ToString());
+    return EasyTask.CompletedTask;
+};
+udpService.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7789))
+    .UseBroadcast()
+    .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+udpService.Start();
+```
+
+### 3.2 发送广播数据
+
+```csharp {3,8}
+UdpSession udpClient = new UdpSession();
+udpClient.Setup(new TouchSocketConfig()
+    .UseBroadcast()//该配置在发送广播时是必须的
+    .SetBindIPHost(new IPHost(7788))
+    .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
+udpClient.Start();
+
+udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
+```
+:::caution 注意
+
+在发送广播数据时，发送端配置UseBroadcast是必须的。
+
+:::  

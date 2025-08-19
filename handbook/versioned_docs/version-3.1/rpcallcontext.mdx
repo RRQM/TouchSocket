@@ -1,0 +1,201 @@
+---
+id: rpcallcontext
+title: 调用上下文
+---
+
+import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketRpcDefinition />
+
+
+## 一、说明
+
+> Rpc服务的调用是无状态的，即只知道当前服务被调用，但无法得知是被谁调用，这个问题给日志记录、Rpc回调等带来了很多麻烦事。所以我们在设计Rpc时，也设计了调用上下文获取。
+
+在上下文中可以获得调用者`Caller`等信息，可以获得调用的IP或其他信息。
+
+:::tip 说明
+
+调用上下文（`ICallContext`）实例每次请求都会创建，所以，不要在上下文中存放一些需要长期使用的数据。
+
+:::  
+
+
+## 二、使用
+
+### 2.1 通过传参获得
+
+当服务是单例注册时，服务方法可能会被并发调用，所以，调用上下文必须从参数获得传入。
+
+**步骤：**
+
+定义的服务方法的`第一个参数`使用`ICallContext`或其派生类（例如：`DmtpRpc`可以使用`IDmtpRpcCallContext`）。
+
+```csharp showLineNumbers
+public class MyRpcServer : SingletonRpcServer
+{
+    [Description("登录")]
+    [DmtpRpc]
+    public bool Login(ICallContext callContext,string account,string password)
+    {
+        if (callContext.Caller is TcpDmtpSessionClient)
+        {
+            Console.WriteLine("TcpDmtpRpc请求");
+        }
+        if (account=="123"&&password=="abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+### 2.2 通过瞬时生命周期获取
+
+当服务是瞬态注册时，每次调用服务会创建新的实例，所以当前方法只会被当前调用者拥有，所以，调用上下文会从属性直接注入。
+
+步骤：
+
+1. 继承TransientRpcServer或者实现ITransientRpcServer接口。
+
+```csharp showLineNumbers
+public class MyRpcServer : TransientRpcServer
+{
+    [Description("登录")]
+    [DmtpRpc]
+    public bool Login(string account,string password)
+    {
+        if ( this.CallContext.Caller is TcpDmtpSessionClient)
+        {
+            Console.WriteLine("TcpDmtpRpc请求");
+        }
+        if (account=="123"&&password=="abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+//或使用泛型上下文
+public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
+{
+    [Description("登录")]
+    [DmtpRpc]
+    public bool Login(string account, string password)
+    {
+        if (this.CallContext.Caller is TcpDmtpSessionClient)
+        {
+            Console.WriteLine("TcpDmtpRpc请求");
+        }
+        if (account == "123" && password == "abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+### 2.3 通过IRpcCallContextAccessor服务获取
+
+不管在单例，还是瞬态的Rpc服务，都可以通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
+
+首先，需要在容器中注册`IRpcCallContextAccessor`服务。
+
+```csharp {3} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcCallContextAccessor();
+});
+```
+
+然后，在Rpc服务中，通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
+
+```csharp {5,7,16} showLineNumbers
+public partial class MyRpcServer : SingletonRpcServer
+{
+    private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
+
+    public MyRpcServer(IRpcCallContextAccessor rpcCallContextAccessor)
+    {
+        this.m_rpcCallContextAccessor = rpcCallContextAccessor;
+    }
+
+    [Description("测试从CallContextAccessor中获取当前关联的CallContext")]
+    [DmtpRpc]
+    public async Task TestGetCallContextFromCallContextAccessor()
+    {
+        //通过CallContextAccessor获取当前关联的CallContext
+        //此处即使m_rpcCallContextAccessor与当前RpcServer均为单例，也能获取到正确的CallContext
+        var callContext = this.m_rpcCallContextAccessor.CallContext;
+        await Task.CompletedTask;
+    }
+}
+```
+
+:::tip 提示
+
+该方式是通过`AsyncLocal`的方式实现的，所以，即使把`IRpcCallContextAccessor`保存到静态变量中，也能正常获取到正确的`CallContext`。但前提是，获取流程在调用上下文生命周期内，否则，可能会获取到错误的`CallContext`。
+
+:::  
+
+## 三、取消任务
+
+一般的，Rpc在执行时，如遇到异常，或主动操作，会自动取消任务。所以我们在调用上下文`ICallContext`接口中也规范了取消任务的方法。
+
+下列将以`DmtpRpc`为例，介绍如何取消任务。
+
+```csharp showLineNumbers
+/// <summary>
+/// 测试取消调用
+/// </summary>
+/// <param name="callContext"></param>
+/// <returns></returns>
+[Description("测试取消调用")]
+[DmtpRpc]
+public async Task<int> TestCancellationToken(ICallContext callContext)
+{
+    //模拟一个耗时操作
+    for (var i = 0; i < 10; i++)
+    {
+        //判断任务是否已被取消
+        if (callContext.Token.IsCancellationRequested)
+        {
+            Console.WriteLine("执行已取消");
+            return i;
+        }
+        Console.WriteLine($"执行{i}次");
+        await Task.Delay(1000);
+    }
+
+    return -1;
+}
+```
+
+:::tip 提示
+
+由于Rpc框架仅约束了取消任务的接口，并无实际实现。所以取消任务的时机，完全取决于具体Rpc框架的实现者。例如：对于DmtpRpc，当连接断开或主动取消任务时，均会触发取消任务。
+
+同时，如果想自己手动取消任务，也可以在调用上下文生命周期内的任意地方，使用`callContext.Cancel()`来取消任务。
+
+:::  
+
+## 四、调用上下文属性
+
+调用上下文是所有Rpc均支持的（包括[DmtpRpc](./dmtprpc.mdx)、[JsonRpc](./jsonrpc.mdx)、[XmlRpc](./xmlrpc.mdx)、[WebApi](./webapi.mdx)）。
+
+但是由于不同的Rpc实现方式，其调用上下文参数的类型也不同。
+
+一般的:
+
+- `Caller`属性就是调用的触发终端。例如：使用DmtpRpc-Tcp，由客户端调用服务器时，`Caller`就是`TcpDmtpSessionClient`。
+- `RpcMethod`属性就是调用的触发方法。
+- 其他参数可以参阅注释帮助理解。
+
