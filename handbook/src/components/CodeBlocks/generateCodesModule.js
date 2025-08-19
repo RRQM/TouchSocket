@@ -3,7 +3,7 @@ const path = require('path');
 
 // 配置要搜索的目录列表（相对于项目根目录）
 const SEARCH_DIRECTORIES = [
-  '../examples',        // 主要代码目录
+  '../examples',     // 示例代码目录
 ];
 
 // 排除的目录模式
@@ -170,6 +170,44 @@ export const searchDirectories = ${JSON.stringify(SEARCH_DIRECTORIES)};
 export const validDirectories = ${JSON.stringify(validDirectories)};
 
 /**
+ * 解析高亮语法
+ * @param {string} highlightStr - 高亮字符串，如 "{1,2-3,5}"
+ * @returns {number[]} - 高亮行数组
+ */
+function parseHighlightSyntax(highlightStr) {
+  if (!highlightStr) return [];
+  
+  // 移除大括号
+  const content = highlightStr.replace(/[{}]/g, '');
+  if (!content) return [];
+  
+  const lines = [];
+  const parts = content.split(',');
+  
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (trimmed.includes('-')) {
+      // 范围语法，如 "2-3"
+      const [start, end] = trimmed.split('-').map(num => parseInt(num.trim()));
+      if (!isNaN(start) && !isNaN(end) && start <= end) {
+        for (let i = start; i <= end; i++) {
+          lines.push(i);
+        }
+      }
+    } else {
+      // 单行语法，如 "1"
+      const num = parseInt(trimmed);
+      if (!isNaN(num)) {
+        lines.push(num);
+      }
+    }
+  }
+  
+  // 去重并排序
+  return [...new Set(lines)].sort((a, b) => a - b);
+}
+
+/**
  * 从代码内容中提取指定region的代码
  * @param {string} regionTitle - region的名称
  * @returns {Object|null} - 提取的代码块信息或null
@@ -177,18 +215,28 @@ export const validDirectories = ${JSON.stringify(validDirectories)};
 export function extractCodeRegion(regionTitle) {
   const content = codesContent;
   const lines = content.split('\\n');
-  const regionStartPattern = new RegExp(\`^\\\\s*#region\\\\s+\${regionTitle}\\\\s*$\`);
+  
+  // 修改正则表达式以支持高亮语法
+  // 匹配 #region RegionName {1,2-3} 或 #region RegionName
+  const regionStartPattern = new RegExp(\`^\\\\s*#region\\\\s+\${regionTitle}(?:\\\\s*\\\\{([^}]+)\\\\})?\\\\s*$\`);
   const anyRegionStartPattern = /^\\s*#region\\s+(.+)\\s*$/;
   const regionEndPattern = /^\\s*#endregion\\s*$/;
   
   let startIndex = -1;
   let endIndex = -1;
   let sourceFile = null;
+  let highlightLines = [];
   
   // 找到目标region开始位置
   for (let i = 0; i < lines.length; i++) {
-    if (regionStartPattern.test(lines[i])) {
+    const match = regionStartPattern.exec(lines[i]);
+    if (match) {
       startIndex = i + 1; // 跳过#region行
+      
+      // 解析高亮语法
+      if (match[1]) {
+        highlightLines = parseHighlightSyntax('{' + match[1] + '}');
+      }
       
       // 查找region所在的源文件
       for (let j = i; j >= 0; j--) {
@@ -267,7 +315,8 @@ export function extractCodeRegion(regionTitle) {
     code: code,
     sourceFile: sourceFile || 'unknown',
     startLine: startIndex,
-    endLine: endIndex
+    endLine: endIndex,
+    highlightLines: highlightLines  // 添加高亮行信息
   };
 }
 
