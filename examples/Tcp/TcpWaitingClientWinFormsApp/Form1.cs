@@ -73,7 +73,7 @@ public partial class Form1 : Form
                 {
                     var waitingClient = client.CreateWaitingClient(new WaitingOptions());
 
-                   using var bytes = await waitingClient.SendThenResponseAsync("hello");
+                    using var bytes = await waitingClient.SendThenResponseAsync("hello");
                 });
 
                 await Task.CompletedTask;
@@ -105,11 +105,8 @@ public partial class Form1 : Form
             var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions());
 
             this.cts = new CancellationTokenSource(5000);
-            var bytes = await waitingClient.SendThenReturnAsync(this.textBox2.Text.ToUtf8Bytes(), this.cts.Token);
-            if (bytes != null)
-            {
-                MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes)}");
-            }
+            using var bytes = await waitingClient.SendThenResponseAsync(this.textBox2.Text.ToUtf8Bytes(), this.cts.Token);
+            MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes.Memory.Span)}");
         }
         catch (Exception ex)
         {
@@ -126,12 +123,12 @@ public partial class Form1 : Form
             {
                 FilterFuncAsync = async (response) =>
                 {
-                    var byteBlock = response.ByteBlock;
+                    var memory = response.Memory;
                     var requestInfo = response.RequestInfo;
 
-                    if (byteBlock != null)
+                    if (!memory.IsEmpty)
                     {
-                        var str = byteBlock.Span.ToString(Encoding.UTF8);
+                        var str = memory.Span.ToString(Encoding.UTF8);
                         if (str.Contains(this.textBox4.Text))
                         {
                             return true;
@@ -142,7 +139,7 @@ public partial class Form1 : Form
 
                             //如果需要在插件中继续处理，在此处触发插件
 
-                            await this.m_tcpClient.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.m_tcpClient, new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
+                            await this.m_tcpClient.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.m_tcpClient, new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(false);
                         }
                     }
                     return false;
@@ -150,7 +147,7 @@ public partial class Form1 : Form
             });
 
             this.cts = new CancellationTokenSource(500000);
-           using var bytes = await waitingClient.SendThenResponseAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
+            using var bytes = await waitingClient.SendThenResponseAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
 
             MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes.Memory.Span)}");
         }

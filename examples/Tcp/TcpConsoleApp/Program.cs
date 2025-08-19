@@ -32,7 +32,6 @@ internal class Program
 
         consoleAction.ShowAll();
         await consoleAction.RunCommandLineAsync();
-
     }
 
     private static async Task<TcpService> CreateService()
@@ -167,7 +166,7 @@ internal class Program
                     }
 
                     //从服务器收到信息。
-                    var mes = receiverResult.ByteBlock.Span.ToString(Encoding.UTF8);
+                    var mes = receiverResult.Memory.Span.ToString(Encoding.UTF8);
                     client.Logger.Info($"客户端接收到信息：{mes}");
 
                     //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
@@ -257,7 +256,7 @@ internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
                     }
 
                     //从服务器收到信息。
-                    var mes = receiverResult.ByteBlock.Span.ToString(Encoding.UTF8);
+                    var mes = receiverResult.Memory.Span.ToString(Encoding.UTF8);
                     client.Logger.Info($"客户端接收到信息：{mes}");
 
                     //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
@@ -295,8 +294,6 @@ internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
             //    }
             //}
         }
-
-
 
         await e.InvokeNext();
     }

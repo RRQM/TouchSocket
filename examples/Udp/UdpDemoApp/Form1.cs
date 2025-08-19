@@ -57,7 +57,7 @@ public partial class Form1 : Form
                    }
                    else
                    {
-                       return def、asd;
+                       return default;
                    }
                })
                .ConfigureContainer(a =>
@@ -105,8 +105,8 @@ public partial class Form1 : Form
         });
 
         //然后使用SendThenReturn。
-        var returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
-        this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+        using var returnData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+        this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData.Memory.Span)}");
 
         ////同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
         //ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
