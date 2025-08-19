@@ -4,6 +4,8 @@ title: 说明
 slug: /
 ---
 
+import CustomCodeBlock from '@site/src/components/CodeBlocks/CodeBlock';
+
 ---
 :::tip 新课程公告！！！
 
@@ -19,6 +21,37 @@ n多课时系统讲解TCP/IP协议原理、Socket编程核心技术。涵盖开�
 :::  
 ---
 
+
+<CustomCodeBlock region="接口成员" />
+
+```csharp {1} showLineNumbers
+long IBigFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+
+void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
+{
+    //每次追加数据
+    this.m_bytes.AddRange(buffer.ToArray());
+}
+
+bool IBigFixedHeaderRequestInfo.OnFinished()
+{
+    if (this.m_bytes.Count == this.m_bodyLength)
+    {
+        this.Body = this.m_bytes.ToArray();
+        return true;
+    }
+    return false;
+}
+
+bool IBigFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+{
+    //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
+    this.m_bodyLength = header[0] - 2;
+    this.DataType = header[1];
+    this.OrderType = header[2];
+    return true;
+}
+```
 
 ## 使用前必要阅读
 
