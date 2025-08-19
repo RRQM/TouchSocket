@@ -1,0 +1,22 @@
+---
+id: datasecurity
+title: 数据加密
+---
+
+import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketCoreDefinition />
+
+
+## 一、3DES
+**Nuget Package：**[TouchSocket](https://www.nuget.org/packages/TouchSocket/)
+【加密】
+```csharp showLineNumbers
+var dataLocked = DataSecurity.EncryptDES(data, "12345678");//加密口令，长度为8。
+```
+【解密】
+```csharp showLineNumbers
+var newData = DataSecurity.DecryptDES(dataLocked, "12345678");//解密口令，和加密一致。
+```

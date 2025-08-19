@@ -1,0 +1,76 @@
+---
+id: dataadaptertester
+title: 适配器完整性、性能测试
+---
+
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketCoreDefinition />
+
+
+## 一、说明
+
+适配器测试是测试适配器在正常情况下，极端工作的一种测试方式。能够在前期，解决100%的算法问题。也能在极端配置下，模拟极端工作环境，能够简单，直观的展示出适配器的稳定性和工作性能。
+
+<BilibiliCard title="适配器的功能完整性测试" link="https://www.bilibili.com/cheese/play/ep1522801" isPro="true"/>
+<BilibiliCard title="适配器性能测试" link="https://www.bilibili.com/cheese/play/ep1522802" isPro="true"/>
+
+### 1.1 测试原理
+
+假设发送数据为[0,1,2,3,4]，连续发送10次。
+当bufferLength=1时，会先接收一个字节，然后适配器判断无法解析，然后缓存，然后再接收下一个字节，直到成功解析一个完整数据包。该模式解决的就是大家所说的分包，也就是能很好的模拟**网络很差**的环境。
+当bufferLength>5时,假如为8，则会先接收[0,1,2,3,4,0,1,2]，然后适配器成功判断解析前五字节，然后缓存后三字节，然后再接收下一个续包，直到解析结束。
+
+
+### 1.2 测试事项
+
+1. bufferLength应该多次设置，且最好不要整除于发送数据的长度，这样避免巧合发生，测不出极端问题。
+2. Run的次数应该多设，模拟高频情况。
+
+
+## 二、Tcp适配器
+
+Tcp适配器的工作环境，只需考虑单线程即可。因为是客户端与适配器是一一对应的。
+
+下列以 [固定包头数据处理适配器](./packageadapter.mdx) 为例
+
+```csharp showLineNumbers
+//Tcp适配器测试
+//bufferLength的作用是模拟tcp接收缓存区，例如：
+
+//发送数据为{0,1,2,3,4}时
+//当bufferLength=1时，会先接收一个字节，然后适配器判断无法解析，然后缓存，然后再接收下一个字节，直到成功解析。
+//该模式能很好的模拟网络很差的环境。
+//当bufferLength=8时，会先接收{0,1,2,3,4,0,1,2}，然后适配器判断解析前五字节，然后缓存后三字节，然后再接收下一个续包，直到解析结束
+
+for (int bufferLength = 1; bufferLength < 1024 * 10; bufferLength += 1024)
+{
+    bool isSuccess = true;
+    var data = new byte[] { 0, 1, 2, 3, 4 };
+    SingleStreamDataAdapterTester tester = SingleStreamDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
+     , bufferLength, (byteBlock, requestInfo) =>
+     {
+         //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
+         if (byteBlock.Length!=5||(!byteBlock.ToArray().SequenceEqual(data)))
+         {
+             isSuccess = false;
+         }
+     });
+    
+    //data是发送的数据，因为此处使用的是固定包头适配器，
+    //发送前适配器会自动添加包头，所以，此处只发送数据即可。
+	//如果测试的是自定义适配器，发送前没有封装的话，就需要自行构建发送数据。
+	//随后的两个参数，10,10是测试次数，和期望次数，一般这两个值是相等的。
+	//意为：本次数据将循环发送10次，且会接收10次。不然此处会一直阻塞。
+	//最后一个参数是测试的最大超时时间。
+
+    var time = tester.Run(data, 10, 10, 1000 * 10);
+    Thread.Sleep(1000);
+    Console.WriteLine($"测试结束，状态:{isSuccess}，用时：{time}");
+}
+Console.WriteLine("测试结束");
+
+```

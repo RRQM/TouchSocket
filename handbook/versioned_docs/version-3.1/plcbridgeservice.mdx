@@ -1,0 +1,250 @@
+---
+id: plcbridgeservice
+title: 历史更新
+---
+
+import Pro from "@site/src/components/Pro.js";
+import CardLink from "@site/src/components/CardLink.js";
+import { TouchSocketProPlcBridgesDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketProPlcBridgesDefinition />
+
+
+## 一、说明 <Pro/>
+`TouchSocketPro.PlcBridges` 是一个高效、灵活的PLC数据桥接库，专为.NET开发者设计，用于简化与可编程逻辑控制器（PLC）的数据交互流程。该库提供了强大的数据读写管理能力，支持多种PLC协议和数据类型，使工业自动化开发更加便捷高效。
+
+
+
+## 二、支持的目标框架
+
+- .NET Framework 4.5+
+- .NET Standard 2.0+
+- .NET Core 3.1+
+- .NET 5/6/8/9
+
+
+## 三、快速开始
+
+### 3.1 安装NuGet包
+
+```bash
+Install-Package TouchSocketPro.PlcBridges
+```
+
+### 3.2 基本使用示例
+
+```csharp
+using TouchSocket.PlcBridges;
+
+// 1. 初始化PLC桥接服务
+var plcBridge = new PlcBridgeService();
+
+// 2. 简单配置
+await plcBridge.SetupAsync(new TouchSocketConfig());
+
+// 3. 添加内存PLC驱动器
+await plcBridge.AddDriveAsync(new MemoryPlcDrive<short>(
+    new PlcDriveOption() 
+    { 
+        Name = "DeviceA", 
+        Start = 0, 
+        Count = 10 
+    }));
+
+// 4. 启动PLC桥接服务
+await plcBridge.StartAsync();
+
+// 5. 创建操作器
+var plcOperator = plcBridge.CreateOperator<short>();
+
+// 6. 写入数据
+var writeResult = await plcOperator.WriteAsync(
+    new WritableValueCollection<short>(
+        new WritableValue<short>(0, new short[] {1,2,3,4,5})
+    ));
+
+// 7. 读取数据
+var readableValues = new ReadableValueCollection<short>(
+    new ReadableValue<short>(0, 5));
+var readResult = await plcOperator.ReadAsync(readableValues);
+
+// 8. 停止服务
+await plcBridge.StopAsync();
+```
+
+## 四、配置详解
+
+### 4.1 PlcDriveOption 配置属性
+
+| 属性 | 类型 | 说明 | 默认值 |
+|------|------|------|--------|
+| `Name` | `string` | 驱动器名称标识符，用于唯一标识当前驱动实例 | `null` |
+| `Start` | `int` | 映射到PLC桥接服务的**起始地址偏移量** | 必须自定义赋值 |
+| `Count` | `int` | 映射到PLC桥接服务的**数据单元数量** | 必须自定义赋值 |
+| `EndianType` | `EndianType` | PLC数据的**字节序类型**（Big-Endian） | `EndianType.Big` |
+| `MaxReadGap` | `int` | 读取地址范围间的最大间隙阈值（单位：地址偏移量）：<br/>- 当连续地址块之间的间隙 ≤ 该值时，会被合并为一次性读取操作<br/>- 示例：地址块 `0-1`, `2-3`, `4-7` (间隙≤10) → 合并读取 `0-7`  | `10` |
+| `MaxWriteGap` | `int` | 写入地址范围间的最大间隙阈值（默认值）：<br/>- `0` 表示每次写入操作单独处理（不合并）<br/>- 若设置为有效值需配合 `WriteGapValidityWindow`  | `0` |
+| `WriteGapValidityWindow` | `TimeSpan` | 写入间隙有效时间窗口（需与 `MaxWriteGap` 配合使用）：<br/>- 当写入操作存在间隙（≤`MaxWriteGap`）时，若该间隙值在窗口时间内被读取过<br/>- 系统会将读取值作为补丁数据，与写入操作合并批量提交<br/>- **作用**：避免间隙地址被意外覆盖（如默认0值填充） | `TimeSpan.Zero` |
+| `Group` | `string` | 驱动器分组名称：<br/>- 相同分组名称的驱动器使用**同一个Task执行队列**（串行化执行） | `null` |
+| `DelayTime` | `TimeSpan` | 驱动器轮询延迟时间：<br/>- 值越大，批量处理合并的可能性越高（提升吞吐量）<br/>- 值过大会**降低实时性**，需根据业务场景权衡 | `TimeSpan.Zero` |
+
+
+### 4.2 示例配置
+
+```csharp
+var driveOption = new PlcDriveOption
+{
+    Name = "DeviceA",
+    Start = 0,
+    Count = 10,
+    EndianType = EndianType.Little,
+    MaxReadGap = 5,
+    MaxWriteGap = 1,
+    WriteGapValidityWindow = TimeSpan.FromMilliseconds(500),
+    Group = "GroupA",
+    DelayTime = TimeSpan.FromMilliseconds(100)
+};
+```
+
+## 五、核心类与方法
+
+### 5.1 PlcBridgeService 类
+
+PLC桥接服务的主入口点，负责管理驱动器和操作请求。
+
+#### 5.1.1 主要方法
+
+| 方法 | 说明 |
+|------|------|
+| `SetupAsync(TouchSocketConfig)` | 配置服务 |
+| `AddDriveAsync(IPlcDrive)` | 添加PLC驱动器 |
+| `StartAsync()` | 启动服务 |
+| `StopAsync()` | 停止服务 |
+| `CreateOperator<T>()` | 创建数据操作器 |
+
+### 5.2 IPlcOperator 接口
+
+提供读写PLC数据的操作接口。
+
+#### 5.2.1 主要方法
+
+| 方法 | 说明 |
+|------|------|
+| `ReadAsync(ReadableValueCollection<T>)` | 读取数据 |
+| `WriteAsync(WritableValueCollection<T>)` | 写入数据 |
+
+### 5.3 数据集合类
+
+| 类 | 说明 |
+|------|------|
+| `ReadableValue<T>` | 定义可读值（起始地址+长度） |
+| `ReadableValueCollection<T>` | 可读值集合 |
+| `WritableValue<T>` | 定义可写值（起始地址+数据） |
+| `WritableValueCollection<T>` | 可写值集合 |
+
+## 六、高级特性
+
+### 6.1 请求合并优化
+
+通过配置`MaxWriteGap`和`WriteGapValidityWindow`实现相邻请求的智能合并：
+
+```csharp
+// 配置写入间隙为1，有效窗口500ms
+var driveOption = new PlcDriveOption
+{
+    MaxWriteGap = 1,
+    WriteGapValidityWindow = TimeSpan.FromMilliseconds(500)
+};
+
+// 写入操作会自动合并相邻请求
+var writeResult = await plcOperator.WriteAsync(
+    new WritableValueCollection<byte>(
+        new WritableValue<byte>(0, new byte[] {0,1,2,3}),
+        new WritableValue<byte>(5, new byte[] {5,6})
+    ));
+```
+
+### 6.2 使用PlcObject简化访问
+
+通过定义PLC对象映射简化数据访问：
+
+```csharp
+partial class MyPlcObject : PlcObject
+{
+    public MyPlcObject(IPlcBridgeService bridgeService) 
+        : base(bridgeService) { }
+
+    [PlcField<short>(Start = 0)]
+    private short m_shortValue;
+
+    [PlcField<short>(Start = 1, Quantity = 3)]
+    private ReadOnlyMemory<short> m_shortValues;
+}
+
+// 使用
+var myPlcObject = new MyPlcObject(plcBridge);
+var resultSet = await myPlcObject.SetShortValueAsync(1);
+var resultGet = await myPlcObject.GetShortValueAsync();
+```
+
+### 6.3 多驱动器协同工作
+
+
+支持多个驱动器协同工作，自动处理地址映射：
+
+```csharp
+// 添加两个驱动器
+var memoryPlcDrive_1 = new MemoryPlcDrive<short>(
+    new PlcDriveOption() { Start = 0, Count = 5 });
+var memoryPlcDrive_2 = new MemoryPlcDrive<short>(
+    new PlcDriveOption() { Start = 5, Count = 5 });
+
+plcBridge.AddDriveAsync(memoryPlcDrive_1);
+plcBridge.AddDriveAsync(memoryPlcDrive_2);
+
+// 写入跨越两个驱动器的数据
+var writeResult = await plcOperator.WriteAsync(
+    new WritableValueCollection<short>(
+        new WritableValue<short>(0, new short[] {0,1,2,3,4,5,6,7,8,9})
+    ));
+```
+
+## 七、性能优化建议
+
+1. **合理设置MaxGap参数**：
+
+```csharp
+// 增大间隙值可提高合并率
+driveOption.MaxReadGap = 20;
+driveOption.MaxWriteGap = 5;
+```
+
+2. **使用分组控制执行顺序**：
+
+```csharp
+// 相同分组的驱动器串行执行
+driveOption.Group = "CriticalGroup";
+```
+
+3. **调整延迟时间平衡实时性与性能**：
+
+```csharp
+// 适当增加延迟时间提高合并率
+driveOption.DelayTime = TimeSpan.FromMilliseconds(100);
+```
+
+4. **利用内存池减少分配开销**：
+
+```csharp
+// 使用ByteBlock减少内存分配
+using (var byteBlock = new ByteBlock(1024))
+{
+    // 处理数据
+}
+```
+
+## 八、本文示例
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/PlcBridges/PlcBridgesConsoleApp"/>

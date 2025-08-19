@@ -1,0 +1,57 @@
+---
+id: pipelinedatahandlingadapter
+title: Pipeline数据适配器
+---
+
+import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketDefinition />
+
+
+## 一、说明
+
+Pipeline适配器，是结合IOCP与管道模型结合的产物。功能类似于NetworkStream，但与之不同的是，Pipeline每当有数据到达时，会先触发一个事件（OnReveived），然后用户在事件中可无限制的Read或Write数据。如果本次接收完成，可退出接收。当下一段数据抵达时，会再次通知接收。
+
+
+
+## 二、使用
+
+下列示例代码实现，当读到换行时，结束本次接收。
+
+```csharp showLineNumbers
+TcpService service = new TcpService();
+
+service.Received = (client, e) =>
+{
+    if (e.RequestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
+    {
+        pipeline.ReadTimeout = 1000 * 60;//设置读取超时时间为60秒。
+        StreamReader streamReader = new StreamReader(pipeline);//所以可以直接用StreamReader构造
+        string ss = streamReader.ReadLine();//会一直等换行，直到等到换行，才继续向下执行
+        Console.WriteLine(ss);
+    }
+     //当Pipeline退出该事件方法时，会被自动释放，下次会投递新的Pipeline实例。
+     // 如果里面还有未Read完的数据，下次会继续投递,如果想直接丢弃，则在此处直接调用Disopose即可。
+     
+};
+
+//声明配置
+var config = new TouchSocketConfig();
+config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .SetDataHandlingAdapter(() => new PipelineDataHandlingAdapter());//配置适配器为Pipeline
+
+//载入配置
+await service.SetupAsync(config);
+
+//启动
+await service.StartAsync();
+
+```
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  

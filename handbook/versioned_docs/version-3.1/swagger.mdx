@@ -1,0 +1,45 @@
+---
+id: swagger
+title: Swagger页面
+---
+
+import Tag from "@site/src/components/Tag.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import { TouchSocketWebApiSwaggerDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketWebApiSwaggerDefinition />
+
+
+## 一、说明
+
+Swagger是一个用于生成、描述和调用RESTful接口的Web服务。通俗的来讲，Swagger就是将项目中所有（想要暴露的）接口展现在页面上，并且可以进行接口调用和测试的服务。
+
+<BilibiliCard title="启用Swagger" link="https://www.bilibili.com/cheese/play/ep1688289" isPro="true"/>
+
+## 二、使用
+
+使用非常简单，先安装`TouchSocket.WebApi.Swagger`的包，然后直接UseSwagger即可。
+
+```csharp {14-15}
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+   .ConfigurePlugins(a =>
+   {
+       a.UseCheckClear();
+
+       a.UseWebApi();
+
+       a.UseSwagger()//使用Swagger页面
+        .UseLaunchBrowser();//启动浏览器
+
+       //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+       a.UseDefaultHttpServicePlugin();
+   }));
+   
+await service.StartAsync();
+
+Console.WriteLine("测试swagger http://127.0.0.1:7789/swagger/index.html");
+```
