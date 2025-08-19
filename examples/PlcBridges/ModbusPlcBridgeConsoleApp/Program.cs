@@ -18,6 +18,7 @@ using TouchSocket.Sockets;
 
 namespace ModbusPlcBridgeConsoleApp;
 
+#region 代码测试 {1,3,5,7,9,10-20}
 internal class Program
 {
     static async Task Main(string[] args)
@@ -231,3 +232,4 @@ class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
         return result;
     }
 }
+#endregion
