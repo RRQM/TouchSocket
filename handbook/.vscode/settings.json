@@ -38,7 +38,7 @@
     "scm.inputFontSize": 14,
     
     // TouchSocket 项目提交规范提示
-    "git.commitTemplate": "./gitmessage-template.txt",
+    "git.commitTemplate": "../../gitmessage-template.txt",
     
     // Copilot 配置
     "github.copilot.enable": {
