@@ -30,6 +30,10 @@
     "editor.wordWrap": "on",
     // "editor.wordWrapColumn": 80,
     
+    // 文件编码设置
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
+    
     // Git 提交配置
     "git.inputValidationLength": 50,
     "git.inputValidationSubjectLength": 50,
