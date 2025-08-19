@@ -76,19 +76,15 @@ public class Touch_HttpDmtp : BaseTouchServer
                 using (channel)
                 {
                     client.DmtpActor.Logger.Info("通道开始接收");
-                    //此判断主要是探测是否有Hold操作
-                    while (channel.CanRead)
+                    long count = 0;
+                    await foreach (var byteBlock in channel)
                     {
-                        long count = 0;
-                        await foreach (var byteBlock in channel)
-                        {
-                            //这里处理数据
-                            count += byteBlock.Length;
-                            client.DmtpActor.Logger.Info($"通道已接收：{count}字节");
-                        }
-
-                        client.DmtpActor.Logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+                        //这里处理数据
+                        count += byteBlock.Length;
+                        client.DmtpActor.Logger.Info($"通道已接收：{count}字节");
                     }
+
+                    client.DmtpActor.Logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
                 }
             }
 

@@ -91,7 +91,7 @@ internal class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamed
 
         if (client is INamedPipeSessionClient sessionClient)
         {
-            await sessionClient.SendAsync(e.Memory.Memory);
+            await sessionClient.SendAsync(e.Memory);
         }
 
         await e.InvokeNext();

@@ -91,10 +91,12 @@ internal class Program
         {
             //此处接收服务器返回的消息
 
-            var head = e.Memory.ToArray(0, 2);
-            e.Memory.Seek(2, SeekOrigin.Begin);
-            var flags = e.Memory.ReadUInt16(EndianType.Big);
-            var length = e.Memory.ReadInt32(EndianType.Big);
+            var span = e.Memory.Span;
+            var head = span.Slice(0, 2);
+
+            span = span.Slice(2);
+            var flags = span.ReadValue<ushort>(EndianType.Big);
+            var length = span.ReadValue<ushort>(EndianType.Big);
 
             var json = e.Memory.Span.ToString(Encoding.UTF8);
 
@@ -133,12 +135,12 @@ internal class Program
         //将json转为utf-8编码。
         var jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)1));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(jsonBytes.Length));
+            byteBlock.WriteValue((ushort)1, EndianType.Big);
+            byteBlock.WriteValue(jsonBytes.Length, EndianType.Big);
             byteBlock.Write(jsonBytes);
 
             await tcpClient.SendAsync(byteBlock.Memory);
@@ -151,12 +153,12 @@ internal class Program
         json = "{\"Sign\":2,\"Route\":false,\"SourceId\":null,\"TargetId\":null}";
         jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)5));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(jsonBytes.Length));
+            byteBlock.WriteValue((ushort)5, EndianType.Big);
+            byteBlock.WriteValue(jsonBytes.Length, EndianType.Big);
             byteBlock.Write(jsonBytes);
 
             await tcpClient.SendAsync(byteBlock.Memory);
@@ -250,8 +252,8 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
     {
         if (e.DmtpMessage.ProtocolFlags == 1000)
         {
-            //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
-            var msg = e.DmtpMessage.BodyByteBlock.ToString();
+            //判断完协议以后，从 e.DmtpMessage.Memory可以拿到实际的数据
+            var msg = e.DmtpMessage.Memory.Span.ToUtf8String();
             await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
             //向客户端回发消息

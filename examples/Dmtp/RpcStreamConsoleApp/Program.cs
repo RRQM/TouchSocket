@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -117,7 +118,7 @@ internal class Program
             for (var i = 0; i < Program.Count; i++)
             {
                 size += package;
-                await channel.WriteAsync(new byte[package]);
+                await channel.SendAsync(new byte[package]);
             }
             await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
         });
@@ -150,7 +151,7 @@ internal class Program
                     for (var i = 0; i < Program.Count; i++)
                     {
                         size += package;
-                        await channel.WriteAsync(new byte[package]);
+                        await channel.SendAsync(new byte[package]);
                     }
                     await channel.CompleteAsync();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
                 }
@@ -165,7 +166,7 @@ internal class Program
         /// <param name="channelID"></param>
         [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
         [DmtpRpc(MethodInvoke = true)]//此处设置直接使用方法名调用
-        public int RpcPushChannel(ICallContext callContext, int channelID)
+        public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
         {
             var size = 0;
 
@@ -173,7 +174,7 @@ internal class Program
             {
                 if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                    foreach (var byteBlock in channel)
+                   await foreach (var byteBlock in channel)
                     {
                         size += byteBlock.Length;
                     }

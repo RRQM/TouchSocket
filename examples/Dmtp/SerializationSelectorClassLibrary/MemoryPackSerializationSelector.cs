@@ -24,7 +24,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
 {
     public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
-        var len = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+        var len = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
         var span = byteBlock.ReadToSpan(len);
         return MemoryPackSerializer.Deserialize(parameterType, span);
     }
@@ -64,7 +64,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType);
             case SerializationType.SystemBinary:
                 // 检查字节块是否为null
-                if (ReaderExtension.ReadIsNull<TReader>(ref byteBlock))
+                if (ReaderExtension.ReadIsNull<TByteBlock>(ref byteBlock))
                 {
                     // 如果为null，则返回该类型的默认值
                     return parameterType.GetDefault();

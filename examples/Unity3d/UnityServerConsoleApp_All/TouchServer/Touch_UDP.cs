@@ -15,7 +15,7 @@ public class Touch_UDP : BaseTouchServer
     {
         await this.udpService.SetupAsync(new TouchSocketConfig()
                .SetBindIPHost(new IPHost(port))
-               .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
+               //常规udp
                                                                                    //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
                 .ConfigurePlugins(a =>
                 {
