@@ -29,11 +29,10 @@ namespace DmtpRpcConsoleApp
                         continue;
                     }
 
-                    var invokeOption = new DmtpInvokeOption()
+                    var invokeOption = new DmtpInvokeOption(5000)
                     {
                         FeedbackType = FeedbackType.WaitInvoke,
-                        SerializationType = SerializationType.FastBinary,
-                        Timeout = 5000
+                        SerializationType = SerializationType.FastBinary
                     };
 
                     var result = await client.GetDmtpRpcActor().LoginAsync(strs[0], strs[1], invokeOption);

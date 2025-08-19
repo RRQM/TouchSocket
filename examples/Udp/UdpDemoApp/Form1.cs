@@ -57,7 +57,7 @@ public partial class Form1 : Form
                    }
                    else
                    {
-                       return new NormalUdpDataHandlingAdapter();
+                       return def、asd;
                    }
                })
                .ConfigureContainer(a =>

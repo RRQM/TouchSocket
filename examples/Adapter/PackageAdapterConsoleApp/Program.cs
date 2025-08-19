@@ -90,10 +90,4 @@ internal class MyFixedSizePackageAdapter : FixedSizePackageAdapter
     public MyFixedSizePackageAdapter(int fixedSize) : base(fixedSize)
     {
     }
-
-    protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
-    {
-        //重写之后直接发送，当然也可以自己判断一些信息
-        return this.GoSendAsync(memory);
-    }
 }

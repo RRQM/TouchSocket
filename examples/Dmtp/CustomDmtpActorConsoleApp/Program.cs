@@ -34,7 +34,7 @@ internal class Program
 
             try
             {
-                actor.Invoke(methodName);
+                await actor.Invoke(methodName, CancellationToken.None);
                 Console.WriteLine("调用成功");
             }
             catch (Exception ex)
