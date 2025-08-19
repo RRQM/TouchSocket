@@ -199,8 +199,8 @@ public sealed class MyClass5FastBinaryConverter : FastBinaryConverter<MyClass5>
         //我们只需要把有效信息按写入的顺序，读取即可。
 
         var myClass5 = new MyClass5();
-        myClass5.P1 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
-        myClass5.P2 = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
+        myClass5.P1 = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
+        myClass5.P2 = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
 
         return myClass5;
     }

@@ -58,37 +58,41 @@ internal class Program
 
     private static void BytesPackageWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024 * 64))
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
         {
-            byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
+            WriterExtension.WriteByteSpan(ref byteBlock, Encoding.UTF8.GetBytes("TouchSocket"));
 
             byteBlock.SeekToStart();
 
-            var bytes = byteBlock.ReadBytesPackage();
-
-            byteBlock.SeekToStart();
-
-            //使用下列方式即可高效完成读取
-            var memory = byteBlock.ReadBytesPackageMemory();
-
+            var bytes = ReaderExtension.ReadByteSpan(ref byteBlock);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
 
     private static void PrimitiveWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024 * 64))
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
         {
-            WriterExtension.WriteValue(ref byteBlock,(byte)byte.MaxValue);//写入byte类型
-            WriterExtension.WriteValue(ref byteBlock,(int)int.MaxValue);//写入int类型
-            WriterExtension.WriteValue(ref byteBlock,(long)long.MaxValue);//写入long类型
-            WriterExtension.WriteString(ref byteBlock,(string)"RRQM");//写入字符串类型
+            WriterExtension.WriteValue(ref byteBlock, (byte)byte.MaxValue);//写入byte类型
+            WriterExtension.WriteValue(ref byteBlock, (int)int.MaxValue);//写入int类型
+            WriterExtension.WriteValue(ref byteBlock, (long)long.MaxValue);//写入long类型
+            WriterExtension.WriteString(ref byteBlock, (string)"RRQM");//写入字符串类型
 
             byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
-            var byteValue = ReaderExtension.ReadValue<TReader,byte>(ref byteBlock);
-            var intValue = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
-            var longValue = ReaderExtension.ReadValue<TReader,long>(ref byteBlock);
-            var stringValue = ReaderExtension.ReadString<TReader>(ref byteBlock);
+            var byteValue = ReaderExtension.ReadValue<ByteBlock, byte>(ref byteBlock);
+            var intValue = ReaderExtension.ReadValue<ByteBlock, int>(ref byteBlock);
+            var longValue = ReaderExtension.ReadValue<ByteBlock, long>(ref byteBlock);
+            var stringValue = ReaderExtension.ReadString<ByteBlock>(ref byteBlock);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
 
@@ -177,7 +181,7 @@ internal static class MyByteBlockExtension
 {
     public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IBytesWriter
     {
-        WriterExtension.WriteValue(ref byteBlock,(short)10);
-        WriterExtension.WriteValue(ref byteBlock,(int)10);
+        WriterExtension.WriteValue(ref byteBlock, (short)10);
+        WriterExtension.WriteValue(ref byteBlock, (int)10);
     }
 }

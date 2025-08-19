@@ -87,7 +87,7 @@ public partial class Form1 : Form
                     //return c.IsHandshaked;//判断是否在握手状态
 
                     //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
-                    if (await c.PingAsync())
+                    if ((await c.PingAsync()).IsSuccess)
                     {
                         return true;
                     }

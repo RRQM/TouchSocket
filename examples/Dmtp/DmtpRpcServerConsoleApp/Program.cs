@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -121,7 +122,7 @@ public partial class MyRpcServer : SingletonRpcServer
                 for (var i = 0; i < 10; i++)
                 {
                     size += package;
-                    await channel.WriteAsync(new byte[package]);
+                    await channel.SendAsync(new byte[package]);
                 }
                 await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
             }
@@ -136,7 +137,7 @@ public partial class MyRpcServer : SingletonRpcServer
     /// <param name="channelID"></param>
     [Description("测试客户端推送流数据")]
     [DmtpRpc]
-    public int RpcPushChannel(ICallContext callContext, int channelID)
+    public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
     {
         var size = 0;
 
@@ -144,7 +145,7 @@ public partial class MyRpcServer : SingletonRpcServer
         {
             if (socketClient.TrySubscribeChannel(channelID, out var channel))
             {
-                foreach (var item in channel)
+               await foreach (var item in channel)
                 {
                     size += item.Length;//此处处理流数据
                 }
