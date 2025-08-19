@@ -28,5 +28,26 @@
         "winform"
     ],
     "editor.wordWrap": "on",
-    // "editor.wordWrapColumn": 80
+    // "editor.wordWrapColumn": 80,
+    
+    // Git 提交配置
+    "git.inputValidationLength": 50,
+    "git.inputValidationSubjectLength": 50,
+    "git.verboseCommit": true,
+    "scm.inputFontFamily": "Consolas, 'Courier New', monospace",
+    "scm.inputFontSize": 14,
+    
+    // TouchSocket 项目提交规范提示
+    "git.commitTemplate": "./gitmessage-template.txt",
+    
+    // Copilot 配置
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": true
+    },
+    
+    // Git 提交相关的 Copilot 提示
+    "github.copilot.editor.enableAutoCompletions": true
 }
