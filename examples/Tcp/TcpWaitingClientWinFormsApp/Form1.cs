@@ -73,7 +73,7 @@ public partial class Form1 : Form
                 {
                     var waitingClient = client.CreateWaitingClient(new WaitingOptions());
 
-                    var bytes = await waitingClient.SendThenReturnAsync("hello");
+                   using var bytes = await waitingClient.SendThenResponseAsync("hello");
                 });
 
                 await Task.CompletedTask;
@@ -150,12 +150,9 @@ public partial class Form1 : Form
             });
 
             this.cts = new CancellationTokenSource(500000);
-            var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
+           using var bytes = await waitingClient.SendThenResponseAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
 
-            if (bytes != null)
-            {
-                MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes)}");
-            }
+            MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes.Memory.Span)}");
         }
         catch (Exception ex)
         {
@@ -209,7 +206,7 @@ internal class MyPlugin1 : PluginBase, ITcpReceivedPlugin
 
         if (client is ITcpSessionClient sessionClient)
         {
-            await sessionClient.SendAsync(e.Memory.Memory);
+            await sessionClient.SendAsync(e.Memory);
         }
     }
 }

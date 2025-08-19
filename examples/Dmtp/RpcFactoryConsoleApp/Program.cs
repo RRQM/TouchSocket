@@ -23,7 +23,8 @@ internal class Program
     {
         var clientFactory = CreateTcpClientFactory();
 
-        using (var clientFactoryResult = await clientFactory.GetClient())
+        var cts = new CancellationTokenSource(1000 * 10);
+        using (var clientFactoryResult = await clientFactory.GetClient(cts.Token))
         {
             //这里可以让得到的通讯单体进行业务交流
             var client = clientFactoryResult.Client;

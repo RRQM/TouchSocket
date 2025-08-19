@@ -22,14 +22,14 @@ namespace SerializationSelectorClassLibrary;
 
 public class MemoryPackSerializationSelector : ISerializationSelector
 {
-    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
         var len = ReaderExtension.ReadValue<TReader,int>(ref byteBlock);
         var span = byteBlock.ReadToSpan(len);
         return MemoryPackSerializer.Deserialize(parameterType, span);
     }
 
-    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IBytesWriter
     {
         var pos = byteBlock.Position;
         byteBlock.Seek(4, SeekOrigin.Current);
@@ -54,7 +54,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
     /// <param name="parameterType">预期反序列化出的对象类型。</param>
     /// <returns>反序列化后的对象。</returns>
     /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
-    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
         // 根据序列化类型选择不同的反序列化方式
         switch (serializationType)
@@ -115,7 +115,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
     /// <param name="serializationType">序列化类型，决定了使用哪种方式序列化</param>
     /// <param name="parameter">待序列化的参数对象</param>
     /// <typeparam name="TByteBlock">字节块类型，必须实现IByteBlock接口</typeparam>
-    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IBytesWriter
     {
         // 根据序列化类型选择不同的序列化方法
         switch (serializationType)

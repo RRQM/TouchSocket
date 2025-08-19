@@ -15,7 +15,7 @@ namespace TcpStressTestingConsoleApp
 
         static async Task Main(string[] args)
         {
-            m_channel = Channel.CreateUnbounded<ByteBlock>(new UnboundedChannelOptions()
+            m_channel = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions()
             {
                 SingleReader = false,
                 SingleWriter = false,
@@ -39,7 +39,7 @@ namespace TcpStressTestingConsoleApp
                                     {
                                         try
                                         {
-                                            await socketClient.SendAsync(byteBlock.Memory);
+                                            await socketClient.SendAsync(byteBlock);
                                         }
                                         catch (Exception ex)
                                         {
@@ -47,8 +47,6 @@ namespace TcpStressTestingConsoleApp
                                         }
                                     }
                                 }
-
-                                byteBlock.SetHolding(false);
                             }
                         }
                     }
@@ -85,16 +83,14 @@ namespace TcpStressTestingConsoleApp
 
         }
 
-        static Channel<ByteBlock> m_channel;
+        static Channel<byte[]> m_channel;
 
         static async Task<TcpService> GetTcpService()
         {
             var service = new TcpService();
             service.Received = async (client, e) =>
             {
-                e.Memory.SetHolding(true);
-                await m_channel.Writer.WriteAsync(e.Memory);
-                //client.Send(byteBlock);
+                await m_channel.Writer.WriteAsync(e.Memory.ToArray());
             };
 
             await service.SetupAsync(new TouchSocketConfig()//载入配置

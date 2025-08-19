@@ -84,12 +84,12 @@ internal class Program
         var client = CreateClient();
         //测试客户端持续请求数据
         var size = 0;
-        var channel =await client.CreateChannelAsync();//创建通道
-        var task = Task.Run(() =>//这里必须用异步
+        var channel = await client.CreateChannelAsync();//创建通道
+        var task = Task.Run(async () =>//这里必须用异步
         {
             using (channel)
             {
-                foreach (var byteBlock in channel)
+                await foreach (var byteBlock in channel)
                 {
                     size += byteBlock.Length;
                 }
@@ -97,7 +97,7 @@ internal class Program
         });
 
         //此处是直接调用，真正使用时，可以生成代理调用。
-        var result =await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPullChannel", InvokeOption.WaitInvoke, channel.Id);
+        var result = await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPullChannel", InvokeOption.WaitInvoke, channel.Id);
         await task;//等待异步接收完成
         Console.WriteLine($"客户端接收结束，状态：{channel.Status}，size={size}");
         //测试客户端持续请求数据
@@ -111,7 +111,7 @@ internal class Program
         var client = CreateClient();
         var size = 0;
         var package = 1024 * 1024;
-        var channel =await client.CreateChannelAsync();//创建通道
+        var channel = await client.CreateChannelAsync();//创建通道
         var task = Task.Run(async () =>//这里必须用异步
         {
             for (var i = 0; i < Program.Count; i++)
@@ -123,7 +123,7 @@ internal class Program
         });
 
         //此处是直接调用，真正使用时，可以生成代理调用。
-        var result =await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPushChannel", InvokeOption.WaitInvoke, channel.Id);
+        var result = await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPushChannel", InvokeOption.WaitInvoke, channel.Id);
         await task;//等待异步接收完成
 
         channel.Dispose();

@@ -87,9 +87,9 @@ public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceiving
         return e.InvokeNext();
     }
 
-    public async Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e)
+    public async Task OnTcpReceiving(ITcpSession client, BytesReaderEventArgs e)
     {
-        await client.GetFlowGate().AddCheckWaitAsync(e.Memory.Length);
+        await client.GetFlowGate().AddCheckWaitAsync(e.Reader.Sequence.Length);
         await e.InvokeNext();
     }
 }

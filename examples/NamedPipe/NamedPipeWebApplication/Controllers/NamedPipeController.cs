@@ -49,7 +49,7 @@ public class NamedPipeController : ControllerBase
                 using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
                 {
                     //收到的数据，此处的数据会根据适配器投递不同的数据。
-                    var byteBlock = receiverResult.ByteBlock;
+                    var byteBlock = receiverResult.Memory;
                     var requestInfo = receiverResult.RequestInfo;
 
                     if (receiverResult.IsCompleted)

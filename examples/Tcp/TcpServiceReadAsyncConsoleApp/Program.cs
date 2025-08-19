@@ -34,7 +34,6 @@ internal class Program
                  .SetTick(TimeSpan.FromSeconds(60))
                  .SetOnClose(async (c, t) =>
                  {
-                     await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
                      await c.CloseAsync("超时无数据");
                  });
 
@@ -55,17 +54,13 @@ internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
             //receiver可以复用，不需要每次接收都新建
             using (var receiver = sessionClient.CreateReceiver())
             {
-                receiver.CacheMode = true;
-                receiver.MaxCacheSize = 1024 * 1024;
-
-                var rn = Encoding.UTF8.GetBytes("\r\n");
                 while (true)
                 {
                     //receiverResult每次接收完必须释放
                     using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
                         //收到的数据，此处的数据会根据适配器投递不同的数据。
-                        var byteBlock = receiverResult.ByteBlock;
+                        var memory = receiverResult.Memory;
                         var requestInfo = receiverResult.RequestInfo;
 
                         if (receiverResult.IsCompleted)
@@ -74,26 +69,6 @@ internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
                             Console.WriteLine($"断开信息：{receiverResult.Message}");
                             return;
                         }
-
-                        //在CacheMode下，byteBlock将不可能为null
-
-                        var index = 0;
-                        while (true)
-                        {
-                            var r = byteBlock.Span.Slice(index).IndexOf(rn);
-                            if (r < 0)
-                            {
-                                break;
-                            }
-
-                            var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
-                            Console.WriteLine(str);
-
-                            index += rn.Length;
-                            index += r;
-                        }
-
-                        byteBlock.Seek(index);
                     }
                 }
             }

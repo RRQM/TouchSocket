@@ -38,7 +38,9 @@ public partial class Form1 : Form
 
             this.udpSession.Received = (c, e) =>
             {
-                this.pictureBox1.Image = Image.FromStream(e.Memory.AsStream(false));
+                var reader = new ByteBlockReader(e.Memory);
+                var stream=reader.AsReadStream();
+                this.pictureBox1.Image = Image.FromStream(stream);
                 return EasyTask.CompletedTask;
             };
             this.udpSession.SetupAsync(new TouchSocketConfig()

@@ -51,7 +51,6 @@ internal class Program
                  .SetTick(TimeSpan.FromSeconds(60))
                  .SetOnClose(async (c, t) =>
                  {
-                     await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
                      await c.CloseAsync("超时无数据");
                  });
 

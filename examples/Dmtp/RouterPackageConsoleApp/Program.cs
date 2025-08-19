@@ -157,13 +157,14 @@ internal class Program
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.WriteByteBlock(this.ByteBlock);
+            WriterExtension.WriteByteBlock(ref byteBlock, this.ByteBlock);
         }
 
         public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.UnpackageBody(ref byteBlock);
-            this.ByteBlock = byteBlock.ReadByteBlock();
+
+            this.ByteBlock =ReaderExtension.ReadByteBlock(ref byteBlock);
         }
     }
 
