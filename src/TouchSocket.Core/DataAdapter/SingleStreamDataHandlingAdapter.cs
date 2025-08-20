@@ -70,7 +70,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     {
         if (this.m_cacheSize > 0)
         {
-            if (this.CacheTimeoutEnable && this.LastCacheTime + this.CacheTimeout > DateTimeOffset.UtcNow)
+            if (this.CacheTimeoutEnable && this.LastCacheTime + this.CacheTimeout <= DateTimeOffset.UtcNow)
             {
                 reader.Advance((int)this.m_cacheSize);
             }
