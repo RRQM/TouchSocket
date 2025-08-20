@@ -142,7 +142,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
             var position = sequence.GetPosition(reader.BytesRead);
 
             // 通知PipeReader已消费
-            this.m_pipe.Reader.AdvanceTo(position);
+            this.m_pipe.Reader.AdvanceTo(position, sequence.End);
 
             // 如果本次ReadAsync已完成或被取消，直接返回
             if (readResult.IsCanceled || readResult.IsCompleted)
