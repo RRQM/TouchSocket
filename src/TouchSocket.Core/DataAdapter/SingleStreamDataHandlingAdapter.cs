@@ -72,6 +72,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
         {
             if (this.CacheTimeoutEnable && this.LastCacheTime + this.CacheTimeout <= DateTimeOffset.UtcNow)
             {
+                // 缓存已超时，跳过旧的缓存数据
                 reader.Advance((int)this.m_cacheSize);
             }
             else if (this.m_needReset)
@@ -84,12 +85,26 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
 
     #region SendInput
 
+    /// <summary>
+    /// 发送输入数据到指定的写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
+    /// <param name="writer">写入器的引用。</param>
+    /// <param name="memory">要写入的数据内存块。</param>
     public virtual void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
         where TWriter : IBytesWriter
     {
         writer.Write(memory.Span);
     }
 
+    /// <summary>
+    /// 发送输入数据到指定的写入器。
+    /// 如果 <paramref name="requestInfo"/> 实现了 <see cref="IRequestInfoBuilder"/>，则调用其 Build 方法写入数据。
+    /// 否则抛出异常。
+    /// </summary>
+    /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
+    /// <param name="writer">写入器的引用。</param>
+    /// <param name="requestInfo">要写入的请求信息。</param>
     public virtual void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
         where TWriter : IBytesWriter
     {

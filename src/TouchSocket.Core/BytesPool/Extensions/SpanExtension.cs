@@ -12,6 +12,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace TouchSocket.Core;
 
@@ -33,10 +34,46 @@ public static class SpanExtension
         span = span.Slice(size);
     }
 
-
     #endregion WriteValue
 
     #region ReadValue
+
+    public static string ReadString(this ref ReadOnlySpan<byte> span, FixedHeaderType headerType = FixedHeaderType.Int)
+    {
+        int len;
+        switch (headerType)
+        {
+            case FixedHeaderType.Byte:
+                len = ReadValue<byte>(ref span);
+                if (len == byte.MaxValue)
+                {
+                    return null;
+                }
+                break;
+
+            case FixedHeaderType.Ushort:
+                len = ReadValue<ushort>(ref span);
+                if (len == ushort.MaxValue)
+                {
+                    return null;
+                }
+                break;
+
+            case FixedHeaderType.Int:
+            default:
+                len = ReadValue<int>(ref span);
+                if (len == int.MaxValue)
+                {
+                    return null;
+                }
+                break;
+        }
+
+        var spanString = span.Slice(0, len);
+        var str = spanString.ToString(Encoding.UTF8);
+        span = span.Slice(len);
+        return str;
+    }
 
     public static ReadOnlySpan<byte> ReadToSpan(this ref ReadOnlySpan<byte> span, int length)
     {
@@ -44,6 +81,7 @@ public static class SpanExtension
         span = span.Slice(length);
         return result;
     }
+
     public static T ReadValue<T>(this ref ReadOnlySpan<byte> span)
         where T : unmanaged
     {
@@ -55,7 +93,6 @@ public static class SpanExtension
         return TouchSocketBitConverter.Default.To<T>(span);
     }
 
-
     public static T ReadValue<T>(this ref ReadOnlySpan<byte> span, EndianType endianType)
         where T : unmanaged
     {
@@ -66,8 +103,6 @@ public static class SpanExtension
         }
         return TouchSocketBitConverter.GetBitConverter(endianType).To<T>(span);
     }
-
-
 
     #endregion ReadValue
 }

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,15 +20,12 @@ namespace TouchSocket;
 
 internal sealed class PackageCodeBuilder : CodeBuilder
 {
-    private readonly string m_byteBlockString = "TByteBlock";
-
-    private readonly GeneratorExecutionContext m_context;
+    private readonly SourceProductionContext m_context;
     private readonly string m_packageBaseString = "TouchSocket.Core.PackageBase";
+    private readonly INamedTypeSymbol m_packageClass;
     private readonly string m_packageMemberAttributeString = "TouchSocket.Core.PackageMemberAttribute";
 
-    private readonly INamedTypeSymbol m_packageClass;
-
-    public PackageCodeBuilder(INamedTypeSymbol packageClass, GeneratorExecutionContext context)
+    public PackageCodeBuilder(INamedTypeSymbol packageClass, SourceProductionContext context)
     {
         this.m_packageClass = packageClass;
         this.m_context = context;
@@ -38,74 +34,21 @@ internal sealed class PackageCodeBuilder : CodeBuilder
     public override string Id => this.m_packageClass.ToDisplayString();
     public string Prefix { get; set; }
 
-    public IEnumerable<string> Usings
-    {
-        get
-        {
-            yield return "using System;";
-            yield return "using System.Diagnostics;";
-            yield return "using TouchSocket.Core;";
-            yield return "using System.Threading.Tasks;";
-        }
-    }
-
     public override string GetFileName()
     {
-        return this.m_packageClass.ToDisplayString() + "Generator";
-    }
-
-    public override string ToString()
-    {
-        var codeString = new StringBuilder();
-        codeString.AppendLine("/*");
-        codeString.AppendLine("此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码");
-        codeString.AppendLine("*/");
-        codeString.AppendLine("#pragma warning disable");
-
-        foreach (var item in this.Usings)
-        {
-            codeString.AppendLine(item);
-        }
-
-        //Debugger.Launch();
-        if (!this.m_packageClass.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine($"namespace {this.m_packageClass.ContainingNamespace}");
-            codeString.AppendLine("{");
-        }
-
-
-        codeString.AppendLine($"partial {(this.m_packageClass.TypeKind == TypeKind.Struct ? "struct" : "class")} {this.m_packageClass.Name}");
-        codeString.AppendLine("{");
-
-        var members = this.GetPackageMembers();
-
-        this.BuildConverter(codeString, members);
-
-        this.m_deep = 0;
-        this.BuildPackage(codeString, members);
-
-        this.m_deep = 0;
-        this.BuildUnpackage(codeString, members);
-        codeString.AppendLine("}");
-
-        if (!this.m_packageClass.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine("}");
-        }
-        // System.Diagnostics.Debugger.Launch();
-        return codeString.ToString();
+        return $"{this.m_packageClass.Name}_Package.g.cs";
     }
 
     #region Converter
-    private void BuildConverter(StringBuilder codeString, IEnumerable<PackageMember> members)
+
+    private void BuildConverter(StringBuilder codeBuilder, IEnumerable<PackageMember> members)
     {
         foreach (var item in members)
         {
             var converter = item.Converter;
             if (converter != null)
             {
-                codeString.AppendLine($"private static readonly IFastBinaryConverter {this.GetConverterVariableName(converter)} = new {converter.ToDisplayString()}();");
+                codeBuilder.AppendLine($"private static readonly {converter.ToDisplayString()} {this.GetConverterVariableName(converter)} = new {converter.ToDisplayString()}();");
             }
         }
     }
@@ -114,13 +57,14 @@ internal sealed class PackageCodeBuilder : CodeBuilder
     {
         return $"m_{typeSymbol.Name}";
     }
-    #endregion
+
+    #endregion Converter
 
     #region Package
 
     private int m_deep;
 
-    private void AppendArrayWriteString(StringBuilder codeString, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
+    private void AppendArrayWriteString(StringBuilder codeBuilder, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
     {
         var arrayTypeSymbol = (IArrayTypeSymbol)typeSymbol;
         if (!this.SupportType(arrayTypeSymbol.ElementType))
@@ -129,49 +73,49 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             return;
         }
 
-        codeString.AppendLine($"byteBlock.WriteIsNull({name});");
-        codeString.AppendLine($"if ({name}!=null)");
-        codeString.AppendLine("{");
+        codeBuilder.AppendLine($"WriterExtension.WriteIsNull(ref writer,{name});");
+        codeBuilder.AppendLine($"if ({name}!=null)");
+        codeBuilder.AppendLine("{");
 
         var rank = arrayTypeSymbol.Rank;
         if (rank == 1)
         {
-            codeString.AppendLine($"byteBlock.WriteVarUInt32((uint){name}.Length);");
+            codeBuilder.AppendLine($"WriterExtension.WriteVarUInt32(ref writer,(uint){name}.Length);");
         }
         else
         {
             var dimensionItem = this.GetDeepItemString();
-            codeString.AppendLine($"for (var {dimensionItem} = 0; {dimensionItem} < {rank}; {dimensionItem}++)");
-            codeString.AppendLine("{");
-            codeString.AppendLine($"byteBlock.WriteVarUInt32((uint){name}.GetLength({dimensionItem}));");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine($"for (var {dimensionItem} = 0; {dimensionItem} < {rank}; {dimensionItem}++)");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine($"WriterExtension.WriteVarUInt32(ref writer,(uint){name}.GetLength({dimensionItem}));");
+            codeBuilder.AppendLine("}");
         }
 
         var item = this.GetDeepItemString();
-        codeString.AppendLine($"foreach (var {item} in {name})");
-        codeString.AppendLine("{");
-        this.AppendObjectWriteString(codeString, packageMember, arrayTypeSymbol.ElementType, item);
-        codeString.AppendLine("}");
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine($"foreach (var {item} in {name})");
+        codeBuilder.AppendLine("{");
+        this.AppendObjectWriteString(codeBuilder, packageMember, arrayTypeSymbol.ElementType, item);
+        codeBuilder.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
-    private void AppendObjectWriteString(StringBuilder codeString, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
+    private void AppendObjectWriteString(StringBuilder codeBuilder, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
     {
         //Debugger.Launch();
         if (typeSymbol.TypeKind == TypeKind.Enum)
         {
             //枚举
-            this.AppendWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
         else if (this.CanReadWrite(typeSymbol))
         {
             //直接读写
-            this.AppendWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
         else if (packageMember.Converter != null)
         {
             //转换器
-            codeString.AppendLine($"{this.GetConverterVariableName(packageMember.Converter)}.Write(ref byteBlock,this.{packageMember.Name});");
+            codeBuilder.AppendLine($"{this.GetConverterVariableName(packageMember.Converter)}.Package(ref writer,this.{packageMember.Name});");
         }
         else if (typeSymbol is INamedTypeSymbol listNamedTypeSymbol && listNamedTypeSymbol.IsList())
         {
@@ -183,16 +127,16 @@ internal sealed class PackageCodeBuilder : CodeBuilder
                 this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0002, packageMember.Location, packageMember.Name, elementType));
                 return;
             }
-            codeString.AppendLine($"byteBlock.WriteIsNull({name});");
-            codeString.AppendLine($"if ({name}!=null)");
-            codeString.AppendLine("{");
-            codeString.AppendLine($"byteBlock.WriteVarUInt32((uint){name}.Count);");
+            codeBuilder.AppendLine($"WriterExtension.WriteIsNull(ref writer,{name});");
+            codeBuilder.AppendLine($"if ({name}!=null)");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine($"WriterExtension.WriteVarUInt32(ref writer,(uint){name}.Count);");
             var item = this.GetDeepItemString();
-            codeString.AppendLine($"foreach (var {item} in {name})");
-            codeString.AppendLine("{");
-            this.AppendObjectWriteString(codeString, packageMember, elementType, item);
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine($"foreach (var {item} in {name})");
+            codeBuilder.AppendLine("{");
+            this.AppendObjectWriteString(codeBuilder, packageMember, elementType, item);
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
         else if (typeSymbol is INamedTypeSymbol dicNamedTypeSymbol && dicNamedTypeSymbol.IsDictionary())
         {
@@ -210,35 +154,35 @@ internal sealed class PackageCodeBuilder : CodeBuilder
                 this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0002, packageMember.Location, packageMember.Name, elementTypeValue));
                 return;
             }
-            codeString.AppendLine($"byteBlock.WriteIsNull({name});");
-            codeString.AppendLine($"if ({name}!=null)");
-            codeString.AppendLine("{");
-            codeString.AppendLine($"byteBlock.WriteVarUInt32((uint){name}.Count);");
+            codeBuilder.AppendLine($"WriterExtension.WriteIsNull(ref writer,{name});");
+            codeBuilder.AppendLine($"if ({name}!=null)");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine($"WriterExtension.WriteVarUInt32(ref writer,(uint){name}.Count);");
 
             var item = this.GetDeepItemString();
 
-            codeString.AppendLine($"foreach (var {item} in {name})");
-            codeString.AppendLine("{");
-            this.AppendObjectWriteString(codeString, packageMember, elementTypeKey, $"{item}.Key");
-            this.AppendObjectWriteString(codeString, packageMember, elementTypeValue, $"{item}.Value");
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine($"foreach (var {item} in {name})");
+            codeBuilder.AppendLine("{");
+            this.AppendObjectWriteString(codeBuilder, packageMember, elementTypeKey, $"{item}.Key");
+            this.AppendObjectWriteString(codeBuilder, packageMember, elementTypeValue, $"{item}.Value");
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
         else if (typeSymbol.TypeKind == TypeKind.Class)
         {
-            if (!typeSymbol.IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+            if (!typeSymbol.IsInheritFrom(Utils.IPackageTypeName))
             {
                 this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0002, packageMember.Location, packageMember.Name, packageMember.Type));
                 return;
             }
-            this.AppendWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
         else if (typeSymbol.TypeKind == TypeKind.Struct)
         {
             if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
             {
                 var typeSymbolNotNullable = typeSymbol.GetNullableType();
-                if (!typeSymbolNotNullable.WithNullableAnnotation(NullableAnnotation.None).IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+                if (!typeSymbolNotNullable.IsInheritFrom(Utils.IPackageTypeName))
                 {
                     this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0002, packageMember.Location, packageMember.Name, packageMember.Type));
                     return;
@@ -246,145 +190,72 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             }
             else
             {
-                if (!typeSymbol.IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+                if (!typeSymbol.IsInheritFrom(Utils.IPackageTypeName))
                 {
                     this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0002, packageMember.Location, packageMember.Name, packageMember.Type));
                     return;
                 }
             }
-            this.AppendWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
         else if (typeSymbol.TypeKind == TypeKind.Array)
         {
-            this.AppendArrayWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendArrayWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
     }
 
-    private void AppendWriteString(StringBuilder codeString, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
+    private void AppendWriteString(StringBuilder codeBuilder, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
     {
-        //Debugger.Launch();
         if (typeSymbol.TypeKind == TypeKind.Enum)
         {
             var namedTypeSymbol = (INamedTypeSymbol)typeSymbol;
             var enumUnderlyingType = namedTypeSymbol.EnumUnderlyingType;
 
             var writeString = this.GetWriteString(enumUnderlyingType, $"({enumUnderlyingType.ToDisplayString()}){name}");
-            codeString.AppendLine($"{writeString};");
+            codeBuilder.AppendLine($"{writeString};");
         }
         else if (this.CanReadWrite(typeSymbol))
         {
-            codeString.AppendLine($"{this.GetWriteString(typeSymbol, name)};");
+            codeBuilder.AppendLine($"{this.GetWriteString(typeSymbol, name)};");
         }
         else if (typeSymbol.TypeKind == TypeKind.Struct)
         {
             if (typeSymbol.NullableAnnotation == NullableAnnotation.NotAnnotated)
             {
-                codeString.AppendLine($"{name}.Package(ref byteBlock);");
+                codeBuilder.AppendLine($"{name}.Package(ref writer);");
             }
             else
             {
-                codeString.AppendLine($"if ({name}.HasValue)");
-                codeString.AppendLine("{");
-                codeString.AppendLine($"byteBlock.WriteNotNull();");
-                codeString.AppendLine($"this.{name}.Value.Package(ref byteBlock);");
-                codeString.AppendLine("}");
-                codeString.AppendLine($"else");
-                codeString.AppendLine("{");
-                codeString.AppendLine("byteBlock.WriteNull();");
-                codeString.AppendLine("}");
+                codeBuilder.AppendLine($"if ({name}.HasValue)");
+                codeBuilder.AppendLine("{");
+                codeBuilder.AppendLine($" WriterExtension.WriteNotNull(ref writer);");
+                codeBuilder.AppendLine($"this.{name}.Value.Package(ref writer);");
+                codeBuilder.AppendLine("}");
+                codeBuilder.AppendLine($"else");
+                codeBuilder.AppendLine("{");
+                codeBuilder.AppendLine("WriterExtension.WriteNull(ref writer);");
+                codeBuilder.AppendLine("}");
             }
         }
         else if (typeSymbol.TypeKind == TypeKind.Array)
         {
-            this.AppendArrayWriteString(codeString, packageMember, typeSymbol, name);
+            this.AppendArrayWriteString(codeBuilder, packageMember, typeSymbol, name);
         }
         else
         {
-            codeString.AppendLine($"byteBlock.WritePackage({name});");
+            codeBuilder.AppendLine($"if ({name}!=null)");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine($" WriterExtension.WriteNotNull(ref writer);");
+            codeBuilder.AppendLine($"{name}.Package(ref writer);");
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine($"else");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine("WriterExtension.WriteNull(ref writer);");
+            codeBuilder.AppendLine("}");
         }
     }
 
-    private string GetWriteString(ITypeSymbol typeSymbol, string name)
-    {
-        if (typeSymbol.SpecialType == SpecialType.System_Boolean)
-        {
-            return $"byteBlock.WriteBoolean({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Byte)
-        {
-            return $"byteBlock.WriteByte({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_SByte)
-        {
-            return $"byteBlock.WriteInt16({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int16)
-        {
-            return $"byteBlock.WriteInt16({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt16)
-        {
-            return $"byteBlock.WriteUInt16({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int32)
-        {
-            return $"byteBlock.WriteInt32({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt32)
-        {
-            return $"byteBlock.WriteUInt32({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int64)
-        {
-            return $"byteBlock.WriteInt64({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt64)
-        {
-            return $"byteBlock.WriteUInt64({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Single)
-        {
-            return $"byteBlock.WriteFloat({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Double)
-        {
-            return $"byteBlock.WriteDouble({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_String)
-        {
-            return $"byteBlock.WriteString({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Char)
-        {
-            return $"byteBlock.WriteChar({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Decimal)
-        {
-            return $"byteBlock.WriteDecimal({name})";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_DateTime)
-        {
-            return $"byteBlock.WriteDateTime({name})";
-        }
-        else if (typeSymbol.IsTimeSpan())
-        {
-            return $"byteBlock.WriteTimeSpan({name})";
-        }
-        else if (typeSymbol.IsGuid())
-        {
-            return $"byteBlock.WriteGuid({name})";
-        }
-        else if (typeSymbol.ToDisplayString() == "byte[]")
-        {
-            return $"byteBlock.WriteBytesPackage({name})";
-        }
-        else
-        {
-            return "";
-        }
-    }
-
-    private void BuildPackage(StringBuilder codeString, IEnumerable<PackageMember> members)
+    private void BuildPackage(StringBuilder codeBuilder, IEnumerable<PackageMember> members)
     {
         if (this.ExistsPackageMethod())
         {
@@ -394,73 +265,45 @@ internal sealed class PackageCodeBuilder : CodeBuilder
         var OverrideMethod = this.NeedOverridePackageMethod(this.m_packageClass.BaseType);
         if (OverrideMethod != null)
         {
-            codeString.AppendLine($"public override void Package<TByteBlock>(ref TByteBlock byteBlock)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"public override void Package<TWriter>(ref TWriter writer)");
+            codeBuilder.AppendLine("{");
 
             if (OverrideMethod.IsVirtual || this.IsGeneratorPackage(this.m_packageClass.BaseType))
             {
-                codeString.AppendLine("base.Package(ref byteBlock);");
+                codeBuilder.AppendLine("base.Package(ref writer);");
             }
         }
         else
         {
-            codeString.AppendLine($"public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"public void Package<TWriter>(ref TWriter writer) where TWriter: IBytesWriter");
+            codeBuilder.AppendLine("{");
         }
         foreach (var packageMember in members)
         {
-            this.AppendObjectWriteString(codeString, packageMember, packageMember.Type, packageMember.Name);
+            this.AppendObjectWriteString(codeBuilder, packageMember, packageMember.Type, packageMember.Name);
         }
-        codeString.AppendLine("}");
-    }
-
-    private bool IsGeneratorPackage(INamedTypeSymbol namedTypeSymbol)
-    {
-        if (namedTypeSymbol == null)
-        {
-            return false;
-        }
-        return namedTypeSymbol.HasAttribute(PackageSyntaxReceiver.GeneratorPackageAttributeTypeName);
+        codeBuilder.AppendLine("}");
     }
 
     private bool CanReadWrite(ITypeSymbol typeSymbol)
     {
-        if (typeSymbol.IsTimeSpan())
+        //Debugger.Launch();
+        var typeSymbolNotNullable = typeSymbol.GetNullableType();
+        if (typeSymbolNotNullable.IsInheritFrom(Utils.IPackageTypeName))
+        {
+            return false;
+        }
+
+        if (typeSymbol.IsUnmanagedType())
         {
             return true;
         }
-        if (typeSymbol.IsGuid())
+        if (typeSymbol.SpecialType == SpecialType.System_String)
         {
             return true;
         }
 
-        if (typeSymbol.ToDisplayString() == "byte[]")
-        {
-            return true;
-        }
-        switch (typeSymbol.SpecialType)
-        {
-            case SpecialType.System_Boolean:
-            case SpecialType.System_Char:
-            case SpecialType.System_SByte:
-            case SpecialType.System_Byte:
-            case SpecialType.System_Int16:
-            case SpecialType.System_UInt16:
-            case SpecialType.System_Int32:
-            case SpecialType.System_UInt32:
-            case SpecialType.System_Int64:
-            case SpecialType.System_UInt64:
-            case SpecialType.System_Decimal:
-            case SpecialType.System_Single:
-            case SpecialType.System_Double:
-            case SpecialType.System_String:
-            case SpecialType.System_DateTime:
-                {
-                    return true;
-                }
-            default:
-                return false;
-        }
+        return false;
     }
 
     private int GetDeep()
@@ -473,37 +316,25 @@ internal sealed class PackageCodeBuilder : CodeBuilder
         return "item" + this.GetDeep();
     }
 
-    #endregion Package
-
-    public bool TryToSourceText(out SourceText sourceText)
+    private string GetWriteString(ITypeSymbol typeSymbol, string name)
     {
-        var b = false;
-        if (this.m_packageClass.IsInheritFrom(this.m_packageBaseString))
+        if (typeSymbol.SpecialType == SpecialType.System_String)
         {
-            b = true;
+            return $"WriterExtension.WriteString(ref writer,{name})";
         }
-        else if (this.m_packageClass.TypeKind == TypeKind.Struct)
-        {
-            b = true;
-        }
-        else
-        {
-            this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0001, this.m_packageClass.Locations[0]));
-        }
-        if (b)
-        {
-            var code = this.ToString();
-            if (string.IsNullOrEmpty(code))
-            {
-                sourceText = null;
-                return false;
-            }
-            sourceText = SourceText.From(code, Encoding.UTF8);
-            return true;
-        }
-        sourceText = null;
-        return false;
+        return $"WriterExtension.WriteValue<TWriter,{typeSymbol.ToDisplayString()}>(ref writer,{name})";
     }
+
+    private bool IsGeneratorPackage(INamedTypeSymbol namedTypeSymbol)
+    {
+        if (namedTypeSymbol == null)
+        {
+            return false;
+        }
+        return namedTypeSymbol.HasAttribute(Utils.GeneratorPackageAttributeTypeName);
+    }
+
+    #endregion Package
 
     private IEnumerable<PackageMember> GetPackageMembers()
     {
@@ -629,7 +460,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             return true;
         }
 
-        if (typeSymbol.IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+        if (typeSymbol.IsInheritFrom(Utils.IPackageTypeName))
         {
             return true;
         }
@@ -649,7 +480,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
 
     #region Unpackage
 
-    private void AppendArrayReadString(StringBuilder codeString, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
+    private void AppendArrayReadString(StringBuilder codeBuilder, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
     {
         var arrayTypeSymbol = (IArrayTypeSymbol)typeSymbol;
         var elementType = arrayTypeSymbol.ElementType;
@@ -663,101 +494,100 @@ internal sealed class PackageCodeBuilder : CodeBuilder
 
         if (rank == 1)
         {
-            codeString.AppendLine("if (!byteBlock.ReadIsNull())");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("if (!ReaderExtension.ReadIsNull(ref reader))");
+            codeBuilder.AppendLine("{");
             var len = this.GetDeepItemString();
-            codeString.AppendLine($"var {len}=(int)byteBlock.ReadVarUInt32();");
-            codeString.AppendLine($"{name} = new {elementType.ToDisplayString()}[{len}];");
+            codeBuilder.AppendLine($"var {len}=(int)ReaderExtension.ReadVarUInt32(ref reader);");
+            codeBuilder.AppendLine($"{name} = new {elementType.ToDisplayString()}[{len}];");
 
             var i = this.GetDeepItemString();
-            codeString.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
+            codeBuilder.AppendLine("{");
             if (this.CanReadWrite(elementType))
             {
-                codeString.AppendLine($"{name}[{i}] = {this.GetReadString(elementType)};");
+                codeBuilder.AppendLine($"{name}[{i}] = {this.GetReadString(elementType)};");
             }
             else
             {
                 var item = this.GetDeepItemString();
-                codeString.AppendLine($"{elementType.ToDisplayString()} {item}=default;");
-                this.AppendObjectReadString(codeString, packageMember, elementType, item);
-                codeString.AppendLine($"{name}[{i}] = {item};");
+                codeBuilder.AppendLine($"{elementType.ToDisplayString()} {item}=default;");
+                this.AppendObjectReadString(codeBuilder, packageMember, elementType, item);
+                codeBuilder.AppendLine($"{name}[{i}] = {item};");
             }
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
         else
         {
-            codeString.AppendLine("if (!byteBlock.ReadIsNull())");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("if (!ReaderExtension.ReadIsNull(ref reader))");
+            codeBuilder.AppendLine("{");
 
             var dimensionNames = new string[rank];
             for (var j = 0; j < rank; j++)
             {
                 var lenName = this.GetDeepItemString();
-                codeString.AppendLine($"var {lenName}=(int)byteBlock.ReadVarUInt32();");
+                codeBuilder.AppendLine($"var {lenName}=(int)ReaderExtension.ReadVarUInt32(ref reader);");
                 dimensionNames[j] = lenName;
             }
 
             var array = this.GetDeepItemString();
 
-            codeString.Append($"var {array} = new {elementType.ToDisplayString()}[{string.Join(",", dimensionNames)}];");
+            codeBuilder.Append($"var {array} = new {elementType.ToDisplayString()}[{string.Join(",", dimensionNames)}];");
 
+            this.AppendDimensionArrayReadString(codeBuilder, dimensionNames, 0, elementType, array, packageMember, new string[rank]);
 
-            this.AppendDimensionArrayReadString(codeString, dimensionNames, 0, elementType, array, packageMember, new string[rank]);
-
-            codeString.Append($"{name} = {array};");
-            codeString.AppendLine("}");
+            codeBuilder.Append($"{name} = {array};");
+            codeBuilder.AppendLine("}");
         }
     }
 
-    private void AppendDimensionArrayReadString(StringBuilder codeString, string[] dimensionNames, int dimensionNameIndex, ITypeSymbol elementType, string name, PackageMember packageMember, string[] dimensionIndexNames)
+    private void AppendDimensionArrayReadString(StringBuilder codeBuilder, string[] dimensionNames, int dimensionNameIndex, ITypeSymbol elementType, string name, PackageMember packageMember, string[] dimensionIndexNames)
     {
         var i = this.GetDeepItemString();
         dimensionIndexNames[dimensionNameIndex] = i;
         var len = dimensionNames[dimensionNameIndex];
-        codeString.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
-        codeString.AppendLine("{");
+        codeBuilder.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
+        codeBuilder.AppendLine("{");
         if (dimensionNameIndex == dimensionNames.Length - 1)
         {
             //最后一个维度
             if (this.CanReadWrite(elementType))
             {
-                codeString.AppendLine($"{name}[{string.Join(",", dimensionIndexNames)}] = {this.GetReadString(elementType)};");
+                codeBuilder.AppendLine($"{name}[{string.Join(",", dimensionIndexNames)}] = {this.GetReadString(elementType)};");
             }
             else
             {
                 var item = this.GetDeepItemString();
-                codeString.AppendLine($"{elementType.ToDisplayString()} {item}=default;");
-                this.AppendObjectReadString(codeString, packageMember, elementType, item);
-                codeString.AppendLine($"{name}[{string.Join(",", dimensionIndexNames)}] = {item};");
+                codeBuilder.AppendLine($"{elementType.ToDisplayString()} {item}=default;");
+                this.AppendObjectReadString(codeBuilder, packageMember, elementType, item);
+                codeBuilder.AppendLine($"{name}[{string.Join(",", dimensionIndexNames)}] = {item};");
             }
         }
         else
         {
-            this.AppendDimensionArrayReadString(codeString, dimensionNames, dimensionNameIndex + 1, elementType, name, packageMember, dimensionIndexNames);
+            this.AppendDimensionArrayReadString(codeBuilder, dimensionNames, dimensionNameIndex + 1, elementType, name, packageMember, dimensionIndexNames);
         }
 
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
-    private void AppendObjectReadString(StringBuilder codeString, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
+    private void AppendObjectReadString(StringBuilder codeBuilder, PackageMember packageMember, ITypeSymbol typeSymbol, string name)
     {
         //Debugger.Launch();
         if (typeSymbol.TypeKind == TypeKind.Enum)
         {
             //枚举
-            codeString.AppendLine($"{name}=({typeSymbol.ToDisplayString()}){this.GetReadString(((INamedTypeSymbol)typeSymbol).EnumUnderlyingType)};");
+            codeBuilder.AppendLine($"{name}=({typeSymbol.ToDisplayString()}){this.GetReadString(((INamedTypeSymbol)typeSymbol).EnumUnderlyingType)};");
         }
         else if (this.CanReadWrite(typeSymbol))
         {
             //直接读写
-            codeString.AppendLine($"{name}={this.GetReadString(typeSymbol)};");
+            codeBuilder.AppendLine($"{name}={this.GetReadString(typeSymbol)};");
         }
         else if (packageMember.Converter != null)
         {
             //转换器
-            codeString.AppendLine($"this.{packageMember.Name}=({typeSymbol.ToDisplayString()}){this.GetConverterVariableName(packageMember.Converter)}.Read(ref byteBlock,typeof({typeSymbol.ToDisplayString()}));");
+            codeBuilder.AppendLine($"this.{packageMember.Name}=({typeSymbol.ToDisplayString()}){this.GetConverterVariableName(packageMember.Converter)}.Unpackage(ref reader);");
         }
         else if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsList())
         {
@@ -767,34 +597,34 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             {
                 return;
             }
-            codeString.AppendLine("if (!byteBlock.ReadIsNull())");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("if (!ReaderExtension.ReadIsNull(ref reader))");
+            codeBuilder.AppendLine("{");
             var len = this.GetDeepItemString();
-            codeString.AppendLine($"var {len}=(int)byteBlock.ReadVarUInt32();");
+            codeBuilder.AppendLine($"var {len}=(int)ReaderExtension.ReadVarUInt32(ref reader);");
 
             var list = this.GetDeepItemString();
-            codeString.AppendLine($"var {list} = new System.Collections.Generic.List<{elementType.ToDisplayString()}>({len});");
+            codeBuilder.AppendLine($"var {list} = new System.Collections.Generic.List<{elementType.ToDisplayString()}>({len});");
 
             var i = this.GetDeepItemString();
 
-            codeString.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
+            codeBuilder.AppendLine("{");
             if (this.CanReadWrite(elementType))
             {
-                codeString.AppendLine($"{list}.Add({this.GetReadString(elementType)});");
+                codeBuilder.AppendLine($"{list}.Add({this.GetReadString(elementType)});");
             }
             else
             {
                 var itemName = this.GetDeepItemString();
-                codeString.AppendLine($"{elementType.ToDisplayString()} {itemName}=default;");
-                this.AppendObjectReadString(codeString, packageMember, elementType, itemName);
+                codeBuilder.AppendLine($"{elementType.ToDisplayString()} {itemName}=default;");
+                this.AppendObjectReadString(codeBuilder, packageMember, elementType, itemName);
 
-                codeString.AppendLine($"{list}.Add({itemName});");
+                codeBuilder.AppendLine($"{list}.Add({itemName});");
             }
 
-            codeString.AppendLine("}");
-            codeString.AppendLine($"{name}={list};");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine($"{name}={list};");
+            codeBuilder.AppendLine("}");
         }
         else if (typeSymbol is INamedTypeSymbol dicNamedTypeSymbol && dicNamedTypeSymbol.IsDictionary())
         {
@@ -809,56 +639,56 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             {
                 return;
             }
-            codeString.AppendLine("if (!byteBlock.ReadIsNull())");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("if (!ReaderExtension.ReadIsNull(ref reader))");
+            codeBuilder.AppendLine("{");
 
             var len = this.GetDeepItemString();
-            codeString.AppendLine($"var {len}=(int)byteBlock.ReadVarUInt32();");
+            codeBuilder.AppendLine($"var {len}=(int)ReaderExtension.ReadVarUInt32(ref reader);");
 
             var dic = this.GetDeepItemString();
-            codeString.AppendLine($"var {dic} = new System.Collections.Generic.Dictionary<{elementTypeKey.ToDisplayString()},{elementTypeValue.ToDisplayString()}>({len});");
+            codeBuilder.AppendLine($"var {dic} = new System.Collections.Generic.Dictionary<{elementTypeKey.ToDisplayString()},{elementTypeValue.ToDisplayString()}>({len});");
 
             var i = this.GetDeepItemString();
-            codeString.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"for (var {i} = 0; {i} < {len}; {i}++)");
+            codeBuilder.AppendLine("{");
 
             var key = this.GetDeepItemString();
             if (this.CanReadWrite(elementTypeKey))
             {
-                codeString.AppendLine($"var {key} = {this.GetReadString(elementTypeKey)};");
+                codeBuilder.AppendLine($"var {key} = {this.GetReadString(elementTypeKey)};");
             }
             else
             {
-                codeString.AppendLine($"{elementTypeKey.ToDisplayString()} {key}=default;");
-                this.AppendObjectReadString(codeString, packageMember, elementTypeKey, key);
+                codeBuilder.AppendLine($"{elementTypeKey.ToDisplayString()} {key}=default;");
+                this.AppendObjectReadString(codeBuilder, packageMember, elementTypeKey, key);
             }
 
             var value = this.GetDeepItemString();
             if (this.CanReadWrite(elementTypeValue))
             {
-                codeString.AppendLine($"var {value} = {this.GetReadString(elementTypeValue)};");
+                codeBuilder.AppendLine($"var {value} = {this.GetReadString(elementTypeValue)};");
             }
             else
             {
-                codeString.AppendLine($"{elementTypeValue.ToDisplayString()} {value}=default;");
-                this.AppendObjectReadString(codeString, packageMember, elementTypeValue, value);
+                codeBuilder.AppendLine($"{elementTypeValue.ToDisplayString()} {value}=default;");
+                this.AppendObjectReadString(codeBuilder, packageMember, elementTypeValue, value);
             }
-            codeString.AppendLine($"{dic}.Add({key},{value});");
-            codeString.AppendLine("}");
-            codeString.AppendLine($"{name}={dic};");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine($"{dic}.Add({key},{value});");
+            codeBuilder.AppendLine("}");
+            codeBuilder.AppendLine($"{name}={dic};");
+            codeBuilder.AppendLine("}");
         }
         else if (typeSymbol.TypeKind == TypeKind.Class)
         {
-            if (!typeSymbol.IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+            if (!typeSymbol.IsInheritFrom(Utils.IPackageTypeName))
             {
                 return;
             }
-            codeString.AppendLine($"if(!byteBlock.ReadIsNull())");
-            codeString.AppendLine("{");
-            codeString.AppendLine($"{name}=new {typeSymbol.ToDisplayString()}();");
-            codeString.AppendLine($"{name}.Unpackage(ref byteBlock);");
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine($"if(!ReaderExtension.ReadIsNull(ref reader))");
+            codeBuilder.AppendLine("{");
+            codeBuilder.AppendLine($"{name}=new {typeSymbol.ToDisplayString()}();");
+            codeBuilder.AppendLine($"{name}.Unpackage(ref reader);");
+            codeBuilder.AppendLine("}");
         }
         else if (typeSymbol.TypeKind == TypeKind.Struct)
         {
@@ -866,37 +696,37 @@ internal sealed class PackageCodeBuilder : CodeBuilder
 
             if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
             {
-                if (!typeSymbol.GetNullableType().IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+                if (!typeSymbol.GetNullableType().IsInheritFrom(Utils.IPackageTypeName))
                 {
                     return;
                 }
 
-                codeString.AppendLine($"if(!byteBlock.ReadIsNull())");
-                codeString.AppendLine("{");
-                codeString.AppendLine($"var {propertySymbolName}=new {typeSymbol.GetNullableType().ToDisplayString()}();");
-                codeString.AppendLine($"{propertySymbolName}.Unpackage(ref byteBlock);");
-                codeString.AppendLine($"this.{name} = {propertySymbolName};");
-                codeString.AppendLine("}");
+                codeBuilder.AppendLine($"if(!ReaderExtension.ReadIsNull(ref reader))");
+                codeBuilder.AppendLine("{");
+                codeBuilder.AppendLine($"var {propertySymbolName}=new {typeSymbol.GetNullableType().ToDisplayString()}();");
+                codeBuilder.AppendLine($"{propertySymbolName}.Unpackage(ref reader);");
+                codeBuilder.AppendLine($"this.{name} = {propertySymbolName};");
+                codeBuilder.AppendLine("}");
             }
             else
             {
-                if (!typeSymbol.IsInheritFrom(PackageSyntaxReceiver.IPackageTypeName))
+                if (!typeSymbol.IsInheritFrom(Utils.IPackageTypeName))
                 {
                     return;
                 }
 
-                codeString.AppendLine($"var {propertySymbolName}=new {typeSymbol.ToDisplayString()}();");
-                codeString.AppendLine($"{propertySymbolName}.Unpackage(ref byteBlock);");
-                codeString.AppendLine($"{name}={propertySymbolName};");
+                codeBuilder.AppendLine($"var {propertySymbolName}=new {typeSymbol.ToDisplayString()}();");
+                codeBuilder.AppendLine($"{propertySymbolName}.Unpackage(ref reader);");
+                codeBuilder.AppendLine($"{name}={propertySymbolName};");
             }
         }
         else if (typeSymbol.TypeKind == TypeKind.Array)
         {
-            this.AppendArrayReadString(codeString, packageMember, typeSymbol, name);
+            this.AppendArrayReadString(codeBuilder, packageMember, typeSymbol, name);
         }
     }
 
-    private void BuildUnpackage(StringBuilder codeString, IEnumerable<PackageMember> members)
+    private void BuildUnpackage(StringBuilder codeBuilder, IEnumerable<PackageMember> members)
     {
         if (this.ExistsUnpackageMethod())
         {
@@ -906,109 +736,81 @@ internal sealed class PackageCodeBuilder : CodeBuilder
         var OverrideMethod = this.NeedOverrideUnpackageMethod(this.m_packageClass.BaseType);
         if (OverrideMethod != null)
         {
-            codeString.AppendLine($"public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"public override void Unpackage<TReader>(ref TReader reader)");
+            codeBuilder.AppendLine("{");
             if (OverrideMethod.IsVirtual || this.IsGeneratorPackage(this.m_packageClass.BaseType))
             {
-                codeString.AppendLine("base.Unpackage(ref byteBlock);");
+                codeBuilder.AppendLine("base.Unpackage(ref reader);");
             }
         }
         else
         {
-            codeString.AppendLine($"public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine($"public void Unpackage<TReader>(ref TReader reader) where TReader : IBytesReader");
+            codeBuilder.AppendLine("{");
         }
 
         foreach (var packageMember in members)
         {
-            this.AppendObjectReadString(codeString, packageMember, packageMember.Type, packageMember.Name);
+            this.AppendObjectReadString(codeBuilder, packageMember, packageMember.Type, packageMember.Name);
         }
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
     private string GetReadString(ITypeSymbol typeSymbol)
     {
-        if (typeSymbol.SpecialType == SpecialType.System_Boolean)
+        if (typeSymbol.SpecialType == SpecialType.System_String)
         {
-            return "byteBlock.ReadBoolean()";
+            return $"ReaderExtension.ReadString(ref reader)";
         }
-        else if (typeSymbol.SpecialType == SpecialType.System_Byte)
-        {
-            return "byteBlock.ReadByte()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_SByte)
-        {
-            return "(sbyte)byteBlock.ReadInt16()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int16)
-        {
-            return "byteBlock.ReadInt16()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt16)
-        {
-            return "byteBlock.ReadUInt16()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int32)
-        {
-            return "byteBlock.ReadInt32()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt32)
-        {
-            return "byteBlock.ReadUInt32()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Int64)
-        {
-            return "byteBlock.ReadInt64()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_UInt64)
-        {
-            return "byteBlock.ReadUInt64()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Single)
-        {
-            return "byteBlock.ReadFloat()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Double)
-        {
-            return "byteBlock.ReadDouble()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_String)
-        {
-            return "byteBlock.ReadString()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Char)
-        {
-            return "byteBlock.ReadChar()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_Decimal)
-        {
-            return "byteBlock.ReadDecimal()";
-        }
-        else if (typeSymbol.SpecialType == SpecialType.System_DateTime)
-        {
-            return "byteBlock.ReadDateTime()";
-        }
-        else if (typeSymbol.IsTimeSpan())
-        {
-            return "byteBlock.ReadTimeSpan()";
-        }
-        else if (typeSymbol.IsGuid())
-        {
-            return "byteBlock.ReadGuid()";
-        }
-        else if (typeSymbol.ToDisplayString() == "byte[]")
-        {
-            return "byteBlock.ReadBytesPackage()";
-        }
-        else
-        {
-            return "";
-        }
+        return $"ReaderExtension.ReadValue<TReader,{typeSymbol.ToDisplayString()}>(ref reader)";
     }
 
     #endregion Unpackage
 
     #region override
+
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
+    {
+        if (this.m_packageClass.IsInheritFrom(this.m_packageBaseString))
+        {
+        }
+        else if (this.m_packageClass.TypeKind == TypeKind.Struct)
+        {
+        }
+        else
+        {
+            this.m_context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Package0001, this.m_packageClass.Locations[0]));
+            return false;
+        }
+
+        //Debugger.Launch();
+        if (!this.m_packageClass.ContainingNamespace.IsGlobalNamespace)
+        {
+            codeBuilder.AppendLine($"namespace {this.m_packageClass.ContainingNamespace}");
+            codeBuilder.AppendLine("{");
+        }
+
+        codeBuilder.AppendLine($"partial {(this.m_packageClass.TypeKind == TypeKind.Struct ? "struct" : "class")} {this.m_packageClass.Name}");
+        codeBuilder.AppendLine("{");
+
+        var members = this.GetPackageMembers();
+
+        this.BuildConverter(codeBuilder, members);
+
+        this.m_deep = 0;
+        this.BuildPackage(codeBuilder, members);
+
+        this.m_deep = 0;
+        this.BuildUnpackage(codeBuilder, members);
+        codeBuilder.AppendLine("}");
+
+        if (!this.m_packageClass.ContainingNamespace.IsGlobalNamespace)
+        {
+            codeBuilder.AppendLine("}");
+        }
+        // System.Diagnostics.Debugger.Launch();
+        return true;
+    }
 
     private bool ExistsPackageMethod()
     {
@@ -1019,7 +821,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             {
                 if (m.Name == "Package" && m.Parameters.Length == 1)
                 {
-                    if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == this.m_byteBlockString)
+                    if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == "TWriter")
                     {
                         return true;
                     }
@@ -1037,7 +839,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
             {
                 if (m.Name == "Unpackage" && m.Parameters.Length == 1)
                 {
-                    if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == this.m_byteBlockString)
+                    if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == "TReader")
                     {
                         return true;
                     }
@@ -1067,7 +869,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
                      {
                          return false;
                      }
-                     if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == this.m_byteBlockString)
+                     if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == "TWriter")
                      {
                          return true;
                      }
@@ -1101,7 +903,7 @@ internal sealed class PackageCodeBuilder : CodeBuilder
                      {
                          return false;
                      }
-                     if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == this.m_byteBlockString)
+                     if (m.Parameters[0].RefKind == RefKind.Ref && m.Parameters[0].Type.ToDisplayString() == "TReader")
                      {
                          return true;
                      }
@@ -1119,13 +921,15 @@ internal sealed class PackageCodeBuilder : CodeBuilder
     #endregion override
 
     #region Class
+
     private class PackageMember
     {
-        public int Index { get; set; }
         public ITypeSymbol Converter { get; set; }
+        public int Index { get; set; }
+        public Location Location { get; set; }
         public string Name { get; set; }
         public ITypeSymbol Type { get; set; }
-        public Location Location { get; set; }
     }
-    #endregion
+
+    #endregion Class
 }
