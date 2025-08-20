@@ -311,7 +311,7 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
                     }
                 }
                 var position = result.Buffer.GetPosition(reader.BytesRead);
-                transport.Input.AdvanceTo(position);
+                transport.Input.AdvanceTo(position, result.Buffer.End);
 
                 if (result.IsCanceled || result.IsCompleted)
                 {
