@@ -124,7 +124,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
             }
 
             var position = readResult.Buffer.GetPosition(reader.BytesRead);
-            this.m_pipe.Reader.AdvanceTo(position);
+            this.m_pipe.Reader.AdvanceTo(position, readResult.Buffer.End);
 
             if (readResult.IsCanceled || readResult.IsCompleted)
             {

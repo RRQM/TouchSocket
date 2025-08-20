@@ -374,7 +374,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
                 }
                 finally
                 {
-                    transport.Input.AdvanceTo(sequence.GetPosition(reader.BytesRead));
+                    transport.Input.AdvanceTo(sequence.GetPosition(reader.BytesRead), sequence.End);
                     reader.Dispose();
                 }
             }
