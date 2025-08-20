@@ -39,6 +39,11 @@ public partial interface IDmtpChannel : ISender, IDisposableObject, IAsyncEnumer
     string LastOperationMes { get; }
 
     /// <summary>
+    /// 获取上次操作的时间。
+    /// </summary>
+    DateTimeOffset LastOperationTime { get; }
+
+    /// <summary>
     /// 元数据
     /// </summary>
     Metadata Metadata { get; }
@@ -52,11 +57,6 @@ public partial interface IDmtpChannel : ISender, IDisposableObject, IAsyncEnumer
     /// 目的Id地址。仅当该通道由两个客户端打通时有效。
     /// </summary>
     string TargetId { get; }
-
-    /// <summary>
-    /// 获取上次操作的时间。
-    /// </summary>
-    DateTimeOffset LastOperationTime { get; }
 
     /// <summary>
     /// 异步取消操作

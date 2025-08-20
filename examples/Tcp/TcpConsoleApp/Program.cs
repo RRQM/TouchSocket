@@ -65,11 +65,37 @@ internal class Program
     {
         var config = new TouchSocketConfig();
 
-        #region 示例Tcp服务器监听
+        #region 示例简单Tcp服务器监听
         //设置远程IP地址和端口
-        config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"));
+        config.SetListenIPHosts(new IPHost("127.0.0.1:7789"));
+
+        //或者直接设置端口
+        config.SetListenIPHosts(7789, 7790);
         #endregion
 
+        #region 示例个性化Tcp服务器监听
+        config.SetListenOptions(options =>
+        {
+            options.Add(new TcpListenOption()
+            {
+                IpHost = new IPHost(7789),
+                Adapter = () => new FixedHeaderPackageAdapter()
+                //其他配置
+            });
+        });
+        #endregion
+
+        #region 服务器设置Id生成策略
+        config.SetGetDefaultNewId(()=>Guid.NewGuid().ToString());
+        #endregion
+
+        #region 服务器设置半连接数量
+        config.SetBacklog(100);
+        #endregion
+
+        #region 服务器最大连接数
+        config.SetMaxCount(10000);
+        #endregion
     }
 
     /// <summary>

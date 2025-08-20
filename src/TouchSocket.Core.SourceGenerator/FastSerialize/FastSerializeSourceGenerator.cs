@@ -11,40 +11,189 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
+using TouchSocket.Core;
 
 namespace TouchSocket;
 
 [Generator]
-public class FastSerializeGenerator : ISourceGenerator
+public class FastSerializeGenerator : IIncrementalGenerator
 {
     public const string FastSerializableAttributeString = "TouchSocket.Core.FastSerializableAttribute";
-    public void Execute(GeneratorExecutionContext context)
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var compilation = context.Compilation;
-        var s = compilation.GetMetadataReference(context.Compilation.Assembly);
+        // 注册FastSerializableAttribute
+        context.RegisterPostInitializationOutput(ctx =>
+            ctx.AddSource("FastSerializableAttribute.g.cs", SourceText.From(fastSerializableAttribute, Encoding.UTF8)));
 
-        var fastSerializableAttribute = compilation.GetTypeByMetadataName(FastSerializableAttributeString);
+        // 筛选包含FastSerializableAttribute的类
+        var provider = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => s is TypeDeclarationSyntax tds
+                    && tds.AttributeLists.Count > 0,
+                transform: static (ctx, _) => GetClassSymbol(ctx))
+            .Where(static m => m is not null);
 
-        if (context.SyntaxReceiver is FastSerializeSyntaxReceiver receiver)
+        var combined = provider.Collect();
+
+        context.RegisterSourceOutput(combined, (spc, source) => Execute(source, spc));
+    }
+
+    private static void Execute(ImmutableArray<INamedTypeSymbol> symbols, SourceProductionContext context)
+    {
+        var processed = new HashSet<string>();
+
+        foreach (var namedTypeSymbol in symbols.Distinct(SymbolEqualityComparer.Default).Cast<INamedTypeSymbol>())
         {
-            var pairs = receiver.GetFastSerializeContexts(context);
+            if (!namedTypeSymbol.HasAttributes(FastSerializableAttributeString, out var atts))
+                continue;
 
-            var builders = pairs.Select(a => new FastSerializeCodeBuilder(a.Key, a.Value));
-            foreach (var builder in builders)
+            var pairs = ProcessAttributes(namedTypeSymbol, atts, context);
+            foreach (var pair in pairs)
             {
-                context.AddSource($"{builder.GetFileName()}.g.cs", builder.ToSourceText());
+                var builder = new FastSerializeCodeBuilder(pair.Key, pair.Value);
+                if (processed.Add(builder.Id))
+                {
+                    context.AddSource(builder);
+                }
             }
-
-            //foreach (var builder in pairs.Keys.Select(a => new MethodInvokeTitleCodeBuilder(a)))
-            //{
-            //    context.AddSource($"{builder.GetFileName()}.g.cs", builder.ToSourceText());
-            //}
         }
     }
 
-    private readonly string fastSerializableAttribute = @"
+    private static Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> ProcessAttributes(
+        INamedTypeSymbol classSymbol,
+        IEnumerable<AttributeData> attributes,
+        SourceProductionContext context)
+    {
+        var pairs = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+        var types = new List<INamedTypeSymbol>();
 
+        foreach (var item in attributes)
+        {
+            var args = item.ConstructorArguments;
+            if (args.Length == 0) continue;
+
+            var typeSymbol = args[0].Value as INamedTypeSymbol;
+            if (typeSymbol == null) continue;
+
+            var typeMode = args.Length > 1 && args[1].Value is int mode
+                ? (TypeMode)mode
+                : TypeMode.Self;
+
+            CollectTypes(typeSymbol, typeMode, types, context, item);
+        }
+
+        pairs[classSymbol] = types.Distinct(SymbolEqualityComparer.Default).Cast<INamedTypeSymbol>().ToList();
+        return pairs;
+    }
+
+    private static bool CanBeAdd(INamedTypeSymbol namedTypeSymbol, SourceProductionContext context, AttributeData attributeData)
+    {
+        if (namedTypeSymbol.IsPrimitiveAndString())
+        {
+            return false;
+        }
+        if (namedTypeSymbol.IsAbstract || namedTypeSymbol.TypeKind == TypeKind.Interface)
+        {
+            return false;
+        }
+
+        if (!namedTypeSymbol.IsInheritFrom(Utils.IPackageTypeName))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_FastSerialize0001, attributeData.ApplicationSyntaxReference.GetSyntax().GetLocation(), namedTypeSymbol.ToDisplayString()));
+            return false;
+        }
+        return true;
+    }
+
+    private static void CollectTypes(
+        INamedTypeSymbol namedTypeSymbol,
+        TypeMode typeMode,
+        List<INamedTypeSymbol> namedTypeSymbols,
+        SourceProductionContext context,
+        AttributeData attributeData)
+    {
+        if (typeMode == TypeMode.Self)
+        {
+            //Debugger.Launch();
+            if (CanBeAdd(namedTypeSymbol, context, attributeData))
+            {
+                namedTypeSymbols.Add(namedTypeSymbol);
+            }
+            return;
+        }
+
+        foreach (var symbol in namedTypeSymbol.GetMembers())
+        {
+            switch (symbol)
+            {
+                case IFieldSymbol targetSymbol:
+                    {
+                        if (typeMode == TypeMode.All || typeMode.HasFlag(TypeMode.Field))
+                        {
+                            if (targetSymbol.Type is INamedTypeSymbol namedType && CanBeAdd(namedType, context, attributeData))
+                            {
+                                namedTypeSymbols.Add(namedType);
+                            }
+                        }
+                        break;
+                    }
+                case IPropertySymbol targetSymbol:
+                    {
+                        if (typeMode == TypeMode.All || typeMode.HasFlag(TypeMode.Property))
+                        {
+                            if (targetSymbol.Type is INamedTypeSymbol namedType && CanBeAdd(namedType, context, attributeData))
+                            {
+                                namedTypeSymbols.Add(namedType);
+                            }
+                        }
+                        break;
+                    }
+                case IMethodSymbol targetSymbol:
+                    {
+                        if (typeMode == TypeMode.All || typeMode.HasFlag(TypeMode.MethodReturn))
+                        {
+                            if (targetSymbol.HasReturn())
+                            {
+                                if (targetSymbol.GetRealReturnType() is INamedTypeSymbol namedType && CanBeAdd(namedType, context, attributeData))
+                                {
+                                    namedTypeSymbols.Add(namedType);
+                                }
+                            }
+                        }
+
+                        if (typeMode == TypeMode.All || typeMode.HasFlag(TypeMode.MethodParameter))
+                        {
+                            foreach (var parameterSymbol in targetSymbol.Parameters)
+                            {
+                                if (parameterSymbol.Type is INamedTypeSymbol namedType && CanBeAdd(namedType, context, attributeData))
+                                {
+                                    namedTypeSymbols.Add(namedType);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+    }
+
+    private static INamedTypeSymbol GetClassSymbol(GeneratorSyntaxContext context)
+    {
+        var typeSyntax = (TypeDeclarationSyntax)context.Node;
+        return context.SemanticModel.GetDeclaredSymbol(typeSyntax) as INamedTypeSymbol;
+    }
+
+    // 保持原有fastSerializableAttribute字符串
+    private const string fastSerializableAttribute = @"
 /*
 此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码
 */
@@ -91,15 +240,5 @@ namespace TouchSocket.Core
     }
 }
 
-
 ";
-
-    public void Initialize(GeneratorInitializationContext context)
-    {
-        context.RegisterForPostInitialization(a =>
-        {
-            a.AddSource($"{nameof(this.fastSerializableAttribute)}.g.cs", this.fastSerializableAttribute);
-        });
-        context.RegisterForSyntaxNotifications(() => new FastSerializeSyntaxReceiver());
-    }
 }

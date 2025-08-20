@@ -22,8 +22,12 @@ namespace TouchSocket.Dmtp.Rpc;
 /// <summary>
 /// 默认序列化选择器，实现了<see cref="ISerializationSelector"/>接口
 /// </summary>
-public sealed class DefaultSerializationSelector : ISerializationSelector
+public class DefaultSerializationSelector : ISerializationSelector
 {
+    private JsonSerializerOptions m_jsonSerializerOptions;
+
+    private bool m_useSystemTextJson;
+
     /// <summary>
     /// 快速序列化上下文属性
     /// </summary>
@@ -39,21 +43,6 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
     /// </summary>
     public SerializationBinder SerializationBinder { get; set; }
 
-    private bool m_useSystemTextJson;
-    private JsonSerializerOptions m_jsonSerializerOptions;
-
-    /// <summary>
-    /// 使用System.Text.Json进行序列化
-    /// </summary>
-    /// <param name="options"></param>
-    public void UseSystemTextJson(Action<JsonSerializerOptions> options)
-    {
-        var serializerOptions = new JsonSerializerOptions();
-        options.Invoke(serializerOptions);
-        this.m_useSystemTextJson = true;
-        this.m_jsonSerializerOptions = serializerOptions;
-    }
-
     /// <summary>
     /// 根据指定的序列化类型反序列化字节块中的数据。
     /// </summary>
@@ -62,35 +51,28 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
     /// <param name="parameterType">预期反序列化出的对象类型。</param>
     /// <returns>反序列化后的对象。</returns>
     /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
-    public object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType) where TReader : IBytesReader
+    public virtual object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType) where TReader : IBytesReader
 
     {
-        // 根据序列化类型选择不同的反序列化方式
         switch (serializationType)
         {
             case SerializationType.FastBinary:
-                // 使用FastBinary格式进行反序列化
                 return FastBinaryFormatter.Deserialize(ref reader, parameterType, this.FastSerializerContext);
+
             case SerializationType.SystemBinary:
-                // 检查字节块是否为<see langword="null"/>
                 if (ReaderExtension.ReadIsNull(ref reader))
                 {
-                    // 如果为<see langword="null"/>，则返回该类型的默认值
                     return parameterType.GetDefault();
                 }
 
-                // 使用SystemBinary格式进行反序列化
                 using (var block = ReaderExtension.ReadByteBlock(ref reader))
                 {
-                    // 将字节块转换为流并进行反序列化
                     return SerializeConvert.BinaryDeserialize(block.AsStream(), this.SerializationBinder);
                 }
             case SerializationType.Json:
                 {
-                    // 检查字节块是否为<see langword="null"/>
                     if (ReaderExtension.ReadIsNull(ref reader))
                     {
-                        // 如果为<see langword="null"/>，则返回该类型的默认值
                         return parameterType.GetDefault();
                     }
 
@@ -99,21 +81,16 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                         return System.Text.Json.JsonSerializer.Deserialize(ReaderExtension.ReadString(ref reader), parameterType, this.m_jsonSerializerOptions);
                     }
 
-                    // 使用Json格式进行反序列化
                     return JsonConvert.DeserializeObject(ReaderExtension.ReadString(ref reader), parameterType, this.JsonSerializerSettings);
-
                 }
             case SerializationType.Xml:
-                // 检查字节块是否为<see langword="null"/>
                 if (ReaderExtension.ReadIsNull(ref reader))
                 {
-                    // 如果为<see langword="null"/>，则返回该类型的默认值
                     return parameterType.GetDefault();
                 }
-                // 使用Xml格式进行反序列化
                 return SerializeConvert.XmlDeserializeFromBytes(ReaderExtension.ReadByteSpan(ref reader).ToArray(), parameterType);
+
             default:
-                // 如果序列化类型未识别，则抛出异常
                 throw new RpcException("未指定的反序列化方式");
         }
     }
@@ -125,34 +102,28 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
     /// <param name="serializationType">序列化类型，决定了使用哪种方式序列化</param>
     /// <param name="parameter">待序列化的参数对象</param>
     /// <typeparam name="TWriter">字节块类型，必须实现IByteBlock接口</typeparam>
-    public void SerializeParameter<TWriter>(ref TWriter writer, SerializationType serializationType, in object parameter) where TWriter : IBytesWriter
+    public virtual void SerializeParameter<TWriter>(ref TWriter writer, SerializationType serializationType, in object parameter) where TWriter : IBytesWriter
 
     {
-        // 根据序列化类型选择不同的序列化方法
         switch (serializationType)
         {
             case SerializationType.FastBinary:
                 {
-                    // 使用FastBinaryFormatter进行序列化
                     FastBinaryFormatter.Serialize(ref writer, parameter, this.FastSerializerContext);
                     break;
                 }
             case SerializationType.SystemBinary:
                 {
-                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         WriterExtension.WriteNull(ref writer);
                     }
                     else
                     {
-                        // 参数不为<see langword="null"/>时，标记并序列化参数
                         WriterExtension.WriteNotNull(ref writer);
                         using (var block = new ByteBlock(1024 * 64))
                         {
-                            // 使用System.Runtime.Serialization.BinaryFormatter进行序列化
                             SerializeConvert.BinarySerialize(block.AsStream(), parameter);
-                            // 将序列化后的字节块写入byteBlock
                             WriterExtension.WriteByteBlock(ref writer, block);
                         }
                     }
@@ -162,27 +133,23 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 {
                     if (this.m_useSystemTextJson)
                     {
-                        // 参数为<see langword="null"/>时，写入空值标记
                         if (parameter is null)
                         {
                             WriterExtension.WriteNull(ref writer);
                         }
                         else
                         {
-                            // 参数不为<see langword="null"/>时，标记并转换为JSON字符串
                             WriterExtension.WriteNotNull(ref writer);
                             WriterExtension.WriteString(ref writer, System.Text.Json.JsonSerializer.Serialize(parameter, parameter.GetType(), this.m_jsonSerializerOptions));
                         }
                         return;
                     }
-                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         WriterExtension.WriteNull(ref writer);
                     }
                     else
                     {
-                        // 参数不为<see langword="null"/>时，标记并转换为JSON字符串
                         WriterExtension.WriteNotNull(ref writer);
                         WriterExtension.WriteString(ref writer, JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
                     }
@@ -190,22 +157,31 @@ public sealed class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.Xml:
                 {
-                    // 参数为<see langword="null"/>时，写入空值标记
                     if (parameter is null)
                     {
                         WriterExtension.WriteNull(ref writer);
                     }
                     else
                     {
-                        // 参数不为<see langword="null"/>时，标记并转换为Xml字节
                         WriterExtension.WriteNotNull(ref writer);
                         WriterExtension.WriteByteSpan(ref writer, SerializeConvert.XmlSerializeToBytes(parameter));
                     }
                     break;
                 }
             default:
-                // 抛出异常，提示未指定的序列化方式
                 throw new RpcException("未指定的序列化方式");
         }
+    }
+
+    /// <summary>
+    /// 使用System.Text.Json进行序列化
+    /// </summary>
+    /// <param name="options"></param>
+    public void UseSystemTextJson(Action<JsonSerializerOptions> options)
+    {
+        var serializerOptions = new JsonSerializerOptions();
+        options.Invoke(serializerOptions);
+        this.m_useSystemTextJson = true;
+        this.m_jsonSerializerOptions = serializerOptions;
     }
 }

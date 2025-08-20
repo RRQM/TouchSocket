@@ -54,6 +54,12 @@ public class RpcAnalyzer : DiagnosticAnalyzer
        "Rpc中{0}函数出现ref、out、in参数，这是不允许的。",
        "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor m_rule_Rpc0006 = new DiagnosticDescriptor(
+      "Rpc0006",
+      "用于判断Rpc函数参数是否为接口或抽象类且没有标识[FromServices]",
+      "Rpc中{0}函数{1}参数为接口或抽象类，且没有标识[FromServices]，这是不允许的。",
+      "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     #endregion DiagnosticDescriptors
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
@@ -65,7 +71,8 @@ public class RpcAnalyzer : DiagnosticAnalyzer
         m_rule_Rpc0002,
         m_rule_Rpc0003,
         m_rule_Rpc0004,
-        m_rule_Rpc0005
+        m_rule_Rpc0005,
+        m_rule_Rpc0006
         );
         }
     }
@@ -97,7 +104,7 @@ public class RpcAnalyzer : DiagnosticAnalyzer
             }
         }
         //Debugger.Launch();
-        if (namedTypeSymbol.AllInterfaces.Any(a => a.ToDisplayString() == RpcServerSyntaxReceiver.IRpcServerTypeName))
+        if (namedTypeSymbol.AllInterfaces.Any(a => a.ToDisplayString() == RpcServerSourceGenerator.IRpcServerTypeName))
         {
             var names = new List<string>();
             foreach (var methodSymbol in namedTypeSymbol.GetMembers().OfType<IMethodSymbol>())
@@ -115,6 +122,15 @@ public class RpcAnalyzer : DiagnosticAnalyzer
                         if (item.RefKind != RefKind.None)
                         {
                             context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0005, methodSymbol.Locations[0], methodSymbol.Name));
+                        }
+
+                        var type = item.Type;
+                        if ((type.TypeKind == TypeKind.Interface || type.IsAbstract) && (!type.IsInheritFrom(RpcUtils.ICallContextTypeName)))
+                        {
+                            if (!item.HasAttribute(RpcUtils.FromServicesAttributeName))
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0006, methodSymbol.Locations[0], methodSymbol.Name, item.Name));
+                            }
                         }
                     }
 

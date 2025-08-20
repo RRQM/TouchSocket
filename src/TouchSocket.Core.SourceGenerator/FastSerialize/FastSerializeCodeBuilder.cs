@@ -16,93 +16,51 @@ using System.Text;
 
 namespace TouchSocket;
 
-internal class FastSerializeCodeBuilder : CodeBuilder
+internal class FastSerializeCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
 {
-    private readonly INamedTypeSymbol m_namedTypeSymbol;
+    private readonly List<INamedTypeSymbol> m_namedTypeSymbols;
 
-    public FastSerializeCodeBuilder(INamedTypeSymbol type, List<INamedTypeSymbol> namedTypeSymbols)
+    public FastSerializeCodeBuilder(INamedTypeSymbol type, List<INamedTypeSymbol> namedTypeSymbols) : base(type)
     {
-        this.m_namedTypeSymbol = type;
         this.m_namedTypeSymbols = namedTypeSymbols;
     }
-
-    public INamedTypeSymbol NamedTypeSymbol => this.m_namedTypeSymbol;
-
-    public virtual IEnumerable<string> Usings
-    {
-        get
-        {
-            yield return "using System;";
-            yield return "using System.Diagnostics;";
-            yield return "using TouchSocket.Core;";
-            yield return "using System.Threading.Tasks;";
-        }
-    }
-
-    public override string Id => this.m_namedTypeSymbol.ToDisplayString();
-
-    private readonly List<INamedTypeSymbol> m_namedTypeSymbols;
 
     public override string GetFileName()
     {
         return this.GetGeneratorTypeName() + "Generator";
     }
 
-    private string GetGeneratorTypeName()
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
     {
-        var typeName = this.m_namedTypeSymbol.Name;
+        using (this.CreateNamespace(codeBuilder))
+        {
+            codeBuilder.AppendLine($"partial class {this.GetGeneratorTypeName()}");
+            codeBuilder.AppendLine("{");
 
-        return typeName;
+            codeBuilder.AppendLine($"public {this.GetGeneratorTypeName()} ()");
+            codeBuilder.AppendLine("{");
+            foreach (var item in this.m_namedTypeSymbols)
+            {
+                this.BuildItems(codeBuilder, item);
+            }
+            codeBuilder.AppendLine("}");
+
+            codeBuilder.AppendLine("}");
+        }
+
+        return true;
     }
 
-    public override string ToString()
-    {
-        var codeString = new StringBuilder();
-        codeString.AppendLine("/*");
-        codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
-        codeString.AppendLine("*/");
-        codeString.AppendLine("#pragma warning disable");
-
-        foreach (var item in this.Usings)
-        {
-            codeString.AppendLine(item);
-        }
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine($"namespace {this.NamedTypeSymbol.ContainingNamespace}");
-            codeString.AppendLine("{");
-        }
-
-        codeString.AppendLine($"partial class {this.GetGeneratorTypeName()}");
-        codeString.AppendLine("{");
-
-        codeString.AppendLine($"public {this.GetGeneratorTypeName()} ()");
-        codeString.AppendLine("{");
-        foreach (var item in this.m_namedTypeSymbols)
-        {
-            this.BuildItems(codeString, item);
-        }
-        codeString.AppendLine("}");
-
-        codeString.AppendLine("}");
-
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine("}");
-        }
-
-        // System.Diagnostics.Debugger.Launch();
-        return codeString.ToString();
-    }
-
-    private void BuildItems(StringBuilder codeString, INamedTypeSymbol namedTypeSymbol)
+    private void BuildItems(StringBuilder codeBuilder, INamedTypeSymbol namedTypeSymbol)
     {
         var typeName = namedTypeSymbol.ToDisplayString();
-        codeString.AppendLine($"this.AddConverter(typeof({typeName}), new PackageFastBinaryConverter<{typeName}>());");
+        codeBuilder.AppendLine($"this.AddConverter(typeof({typeName}), new PackageFastBinaryConverter<{typeName}>());");
     }
 
-    private string GetTypeName(INamedTypeSymbol namedTypeSymbol)
+    private string GetGeneratorTypeName()
     {
-        return Utils.MakeIdentifier(namedTypeSymbol.ToDisplayString());
+        var typeName = this.TypeSymbol.Name;
+
+        return typeName;
     }
 }

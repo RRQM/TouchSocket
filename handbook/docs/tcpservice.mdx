@@ -8,6 +8,7 @@ import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from '@site/src/components/CodeBlocks/CodeBlock';
 
 ### 定义
 
@@ -77,31 +78,47 @@ flowchart TD;
 
 ## 五、可配置项
 
+### 5.1 配置监听
+
+简单情况下，直接设置统一的监听IP和端口号组，可以一次性设置多个地址。 
+
+<CustomCodeBlock region="示例简单Tcp服务器监听"/>
+
+简单设置时，无法进行更加个性化的配置。例如：是否启用Ssl加密、使用何种适配器等。
+
+所以，可以使用`SetListenOptions`方法，进行个性化监听配置。
+
+<CustomCodeBlock region="示例个性化Tcp服务器监听"/>
+
+### 5.2 Id分配策略
+
+`TcpService`会在每次新建`SessionClient`时，分配一个Id。默认情况下，Id是随机分配的。
+如果需要自定义Id分配策略，可以使用`SetGetDefaultNewId`方法。
+
+<BilibiliCard title="服务器设置Id生成策略" link="https://www.bilibili.com/cheese/play/ep1541404" isPro="true"/>
+
+<CustomCodeBlock region="服务器设置Id生成策略"/>
+
+### 5.3 Tcp半连接队列
+
+`TcpService`的半连接队列是指在服务器端，等待完成三次握手的连接请求队列。可以通过`SetBacklogProperty`方法设置。
+<BilibiliCard title="服务器设置半连接数量" link="https://www.bilibili.com/cheese/play/ep1541411" isPro="true"/>
+
+<CustomCodeBlock region="服务器设置半连接数量"/>
+
+### 5.4 设置最大连接数量
+`TcpService`的最大连接数可以通过`SetMaxCount`方法设置。默认情况下，最大连接数为10000。
+<BilibiliCard title="服务器最大连接数" link="https://www.bilibili.com/cheese/play/ep1541412" isPro="true"/>
+
+<CustomCodeBlock region="服务器最大连接数"/>
+
 <details>
 <summary>可配置项</summary>
 <div>
 
-#### SetMaxPackageSize
-数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
-
-#### SetGetDefaultNewId
-配置初始Id的分配策略。
-
-<BilibiliCard title="服务器设置Id生成策略" link="https://www.bilibili.com/cheese/play/ep1541404" isPro="true"/>
-
-#### SetListenIPHosts
-设置统一的监听IP和端口号组，可以一次性设置多个地址。 
-
-#### SetListenOptions
-设置独立的监听IP和端口号，可以独立控制当前地址监听的个性化配置。 
 
 #### SetServerName
 服务器标识名称，无实际使用意义。
-
-#### SetBacklogProperty
-Tcp半连接挂起连接队列的最大长度。默认为30 
-
-<BilibiliCard title="服务器设置半连接数量" link="https://www.bilibili.com/cheese/play/ep1541411" isPro="true"/>
 
 #### SetMaxCount
 最大可连接数，默认为10000 

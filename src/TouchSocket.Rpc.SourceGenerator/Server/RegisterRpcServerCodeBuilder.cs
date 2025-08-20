@@ -39,93 +39,89 @@ internal class RegisterRpcServerCodeBuilder : CodeBuilder
         return $"Register{this.GetAssemblyName()}RpcServerGenerator";
     }
 
-    public override string ToString()
-    {
-        var codeString = new StringBuilder();
-        codeString.AppendLine("/*");
-        codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
-        codeString.AppendLine("*/");
-        codeString.AppendLine("#pragma warning disable");
 
-        codeString.AppendLine($"namespace TouchSocket.Rpc");
-        codeString.AppendLine("{");
-        codeString.AppendLine("/// <summary>");
-        codeString.AppendLine($"/// {this.GetClassName()}");
-        codeString.AppendLine("/// </summary>");
-        codeString.AppendLine($"public static class {this.GetClassName()}");
-        codeString.AppendLine("{");
+
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
+    {
+        codeBuilder.AppendLine($"namespace TouchSocket.Rpc");
+        codeBuilder.AppendLine("{");
+        codeBuilder.AppendLine("/// <summary>");
+        codeBuilder.AppendLine($"/// {this.GetClassName()}");
+        codeBuilder.AppendLine("/// </summary>");
+        codeBuilder.AppendLine($"public static class {this.GetClassName()}");
+        codeBuilder.AppendLine("{");
 
         var registers = this.RpcApis.Select(a => this.GetRegister(a));
 
         switch (this.GetAccessibility())
         {
             case Rpc.Accessibility.Both:
-                this.BuildInternal(codeString, registers);
-                this.BuildPublic(codeString, registers.Where(a => a.Item2.DeclaredAccessibility == Microsoft.CodeAnalysis.Accessibility.Public));
+                this.BuildInternal(codeBuilder, registers);
+                this.BuildPublic(codeBuilder, registers.Where(a => a.Item2.DeclaredAccessibility == Microsoft.CodeAnalysis.Accessibility.Public));
                 break;
 
             case Rpc.Accessibility.Internal:
-                this.BuildInternal(codeString, registers);
+                this.BuildInternal(codeBuilder, registers);
                 break;
 
             case Rpc.Accessibility.Public:
-                this.BuildPublic(codeString, registers.Where(a => a.Item2.DeclaredAccessibility == Microsoft.CodeAnalysis.Accessibility.Public));
+                this.BuildPublic(codeBuilder, registers.Where(a => a.Item2.DeclaredAccessibility == Microsoft.CodeAnalysis.Accessibility.Public));
                 break;
 
             default:
                 break;
         }
-        codeString.AppendLine("}");
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
+        codeBuilder.AppendLine("}");
 
-        return codeString.ToString();
+        return true;
     }
 
-    private void BuildInternal(StringBuilder codeString, IEnumerable<(INamedTypeSymbol, INamedTypeSymbol)> values)
+    private void BuildInternal(StringBuilder codeBuilder, IEnumerable<(INamedTypeSymbol, INamedTypeSymbol)> values)
     {
         if (values.Count() > 0)
         {
-            codeString.AppendLine("/// <summary>");
-            codeString.AppendLine($"/// 注册程序集{this.m_assemblySymbol.Name}中的所有Rpc服务。包括：");
-            codeString.AppendLine("/// <list type=\"number\">");
+            codeBuilder.AppendLine("/// <summary>");
+            codeBuilder.AppendLine($"/// 注册程序集{this.m_assemblySymbol.Name}中的所有Rpc服务。包括：");
+            codeBuilder.AppendLine("/// <list type=\"number\">");
             foreach (var item in values)
             {
-                codeString.AppendLine($"/// <item><see cref=\"{item.Item1.ToDisplayString()}\"/>:<see cref=\"{item.Item2.ToDisplayString()}\"/></item>");
+                codeBuilder.AppendLine($"/// <item><see cref=\"{item.Item1.ToDisplayString()}\"/>:<see cref=\"{item.Item2.ToDisplayString()}\"/></item>");
             }
-            codeString.AppendLine("/// </list>");
-            codeString.AppendLine("/// </summary>");
-            codeString.AppendLine("/// <param name=\"rpcStore\"></param>");
-            codeString.AppendLine($"internal static void Internal{this.GetMethodName()}(this RpcStore rpcStore)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("/// </list>");
+            codeBuilder.AppendLine("/// </summary>");
+            codeBuilder.AppendLine("/// <param name=\"rpcStore\"></param>");
+            codeBuilder.AppendLine($"internal static void Internal{this.GetMethodName()}(this RpcStore rpcStore)");
+            codeBuilder.AppendLine("{");
             foreach (var item in values)
             {
-                codeString.AppendLine($"rpcStore.RegisterServer<{item.Item1.ToDisplayString()},{item.Item2.ToDisplayString()}>();");
+                codeBuilder.AppendLine($"rpcStore.RegisterServer<{item.Item1.ToDisplayString()},{item.Item2.ToDisplayString()}>();");
             }
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
     }
 
-    private void BuildPublic(StringBuilder codeString, IEnumerable<(INamedTypeSymbol, INamedTypeSymbol)> values)
+    private void BuildPublic(StringBuilder codeBuilder, IEnumerable<(INamedTypeSymbol, INamedTypeSymbol)> values)
     {
         if (values.Count() > 0)
         {
-            codeString.AppendLine("/// <summary>");
-            codeString.AppendLine($"/// 注册程序集{this.m_assemblySymbol.Name}中的所有公共Rpc服务。包括：");
-            codeString.AppendLine("/// <list type=\"number\">");
+            codeBuilder.AppendLine("/// <summary>");
+            codeBuilder.AppendLine($"/// 注册程序集{this.m_assemblySymbol.Name}中的所有公共Rpc服务。包括：");
+            codeBuilder.AppendLine("/// <list type=\"number\">");
             foreach (var item in values)
             {
-                codeString.AppendLine($"/// <item><see cref=\"{item.Item1.ToDisplayString()}\"/>:<see cref=\"{item.Item2.ToDisplayString()}\"/></item>");
+                codeBuilder.AppendLine($"/// <item><see cref=\"{item.Item1.ToDisplayString()}\"/>:<see cref=\"{item.Item2.ToDisplayString()}\"/></item>");
             }
-            codeString.AppendLine("/// </list>");
-            codeString.AppendLine("/// </summary>");
-            codeString.AppendLine("/// <param name=\"rpcStore\"></param>");
-            codeString.AppendLine($"public static void {this.GetMethodName()}(this RpcStore rpcStore)");
-            codeString.AppendLine("{");
+            codeBuilder.AppendLine("/// </list>");
+            codeBuilder.AppendLine("/// </summary>");
+            codeBuilder.AppendLine("/// <param name=\"rpcStore\"></param>");
+            codeBuilder.AppendLine($"public static void {this.GetMethodName()}(this RpcStore rpcStore)");
+            codeBuilder.AppendLine("{");
             foreach (var item in values)
             {
-                codeString.AppendLine($"rpcStore.RegisterServer<{item.Item1.ToDisplayString()},{item.Item2.ToDisplayString()}>();");
+                codeBuilder.AppendLine($"rpcStore.RegisterServer<{item.Item1.ToDisplayString()},{item.Item2.ToDisplayString()}>();");
             }
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
     }
 
@@ -166,7 +162,7 @@ internal class RegisterRpcServerCodeBuilder : CodeBuilder
 
     private (INamedTypeSymbol, INamedTypeSymbol) GetRegister(INamedTypeSymbol namedTypeSymbol)
     {
-        var symbolsInterface = namedTypeSymbol.Interfaces.Where(a => a.IsInheritFrom(RpcServerSyntaxReceiver.IRpcServerTypeName) && a.ToDisplayString() != RpcServerSyntaxReceiver.IRpcServerTypeName).FirstOrDefault();
+        var symbolsInterface = namedTypeSymbol.Interfaces.Where(a => a.IsInheritFrom(RpcServerSourceGenerator.IRpcServerTypeName) && a.ToDisplayString() != RpcServerSourceGenerator.IRpcServerTypeName).FirstOrDefault();
 
         if (symbolsInterface == null)
         {

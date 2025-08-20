@@ -11,45 +11,102 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace TouchSocket;
 
 [Generator]
-public class MethodInvokeSourceGenerator : ISourceGenerator
+public class MethodInvokeSourceGenerator : IIncrementalGenerator
 {
-    public void Execute(GeneratorExecutionContext context)
+    public const string DynamicMethod = "TouchSocket.Core.DynamicMethodAttribute";
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
+        // 1. 注册语法提供器来捕获类型声明
+        var typeDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => s is TypeDeclarationSyntax,
+                transform: static (ctx, _) => (TypeDeclarationSyntax)ctx.Node);
 
-        if (context.SyntaxReceiver is MethodInvokeSyntaxReceiver receiver)
+        // 2. 组合编译和类型信息
+        var compilationAndTypes = context.CompilationProvider.Combine(typeDeclarations.Collect());
+
+        // 3. 注册生成逻辑
+        context.RegisterSourceOutput(compilationAndTypes, (spc, source) =>
+            Execute(source.Left, source.Right, spc));
+    }
+
+    private static void Execute(
+        Compilation compilation,
+        IEnumerable<TypeDeclarationSyntax> typeDeclaration,
+        SourceProductionContext context)
+    {
+        var pairs = new Dictionary<INamedTypeSymbol, List<IMethodSymbol>>(SymbolEqualityComparer.Default);
+
+        foreach (var typeSyntax in typeDeclaration.Distinct())
         {
+            var model = compilation.GetSemanticModel(typeSyntax.SyntaxTree);
+            var typeSymbol = model.GetDeclaredSymbol(typeSyntax) as INamedTypeSymbol;
+
+            if (typeSymbol == null || typeSymbol.IsGenericType)
+            {
+                continue;
+            }
+
+            // 3. 检查类型和方法是否应用了DynamicMethod属性
+            var methods = GetDynamicMethods(typeSymbol);
+            if (methods.Any())
+            {
+                pairs[typeSymbol] = methods.ToList();
+            }
+        }
+
+        // 4. 生成源代码
+        foreach (var pair in pairs)
+        {
+            var builder = new MethodInvokeCodeBuilder(pair.Key, compilation, pair.Value);
+            context.AddSource(builder);
+
             //Debugger.Launch();
-            try
-            {
-                var pairs = receiver.GetInvokePairs(context.Compilation);
+            var methodInvokeClassCodeBuilder = new MethodInvokeClassCodeBuilder(pair.Key, compilation, pair.Value);
+            context.AddSource(methodInvokeClassCodeBuilder);
 
-                var builders = pairs.Select(a => new MethodInvokeCodeBuilder(a.Key, a.Value));
-                foreach (var builder in builders)
-                {
-                    context.AddSource($"{builder.GetFileName()}.g.cs", builder.ToSourceText());
-                }
+            var titleBuilder = new MethodInvokeTitleCodeBuilder(pair.Key);
+            context.AddSource(titleBuilder);
 
-                foreach (var builder in pairs.Keys.Select(a => new MethodInvokeTitleCodeBuilder(a)))
-                {
-                    context.AddSource($"{builder.GetFileName()}.g.cs", builder.ToSourceText());
-                }
-            }
-            catch (System.Exception ex)
-            {
-                throw ex;
-            }
 
+            //var returnTypeInvokeCodeBuilder = new ReturnTypeInvokeCodeBuilder(pair.Key, compilation, pair.Value.Select(a => a.ReturnType).Distinct(SymbolEqualityComparer.Default).Cast<INamedTypeSymbol>());
+            //context.AddSource(returnTypeInvokeCodeBuilder);
         }
     }
 
-    public void Initialize(GeneratorInitializationContext context)
+    private static IEnumerable<IMethodSymbol> GetDynamicMethods(INamedTypeSymbol typeSymbol)
     {
-        context.RegisterForSyntaxNotifications(() => new MethodInvokeSyntaxReceiver());
+        var hasTypeAttribute = typeSymbol.HasAttribute(MethodInvokeSourceGenerator.DynamicMethod);
+
+        return typeSymbol.GetMembers()
+            .OfType<IMethodSymbol>()
+            .Where(m => m.MethodKind == MethodKind.Ordinary &&
+                      !m.IsGenericMethod &&
+                      IsAccessible(m.DeclaredAccessibility) &&
+                      (hasTypeAttribute || HasMethodAttribute(m)));
     }
+
+    private static bool IsAccessible(Accessibility accessibility)
+    {
+        return accessibility switch
+        {
+            Accessibility.Internal or
+            Accessibility.ProtectedAndInternal or
+            Accessibility.Public => true,
+            _ => false
+        };
+    }
+
+    private static bool HasMethodAttribute(IMethodSymbol method) =>
+        method.GetAttributes().Any(a =>
+            a.AttributeClass?.ToDisplayString() == DynamicMethod ||
+            a.AttributeClass?.GetAttributes().Any(ad =>
+                ad.AttributeClass?.ToDisplayString() == DynamicMethod) == true);
 }

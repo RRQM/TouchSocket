@@ -30,10 +30,7 @@ internal enum TaskType
 
 internal abstract class RpcClientCodeBuilder : CodeBuilder
 {
-    public string RpcAttribute { get; private set; }
-    protected abstract string RpcAttributeName { get; }
     private readonly INamedTypeSymbol m_rpcApi;
-
     private readonly Dictionary<string, TypedConstant> m_rpcApiNamedArguments;
 
     protected RpcClientCodeBuilder(INamedTypeSymbol rpcApi, string rpcAttribute)
@@ -58,10 +55,10 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
 
     public override string Id => this.m_rpcApi.ToDisplayString();
     public string Prefix { get; set; }
-
+    public string RpcAttribute { get; private set; }
     public string ServerName { get; set; }
 
-    public virtual IEnumerable<string> Usings
+    public override IEnumerable<string> Usings
     {
         get
         {
@@ -74,35 +71,46 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         }
     }
 
+    protected abstract string RpcAttributeName { get; }
+
     public override string GetFileName()
     {
         return this.m_rpcApi.ToDisplayString() + "Generator";
     }
 
-    public override string ToString()
+    public string ReplacePatterns(Dictionary<string, TypedConstant> pairs, string input)
     {
-        var codeString = RpcUtils.CreateStringBuilder();
+        var sb = new StringBuilder();
 
-        foreach (var item in this.Usings)
+        for (var i = 0; i < input.Length; i++)
         {
-            codeString.AppendLine(item);
-        }
-        codeString.AppendLine($"namespace {this.GetNamespace()}");
-        codeString.AppendLine("{");
+            if (i < input.Length - 1 && input[i] == '{' && char.IsLetter(input[i + 1]))
+            {
+                // 检查是否存在下一个字符并且是字母，处理多字符键的情况
+                var end = i + 2;
+                while (end < input.Length && char.IsLetter(input[end - 1]))
+                {
+                    end++;
+                }
+                var key = input.Substring(i + 1, end - i - 2);
 
-        if (this.AllowAsync(GeneratorFlag.InterfaceSync) || this.AllowAsync(GeneratorFlag.InterfaceAsync))
-        {
-            this.BuildIntereface(codeString);
+                if (pairs.TryGetValue(key, out var value))
+                {
+                    sb.Append(this.ReplacePattern(key, value));
+                    i = end - 1; // 跳过"{key}"
+                }
+                else
+                {
+                    sb.Append(input[i]); // 保留原始字符
+                }
+            }
+            else
+            {
+                sb.Append(input[i]);
+            }
         }
 
-        if (this.AllowAsync(GeneratorFlag.ExtensionSync) || this.AllowAsync(GeneratorFlag.ExtensionAsync))
-        {
-            this.BuildMethod(codeString);
-        }
-        codeString.AppendLine("}");
-
-        // System.Diagnostics.Debugger.Launch();
-        return codeString.ToString();
+        return sb.ToString();
     }
 
     protected virtual bool AllowAsync(GeneratorFlag flag, IMethodSymbol method = default, Dictionary<string, TypedConstant> namedArguments = default)
@@ -147,7 +155,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         return true;
     }
 
-    protected virtual void BuildIntereface(StringBuilder codeString)
+    protected virtual void BuildIntereface(StringBuilder codeBuilder)
     {
         var interfaceNames = new List<string>();
         if (this.IsInheritedInterface())
@@ -166,38 +174,38 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
 
         if (interfaceNames.Count == 0)
         {
-            codeString.AppendLine($"public partial interface I{this.GetClassName()}");
+            codeBuilder.AppendLine($"public partial interface I{this.GetClassName()}");
         }
         else
         {
-            codeString.AppendLine($"public partial interface I{this.GetClassName()} :{string.Join(",", interfaceNames)}");
+            codeBuilder.AppendLine($"public partial interface I{this.GetClassName()} :{string.Join(",", interfaceNames)}");
         }
 
-        codeString.AppendLine("{");
+        codeBuilder.AppendLine("{");
         //Debugger.Launch();
 
         foreach (var method in this.FindApiMethods())
         {
             var methodCode = this.BuildMethodInterface(method);
-            codeString.AppendLine(methodCode);
+            codeBuilder.AppendLine(methodCode);
         }
 
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
-    protected virtual void BuildMethod(StringBuilder codeString)
+    protected virtual void BuildMethod(StringBuilder codeBuilder)
     {
-        codeString.AppendLine($"public static partial class {this.GetClassName()}Extensions");
-        codeString.AppendLine("{");
+        codeBuilder.AppendLine($"public static partial class {this.GetClassName()}Extensions");
+        codeBuilder.AppendLine("{");
         //Debugger.Launch();
 
         foreach (var method in this.FindApiMethods())
         {
             var methodCode = this.BuildMethod(method);
-            codeString.AppendLine(methodCode);
+            codeBuilder.AppendLine(methodCode);
         }
 
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
     protected virtual string BuildMethod(IMethodSymbol method)
@@ -225,125 +233,100 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         var parameters = method.Parameters.Where(a => (!RpcUtils.IsCallContext(a)) && (!RpcUtils.IsFromServices(a))).ToImmutableArray();
 
         //生成开始
-        var codeString = new StringBuilder();
+        var codeBuilder = new StringBuilder();
 
         if (allowSync)
         {
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{this.GetDescription(method)}");
-            codeString.AppendLine("///</summary>");
-            codeString.Append($"public static {returnType} {methodName}");
-            codeString.Append("<TClient>(");//方法参数
+            codeBuilder.AppendLine("///<summary>");
+            codeBuilder.AppendLine($"///{this.GetDescription(method)}");
+            codeBuilder.AppendLine("///</summary>");
+            codeBuilder.AppendLine("[AsyncToSyncWarning]");
+            codeBuilder.Append($"public static {returnType} {methodName}");
+            codeBuilder.Append("<TClient>(");//方法参数
 
-            codeString.Append($"this TClient client");
+            codeBuilder.Append($"this TClient client");
 
-            codeString.Append(",");
+            codeBuilder.Append(",");
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (i > 0)
                 {
-                    codeString.Append(",");
+                    codeBuilder.Append(",");
                 }
-                codeString.Append(this.GetMethodParameterString(parameters[i]));
+                codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
             }
             if (parameters.Length > 0)
             {
-                codeString.Append(",");
+                codeBuilder.Append(",");
             }
-            codeString.Append("IInvokeOption invokeOption = default");
-            codeString.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
+            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
-            codeString.AppendLine("{");//方法开始
+            codeBuilder.AppendLine("{");//方法开始
 
             var parametersString = this.GetParametersString(parameters);
 
             if (method.HasReturn())
             {
-                codeString.AppendLine($"return ({returnType}) client.Invoke(\"{invokeKey}\",typeof({returnType}),invokeOption,{parametersString});");
+                codeBuilder.AppendLine($"return ({returnType}) client.Invoke(\"{invokeKey}\",typeof({returnType}),invokeOption,{parametersString});");
             }
             else
             {
-                codeString.AppendLine($"client.Invoke(\"{invokeKey}\",default,invokeOption,{parametersString});");
+                codeBuilder.AppendLine($"client.Invoke(\"{invokeKey}\",default,invokeOption,{parametersString});");
             }
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
 
         if (allowAsync)
         {
             //以下生成异步
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{this.GetDescription(method)}");
-            codeString.AppendLine("///</summary>");
+            codeBuilder.AppendLine("///<summary>");
+            codeBuilder.AppendLine($"///{this.GetDescription(method)}");
+            codeBuilder.AppendLine("///</summary>");
             if (method.HasReturn())
             {
-                codeString.Append($"public static async Task<{returnType}> {methodName}Async");
+                codeBuilder.Append($"public static async Task<{returnType}> {methodName}Async");
             }
             else
             {
-                codeString.Append($"public static Task {methodName}Async");
+                codeBuilder.Append($"public static Task {methodName}Async");
             }
 
-            codeString.Append("<TClient>(");//方法参数
+            codeBuilder.Append("<TClient>(");//方法参数
 
-            codeString.Append($"this TClient client");
+            codeBuilder.Append($"this TClient client");
 
-            codeString.Append(",");
+            codeBuilder.Append(",");
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (i > 0)
                 {
-                    codeString.Append(",");
+                    codeBuilder.Append(",");
                 }
-                codeString.Append(this.GetMethodParameterString(parameters[i]));
+                codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
             }
             if (parameters.Length > 0)
             {
-                codeString.Append(",");
+                codeBuilder.Append(",");
             }
-            codeString.Append("IInvokeOption invokeOption = default");
-            codeString.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
+            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
-            codeString.AppendLine("{");//方法开始
+            codeBuilder.AppendLine("{");//方法开始
             var parametersString = this.GetParametersString(parameters);
 
             if (method.HasReturn())
             {
-                codeString.AppendLine($"return ({returnType}) await client.InvokeAsync(\"{invokeKey}\",typeof({returnType}),invokeOption,{parametersString});");
+                codeBuilder.AppendLine($"return ({returnType}) await client.InvokeAsync(\"{invokeKey}\",typeof({returnType}),invokeOption,{parametersString});");
             }
             else
             {
-                codeString.AppendLine($"return client.InvokeAsync(\"{invokeKey}\",default,invokeOption,{parametersString});");
+                codeBuilder.AppendLine($"return client.InvokeAsync(\"{invokeKey}\",default,invokeOption,{parametersString});");
             }
-            codeString.AppendLine("}");
+            codeBuilder.AppendLine("}");
         }
 
-        return codeString.ToString();
-    }
-
-    protected string GetMethodParameterString(IParameterSymbol parameter)
-    {
-        //Debugger.Launch();
-        if (parameter.HasExplicitDefaultValue)
-        {
-            var data = parameter.ExplicitDefaultValue;
-            if (data == null)
-            {
-                return $"{parameter.Type} {parameter.Name}=null";
-            }
-            else if (data.GetType() == typeof(string))
-            {
-                return $"{parameter.Type} {parameter.Name}=\"{parameter.ExplicitDefaultValue}\"";
-            }
-            else if (data is bool b)
-            {
-                return $"{parameter.Type} {parameter.Name}={b.ToString().ToLower()}";
-            }
-            else
-            {
-                return $"{parameter.Type} {parameter.Name}={parameter.ExplicitDefaultValue.ToString()}";
-            }
-        }
-        return parameter.ToDisplayString();
+        return codeBuilder.ToString();
     }
 
     protected virtual string BuildMethodInterface(IMethodSymbol method)
@@ -375,66 +358,67 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         //}
 
         //生成开始
-        var codeString = new StringBuilder();
+        var codeBuilder = new StringBuilder();
 
         if (allowSync)
         {
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{this.GetDescription(method)}");
-            codeString.AppendLine("///</summary>");
-            codeString.Append($"{returnType} {methodName}");
-            codeString.Append("(");//方法参数
+            codeBuilder.AppendLine("///<summary>");
+            codeBuilder.AppendLine($"///{this.GetDescription(method)}");
+            codeBuilder.AppendLine("///</summary>");
+            codeBuilder.AppendLine("[AsyncToSyncWarning]");
+            codeBuilder.Append($"{returnType} {methodName}");
+            codeBuilder.Append("(");//方法参数
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (i > 0)
                 {
-                    codeString.Append(",");
+                    codeBuilder.Append(",");
                 }
 
-                codeString.Append(this.GetMethodParameterString(parameters[i]));
+                codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
             }
             if (parameters.Length > 0)
             {
-                codeString.Append(",");
+                codeBuilder.Append(",");
             }
-            codeString.Append("IInvokeOption invokeOption = default");
-            codeString.AppendLine($");");
+            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.AppendLine($");");
         }
 
         if (allowAsync)
         {
             //以下生成异步
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{this.GetDescription(method)}");
-            codeString.AppendLine("///</summary>");
+            codeBuilder.AppendLine("///<summary>");
+            codeBuilder.AppendLine($"///{this.GetDescription(method)}");
+            codeBuilder.AppendLine("///</summary>");
 
             if (!method.HasReturn())
             {
-                codeString.Append($"Task {methodName}Async");
+                codeBuilder.Append($"Task {methodName}Async");
             }
             else
             {
-                codeString.Append($"Task<{returnType}> {methodName}Async");
+                codeBuilder.Append($"Task<{returnType}> {methodName}Async");
             }
 
-            codeString.Append("(");//方法参数
+            codeBuilder.Append("(");//方法参数
             for (var i = 0; i < parameters.Length; i++)
             {
                 if (i > 0)
                 {
-                    codeString.Append(",");
+                    codeBuilder.Append(",");
                 }
-                codeString.Append(this.GetMethodParameterString(parameters[i]));
+                codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
             }
             if (parameters.Length > 0)
             {
-                codeString.Append(",");
+                codeBuilder.Append(",");
             }
-            codeString.Append("IInvokeOption invokeOption = default");
-            codeString.AppendLine($");");
+            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.AppendLine($");");
         }
 
-        return codeString.ToString();
+        return codeBuilder.ToString();
     }
 
     protected virtual IEnumerable<IMethodSymbol> FindApiMethods()
@@ -444,7 +428,25 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             .OfType<IMethodSymbol>();
     }
 
-    protected abstract string GetInheritedClassName(INamedTypeSymbol rpcApi);
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
+    {
+        codeBuilder.AppendLine($"namespace {this.GetNamespace()}");
+        codeBuilder.AppendLine("{");
+
+        if (this.AllowAsync(GeneratorFlag.InterfaceSync) || this.AllowAsync(GeneratorFlag.InterfaceAsync))
+        {
+            this.BuildIntereface(codeBuilder);
+        }
+
+        if (this.AllowAsync(GeneratorFlag.ExtensionSync) || this.AllowAsync(GeneratorFlag.ExtensionAsync))
+        {
+            this.BuildMethod(codeBuilder);
+        }
+        codeBuilder.AppendLine("}");
+
+        // System.Diagnostics.Debugger.Launch();
+        return true;
+    }
 
     protected virtual string GetClassName()
     {
@@ -508,6 +510,8 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         }
     }
 
+    protected abstract string GetInheritedClassName(INamedTypeSymbol rpcApi);
+
     protected virtual string GetInvokeKey(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
     {
         if (namedArguments.TryGetValue("InvokeKey", out var typedConstant))
@@ -554,53 +558,45 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         return name.EndsWith("Async") ? name.Replace("Async", string.Empty) : name;
     }
 
-    public string ReplacePatterns(Dictionary<string, TypedConstant> pairs, string input)
+    protected string GetMethodParameterString(IParameterSymbol parameter)
     {
-        var sb = new StringBuilder();
-
-        for (var i = 0; i < input.Length; i++)
+        //Debugger.Launch();
+        if (parameter.HasExplicitDefaultValue)
         {
-            if (i < input.Length - 1 && input[i] == '{' && char.IsLetter(input[i + 1]))
+            var data = parameter.ExplicitDefaultValue;
+            if (data == null)
             {
-                // 检查是否存在下一个字符并且是字母，处理多字符键的情况
-                var end = i + 2;
-                while (end < input.Length && char.IsLetter(input[end - 1]))
-                {
-                    end++;
-                }
-                var key = input.Substring(i + 1, end - i - 2);
-
-                if (pairs.TryGetValue(key, out var value))
-                {
-                    sb.Append(this.ReplacePattern(key, value));
-                    i = end - 1; // 跳过"{key}"
-                }
-                else
-                {
-                    sb.Append(input[i]); // 保留原始字符
-                }
+                return $"{parameter.Type} {parameter.Name}=null";
+            }
+            else if (data.GetType() == typeof(string))
+            {
+                return $"{parameter.Type} {parameter.Name}=\"{parameter.ExplicitDefaultValue}\"";
+            }
+            else if (data is bool b)
+            {
+                return $"{parameter.Type} {parameter.Name}={b.ToString().ToLower()}";
             }
             else
             {
-                sb.Append(input[i]);
+                return $"{parameter.Type} {parameter.Name}={parameter.ExplicitDefaultValue.ToString()}";
             }
         }
-
-        return sb.ToString();
-    }
-
-    protected virtual string ReplacePattern(string key, TypedConstant typedConstant)
-    {
-        return typedConstant.Value?.ToString();
+        return parameter.ToDisplayString();
     }
 
     protected virtual string GetNamespace()
     {
-        if (this.m_rpcApiNamedArguments.TryGetValue("Namespace", out var typedConstant))
+        var defaultNamespace = $"TouchSocket.Rpc.{this.RpcAttributeName}.Generators";
+        if (!this.m_rpcApiNamedArguments.TryGetValue("Namespace", out var typedConstant))
         {
-            return typedConstant.Value?.ToString() ?? "TouchSocket.Rpc.Generators";
+            return defaultNamespace;
         }
-        return "TouchSocket.Rpc.Generators";
+        var namespaceValue = typedConstant.Value?.ToString();
+        if (string.IsNullOrEmpty(namespaceValue))
+        {
+            return defaultNamespace;
+        }
+        return string.Format(namespaceValue, this.RpcAttributeName);
     }
 
     protected virtual string GetParametersString(ImmutableArray<IParameterSymbol> parameters)
@@ -609,22 +605,22 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         {
             return "default";
         }
-        var codeString = new StringBuilder();
+        var codeBuilder = new StringBuilder();
 
-        codeString.Append($"new object[]");
-        codeString.Append("{");
+        codeBuilder.Append($"new object[]");
+        codeBuilder.Append("{");
 
         foreach (var parameter in parameters)
         {
-            codeString.Append(parameter.Name);
+            codeBuilder.Append(parameter.Name);
             if (!parameter.Equals(parameters[parameters.Length - 1], SymbolEqualityComparer.Default))
             {
-                codeString.Append(",");
+                codeBuilder.Append(",");
             }
         }
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
 
-        return codeString.ToString();
+        return codeBuilder.ToString();
     }
 
     protected virtual string GetReturnType(IMethodSymbol method)
@@ -632,6 +628,11 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         if (!method.HasReturn())
         {
             return "void";
+        }
+
+        if (method.ReturnType is IArrayTypeSymbol arrayTypeSymbol)
+        {
+            return arrayTypeSymbol.ToDisplayString();
         }
 
         if (method.ReturnType is not INamedTypeSymbol returnTypeSymbol)
@@ -677,5 +678,10 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             return typedConstant.Value is bool value && value;
         }
         return true;
+    }
+
+    protected virtual string ReplacePattern(string key, TypedConstant typedConstant)
+    {
+        return typedConstant.Value?.ToString();
     }
 }

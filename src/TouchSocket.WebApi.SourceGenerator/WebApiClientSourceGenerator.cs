@@ -12,36 +12,83 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Linq;
+using TouchSocket.Rpc;
 
 namespace TouchSocket;
 
 [Generator]
-public class WebApiClientSourceGenerator : ISourceGenerator
+public class WebApiClientSourceGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new WebApiClientSyntaxReceiver());
-    }
+        // 第一步：收集所有接口声明语法节点
+        var interfaceDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => s is InterfaceDeclarationSyntax,
+                transform: static (ctx, _) => (InterfaceDeclarationSyntax)ctx.Node);
 
-    public void Execute(GeneratorExecutionContext context)
-    {
-        var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
-
-        if (context.SyntaxReceiver is WebApiClientSyntaxReceiver receiver)
-        {
-            var builders = receiver
-                .GetRpcApiTypes(context.Compilation)
-                .Select(i => new WebApiClientCodeBuilder(i))
-                .Distinct(CodeBuilderEqualityComparer<WebApiClientCodeBuilder>.Default);
-            //Debugger.Launch();
-            foreach (var builder in builders)
+        // 第二步：将语法节点转换为符号并过滤有效接口
+        var interfacesWithSymbol = context.CompilationProvider.Combine(interfaceDeclarations.Collect())
+            .SelectMany(static (tuple, _) =>
             {
-                var tree = CSharpSyntaxTree.ParseText(builder.ToSourceText());
-                var root = tree.GetRoot().NormalizeWhitespace();
-                var ret = root.ToFullString();
-                context.AddSource($"{builder.GetFileName()}.g.cs", ret);
-            }
-        }
+                var (compilation, interfaces) = tuple;
+                var results = new List<INamedTypeSymbol>();
+                var attributeSymbol = RpcUtils.GetGeneratorRpcProxyAttribute(compilation);
+
+                foreach (var interfaceSyntax in interfaces)
+                {
+                    var model = compilation.GetSemanticModel(interfaceSyntax.SyntaxTree);
+                    var interfaceSymbol = model.GetDeclaredSymbol(interfaceSyntax);
+
+                    if (interfaceSymbol != null &&
+                        attributeSymbol != null &&
+                        RpcUtils.IsRpcApiInterface(interfaceSymbol))
+                    {
+                        results.Add(interfaceSymbol);
+                    }
+                }
+                return results.Distinct(SymbolEqualityComparer.Default);
+            });
+
+        // 第三步：生成源代码
+        context.RegisterSourceOutput(interfacesWithSymbol,
+            static (productionContext, interfaceSymbol) =>
+            {
+                var builder = new WebApiClientCodeBuilder((INamedTypeSymbol)interfaceSymbol);
+                productionContext.AddSource(builder);
+            });
     }
 }
+
+//[Generator]
+//public class WebApiClientSourceGenerator : ISourceGenerator
+//{
+//    public void Initialize(GeneratorInitializationContext context)
+//    {
+//        context.RegisterForSyntaxNotifications(() => new WebApiClientSyntaxReceiver());
+//    }
+
+//    public void Execute(GeneratorExecutionContext context)
+//    {
+//        var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
+
+//        if (context.SyntaxReceiver is WebApiClientSyntaxReceiver receiver)
+//        {
+//            var builders = receiver
+//                .GetRpcApiTypes(context.Compilation)
+//                .Select(i => new WebApiClientCodeBuilder(i))
+//                .Distinct(CodeBuilderEqualityComparer<WebApiClientCodeBuilder>.Default);
+//            //Debugger.Launch();
+//            foreach (var builder in builders)
+//            {
+//                var tree = CSharpSyntaxTree.ParseText(builder.ToSourceText());
+//                var root = tree.GetRoot().NormalizeWhitespace();
+//                var ret = root.ToFullString();
+//                context.AddSource($"{builder.GetFileName()}.g.cs", ret);
+//            }
+//        }
+//    }
+//}

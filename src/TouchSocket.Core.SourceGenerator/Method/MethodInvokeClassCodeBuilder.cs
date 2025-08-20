@@ -17,12 +17,13 @@ using System.Text;
 
 namespace TouchSocket;
 
-internal class MethodInvokeCodeBuilder : MethodCodeBuilder
+internal class MethodInvokeClassCodeBuilder : MethodCodeBuilder
 {
     private readonly Compilation m_compilation;
 
-    public MethodInvokeCodeBuilder(INamedTypeSymbol type, Compilation compilation, List<IMethodSymbol> methodSymbols) : base(type)
+    public MethodInvokeClassCodeBuilder(INamedTypeSymbol type, Compilation compilation, List<IMethodSymbol> methodSymbols) : base(type)
     {
+        //Debugger.Launch();
         this.m_compilation = compilation;
         this.MethodSymbols = methodSymbols;
     }
@@ -31,7 +32,7 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
     public override string GetFileName()
     {
-        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Generator.g.cs";
+        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Class.Generator.g.cs";
     }
 
     protected override bool GeneratorCode(StringBuilder codeBuilder)
@@ -45,20 +46,127 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
                 foreach (var item in methods)
                 {
+                    //Debugger.Launch();
                     this.BuildMethodFunc(codeBuilder, item);
-                    this.BuildMethod(codeBuilder, item);
-                    this.BuildAwaitableReturnTypeMethod(codeBuilder, item);
+                    this.BuildClass(codeBuilder, item);
                 }
             }
         }
         return true;
     }
 
+    private void BuildClass(StringBuilder codeBuilder, IMethodSymbol method)
+    {
+        var isTypeAwaitable = this.IsTypeAwaitable(method.ReturnType, out var returnType);
+
+        codeBuilder.AppendLine($"class {this.GetMethodName(method)}Class : IDynamicMethodInfo");
+        using (this.CreateCodeSpace(codeBuilder))
+        {
+            if (method.ReturnType.IsVoid())
+            {
+                codeBuilder.AppendLine("public Type RealReturnType => default;");
+                codeBuilder.AppendLine("public MethodReturnKind ReturnKind => MethodReturnKind.Void;");
+
+                this.BuildMethod(codeBuilder, method);
+
+                codeBuilder.AppendLine("public Task<object> GetResultAsync(object o)");
+                using (this.CreateCodeSpace(codeBuilder))
+                {
+                    codeBuilder.AppendLine("throw new NotImplementedException();");
+                }
+            }
+            else if (isTypeAwaitable)
+            {
+                var hasConfigureAwait = this.HasConfigureAwait(method.ReturnType);
+                if (returnType == null)
+                {
+                    codeBuilder.AppendLine("public Type RealReturnType => default;");
+                    codeBuilder.AppendLine("public MethodReturnKind ReturnKind => MethodReturnKind.Awaitable;");
+
+                    this.BuildMethod(codeBuilder, method);
+
+                    codeBuilder.AppendLine("public async Task<object> GetResultAsync(object o)");
+                    using (this.CreateCodeSpace(codeBuilder))
+                    {
+                        if (method.ReturnType.IsValueType)
+                        {
+                            codeBuilder.AppendLine($"var result = ({method.ReturnType.ToDisplayString()})o;");
+                        }
+                        else
+                        {
+                            codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.As<{method.ReturnType.ToDisplayString()}>(o);");
+                        }
+
+                        if (hasConfigureAwait)
+                        {
+                            codeBuilder.AppendLine("await result.ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+                        }
+                        else
+                        {
+                            codeBuilder.AppendLine("await result;");
+                        }
+
+                        codeBuilder.AppendLine("return default;");
+                    }
+                }
+                else
+                {
+                    codeBuilder.AppendLine($"public Type RealReturnType =>typeof({returnType.GetTypeofString()}) ;");
+                    codeBuilder.AppendLine("public MethodReturnKind ReturnKind => MethodReturnKind.AwaitableObject;");
+
+                    this.BuildMethod(codeBuilder, method);
+
+                    codeBuilder.AppendLine("public async Task<object> GetResultAsync(object o)");
+                    using (this.CreateCodeSpace(codeBuilder))
+                    {
+                        if (method.ReturnType.IsValueType)
+                        {
+                            codeBuilder.AppendLine($"var result = ({method.ReturnType.ToDisplayString()})o;");
+                        }
+                        else
+                        {
+                            codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.As<{method.ReturnType.ToDisplayString()}>(o);");
+                        }
+
+                        if (hasConfigureAwait)
+                        {
+                            codeBuilder.AppendLine("return await result.ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+                        }
+                        else
+                        {
+                            codeBuilder.AppendLine("return await result;");
+                        }
+                        codeBuilder.AppendLine("return await result;");
+                    }
+                }
+            }
+            else
+            {
+                codeBuilder.AppendLine($"public Type RealReturnType => typeof({method.ReturnType.GetTypeofString()});");
+                codeBuilder.AppendLine("public MethodReturnKind ReturnKind => MethodReturnKind.Object;");
+
+                this.BuildMethod(codeBuilder, method);
+                codeBuilder.AppendLine("public Task<object> GetResultAsync(object o)");
+                using (this.CreateCodeSpace(codeBuilder))
+                {
+                    codeBuilder.AppendLine("throw new NotImplementedException();");
+                }
+            }
+        }
+    }
+
+    private bool HasConfigureAwait(ITypeSymbol taskType)
+    {
+        var configureAwaitMethod = taskType?.GetMembers("ConfigureAwait")
+            .OfType<IMethodSymbol>()
+            .FirstOrDefault(m => m.Parameters.Length == 1 && m.Parameters[0].Type.SpecialType == SpecialType.System_Boolean);
+        return configureAwaitMethod != null;
+    }
+
     private void BuildMethod(StringBuilder codeBuilder, IMethodSymbol method)
     {
-        var objectName = this.GetObjectName(method);
-
-        codeBuilder.AppendLine($"private static object {this.GetMethodName(method)}(object {objectName}, object[] ps)");
+        //var objectName = this.GetObjectName(method);
+        codeBuilder.AppendLine($"public object Invoke(object instance, object[] ps)");
         codeBuilder.AppendLine("{");
 
         var ps = new List<string>();
@@ -90,7 +198,7 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
                 }
                 else
                 {
-                    codeBuilder.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
+                    codeBuilder.AppendLine($"(({method.ContainingType.ToDisplayString()})instance).{method.Name}({string.Join(",", ps)});");
                 }
             }
             else
@@ -101,7 +209,7 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
                 }
                 else
                 {
-                    codeBuilder.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
+                    codeBuilder.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})instance).{method.Name}({string.Join(",", ps)});");
                 }
             }
         }
@@ -115,7 +223,7 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
                 }
                 else
                 {
-                    codeBuilder.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
+                    codeBuilder.AppendLine($"(({method.ContainingType.ToDisplayString()})instance).{method.Name}();");
                 }
             }
             else
@@ -126,7 +234,7 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
                 }
                 else
                 {
-                    codeBuilder.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
+                    codeBuilder.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})instance).{method.Name}();");
                 }
             }
         }
@@ -153,42 +261,12 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
     private void BuildMethodFunc(StringBuilder codeBuilder, IMethodSymbol method)
     {
-        codeBuilder.AppendLine($"public static Func<object, object[], object> {this.GetMethodName(method)}Func => {this.GetMethodName(method)};");
+        codeBuilder.AppendLine($"public static IDynamicMethodInfo {this.GetMethodName(method)}ClassProperty => new {this.GetMethodName(method)}Class();");
     }
 
-    private void BuildAwaitableReturnTypeMethod(StringBuilder codeBuilder, IMethodSymbol method)
+    private bool IsTypeAwaitable(ITypeSymbol typeSymbol, out ITypeSymbol returnType)
     {
-        var returnType = method.ReturnType;
-        if (returnType.IsVoid())
-        {
-            return;
-        }
-        if (this.IsTypeAwaitable(returnType, out var hasResult))
-        {
-            //Debugger.Launch();
-            var methodId = this.GetMethodName(method) + "ReturnTypeMethod";
-            codeBuilder.AppendLine($"private static async Task<object> {methodId}(object o)");
-            using (this.CreateCodeSpace(codeBuilder))
-            {
-                codeBuilder.AppendLine($"var result = ({returnType.ToDisplayString()})o;");
-
-                if (hasResult)
-                {
-                    codeBuilder.AppendLine("return await result;");
-                }
-                else
-                {
-                    codeBuilder.AppendLine("await result;");
-                    codeBuilder.AppendLine("return default;");
-                }
-            }
-
-            codeBuilder.AppendLine($"public static Func<object, Task<object>> {methodId}Func=>{methodId};");
-        }
-    }
-
-    private bool IsTypeAwaitable(ITypeSymbol typeSymbol, out bool hasResult)
-    {
+        returnType = default;
         // 查找无参数的GetAwaiter实例方法
         var getAwaiterMethod = typeSymbol.GetMembers("GetAwaiter")
             .OfType<IMethodSymbol>()
@@ -196,14 +274,12 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
         if (getAwaiterMethod == null)
         {
-            hasResult = false;
             return false; // 无符合条件的实例方法
         }
 
         var awaiterType = getAwaiterMethod.ReturnType as INamedTypeSymbol;
         if (awaiterType == null)
         {
-            hasResult = false;
             return false;
         }
 
@@ -213,7 +289,6 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
         if (inotifyCompletion == null || icriticalNotifyCompletion == null)
         {
-            hasResult = false;
             return false; // 编译环境中缺少必要接口
         }
 
@@ -224,7 +299,6 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
         if (!implementsInterface)
         {
-            hasResult = false;
             return false;
         }
 
@@ -235,7 +309,6 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 
         if (isCompleted == null)
         {
-            hasResult = false;
             return false;
         }
 
@@ -243,8 +316,15 @@ internal class MethodInvokeCodeBuilder : MethodCodeBuilder
         var getResult = awaiterType.GetMembers("GetResult")
             .OfType<IMethodSymbol>()
             .FirstOrDefault(m => m.Parameters.IsEmpty);
+        if (getResult.ReturnType.IsVoid())
+        {
+            returnType = default;
+        }
+        else
+        {
+            returnType = getResult.ReturnType;
+        }
 
-        hasResult = !getResult.ReturnsVoid;
         return getResult != null;
     }
 
