@@ -16,12 +16,12 @@ import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 
 ## 一、说明
 
-TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SessionClient**类实例。而**SessionClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
+`TcpService`是`Tcp`系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建`SessionClient`类实例。而`SessionClient`是当`TcpClient`（客户端）成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
 
 ## 二、特点
 
 - 简单易用。
-- IOCP多线程。
+- `IOCP`多线程。
 - 内存池支持
 - 高性能（实测服务器单客户端单线程，每秒可接收200w条8字节的信息，接收数据流量可达3GB/s）。
 - **多地址监听**（可以一次性监听多个IP及端口）
@@ -50,9 +50,9 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 
 ### 4.1 连接架构
 
-服务器在收到**新客户端连接**时，会创建一个SessionClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
+服务器在收到**新客户端连接**时，会创建一个`SessionClient`的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
 
-SessionClient在Service里面以字典映射。ID为键，SessionClient本身为值。
+`SessionClient`在`Service`里面以字典映射。`ID`为键，`SessionClient`本身为值。
 
 ```mermaid
 flowchart TD;

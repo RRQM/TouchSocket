@@ -61,6 +61,17 @@ internal class Program
         return service;
     }
 
+    private static void GetTouchSocketConfig()
+    {
+        var config = new TouchSocketConfig();
+
+        #region 示例Tcp服务器监听
+        //设置远程IP地址和端口
+        config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"));
+        #endregion
+
+    }
+
     /// <summary>
     /// 以Received异步委托接收数据
     /// </summary>
