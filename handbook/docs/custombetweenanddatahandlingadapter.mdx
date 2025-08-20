@@ -7,6 +7,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from '@site/src/components/CodeBlocks/CodeBlock';
 
 ### 定义
 
@@ -42,6 +43,7 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 【MyBetweenAndRequestInfo】
 首先，新建MyBetweenAndRequestInfo类，然后实现**IRequestInfo**接口。
 
+<CustomCodeBlock region="区间字符实体类"/>
 ```csharp showLineNumbers
 class MyBetweenAndRequestInfo : IRequestInfo
 {
