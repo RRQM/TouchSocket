@@ -461,7 +461,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
                     }
                 }
                 var position = result.Buffer.GetPosition(reader.BytesRead);
-                transport.Input.AdvanceTo(position);
+                transport.Input.AdvanceTo(position, result.Buffer.End);
 
                 if (result.IsCanceled || result.IsCompleted)
                 {
