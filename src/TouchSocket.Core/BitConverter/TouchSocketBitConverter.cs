@@ -171,7 +171,7 @@ public sealed class TouchSocketBitConverter
         }
         fixed (byte* p = &span[0])
         {
-            if (this.IsSameOfSet())
+            if (this.IsSameOfSet() || size == 1)
             {
                 return Unsafe.Read<T>(p);
             }
