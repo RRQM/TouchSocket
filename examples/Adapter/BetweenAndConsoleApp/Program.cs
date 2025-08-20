@@ -82,6 +82,7 @@ internal class Program
     }
 }
 
+#region 区间字符实体类
 internal class MyBetweenAndRequestInfo : IRequestInfo
 {
     public MyBetweenAndRequestInfo(byte[] body)
@@ -91,6 +92,8 @@ internal class MyBetweenAndRequestInfo : IRequestInfo
 
     public byte[] Body { get; private set; }
 }
+#endregion
+
 
 internal class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
 {

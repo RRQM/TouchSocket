@@ -122,6 +122,13 @@
 		],
 		"description": "importHighlight"
 	},
+	"importCustomCodeBlock": {
+		"prefix": "importCustomCodeBlock",
+		"body": [
+			"import CustomCodeBlock from '@site/src/components/CodeBlocks/CodeBlock';"
+		],
+		"description": "importCustomCodeBlock"
+	},
 	"importBilibiliCard": {
 		"prefix": "importBilibiliCard",
 		"body": [
@@ -156,6 +163,13 @@
 			"<CardLink link=\"$0\" isPro=\"true\"/>"
 		],
 		"description": "CardLink"
+	},
+	"CustomCodeBlock": {
+		"prefix": "CustomCodeBlock",
+		"body": [
+			"<CustomCodeBlock region=\"$0\"/>"
+		],
+		"description": "CustomCodeBlock"
 	},
 	"BilibiliCard": {
 		"prefix": "BilibiliCard",
