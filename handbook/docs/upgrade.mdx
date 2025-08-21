@@ -18,6 +18,60 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.1.16
+
+**更新日期：** 2025.8.21
+
+**更新描述：**
+
+- SSL配置重构和安全性改进。
+- 代码格式优化和规范化。
+- 版本号更新至3.1.16。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `SystemExtension.WriteAsync` 方法的代码格式，将多行的 `ConfigureAwait` 调用合并为一行，提升代码可读性。
+
+#### TouchSocket
+
+- &nbsp;<Tag>调整</Tag> `ClientSslOption` 构造函数重构，移除自动读取系统根证书存储的复杂逻辑，改为初始化空的 `X509Certificate2Collection` 集合，提升安全性。
+- &nbsp;<Tag>调整</Tag> `SslOption.SslProtocols` 属性添加默认值 `SslProtocols.None`，简化SSL配置。
+- &nbsp;<Tag>调整</Tag> `TouchSocketConfigExtension` 中SSL配置逻辑简化：
+  - 将 `TargetHost` 从 `value.Authority` 改为 `value.Host`
+  - 移除复杂的条件编译SSL协议配置，统一使用 `SslProtocols.None`
+
+
+***
+
+<details>
+<summary>v3.1</summary>
+<div>
+
+## v3.1.15
+
+**更新日期：** 2025.8.3
+
+**更新描述：**
+
+- HTTP协议头部解析性能优化。
+- RPC代码生成器命名空间改进。
+
+**更新详情：**
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> `HttpBase.ParsingHeader` 方法中的字节块解析逻辑，优化内存使用和变量命名，提升HTTP头部解析性能。
+- &nbsp;<Tag>修复</Tag> 修复头部长度计算错误的问题。
+
+#### TouchSocket.SourceGenerator
+
+- &nbsp;<Tag>调整</Tag> `RpcClientCodeBuilder.GetNamespace` 方法，改进默认命名空间生成策略，支持根据RpcAttributeName自定义命名空间格式。
+- &nbsp;<Tag>优化</Tag> 代码生成器的命名空间逻辑，提升生成代码的组织结构。
+
+***
+
 ## v3.1.14
 
 **更新日期：** 2025.7.20
@@ -54,11 +108,6 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> `VariableByteIntegerRecorder` 中长度设置错误，修复变长整数记录器的边界处理。
 
 ***
-
-
-<details>
-<summary>v3.1</summary>
-<div>
 
 ## v3.1.12
 
