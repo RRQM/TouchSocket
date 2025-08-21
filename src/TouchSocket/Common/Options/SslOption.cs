@@ -46,7 +46,7 @@ public abstract class SslOption
     /// <summary>
     /// 协议版本
     /// </summary>
-    public SslProtocols SslProtocols { get; set; }
+    public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
 
     /// <summary>
     /// 该值指定身份验证期间是否检查证书吊销列表

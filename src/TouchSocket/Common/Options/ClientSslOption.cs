@@ -24,14 +24,7 @@ public class ClientSslOption : SslOption
     /// </summary>
     public ClientSslOption()
     {
-        // 初始化一个X509证书存储，用于读取和验证根证书
-        var store = new X509Store(StoreName.Root);
-        // 打开证书存储，允许读写操作
-        store.Open(OpenFlags.ReadWrite);
-        // 将证书存储中的所有证书赋值给客户端证书属性
-        this.ClientCertificates = store.Certificates;
-        // 关闭证书存储
-        store.Close();
+        this.ClientCertificates = new X509Certificate2Collection();
     }
 
     /// <summary>
