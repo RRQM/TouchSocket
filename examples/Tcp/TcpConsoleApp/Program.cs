@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ internal class Program
     {
         var service = new TcpService();
         await service.SetupAsync(new TouchSocketConfig()//载入配置
-             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790, new IPHost(System.Net.IPAddress.IPv6Any, 7791))//同时监听两个地址
+             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790, new IPHost(System.Net.IPAddress.IPv6Any, 7791))//同时监听多个地址
              .ConfigureContainer(a =>//容器的配置顺序应该在最前面
              {
                  a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -61,12 +62,45 @@ internal class Program
         return service;
     }
 
+    private static async Task CreateDefaultService()
+    {
+        #region 创建TcpService
+        var service = new TcpService();
+        service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+        service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+        service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+        service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+        service.Received = async (client, e) =>
+        {
+            //从客户端收到信息
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
+            client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+
+            //简单消除Task，当使用插件接收时，需要使用 await e.InvokeNext();来继续执行后续插件。
+            await EasyTask.CompletedTask;
+        };
+
+        await service.SetupAsync(new TouchSocketConfig()//载入配置
+             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//可以同时监听多个地址
+             .ConfigureContainer(a =>//容器的配置
+             {
+                 a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+             })
+             .ConfigurePlugins(a =>
+             {
+                 //a.Add();//此处可以添加插件
+             }));
+
+        await service.StartAsync();//启动
+        #endregion
+    }
+
     private static void GetTouchSocketConfig()
     {
         var config = new TouchSocketConfig();
 
         #region 示例简单Tcp服务器监听
-        //设置远程IP地址和端口
+        //设置监听IP地址和端口
         config.SetListenIPHosts(new IPHost("127.0.0.1:7789"));
 
         //或者直接设置端口
@@ -95,6 +129,31 @@ internal class Program
 
         #region 服务器最大连接数
         config.SetMaxCount(10000);
+        #endregion
+
+        #region 配置NoDelay算法
+        config.SetNoDelay(true);
+        #endregion
+
+        #region 服务器端口复用
+        config.UseReuseAddress();
+        #endregion
+
+        #region 接收缓存池的设定场景
+        //此配置已在4.0中无实际意义，TouchSocket会根据实际情况动态分配缓存。
+        config.SetMaxBufferSize(1024);
+        config.SetMinBufferSize(1024);
+        #endregion
+
+        #region 服务器名称设置
+        config.SetServerName("Touch Server");
+        #endregion
+
+        #region SSL加密设置
+        config.SetServiceSslOption(new ServiceSslOption()
+        {
+            Certificate = new X509Certificate2("key.pfx", "pwd")
+        });
         #endregion
     }
 
