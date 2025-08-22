@@ -1,0 +1,195 @@
+---
+id: upgrade-v3-1
+title: v3.1 系列更新
+---
+
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+## v3.1.16
+
+**更新日期：** 2025.8.21
+
+**更新描述：**
+
+- SSL配置重构和安全性改进。
+- 代码格式优化和规范化。
+- 版本号更新至3.1.16。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `SystemExtension.WriteAsync` 方法的代码格式，将多行的 `ConfigureAwait` 调用合并为一行，提升代码可读性。
+
+#### TouchSocket
+
+- &nbsp;<Tag>调整</Tag> `ClientSslOption` 构造函数重构，移除自动读取系统根证书存储的复杂逻辑，改为初始化空的 `X509Certificate2Collection` 集合，提升安全性。
+- &nbsp;<Tag>调整</Tag> `SslOption.SslProtocols` 属性添加默认值 `SslProtocols.None`，简化SSL配置。
+- &nbsp;<Tag>调整</Tag> `TouchSocketConfigExtension` 中SSL配置逻辑简化：
+  - 将 `TargetHost` 从 `value.Authority` 改为 `value.Host`
+  - 移除复杂的条件编译SSL协议配置，统一使用 `SslProtocols.None`
+
+***
+
+## v3.1.15
+
+**更新日期：** 2025.8.3
+
+**更新描述：**
+
+- HTTP协议头部解析性能优化。
+- RPC代码生成器命名空间改进。
+
+**更新详情：**
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> `HttpBase.ParsingHeader` 方法中的字节块解析逻辑，优化内存使用和变量命名，提升HTTP头部解析性能。
+- &nbsp;<Tag>修复</Tag> 修复头部长度计算错误的问题。
+
+#### TouchSocket.SourceGenerator
+
+- &nbsp;<Tag>调整</Tag> `RpcClientCodeBuilder.GetNamespace` 方法，改进默认命名空间生成策略，支持根据RpcAttributeName自定义命名空间格式。
+- &nbsp;<Tag>优化</Tag> 代码生成器的命名空间逻辑，提升生成代码的组织结构。
+
+***
+
+## v3.1.14
+
+**更新日期：** 2025.7.20
+
+**更新描述：**
+
+- HTTP模块性能优化和内存管理改进。
+
+**更新详情：**
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> `HttpResponse.GetContentAsync` 方法中的内存流初始化，使用精确的内容长度预分配内存，提升性能。
+- &nbsp;<Tag>优化</Tag> 内存分配策略，减少不必要的内存占用。
+- &nbsp;<Tag>优化</Tag> 变量命名和局部变量使用，提升代码可读性。
+
+***
+
+## v3.1.13
+
+**更新日期：** 2025.7.14
+
+**更新描述：**
+
+- 修复和改进升级，提升稳定性和性能。
+- MQTT协议处理优化和错误修复。
+
+**更新详情：**
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>修复</Tag> MQTT 协议名称统一为 "MQTT"（大写），修复协议标准一致性问题。
+- &nbsp;<Tag>修复</Tag> `MqttAdapter` 中消息解析位置计算错误，修复数据包边界计算问题。
+- &nbsp;<Tag>修复</Tag> `VariableByteIntegerRecorder` 中长度设置错误，修复变长整数记录器的边界处理。
+
+***
+
+## v3.1.12
+
+**更新日期：** 2025.7.8
+
+**更新描述：**
+
+- 兼容性修复升级。
+- 代码质量和文档规范化改进，以及功能增强。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> 代码注释规范化，统一将 "null" 改为 `<see langword="null"/>` 的XML文档格式。
+- &nbsp;<Tag>新增</Tag> `EasyMemoryMarshal` 类增加了更详细的文档和泛型约束。
+- &nbsp;<Tag>优化</Tag> 多个核心类的内存管理和线程安全性。
+- &nbsp;<Tag>优化</Tag> `TouchSocketBitConverter` 中的异常文档注释。
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>优化</Tag> MQTT协议名称从 "MQTT" 统一为 "Mqtt"。
+- &nbsp;<Tag>重构</Tag> `MqttSessionActor` 消息分发机制，提升性能和稳定性。
+- &nbsp;<Tag>新增</Tag> `ThreadSafeTopicSubscriptions` 类，提供线程安全的主题订阅管理。
+- &nbsp;<Tag>优化</Tag> `MqttBroker` 的消息转发逻辑，改进并发处理能力。
+- &nbsp;<Tag>修复</Tag> `MqttReceivedEventArgs` 中属性命名一致性问题。
+
+#### TouchSocket.SerialPorts
+
+- &nbsp;<Tag>新增</Tag> `ISerialPortClient` 和 `SerialPortClient` 实现 `IConnectableClient` 接口。
+- &nbsp;<Tag>新增</Tag> `ConnectAsync` 方法支持异步连接操作。
+- &nbsp;<Tag>调整</Tag> `ISerialPortSession` 接口继承关系，移除冗余接口。
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>新增</Tag> `IModbusRtuMaster` 实现 `IConnectableClient` 接口。
+- &nbsp;<Tag>新增</Tag> `ModbusRtuMaster` 增加 `ConnectAsync` 方法支持。
+
+#### TouchSocket.WebApi
+
+- &nbsp;<Tag>新增</Tag> `RegexRouterAttribute` 类增加详细的XML文档注释。
+- &nbsp;<Tag>优化</Tag> `WebApiAttribute` 中的路由处理逻辑和变量命名。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>优化</Tag> 网络监听器和客户端基类的参数验证和错误处理。
+- &nbsp;<Tag>修复</Tag> `ReconnectionPlugin` 的 Dispose 方法错误，修复无限循环任务的正确释放机制。([#68](https://github.com/RRQM/TouchSocket/pull/68) by [@godchadigo](https://github.com/godchadigo))
+
+***
+
+## v3.1.9(10)(11)
+
+**更新日期：** 2025.6.24
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `Result`和`Result<T>`在调试时的显示。
+- &nbsp;<Tag>优化</Tag> `IByteBlock`的部分方法传参。
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>修复</Tag> `IMqttTcpClient`没有继承`ISetupConfigObject`的bug。
+
+#### TouchSocket.SerialPort
+
+- &nbsp;<Tag>修复</Tag> `StreamAsync`异步流模式工作异常的bug。
+
+#### TouchSocketPro.Modbus
+
+- &nbsp;<Tag>新增</Tag> `ModbusCoilsDrive`支持线圈读写。
+- &nbsp;<Tag>新增</Tag> `ModbusDiscreteInputsDrive`支持离散输入读写。
+- &nbsp;<Tag>新增</Tag> `ModbusHoldingRegistersDrive`支持保持寄存器读写。
+- &nbsp;<Tag>新增</Tag> `ModbusInputRegistersDrive`支持输入寄存器读写。
+
+***
+
+## v3.1.8
+
+**更新日期：** 2025.6.15
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `DependencyProperty`在调试时的显示。
+- &nbsp;<Tag>调整</Tag> `SafeDispose`方法的返回，由`void`改为`Result`。此修改不影响代码编译，但是需要重新编译依赖dll。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> 当`Http服务器`在响应后，`HttpResponse`不会清空`Content`的`bug`。 [#ICEVTN](https://gitee.com/RRQM_Home/TouchSocket/issues/ICEVTN)
+
+*** End of file

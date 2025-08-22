@@ -1,0 +1,335 @@
+---
+id: upgrade-v2-0
+title: v2.0 系列更新
+---
+
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+## v2.0.18
+
+**更新日期：** 2024.9.10
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> 当Cancel延迟到Reset之后时，新获取的waitData会出现Status为Cancel异常bug [#IAQ2AI](https://gitee.com/RRQM_Home/TouchSocket/issues/IAQ2AI)。
+
+
+***
+
+
+## v2.0.17
+
+**更新日期：** 2024.8.30
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> 使用AspNetCore容器时，默认没有注册ILog的bug。
+
+***
+
+
+## v2.0.16
+
+**更新日期：** 2024.8.19
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> tcp在winform中会使用主线程接收的bug，导致各种同步接收异常。
+
+
+***
+
+
+## v2.0.15
+
+**更新日期：** 2024.8.9
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> 当客户端断开连接时，http响应会出现object is null的bug提示。
+
+
+## v2.0.13（14）
+
+**更新日期：** 2024.7.24
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> 重连插件在长时间运行时，会失效的bug。
+- &nbsp;<Tag>修复</Tag> ssl加密下，连接响应时间过长bug[#IAET6V](https://gitee.com/RRQM_Home/TouchSocket/issues/IAET6V) 。
+
+## v2.0.12
+
+**更新日期：** 2024.7.17
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> socket在接收连接时，异常无法拦截的bug[#IADIGX](https://gitee.com/RRQM_Home/TouchSocket/issues/IADIGX)。
+- &nbsp;<Tag>调整</Tag> 日志记录在执行时，先判断日志组件的可用性。
+
+## v2.0.11
+
+**更新日期：** 2024.7.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> Metadata在Add时不会覆盖原key的bug。
+
+
+
+## v2.0.10
+
+**更新日期：** 2024.5.31
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> WebSocket快捷命令行bug。 [#I9TG3V](https://gitee.com/RRQM_Home/TouchSocket/issues/I9TG3V)。
+
+
+## v2.0.9
+
+**更新日期：** 2024.5.29
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> UdpPackage适配器在工作时调时导致的bug。 [#I9SYTR](https://gitee.com/RRQM_Home/TouchSocket/issues/I9SYTR)。
+- &nbsp;<Tag>修复</Tag> Http在GetBoundary时bug。 [#I9PXWT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PXWT)。
+
+
+
+## v2.0.(7)8
+
+**更新日期：** 2024.5.17
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> udp首次建立连接无法接收数据的bug。 [#I9PV7C](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PV7C)。
+
+## v2.0.6
+
+**更新日期：** 2024.5.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> FlowGate的waitTime小于0时bug。
+
+
+## v2.0.5
+
+**更新日期：** 2024.5.2
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> wsclient Received事件与插件触发bug。[#I9L9WI](https://gitee.com/RRQM_Home/TouchSocket/issues/I9L9WI)。
+- &nbsp;<Tag>修复</Tag> ws命令行执行bug。
+
+## v2.0.4
+
+**更新日期：** 2024.4.30
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> linux平台下，Socket吞吐量大幅降低。[#I9KURV](https://gitee.com/RRQM_Home/TouchSocket/issues/I9KURV)。
+- &nbsp;<Tag>修复</Tag> WebSocket在进行连接时，Host的Header写法错误，没有包含端口。[#I9KUVI](https://gitee.com/RRQM_Home/TouchSocket/issues/I9KUVI)。
+
+
+## v2.0.3
+
+**更新日期：** 2024.4.14
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> Tcp在接收时，内存池释放存在延迟，可能导致内存池快速扩张，浪费内存。[#I9FVAA](https://gitee.com/RRQM_Home/TouchSocket/issues/I9FVAA)。
+- &nbsp;<Tag>修复</Tag> 在使用Host模型时，注入瞬态的TcpClient，在第一次获取实例是正常的，第二次就失败。[#I9G3SV](https://gitee.com/RRQM_Home/TouchSocket/issues/I9G3SV)。
+- &nbsp;<Tag>修复</Tag> WebSocketClient连接其他服务器时显示 “操作已被取消”。[#I9GG05](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GG05)。
+- &nbsp;<Tag>新增</Tag> ConcurrentList新增实现IReadOnlyList接口。
+
+
+## v2.0.2
+
+**更新日期：** 2024.4.1
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> TouchSocketBitConverter中的ToBooleans方法存在Bug[#I9C1UY](https://gitee.com/RRQM_Home/TouchSocket/issues/I9C1UY)。
+- &nbsp;<Tag>修复</Tag> SystemExtensions中的GetBit和SetBit方法[#I9C1WM](https://gitee.com/RRQM_Home/TouchSocket/issues/I9C1WM)。
+- &nbsp;<Tag>修复</Tag> HttpService多次响应下载文件时，不会响应的bug。
+
+
+
+## v2.0.1
+
+**更新日期：** 2024.3.16
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> HttpClient，无法通过HttpResponse.GetBody()获取响应内容[#I989SI](https://gitee.com/RRQM_Home/TouchSocket/issues/I989SI)。
+- &nbsp;<Tag>修复</Tag> SetNoDelay 异常[#I979B0](https://gitee.com/RRQM_Home/TouchSocket/issues/I979B0)。
+- &nbsp;<Tag>修复</Tag> 调用Dmtp服务的大数据传输时，如果循环调用会出现收到的数据和发送的数据不一致。实际上该问题是由`ByteBlock`写入扩容bug而导致的[#I96FNF](https://gitee.com/RRQM_Home/TouchSocket/issues/I96FNF)。
+
+
+## v2.0.0
+
+**更新日期：** 2024.3.9
+
+**更新描述：**
+
+此版本是大版本更新。可能会产生很多不兼容部分，所以升级之前请做好备份，并且请详细阅读下列更新内容。
+
+**升级指南：**
+
+- 升级时请先升级至`2.0.0-beta.190`，再升级至`2.0.0-rc.2`版本，因为正式版对于[Obsolete]特性的成员直接删除了，所以为友好升级，请先升级至此版本。
+- 由2.0.0-beta.200至2.0.0-beta.220 [#I8DE1D](https://gitee.com/RRQM_Home/TouchSocket/issues/I8DE1D)
+- 由2.0.0-beta.220至2.0.0-beta.230 [#I8LAX4](https://gitee.com/RRQM_Home/TouchSocket/issues/I8LAX4)
+
+**更新详情：**
+
+#### TouchSokcet.Core
+
+- &nbsp;<Tag>优化</Tag> FileLogger支持指定不同目录。
+- &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。同时e.Handled功能依然有效。
+- &nbsp;<Tag>调整</Tag> Log项。LogType调整为LogLevel，并且不需要位运算。直接按日志等级输出。
+- &nbsp;<Tag>调整</Tag> 修改IPluginsManager名称为IPluginsManager。
+- &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
+- &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
+- &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会影响内存池的效率。
+- &nbsp;<Tag>调整</Tag> 修改所有委托为异步Task。
+- &nbsp;<Tag>调整</Tag> 修改所有Setup返回值为void。
+- &nbsp;<Tag>修复</Tag> Metadata在0个成员长度时，会被反序列化成null的bug。
+- &nbsp;<Tag>修复</Tag> PluginsManager在注册具有继承的插件时，会无法识别的bug。
+
+#### TouchSokcet.Sokcets
+
+- &nbsp;<Tag>优化</Tag> IPHost支持从int、string直接隐式转换。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有“ID”属性，改名为“Id”。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有插件的执行顺序，移动至内部重写方法之后。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有`ResetID`改名为`ResetId`。
+- &nbsp;<Tag>调整</Tag> UseCheckClear项，SetDuration调整名称为SetTick。
+- &nbsp;<Tag>调整</Tag> UseCheckClear项，不仅可以适用服务器，客户端也适用。
+- &nbsp;<Tag>调整</Tag> Config配置中，SetDataHandlingAdapter调整为SetTcpDataHandlingAdapter。
+- &nbsp;<Tag>调整</Tag> 适配器项，CustomDataHandlingAdapter中的Filter方法中，byteBlock参数使用in修饰。
+- &nbsp;<Tag>调整</Tag> 适配器项，DataHandlingAdapter改名为TcpDataHandlingAdapter。
+- &nbsp;<Tag>调整</Tag> 适配器项，DataAdapterTester改名为TcpDataAdapterTester。
+- &nbsp;<Tag>调整</Tag> Config项，所有适配器的相关配置，使用SetAdapterOption配置。
+- &nbsp;<Tag>移除</Tag> UsePlugin的显式配置，当调用ConfigurePlugins时，会自动启用。
+
+#### TouchSokcet.Http
+
+- &nbsp;<Tag>调整</Tag> WSCommandLinePlugin改名为WebSocketCommandLinePlugin。
+- &nbsp;<Tag>新增</Tag> WebSocket添加[同步非阻塞Read](./websocketservice.mdx#52-websocket显式readasync)。
+- &nbsp;<Tag>新增</Tag> WebSocket的WSDataFrame新增IsPing、IsPong、IsText、IsBinary、IsClose等属性。
+- &nbsp;<Tag>新增</Tag> 静态网页插件新增NavigateAction与ResponseAction等委托，可以在静态页面请求之前重定向，或者请求返回时设置header等。
+
+#### TouchSokcet.Rpc
+
+- &nbsp;<Tag>移除</Tag> 整体功能迁移至TouchSokcet(Pro).Dmtp。
+- &nbsp;<Tag>调整</Tag> [RpcActionFilter](./rpcactionfilter.mdx#33-规则)执行策略和顺序 
+- &nbsp;<Tag>调整</Tag> 修改ConfigureRpcStore为AddRpcStore。 
+- &nbsp;<Tag>新增</Tag> [RealityProxy](./rpcgenerateproxy.mdx)透明代理方式。 
+- &nbsp;<Tag>新增</Tag> [DispatchProxy](./rpcgenerateproxy.mdx)添加OnBefore和OnAfter的AOP调用。
+
+#### TouchSokcet(Pro).Dmtp
+
+- &nbsp;<Tag>调整</Tag> 原TouchRpc全系改名为Dmtp。例如：原TcpTouchRpcClient改名为TcpDmtpClient。
+- &nbsp;<Tag>调整</Tag> 原TouchRpc中InvokeOption，改名为DmtpInvokeOption。InvokeOption依然有效，但是在调用DmtpRpc时，则无法指定序列化方式。所以可能需要使用DmtpInvokeOption。
+- &nbsp;<Tag>调整</Tag> 原TouchRpc中Invoke直接调用的方式，改为InvokeT。
+- &nbsp;<Tag>调整</Tag> Dmtp相关配置，使用SetDmtpOption配置。
+- &nbsp;<Tag>移除</Tag> **暂时**移除EventBus功能，后续可能考虑添加。
+- &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+- &nbsp;<Tag>新增</Tag> 文件传输项，开放增加SetMaxSpeed功能。
+- &nbsp;<Tag>新增</Tag> DmtpRpc。
+- &nbsp;<Tag>新增</Tag> DmtpRpc组件在调用时，可以通过DmtpInvokeOption传入Metadata元数据。
+- &nbsp;<Tag>修复</Tag> DmtpRpc在调用无ref，out的函数时，参数会为null的bug。
+
+#### TouchSokcet.JsonRpc
+
+- &nbsp;<Tag>修复</Tag> JsonRpc使用内联数组调用[#I79OFZ](https://gitee.com/RRQM_Home/TouchSocket/issues/I79OFZ)。
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### TouchSokcet.WebApi
+
+- &nbsp;<Tag>新增</Tag> WebApi新增[Swagger页面](./swagger.mdx)。
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### TouchSokcet.XmlRpc
+
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### TouchSokcet(Pro).Hosting
+
+- &nbsp;<Tag>新增</Tag> 新发布Hosting的包，用于构建更加强壮的运行程序。
+
+#### TouchSokcet.SerialPorts
+
+- &nbsp;<Tag>新增</Tag> 新发布串口的包。
+
+#### TouchSokcet(Pro).Modbus
+
+- &nbsp;<Tag>新增</Tag> 新发布Modbus的包，支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp协议的主站（Poll）和从站（Slave）。
+---
+

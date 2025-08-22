@@ -1,0 +1,204 @@
+---
+id: upgrade-v2-1
+title: v2.1 系列更新
+---
+
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+## v2.1.10
+
+**更新日期：** 2024.10.25
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>优化</Tag> `CheckClearPlugin`插件频繁输出poll日志的不合理设计。
+
+***
+
+## v2.1.9
+
+**更新日期：** 2024.10.14
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> CheckClearPlugin长时间工作时可能失效的bug。
+
+
+***
+
+## v2.1.8
+
+**更新日期：** 2024.10.11
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> TcpService在Stop的时候，有个内部异常打了log。 [#IAWD4N](https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N)
+
+
+***
+
+## v2.1.7
+
+**更新日期：** 2024.10.5
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> TcpService在启动时如果异常，则无法再重新启动的bug。
+
+***
+
+## v2.1.6
+
+**更新日期：** 2024.10.1
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>新增</Tag> HttpContent机制，能上传超大数据。
+- &nbsp;<Tag>新增</Tag> StreamHttpContent，能上传流数据，例如：文件流。
+- &nbsp;<Tag>修复</Tag> Task内部异常时没有及时try，导致全局捕获时有无用捕获。
+- &nbsp;<Tag>修复</Tag> TcpServiceBase在调用StopAsync时，IServerStopedPlugin插件无法触发的bug。
+- &nbsp;<Tag>移除</Tag> TriggerQueue无用类。
+- &nbsp;<Tag>优化</Tag> HttpRequest，使其能上传超大数据。
+
+***
+
+## v2.1.4(5)
+
+**更新日期：** 2024.9.23
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>新增</Tag> DmtpRpc恢复性新增Xml序列化。
+- &nbsp;<Tag>修复</Tag> 使用源生成（IPackage）打包时报错。[#IASTWJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IASTWJ)
+- &nbsp;<Tag>修复</Tag> Result泛型类中隐式转换错写成显示转换的bug。
+- &nbsp;<Tag>修复</Tag> DmtpRpc序列化选择器没有预留Json序列化配置的bug。
+
+
+***
+
+
+## v2.1.3
+
+**更新日期：** 2024.9.22
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>优化</Tag> 部分类，方法注释。
+- &nbsp;<Tag>优化</Tag> 多数英文字符串资源。
+- &nbsp;<Tag>修复</Tag> Tcp、NamedPipe、SerialPort等组件在主动调用Close时，ClosedEventArgs参数属性Manual为false的bug，导致重连插件偶发性再次连接。[#IASH1A](https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A)
+- &nbsp;<Tag>修复</Tag> `ByteBlock`类部分bug。
+- &nbsp;<Tag>移除</Tag> `DecimalConver`类，该类功能已完全由`TouchSocketBitConverter`代替，属于无用类。
+- &nbsp;<Tag>调整</Tag> 受保护方法`ProtectedResetId`方法，名称更改为`ProtectedResetIdAsync`。
+
+***
+
+
+## v2.1.2
+
+**更新日期：** 2024.9.19
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>优化</Tag> 部分类，方法注释。
+- &nbsp;<Tag>修复</Tag> TcpClient在释放时，重连插件会无限连接的bug，该bug会导致CPU占用过高。[#IAS9NG](https://gitee.com/RRQM_Home/TouchSocket/issues/IAS9NG)
+
+***
+
+## v2.1.1
+
+**更新日期：** 2024.9.18
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>新增</Tag> 在`MemoryCache`中实现新的`TryGetValue`方法。
+- &nbsp;<Tag>优化</Tag> 密封`CacheEntry`类并优化缓存管理逻辑。
+- &nbsp;<Tag>优化</Tag> 扩展`PackageExtensions`类，增加泛型方法以提高可读性和可重用性。
+- &nbsp;<Tag>优化</Tag> 优化`HttpStaticPagePlugin`构造函数和`StaticPageOptions`类以简化静态页面配置。
+- &nbsp;<Tag>修复</Tag> 在`FastBinaryFormatter`中改进序列化逻辑，特别是对于**多维数组**的处理。 [#IARKE1](https://gitee.com/RRQM_Home/TouchSocket/issues/IARKE1)
+- &nbsp;<Tag>修复</Tag> 在`IPackage`中改进打包、解包逻辑，特别是对于**多维数组**的处理。
+
+***
+
+## v2.1.0
+
+**更新日期：** 2024.9.15
+
+**更新描述：**
+
+大版本升级，有部分不兼容性升级。所以请在升级前做好备份，同时在升级之后，请务必阅读[v2.1升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/I9QSDK)。
+
+**更新亮点：**
+
+本次更新，主要有以下亮点：
+
+1. 全系支持Span、ValueTask、Memory、Unsafe等依赖。大幅提升并发性能与低GC能力。
+2. 全系组件，尽量多的提供了异步Api，大幅度提升并发能力。
+3. 重构fast序列化，Package包模式、Http、WebSocket等组件，使之更加易用。
+4. 资源国际化。本次更新会在内部使用中英双语信息提示，这在日志记录，堆栈跟踪等场景更加符合区域化。
+5. 增加完整注释。基本上能达到95%的代码注释率。
+
+**更新详情：**
+
+#### TouchSokcet.Core
+
+- &nbsp;<Tag>新增</Tag> TouchSocketBitConverter新增To、UnsafeTo、WriteBytes、UnsafeWriteBytes等可以直接操作Span。 
+- &nbsp;<Tag>新增</Tag> Crc类新增Span相关转换。 
+- &nbsp;<Tag>新增</Tag> CustomDataHandlingAdapter新增`bool TryParseRequest(ref TByteBlock byteBlock, out TRequest request)`方法，可以同步完成适配器数据解析。 
+- &nbsp;<Tag>新增</Tag> SingleStreamDataAdapterTester泛型测试器，可以对TryParseRequest进行完整性测试。 
+- &nbsp;<Tag>新增</Tag> IPackage源生成器新增自定义PackageMember特性，用来定义打包的顺序和自定义转换器。 
+- &nbsp;<Tag>新增</Tag> SetupConfigObject的SetupAsync。 
+- &nbsp;<Tag>优化</Tag> CustomDataHandlingAdapter支持结构体作为泛型类型。 
+- &nbsp;<Tag>优化</Tag> Fast序列化支持自定义FastSerializerContext，这可以极大的利用源生成来决定序列化和反序列化。 
+- &nbsp;<Tag>调整</Tag> 分离MemoryCache的同步和异步接口。 
+- &nbsp;<Tag>调整</Tag> ByteBlock取消Stream的继承，如果需要使用Stream，可以使用ByteBlock.AsStream()。 
+- &nbsp;<Tag>调整</Tag> Gzip类调整ByteBlock参数为Stream。 
+- &nbsp;<Tag>调整</Tag> CustomDataHandlingAdapter解析的数据，均会以ReadonlySpan的形式投递。 
+- &nbsp;<Tag>调整</Tag> IPackage接口，使之既可以在ByteBlock工作，也可以在ValueByteBlock工作。 
+- &nbsp;<Tag>调整</Tag> PluginManager使用接口作为唯一键，规定一个接口中有且仅有一个方法。
+- &nbsp;<Tag>调整</Tag> ByteBlock、ValueByteBlock均继承IByteBlock接口规范。
+- &nbsp;<Tag>移除</Tag> ByteBlock、ValueByteBlock移除Buffer属性，如果想获取有效数据，可以通过Memory、Span等获取，如果想获取容量可以使用TotalMemory属性。
+ 
+#### TouchSokcet.Sockets
+
+- &nbsp;<Tag>调整</Tag> Tcp、Udp组件，默认情况下适配器将为null，并且可以正常工作。 
+- &nbsp;<Tag>调整</Tag> SocketClient、ISocketClient等服务器辅助类，改名为TcpSessionClient和ITcpSessionClient。 
+
+
+***
