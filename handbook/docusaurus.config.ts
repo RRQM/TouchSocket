@@ -109,7 +109,7 @@ const config = {
           {
             label: "更新日志",
             position: "left",
-            to: "docs/current/upgrade"
+            to: "/upgrade"
           },
           {
             label: "博客",
