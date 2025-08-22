@@ -9,6 +9,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 import CustomCodeBlock from '@site/src/components/CodeBlocks/CodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 ### 定义
 
@@ -89,6 +90,16 @@ flowchart TD;
 所以，可以使用`SetListenOptions`方法，进行个性化监听配置。
 
 <CustomCodeBlock region="示例个性化Tcp服务器监听"/>
+
+所有配置监听的项，都是从`IPHost`类创建而来。
+
+`IPHost`支持以下格式创建：
+
+- 端口：直接按`int`入参，该操作一般在监听`Ipv4`时使用。
+- IPv4：按"127.0.0.1:7789"入参。
+- IPv6：按"[\*::\*]:7789"入参。
+
+<BilibiliCard title="服务器监听配置" isPro="true" link="https://www.bilibili.com/cheese/play/ep1541394"/>
 
 :::caution 注意
 
@@ -194,172 +205,44 @@ Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运
 
 ### 7.2 泛型创建
 
-通过泛型创建服务器，可以实现很多有意思，且能**重写**一些有用的功能。下面就演示，如何通过泛型创建服务器。
+通过泛型创建服务器，可以实现很多有意思，且能**重写**一些有用的功能。下面就演示，如何通过泛型创建自定义服务器。
 
 代码如下：
 
 （1）建立SessionClient继承类。
 
-```csharp showLineNumbers
-public sealed class MySessionClient : TcpSessionClient
-{
-    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    {
-        //此处逻辑单线程处理。
+<CustomCodeBlock region="自定义Tcp服务器通讯会话"/>
 
-        //此处处理数据，功能相当于Received委托。
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        Console.WriteLine($"已接收到信息：{mes}");
+（2）建立`TcpService`继承类。使用**TcpService的泛型**直接创建。
 
-        await base.OnTcpReceived(e);
-    }
-}
-```
+<CustomCodeBlock region="自定义Tcp服务器"/>
 
-（2）建立TcpService继承类。实际上如果业务不涉及服务器配置的话，可以省略该步骤，使用**TcpService的泛型**直接创建。
+（3）启动服务器。
 
-```csharp showLineNumbers
-public class MyService : TcpService<MySessionClient>
-{
-    protected override void LoadConfig(TouchSocketConfig config)
-    {
-        //此处加载配置，用户可以从配置中获取配置项。
-        base.LoadConfig(config);
-    }
+自定义服务器的配置和启动与普通服务器一致。
 
-    protected override MySessionClient NewClient()
-    {
-        return new MySessionClient();
-    }
+<CustomCodeBlock region="创建MyService服务器"/>
 
-    protected override async Task OnTcpConnecting(MySessionClient socketClient, ConnectingEventArgs e)
-    {
-        //此处逻辑会多线程处理。
-
-        //e.Id:对新连接的客户端进行ID初始化，默认情况下是按照设定的规则随机分配的。
-        //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
-
-        //e.IsPermitOperation:指示是否允许该客户端链接。
-
-        await base.OnTcpConnecting(socketClient, e);
-    }
-}
-```
-
-（3）创建服务器。
-
-```csharp showLineNumbers
-MyService service = new MyService();
-
-await service.SetupAsync(new TouchSocketConfig()//载入配置     
-     .SetListenIPHosts("tcp://127.0.0.1:7789")
-     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-     {
-         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-     })
-     .ConfigurePlugins(a =>
-     {
-         //a.Add();//此处可以添加插件
-     }));
-
-await service.StartAsync();//启动
-```
 
 :::tip 建议
 
-由上述代码可以看出，通过继承，可以更加灵活的实现扩展。但实际上，很多业务我们希望大家能通过插件完成。
+由上述代码可以看出，通过继承，可以更加灵活的实现扩展。如有必要，还可以直接从`TcpServiceBase<>`继承，这样可以实现更底层的功能。
 
 :::  
 
-## 八、配置监听
-
-所有配置监听的项，都是从`IPHost`类创建而来。
-
-`IPHost`支持以下格式创建：
-
-- 端口：直接按`int`入参，该操作一般在监听`Ipv4`时使用。
-- IPv4：按"127.0.0.1:7789"入参。
-- IPv6：按"[\*::\*]:7789"入参。
-
-<BilibiliCard title="服务器监听配置" isPro="true" link="https://www.bilibili.com/cheese/play/ep1541394"/>
-
-### 8.1 Config直接配置
-
-服务器在配置监听时，有多种方式实现。其中最简单、最常见的配置方式就是通过Config直接配置。
-
-```csharp showLineNumbers
-TcpService service = new TcpService();
-
-await service.SetupAsync(new TouchSocketConfig()//载入配置
-     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790));
-
-await service.StartAsync();//启动
-```
-
-### 8.2 直接添加监听配置
-
-直接添加监听配置是更加个性化的监听配置，它可以单独控制指定监听地址的具体配置，例如：是否启用Ssl加密、使用何种适配器等。
-
-```csharp showLineNumbers
-var service = new TcpService();
-
-await service.SetupAsync(new TouchSocketConfig()//载入配置
-     .SetListenOptions(option =>
-     {
-         option.Add(new TcpListenOption()
-         {
-             IpHost = "127.0.0.1:7789",
-             Name = "server1",//名称用于区分监听
-             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-             Adapter = () => new NormalDataHandlingAdapter(),//可以单独对当前地址监听，配置适配器
-                                                             //还有其他可配置项，都是单独对当前地址有效。
-         });
-
-         option.Add(new TcpListenOption()
-         {
-             IpHost = 7790,
-             Name = "server2",//名称用于区分监听
-             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-             Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                             //还有其他可配置项，都是单独对当前地址有效。
-         });
-     }));
-
-await service.StartAsync();//启动
-```
-
-:::info 温馨提示
-
-`SetListenIPHosts`可以和`SetListenOptions`可以同时使用，但是需要注意的是，Config的全局配置仅会对`SetListenIPHosts`单独生效的。`SetListenOptions`的地址配置均是单独配置的。
-
-:::  
-
-
-### 8.3 动态添加、移除监听配置
+## 八、动态添加、移除监听配置
 
 服务器支持在运行时，动态添加，和移除监听配置，这极大的为灵活监听提供了方便，并且还不影响现有连接。可以轻量级的实现Stop操作。
 
-```csharp {5,16}
-TcpService service = new TcpService();
-await service.SetupAsync(new TouchSocketConfig());
-await service.StartAsync();//启动
+<CustomCodeBlock region="动态添加移除监听配置"/>
 
-service.AddListen(new TcpListenOption()//在Service运行时，可以调用，直接添加监听
-{
-    IpHost = 7791,
-    Name = "server3",//名称用于区分监听
-    ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-    Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                    //还有其他可配置项，都是单独对当前地址有效。
-});
-
-foreach (var item in service.Monitors)
-{
-    service.RemoveListen(item);//在Service运行时，可以调用，直接移除现有监听
-}
-```
 <BilibiliCard title="服务器动态监听" link="https://www.bilibili.com/cheese/play/ep1541399" isPro="true"/>
 
+:::info 信息
+
+在移除监听配置时，已完成连接的客户端不受影响。
+
+:::  
 
 ## 九、接收数据
 
@@ -371,28 +254,11 @@ foreach (var item in service.Monitors)
 
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
-```csharp showLineNumbers
-var service = new TcpService();
-service.Received = (client, e) =>
-{
-    //从客户端收到信息
-    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
-
-await service.SetupAsync(new TouchSocketConfig()//载入配置     
-     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-     {
-         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-     }));
-await service.StartAsync();//启动
-```
+<CustomCodeBlock region="Tcp服务器使用Received异步委托接收数据"/>
 
 ### 9.2 重写TcpSessionClient处理
 
-正如6.2所示，可以直接在MySessionClient的重写**OnTcpReceived**中直接处理数据。
+正如7.2所示，可以直接在`MySessionClient`的重写`OnTcpReceived`中直接处理数据。
 
 ### 9.3 插件处理 <Tag>推荐</Tag>
 
@@ -405,7 +271,8 @@ await service.StartAsync();//启动
     ]}
 >
 <TabItem value="tab1">
-按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
+
+按照`TouchSocket`的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
 
@@ -413,43 +280,20 @@ await service.StartAsync();//启动
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp showLineNumbers
-public class MyPlugin : PluginBase, ITcpReceivedPlugin
+<CustomCodeBlock region="Tcp服务器使用插件接收"/>
+
+（2）配置使用插件处理的服务器
+
+```csharp
+.ConfigurePlugins(a =>
 {
-    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
-    {
-        //这里处理数据接收
-        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.ByteBlock;
-        IRequestInfo requestInfo = e.RequestInfo;
-
-        ////表示该数据已经被本插件处理，无需再投递到其他插件。
-
-        await e.InvokeNext();//如果本插件无法处理当前数据，请将数据转至下一个插件。
-    }
-}
+    a.Add<TcpServiceReceivedPlugin>();
+})
 ```
 
-（2）创建使用插件处理的服务器
+:::info 信息
 
-```csharp {10}
-var service = new TcpService();
-await service.SetupAsync(new TouchSocketConfig()
-     .SetListenIPHosts(7789)
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();
-     })
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyPlugin>();
-     }));
-await service.StartAsync();
-```
-
-:::danger 注意
-
-当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Length)。而不是ByteBlock.Buffer.Length
+当接收数据时，`Memory`与`RequestInfo`的值会根据适配器类型不同而不同。
 
 :::  
 
@@ -467,9 +311,7 @@ await service.StartAsync();
 </Tabs>
 
 
-
-
-### 9.4 异步阻塞接收 <Tag>推荐</Tag>
+### 9.4 异步阻塞接收
 
 异步阻塞接收，即使用`await`的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。
 
@@ -477,155 +319,30 @@ await service.StartAsync();
 
 下列将以插件为例：
 
-```csharp showLineNumbers
-class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
-{
-    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
-    {
-        if (client is ITcpSessionClient sessionClient)
-        {
-            //receiver可以复用，不需要每次接收都新建
-            using (var receiver = sessionClient.CreateReceiver())
-            {
-                while (true)
-                {
-                    //receiverResult每次接收完必须释放
-                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
-                    {
-                        //收到的数据，此处的数据会根据适配器投递不同的数据。
-                        var byteBlock = receiverResult.ByteBlock;
-                        var requestInfo = receiverResult.RequestInfo;
+<CustomCodeBlock region="Tcp服务器异步阻塞接收"/>
 
-                        if (receiverResult.IsCompleted)
-                        {
-                            //断开连接了
-                            Console.WriteLine($"断开信息：{receiverResult.Message}");
-                            return;
-                        }
-
-                        //如果数据是从ByteBlock投递
-                        if (byteBlock != null)
-                        {
-                            Console.WriteLine(byteBlock.Span.ToString(Encoding.UTF8));
-                        }
-
-                        //如果是适配器信息，则可以直接处理requestInfo;
-                    }
-                }
-            }
-        }
-
-        await e.InvokeNext();
-    }
-}
-```
-
-在异步阻塞接收时，当接收的数据不满足解析条件时，还可以缓存起来，下次一起处理。
-
-例如：下列将演示接收字符串，当没有发现“\r\n”时，将缓存数据，直到发现重要字符。
-
-其中，`CacheMode`与`MaxCacheSize`是启用缓存的重要属性。`byteBlock.Seek`则是将已读取的数据游标移动至指定位置。
-
-```csharp {10-11,48} showLineNumbers
-class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
-{
-    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
-    {
-        if (client is ITcpSessionClient sessionClient)
-        {
-            //receiver可以复用，不需要每次接收都新建
-            using (var receiver = sessionClient.CreateReceiver())
-            {
-                receiver.CacheMode = true;
-                receiver.MaxCacheSize = 1024 * 1024;
-
-                var rn = Encoding.UTF8.GetBytes("\r\n");
-                while (true)
-                {
-                    //receiverResult每次接收完必须释放
-                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
-                    {
-                        //收到的数据，此处的数据会根据适配器投递不同的数据。
-                        var byteBlock = receiverResult.ByteBlock;
-                        var requestInfo = receiverResult.RequestInfo;
-
-                        if (receiverResult.IsCompleted)
-                        {
-                            //断开连接了
-                            Console.WriteLine($"断开信息：{receiverResult.Message}");
-                            return;
-                        }
-
-                        //在CacheMode下，byteBlock将不可能为null
-                       
-                        var index = 0;
-                        while (true)
-                        {
-                            var r = byteBlock.Span.Slice(index).IndexOf(rn);
-                            if (r < 0)
-                            {
-                                break;
-                            }
-
-                            var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
-                            Console.WriteLine(str);
-
-                            index += rn.Length;
-                            index += r;
-                        }
-
-                        byteBlock.Seek(index);
-                    }
-                }
-            }
-        }
-
-        await e.InvokeNext();
-    }
-}
-```
-
-:::tip 提示
-
-异步阻塞接收，在等待接收数据时，不会阻塞线程资源，所以即使大量使用，也不会影响性能。
-
-:::  
 
 ## 十、发送数据
 
-按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**TcpSessionClient**的实例，并将其存以生成的Id为键，存在一个字典中。
+按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自`TcpSessionClient`的实例，并将其存以生成的`Id`为键，存在一个字典中。
 
-所以，service提供了一下原生方法，可以通过id直接将数据发送至指定客户端。
+所以，可以直接使用`TcpSessionClient`直接发送。
 
-```csharp showLineNumbers
-//原生
-public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
-public Task SendAsync(string id, IRequestInfo requestInfo);
-```
+例如，在`Received`委托中，直接回应数据：
 
-例如：
+<CustomCodeBlock region="Tcp服务器使用Received异步委托接收数据并回应"/>
 
-```csharp showLineNumbers
-await service.SendAsync("id",Encoding.UTF8.GetBytes("hello"));
-```
-
-亦或者，可以先用id查到对应的TcpSessionClient，然后用其提供的方法直接发送。
+或者，如果你知道目标客户端的`Id`，那么可以使用`TcpService`的`SendAsync`方法直接发送数据。
 
 例如：
 
-```csharp showLineNumbers
-//尝试性获取
-if (service.TryGetClient("id", out var sessionClient))
-{
-    await sessionClient.SendAsync("hello");
-}
-```
+<CustomCodeBlock region="Tcp服务器按目标Id直接回应"/>
 
-```csharp showLineNumbers
-//直接获取，如果id不存在，则会抛出异常
-var sessionClient = service.GetClient("id");
-await sessionClient.SendAsync("hello");
-```
+亦或者，可以先用id查到对应的`TcpSessionClient`，然后用其提供的方法直接发送。
+
+例如：
+
+<CustomCodeBlock region="Tcp服务器按目标Id先查找再回应"/>
 
 :::caution 注意
 
@@ -639,11 +356,9 @@ await sessionClient.SendAsync("hello");
 
 :::  
 
-:::tip 提示
 
-框架不仅内置了字节的发送，也扩展了**字符串**等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+## 十一、示例Demo
 
-:::  
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp"/>
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
 
