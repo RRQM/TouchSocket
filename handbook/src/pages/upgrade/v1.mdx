@@ -3,8 +3,10 @@ id: upgrade-v1
 title: v1 系列更新
 ---
 
+import useBaseUrl from "@docusaurus/useBaseUrl";
 import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
+
 
 ## v1.3
 
@@ -18,12 +20,6 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
 ---
 
-</div>
-</details>
-
-<details>
-<summary>v1.2</summary>
-<div>
 
 ## v1.2
 
@@ -44,14 +40,7 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>新增</Tag> IServicePlugin插件，用于显示通知服务器的启动状态。
   - &nbsp;<Tag>新增</Tag> Rpc支持接口特性标记。
   - &nbsp;<Tag>调整</Tag> 将BytePool由静态调整为实例，且由其Default实例作为默认。
----
 
-</div>
-</details>
-
-<details>
-<summary>v1.1</summary>
-<div>
 
 ## v1.1
 
@@ -66,14 +55,6 @@ import Highlight from '@site/src/components/Highlight.js';
   - &nbsp;<Tag>新增</Tag> Tcp客户端新增Disconnecting事件。在主动Close时生效。
   - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
   - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
----
-
-</div>
-</details>
-
-<details>
-<summary>v1.0</summary>
-<div>
 
 ## v1.0.0
 
@@ -117,5 +98,3 @@ import Highlight from '@site/src/components/Highlight.js';
 （3）服务端定时清理警告：在配置插件中使用UseCheckClear，并且进行相关配置。
 ![image.png](@site/static/img/docs/upgrade-3.png)
 ![image.png](@site/static/img/docs/upgrade-4.png)
-
----
