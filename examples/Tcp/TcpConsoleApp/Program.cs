@@ -70,6 +70,8 @@ internal class Program
         service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
         service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
         service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+
+        #region Tcp服务器使用Received异步委托接收数据
         service.Received = async (client, e) =>
         {
             //从客户端收到信息
@@ -79,6 +81,8 @@ internal class Program
             //简单消除Task，当使用插件接收时，需要使用 await e.InvokeNext();来继续执行后续插件。
             await EasyTask.CompletedTask;
         };
+        #endregion
+
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//可以同时监听多个地址
@@ -92,6 +96,81 @@ internal class Program
              }));
 
         await service.StartAsync();//启动
+        #endregion
+
+        #region Tcp服务器按目标Id直接回应
+        await service.SendAsync("targetId", "消息内容");
+        #endregion
+
+        #region Tcp服务器按目标Id先查找再回应
+        if (service.Clients.TryGetClient("targetId", out var tcpSessionClient))
+        {
+            await tcpSessionClient.SendAsync("消息内容");
+        }
+        #endregion
+    }
+
+    private static async Task CreateCustomService()
+    {
+        #region 创建MyService服务器
+        var service = new MyService();
+        service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+        service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+        service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+        service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+
+        #region Tcp服务器使用Received异步委托接收数据并回应
+        service.Received = async (client, e) =>
+        {
+            //从客户端收到信息
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
+            client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+
+            //按字符发送给客户端
+            await client.SendAsync(mes);
+
+            //按字节数组发送给客户端
+            //await client.SendAsync(new byte[] { 0, 1, 2, 3, 4 });
+        };
+        #endregion
+
+
+        await service.SetupAsync(new TouchSocketConfig()//载入配置
+             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//可以同时监听多个地址
+             .ConfigureContainer(a =>//容器的配置
+             {
+                 a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+             })
+             .ConfigurePlugins(a =>
+             {
+                 //a.Add();//此处可以添加插件
+             }));
+
+        await service.StartAsync();//启动
+        #endregion
+    }
+
+    private static async Task CreateDefaultService2()
+    {
+        #region 动态添加移除监听配置 {5,17}
+        var service = new TcpService();
+        await service.StartAsync();//直接启动，此处没有配置任何东西
+
+        //在Service运行时，可以调用，直接添加监听
+        service.AddListen(new TcpListenOption()
+        {
+            IpHost = 7791,
+            Name = "server3",//名称用于区分监听
+            ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+            Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
+                                                            //还有其他可配置项，都是单独对当前地址有效。
+        });
+
+        //在Service运行时，可以调用，直接移除监听
+        foreach (var item in service.Monitors)
+        {
+            service.RemoveListen(item);//在Service运行时，可以调用，直接移除现有监听
+        }
         #endregion
     }
 
@@ -120,7 +199,7 @@ internal class Program
         #endregion
 
         #region 服务器设置Id生成策略
-        config.SetGetDefaultNewId(()=>Guid.NewGuid().ToString());
+        config.SetGetDefaultNewId(() => Guid.NewGuid().ToString());
         #endregion
 
         #region 服务器设置半连接数量
@@ -329,6 +408,7 @@ internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerS
     }
 }
 
+#region Tcp服务器异步阻塞接收
 internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
 {
     public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
@@ -361,7 +441,10 @@ internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
         }
     }
 }
+#endregion
 
+
+#region Tcp服务器使用插件接收
 internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
 {
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
@@ -377,23 +460,13 @@ internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
         if (client is ITcpSessionClient sessionClient)
         {
             await sessionClient.SendAsync(mes);//将收到的信息直接返回给发送方
-
-            //sessionClient.Send("id",mes);//将收到的信息返回给特定ID的客户端
-
-            //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
-            //var ids = client.Service.GetIds();
-            //foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
-            //{
-            //    if (clientId != client.Id)//不给自己发
-            //    {
-            //        await client.Service.SendAsync(clientId, mes);
-            //    }
-            //}
         }
 
         await e.InvokeNext();
     }
 }
+
+#endregion
 
 /// <summary>
 /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
@@ -433,3 +506,48 @@ internal class CloseException : Exception
     {
     }
 }
+
+#region 自定义Tcp服务器通讯会话
+public sealed class MySessionClient : TcpSessionClient
+{
+    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    {
+        //此处逻辑单线程处理。
+
+        //此处处理数据，功能相当于Received委托。
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
+        Console.WriteLine($"已接收到信息：{mes}");
+
+        await base.OnTcpReceived(e);
+    }
+}
+#endregion
+
+#region 自定义Tcp服务器
+public class MyService : TcpService<MySessionClient>
+{
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        //此处加载配置，用户可以从配置中获取配置项。
+        base.LoadConfig(config);
+    }
+
+    protected override MySessionClient NewClient()
+    {
+        return new MySessionClient();
+    }
+
+    protected override async Task OnTcpConnecting(MySessionClient socketClient, ConnectingEventArgs e)
+    {
+        //此处逻辑会多线程处理。
+
+        //e.Id:对新连接的客户端进行ID初始化，默认情况下是按照设定的规则随机分配的。
+        //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
+
+        //e.IsPermitOperation:指示是否允许该客户端链接。
+
+        await base.OnTcpConnecting(socketClient, e);
+    }
+}
+
+#endregion
