@@ -307,6 +307,45 @@ internal class Program
         }
     }
 
+    private static void CreateTcpClientConfig()
+    {
+
+        var config = new TouchSocketConfig();
+        #region 设置远程服务器地址
+        config.SetRemoteIPHost("tcp://127.0.0.1:7789");
+        #endregion
+
+        #region 设置Tcp客户端Ssl加密
+        config.SetClientSslOption(new ClientSslOption()
+        {
+            CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
+            CheckCertificateRevocation = false,
+            ClientCertificates = new X509Certificate2Collection() { new X509Certificate2("client.pfx", "pwd") },
+            SslProtocols = System.Security.Authentication.SslProtocols.None,
+            TargetHost = "127.0.0.1"
+        });
+        #endregion
+
+        #region 设置Tcp底层心跳
+        //此配置项仅在windows下有效。
+        //非必要请勿开启。
+        config.SetKeepAliveValue(new KeepAliveValue()
+        {
+            AckInterval = 2000,
+            Interval = 20*1000
+        });
+        #endregion
+
+        #region 设置客户端固定端口号
+        //不设置时，系统会自动分配端口
+        config.SetBindIPHost("127.0.0.1:8848");
+        #endregion
+
+        #region 设置客户端端口复用
+        config.UseReuseAddress();
+        #endregion
+    }
+
     private static async Task RunClientForReadAsync()
     {
         var client = new TcpClient();
