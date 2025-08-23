@@ -60,13 +60,16 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+
+        #region 内置包适配器按Memory解析 {3}
         service.Received = (client, e) =>
         {
-            //从客户端收到信息
             var mes = e.Memory.Span.ToString(Encoding.UTF8);//注意：数据长度是byteBlock.Length
             client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             return EasyTask.CompletedTask;
         };
+        #endregion
+
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
@@ -82,6 +85,33 @@ internal class Program
         await service.StartAsync();//启动
         service.Logger.Info("服务器已启动");
         return service;
+    }
+
+    private static void Test()
+    {
+        var config = new TouchSocketConfig();
+
+        #region 示例内置固定包头适配器
+        config.SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType = FixedHeaderType.Int });
+        #endregion
+
+        #region 示例内置固定长度适配器
+        config.SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10));
+        #endregion
+
+        #region 示例内置终止字符适配器
+        config.SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
+        #endregion
+
+        #region 示例内置周期时间适配器
+        config.SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMicroseconds(100) });
+        #endregion
+
+        #region 示例内置Json适配器
+        config.SetTcpDataHandlingAdapter(() => new JsonPackageAdapter());
+        #endregion
+
+
     }
 }
 

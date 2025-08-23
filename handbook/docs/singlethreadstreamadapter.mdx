@@ -6,291 +6,109 @@ title: 单线程流式适配器完整指南
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import CardLink from "@site/src/components/CardLink.js";
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
 ## 概述
 
-单线程流式适配器是TouchSocket框架中用于处理TCP数据流的核心组件，主要用于解决网络通信中的粘包、分包问题。本文档包含了所有单线程流式适配器的完整介绍，包括原始适配器、内置包适配器以及各种模板解析适配器。
+单线程流式适配器是`TouchSocket`框架中用于处理流式数据流的核心组件，主要用于解决网络、管道、串口等通信等流式数据中的粘包、分包问题。
 
-## 一、原始适配器
+在流式数据通信中，由于数据传输的连续性和网络传输特性，经常会遇到数据粘包和分包的问题。粘包是指发送方发送的多个数据包在接收方被合并成一个数据包接收；分包则是指一个完整的数据包被拆分成多个片段进行传输。这些问题会导致接收方无法正确解析数据结构，影响应用程序的正常运行。
 
-### 1.1 说明
+TouchSocket框架提供了一套完整的适配器解决方案来处理这些问题。适配器作为数据处理的中间层，位于原始数据流和应用逻辑之间，负责将连续的字节流按照特定的协议规则解析成完整的数据包。
 
-原始适配器则是直接从`SingleStreamDataHandlingAdapter（或者NormalDataHandlingAdapter）`继承，能够在第一时间，第一手接触到流式数据。可以自定实现数据的继续投递方式。但一般实现算法比较困难，因为所考虑的情况比较多。
+本文档涵盖了TouchSocket框架中所有类型的单线程流式适配器，从最基础的原始适配器到高度封装的模板解析适配器，每种适配器都有其特定的使用场景和优势。通过合理选择和使用这些适配器，开发者可以轻松处理各种复杂的数据协议，确保数据的完整性和准确性。
 
-例如：假设如下数据格式。
+适配器的主要优势包括：
 
-- 第1个字节表示整个数据长度（包括数据类型和指令类型）
-- 第2字节表示数据类型。
-- 第3字节表示指令类型。
-- 后续字节表示其他数据。
+- **自动化处理**：无需手动处理复杂的数据拆分和组合逻辑
+- **高性能**：采用内存池和零拷贝技术，最大化传输效率
+- **灵活性**：支持自定义数据格式和解析规则
+- **可靠性**：内置错误检测和恢复机制
+- **易用性**：提供多种现成的模板适配器，满足常见的数据协议需求
 
-其次，希望在发送时，只传入数据类型，指令类型和其他数据，而数据长度则由适配器自行封装。最后，希望在接收端每次能接收到一个完整的数据。
+## 示例说明
 
-<img src={require('@site/static/img/docs/datahandleadapter-1.png').default}/>
+为了更好地理解和使用单线程流式适配器，本文档将通过一个具体的示例来说明适配器的实现和应用。
+
+假设我们有一个简单的自定义协议，数据格式如下：
+
+- 第1个字节表示指令类型
+- 第2字节表示数据类型
+- 第3字节表示后续数据的长度。使用ushort大端表示，最大长度为65535
+- 后续字节表示载荷数据
+- 最后2字节表示CRC16校验码
+
+包结构如下：
+
+```mermaid
+---
+title: "Custom Packet Structure"
+---
+packet
+0-7: "Command Type (指令类型)"
+8-15: "Data Type (数据类型)"
+16-31: "Data Length (数据长度) - UShort"
+32-63: "Payload Data (载荷数据) - Variable Length"
+64-79: "CRC16 Checksum (CRC16校验码)"
+```
+
+## 一、使用适配器
+
+单线程流式适配器可以配置在所有流式组件中，例如：Tcp客户端和服务器、管道客户端和服务器、串口等。
+
+### 1.1 配置使用
+
+在`TouchSocketConfig`配置中，使用`SetTcpDataHandlingAdapter`、`SetNamedPipeDataHandlingAdapter`、`SetSerialDataHandlingAdapter`等方法进行配置。
+
+<CustomCodeBlock region="配置使用Tcp适配器"/>
+<CustomCodeBlock region="配置使用NamedPipe适配器"/>
+<CustomCodeBlock region="配置使用Serial适配器"/>
+
+:::caution 注意
+
+适配器在配置时，必须使用`new`关键字创建**新实例**，不能使用单例模式。
+
+:::  
+
+### 1.2 直接设置
+
+可以在任意时刻，例如在连接成功后，直接通过`SetAdapter`方法直接进行配置。
+
+<CustomCodeBlock region="示例Tcp客户端直接设置适配器"/>
+
+:::info 信息
+
+1. `SetAdapter`是非公共方法，必须在继承后才可使用。
+2. 一般建议在连接初始化（例如：OnTcpConnecting）时进行配置，避免在数据处理中途更换适配器，导致数据异常。
+
+:::  
+
+## 二、使用原始适配器解析数据
+
+原始适配器则是直接从`SingleStreamDataHandlingAdapter`继承，能够在第一时间，第一手接触到流式源数据。
+可以自定实现数据的继续投递方式。
+
+例如：对于最开始假设的数据格式。我们可以这样解析：
 
 <BilibiliCard title="原始适配器" link="https://www.bilibili.com/cheese/play/ep1522770" isPro="true"/>
 
-### 1.2 特点
+<CustomCodeBlock region="使用原始数据适配器解析"/>
 
-1. 能够第一时间，第一手接触到流式数据
-2. 希望能自定义投递数据的方式
-3. 本身不具备处理数据粘分包的能力，需要自己实现。
-
-### 1.3 实现适配器
-
-首先，创建类，继承自`SingleStreamDataHandlingAdapter`，然后实现对应属性，及方法。
-
-然后，从原生适配器解封数据，需要考虑的情况比较多。在本示例中，需要考虑以下情况：
-
-1. 一次刚好接收一个数据。
-2. 一次刚好接收了多个数据。
-3. 一次接收了多个数据，但最后一个数据不完整。
-4. 一次未接收完一个数据。
-
-所以，情况比较复杂，所以就必须自己做接收数据的缓存容器。
-
-具体代码如下：
-
-```csharp showLineNumbers
-internal class MyDataHandleAdapter : SingleStreamDataHandlingAdapter
-{
-    /// <summary>
-    /// 包剩余长度
-    /// </summary>
-    private byte m_surPlusLength;
-
-    /// <summary>
-    /// 临时包，此包仅当前实例储存
-    /// </summary>
-    private ByteBlock m_tempByteBlock;
-
-    public override bool CanSendRequestInfo => false;
-
-    public override bool CanSplicingSend => false;
-
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
-    {
-        //收到从原始流式数据。
-
-        var buffer = byteBlock.TotalMemory.GetArray().Array;
-        var r = byteBlock.Length;
-        if (this.m_tempByteBlock == null)//如果没有临时包，则直接分包。
-        {
-            await this.SplitPackageAsync(buffer, 0, r);
-        }
-        else
-        {
-            if (this.m_surPlusLength == r)//接收长度正好等于剩余长度，组合完数据以后直接处理数据。
-            {
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                await this.PreviewHandleAsync(this.m_tempByteBlock);
-                this.m_tempByteBlock = null;
-                this.m_surPlusLength = 0;
-            }
-            else if (this.m_surPlusLength < r)//接收长度大于剩余长度，先组合包，然后处理包，然后将剩下的分包。
-            {
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                await this.PreviewHandleAsync(this.m_tempByteBlock);
-                this.m_tempByteBlock = null;
-                await this.SplitPackageAsync(buffer, this.m_surPlusLength, r);
-            }
-            else//接收长度小于剩余长度，无法处理包，所以必须先组合包，然后等下次接收。
-            {
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, r));
-                this.m_surPlusLength -= (byte)r;
-            }
-        }
-    }
-
-    protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
-    {
-        //在发送流式数据之前
-
-        var length = memory.Length;
-        if (length > byte.MaxValue)//超长判断
-        {
-            throw new OverlengthException("发送数据太长。");
-        }
-
-        //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
-        //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
-        using (var byteBlock = new ByteBlock(1024))
-        {
-            byteBlock.WriteByte((byte)length);//先写长度
-            byteBlock.Write(memory.Span);//再写数据
-            await this.GoSendAsync(byteBlock.Memory);
-        }
-    }
-
-    protected override async Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        //使用拼接模式发送，在发送流式数据之前
-
-        var dataLen = 0;
-        foreach (var item in transferBytes)
-        {
-            dataLen += item.Count;
-        }
-        if (dataLen > byte.MaxValue)//超长判断
-        {
-            throw new OverlengthException("发送数据太长。");
-        }
-
-        //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
-        //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
-
-        using (var byteBlock = new ByteBlock(1024))
-        {
-            byteBlock.WriteByte((byte)dataLen);//先写长度
-            foreach (var item in transferBytes)
-            {
-                byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));//依次写入
-            }
-            await this.GoSendAsync(byteBlock.Memory);
-        }
-    }
-
-    protected override async Task PreviewSendAsync(IRequestInfo requestInfo)
-    {
-        //使用对象发送，在发送流式数据之前
-
-        if (requestInfo is MyClass myClass)
-        {
-            var data = myClass.Data ?? Array.Empty<byte>();
-            if (data.Length > byte.MaxValue)//超长判断
-            {
-                throw new OverlengthException("发送数据太长。");
-            }
-
-            //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
-            //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
-            using (var byteBlock = new ByteBlock(1024))
-            {
-                byteBlock.WriteByte((byte)data.Length);//先写长度
-                byteBlock.WriteByte((byte)myClass.DataType);//然后数据类型
-                byteBlock.WriteByte((byte)myClass.OrderType);//然后指令类型
-                byteBlock.Write(data);//再写数据
-                await this.GoSendAsync(byteBlock.Memory);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 处理数据
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    private async Task PreviewHandleAsync(ByteBlock byteBlock)
-    {
-        try
-        {
-            await this.GoReceivedAsync(byteBlock, null);
-        }
-        finally
-        {
-            byteBlock.Dispose();//在框架里面将内存块释放
-        }
-    }
-
-    /// <summary>
-    /// 分解包
-    /// </summary>
-    /// <param name="dataBuffer"></param>
-    /// <param name="index"></param>
-    /// <param name="r"></param>
-    private async Task SplitPackageAsync(byte[] dataBuffer, int index, int r)
-    {
-        while (index < r)
-        {
-            var length = dataBuffer[index];
-            var recedSurPlusLength = r - index - 1;
-            if (recedSurPlusLength >= length)
-            {
-                var byteBlock = new ByteBlock(length);
-                byteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + 1, length));
-                await this.PreviewHandleAsync(byteBlock);
-                this.m_surPlusLength = 0;
-            }
-            else//半包
-            {
-                this.m_tempByteBlock = new ByteBlock(length);
-                this.m_surPlusLength = (byte)(length - recedSurPlusLength);
-                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + 1, recedSurPlusLength));
-            }
-            index += length + 1;
-        }
-    }
-}
-```
-
-### 1.4 使用原始适配器
-
-```csharp {7,31} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new MyDataHandleAdapter())
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new MyDataHandleAdapter())
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
 
 ## 二、内置包适配器
 
 ### 2.1 说明
 
-内置包适配器，是框架内置的，用于解决粘、分包问题的现成适配器。它能一键式解决粘、分包问题。目前内置的包适配器有：
+内置包适配器，是框架内置的，用于直接解决粘、分包问题的现成适配器。
 
-|  适配器   | 名称  |功能特点|
-|  ----  | ----  |----  |
-| FixedHeaderPackageAdapter | 固定包头数据处理适配器 |固定包头数据处理适配器是处理粘包、分包问题的**最有力**、**最可靠**、**最高效**、**最稳定**的一种方案，它基本上适用于**所有场景**。即使**跨语言**使用，也只需要在其他语言中设计**相同算法**就可以。|
-| FixedSizePackageAdapter  | 固定长度数据处理适配器 |固定长度数据处理适配器是将发送的数据通过分割、填补的操作，以达到每次发送、接收的数据都是固定的长度来处理粘包、分包问题。这种方案一般适用于机械臂，机器人控制等场景。 |
-| TerminatorPackageAdapter  | 终止因子数据处理适配器 |终止因子数据处理适配器是通过**特殊字符或数值**的方式，来达到处理粘包、分包的目的。可随意设置分割因子的值，以及编码方式。不仅如此，还有异常数据设置，在达到设定值时，如果还没有发现分割因子，则抛弃数据。其稳定性仅次于固定包头，且使用场景也比较广泛。|
-| PeriodPackageAdapter  | 周期数据处理适配器 |周期数据处理适配器是通过**时间周期**的方式，来处理分包的目的（不包括粘包）。可处理任意数据。但是这也只是一定程度的处理。|
-| JsonPackageAdapter  | Json格式数据处理适配器 |Json格式数据处理适配器，是一个非常不错的解决**纯Json字符串**粘、分包的方案，它能将符合Json标准的数据准确地分割出来。并且能把其中的杂质数据一起提取出来。|
+它需要客户端和服务器配套使用，能一键式解决粘、分包问题。
 
-### 2.2 特点
+目前内置的包适配器有以下几种：
 
-#### 2.2.1 固定包头数据处理适配器
+### 2.2 固定包头数据处理适配器
 
 1. 最有力的解决粘包。分包问题。
 2. 是自定义协议的不二选择。
@@ -299,7 +117,29 @@ private static async Task<TcpService> CreateService()
 
 <BilibiliCard title="内置包适配器之固定包头适配器" link="https://www.bilibili.com/cheese/play/ep1510469" isPro="true"/>
 
-#### 2.2.2 固定长度数据处理适配器
+#### 2.2.1 固定包头算法解释
+
+- Byte包头算法：以第一个字节作为后续整个数据的长度，整个数据长度区间为[0,255]。
+- Ushort包头算法：前2个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)的排列，作为后续整个数据的长度，整个数据长度区间为[0,65535]。
+- Int包头算法（默认配置）：前4个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)排列，作为后续整个数据的长度，整个数据长度区间为[0,2^31]。
+
+#### 2.2.2 使用
+
+<CustomCodeBlock region="示例内置固定包头适配器"/>
+
+#### 2.2.3 接收数据
+
+固定包头数据处理适配器会把数据通过`Memory`进行投递，所以在`Received`中，直接解析`Memory`即可。
+
+<CustomCodeBlock region="内置包适配器按Memory解析"/>
+
+:::tip 提示
+
+固定包头数据处理适配器会对发送的数据进行处理，添加包头。
+
+:::  
+
+### 2.3 固定长度数据处理适配器
 
 1. 无论何时，发送与接收的数据长度永远为设定值。
 2. 算法简单，可以比较轻松的实现跨语言、跨框架。
@@ -307,7 +147,28 @@ private static async Task<TcpService> CreateService()
 
 <BilibiliCard title="内置包适配器之固定长度适配器" link="https://www.bilibili.com/cheese/play/ep1522720" isPro="true"/>
 
-#### 2.2.3 终止因子数据处理适配器
+
+#### 2.3.1 固定长度数据处理算法
+
+固定长度数据处理算法比较简单，就是事先约定发送数据的长度无论何时都是一致的。
+
+#### 2.3.2 使用
+
+<CustomCodeBlock region="示例内置固定长度适配器"/>
+
+#### 2.3.3 接收数据
+
+固定长度数据处理适配器会把数据通过`Memory`进行投递，所以在`Received`中，直接解析`Memory`即可。
+
+<CustomCodeBlock region="内置包适配器按Memory解析"/>
+
+:::tip 提示
+
+固定长度数据处理适配器会对发送的数据进行检查，如果长度不符合要求，则会抛出异常。
+
+:::
+
+### 2.4 终止因子数据处理适配器
 
 1. 最适用于字符串类（`Json`，`Xml`等）的信息交互。
 2. 算法简单，非常容易实现跨语言、跨框架。
@@ -315,7 +176,21 @@ private static async Task<TcpService> CreateService()
 
 <BilibiliCard title="内置包适配器之终止因子适配器" link="https://www.bilibili.com/cheese/play/ep1522721" isPro="true"/>
 
-#### 2.2.4 周期数据处理适配器
+#### 2.4.1 终止因子分割数据算法
+
+终止因子分割数据算法，就是通过事先约定，发送的数据是以特定数据的组合作为结束的。例如：`redis`协议，就是以`\r\n`作为结束。不过值得注意的是，框架内置的不仅可以用字符串作为终止字符，还能以16进制甚至二进制作为终止字符。
+
+#### 2.4.2 使用
+
+<CustomCodeBlock region="示例内置终止字符适配器"/>
+
+#### 2.4.3 接收数据
+
+终止因子数据处理适配器会把数据通过`Memory`进行投递，所以在`Received`中，直接解析`Memory`即可。
+
+<CustomCodeBlock region="内置包适配器按Memory解析"/>
+
+### 2.5 周期数据处理适配器
 
 1. 可处理任意数据。
 2. 只能解决分包问题，无法解决粘包问题。
@@ -323,7 +198,21 @@ private static async Task<TcpService> CreateService()
 
 <BilibiliCard title="内置包适配器之周期时间适配器" link="https://www.bilibili.com/cheese/play/ep1522723" isPro="true"/>
 
-#### 2.2.5 Json格式数据处理适配器
+#### 2.5.1 周期数据算法
+
+周期数据处理适配器，就是通过判断收到数据的时间间隔，将极短时间内收到的数据进行合并。能够一定程度的解决分包问题。
+
+#### 2.5.2 使用
+
+<CustomCodeBlock region="示例内置周期时间适配器"/>
+
+#### 2.5.3 接收数据
+
+周期数据处理适配器会把数据通过`Memory`进行投递，所以在`Received`中，直接解析`Memory`即可。
+
+<CustomCodeBlock region="内置包适配器按Memory解析"/>
+
+### 2.6 Json格式数据处理适配器
 
 1. 能够处理任意标准`Json`数据。
 2. 能够提取出信息中的杂质数据。
@@ -332,303 +221,19 @@ private static async Task<TcpService> CreateService()
 
 <BilibiliCard title="内置包适配器之Json包适配器" link="https://www.bilibili.com/cheese/play/ep1522730" isPro="true"/>
 
-### 2.3 算法解释
-
-#### 2.3.1 固定包头算法
-
-- Byte包头算法：以第一个字节作为后续整个数据的长度，整个数据长度区间为[0,255]。
-- Ushort包头算法：前2个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)的排列，作为后续整个数据的长度，整个数据长度区间为[0,65535]。
-- Int包头算法（默认配置）：前4个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)排列，作为后续整个数据的长度，整个数据长度区间为[0,2^31]。
-
-#### 2.3.2 固定长度数据处理算法
-
-固定长度数据处理算法比较简单，就是事先约定发送数据的长度无论何时都是一致的。
-
-#### 2.3.3 终止因子分割数据算法
-
-终止因子分割数据算法，就是通过事先约定，发送的数据是以特定数据的组合作为结束的。例如：`redis`协议，就是以`\r\n`作为结束。不过值得注意的是，框架内置的不仅可以用字符串作为终止字符，还能以16进制甚至二进制作为终止字符。
-
-#### 2.3.4 周期数据算法
-
-周期数据处理适配器，就是通过判断收到数据的时间间隔，将极短时间内收到的数据进行合并。能够一定程度的解决分包问题。
-
-#### 2.3.5 Json格式数据处理算法
+#### 2.6.1 Json格式数据处理算法
 
 Json格式数据处理算法，就是对接收的字符串进行大括号和中括号的计数，当成对的括号组合，来确定一个完整的json数据。
 
-### 2.4 使用内置包适配器
+#### 2.6.2 使用
 
-#### 2.4.1 使用固定包头适配器
+<CustomCodeBlock region="示例内置Json适配器"/>
 
-步骤
+#### 2.6.3 接收数据
 
-1. `TouchSocketConfig`配置中设置（可以同时指定`HeaderType`等属性）
-2. 通过`Received`（事件、方法、插件）中的`ByteBlock`读取数据。
+Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，所以在`Received`中，需要把`IRequestInfo`转为`JsonPackage`。
 
-```csharp {7,31} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
-
-:::caution 注意
-
-1. 使用该适配器时，最好服务器与客户端均使用`TouchSocket`，这样更好维护。
-
-2. 同时在发送`SendAsync`数据时，会自动封装数据头，所以不需要手动封装。
-
-:::  
-
-#### 2.4.2 使用固定长度适配器
-
-```csharp {7,31} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
-
-#### 2.4.3 使用终止因子分割适配器
-
-```csharp {7,31} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
-
-:::caution 注意
-
-该适配器，在发送`SendAsync`数据时，会自动追加分割符。
-
-:::  
-
-:::tip 提示
-
-默认情况下终止因子不会保留在数据中，用户可通过`ReserveTerminatorCode`属性，设为`true`，来保留终止因子。
-
-:::  
-
-#### 2.4.4 使用周期适配器
-
-```csharp {7,31} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
-
-#### 2.4.5 使用Json格式数据处理适配器
-
-```csharp {7,24-32,38} showLineNumbers
-private static async Task<TcpClient> CreateClient()
-{
-    var client = new TcpClient();
-    //载入配置
-    await client.SetupAsync(new TouchSocketConfig()
-         .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(()=>new JsonPackageAdapter(Encoding.UTF8))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个日志注入
-         }));
-
-    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-    client.Logger.Info("客户端成功连接");
-    return client;
-}
-
-private static async Task<TcpService> CreateService()
-{
-    var service = new TcpService();
-    service.Received = (client, e) =>
-    {
-        //从客户端收到信息
-        if (e.RequestInfo is JsonPackage jsonPackage)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append($"已从{client.Id}接收到数据。");
-            sb.Append($"数据类型：{jsonPackage.Kind},");
-            sb.Append($"数据：{jsonPackage.DataString},");
-            sb.Append($"杂质数据：{jsonPackage.ImpurityData.Span.ToString(Encoding.UTF8)}");
-            client.Logger.Info(sb.ToString());
-        }
-        return Task.CompletedTask;
-    };
-
-    await service.SetupAsync(new TouchSocketConfig()//载入配置
-         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(()=>new JsonPackageAdapter(Encoding.UTF8))
-         .ConfigureContainer(a =>
-         {
-             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-         })
-         .ConfigurePlugins(a =>
-         {
-             //a.Add();//此处可以添加插件
-         }));
-    await service.StartAsync();//启动
-    service.Logger.Info("服务器已启动");
-    return service;
-}
-```
+<CustomCodeBlock region="内置包Json适配器按JsonPackage解析"/>
 
 :::tip 提示
 
