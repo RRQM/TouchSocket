@@ -5,7 +5,7 @@
 ## 基本用法
 
 ```jsx
-import CustomCodeBlock from '@site/src/components/CodeBlocks/CustomCodeBlock';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 // 显示CodeRegion区域的代码
 <CustomCodeBlock region="CodeRegion" />
@@ -46,7 +46,7 @@ import CustomCodeBlock from '@site/src/components/CodeBlocks/CustomCodeBlock';
 在你的.mdx文件中，你可以这样使用：
 
 ```mdx
-import CustomCodeBlock from '@site/src/components/CodeBlocks/CustomCodeBlock';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 # 我的文档
 

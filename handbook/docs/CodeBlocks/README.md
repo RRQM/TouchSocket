@@ -43,7 +43,7 @@ node src/components/CodeBlocks/generateCodesModule.js
 ### 3. 在MDX文件中使用组件
 
 ```mdx
-import CustomCodeBlock from '@site/src/components/CodeBlocks/CustomCodeBlock';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 # 我的文档
 
