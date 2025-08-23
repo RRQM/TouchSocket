@@ -125,7 +125,7 @@
 	"importCustomCodeBlock": {
 		"prefix": "importCustomCodeBlock",
 		"body": [
-			"import CustomCodeBlock from '@site/src/components/CodeBlocks/CustomCodeBlock';"
+			"import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';"
 		],
 		"description": "importCustomCodeBlock"
 	},

@@ -3,7 +3,7 @@ const path = require('path');
 
 // 配置要搜索的目录列表（相对于项目根目录）
 const SEARCH_DIRECTORIES = [
-  '../examples',     // 示例代码目录
+  'examples',     // 示例代码目录
 ];
 
 // 排除的目录模式
