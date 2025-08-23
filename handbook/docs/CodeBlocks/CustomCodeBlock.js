@@ -270,7 +270,8 @@ const CustomCodeBlock = ({
     }
 
     // 构建最终的代码内容和高亮信息
-    let finalCode = codeInfo.code;
+    // 去除尾随的所有空白字符（包括 \r\n、\n、空格、制表符等），防止显示时多一行
+    let finalCode = codeInfo.code.replace(/\s+$/, '');
     let finalMetastring = '';
 
     if (highlightLines.length > 0)
