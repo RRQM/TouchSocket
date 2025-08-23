@@ -307,6 +307,85 @@ internal class Program
         }
     }
 
+    private static async Task CreateReconnectionTcpClient()
+    {
+        #region Tcp客户端启用断线重连
+        var tcpClient = new TcpClient();
+
+        //载入配置
+        await tcpClient.SetupAsync(new TouchSocketConfig()
+              .SetRemoteIPHost("127.0.0.1:7789")
+              .ConfigurePlugins(a =>
+              {
+                  a.UseTcpReconnection();
+              }));
+
+        await tcpClient.ConnectAsync();//调用连接
+        #endregion
+    }
+
+    private static async Task CreateReconnection2TcpClient()
+    {
+        #region Tcp客户端启用轮询断线重连
+        var tcpClient = new TcpClient();
+
+        //载入配置
+        await tcpClient.SetupAsync(new TouchSocketConfig()
+              .SetRemoteIPHost("127.0.0.1:7789")
+              .ConfigurePlugins(a =>
+              {
+                  a.UseTcpReconnection()
+                  .UsePolling(TimeSpan.FromSeconds(1));
+              }));
+
+        await tcpClient.ConnectAsync();//调用连接
+        #endregion
+    }
+    private static async Task CreateDefaultTcpClient()
+    {
+        #region 创建Tcp客户端
+        var tcpClient = new TcpClient();
+        tcpClient.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
+        tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+        tcpClient.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
+        tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+        #region Tcp客户端使用Received异步委托接收数据
+        tcpClient.Received = (client, e) =>
+        {
+            //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
+            tcpClient.Logger.Info($"客户端接收到信息：{mes}");
+            return EasyTask.CompletedTask;
+        };
+        #endregion
+
+
+        //载入配置
+        #region Tcp客户端配置插件 {5}
+        await tcpClient.SetupAsync(new TouchSocketConfig()
+              .SetRemoteIPHost("tcp://127.0.0.1:7789")
+              .ConfigurePlugins(a =>
+              {
+                  a.Add<TcpClientReceivedPlugin>();
+              })
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();//添加一个日志注入
+              }));
+        #endregion
+
+        await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+        #endregion
+
+        #region Tcp客户端发送数据
+        //发送字符串数据
+        await tcpClient.SendAsync("hello");
+
+        //发送字节数组数据
+        await tcpClient.SendAsync(new byte[] {0,1,2,3,4 });
+        #endregion
+
+    }
     private static void CreateTcpClientConfig()
     {
 
@@ -332,7 +411,7 @@ internal class Program
         config.SetKeepAliveValue(new KeepAliveValue()
         {
             AckInterval = 2000,
-            Interval = 20*1000
+            Interval = 20 * 1000
         });
         #endregion
 
@@ -348,19 +427,10 @@ internal class Program
 
     private static async Task RunClientForReadAsync()
     {
+        #region Tcp客户端异步阻塞接收
         var client = new TcpClient();
-        await client.SetupAsync(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .ConfigurePlugins(a =>
-                {
-                    a.UseTcpReconnection()
-                    .UsePolling(TimeSpan.FromSeconds(1));
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }));//载入配置
-        await client.ConnectAsync();//连接
+        await client.ConnectAsync("tcp://127.0.0.1:7789");//连接
+
         client.Logger.Info("客户端成功连接");
 
         Console.WriteLine("输入任意内容，回车发送");
@@ -369,27 +439,36 @@ internal class Program
         {
             while (true)
             {
+                //发送信息
                 await client.SendAsync(Console.ReadLine());
 
-                //receiverResult必须释放
-                using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                //设置接收超时
+                using (var cts = new CancellationTokenSource(1000 * 60))
                 {
-                    if (receiverResult.IsCompleted)
+                    //receiverResult必须释放
+                    using (var receiverResult = await receiver.ReadAsync(cts.Token))
                     {
-                        //断开连接了
+                        if (receiverResult.IsCompleted)
+                        {
+                            //断开连接了
+                        }
+
+                        //从服务器收到信息。
+                        var mes = receiverResult.Memory.Span.ToString(Encoding.UTF8);
+                        client.Logger.Info($"客户端接收到信息：{mes}");
+
+                        //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
                     }
-
-                    //从服务器收到信息。
-                    var mes = receiverResult.Memory.Span.ToString(Encoding.UTF8);
-                    client.Logger.Info($"客户端接收到信息：{mes}");
-
-                    //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
                 }
+
             }
         }
+        #endregion
+
     }
 }
 
+#region 从继承创建Tcp客户端
 internal class MyTcpClient : TcpClientBase
 {
     protected override Task OnTcpReceived(ReceivedDataEventArgs e)
@@ -403,6 +482,8 @@ internal class MyTcpClient : TcpClientBase
         return EasyTask.CompletedTask;
     }
 }
+
+#endregion
 
 internal class MyPluginClass : PluginBase
 {
@@ -504,7 +585,21 @@ internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
         await e.InvokeNext();
     }
 }
+#endregion
 
+#region Tcp客户端使用插件接收
+internal class TcpClientReceivedPlugin : PluginBase, ITcpReceivedPlugin
+{
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        //从客户端收到信息
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
+
+        client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
+
+        await e.InvokeNext();
+    }
+}
 #endregion
 
 /// <summary>

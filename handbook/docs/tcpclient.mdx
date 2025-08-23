@@ -9,6 +9,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 ### 定义
 
@@ -127,73 +128,15 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 代码如下：
 
-```csharp showLineNumbers
-var tcpClient = new TcpClient();
-tcpClient.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
-tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
-tcpClient.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
-tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
-tcpClient.Received = (client, e) =>
-{
-    //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    tcpClient.Logger.Info($"客户端接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
-
-//载入配置
-await tcpClient.SetupAsync(new TouchSocketConfig()
-      .SetRemoteIPHost("127.0.0.1:7789")
-      .ConfigureContainer(a =>
-      {
-          a.AddConsoleLogger();//添加一个日志注入
-      }));
-
-await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-
-Result result = await tcpClient.TryConnectAsync();//或者可以调用TryConnectAsync
-if (result.IsSuccess())
-{
-
-}
-
-tcpClient.Logger.Info("客户端成功连接");
-```
-
 <BilibiliCard title="创建Tcp客户端" link="https://www.bilibili.com/cheese/play/ep1501991" isPro="true"/>
+
+<CustomCodeBlock region="创建Tcp客户端"/>
 
 #### 6.2 继承实现
 
 一般继承实现的话，可以从`TcpClient`继承。如果有特殊需求，也可以从`TcpClientBase`继承。
 
-```csharp showLineNumbers
-class MyTcpClient : TcpClient
-{
-    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    {
-        //此处逻辑单线程处理。
-
-        //此处处理数据，功能相当于Received委托。
-        string mes =e.ByteBlock.Span.ToString(Encoding.UTF8);
-        Console.WriteLine($"已接收到信息：{mes}");
-        await base.OnTcpReceived(e);
-    }
-}
-```
-
-```csharp showLineNumbers
-var tcpClient = new MyTcpClient();
-//载入配置
-await tcpClient.SetupAsync(new TouchSocketConfig()
-     .SetRemoteIPHost("127.0.0.1:7789")
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();//添加一个日志注入
-     }));
-
-await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-```
-
+<CustomCodeBlock region="从继承创建Tcp客户端"/>
 
 ## 七、接收数据
 
@@ -201,25 +144,15 @@ await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛�
 
 ### 7.1 Received委托处理
 
-当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+当使用`TcpClient`创建客户端时，内部已经定义好了一个外置委托`Received`，可以通过该委托直接接收数据。
 
-```csharp showLineNumbers
-var tcpClient = new TcpClient();
-tcpClient.Received = (client, e) =>
-{
-    //从服务器收到信息
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
+<CustomCodeBlock region="Tcp客户端使用Received异步委托接收数据"/>
 
-await tcpClient.ConnectAsync("127.0.0.1:7789");
-```
+### 7.2 继承TcpClient重写接收逻辑
 
+如6.2所示，如果需要更自定义的接收逻辑，可以从`TcpClient`继承，然后重写`OnTcpReceived`方法。
 
 ### 7.2 插件处理 <Tag>推荐</Tag>
-
-
 
 <Tabs
     defaultValue="tab1"
@@ -238,46 +171,12 @@ await tcpClient.ConnectAsync("127.0.0.1:7789");
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp showLineNumbers
-public class MyPlugin : PluginBase, ITcpReceivedPlugin
-{
-    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
-    {
-        //这里处理数据接收
-        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.ByteBlock;
-        IRequestInfo requestInfo = e.RequestInfo;
-
-        ////表示该数据已经被本插件处理，无需再投递到其他插件。
-
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="Tcp客户端使用插件接收"/>
 
 （2）创建使用插件处理的客户端
 
-```csharp showLineNumbers
-var client = new TcpClient();
-await client.SetupAsync(new TouchSocketConfig()
-     .SetRemoteIPHost("127.0.0.1:7789")
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();
-     })
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyPlugin>();
-     }));
+<CustomCodeBlock region="Tcp客户端配置插件"/>
 
-await client.ConnectAsync();
-```
-
-:::danger 注意
-
-当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。
-
-:::  
 </TabItem>
 <TabItem value="tab2">
 <BilibiliCard title="使用插件接收消息" link="https://www.bilibili.com/cheese/play/ep1504559" isPro="true"/>
@@ -290,97 +189,11 @@ await client.ConnectAsync();
 </TabItem>
 </Tabs>
 
-### 7.3 异步阻塞接收 <Tag>推荐</Tag>
+### 7.3 异步阻塞接收
 
 异步阻塞接收，即使用await的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。例如：
 
-```csharp showLineNumbers
-var client = new TcpClient();
-await client.ConnectAsync("127.0.0.1:7789");//连接
-
-//receiver可以复用，不需要每次接收都新建
-using (var receiver = client.CreateReceiver())
-{
-    while (true)
-    {
-        //receiverResult必须释放
-        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
-        {
-            if (receiverResult.IsCompleted)
-            {
-                Console.WriteLine($"客户端已断开，信息：{receiverResult.Message}");
-                //断开连接了
-                return;
-            }
-
-            //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
-            var requestInfo = receiverResult.RequestInfo;
-            var byteBlock = receiverResult.ByteBlock;
-
-            //从服务器收到信息。
-            var mes = byteBlock.Span.ToString(Encoding.UTF8);
-            client.Logger.Info($"客户端接收到信息：{mes}");
-        }
-    }
-}
-```
-
-在异步阻塞接收时，当接收的数据不满足解析条件时，还可以缓存起来，下次一起处理。
-
-例如：下列将演示接收字符串，当没有发现“\r\n”时，将缓存数据，直到发现重要字符。
-
-其中，`CacheMode`与`MaxCacheSize`是启用缓存的重要属性。`byteBlock.Seek`则是将已读取的数据游标移动至指定位置。
-
-```csharp {7-8,45} showLineNumbers
-var client = new TcpClient();
-await client.ConnectAsync("127.0.0.1:7789");//连接
-
-//receiver可以复用，不需要每次接收都新建
-using (var receiver = client.CreateReceiver())
-{
-    receiver.CacheMode = true;
-    receiver.MaxCacheSize = 1024 * 1024;
-
-    var rn = Encoding.UTF8.GetBytes("\r\n");
-    while (true)
-    {
-        //receiverResult每次接收完必须释放
-        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
-        {
-            //收到的数据，此处的数据会根据适配器投递不同的数据。
-            var byteBlock = receiverResult.ByteBlock;
-            var requestInfo = receiverResult.RequestInfo;
-
-            if (receiverResult.IsCompleted)
-            {
-                //断开连接了
-                Console.WriteLine($"断开信息：{receiverResult.Message}");
-                return;
-            }
-
-            //在CacheMode下，byteBlock将不可能为null
-
-            var index = 0;
-            while (true)
-            {
-                var r = byteBlock.Span.Slice(index).IndexOf(rn);
-                if (r < 0)
-                {
-                    break;
-                }
-
-                var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
-                Console.WriteLine(str);
-
-                index += rn.Length;
-                index += r;
-            }
-
-            byteBlock.Seek(index);
-        }
-    }
-}
-```
+<CustomCodeBlock region="Tcp客户端异步阻塞接收"/>
 
 :::tip 提示
 
@@ -391,13 +204,9 @@ using (var receiver = client.CreateReceiver())
 
 ## 八、发送数据
 
-TcpClient已经内置了发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
+`TcpClient`已经内置了发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 
-```csharp showLineNumbers
-//原生
-public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
-public Task SendAsync(string id, IRequestInfo requestInfo);
-```
+<CustomCodeBlock region="Tcp客户端发送数据"/>
 
 :::tip 提示
 
@@ -420,43 +229,28 @@ public Task SendAsync(string id, IRequestInfo requestInfo);
 
 触发型重连，依靠的是Tcp断开事件（Closed）发生时，再次尝试连接。所以，这就要求客户端在初始时，至少完成一次连接。
 
-```csharp {8,11} showLineNumbers
-var tcpClient = new TcpClient();
+<BilibiliCard title="客户端触发式断线重连" link="https://www.bilibili.com/cheese/play/ep1541437" isPro="true"/>
 
-//载入配置
-await tcpClient.SetupAsync(new TouchSocketConfig()
-      .SetRemoteIPHost("127.0.0.1:7789")
-      .ConfigurePlugins(a => 
-      {
-          a.UseTcpReconnection();
-      }));
+<CustomCodeBlock region="Tcp客户端启用断线重连"/>
 
-await tcpClient.ConnectAsync();//调用连接
-```
 :::caution 注意
 
 **触发重连，必须满足以下几个要求：**
 
 1. 必须完成第一次连接。
-2. 必须是被动断开，如果是客户端主动调用Close、Disposed等方法主动断开的话，一般不会生效。
-3. 必须有显式的断开信息，也就是说，直接拔网线的话，不会立即生效，会等tcp保活到期后再生效。
+2. 必须是被动断开，如果是客户端主动调用`Close`、`Disposed`等方法主动断开的话，则不会生效。
+3. 必须有显式的断开信息，也就是说，直接拔网线的话，**不会**立即生效，会等tcp保活到期后再生效。
 
 :::  
 
 
-<BilibiliCard title="客户端触发式断线重连" link="https://www.bilibili.com/cheese/play/ep1541437" isPro="true"/>
-
 ### 9.2 使用Polling轮询连接插件
 
-使用Polling断线重连，是一种无人值守的连接方式，它不要求首次连接。
+使用`Polling`断线重连，是一种无人值守的连接方式，它不要求首次连接。
 
-```csharp showLineNumbers
-.ConfigurePlugins(a => 
-{
-    a.UseTcpReconnection()
-    .UsePolling(TimeSpan.FromSeconds(1));
-})
-```
+<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
+
+<CustomCodeBlock region="Tcp客户端启用轮询断线重连"/>
 
 :::caution 注意
 
@@ -468,11 +262,16 @@ await tcpClient.ConnectAsync();//调用连接
 
 :::tip 提示
 
-UseReconnection插件，可以通过设置SetActionForCheck，自己规定检查活性的方法。默认情况下，只会检验Online属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
+`UseReconnection`插件，可以通过设置`SetActionForCheck`，自己规定检查活性的方法。默认情况下，只会检验`Online`属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
 
 :::  
 
-<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
+### 9.3 绝对保活
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
+绝对保活，是一种不依赖于任何事件的保活方式。只要连接链路在持续时间内没有数据交互，则视为断开，详情请看[健康活性检验插件](./tcpcommonplugins.mdx)
+
+
+## 十、示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp" isPro="true"/>
 
