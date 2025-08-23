@@ -17,9 +17,9 @@ internal class Program
             Console.ReadKey();
             for (var i = 0; i < 10; i++)
             {
-                var myRequestInfo = new MyUnfixedHeaderRequestInfo()
+                var myRequestInfo = new MyDataClass()
                 {
-                    Body = Encoding.UTF8.GetBytes("hello"),
+                    Data = Encoding.UTF8.GetBytes("hello"),
                     DataType = (byte)i,
                     OrderType = (byte)i
                 };
@@ -28,10 +28,10 @@ internal class Program
                 var byteBlock = new ByteBlock(1024);
                 try
                 {
-                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Data.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
                     WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.DataType);//然后数据类型
                     WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.OrderType);//然后指令类型
-                    byteBlock.Write(myRequestInfo.Body);//再写数据
+                    byteBlock.Write(myRequestInfo.Data);//再写数据
 
                     await client.SendAsync(byteBlock.Memory);
                 }
@@ -63,16 +63,16 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+        #region 接收自定义非固定包头适配器
         service.Received = (client, e) =>
         {
-            //从客户端收到信息
-
-            if (e.RequestInfo is MyUnfixedHeaderRequestInfo myRequest)
+            if (e.RequestInfo is MyDataClass myRequest)
             {
-                client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
+                client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Data)}");
             }
             return Task.CompletedTask;
         };
+        #endregion
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
@@ -91,15 +91,23 @@ internal class Program
     }
 }
 
-public class MyUnfixedHeaderCustomDataHandlingAdapter : CustomUnfixedHeaderDataHandlingAdapter<MyUnfixedHeaderRequestInfo>
+#region 创建自定义非固定包头适配器
+/// <summary>
+/// 第1个字节表示指令类型
+/// 第2字节表示数据类型
+/// 第3字节表示后续数据的长度。使用ushort(大端)表示，最大长度为65535
+/// 后续字节表示载荷数据
+/// 最后2字节表示CRC16校验码
+/// </summary>
+public class MyUnfixedHeaderCustomDataHandlingAdapter : CustomUnfixedHeaderDataHandlingAdapter<MyDataClass>
 {
-    protected override MyUnfixedHeaderRequestInfo GetInstance()
+    protected override MyDataClass GetInstance()
     {
-        return new MyUnfixedHeaderRequestInfo();
+        return new MyDataClass();
     }
 }
 
-public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
+public class MyDataClass : IUnfixedHeaderRequestInfo
 {
     /// <summary>
     /// 接口实现，标识数据长度
@@ -119,20 +127,25 @@ public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
     /// <summary>
     /// 自定义属性，标识实际数据
     /// </summary>
-    public byte[] Body { get; set; }
-
-
+    public byte[] Data { get; set; }
 
     public int HeaderLength { get; private set; }
 
     public bool OnParsingBody(ReadOnlySpan<byte> body)
     {
-        if (body.Length == this.BodyLength)
+        var data = body.Slice(0, body.Length - 2);//最后2个字节是CRC16校验码
+        var crc16 = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(body.Length - 2, 2));
+
+        //计算CRC16
+        var newCrc16 = Crc.Crc16Value(data);
+        if (crc16 != newCrc16)
         {
-            this.Body = body.ToArray();
-            return true;
+            //CRC校验失败
+            throw new Exception("CRC校验失败");
         }
-        return false;
+
+        this.Data = data.ToArray();
+        return true;
     }
 
 
@@ -141,26 +154,33 @@ public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
         //在使用不固定包头解析时
 
         //【首先】需要先解析包头
-        if (reader.BytesRemaining < 3)
+        if (reader.BytesRemaining < 4)
         {
             //即直接缓存
             return false;
         }
 
         //【然后】ReadToSpan会递增游标，所以不需要再递增游标
-        var header = reader.GetSpan(3);
+        var header = reader.GetSpan(4);
 
-        reader.Advance(3); //推进游标到包头结束位置
+        reader.Advance(4); //推进游标到包头结束位置
 
         //【然后】解析包头，和BodyLength
-        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.BodyLength = header[0] - 2;
+        //获取指令类型
+        this.OrderType = header[0];
+
+        //获取数据类型
         this.DataType = header[1];
-        this.OrderType = header[2];
+
+        var payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
+
 
         //【最后】对HeaderLength做有效赋值
-        this.HeaderLength = 3;
+        this.HeaderLength = 4;
+        this.BodyLength = payloadLength + 2;
 
         return true;
     }
 }
+
+#endregion
