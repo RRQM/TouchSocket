@@ -17,7 +17,7 @@ internal class Program
             Console.ReadKey();
             for (var i = 0; i < 10; i++)
             {
-                var myRequestInfo = new MyBigFixedHeaderRequestInfo()
+                var myRequestInfo = new MyDataClass()
                 {
                     Body = Encoding.UTF8.GetBytes("hello"),
                     DataType = (byte)i,
@@ -64,16 +64,18 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+        #region 接收自定义大数据固定包头适配器
         service.Received = (client, e) =>
         {
             //从客户端收到信息
 
-            if (e.RequestInfo is MyBigFixedHeaderRequestInfo myRequest)
+            if (e.RequestInfo is MyDataClass myRequest)
             {
                 client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
             }
             return Task.CompletedTask;
         };
+        #endregion
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
@@ -92,17 +94,25 @@ internal class Program
     }
 }
 
-internal class MyCustomBigFixedHeaderDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
+#region 创建自定义大数据固定包头适配器 {10,42-46,48-56,58-74}
+/// <summary>
+/// 第1个字节表示指令类型
+/// 第2字节表示数据类型
+/// 第3字节表示后续数据的长度。使用ushort(大端)表示，最大长度为65535
+/// 后续字节表示载荷数据
+/// 最后2字节表示CRC16校验码
+/// </summary>
+internal class MyCustomBigFixedHeaderDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyDataClass>
 {
-    public override int HeaderLength => 3;
+    public override int HeaderLength => 4;
 
-    protected override MyBigFixedHeaderRequestInfo GetInstance()
+    protected override MyDataClass GetInstance()
     {
-        return new MyBigFixedHeaderRequestInfo();
+        return new MyDataClass();
     }
 }
 
-internal class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
+internal class MyDataClass : IBigFixedHeaderRequestInfo
 {
     /// <summary>
     /// 自定义属性，标识数据类型
@@ -119,12 +129,12 @@ internal class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
     /// </summary>
     public byte[] Body { get; set; }
 
-    private long m_bodyLength;
+    private long m_length;
 
     private readonly List<byte> m_bytes = new List<byte>();
 
     #region 接口成员
-    long IBigFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+    long IBigFixedHeaderRequestInfo.BodyLength => this.m_length;
 
     void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
     {
@@ -134,7 +144,7 @@ internal class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
 
     bool IBigFixedHeaderRequestInfo.OnFinished()
     {
-        if (this.m_bytes.Count == this.m_bodyLength)
+        if (this.m_bytes.Count == this.m_length)
         {
             this.Body = this.m_bytes.ToArray();
             return true;
@@ -144,12 +154,22 @@ internal class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
 
     bool IBigFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
     {
-        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.m_bodyLength = header[0] - 2;
+        //这里header长度已经经过验证，一定是4字节
+
+        //获取指令类型
+        this.OrderType = header[0];
+
+        //获取数据类型
         this.DataType = header[1];
-        this.OrderType = header[2];
+
+        var payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
+
+
+        this.m_length = payloadLength + 2;//+2是因为还包含Crc16的长度
+
         return true;
     }
     #endregion
 
 }
+#endregion

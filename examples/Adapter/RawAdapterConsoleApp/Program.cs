@@ -115,45 +115,47 @@ internal class MyRawDataHandleAdapter : SingleStreamDataHandlingAdapter
     private int m_payloadLength;
     protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        if (this.m_myDataClass == null)
+        while (reader.BytesRemaining>0)
         {
-            //首次接收该解析对象
-
-            if (reader.BytesRemaining < 4)
+            if (this.m_myDataClass == null)
             {
-                //如果剩余数据小于4个字节，则继续等待
-                return;
+                //首次接收该解析对象
+
+                if (reader.BytesRemaining < 4)
+                {
+                    //如果剩余数据小于4个字节，则继续等待
+                    return;
+                }
+
+                //读取前4个字节
+                var header = reader.GetSpan(4);
+
+                //推进已读取的4个字节
+                reader.Advance(4);
+
+                //获取指令类型
+                var orderType = header[0];
+                //获取数据类型
+                var dataType = header[1];
+
+                //创建数据对象
+                this.m_myDataClass = new MyDataClass()
+                {
+                    OrderType = orderType,
+                    DataType = dataType
+                };
+
+                //获取载荷长度
+                this.m_payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
+
+                await this.ParseData(reader);
             }
-
-            //读取前4个字节
-            var header = reader.GetSpan(4);
-
-            //推进已读取的4个字节
-            reader.Advance(4);
-
-            //获取指令类型
-            var orderType = header[0];
-            //获取数据类型
-            var dataType = header[1];
-
-            //创建数据对象
-            this.m_myDataClass = new MyDataClass()
+            else
             {
-                OrderType = orderType,
-                DataType = dataType
-            };
-
-            //获取载荷长度
-            this.m_payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
-
-            await this.ParseData(reader);
+                //已经读取过头部，继续读取剩余数据
+                await this.ParseData(reader);
+            }
         }
-        else
-        {
-            //已经读取过头部，继续读取剩余数据
-            await this.ParseData(reader);
-        }
-
     }
 
     private async Task ParseData<TReader>(TReader reader)
