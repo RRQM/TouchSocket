@@ -42,9 +42,10 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+
+        #region 内置包Json适配器按JsonPackage解析 {3-11}
         service.Received = async (client, e) =>
         {
-            //从客户端收到信息
             if (e.RequestInfo is JsonPackage jsonPackage)
             {
                 var sb = new StringBuilder();
@@ -54,11 +55,9 @@ internal class Program
                 sb.Append($"杂质数据：{jsonPackage.ImpurityData.Span.ToString(Encoding.UTF8)}");
                 client.Logger.Info(sb.ToString());
             }
-
-
             await e.InvokeNext();
         };
-
+        #endregion
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
              .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8))
