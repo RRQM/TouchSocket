@@ -282,60 +282,9 @@ module.exports =
           "label": "12.1 介绍及使用"
         },
         {
-          "type": "category",
-          "label": "12.2 单线程流式适配器",
-          "items": [
-            {
-              "type": "doc",
-              "id": "datahandleadapter",
-              "label": "a.原始适配器"
-            },
-            {
-              "type": "doc",
-              "id": "packageadapter",
-              "label": "b.内置包适配器"
-            },
-            {
-              "type": "doc",
-              "id": "customdatahandlingadapter",
-              "label": "c.用户自定义适配器"
-            },
-            {
-              "type": "doc",
-              "id": "customfixedheaderdatahandlingadapter",
-              "label": "d.模板解析固定包头适配器"
-            },
-            {
-              "type": "doc",
-              "id": "bigfixedheadercustomdatahandlingadapter",
-              "label": "e.模板解析大数据固定包头适配器"
-            },
-            {
-              "type": "doc",
-              "id": "customunfixedheaderdatahandlingadapter",
-              "label": "f.模板解析非固定包头适配器"
-            },
-            {
-              "type": "doc",
-              "id": "custombigunfixedheaderdatahandlingadapter",
-              "label": "g.模板解析大数据非固定包头适配器"
-            },
-            {
-              "type": "doc",
-              "id": "custombetweenanddatahandlingadapter",
-              "label": "h.模板解析区间数据适配器"
-            },
-            {
-              "type": "doc",
-              "id": "customjsondatahandlingadapter",
-              "label": "i.模板解析“Json”数据适配器"
-            },
-            {
-              "type": "doc",
-              "id": "customcountspliterdatahandlingadapter",
-              "label": "j.模板解析“固定数量分隔符”数据适配器"
-            }
-          ]
+          "type": "doc",
+          "id": "singlethreadstreamadapter",
+          "label": "12.2 单线程流式适配器"
         },
         {
           "type": "category",
