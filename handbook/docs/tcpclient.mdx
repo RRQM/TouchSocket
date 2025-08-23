@@ -8,6 +8,7 @@ import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 ### 定义
 
@@ -35,59 +36,76 @@ import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 
 ## 四、可配置项
 
-<details>
-<summary>可配置项</summary>
-<div>
+### 4.1 目标服务器地址
 
-#### SetMaxPackageSize
-数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
+`TcpClient`必须指定远程服务器地址，否则无法连接。
 
-#### SetRemoteIPHost
 链接到的远程IPHost，支持域名。支持类型：
-1. 使用IPv4，传入形如：127.0.0.1:7789的字符串即可。
-2. 使用IPv6，传入形如：[\*::\*]:7789的字符串即可。
-3. 使用域名，必须包含协议类型，形如：http://baidu.com或者https://baidu.com:80
-3. 使用IPv6域名，必须包含协议类型，形如：http://[\*::\*]:80
 
-#### SetClientSslOption
-客户端Ssl配置，为Null时则不启用。
-注意，当RemoteIPHost使用https、wss的域名时，该配置会使用系统默认配置生效。
+1. 使用IPv4，传入形如：`127.0.0.1:7789`的字符串即可。
+2. 使用IPv6，传入形如：`[*::*]:7789`的字符串即可。
+3. 使用域名，必须包含协议类型，形如：`https://touchsocket.net/`或者`http://touchsocket.net:80`
+3. 使用IPv6域名，必须包含协议类型，形如：`http://[*::*]:80`
+
+<CustomCodeBlock region="设置远程服务器地址"/>
+
+:::tip 提示
+
+建议在配置时，使用规范的名称体制，例如：`tcp://127.0.0.1:7789`、`http://127.0.0.1:7789`等。
+
+:::  
+
+### 4.2 SSL加密设置
+
+`TcpClient`支持SSL加密连接。只需要在配置时，调用`SetClientSslOption`方法，传入`ClientSslOption`实例即可。
 
 <BilibiliCard title="SSL加密设置" link="https://www.bilibili.com/cheese/play/ep1541413" isPro="true"/>
 
-#### SetKeepAliveValue
-为Socket设置的属性。
-注意：该配置仅在window平台生效。
+<CustomCodeBlock region="设置Tcp客户端Ssl加密"/>
 
+:::tip 提示
+
+当远程服务器使用的证书是信任机构颁发的证书（例如：在阿里云、腾讯云等平台签发的），且在设置远程服务器地址时，使用了`https`、`wss`、`ssl`、`tls`等协议头时（例如：`https://touchsocket.net/`），则会使用默认的Ssl配置。无需再设置`ClientSslOption`。
+
+:::  
+
+### 4.3 设置Tcp底层心跳
+
+`TcpClient`支持Tcp底层心跳设置。只需要在配置时，调用`SetKeepAliveValue`方法即可。
 <BilibiliCard title="Tcp协议心跳设置(仅建议观看)" link="https://www.bilibili.com/cheese/play/ep1541421" isPro="true"/>
 
-#### SetBindIPHost
-绑定端口。
-- 在UdpSessionBase中表示本地监听地址
-- 在TcpClient中表示固定客户端端口号。
+<CustomCodeBlock region="设置Tcp底层心跳"/>
+
+:::caution 注意
+
+1. 此配置项仅在windows下有效。
+2. 非必要请勿开启。这个设置不能代替常规心跳包。因为Tcp心跳包的发送是由操作系统控制的，应用程序无法干预。
+
+:::  
+
+### 4.4 固定客户端端口号
+
+`TcpClient`支持固定客户端端口号。只需要在配置时，调用`SetBindIPHost`方法即可。
 
 <BilibiliCard title="客户端固定端口及重新连接问题建议" link="https://www.bilibili.com/cheese/play/ep1541435" isPro="true"/>
 
+<CustomCodeBlock region="设置客户端固定端口号"/>
 
-#### UseNoDelay
-设置Socket的NoDelay属性，默认false。
-<BilibiliCard title="配置NoDelay算法" link="https://www.bilibili.com/cheese/play/ep1541414" isPro="true"/>
+### 4.5 Tcp客户端端口复用
 
-#### UseReuseAddress
-启用端口复用。该配置可在客户端在监听端口时，可以一定程度缓解端口来不及释放的问题。
+`TcpClient`支持端口复用。只需要在配置时，调用`UseReuseAddress`方法即可。
 
 <BilibiliCard title="客户端端口复用场景详解" link="https://www.bilibili.com/cheese/play/ep1541418" isPro="true"/>
 
-#### SetMaxBufferSize
-设置最大缓存容量，默认自动。
+<CustomCodeBlock region="设置客户端端口复用"/>
 
-#### SetMinBufferSize
-设置最小缓存容量，默认自动。
+### 4.6 设置Socket的NoDelay属性
 
-<BilibiliCard title="最大(小)接收缓存池的设定场景" link="https://www.bilibili.com/cheese/play/ep1541425" isPro="true"/>
+`TcpClient`支持设置Socket的NoDelay属性。只需要在配置时，调用`UseNoDelay`方法即可。
 
-</div>
-</details>
+<BilibiliCard title="配置NoDelay算法" link="https://www.bilibili.com/cheese/play/ep1541414" isPro="true"/>
+
+<CustomCodeBlock region="配置NoDelay算法"/>
 
 ## 五、支持插件
 
