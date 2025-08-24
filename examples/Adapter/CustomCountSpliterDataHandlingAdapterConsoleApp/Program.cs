@@ -48,6 +48,7 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+        #region 接收自定义固定数量分隔符适配器
         service.Received = (client, e) =>
         {
             //从客户端收到信息
@@ -58,7 +59,7 @@ internal class Program
             }
             return Task.CompletedTask;
         };
-
+        #endregion
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
              .SetTcpDataHandlingAdapter(() => new MyCustomCountSpliterDataHandlingAdapter())
@@ -76,16 +77,8 @@ internal class Program
     }
 }
 
-internal class MyCountSpliterRequestInfo : IRequestInfo
-{
-    public string Data { get; private set; }
 
-    public MyCountSpliterRequestInfo(string data)
-    {
-        this.Data = data;
-    }
-}
-
+#region 创建自定义固定数量分隔符适配器
 internal class MyCustomCountSpliterDataHandlingAdapter : CustomCountSpliterDataHandlingAdapter<MyCountSpliterRequestInfo>
 {
     public MyCustomCountSpliterDataHandlingAdapter() : base(8, Encoding.UTF8.GetBytes("#"))
@@ -97,3 +90,14 @@ internal class MyCustomCountSpliterDataHandlingAdapter : CustomCountSpliterDataH
         return new MyCountSpliterRequestInfo(dataSpan.ToString(Encoding.UTF8));
     }
 }
+
+internal class MyCountSpliterRequestInfo : IRequestInfo
+{
+    public string Data { get; private set; }
+
+    public MyCountSpliterRequestInfo(string data)
+    {
+        this.Data = data;
+    }
+}
+#endregion

@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -6,44 +18,6 @@ namespace CustomBigFixedHeaderConsoleApp;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
-    {
-        var service = await CreateService();
-        var client = await CreateClient();
-
-        ConsoleLogger.Default.Info("按任意键发送10次");
-        while (true)
-        {
-            Console.ReadKey();
-            for (var i = 0; i < 10; i++)
-            {
-                var myRequestInfo = new MyDataClass()
-                {
-                    Body = Encoding.UTF8.GetBytes("hello"),
-                    DataType = (byte)i,
-                    OrderType = (byte)i
-                };
-
-                //构建发送数据
-
-                var byteBlock = new ByteBlock(1024);
-                try
-                {
-                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.DataType);//然后数据类型
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.OrderType);//然后指令类型
-                    byteBlock.Write(myRequestInfo.Body);//再写数据
-
-                    await client.SendAsync(byteBlock.Memory);
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-            }
-        }
-    }
-
     private static async Task<TcpClient> CreateClient()
     {
         var client = new TcpClient();
@@ -92,6 +66,44 @@ internal class Program
         service.Logger.Info("服务器已启动");
         return service;
     }
+
+    private static async Task Main(string[] args)
+    {
+        var service = await CreateService();
+        var client = await CreateClient();
+
+        ConsoleLogger.Default.Info("按任意键发送10次");
+        while (true)
+        {
+            Console.ReadKey();
+            for (var i = 0; i < 10; i++)
+            {
+                var myRequestInfo = new MyDataClass()
+                {
+                    Body = Encoding.UTF8.GetBytes("hello"),
+                    DataType = (byte)i,
+                    OrderType = (byte)i
+                };
+
+                //构建发送数据
+
+                var byteBlock = new ByteBlock(1024);
+                try
+                {
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.OrderType);//然后指令类型
+                    byteBlock.Write(myRequestInfo.Body);//再写数据
+
+                    await client.SendAsync(byteBlock.Memory);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+    }
 }
 
 #region 创建自定义大数据固定包头适配器 {10,42-46,48-56,58-74}
@@ -114,6 +126,15 @@ internal class MyCustomBigFixedHeaderDataHandlingAdapter : CustomBigFixedHeaderD
 
 internal class MyDataClass : IBigFixedHeaderRequestInfo
 {
+    private readonly List<byte> m_bytes = new List<byte>();
+
+    private long m_length;
+
+    /// <summary>
+    /// 自定义属性，标识实际数据
+    /// </summary>
+    public byte[] Body { get; set; }
+
     /// <summary>
     /// 自定义属性，标识数据类型
     /// </summary>
@@ -123,17 +144,7 @@ internal class MyDataClass : IBigFixedHeaderRequestInfo
     /// 自定义属性，标识指令类型
     /// </summary>
     public byte OrderType { get; set; }
-
-    /// <summary>
-    /// 自定义属性，标识实际数据
-    /// </summary>
-    public byte[] Body { get; set; }
-
-    private long m_length;
-
-    private readonly List<byte> m_bytes = new List<byte>();
-
-    #region 接口成员
+   
     long IBigFixedHeaderRequestInfo.BodyLength => this.m_length;
 
     void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
@@ -169,7 +180,5 @@ internal class MyDataClass : IBigFixedHeaderRequestInfo
 
         return true;
     }
-    #endregion
-
 }
 #endregion
