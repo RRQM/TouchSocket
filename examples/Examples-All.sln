@@ -349,6 +349,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusPlcBridgeConsoleApp",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawAdapterConsoleApp", "Adapter\RawAdapterConsoleApp\RawAdapterConsoleApp.csproj", "{A90C21AE-9552-E1EF-028A-309CB5F72843}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchSocketBitConverterConsoleApp", "Core\TouchSocketBitConverterConsoleApp\TouchSocketBitConverterConsoleApp.csproj", "{896858AE-13F4-473B-A5D5-B214CD04FDEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -803,6 +805,10 @@ Global
 		{A90C21AE-9552-E1EF-028A-309CB5F72843}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A90C21AE-9552-E1EF-028A-309CB5F72843}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A90C21AE-9552-E1EF-028A-309CB5F72843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{896858AE-13F4-473B-A5D5-B214CD04FDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{896858AE-13F4-473B-A5D5-B214CD04FDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{896858AE-13F4-473B-A5D5-B214CD04FDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{896858AE-13F4-473B-A5D5-B214CD04FDEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -954,6 +960,7 @@ Global
 		{BE9B0F56-849A-4BCE-A54E-6CEE7B52AB12} = {CDED01F8-D581-2FF7-E03E-F4B04DDFAC03}
 		{449F3FDA-0AF3-4ACE-B584-A38037C803E3} = {CDED01F8-D581-2FF7-E03E-F4B04DDFAC03}
 		{A90C21AE-9552-E1EF-028A-309CB5F72843} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{896858AE-13F4-473B-A5D5-B214CD04FDEF} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
