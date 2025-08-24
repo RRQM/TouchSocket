@@ -88,6 +88,8 @@ packet
 
 ## 二、使用原始适配器解析数据
 
+### 2.1 说明
+
 原始适配器则是直接从`SingleStreamDataHandlingAdapter`继承，能够在第一时间，第一手接触到流式源数据。
 可以自定实现数据的继续投递方式。
 
@@ -97,6 +99,9 @@ packet
 
 <CustomCodeBlock region="使用原始数据适配器解析"/>
 
+### 2.2 示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/AdapterConsoleApp"/>
 
 ## 二、内置包适配器
 
@@ -241,6 +246,9 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 :::  
 
+### 2.7 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/PackageAdapterConsoleApp"/>
+
 ## 三、用户自定义适配器
 
 ### 3.1 说明
@@ -276,6 +284,8 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 <CustomCodeBlock region="使用自定义适配器接收数据"/>
 
+### 3.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomAdapterConsoleApp"/>
 
 
 ## 四、模板解析"固定包头"数据适配器
@@ -306,6 +316,8 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 <CustomCodeBlock region="接收自定义固定包头适配器"/>
 
+### 4.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomFixedHeaderConsoleApp"/>
 
 ## 五、模板解析"大数据固定包头"数据适配器
 
@@ -329,7 +341,10 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 <CustomCodeBlock region="接收自定义大数据固定包头适配器"/>
 
-## 六、模板解析"非固定包头"数据适配器
+### 5.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomBigFixedHeaderConsoleApp"/>
+
+## 六、模板解析"不固定包头"数据适配器
 
 ### 6.1 说明
 
@@ -351,9 +366,34 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 <CustomCodeBlock region="接收自定义非固定包头适配器"/>
 
-## 七、模板解析"区间数据"数据适配器
+### 6.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomUnfixedHeaderConsoleApp"/>
+
+## 七、模板解析"大数据不固定包头"数据适配器
 
 ### 7.1 说明
+
+大数据不固定包头，是对不固定的包头模板的补充，一般来是，不固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据不固定包头实现。
+
+<BilibiliCard title="用户适配器之大数据非固定包头模板适配器" link="https://www.bilibili.com/cheese/play/ep1522757" isPro="true"/>
+
+### 7.2 特点
+
+1. 可以随意定制数据协议。
+2. 可以与**任意语言、框架**对接数据。
+3. 可以接收**理论无限大**的数据。
+
+### 7.3 创建适配器
+<CustomCodeBlock region="创建自定义大数据非固定包头适配器"/>
+### 7.4 使用
+<CustomCodeBlock region="接收自定义大数据非固定包头适配器"/>
+
+### 7.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomBigUnfixedHeaderConsoleApp"/>
+
+## 八、模板解析"区间数据"数据适配器
+
+### 8.1 说明
 
 区间适配器，一般用于字符串类的消息，类似"\*\*Hello##"，该数据，以\*\*开头，以##结尾。当然，区间适配器也能用于二进制数据，但是会有概率发生标识重复的情况。所以，用于二进制时，应当设置较复杂的区间标识。
 
@@ -361,38 +401,22 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 
 <BilibiliCard title="用户适配器之区间字符模板适配器" link="https://www.bilibili.com/cheese/play/ep1522752" isPro="true"/>
 
-### 7.2 特点
+### 8.2 特点
 
 1. 可以自由适配**很多**的字符串数据协议。
 2. 可以随意定制数据协议。
 3. 可以与**任意语言、框架**对接数据。
 
-### 7.3 创建适配器
-
-<CustomCodeBlock region="创建自定义区间适配器"/>
-
-### 7.4 使用
-
-<CustomCodeBlock region="创建自定义区间适配器"/>
-
-## 八、模板解析"大数据不固定包头"数据适配器
-
-### 8.1 说明
-
-大数据不固定包头，是对不固定的包头模板的补充，一般来是，不固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据不固定包头实现。
-
-<BilibiliCard title="用户适配器之大数据非固定包头模板适配器" link="https://www.bilibili.com/cheese/play/ep1522757" isPro="true"/>
-
-### 8.2 特点
-
-1. 可以随意定制数据协议。
-2. 可以与**任意语言、框架**对接数据。
-3. 可以接收**理论无限大**的数据。
-
 ### 8.3 创建适配器
-<CustomCodeBlock region="创建自定义大数据非固定包头适配器"/>
+
+<CustomCodeBlock region="创建自定义区间适配器"/>
+
 ### 8.4 使用
-<CustomCodeBlock region="接收自定义大数据非固定包头适配器"/>
+
+<CustomCodeBlock region="接收自定义区间适配器"/>
+
+### 8.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/BetweenAndConsoleApp"/>
 
 ## 九、模板解析"固定数量分隔符"数据适配器
 
@@ -413,6 +437,9 @@ Json格式数据处理适配器会把数据通过`IRequestInfo`进行投递，�
 ### 9.4 使用
 <CustomCodeBlock region="接收自定义固定数量分隔符适配器"/>
 
+### 9.5 示例Demo
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomCountSpliterDataHandlingAdapterConsoleApp"/>
+
 ## 十、模板解析"Json"数据适配器
 
 ### 10.1 说明
@@ -428,104 +455,55 @@ Json适配器，一般用于Json字符串类的消息。可以直接通过Json�
 
 ### 10.3 创建适配器
 <CustomCodeBlock region="创建自定义Json适配器"/>
+
 ### 10.4 使用
 <CustomCodeBlock region="接收自定义Json适配器"/>
 
-## 十一、模板解析"大数据固定包头"数据适配器
-
-### 11.1 说明
-
-大数据固定包头，是对固定的包头模板的补充，一般来是，固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据固定包头实现。
-
-<BilibiliCard title="用户适配器之大数据固定包头模板适配器" link="https://www.bilibili.com/cheese/play/ep1522755" isPro="true"/>
-
-### 11.2 特点
-
-1. 可以随意定制数据协议。
-2. 可以与**任意语言、框架**对接数据。
-3. 可以接收**理论无限大**的数据。
-
-### 11.3 创建适配器
-<CustomCodeBlock region="创建自定义大数据固定包头适配器"/>
-### 11.4 使用
-<CustomCodeBlock region="接收自定义大数据固定包头适配器"/>
-
-## 十二、适配器可设置参数
-
-|  属性   | 描述  |默认值  |
-|  ----  | ----  |----  |
-| MaxPackageSize  | 适配器能接收的最大数据包长度 |1024\*1024\*1024字节|
-| CanSendRequestInfo  | 是否允许发送IRequestInfo对象 |false|
-| CanSplicingSend  | 拼接发送 |false|
-| CacheTimeoutEnable  | 是否启用缓存超时。 |true|
-| CacheTimeout  | 缓存超时时间。 |1秒|
-| UpdateCacheTimeWhenRev  | 是否在收到数据时，即刷新缓存时间。当设为true时，将弱化CacheTimeout的作用，只要一直有数据，则缓存不会过期。当设为false时，则在CacheTimeout的时效内。必须完成单个缓存的数据 |true|
-
-<BilibiliCard title="适配器参数之缓存超时设置" link="https://www.bilibili.com/cheese/play/ep1522790" isPro="true"/>
-<BilibiliCard title="适配器参数之最大(小)包设置" link="https://www.bilibili.com/cheese/play/ep1522791" isPro="true"/>
-<BilibiliCard title="全局设置适配器参数" link="https://www.bilibili.com/cheese/play/ep1522799" isPro="true"/>
-
-## 十三、适配器纠错
-
-适配器当收到半包数据时，会自动缓存半包数据，然后等后续数据收到以后执行拼接操作。
-
-但有的时候，可能由于其他原因导致后续数据错乱，这时候就需要纠错。详情可看[适配器纠错](./adaptererrorcorrection.mdx)
-
-## 十四、示例Demo
-
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/AdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/PackageAdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomAdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomFixedHeaderConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomCountSpliterDataHandlingAdapterConsoleApp"/>
+### 10.5 示例Demo
 <CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomJsonDataHandlingAdapterConsoleApp"/>
 
-:::tip 提示
-
-使用自定义适配器的数据，只能通过`IRequestInfo`来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
-
-:::  
-
-:::tip 提示
-
-上述创建的适配器客户端与服务器均适用。
-
-:::  
+## 十一、适配器可设置参数
 
 |  属性   | 描述  |默认值  |
 |  ----  | ----  |----  |
 | MaxPackageSize  | 适配器能接收的最大数据包长度 |1024\*1024\*1024字节|
 | CanSendRequestInfo  | 是否允许发送IRequestInfo对象 |false|
-| CanSplicingSend  | 拼接发送 |false|
 | CacheTimeoutEnable  | 是否启用缓存超时。 |true|
 | CacheTimeout  | 缓存超时时间。 |1秒|
-| UpdateCacheTimeWhenRev  | 是否在收到数据时，即刷新缓存时间。当设为true时，将弱化CacheTimeout的作用，只要一直有数据，则缓存不会过期。当设为false时，则在CacheTimeout的时效内。必须完成单个缓存的数据 |true|
 
 <BilibiliCard title="适配器参数之缓存超时设置" link="https://www.bilibili.com/cheese/play/ep1522790" isPro="true"/>
 <BilibiliCard title="适配器参数之最大(小)包设置" link="https://www.bilibili.com/cheese/play/ep1522791" isPro="true"/>
 <BilibiliCard title="全局设置适配器参数" link="https://www.bilibili.com/cheese/play/ep1522799" isPro="true"/>
 
-## 六、适配器纠错
+## 十二、结语
 
-适配器当收到半包数据时，会自动缓存半包数据，然后等后续数据收到以后执行拼接操作。
+通过本文档的详细介绍，我们全面了解了TouchSocket框架中单线程流式适配器的完整体系和使用方法。从最基础的原始适配器到高度封装的模板解析适配器，每种适配器都为不同的应用场景提供了优雅的解决方案。
 
-但有的时候，可能由于其他原因导致后续数据错乱，这时候就需要纠错。详情可看[适配器纠错](./adaptererrorcorrection.mdx)
+### 12.1 适配器选择指南
 
-## 七、示例Demo
+在实际开发中，选择合适的适配器至关重要：
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/AdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/PackageAdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomAdapterConsoleApp"/>
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomFixedHeaderConsoleApp"/>
+- **性能优先**：需要最高性能和最大灵活性时，使用**原始适配器**，直接处理字节流
+- **快速开发**：对于常见协议格式，优先选择**内置包适配器**（固定包头、终止因子等）
+- **自定义协议**：当数据格式复杂但有规律时，使用**模板解析适配器**
+- **特殊需求**：对于非标准格式或复杂逻辑，采用**用户自定义适配器**
+
+### 12.2 最佳实践总结
+
+1. **统一性**：确保客户端和服务器使用相同的适配器配置
+2. **性能优化**：合理设置最大包长度和缓存超时参数
+3. **错误处理**：在适配器中实施完善的错误检测和恢复机制  
+4. **测试验证**：使用框架提供的`DataHandlerTester`工具验证适配器正确性
+5. **文档记录**：为自定义适配器编写详细的协议文档
+
+### 12.3 发展前景
+
+TouchSocket的适配器系统不仅解决了网络通信中的粘包分包问题，更为构建可靠、高效的分布式系统奠定了坚实基础。随着物联网、边缘计算等领域的快速发展，这套完善的适配器解决方案将在更多场景中发挥重要作用。
+
+掌握了这些适配器的使用方法，您就拥有了处理各种复杂网络协议的强大工具。无论是传统的TCP/IP通信，还是现代的IoT设备互联，TouchSocket的适配器都能为您提供稳定可靠的数据处理能力。
 
 :::tip 提示
 
-使用自定义适配器的数据，只能通过`IRequestInfo`来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
-
-:::  
-
-:::tip 提示
-
-上述创建的适配器客户端与服务器均适用。
+上述创建的适配器客户端与服务器均适用。如有疑问，请参考相关示例Demo或访问官方社区获取技术支持。
 
 :::  

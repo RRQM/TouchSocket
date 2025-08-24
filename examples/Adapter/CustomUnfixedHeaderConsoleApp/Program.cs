@@ -160,7 +160,7 @@ public class MyDataClass : IUnfixedHeaderRequestInfo
             return false;
         }
 
-        //【然后】ReadToSpan会递增游标，所以不需要再递增游标
+        //【然后】先获取4字节包头
         var header = reader.GetSpan(4);
 
         reader.Advance(4); //推进游标到包头结束位置

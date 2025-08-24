@@ -17,7 +17,7 @@ internal class Program
             Console.ReadKey();
             for (var i = 0; i < 10; i++)
             {
-                var myRequestInfo = new MyBigUnfixedHeaderRequestInfo()
+                var myRequestInfo = new MyDataClass()
                 {
                     Body = Encoding.UTF8.GetBytes("hello"),
                     DataType = (byte)i,
@@ -63,16 +63,17 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+        #region 接收自定义大数据非固定包头适配器
         service.Received = (client, e) =>
         {
             //从客户端收到信息
-
-            if (e.RequestInfo is MyBigUnfixedHeaderRequestInfo myRequest)
+            if (e.RequestInfo is MyDataClass myRequest)
             {
                 client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
             }
             return Task.CompletedTask;
         };
+        #endregion
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
@@ -90,16 +91,23 @@ internal class Program
         return service;
     }
 }
-
-internal class MyCustomBigUnfixedHeaderDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<MyBigUnfixedHeaderRequestInfo>
+#region 创建自定义大数据非固定包头适配器
+/// <summary>
+/// 第1个字节表示指令类型
+/// 第2字节表示数据类型
+/// 第3字节表示后续数据的长度。使用ushort(大端)表示，最大长度为65535
+/// 后续字节表示载荷数据
+/// 最后2字节表示CRC16校验码
+/// </summary>
+internal class MyCustomBigUnfixedHeaderDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<MyDataClass>
 {
-    protected override MyBigUnfixedHeaderRequestInfo GetInstance()
+    protected override MyDataClass GetInstance()
     {
-        return new MyBigUnfixedHeaderRequestInfo();
+        return new MyDataClass();
     }
 }
 
-internal class MyBigUnfixedHeaderRequestInfo : IBigUnfixedHeaderRequestInfo
+internal class MyDataClass : IBigUnfixedHeaderRequestInfo
 {
     /// <summary>
     /// 自定义属性，标识数据类型
@@ -122,7 +130,7 @@ internal class MyBigUnfixedHeaderRequestInfo : IBigUnfixedHeaderRequestInfo
     private int m_headerLength;
     private long m_bodyLength;
 
-    #region 接口成员
+    
     int IBigUnfixedHeaderRequestInfo.HeaderLength => this.m_headerLength;
 
     long IBigUnfixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
@@ -145,24 +153,36 @@ internal class MyBigUnfixedHeaderRequestInfo : IBigUnfixedHeaderRequestInfo
 
     bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TReader>(ref TReader reader)
     {
-        if (reader.BytesRemaining < 3)//判断可读数据是否满足一定长度
+        //在使用不固定包头解析时
+
+        //【首先】需要先解析包头
+        if (reader.BytesRemaining < 4)
         {
+            //即直接缓存
             return false;
         }
 
-        var pos = reader.BytesRead;//可以先记录游标位置，当解析不能进行时回退游标
+        //【然后】先获取4字节包头
+        var header = reader.GetSpan(4);
 
-        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.m_bodyLength = ReaderExtension.ReadValue<TReader,byte>(ref reader) - 2;
-        this.DataType = ReaderExtension.ReadValue<TReader,byte>(ref reader);
-        this.OrderType = ReaderExtension.ReadValue<TReader,byte>(ref reader);
+        reader.Advance(4); //推进游标到包头结束位置
+
+        //【然后】解析包头，和BodyLength
+        //获取指令类型
+        this.OrderType = header[0];
+
+        //获取数据类型
+        this.DataType = header[1];
+
+        var payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
 
 
-        //当执行到这里时，byteBlock.Position已经递增了3个长度。
-        //所以无需再其他操作，如果是其他，则需要手动移动byteBlock.Position到指定位置。
+        //【最后】对HeaderLength做有效赋值
+        this.m_headerLength = 4;
+        this.m_bodyLength = payloadLength + 2;
 
-        this.m_headerLength = 3;//表示Header消耗了3个字节，实际上可以省略这一行，但是为了性能，最好加上
         return true;
     }
-    #endregion
 }
+
+#endregion
