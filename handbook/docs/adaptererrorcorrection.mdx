@@ -43,7 +43,7 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 
 其中，Tag为4字节，Length为4字节，Value为可变长度的数据。
 
-要解析该数据，我们非常容易的会想到使用[模版解析固定包头适配器](./customfixedheaderdatahandlingadapter.mdx)来解决问题。
+要解析该数据，我们非常容易的会想到使用[模版解析固定包头适配器](./singlethreadstreamadapter.mdx)来解决问题。
 
 所以代码大概如下：
 
@@ -126,7 +126,7 @@ public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
 
 即时重置缓存，是指当数据不完整时，立即重置缓存。这也就意味着，当数据不完整时，我们会立即放弃本次数据的解析。直接进行下一次数据的解析。
 
-该操作对于[用户自定义解析](./customdatahandlingadapter.mdx)是容易的。您只需要调用`this.Reset()`即可。
+该操作对于[用户自定义解析](./singlethreadstreamadapter.mdx)是容易的。您只需要调用`this.Reset()`即可。
 
 但是对于模版解析，可能需要传递一些委托来完成重置工作。
 
@@ -233,7 +233,7 @@ public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandl
 
 ## 2.5 断开连接
 
-当数据有异常时，直接断开连接，也不失为一种处理方式。同样，该操作对于[用户自定义解析](./customdatahandlingadapter.mdx)是容易的。您只需要调用`Owner`的相关操作即可。例如：
+当数据有异常时，直接断开连接，也不失为一种处理方式。同样，该操作对于[用户自定义解析](./singlethreadstreamadapter.mdx)是容易的。您只需要调用`Owner`的相关操作即可。例如：
 
 可以声明一个方法。用于关闭连接。
 

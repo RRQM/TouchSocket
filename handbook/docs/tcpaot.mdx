@@ -72,7 +72,7 @@ partial class TcpServiceReceivedPlugin : PluginBase,ITcpReceivedPlugin
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
-        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
         if (mes == "close")
         {
             throw new CloseException(mes);

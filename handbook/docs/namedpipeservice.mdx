@@ -103,7 +103,7 @@ service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户�
 service.Received = async (client, e) =>
 {
     //从客户端收到信息
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+    string mes = e.Memory.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
     await client.SendAsync(mes);//将收到的信息直接返回给发送方
@@ -158,7 +158,7 @@ public class MySessionClient : NamedPipeSessionClient
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        string mes = e.Memory.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
         await base.OnNamedPipeReceived(e);
     }
@@ -298,7 +298,7 @@ var service = new NamedPipeService();
 service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+    string mes = e.Memory.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -344,7 +344,7 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeClose
 
     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
-        this.m_logger.Info(e.ByteBlock.ToString());
+        this.m_logger.Info(e.Memory.ToString());
         await e.InvokeNext();
     }
 }

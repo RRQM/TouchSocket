@@ -144,7 +144,7 @@ var waitingClient = client.CreateWaitingClient(new WaitingOptions()
     FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
     {
         var requestInfo=response.RequestInfo;
-        var byteBlock=response.ByteBlock;
+        var byteBlock=response.Memory;
 
         //这里可以根据服务端返回的信息，判断是否响应
         return true;
@@ -195,7 +195,7 @@ var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
 {
     FilterFuncAsync = async (response) =>
     {
-        var byteBlock = response.ByteBlock;
+        var byteBlock = response.Memory;
         var requestInfo = response.RequestInfo;
 
         if (true)//如果满足某个条件，则响应WaitingClient
