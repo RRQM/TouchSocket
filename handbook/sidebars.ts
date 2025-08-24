@@ -45,18 +45,8 @@ module.exports =
           "items": [
             {
               "type": "doc",
-              "id": "fpsgame",
-              "label": "a.FPS实时游戏"
-            },
-            {
-              "type": "doc",
-              "id": "engineertoolbox",
-              "label": "b.工程师软件工具箱"
-            },
-            {
-              "type": "doc",
               "id": "thingsgateway",
-              "label": "c.ThingsGateway"
+              "label": "a.ThingsGateway"
             }
           ]
         }
