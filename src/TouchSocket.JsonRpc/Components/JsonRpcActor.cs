@@ -139,12 +139,20 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="invokeOption">调用选项。</param>
     /// <param name="parameters">参数。</param>
     /// <returns>任务对象。</returns>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         var waitData = this.m_waitHandle.GetWaitDataAsync(out var sign);
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        parameters ??= new object[0];
+        parameters ??= [];
+
+        var token = invokeOption.Token;
+        CancellationTokenSource cts = default;
+        if (!token.CanBeCanceled)
+        {
+            cts = new CancellationTokenSource(invokeOption.Timeout);
+            token = cts.Token;
+        }
 
         var strs = new string[parameters.Length];
         for (var i = 0; i < parameters.Length; i++)
@@ -166,7 +174,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             {
                 var str = this.BuildJsonRpcRequest(jsonRpcRequest);
                 WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
-                await this.SendAction(byteBlock.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAction(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -183,7 +191,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 case FeedbackType.WaitInvoke:
                 default:
                     {
-                        switch (await waitData.WaitAsync(invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             case WaitDataStatus.Success:
                                 {
@@ -218,6 +226,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
         finally
         {
             waitData.Dispose();
+            cts?.Dispose();
         }
     }
 

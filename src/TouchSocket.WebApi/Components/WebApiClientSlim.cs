@@ -50,7 +50,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     public StringSerializerConverter<HttpRequestMessage> Converter { get; }
 
     /// <inheritdoc/>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
         {

@@ -266,16 +266,8 @@ public static class TouchSocketConfigExtension
         {
             config.SetClientSslOption(new ClientSslOption()
             {
-                TargetHost = value.Authority,
-#if NETSTANDARD2_0
-                SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12
-#elif NET481_OR_GREATER
-                SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13
-#elif NET6_0
-                SslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13
-#elif NET7_0_OR_GREATER
-                SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13
-#endif
+                TargetHost = value.Host,
+                SslProtocols = SslProtocols.None
             });
         }
         return config;

@@ -30,5 +30,5 @@ public interface IRpcClient
     /// <param name="invokeOption">调用选项，用于指定调用的特定选项。</param>
     /// <param name="parameters">传递给操作的参数。</param>
     /// <returns>一个任务，其结果是操作的返回值。</returns>
-    Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters);
+    Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters);
 }

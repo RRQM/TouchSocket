@@ -30,5 +30,5 @@ public interface ITargetRpcClient
     /// <param name="invokeOption">调用选项，可能包含超时、重试等调用策略。</param>
     /// <param name="parameters">调用方法的参数，按顺序传递给远程方法。</param>
     /// <returns>返回一个异步任务，包含调用结果对象。返回类型由returnType参数指定。</returns>
-    Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters);
+    Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters);
 }

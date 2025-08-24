@@ -28,5 +28,5 @@ public interface IHttpClient : IHttpSession, ISetupConfigObject, IOnlineClient, 
     /// <param name="request">请求体</param>
     /// <param name="token">结束等待令箭</param>
     /// <returns></returns>
-    ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token = default);
+    ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token);
 }

@@ -65,11 +65,12 @@ public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyB
         var rpcMethod = value.RpcMethod;
         var invokeKey = value.InvokeKey;
 
-        var invokeOption = value.InvokeOption ? (IInvokeOption)args.Last() : InvokeOption.WaitInvoke;
+        InvokeOption invokeOption;
 
         object[] ps;
         if (value.InvokeOption)
         {
+            invokeOption= (InvokeOption)args.Last();
             var pslist = new List<object>();
 
             for (var i = 0; i < args.Length; i++)
@@ -84,6 +85,7 @@ public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyB
         }
         else
         {
+            invokeOption = default;
             ps = args;
         }
 
@@ -122,7 +124,7 @@ public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyB
         var rpcMethod = new RpcMethod(info);
         var invokeKey = attribute.GetInvokeKey(rpcMethod);
         var invokeOption = false;
-        if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
+        if (info.GetParameters().Length > 0 && typeof(InvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
         {
             invokeOption = true;
         }
