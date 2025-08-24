@@ -73,7 +73,7 @@ client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器
 client.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+    string mes = e.Memory.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"客户端接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -109,7 +109,7 @@ class MyNamedPipeClient : NamedPipeClient
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        string mes = e.Memory.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
 
         await base.OnNamedPipeReceived(e);
@@ -143,7 +143,7 @@ var client = new NamedPipeClient();
 client.Received = (client, e) =>
 {
     //从服务器收到信息
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+    string mes = e.Memory.Span.ToString(Encoding.UTF8);
     Console.WriteLine($"接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -166,8 +166,8 @@ public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
-        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.ByteBlock;
+        //根据适配器类型，e.Memory与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+        ByteBlock byteBlock = e.Memory;
         IRequestInfo requestInfo = e.RequestInfo;
 
         ////表示该数据已经被本插件处理，无需再投递到其他插件。

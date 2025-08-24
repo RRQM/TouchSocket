@@ -89,12 +89,12 @@ tcpClient.Received = (client, e) =>
 {
     //此处接收服务器返回的消息
 
-    var head = e.ByteBlock.ToArray(0, 2);
-    e.ByteBlock.Seek(2, SeekOrigin.Begin);
-    var flags = e.ByteBlock.ReadUInt16(EndianType.Big);
-    var length = e.ByteBlock.ReadInt32(EndianType.Big);
+    var head = e.Memory.ToArray(0, 2);
+    e.Memory.Seek(2, SeekOrigin.Begin);
+    var flags = e.Memory.ReadUInt16(EndianType.Big);
+    var length = e.Memory.ReadInt32(EndianType.Big);
 
-    var json = e.ByteBlock.Span.ToString(Encoding.UTF8);
+    var json = e.Memory.Span.ToString(Encoding.UTF8);
 
     ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
 

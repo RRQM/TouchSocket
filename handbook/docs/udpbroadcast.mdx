@@ -29,7 +29,7 @@ import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 UdpSession udpService = new UdpSession();
 udpService.Received = (remote, e) =>
 {
-    Console.WriteLine(e.ByteBlock.ToString());
+    Console.WriteLine(e.Memory.ToString());
     return EasyTask.CompletedTask;
 };
 udpService.Setup(new TouchSocketConfig()
@@ -69,7 +69,7 @@ udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding
 UdpSession udpService = new UdpSession();
 udpService.Received = (remote, e) =>
 {
-    Console.WriteLine(e.ByteBlock.ToString());
+    Console.WriteLine(e.Memory.ToString());
     return EasyTask.CompletedTask;
 };
 udpService.Setup(new TouchSocketConfig()
