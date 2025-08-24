@@ -59,7 +59,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     #endregion JsonRpcActor
 
     /// <inheritdoc/>
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }

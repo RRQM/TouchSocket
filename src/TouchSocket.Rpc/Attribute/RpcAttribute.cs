@@ -416,7 +416,7 @@ public abstract class RpcAttribute : Attribute
     /// <returns></returns>
     public virtual string GetInvokeOption()
     {
-        return "IInvokeOption invokeOption = default";
+        return "InvokeOption invokeOption = default";
     }
 
     /// <summary>

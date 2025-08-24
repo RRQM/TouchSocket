@@ -48,12 +48,14 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 
     private async Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
-        var request = new HttpRequest();
-        request.Method = HttpMethod.Post;
-        request.URL = (this.RemoteIPHost.PathAndQuery);
+        var request = new HttpRequest
+        {
+            Method = HttpMethod.Post,
+            URL = this.RemoteIPHost.PathAndQuery
+        };
         request.SetContent(memory);
 
-        using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await base.ProtectedRequestAsync(request,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             var response = responseResult.Response;
 
@@ -84,7 +86,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// <param name="invokeOption">调用选项。</param>
     /// <param name="parameters">参数。</param>
     /// <returns>表示异步操作的任务，包含调用结果。</returns>
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }

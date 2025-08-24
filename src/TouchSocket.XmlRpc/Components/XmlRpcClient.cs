@@ -32,7 +32,7 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     }
 
     /// <inheritdoc/>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         invokeOption ??= InvokeOption.WaitInvoke;
 

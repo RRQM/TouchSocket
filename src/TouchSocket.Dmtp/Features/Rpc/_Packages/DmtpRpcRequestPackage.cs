@@ -34,7 +34,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
 
     }
 
-    public DmtpRpcRequestPackage(string invokeKey, IInvokeOption option, object[] parameters, Type returnType, ISerializationSelector selector)
+    public DmtpRpcRequestPackage(string invokeKey, InvokeOption option, object[] parameters, Type returnType, ISerializationSelector selector)
     {
         this.m_invokeKey = invokeKey;
 

@@ -69,7 +69,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken token = default)
+    protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken token)
     {
         await this.m_semaphoreForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try

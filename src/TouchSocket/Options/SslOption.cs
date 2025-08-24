@@ -46,7 +46,7 @@ public abstract class SslOption
     /// <summary>
     /// 协议版本
     /// </summary>
-    public SslProtocols SslProtocols { get; set; }
+    public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
 
     /// <summary>
     /// 该值指定身份验证期间是否检查证书吊销列表
@@ -57,5 +57,5 @@ public abstract class SslOption
     /// SSL验证回调。
     /// 用于自定义证书验证逻辑
     /// </summary>
-    public RemoteCertificateValidationCallback CertificateValidationCallback { get; set; }
+    public RemoteCertificateValidationCallback CertificateValidationCallback { get; set; } = (sender, certificate, chain, sslPolicyErrors) => true;
 }

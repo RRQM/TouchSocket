@@ -96,14 +96,9 @@ internal sealed class TcpCore : SafetyDisposableObject
         }
 
         var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-        if (sslOption.ClientCertificates == null)
-        {
-            await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
+
+        await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
         this.m_sslStream = sslStream;
         this.m_useSsl = true;
     }

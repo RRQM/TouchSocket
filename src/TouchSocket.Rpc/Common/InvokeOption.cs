@@ -14,59 +14,67 @@ using System.Threading;
 
 namespace TouchSocket.Rpc;
 
-
-public class InvokeOption : IInvokeOption
+public class InvokeOption
 {
-    /// <summary>
-    /// 默认设置。
-    /// Timeout=5000ms
-    /// </summary>
-    public static InvokeOption OnlySend => new InvokeOption(millisecondsTimeout: 5000)
+    static InvokeOption()
     {
-        FeedbackType = FeedbackType.OnlySend
-    };
+        OnlySend = new InvokeOption(millisecondsTimeout: 5000)
+        {
+            FeedbackType = FeedbackType.OnlySend
+        };
+
+        WaitSend = new InvokeOption(millisecondsTimeout: 5000)
+        {
+            FeedbackType = FeedbackType.WaitSend
+        };
+
+        WaitInvoke = new InvokeOption(millisecondsTimeout: 5000)
+        {
+            FeedbackType = FeedbackType.WaitInvoke
+        };
+    }
+
+   
+    public InvokeOption()
+    {
+    }
+
+   
+    public InvokeOption(int millisecondsTimeout)
+    {
+        this.Timeout = millisecondsTimeout;
+    }
 
     /// <summary>
     /// 默认设置。
     /// Timeout=5000ms
     /// </summary>
-    public static InvokeOption WaitInvoke => new InvokeOption(millisecondsTimeout: 5000)
-    {
-        FeedbackType = FeedbackType.WaitInvoke
-    };
+    public static InvokeOption OnlySend { get; }
+
+    /// <summary>
+    /// 默认设置。
+    /// Timeout=5000ms
+    /// </summary>
+    public static InvokeOption WaitInvoke { get; }
 
     /// <summary>
     /// 默认设置。
     /// Timeout=5000 ms
     /// </summary>
-    public static InvokeOption WaitSend => new InvokeOption(millisecondsTimeout: 5000)
-    {
-        FeedbackType = FeedbackType.WaitSend
-    };
+    public static InvokeOption WaitSend { get; }
 
+    /// <summary>
+    /// 调用反馈
+    /// </summary>
+    public FeedbackType FeedbackType { get; set; } = FeedbackType.WaitInvoke;
 
-    private CancellationToken m_token;
+    /// <summary>
+    /// 调用超时，
+    /// </summary>
+    public int Timeout { get; set; } = 5000;
 
-    private readonly CancellationTokenSource m_tokenSource;
-
-
-    public InvokeOption()
-    {
-    }
-
-
-    public InvokeOption(int millisecondsTimeout)
-    {
-        this.m_tokenSource = new CancellationTokenSource(millisecondsTimeout);
-    }
-
-
-    public FeedbackType FeedbackType { get; init; } = FeedbackType.WaitInvoke;
-
-
-    public CancellationToken Token
-    {
-        get => this.m_tokenSource?.Token ?? this.m_token;
-        init => this.m_token = value;
-    }
+    /// <summary>
+    /// 可以取消的调用令箭
+    /// </summary>
+    public CancellationToken Token { get; set; }
 }

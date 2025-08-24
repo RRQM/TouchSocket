@@ -27,7 +27,7 @@ public class HttpClient : HttpClientBase, IHttpClient
     }
 
     /// <inheritdoc/>
-    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token = default)
+    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token)
     {
         return this.ProtectedRequestAsync(request, token);
     }

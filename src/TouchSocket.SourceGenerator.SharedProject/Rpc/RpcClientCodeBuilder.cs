@@ -259,7 +259,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
             codeBuilder.AppendLine("{");//方法开始
@@ -309,7 +309,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
             codeBuilder.AppendLine("{");//方法开始
@@ -381,7 +381,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($");");
         }
 
@@ -414,7 +414,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($");");
         }
 

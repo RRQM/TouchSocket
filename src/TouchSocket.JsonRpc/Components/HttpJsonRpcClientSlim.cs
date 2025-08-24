@@ -38,7 +38,7 @@
 //        private readonly WaitHandlePool<IWaitResult> m_waitHandle = new WaitHandlePool<IWaitResult>();
 
 //        /// <inheritdoc/>
-//        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+//        public object Invoke(Type returnType, string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
 //        {
 //            var context = new JsonRpcWaitResult();
 //            var waitData = this.m_waitHandle.GetWaitData(context);
@@ -115,7 +115,7 @@
 //        }
 
 //        /// <inheritdoc/>
-//        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+//        public void Invoke(string method, InvokeOption invokeOption, ref object[] parameters, Type[] types)
 //        {
 //            var context = new JsonRpcWaitResult();
 //            var waitData = this.m_waitHandle.GetWaitData(context);
@@ -177,19 +177,19 @@
 //        }
 
 //        /// <inheritdoc/>
-//        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
+//        public void Invoke(string method, InvokeOption invokeOption, params object[] parameters)
 //        {
 //            this.Invoke(method, invokeOption, ref parameters, null);
 //        }
 
 //        /// <inheritdoc/>
-//        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
+//        public object Invoke(Type returnType, string method, InvokeOption invokeOption, params object[] parameters)
 //        {
 //            return this.Invoke(returnType, method, invokeOption, ref parameters, null);
 //        }
 
 //        /// <inheritdoc/>
-//        public async Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+//        public async Task InvokeAsync(string method, InvokeOption invokeOption, params object[] parameters)
 //        {
 //            var context = new JsonRpcWaitResult();
 //            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
@@ -251,7 +251,7 @@
 //        }
 
 //        /// <inheritdoc/>
-//        public async Task<object> InvokeAsync(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
+//        public async Task<object> InvokeAsync(Type returnType, string method, InvokeOption invokeOption, params object[] parameters)
 //        {
 //            var context = new JsonRpcWaitResult();
 //            var waitData = this.m_waitHandle.GetWaitDataAsync(context);

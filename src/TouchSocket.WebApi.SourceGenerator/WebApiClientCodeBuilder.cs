@@ -116,7 +116,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
             codeBuilder.AppendLine("{");//方法开始
@@ -197,7 +197,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
             {
                 codeBuilder.Append(",");
             }
-            codeBuilder.Append("IInvokeOption invokeOption = default");
+            codeBuilder.Append("InvokeOption invokeOption = default");
             codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
             codeBuilder.AppendLine("{");//方法开始
