@@ -12,14 +12,71 @@ import Highlight from '@site/src/components/Highlight.js';
 
 **更新日期：** 待定
 
+
 **更新描述：**
 
-- SSL配置重构和安全性改进。
-- 代码格式优化和规范化。
-- 版本号更新至3.1.16。
+- 此次更新可能会引入**破坏性变更**，所以在升级之前，请务必做好代码备份。代码升级详情请看[4.0升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/ICTCDJ)
+- 此次更新**Fast序列化**、**Dmtp组件**在运行时无法向下兼容v3.x版本，所以请务必保证客户端和服务器同时升级。
+- 核心字节流处理系统重构和性能优化。
+- 全面重构数据适配器架构，提升数据处理能力。
+- 传输层新增多种传输模式支持。
 
 **更新详情：**
 
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `IBytesReader` 和 `IByteBlockReader` 接口，提供统一的字节读取抽象。
+- &nbsp;<Tag>新增</Tag> `IBytesWriter` 和 `IByteBlockWriter` 接口，提供高性能的字节写入能力。
+- &nbsp;<Tag>新增</Tag> `ByteBlockStream`、`ReadOnlyStream`、`WriteOnlyStream` 流包装类，增强流操作能力。
+- &nbsp;<Tag>新增</Tag> `BytesWriter`、`PipeBytesWriter`、`SegmentedBytesWriter` 多种字节写入器实现。
+- &nbsp;<Tag>新增</Tag> `WriterAnchor<TWriter>` 写入锚点机制，支持位置回溯和数据重写。
+- &nbsp;<Tag>新增</Tag> `AsyncExchange<T>` 异步数据交换器，提供线程安全的单槽异步交接。
+- &nbsp;<Tag>新增</Tag> `ReadLease<T>` 读取租约机制，优化资源管理和生命周期控制。
+- &nbsp;<Tag>新增</Tag> `IPackageConverter<T>` 包转换器接口，统一数据包序列化和反序列化。
+- &nbsp;<Tag>新增</Tag> `CustomDataHandlingAdapterGroup<TRequest>` 适配器组，支持多适配器组合使用。
+- &nbsp;<Tag>新增</Tag> `MultithreadingDataAdapterTester` 多线程数据适配器测试器。
+- &nbsp;<Tag>新增</Tag> `TcpDataAdapterTester` 和 `UdpDataAdapterTester` 专用测试器。
+- &nbsp;<Tag>新增</Tag> `UdpDataHandlingAdapter` UDP数据处理适配器基类。
+- &nbsp;<Tag>新增</Tag> `UdpFrame` 和 `UdpPackage` UDP帧和包处理机制。
+- &nbsp;<Tag>新增</Tag> `UdpPackageAdapter` UDP包适配器，支持大数据分包传输。
+- &nbsp;<Tag>新增</Tag> `FastBinaryPrimitiveHelper` 快速二进制原生类型处理器。
+- &nbsp;<Tag>新增</Tag> `EmptyStruct`、`InternalUtilities`、`NullableHelpers` 等内部工具类。
+- &nbsp;<Tag>新增</Tag> `TaskCompletionSourceWithoutInlining<T>` 非内联任务完成源。
+- &nbsp;<Tag>新增</Tag> `AsyncWaitData<T>` 异步等待数据容器。
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>新增</Tag> `ChannelDataType` 通道数据类型枚举。
+- &nbsp;<Tag>新增</Tag> `TouchSocketDmtpSourceGenerationContext` JSON序列化上下文。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpClientBase2` HTTP客户端基类重构版本。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>新增</Tag> `BaseTransport` 和 `StreamTransport` 传输层基类。
+- &nbsp;<Tag>新增</Tag> `TcpTransport` TCP传输实现。
+- &nbsp;<Tag>新增</Tag> `ITransport` 传输接口，支持双向管道和关闭操作。
+- &nbsp;<Tag>新增</Tag> `TransportOption` 传输选项配置类。
+- &nbsp;<Tag>新增</Tag> `TcpOperationResult` 和 `UdpOperationResult` 操作结果结构。
+- &nbsp;<Tag>新增</Tag> `PipeTcpClient` 管道TCP客户端。
+- &nbsp;<Tag>新增</Tag> `IPipeTcpClient` 管道TCP客户端接口。
+- &nbsp;<Tag>新增</Tag> `BytesReaderEventArgs` 和 `MemoryEventArgs` 事件参数类。
+- &nbsp;<Tag>新增</Tag> `ClientSslOption`、`ServiceSslOption`、`SslOption` SSL配置类。
+- &nbsp;<Tag>新增</Tag> `TcpListenOption` TCP监听选项。
+
+#### TouchSocket.NamedPipe
+
+- &nbsp;<Tag>新增</Tag> `NamedPipeTransport` 命名管道传输实现。
+
+#### TouchSocket.SerialPorts
+
+- &nbsp;<Tag>新增</Tag> `SerialPortTransport` 串口传输实现。
+
+#### TouchSocketPro.AspNetCore
+
+- &nbsp;<Tag>新增</Tag> `HttpStreamTransport` HTTP流传输实现。
 
 ***
 
