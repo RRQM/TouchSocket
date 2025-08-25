@@ -78,6 +78,28 @@ internal class Program
         Console.WriteLine("Post访问 http://127.0.0.1:7789/uploadfile 上传文件");
         Console.ReadKey();
     }
+
+    static async Task CreateHttpService()
+    {
+        #region 创建Http服务器 {10}
+        var service = new HttpService();
+        await service.SetupAsync(new TouchSocketConfig()//加载配置
+              .SetListenIPHosts(7789)
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .ConfigurePlugins(a =>
+              {
+                  a.Add<MyHttpPlug1>();
+                  //default插件应该最后添加，其作用是
+                  //1、为找不到的路由返回404
+                  //2、处理 header 为Option的探视跨域请求。
+                  a.UseDefaultHttpServicePlugin();
+              }));
+        await service.StartAsync();
+        #endregion
+    }
 }
 
 public class MyBigWriteHttpPlug : PluginBase, IHttpPlugin
@@ -316,6 +338,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
     }
 }
 
+#region Http服务器使用插件
 public class MyHttpPlug1 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
@@ -339,7 +362,7 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin
         await e.InvokeNext();
     }
 }
-
+#endregion
 public class TestFormPlugin : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
@@ -504,7 +527,7 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
 
                 for (int i = 0; i < 5; i++)
                 {
-                    await response.WriteAsync(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()+"\r\n"));
+                    await response.WriteAsync(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString() + "\r\n"));
                     await Task.Delay(1000);
                 }
 
