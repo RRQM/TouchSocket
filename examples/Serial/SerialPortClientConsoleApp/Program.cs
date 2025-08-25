@@ -145,7 +145,11 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
-
+        //如果需要向串口发送数据
+        if (client is ISerialPortClient serialPortClient)
+        {
+            await serialPortClient.SendAsync("hello");
+        }
         await e.InvokeNext();
     }
 }
