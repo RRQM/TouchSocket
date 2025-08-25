@@ -7,16 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
-  <!--<ItemGroup>
-    <Reference Include="TouchSocket">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
-
+	
   <ItemGroup>
     <PackageReference Include="TouchSocket" Version="3.8.0.9" />
   </ItemGroup>
