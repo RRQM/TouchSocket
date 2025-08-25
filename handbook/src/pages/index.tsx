@@ -14,7 +14,8 @@ import LinuxIcon from "./linux.svg";
 import MacOSIcon from "./macos.svg";
 import WindowIcon from "./windows.svg";
 
-function Home() {
+function Home()
+{
   const context = useDocusaurusContext();
   const { siteConfig = {} } = context;
 
@@ -28,7 +29,8 @@ function Home() {
   );
 }
 
-function Banner() {
+function Banner()
+{
 
   const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
   const isDarkTheme = colorMode === "dark";
@@ -41,18 +43,23 @@ function Banner() {
             TouchSocket
           </div>
           <div style={{ color: "#4f7cb8", position: "relative", fontSize: 14, fontWeight: 500, marginTop: "0.5em" }}>
-            一款简单易用的基础网络通讯组件库。
+            知行合一，从理论到实践的C#网络通讯组件库。
           </div>
-          <div className={"TouchSocket-banner-description"+ (isDarkTheme ? " dark" : "")}>
-            三十功名尘与土，八千里路云和月。
+          <div className={"TouchSocket-banner-description" + (isDarkTheme ? " dark" : "")}>
+            纸上得来终觉浅，绝知此事要躬行。
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
             <li>
               支持 .NET Framework 4.5及以上，.NET Standard2.0及以上
             </li>
-            <li>极少依赖</li>
-            <li>极速上手，极简使用</li>
+            <li>轻量级设计，最小化依赖包</li>
+            <li>开箱即用，几行代码即可构建网络应用</li>
+            <li>高性能异步通讯，支撑海量并发连接</li>
+            <li>丰富的协议支持：TCP、UDP、HTTP、WebSocket、MQTT等</li>
+            <li>内置断线重连、心跳检测、流量控制等企业级特性</li>
+            <li>完善的插件体系，灵活扩展业务逻辑</li>
+            <li>详细的中文文档，丰富的示例代码</li>
           </ul>
           <div className="TouchSocket-support-platform">受支持平台：</div>
           <div className="TouchSocket-support-icons">
@@ -90,18 +97,17 @@ function Banner() {
               source={`
 // highlight-next-line
 var service = new TcpService();
-service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
 service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
 service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.Memory.Span);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置
+await service.SetupAsync(new TouchSocketConfig()//载入配置
     .SetListenIPHosts("tcp://127.0.0.1:7788", 7789)//同时监听两个地址
     .ConfigureContainer(a =>
     {
@@ -111,7 +117,7 @@ service.Setup(new TouchSocketConfig()//载入配置
     {
         //a.Add();//此处可以添加插件
     }));
-service.Start();//启动
+await service.StartAsync();//启动
 `}
             />
           </SystemWindow>
@@ -121,7 +127,8 @@ service.Start();//启动
   );
 }
 
-function Gitee() {
+function Gitee()
+{
   const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
   const isDarkTheme = colorMode === "dark";
 
@@ -142,7 +149,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#2d5aa0" }}>2000 +</div>
+            <div style={{ color: "#2d5aa0" }}>4000 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Stars</span>
           </div>
         </div>
@@ -154,7 +161,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#4f7cb8" }}>600 +</div>
+            <div style={{ color: "#4f7cb8" }}>1000 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Forks</span>
           </div>
         </div>
@@ -166,7 +173,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#6092b6" }}>202,125</div>
+            <div style={{ color: "#6092b6" }}>524,288</div>
             <span className={isDarkTheme ? " dark" : ""}>Downloads</span>
           </div>
         </div>
@@ -175,19 +182,23 @@ function Gitee() {
   );
 }
 
-function CodeSection(props) {
+function CodeSection(props)
+{
   let { language, replace, section, source } = props;
 
   source = source.replace(/\/\/ <.*?\n/g, "");
 
-  if (replace) {
-    for (const [pattern, value] of Object.entries(replace)) {
+  if (replace)
+  {
+    for (const [pattern, value] of Object.entries(replace))
+    {
       source = source.replace(new RegExp(pattern, "gs"), value);
     }
   }
 
   source = source.trim();
-  if (!source.includes("\n")) {
+  if (!source.includes("\n"))
+  {
     source += "\n";
   }
 
@@ -204,7 +215,8 @@ function CodeSection(props) {
   );
 }
 
-function SystemWindow(systemWindowProps) {
+function SystemWindow(systemWindowProps)
+{
   const { children, className, ...props } = systemWindowProps;
   return (
     <div
