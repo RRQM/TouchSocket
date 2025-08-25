@@ -452,7 +452,7 @@ function QuickStart()
             step="3"
             title="启动运行"
             description="配置并启动服务"
-            code="await service.StartAsync();"
+            code="await service.StartAsync(7789);"
             isDark={isDarkTheme}
           />
         </div>

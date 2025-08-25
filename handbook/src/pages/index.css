@@ -91,18 +91,18 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
-  /* 白百合蓝色渐变文字 */
+  /* 中等饱和度的蓝紫渐变文字 */
   background: linear-gradient(135deg, 
-    #2d5aa0 0%,     /* Deep Alice Blue */
-    #4f7cb8 25%,    /* Medium Blue */
-    #7fa8d3 50%,    /* Light Blue */
-    #a5c6e0 75%,    /* Soft Blue */
-    #c7dded 100%    /* Very Light Blue */
+    #4a69bd 0%,     /* 中等蓝色 */
+    #5f27cd 25%,    /* 紫蓝色 */
+    #74b9ff 50%,    /* 亮蓝色 */
+    #6c5ce7 75%,    /* 淡紫色 */
+    #a29bfe 100%    /* 浅紫色 */
   );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.1));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,17 +114,18 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
+  /* 暗色模式中等饱和度渐变文字 */
   background: linear-gradient(135deg, 
-    #c7dded 0%,     /* Very Light Blue */
-    #a5c6e0 25%,    /* Soft Blue */
-    #7fa8d3 50%,    /* Light Blue */
-    #6092b6 75%,    /* Medium Blue */
-    #8bb4d9 100%    /* Light Alice Blue */
+    #74b9ff 0%,     /* 亮蓝色 */
+    #a29bfe 25%,    /* 浅紫色 */
+    #fd79a8 50%,    /* 粉红色 */
+    #fdcb6e 75%,    /* 金黄色 */
+    #6c5ce7 100%    /* 紫色 */
   );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(199, 221, 237, 0.2));
+  filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.15));
 }
 
 .TouchSocket-banner-spec {
