@@ -351,6 +351,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WaitingClient", "WaitingCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpWaitingClientWinFormsApp", "WaitingClient\TcpWaitingClientWinFormsApp\TcpWaitingClientWinFormsApp.csproj", "{90FE56EA-94C2-820D-6E26-012E0BC1BDA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaitingClientConsoleApp", "WaitingClient\WaitingClientConsoleApp\WaitingClientConsoleApp.csproj", "{9CC9DEE5-C96B-454E-8CBF-67A359055121}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -809,6 +811,10 @@ Global
 		{90FE56EA-94C2-820D-6E26-012E0BC1BDA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90FE56EA-94C2-820D-6E26-012E0BC1BDA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90FE56EA-94C2-820D-6E26-012E0BC1BDA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CC9DEE5-C96B-454E-8CBF-67A359055121}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CC9DEE5-C96B-454E-8CBF-67A359055121}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CC9DEE5-C96B-454E-8CBF-67A359055121}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CC9DEE5-C96B-454E-8CBF-67A359055121}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -960,6 +966,7 @@ Global
 		{A90C21AE-9552-E1EF-028A-309CB5F72843} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{896858AE-13F4-473B-A5D5-B214CD04FDEF} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 		{90FE56EA-94C2-820D-6E26-012E0BC1BDA9} = {432C7F0A-B01D-4113-8DF3-C588B147A4C6}
+		{9CC9DEE5-C96B-454E-8CBF-67A359055121} = {432C7F0A-B01D-4113-8DF3-C588B147A4C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
