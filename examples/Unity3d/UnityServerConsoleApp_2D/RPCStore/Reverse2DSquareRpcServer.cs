@@ -20,14 +20,14 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        void UpdatePosition(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default);
+        void UpdatePosition(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default);
         ///<summary>
         ///更新位置
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task UpdatePositionAsync(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default);
+        Task UpdatePositionAsync(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default);
 
         ///<summary>
         ///创建新的NPC
@@ -35,14 +35,14 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        void NewNPC(System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default);
+        void NewNPC(System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default);
         ///<summary>
         ///创建新的NPC
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task NewNPCAsync(System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default);
+        Task NewNPCAsync(System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default);
 
         ///<summary>
         ///玩家离线
@@ -50,14 +50,14 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        void Offline(System.Int32 id, IInvokeOption invokeOption = default);
+        void Offline(System.Int32 id, InvokeOption invokeOption = default);
         ///<summary>
         ///玩家离线
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task OfflineAsync(System.Int32 id, IInvokeOption invokeOption = default);
+        Task OfflineAsync(System.Int32 id, InvokeOption invokeOption = default);
 
         ///<summary>
         ///玩家登陆
@@ -65,14 +65,14 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        void PlayerLogin(System.Int32 id, IInvokeOption invokeOption = default);
+        void PlayerLogin(System.Int32 id, InvokeOption invokeOption = default);
         ///<summary>
         ///玩家登陆
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task PlayerLoginAsync(System.Int32 id, IInvokeOption invokeOption = default);
+        Task PlayerLoginAsync(System.Int32 id, InvokeOption invokeOption = default);
 
     }
     public class Reverse2DSquareRpcServer : IReverse2DSquareRpcServer
@@ -88,7 +88,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public void UpdatePosition(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default)
+        public void UpdatePosition(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -101,7 +101,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///更新位置
         ///</summary>
-        public Task UpdatePositionAsync(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default)
+        public Task UpdatePositionAsync(System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -118,7 +118,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public void NewNPC(System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default)
+        public void NewNPC(System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -131,7 +131,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///创建新的NPC
         ///</summary>
-        public Task NewNPCAsync(System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default)
+        public Task NewNPCAsync(System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -148,7 +148,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public void Offline(System.Int32 id, IInvokeOption invokeOption = default)
+        public void Offline(System.Int32 id, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -161,7 +161,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///玩家离线
         ///</summary>
-        public Task OfflineAsync(System.Int32 id, IInvokeOption invokeOption = default)
+        public Task OfflineAsync(System.Int32 id, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -178,7 +178,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public void PlayerLogin(System.Int32 id, IInvokeOption invokeOption = default)
+        public void PlayerLogin(System.Int32 id, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -191,7 +191,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///玩家登陆
         ///</summary>
-        public Task PlayerLoginAsync(System.Int32 id, IInvokeOption invokeOption = default)
+        public Task PlayerLoginAsync(System.Int32 id, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -211,7 +211,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static void UpdatePosition<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default) where TClient :
+        public static void UpdatePosition<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { id, vector3, time };
@@ -221,7 +221,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///更新位置
         ///</summary>
-        public static Task UpdatePositionAsync<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, IInvokeOption invokeOption = default) where TClient :
+        public static Task UpdatePositionAsync<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, System.Int64 time, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { id, vector3, time };
@@ -235,7 +235,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static void NewNPC<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default) where TClient :
+        public static void NewNPC<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { id, vector3 };
@@ -245,7 +245,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///创建新的NPC
         ///</summary>
-        public static Task NewNPCAsync<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, IInvokeOption invokeOption = default) where TClient :
+        public static Task NewNPCAsync<TClient>(this TClient client, System.Int32 id, System.Numerics.Vector3 vector3, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { id, vector3 };
@@ -259,7 +259,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static void Offline<TClient>(this TClient client, System.Int32 id, IInvokeOption invokeOption = default) where TClient :
+        public static void Offline<TClient>(this TClient client, System.Int32 id, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { id };
@@ -269,7 +269,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///玩家离线
         ///</summary>
-        public static Task OfflineAsync<TClient>(this TClient client, System.Int32 id, IInvokeOption invokeOption = default) where TClient :
+        public static Task OfflineAsync<TClient>(this TClient client, System.Int32 id, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { id };
@@ -283,7 +283,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static void PlayerLogin<TClient>(this TClient client, System.Int32 id, IInvokeOption invokeOption = default) where TClient :
+        public static void PlayerLogin<TClient>(this TClient client, System.Int32 id, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { id };
@@ -293,7 +293,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///玩家登陆
         ///</summary>
-        public static Task PlayerLoginAsync<TClient>(this TClient client, System.Int32 id, IInvokeOption invokeOption = default) where TClient :
+        public static Task PlayerLoginAsync<TClient>(this TClient client, System.Int32 id, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { id };

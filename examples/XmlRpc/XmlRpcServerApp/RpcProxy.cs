@@ -32,14 +32,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Int32 Sum(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
+        System.Int32 Sum(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
+        Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -47,14 +47,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Int32 TestClass(MyClass myClass, IInvokeOption invokeOption = default);
+        System.Int32 TestClass(MyClass myClass, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Int32> TestClassAsync(MyClass myClass, IInvokeOption invokeOption = default);
+        Task<System.Int32> TestClassAsync(MyClass myClass, InvokeOption invokeOption = default);
 
     }
     public class XmlServer : IXmlServer
@@ -70,7 +70,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Int32 Sum(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
+        public System.Int32 Sum(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -83,7 +83,7 @@ namespace RpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -99,7 +99,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Int32 TestClass(MyClass myClass, IInvokeOption invokeOption = default)
+        public System.Int32 TestClass(MyClass myClass, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -112,7 +112,7 @@ namespace RpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.Int32> TestClassAsync(MyClass myClass, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> TestClassAsync(MyClass myClass, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -131,7 +131,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Int32 Sum<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
+        public static System.Int32 Sum<TClient>(this TClient client, System.Int32 a, System.Int32 b, InvokeOption invokeOption = default) where TClient :
         TouchSocket.XmlRpc.IXmlRpcClient
         {
             object[] @_parameters = new object[] { a, b };
@@ -141,7 +141,7 @@ namespace RpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.Int32> SumAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Int32> SumAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, InvokeOption invokeOption = default) where TClient :
         TouchSocket.XmlRpc.IXmlRpcClient
         {
             object[] parameters = new object[] { a, b };
@@ -154,7 +154,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Int32 TestClass<TClient>(this TClient client, MyClass myClass, IInvokeOption invokeOption = default) where TClient :
+        public static System.Int32 TestClass<TClient>(this TClient client, MyClass myClass, InvokeOption invokeOption = default) where TClient :
         TouchSocket.XmlRpc.IXmlRpcClient
         {
             object[] @_parameters = new object[] { myClass };
@@ -164,7 +164,7 @@ namespace RpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.Int32> TestClassAsync<TClient>(this TClient client, MyClass myClass, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Int32> TestClassAsync<TClient>(this TClient client, MyClass myClass, InvokeOption invokeOption = default) where TClient :
         TouchSocket.XmlRpc.IXmlRpcClient
         {
             object[] parameters = new object[] { myClass };

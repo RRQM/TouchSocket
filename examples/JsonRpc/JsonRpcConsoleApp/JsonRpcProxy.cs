@@ -20,14 +20,14 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.String TestGetContext(System.String str, IInvokeOption invokeOption = default);
+        System.String TestGetContext(System.String str, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.String> TestGetContextAsync(System.String str, IInvokeOption invokeOption = default);
+        Task<System.String> TestGetContextAsync(System.String str, InvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -35,14 +35,14 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
+        Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default);
+        Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -50,14 +50,14 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.String TestJsonRpc(System.String str, IInvokeOption invokeOption = default);
+        System.String TestJsonRpc(System.String str, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.String> TestJsonRpcAsync(System.String str, IInvokeOption invokeOption = default);
+        Task<System.String> TestJsonRpcAsync(System.String str, InvokeOption invokeOption = default);
 
         ///<summary>
         ///无注释信息
@@ -65,14 +65,14 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.String Show(System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default);
+        System.String Show(System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.String> ShowAsync(System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default);
+        Task<System.String> ShowAsync(System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default);
 
     }
     public class JsonRpcServer : IJsonRpcServer
@@ -88,7 +88,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.String TestGetContext(System.String str, IInvokeOption invokeOption = default)
+        public System.String TestGetContext(System.String str, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -102,7 +102,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.String> TestGetContextAsync(System.String str, IInvokeOption invokeOption = default)
+        public async Task<System.String> TestGetContextAsync(System.String str, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -119,7 +119,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
+        public Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -133,7 +133,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default)
+        public async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -150,7 +150,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.String TestJsonRpc(System.String str, IInvokeOption invokeOption = default)
+        public System.String TestJsonRpc(System.String str, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -164,7 +164,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.String> TestJsonRpcAsync(System.String str, IInvokeOption invokeOption = default)
+        public async Task<System.String> TestJsonRpcAsync(System.String str, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -181,7 +181,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.String Show(System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default)
+        public System.String Show(System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -195,7 +195,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.String> ShowAsync(System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default)
+        public async Task<System.String> ShowAsync(System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -215,7 +215,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.String TestGetContext<TClient>(this TClient client, System.String str, IInvokeOption invokeOption = default) where TClient :
+        public static System.String TestGetContext<TClient>(this TClient client, System.String str, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { str };
@@ -226,7 +226,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.String> TestGetContextAsync<TClient>(this TClient client, System.String str, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.String> TestGetContextAsync<TClient>(this TClient client, System.String str, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { str };
@@ -240,7 +240,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static Newtonsoft.Json.Linq.JObject TestJObject<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
+        public static Newtonsoft.Json.Linq.JObject TestJObject<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { obj };
@@ -251,7 +251,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync<TClient>(this TClient client, Newtonsoft.Json.Linq.JObject obj, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { obj };
@@ -265,7 +265,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.String TestJsonRpc<TClient>(this TClient client, System.String str, IInvokeOption invokeOption = default) where TClient :
+        public static System.String TestJsonRpc<TClient>(this TClient client, System.String str, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { str };
@@ -276,7 +276,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.String> TestJsonRpcAsync<TClient>(this TClient client, System.String str, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.String> TestJsonRpcAsync<TClient>(this TClient client, System.String str, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { str };
@@ -290,7 +290,7 @@ namespace JsonRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.String Show<TClient>(this TClient client, System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default) where TClient :
+        public static System.String Show<TClient>(this TClient client, System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { a, b, c };
@@ -301,7 +301,7 @@ namespace JsonRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.String> ShowAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, System.Int32 c, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.String> ShowAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, System.Int32 c, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { a, b, c };

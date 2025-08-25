@@ -32,14 +32,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default);
+        System.Boolean Login(System.String account, System.String password, InvokeOption invokeOption = default);
         ///<summary>
         ///登录
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default);
+        Task<System.Boolean> LoginAsync(System.String account, System.String password, InvokeOption invokeOption = default);
 
         ///<summary>
         ///注册
@@ -47,14 +47,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Boolean Register(RegisterModel register, IInvokeOption invokeOption = default);
+        System.Boolean Register(RegisterModel register, InvokeOption invokeOption = default);
         ///<summary>
         ///注册
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Boolean> RegisterAsync(RegisterModel register, IInvokeOption invokeOption = default);
+        Task<System.Boolean> RegisterAsync(RegisterModel register, InvokeOption invokeOption = default);
 
         ///<summary>
         ///性能测试
@@ -62,14 +62,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Int32 Performance(System.Int32 a, IInvokeOption invokeOption = default);
+        System.Int32 Performance(System.Int32 a, InvokeOption invokeOption = default);
         ///<summary>
         ///性能测试
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Int32> PerformanceAsync(System.Int32 a, IInvokeOption invokeOption = default);
+        Task<System.Int32> PerformanceAsync(System.Int32 a, InvokeOption invokeOption = default);
 
         ///<summary>
         ///测试out
@@ -77,14 +77,14 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Boolean OutBytes(System.Byte[] bytes, IInvokeOption invokeOption = default);
+        System.Boolean OutBytes(System.Byte[] bytes, InvokeOption invokeOption = default);
         ///<summary>
         ///测试out
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Boolean> OutBytesAsync(System.Byte[] bytes, IInvokeOption invokeOption = default);
+        Task<System.Boolean> OutBytesAsync(System.Byte[] bytes, InvokeOption invokeOption = default);
 
     }
     public class MyRpcServer : IMyRpcServer
@@ -100,7 +100,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default)
+        public System.Boolean Login(System.String account, System.String password, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -113,7 +113,7 @@ namespace RpcProxy
         ///<summary>
         ///登录
         ///</summary>
-        public async Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default)
+        public async Task<System.Boolean> LoginAsync(System.String account, System.String password, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -129,7 +129,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Boolean Register(RegisterModel register, IInvokeOption invokeOption = default)
+        public System.Boolean Register(RegisterModel register, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -142,7 +142,7 @@ namespace RpcProxy
         ///<summary>
         ///注册
         ///</summary>
-        public async Task<System.Boolean> RegisterAsync(RegisterModel register, IInvokeOption invokeOption = default)
+        public async Task<System.Boolean> RegisterAsync(RegisterModel register, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -158,7 +158,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Int32 Performance(System.Int32 a, IInvokeOption invokeOption = default)
+        public System.Int32 Performance(System.Int32 a, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -171,7 +171,7 @@ namespace RpcProxy
         ///<summary>
         ///性能测试
         ///</summary>
-        public async Task<System.Int32> PerformanceAsync(System.Int32 a, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> PerformanceAsync(System.Int32 a, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -187,7 +187,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Boolean OutBytes(System.Byte[] bytes, IInvokeOption invokeOption = default)
+        public System.Boolean OutBytes(System.Byte[] bytes, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -200,7 +200,7 @@ namespace RpcProxy
         ///<summary>
         ///测试out
         ///</summary>
-        public async Task<System.Boolean> OutBytesAsync(System.Byte[] bytes, IInvokeOption invokeOption = default)
+        public async Task<System.Boolean> OutBytesAsync(System.Byte[] bytes, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -219,7 +219,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Boolean Login<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
+        public static System.Boolean Login<TClient>(this TClient client, System.String account, System.String password, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] @_parameters = new object[] { account, password };
@@ -229,7 +229,7 @@ namespace RpcProxy
         ///<summary>
         ///登录
         ///</summary>
-        public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] parameters = new object[] { account, password };
@@ -242,7 +242,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Boolean Register<TClient>(this TClient client, RegisterModel register, IInvokeOption invokeOption = default) where TClient :
+        public static System.Boolean Register<TClient>(this TClient client, RegisterModel register, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] @_parameters = new object[] { register };
@@ -252,7 +252,7 @@ namespace RpcProxy
         ///<summary>
         ///注册
         ///</summary>
-        public static async Task<System.Boolean> RegisterAsync<TClient>(this TClient client, RegisterModel register, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Boolean> RegisterAsync<TClient>(this TClient client, RegisterModel register, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] parameters = new object[] { register };
@@ -265,7 +265,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Int32 Performance<TClient>(this TClient client, System.Int32 a, IInvokeOption invokeOption = default) where TClient :
+        public static System.Int32 Performance<TClient>(this TClient client, System.Int32 a, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] @_parameters = new object[] { a };
@@ -275,7 +275,7 @@ namespace RpcProxy
         ///<summary>
         ///性能测试
         ///</summary>
-        public static async Task<System.Int32> PerformanceAsync<TClient>(this TClient client, System.Int32 a, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Int32> PerformanceAsync<TClient>(this TClient client, System.Int32 a, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] parameters = new object[] { a };
@@ -288,7 +288,7 @@ namespace RpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Boolean OutBytes<TClient>(this TClient client, System.Byte[] bytes, IInvokeOption invokeOption = default) where TClient :
+        public static System.Boolean OutBytes<TClient>(this TClient client, System.Byte[] bytes, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] @_parameters = new object[] { bytes };
@@ -298,7 +298,7 @@ namespace RpcProxy
         ///<summary>
         ///测试out
         ///</summary>
-        public static async Task<System.Boolean> OutBytesAsync<TClient>(this TClient client, System.Byte[] bytes, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Boolean> OutBytesAsync<TClient>(this TClient client, System.Byte[] bytes, InvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
             object[] parameters = new object[] { bytes };

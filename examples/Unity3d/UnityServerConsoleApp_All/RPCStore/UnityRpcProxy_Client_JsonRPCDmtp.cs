@@ -20,14 +20,14 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        System.Int32 Add(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
+        System.Int32 Add(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default);
         ///<summary>
         ///无注释信息
         ///</summary>
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Int32> AddAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
+        Task<System.Int32> AddAsync(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default);
 
     }
     public class ReverseJsonRpcServer : IReverseJsonRpcServer
@@ -43,7 +43,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public System.Int32 Add(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
+        public System.Int32 Add(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -57,7 +57,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public async Task<System.Int32> AddAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> AddAsync(System.Int32 a, System.Int32 b, InvokeOption invokeOption = default)
         {
             if (this.Client == null)
             {
@@ -77,7 +77,7 @@ namespace UnityRpcProxy
         /// <exception cref="System.TimeoutException">调用超时</exception>
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Int32 Add<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
+        public static System.Int32 Add<TClient>(this TClient client, System.Int32 a, System.Int32 b, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] @_parameters = new object[] { a, b };
@@ -88,7 +88,7 @@ namespace UnityRpcProxy
         ///<summary>
         ///无注释信息
         ///</summary>
-        public static async Task<System.Int32> AddAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Int32> AddAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, InvokeOption invokeOption = default) where TClient :
         TouchSocket.JsonRpc.IJsonRpcClient
         {
             object[] parameters = new object[] { a, b };

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Core" Version="3.7.2.41" />
+		<PackageReference Include="TouchSocket.Core" Version="3.8.0.9" />
 	</ItemGroup>
 	
   <!--<ItemGroup>

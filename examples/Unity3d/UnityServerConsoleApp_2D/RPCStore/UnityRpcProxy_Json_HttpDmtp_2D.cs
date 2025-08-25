@@ -20,14 +20,14 @@ public interface IUnityRpcStore:TouchSocket.Rpc.IRemoteServer
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-void JsonRpc_UnitMovement(System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default);
+void JsonRpc_UnitMovement(System.Numerics.Vector3 vector3,InvokeOption invokeOption = default);
 ///<summary>
 ///单位移动
 ///</summary>
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-Task JsonRpc_UnitMovementAsync(System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default);
+Task JsonRpc_UnitMovementAsync(System.Numerics.Vector3 vector3,InvokeOption invokeOption = default);
 
 }
 public class UnityRpcStore :IUnityRpcStore
@@ -43,7 +43,7 @@ public IRpcClient Client{get;private set; }
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-public void JsonRpc_UnitMovement(System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default)
+public void JsonRpc_UnitMovement(System.Numerics.Vector3 vector3,InvokeOption invokeOption = default)
 {
 if(this.Client==null)
 {
@@ -56,7 +56,7 @@ this.Client.Invoke("JsonRpc_UnitMovement",null,invokeOption, @_parameters);
 ///<summary>
 ///单位移动
 ///</summary>
-public Task JsonRpc_UnitMovementAsync(System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default)
+public Task JsonRpc_UnitMovementAsync(System.Numerics.Vector3 vector3,InvokeOption invokeOption = default)
 {
 if(this.Client==null)
 {
@@ -76,7 +76,7 @@ public static class UnityRpcStoreExtensions
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-public static void JsonRpc_UnitMovement<TClient>(this TClient client,System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default) where TClient:
+public static void JsonRpc_UnitMovement<TClient>(this TClient client,System.Numerics.Vector3 vector3,InvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
 object[] @_parameters = new object[]{vector3};
 client.Invoke("JsonRpc_UnitMovement",null,invokeOption, @_parameters);
@@ -85,7 +85,7 @@ client.Invoke("JsonRpc_UnitMovement",null,invokeOption, @_parameters);
 ///<summary>
 ///单位移动
 ///</summary>
-public static Task JsonRpc_UnitMovementAsync<TClient>(this TClient client,System.Numerics.Vector3 vector3,IInvokeOption invokeOption = default) where TClient:
+public static Task JsonRpc_UnitMovementAsync<TClient>(this TClient client,System.Numerics.Vector3 vector3,InvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
 object[] parameters = new object[]{vector3};
 return client.InvokeAsync("JsonRpc_UnitMovement",null,invokeOption, parameters);
