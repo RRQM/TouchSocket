@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -19,19 +18,18 @@ namespace TcpWaitingClientWinFormsApp;
 
 public partial class Form1 : Form
 {
+    private CancellationTokenSource cts;
+
+    private TcpClient m_tcpClient;
+
+    private TcpService m_tcpService;
+
     public Form1()
     {
         this.InitializeComponent();
         this.Load += this.Form1_Load;
     }
 
-    private TcpService m_tcpService;
-    private async void Form1_Load(object? sender, EventArgs e)
-    {
-        this.m_tcpService = await CreateService();
-
-        this.UpdateServiceButtonUI();
-    }
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
@@ -53,48 +51,9 @@ public partial class Form1 : Form
         return service;
     }
 
-    private TcpClient m_tcpClient;
-
-    private async Task IsConnected()
+    private async void button1_Click(object sender, EventArgs e)
     {
-        try
-        {
-            if (this.m_tcpClient?.Online == true)
-            {
-                return;
-            }
-            this.m_tcpClient.SafeDispose();
-            this.m_tcpClient = new TcpClient();
-
-            this.m_tcpClient.Received = async (client, e) =>
-            {
-                //此处不能await，否则也会导致死锁
-                _ = Task.Run(async () =>
-                {
-                    var waitingClient = client.CreateWaitingClient(new WaitingOptions());
-
-                    using var bytes = await waitingClient.SendThenResponseAsync("hello");
-                });
-
-                await Task.CompletedTask;
-            };
-
-            await this.m_tcpClient.SetupAsync(new TouchSocketConfig()
-                .ConfigurePlugins(a =>
-                {
-                    a.Add(typeof(ITcpReceivedPlugin), (ReceivedDataEventArgs e) =>
-                    {
-                        Console.WriteLine($"PluginReceivedData:{e.Memory.Span.ToString(Encoding.UTF8)}");
-                    });
-                })
-                 .SetRemoteIPHost(this.textBox1.Text));
-
-            await this.m_tcpClient.ConnectAsync();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(ex.Message);
-        }
+        await this.m_tcpClient?.CloseAsync();
     }
 
     private async void button2_Click(object sender, EventArgs e)
@@ -105,8 +64,8 @@ public partial class Form1 : Form
             var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions());
 
             this.cts = new CancellationTokenSource(5000);
-            using var bytes = await waitingClient.SendThenResponseAsync(this.textBox2.Text.ToUtf8Bytes(), this.cts.Token);
-            MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes.Memory.Span)}");
+            using var responsedData = await waitingClient.SendThenResponseAsync(this.textBox2.Text.ToUtf8Bytes(), this.cts.Token);
+            MessageBox.Show($"message:{Encoding.UTF8.GetString(responsedData.Memory.Span)}");
         }
         catch (Exception ex)
         {
@@ -147,9 +106,9 @@ public partial class Form1 : Form
             });
 
             this.cts = new CancellationTokenSource(500000);
-            using var bytes = await waitingClient.SendThenResponseAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
+            using var responsedData = await waitingClient.SendThenResponseAsync(this.textBox3.Text.ToUtf8Bytes(), this.cts.Token);
 
-            MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes.Memory.Span)}");
+            MessageBox.Show($"message:{Encoding.UTF8.GetString(responsedData.Memory.Span)}");
         }
         catch (Exception ex)
         {
@@ -157,22 +116,65 @@ public partial class Form1 : Form
         }
     }
 
-    private async void button1_Click(object sender, EventArgs e)
-    {
-        await this.m_tcpClient?.CloseAsync();
-    }
-
-    private CancellationTokenSource cts;
-    private void button5_Click(object sender, EventArgs e)
-    {
-        this.cts?.Cancel();
-    }
-
     private void button4_Click(object sender, EventArgs e)
     {
         this.m_tcpService?.Dispose();
         this.m_tcpService = default;
         this.UpdateServiceButtonUI();
+    }
+
+    private void button5_Click(object sender, EventArgs e)
+    {
+        this.cts?.Cancel();
+    }
+
+    private async void Form1_Load(object? sender, EventArgs e)
+    {
+        this.m_tcpService = await CreateService();
+
+        this.UpdateServiceButtonUI();
+    }
+
+    private async Task IsConnected()
+    {
+        try
+        {
+            if (this.m_tcpClient?.Online == true)
+            {
+                return;
+            }
+            await this.m_tcpClient.CloseAsync();
+            this.m_tcpClient = new TcpClient();
+
+            this.m_tcpClient.Received = async (client, e) =>
+            {
+                //此处不能await，否则也会导致死锁
+                _ = Task.Run(async () =>
+                {
+                    var waitingClient = client.CreateWaitingClient(new WaitingOptions());
+
+                    using var bytes = await waitingClient.SendThenResponseAsync("hello");
+                });
+
+                await Task.CompletedTask;
+            };
+
+            await this.m_tcpClient.SetupAsync(new TouchSocketConfig()
+                .ConfigurePlugins(a =>
+                {
+                    a.Add(typeof(ITcpReceivedPlugin), (ReceivedDataEventArgs e) =>
+                    {
+                        Console.WriteLine($"PluginReceivedData:{e.Memory.Span.ToString(Encoding.UTF8)}");
+                    });
+                })
+                 .SetRemoteIPHost(this.textBox1.Text));
+
+            await this.m_tcpClient.ConnectAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message);
+        }
     }
 
     private void UpdateServiceButtonUI()
