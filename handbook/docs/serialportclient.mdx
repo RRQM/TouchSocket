@@ -5,6 +5,8 @@ title: 串口客户端
 
 import Tag from "@site/src/components/Tag.js";
 import { TouchSocketSerialPortsDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 ### 定义
 
@@ -13,38 +15,112 @@ import { TouchSocketSerialPortsDefinition } from "@site/src/components/Definitio
 
 ## 一、说明
 
-`SerialPortClient`是串口系客户端，他直接参与串口的连接、发送、接收、处理、断开等。
+`SerialPortClient`是TouchSocket框架提供的高性能串口通信客户端组件，专为.NET平台串口通信场景而设计。它提供了一套完整的串口操作解决方案，涵盖了串口连接建立、数据收发、协议解析、连接管理等全生命周期功能。
 
-## 二、特点
+### 1.1 核心能力
 
-- 简单易用。
-- 内存池支持
-- 高性能
-- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(modbus)等。
-- 超简单的同步发送、异步发送、接收等操作。
-- 基于委托、插件驱动，让每一步都能执行AOP。
+- **全生命周期管理**：完整支持串口连接、数据传输、异常处理、连接断开等各个环节
+- **高效数据处理**：内置内存池机制，减少GC压力，提升数据处理性能
+- **灵活适配器系统**：预置多种数据适配器，一键解决分包、粘包、协议解析等常见问题
+- **事件驱动架构**：基于委托和插件的AOP设计，每个操作步骤都可进行拦截和扩展
+- **异步编程支持**：全面支持async/await异步模式，提供同步和异步发送接收API
 
-## 三、产品应用场景
+### 1.2 适用场景
 
-- 所有串口基础使用场景：可跨平台、跨语言使用。
-- 自定义协议解析场景：可解析任意数据格式的串口数据报文。
+`SerialPortClient`特别适用于以下应用场景：
 
-## 四、可配置项
+- **工业自动化**：PLC通信、传感器数据采集、设备控制等
+- **物联网设备**：串口设备数据采集、远程监控、设备管理
+- **测试测量**：仪器仪表通信、数据记录、自动化测试
+- **嵌入式通信**：单片机通信、开发板调试、产品测试
 
-<details>
-<summary>可配置项</summary>
-<div>
+## 二、核心特性
 
-#### SetMaxPackageSize
+### 2.1 🚀 高性能设计
 
-数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
+- **内存池优化**：采用高效内存池机制，显著降低GC压力，提升数据处理效率
+- **零拷贝传输**：优化数据流转路径，减少不必要的内存拷贝操作
+- **异步优先**：全面拥抱异步编程模式，避免线程阻塞，提升系统并发能力
 
-#### SetSerialPortOption
+### 2.2 🔧 灵活易用
 
-配置串口相关。例如：端口、波特率、数据位、校验位、停止位等。
+- **即插即用**：简洁的API设计，几行代码即可完成串口通信功能
+- **配置丰富**：支持波特率、数据位、停止位、校验位等全面串口参数配置
+- **适配器生态**：内置多种数据适配器，支持自定义协议解析
 
-</div>
-</details>
+### 2.3 🛡️ 可靠稳定
+
+- **异常容错**：完善的异常处理机制，确保通信稳定性
+- **连接管理**：智能连接状态监控，支持自动重连等高级功能
+- **数据完整性**：内置数据校验和完整性保护机制
+
+### 2.4 🔌 插件化扩展
+
+- **AOP支持**：基于插件的面向切面编程，可在任何环节注入自定义逻辑
+- **事件驱动**：丰富的事件回调，满足各种业务场景需求
+- **高度解耦**：模块化设计，各组件职责清晰，易于维护和扩展
+
+## 三、应用场景
+
+### 3.1 🏭 工业自动化领域
+
+- **PLC通信**：支持Modbus RTU、自定义工业协议的设备通信
+- **传感器采集**：温度、压力、流量等各类传感器数据实时采集
+- **设备控制**：电机控制、阀门操作、设备状态监控
+- **生产线集成**：MES系统集成、生产数据采集、质量追溯
+
+### 3.2 🌐 物联网与智能硬件
+
+- **边缘计算网关**：物联网设备数据汇聚、协议转换、云端对接
+- **智能仪表**：电表、水表、气表等智能计量设备通信
+- **环境监测**：空气质量、水质监测、噪音检测等环境数据采集
+- **农业物联网**：土壤监测、温室控制、智能灌溉系统
+
+### 3.3 🔬 测试测量应用
+
+- **仪器仪表通信**：示波器、万用表、频谱分析仪等测试设备集成
+- **自动化测试**：产品功能测试、老化测试、性能验证
+- **数据记录**：长期数据监控、趋势分析、报告生成
+- **标定校准**：设备标定、参数调整、精度验证
+
+### 3.4 💻 嵌入式开发支持
+
+- **单片机调试**：STM32、Arduino等开发板程序调试
+- **固件升级**：设备固件远程更新、版本管理
+- **参数配置**：设备参数远程配置、状态查询
+- **协议开发**：自定义通信协议开发、测试验证
+
+### 3.5 🎯 跨平台兼容性
+
+- **Windows平台**：完整支持.NET Framework/.NET Core/.NET 5+
+- **Linux平台**：支持各种Linux发行版的串口设备访问
+- **嵌入式Linux**：树莓派、工控机等嵌入式设备部署
+- **容器化部署**：支持Docker容器化部署和微服务架构
+
+## 四、配置选项
+
+### 4.1 串口通信参数的核心配置
+
+**主要参数**：
+
+| 参数名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `PortName` | string | "COM1" | 串口名称（Windows：COM1-COM256，Linux：/dev/ttyS0等） |
+| `BaudRate` | int | 9600 | 波特率（支持1200-921600及自定义值） |
+| `DataBits` | int | 8 | 数据位数（通常为5-8位） |
+| `Parity` | Parity | None | 校验位（None/Odd/Even/Mark/Space） |
+| `StopBits` | StopBits | One | 停止位（One/Two/OnePointFive） |
+| `Handshake` | Handshake | None | 流控制（None/XOnXOff/RTS/RTSXOnXOff） |
+
+**配置示例**：
+
+<CustomCodeBlock region="串口通信参数的核心配置"/>
+
+### 4.2 适配器配置
+
+适配器配置及使用详情请看：[单线程流式数据适配器](./singlethreadstreamadapter.mdx)
+
+<CustomCodeBlock region="串口一般推荐周期适配器"/>
 
 ## 五、支持插件
 
@@ -66,75 +142,18 @@ import { TouchSocketSerialPortsDefinition } from "@site/src/components/Definitio
 
 代码如下：
 
-```csharp showLineNumbers
-var client = new SerialPortClient();
-client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到端口
-client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到端口
-client.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从端口断开连接。此处仅主动断开才有效。
-client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从端口断开连接，当连接不成功时不会触发。
-client.Received = async (c, e) =>
-{
-    await Console.Out.WriteLineAsync(e.Memory.Span.ToString(Encoding.UTF8));
-};
-
-await client.SetupAsync(new TouchSocketConfig()
-     .SetSerialPortOption(new SerialPortOption()
-     {
-         BaudRate = 9600,//波特率
-         DataBits = 8,//数据位
-         Parity = System.IO.Ports.Parity.None,//校验位
-         PortName = "COM1",//COM
-         StopBits = System.IO.Ports.StopBits.One//停止位
-     })
-     .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter(){ CacheTimeout = TimeSpan.FromMilliseconds(100) })
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyPlugin>();
-     }));
-
-await client.ConnectAsync();
-Console.WriteLine("连接成功");
-```
+<CustomCodeBlock region="创建串口客户端"/>
 
 :::info 信息
 
-上述示例中使用了`PeriodPackageAdapter`适配器，具体作用是确保把`100ms`内收到数据，作为一个包解析，在实际使用时，可以根据业务情况自由修改时间值。详情： [PeriodPackageAdapter](packageadapter.mdx)
-
+上述示例中使用了`PeriodPackageAdapter`适配器，具体作用是确保把`100ms`内收到数据，作为一个包解析，在实际使用时，可以根据业务情况自由修改时间值。详情： [单线程流式数据适配器](./singlethreadstreamadapter.mdx)
 :::  
 
 #### 6.2 继承实现
 
 一般继承实现的话，可以从`SerialPortClientBase`继承。
 
-```csharp showLineNumbers
-class MySerialClient : SerialPortClientBase
-{
-    protected override async Task OnSerialReceived(ReceivedDataEventArgs e)
-    {
-        //此处逻辑单线程处理。
-
-        //此处处理数据，功能相当于Received委托。
-        string mes = e.Memory.Span.ToString(Encoding.UTF8);
-        Console.WriteLine($"已接收到信息：{mes}");
-
-        await base.OnSerialReceived(e);
-    }
-}
-```
-
-```csharp showLineNumbers
-var client = new MySerialClient();
-await client.SetupAsync(new TouchSocket.Core.TouchSocketConfig()
-    .SetSerialPortOption(new SerialPortOption()
-    {
-        BaudRate = 9600,//波特率
-        DataBits = 8,//数据位
-        Parity = System.IO.Ports.Parity.None,//校验位
-        PortName = "COM1",//COM
-        StopBits = System.IO.Ports.StopBits.One//停止位
-    }));
-await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-```
+<CustomCodeBlock region="继承实现串口客户端"/>
 
 ## 七、接收数据
 
@@ -144,45 +163,13 @@ await client.ConnectAsync();//调用连接，当连接不成功时，会抛出�
 
 当使用`SerialPortClient`创建客户端时，内部已经定义好了一个外置委托`Received`，可以通过该委托直接接收数据。
 
-```csharp showLineNumbers
-var client = new SerialPortClient();
-client.Received = (client, e) =>
-{
-    //收到信息
-    string mes = e.Memory.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
-
-```
+<CustomCodeBlock region="串口通过Received事件接收数据"/>
 
 ### 7.2 ReadAsync异步读取
 
 在使用串口时，可能更需要在当前代码上下文读取的情况。所以此处提供了异步读取方法。
 
-```csharp showLineNumbers
-await client.ConnectAsync();
-
-using (var receiver = client.CreateReceiver())
-{
-    while (true)
-    {
-        using (CancellationTokenSource tokenSource=new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-        {
-            using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
-            {
-                if (receiverResult.IsCompleted)
-                {
-                    //断开
-                }
-
-                //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
-                await Console.Out.WriteLineAsync(receiverResult.ByteBlock.Span.ToString(Encoding.UTF8));
-            }
-        }
-    }
-}
-```
+<CustomCodeBlock region="串口通过ReadAsync读取"/>
 
 :::tip 提示
 
@@ -194,49 +181,13 @@ using (var receiver = client.CreateReceiver())
 
 按照`TouchSocket`的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
-（1）声明插件
+创建串口使用插件接收数据
 
-插件可以先继承`PluginBase`，然后再实现需要的功能插件接口，可以按需选择泛型或者非泛型实现。
+<CustomCodeBlock region="创建串口使用插件接收数据"/>
 
-如果已经有继承类，直接实现`IPlugin`接口即可。
+使用串口接收插件
 
-```csharp showLineNumbers
-public class MyPlugin : PluginBase, ISerialReceivedPlugin
-{
-    public async Task OnSerialReceived(ISerialPortSession client, ReceivedDataEventArgs e)
-    {
-        //这里处理数据接收
-        //根据适配器类型，e.Memory与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        var byteBlock = e.Memory;
-        var requestInfo = e.RequestInfo;
-
-        ////表示该数据已经被本插件处理，无需再投递到其他插件。
-
-        await e.InvokeNext();
-    }
-}
-```
-
-（2）创建使用插件处理的客户端
-
-```csharp  {13} showLineNumbers
-var client = new SerialPortClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .SetSerialPortOption(new SerialPortOption()
-    {
-        BaudRate = 9600,//波特率
-        DataBits = 8,//数据位
-        Parity = System.IO.Ports.Parity.None,//校验位
-        PortName = "COM1",//COM
-        StopBits = System.IO.Ports.StopBits.One//停止位
-    })
-    .ConfigurePlugins(a => 
-    {
-        a.Add<MyPlugin>();
-    }));
-
-await client.ConnectAsync();
-```
+<CustomCodeBlock region="使用串口接收插件"/>
 
 ## 八、发送数据
 
@@ -244,11 +195,7 @@ await client.ConnectAsync();
 
 `SerialPortClient`已经内置了多种发送方法，直接调用就可以发送。
 
-但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请继承以后，使用**DefaultSendAsync**。如果发送失败，则会立即抛出异常。
-
-```csharp showLineNumbers
-Task SendAsync(ReadOnlyMemory<byte> memory);
-```
+<CustomCodeBlock region="串口发送数据"/>
 
 :::tip 提示
 
@@ -256,50 +203,26 @@ Task SendAsync(ReadOnlyMemory<byte> memory);
 
 ::: 
 
-### 8.2 同步发送等待
+## 九、请求-响应模式通信
 
-`WaitingClient`是`TouchSocket`提供的一个等待客户端发送数据的客户端。例如：串口客户端发送一个"Hello"，等待对方回信"Hi"，此时即可使用`WaitingClient`。
+在使用串口时，有时需要一种请求-响应模式通信组件，专门用于处理需要等待回复的串口通信场景。它实现了发送数据后等待特定响应的同步通信模式，特别适用于命令-应答类型的串口协议。
 
-```csharp showLineNumbers
-await client.ConnectAsync();
+### 9.2 应用场景
 
-//调用CreateWaitingClient获取到IWaitingClient的对象。
-var waitClient = client.CreateWaitingClient(new WaitingOptions()
-{
-    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-    {
-        return true;
+- **设备查询**：发送查询命令，等待设备状态或参数回复
+- **指令确认**：发送控制指令，等待设备执行确认响应
+- **数据请求**：请求特定数据，等待完整数据包返回
+- **握手通信**：协议握手过程中的请求确认机制
 
-        //if (response.Data.Length == 1)
-        //{
-        //    return true;
-        //}
-        //return false;
-    }
-});
+### 9.3 基本用法
 
-//然后使用SendThenReturn。
-byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("Hello"));
-client.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+详情请看：[等待响应组件](./waitingclient.mdx)
 
-//同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("Hello"));
-IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
-```
+## 十、关闭和释放
 
-:::tip 提示
+<CustomCodeBlock region="串口客户端关闭和释放"/>
 
-在`SendThenReturn`时，通过其他参数，还可以设置`Timeout`，以及可取消的等待`Token`。
+## 十一、Demo示例
 
-:::  
-
-:::danger 注意事项
-
-1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
-2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
-3. 在**Net461及以下**版本中，`SendThenReturn`与`SendThenReturnAsync`不能混合使用。即：要么全同步，要么全异步。
-
-:::
-
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Serial)
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Serial"/>
 
