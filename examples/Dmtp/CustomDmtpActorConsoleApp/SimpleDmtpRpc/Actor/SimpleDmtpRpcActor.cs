@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 
@@ -32,7 +31,7 @@ internal class SimpleDmtpRpcActor : DisposableObject, ISimpleDmtpRpcActor
     public async Task<bool> InputReceivedData(DmtpMessage message)
     {
         var memory = message.Memory;
-        BytesReader reader = new BytesReader(memory);
+        var reader = new BytesReader(memory);
         if (message.ProtocolFlags == this.m_invoke_Request)
         {
             try
@@ -60,7 +59,7 @@ internal class SimpleDmtpRpcActor : DisposableObject, ISimpleDmtpRpcActor
 
                     rpcPackage.SwitchId();
 
-                    ByteBlock byteBlock = new ByteBlock(1024);
+                    var byteBlock = new ByteBlock(1024);
                     try
                     {
                         rpcPackage.Package(ref byteBlock);

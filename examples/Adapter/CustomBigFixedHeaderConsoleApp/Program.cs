@@ -144,7 +144,7 @@ internal class MyDataClass : IBigFixedHeaderRequestInfo
     /// 自定义属性，标识指令类型
     /// </summary>
     public byte OrderType { get; set; }
-   
+
     long IBigFixedHeaderRequestInfo.BodyLength => this.m_length;
 
     void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)

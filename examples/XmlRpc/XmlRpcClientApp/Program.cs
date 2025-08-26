@@ -26,7 +26,7 @@ internal class Program
         var client = await GetXmlRpcClientAsync();
 
         //直接调用
-        var result1 =await client.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+        var result1 = await client.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
         Console.WriteLine($"直接调用，返回结果:{result1}");
 
         var result2 = client.Sum(10, 20);//此Sum方法是服务端生成的代理。

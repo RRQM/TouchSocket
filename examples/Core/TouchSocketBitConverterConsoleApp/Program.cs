@@ -17,7 +17,7 @@ namespace TouchSocketBitConverterConsoleApp;
 
 internal class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         TouchSocketBitConverterDemo.RunAll();
     }
@@ -42,7 +42,7 @@ public static class TouchSocketBitConverterDemo
     #region 基本GetBytes与To示例
     private static void BasicGetBytesAndTo()
     {
-        int value = 0x12345678;
+        var value = 0x12345678;
 
         // 按小端获取字节
         var littleBytes = TouchSocketBitConverter.LittleEndian.GetBytes(value);
@@ -53,11 +53,11 @@ public static class TouchSocketBitConverterDemo
         Console.WriteLine($"大端字节: {ToHex(bigBytes.Span)}");
 
         // 使用与写入相同的端解析
-        int v1 = TouchSocketBitConverter.LittleEndian.To<int>(littleBytes.Span);
-        int v2 = TouchSocketBitConverter.BigEndian.To<int>(bigBytes.Span);
+        var v1 = TouchSocketBitConverter.LittleEndian.To<int>(littleBytes.Span);
+        var v2 = TouchSocketBitConverter.BigEndian.To<int>(bigBytes.Span);
 
         // 交叉解析（故意错误端），会得到不同数值
-        int wrong = TouchSocketBitConverter.BigEndian.To<int>(littleBytes.Span);
+        var wrong = TouchSocketBitConverter.BigEndian.To<int>(littleBytes.Span);
 
         Console.WriteLine($"正确解析小端 => {v1:X8}");
         Console.WriteLine($"正确解析大端 => {v2:X8}");
@@ -87,7 +87,7 @@ public static class TouchSocketBitConverterDemo
     #region WriteBytes写入既有缓冲区示例
     private static void WriteBytesIntoExistingBuffer()
     {
-        int value = 0x0A0B0C0D;
+        var value = 0x0A0B0C0D;
         Span<byte> buffer = stackalloc byte[4];
 
         TouchSocketBitConverter.BigEndian.WriteBytes(buffer, value);
@@ -104,10 +104,10 @@ public static class TouchSocketBitConverterDemo
     {
         // 准备 3 个UInt16（小端）
         ushort[] data = { 0x1122, 0x3344, 0x5566 };
-        byte[] bytes = new byte[data.Length * 2];
+        var bytes = new byte[data.Length * 2];
         var conv = TouchSocketBitConverter.LittleEndian;
         var span = bytes.AsSpan();
-        for (int i = 0; i < data.Length; i++)
+        for (var i = 0; i < data.Length; i++)
         {
             conv.WriteBytes(span.Slice(i * 2, 2), data[i]);
         }
@@ -126,15 +126,15 @@ public static class TouchSocketBitConverterDemo
     {
         int[] ints = { 1, 2, 3, 0x10203040 };
         // int[] -> byte[]
-        int byteCount = TouchSocketBitConverter.GetConvertedLength<int, byte>(ints.Length);
-        byte[] buffer = new byte[byteCount];
-        TouchSocketBitConverter.ConvertValues<int,byte>(ints, buffer);
+        var byteCount = TouchSocketBitConverter.GetConvertedLength<int, byte>(ints.Length);
+        var buffer = new byte[byteCount];
+        TouchSocketBitConverter.ConvertValues<int, byte>(ints, buffer);
 
         Console.WriteLine($"int数组 => byte: {ToHex(buffer)}");
 
         // 反向 byte -> int
-        int[] back = new int[ints.Length];
-        TouchSocketBitConverter.ConvertValues<byte,int>(buffer, back);
+        var back = new int[ints.Length];
+        TouchSocketBitConverter.ConvertValues<byte, int>(buffer, back);
         Console.WriteLine("还原int: " + string.Join(", ", back.Select(v => $"0x{v:X8}")));
         Console.WriteLine();
     }
@@ -150,14 +150,14 @@ public static class TouchSocketBitConverterDemo
             };
 
         // bool -> byte（按位打包）
-        int byteLength = TouchSocketBitConverter.GetConvertedLength<bool, byte>(bools.Length);
-        byte[] packed = new byte[byteLength];
-        TouchSocketBitConverter.ConvertValues<bool,byte>(bools, packed);
+        var byteLength = TouchSocketBitConverter.GetConvertedLength<bool, byte>(bools.Length);
+        var packed = new byte[byteLength];
+        TouchSocketBitConverter.ConvertValues<bool, byte>(bools, packed);
         Console.WriteLine($"bool打包 => {ToHex(packed)} (总位:{bools.Length})");
 
         // byte -> bool
-        bool[] unpacked = new bool[bools.Length];
-        TouchSocketBitConverter.ConvertValues<byte,bool>(packed, unpacked);
+        var unpacked = new bool[bools.Length];
+        TouchSocketBitConverter.ConvertValues<byte, bool>(packed, unpacked);
         Console.WriteLine("解包结果: " + string.Join("", unpacked.Select(b => b ? '1' : '0')));
         Console.WriteLine();
     }
@@ -168,14 +168,14 @@ public static class TouchSocketBitConverterDemo
     {
         uint[] values = { 0x11223344, 0xAABBCCDD };
         // 源认为大端存储 -> 转成小端字节序的byte[]
-        int byteLength = TouchSocketBitConverter.GetConvertedLength<uint, byte>(values.Length);
-        byte[] littleBytes = new byte[byteLength];
-        TouchSocketBitConverter.ConvertValues<uint,byte>(values, littleBytes, EndianType.Big, EndianType.Little);
+        var byteLength = TouchSocketBitConverter.GetConvertedLength<uint, byte>(values.Length);
+        var littleBytes = new byte[byteLength];
+        TouchSocketBitConverter.ConvertValues<uint, byte>(values, littleBytes, EndianType.Big, EndianType.Little);
         Console.WriteLine($"大端uint -> 小端byte: {ToHex(littleBytes)}");
 
         // 再按小端解释为uint
-        uint[] round = new uint[values.Length];
-        TouchSocketBitConverter.ConvertValues<byte,uint>(littleBytes, round, EndianType.Little, EndianType.Little);
+        var round = new uint[values.Length];
+        TouchSocketBitConverter.ConvertValues<byte, uint>(littleBytes, round, EndianType.Little, EndianType.Little);
         Console.WriteLine("还原uint: " + string.Join(", ", round.Select(v => $"0x{v:X8}")));
         Console.WriteLine();
     }
@@ -209,9 +209,9 @@ public static class TouchSocketBitConverterDemo
         Console.WriteLine($"MyPacket序列化(大端): {ToHex(buffer)}");
 
         // 读取
-        ushort id = big.To<ushort>(buffer.Slice(0, 2));
-        int val = big.To<int>(buffer.Slice(2, 4));
-        byte flag = buffer[6];
+        var id = big.To<ushort>(buffer.Slice(0, 2));
+        var val = big.To<int>(buffer.Slice(2, 4));
+        var flag = buffer[6];
 
         Console.WriteLine($"解析 => Id=0x{id:X4}, Value=0x{val:X8}, Flag=0x{flag:X2}");
         Console.WriteLine();
@@ -227,18 +227,18 @@ public static class TouchSocketBitConverterDemo
         }
 
         // 每个字节需要2个十六进制字符，字节间需要1个空格（除了最后一个）
-        int resultLength = span.Length * 3 - 1;
+        var resultLength = span.Length * 3 - 1;
         Span<char> chars = stackalloc char[resultLength];
-        
-        const string hexChars = "0123456789ABCDEF";
-        int pos = 0;
 
-        for (int i = 0; i < span.Length; i++)
+        const string hexChars = "0123456789ABCDEF";
+        var pos = 0;
+
+        for (var i = 0; i < span.Length; i++)
         {
-            byte b = span[i];
+            var b = span[i];
             chars[pos++] = hexChars[b >> 4];      // 高4位
             chars[pos++] = hexChars[b & 0x0F];    // 低4位
-            
+
             if (i < span.Length - 1)  // 不是最后一个字节时添加空格
             {
                 chars[pos++] = ' ';

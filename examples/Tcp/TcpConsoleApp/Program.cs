@@ -382,7 +382,7 @@ internal class Program
         await tcpClient.SendAsync("hello");
 
         //发送字节数组数据
-        await tcpClient.SendAsync(new byte[] {0,1,2,3,4 });
+        await tcpClient.SendAsync(new byte[] { 0, 1, 2, 3, 4 });
         #endregion
 
     }
@@ -625,7 +625,7 @@ internal class ClosePlugin : PluginBase, ITcpReceivedPlugin
             this.m_logger.Info("拦截到CloseException");
             await client.CloseAsync(ex.Message);
         }
-        catch (Exception exx)
+        catch (Exception)
         {
         }
         finally

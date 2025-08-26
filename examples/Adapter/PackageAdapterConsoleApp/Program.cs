@@ -104,7 +104,7 @@ internal class Program
         #endregion
 
         #region 示例内置周期时间适配器
-        config.SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMicroseconds(100) });
+        config.SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromMicroseconds(100) });
         #endregion
 
         #region 示例内置Json适配器

@@ -21,7 +21,7 @@ namespace ModbusPlcBridgeConsoleApp;
 #region 代码测试 {1,3,5,7,9,10-20}
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         try
         {
@@ -135,7 +135,7 @@ internal class Program
         // 8) 启动PLC桥接服务
         await plcBridge.StartAsync();
 
-        var modbusResponse=await modbusTcpMaster.ReadHoldingRegistersAsync(0,70);
+        var modbusResponse = await modbusTcpMaster.ReadHoldingRegistersAsync(0, 70);
 
         var plcOperator = plcBridge.CreateOperator<short>();
         var result = await plcOperator.ReadAsync(0, 80);
@@ -143,7 +143,7 @@ internal class Program
         // 9) 现在我们可以进行读写操作了。一般来说可以使用操作器，直接读写。
         // 但我们这里直接使用PlcObject来进行读写。
 
-        MyPlcObject myPlcObject = new MyPlcObject(plcBridge);
+        var myPlcObject = new MyPlcObject(plcBridge);
 
         // 写入long类型的寄存器数据
         var setInt64Result = await myPlcObject.SetInt64DataAsync(1000);
@@ -183,7 +183,7 @@ internal class Program
     }
 }
 
-partial class MyPlcObject : PlcObject
+internal partial class MyPlcObject : PlcObject
 {
     public MyPlcObject(IPlcBridgeService bridgeService) : base(bridgeService)
     {
@@ -208,7 +208,7 @@ partial class MyPlcObject : PlcObject
     private long m_int64Data;
 }
 
-class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
+internal class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
 {
     public MyModbusHoldingRegistersDrive(IModbusMaster master, ModbusDriveOption option) : base(master, option)
     {

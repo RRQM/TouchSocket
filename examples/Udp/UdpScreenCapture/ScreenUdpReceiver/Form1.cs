@@ -39,7 +39,7 @@ public partial class Form1 : Form
             this.udpSession.Received = (c, e) =>
             {
                 var reader = new ByteBlockReader(e.Memory);
-                var stream=reader.AsReadStream();
+                var stream = reader.AsReadStream();
                 this.pictureBox1.Image = Image.FromStream(stream);
                 return EasyTask.CompletedTask;
             };

@@ -17,7 +17,7 @@ namespace PlcBridgesConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         try
         {
@@ -160,7 +160,7 @@ internal class Program
 
     private static async Task PlcObjectReadWrite(PlcBridgeService plcBridge)
     {
-        MyPlcObject myPlcObject = new MyPlcObject(plcBridge);
+        var myPlcObject = new MyPlcObject(plcBridge);
 
         await myPlcObject.SetMyShortValueAsync(10);
         var myShortValue = await myPlcObject.GetMyShortValueAsync();

@@ -19,7 +19,7 @@ namespace MqttConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var service = await CreateService();
 
@@ -31,8 +31,8 @@ internal class Program
         {
             var topic1 = "topic1";
             var topic2 = "topic2";
-            SubscribeRequest subscribeRequest1 = new SubscribeRequest(topic1, QosLevel.AtLeastOnce);//订阅请求
-            SubscribeRequest subscribeRequest2 = new SubscribeRequest(topic2, QosLevel.AtMostOnce);//可以设置不同的Qos级别
+            var subscribeRequest1 = new SubscribeRequest(topic1, QosLevel.AtLeastOnce);//订阅请求
+            var subscribeRequest2 = new SubscribeRequest(topic2, QosLevel.AtMostOnce);//可以设置不同的Qos级别
 
             //多个订阅请求
             var mqttSubscribeMessage = new MqttSubscribeMessage(subscribeRequest1, subscribeRequest2);
@@ -98,7 +98,7 @@ internal class Program
         }
     }
 
-    static async Task<MqttTcpService> CreateService()
+    private static async Task<MqttTcpService> CreateService()
     {
         var service = new MqttTcpService();
         await service.SetupAsync(new TouchSocketConfig()//载入配置
@@ -199,7 +199,7 @@ internal class Program
         return service;
     }
 
-    static async Task<MqttTcpClient> CreateClient()
+    private static async Task<MqttTcpClient> CreateClient()
     {
         var client = new MqttTcpClient();
         await client.SetupAsync(new TouchSocketConfig()
@@ -280,7 +280,7 @@ internal class Program
 }
 
 
-class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
+internal class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
 {
     public async Task OnMqttReceived(IMqttSession client, MqttReceivedEventArgs e)
     {

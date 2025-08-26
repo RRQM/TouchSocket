@@ -13,14 +13,13 @@
 using System.Diagnostics;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace AotDynamicMethodConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var consoleAction = new ConsoleAction();
         consoleAction.OnException += ConsoleAction_OnException;
@@ -44,52 +43,52 @@ internal class Program
         Console.WriteLine(ex.Message);
     }
 
-    static void SimpleRun()
+    private static void SimpleRun()
     {
-        Method method = new Method(typeof(MyClass), nameof(MyClass.Run));
+        var method = new Method(typeof(MyClass), nameof(MyClass.Run));
 
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
         method.Invoke(myClass);
     }
 
-    static void ILRun()
+    private static void ILRun()
     {
-        Method method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.IL);
+        var method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.IL);
 
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
         method.Invoke(myClass);
     }
-    static void ExpressionRun()
+    private static void ExpressionRun()
     {
-        Method method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.Expression);
+        var method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.Expression);
 
-        MyClass myClass = new MyClass();
-        method.Invoke(myClass);
-    }
-
-    static void ReflectRun()
-    {
-        Method method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.Reflect);
-
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
         method.Invoke(myClass);
     }
 
-    static void SourceGeneratorRun()
+    private static void ReflectRun()
     {
-        Method method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.SourceGenerator);
+        var method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.Reflect);
 
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
         method.Invoke(myClass);
     }
 
-    static void Performance()
+    private static void SourceGeneratorRun()
     {
-        int count = 10000000;
+        var method = new Method(typeof(MyClass), nameof(MyClass.Run), DynamicBuilderType.SourceGenerator);
 
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
+        method.Invoke(myClass);
+    }
 
-        Stopwatch stopwatch = new Stopwatch();
+    private static void Performance()
+    {
+        var count = 10000000;
+
+        var myClass = new MyClass();
+
+        var stopwatch = new Stopwatch();
 
         var methods = GetMethods(typeof(MyClass), nameof(MyClass.Performance));
 
@@ -99,7 +98,7 @@ internal class Program
             try
             {
                 var method = item;
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     method.Invoke(myClass);
                 }
@@ -117,15 +116,15 @@ internal class Program
 
     }
 
-    static void MultiParameters()
+    private static void MultiParameters()
     {
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
 
         var methods = GetMethods(typeof(MyClass), nameof(MyClass.MultiParameters));
 
         foreach (var item in methods)
         {
-            object[] ps = new object[] { "hello", 0, 200 };
+            var ps = new object[] { "hello", 0, 200 };
             try
             {
                 var method = item;
@@ -143,9 +142,9 @@ internal class Program
 
     }
 
-    static void CustomDynamicMethod()
+    private static void CustomDynamicMethod()
     {
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
 
         var methods = GetMethods(typeof(MyClass), nameof(MyClass.CustomDynamicMethod));
 
@@ -168,9 +167,9 @@ internal class Program
 
     }
 
-    static async Task TaskRun()
+    private static async Task TaskRun()
     {
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
 
         var methods = GetMethods(typeof(MyClass), nameof(MyClass.TaskRun));
 
@@ -196,9 +195,9 @@ internal class Program
 
     }
 
-    static async Task TaskObjectRun()
+    private static async Task TaskObjectRun()
     {
-        MyClass myClass = new MyClass();
+        var myClass = new MyClass();
 
         var methods = GetMethods(typeof(MyClass), nameof(MyClass.TaskObjectRun));
 
@@ -226,7 +225,7 @@ internal class Program
 
     }
 
-    static List<Method> GetMethods(Type type, string name)
+    private static List<Method> GetMethods(Type type, string name)
     {
         var methods = new List<Method>();
         foreach (var item in Enum.GetValues(typeof(DynamicBuilderType)).OfType<DynamicBuilderType>())
@@ -244,7 +243,7 @@ internal class Program
         return methods;
     }
 
-    static bool IsDynamicCodeCompiled()
+    private static bool IsDynamicCodeCompiled()
     {
 #if NET8_0_OR_GREATER
         return RuntimeFeature.IsDynamicCodeCompiled;

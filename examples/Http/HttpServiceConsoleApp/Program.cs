@@ -82,7 +82,7 @@ internal class Program
         Console.ReadKey();
     }
 
-    static async Task CreateHttpService()
+    private static async Task CreateHttpService()
     {
         #region 创建Http服务器 {10}
         var service = new HttpService();
@@ -104,7 +104,7 @@ internal class Program
         #endregion
     }
 
-    static async Task CreateHttpService1()
+    private static async Task CreateHttpService1()
     {
         #region 创建Ssl的Http服务器 {4-8}
         var service = new HttpService();
@@ -482,11 +482,11 @@ public class MyHttpPlug11 : PluginBase, IHttpPlugin
         #endregion
 
         #region Http服务器获取字符串Body内容
-        string bodyString = await e.Context.Request.GetBodyAsync();
+        var bodyString = await e.Context.Request.GetBodyAsync();
         #endregion
 
         #region Http服务器获取内存Body内容
-        ReadOnlyMemory<byte> content = await e.Context.Request.GetContentAsync();
+        var content = await e.Context.Request.GetContentAsync();
         #endregion
 
         if (request.IsGet() && request.UrlEquals("/success"))
@@ -656,13 +656,13 @@ public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
     }
 }
 
-class MyDelayResponsePlugin : PluginBase, IHttpPlugin
+internal class MyDelayResponsePlugin : PluginBase, IHttpPlugin
 {
-    private ConcurrentQueue<TaskCompletionSource<string>> m_queue = new();
+    private readonly ConcurrentQueue<TaskCompletionSource<string>> m_queue = new();
 
     public MyDelayResponsePlugin()
     {
-        Task.Factory.StartNew(HandleQueue, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(this.HandleQueue, TaskCreationOptions.LongRunning);
     }
 
     private async Task HandleQueue()
@@ -673,7 +673,7 @@ class MyDelayResponsePlugin : PluginBase, IHttpPlugin
             await Task.Delay(3000);
 
             //处理队列
-            while (m_queue.TryDequeue(out var tcs))
+            while (this.m_queue.TryDequeue(out var tcs))
             {
                 //返回结果
                 tcs.SetResult(Guid.NewGuid().ToString());
@@ -688,7 +688,7 @@ class MyDelayResponsePlugin : PluginBase, IHttpPlugin
         if (request.UrlEquals("/delay"))
         {
             var tcs = new TaskCompletionSource<string>();
-            m_queue.Enqueue(tcs);
+            this.m_queue.Enqueue(tcs);
             var result = await tcs.Task;
 
             await response
@@ -700,13 +700,13 @@ class MyDelayResponsePlugin : PluginBase, IHttpPlugin
     }
 }
 
-class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
+internal class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
 {
-    ConcurrentQueue<MyTaskCompletionSource> m_queue = new();
+    private readonly ConcurrentQueue<MyTaskCompletionSource> m_queue = new();
 
     public MyDelayResponsePlugin2()
     {
-        Task.Factory.StartNew(HandleQueue, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(this.HandleQueue, TaskCreationOptions.LongRunning);
     }
 
     private async Task HandleQueue()
@@ -717,7 +717,7 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
             await Task.Delay(3000);
 
             //处理队列
-            while (m_queue.TryDequeue(out var tcs))
+            while (this.m_queue.TryDequeue(out var tcs))
             {
                 //返回结果
 
@@ -727,7 +727,7 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
                 response.SetStatus(200, "success");
                 response.IsChunk = true;
 
-                for (int i = 0; i < 5; i++)
+                for (var i = 0; i < 5; i++)
                 {
                     await response.WriteAsync(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString() + "\r\n"));
                     await Task.Delay(1000);
@@ -747,14 +747,14 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
         if (request.UrlEquals("/delay2"))
         {
             var tcs = new MyTaskCompletionSource(client, e.Context);
-            m_queue.Enqueue(tcs);
+            this.m_queue.Enqueue(tcs);
             var result = await tcs.Task;
             //不做任何处理
         }
         await e.InvokeNext();
     }
 
-    class MyTaskCompletionSource : TaskCompletionSource<bool>
+    private class MyTaskCompletionSource : TaskCompletionSource<bool>
     {
         public MyTaskCompletionSource(IHttpSessionClient client, HttpContext context)
         {
@@ -768,7 +768,7 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
 }
 
 #region Http服务器响应有长度大数据 {10,13,18}
-class MyHttpPlugin22 : PluginBase, IHttpPlugin
+internal class MyHttpPlugin22 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
@@ -782,7 +782,7 @@ class MyHttpPlugin22 : PluginBase, IHttpPlugin
             //2.然后设置数据总长度
             response.ContentLength = 1024 * 1024;
 
-            for (int i = 0; i < 1024; i++)
+            for (var i = 0; i < 1024; i++)
             {
                 //3.将数据持续写入
                 await response.WriteAsync(new byte[1024]);
@@ -794,7 +794,7 @@ class MyHttpPlugin22 : PluginBase, IHttpPlugin
 #endregion
 
 #region Http服务器响应无长度大数据 {10,13,18,22}
-class MyHttpPlugin33 : PluginBase, IHttpPlugin
+internal class MyHttpPlugin33 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
@@ -808,7 +808,7 @@ class MyHttpPlugin33 : PluginBase, IHttpPlugin
             //2.设置使用Chunk模式
             response.IsChunk = true;
 
-            for (int i = 0; i < 1024; i++)
+            for (var i = 0; i < 1024; i++)
             {
                 //3.将数据持续写入
                 await response.WriteAsync(new byte[1024]);

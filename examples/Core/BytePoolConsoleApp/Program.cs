@@ -78,10 +78,10 @@ internal class Program
         var byteBlock = new ByteBlock(1024 * 64);
         try
         {
-            WriterExtension.WriteValue(ref byteBlock, (byte)byte.MaxValue);//写入byte类型
-            WriterExtension.WriteValue(ref byteBlock, (int)int.MaxValue);//写入int类型
-            WriterExtension.WriteValue(ref byteBlock, (long)long.MaxValue);//写入long类型
-            WriterExtension.WriteString(ref byteBlock, (string)"RRQM");//写入字符串类型
+            WriterExtension.WriteValue(ref byteBlock, byte.MaxValue);//写入byte类型
+            WriterExtension.WriteValue(ref byteBlock, int.MaxValue);//写入int类型
+            WriterExtension.WriteValue(ref byteBlock, long.MaxValue);//写入long类型
+            WriterExtension.WriteString(ref byteBlock, "RRQM");//写入字符串类型
 
             byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
@@ -182,6 +182,6 @@ internal static class MyByteBlockExtension
     public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IBytesWriter
     {
         WriterExtension.WriteValue(ref byteBlock, (short)10);
-        WriterExtension.WriteValue(ref byteBlock, (int)10);
+        WriterExtension.WriteValue(ref byteBlock, 10);
     }
 }

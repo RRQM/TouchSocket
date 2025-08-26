@@ -1,5 +1,16 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -10,7 +21,7 @@ namespace RpcPerformanceConsoleApp
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
             consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
@@ -19,9 +30,9 @@ namespace RpcPerformanceConsoleApp
 
             var count = 100000;
 
-            consoleAction.Add("3.1", "DmtpRpc测试Sum", async () =>await StartSumClient(count));
+            consoleAction.Add("3.1", "DmtpRpc测试Sum", async () => await StartSumClient(count));
             consoleAction.Add("3.2", "DmtpRpc测试GetBytes", async () => await StartGetBytesClient(count));
-            consoleAction.Add("3.3", "DmtpRpc测试BigString", async () =>await StartBigStringClient(count));
+            consoleAction.Add("3.3", "DmtpRpc测试BigString", async () => await StartBigStringClient(count));
 
             consoleAction.ShowAll();
 
@@ -58,13 +69,13 @@ namespace RpcPerformanceConsoleApp
 
         public static async Task StartSumClient(int count)
         {
-            var client =await GetClient();
+            var client = await GetClient();
             var timeSpan = TimeMeasurer.Run(async () =>
             {
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 0; i < count; i++)
                 {
-                    var rs =await actor.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, i, i);
+                    var rs = await actor.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, i, i);
                     if (rs != i + i)
                     {
                         Console.WriteLine("调用结果不一致");
@@ -102,7 +113,7 @@ namespace RpcPerformanceConsoleApp
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 1; i < count; i++)
                 {
-                    var rs =await actor.InvokeTAsync<byte[]>("GetBytes", InvokeOption.WaitInvoke, i);//测试10k数据
+                    var rs = await actor.InvokeTAsync<byte[]>("GetBytes", InvokeOption.WaitInvoke, i);//测试10k数据
                     if (rs.Length != i)
                     {
                         Console.WriteLine("调用结果不一致");
@@ -118,13 +129,13 @@ namespace RpcPerformanceConsoleApp
 
         public static async Task StartBigStringClient(int count)
         {
-            var client =await GetClient();
+            var client = await GetClient();
             var timeSpan = TimeMeasurer.Run(async () =>
             {
                 var actor = client.GetDmtpRpcActor();
                 for (var i = 0; i < count; i++)
                 {
-                    var rs =await actor.InvokeTAsync<string>("GetBigString", InvokeOption.WaitInvoke);
+                    var rs = await actor.InvokeTAsync<string>("GetBigString", InvokeOption.WaitInvoke);
                     if (i % 1000 == 0)
                     {
                         Console.WriteLine(i);

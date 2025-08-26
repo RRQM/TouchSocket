@@ -15,14 +15,14 @@ using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 using TouchSocket.Rpc.DmtpRpc.Generators;
+using TouchSocket.Sockets;
 
 namespace RpcDispatcherConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var service = new TcpDmtpService();
         var config = new TouchSocketConfig()//配置
@@ -68,7 +68,7 @@ internal class Program
 
         //});
 
-        DmtpInvokeOption dmtpInvokeOption = new DmtpInvokeOption()
+        var dmtpInvokeOption = new DmtpInvokeOption()
         {
             FeedbackType = FeedbackType.OnlySend
         };
@@ -87,7 +87,7 @@ internal class Program
 
 
 [GeneratorRpcProxy]
-interface IMyRpcServer : IRpcServer
+internal interface IMyRpcServer : IRpcServer
 {
     [Reenterable(false)]
     [Description("登录")]//服务描述，在生成代理时，会变成注释。

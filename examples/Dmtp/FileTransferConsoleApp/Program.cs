@@ -111,7 +111,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会等待，直到传输结束
-        var  result = await clientFactory.PushFileAsync(fileOperator);
+        var result = await clientFactory.PushFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info($"向服务器推送文件结束，{result}");
 
@@ -171,7 +171,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会等待，直到传输结束
-        var  result = await clientFactory.PullFileAsync(fileOperator);
+        var result = await clientFactory.PullFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 
@@ -309,7 +309,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        var  result = await client1.GetDmtpFileTransferActor().PushFileAsync(client2.Id, fileOperator);
+        var result = await client1.GetDmtpFileTransferActor().PushFileAsync(client2.Id, fileOperator);
 
         ConsoleLogger.Default.Info("从其他客户端下载文件结束");
         client1.Logger.Info(result.ToString());
@@ -435,7 +435,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-        var  result = await socketClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        var result = await socketClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
         socketClient.Logger.Info(result.ToString());
@@ -500,7 +500,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        var  result = await socketClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        var result = await socketClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info("从客户端下载文件结束");
         socketClient.Logger.Info(result.ToString());
@@ -559,7 +559,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        var  result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        var result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 
         ////关于断点续传
         ////在执行完PullFile(fileOperator)或PushFile(fileOperator)时。只要返回的结果不是Success。
@@ -642,7 +642,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-        var  result = await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        var result = await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 
         ConsoleLogger.Default.Info("上传文件到服务器结束");
         client.Logger.Info(result.ToString());

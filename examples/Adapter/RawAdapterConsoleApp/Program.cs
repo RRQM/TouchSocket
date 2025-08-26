@@ -115,7 +115,7 @@ internal class MyRawDataHandleAdapter : SingleStreamDataHandlingAdapter
     private int m_payloadLength;
     protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        while (reader.BytesRemaining>0)
+        while (reader.BytesRemaining > 0)
         {
             if (this.m_myDataClass == null)
             {

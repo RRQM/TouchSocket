@@ -11,13 +11,9 @@
 //------------------------------------------------------------------------------
 
 using MemoryPack;
-using Newtonsoft.Json;
 using System;
-using System.IO;
-using System.Reflection.PortableExecutable;
 using TouchSocket.Core;
 using TouchSocket.Dmtp.Rpc;
-using TouchSocket.Rpc;
 
 namespace SerializationSelectorClassLibrary;
 
@@ -26,7 +22,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
     public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
         var len = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
-        var span =ReaderExtension .ReadToSpan(ref byteBlock, len);
+        var span = ReaderExtension.ReadToSpan(ref byteBlock, len);
         return MemoryPackSerializer.Deserialize(parameterType, span);
     }
 
@@ -39,7 +35,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
         MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
 
         var span = writerAnchor.Rewind(ref byteBlock, out var len);
-        span.WriteValue((int)memoryPackWriter.WrittenCount);
+        span.WriteValue(memoryPackWriter.WrittenCount);
     }
 }
 
@@ -47,7 +43,7 @@ internal sealed class MyDefaultSerializationSelector : DefaultSerializationSelec
 {
     public override object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType)
     {
-        if ((byte)serializationType==4)
+        if ((byte)serializationType == 4)
         {
             var len = ReaderExtension.ReadValue<TReader, int>(ref reader);
             var span = ReaderExtension.ReadToSpan(ref reader, len);
@@ -67,7 +63,7 @@ internal sealed class MyDefaultSerializationSelector : DefaultSerializationSelec
             MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
 
             var span = writerAnchor.Rewind(ref writer, out var len);
-            span.WriteValue((int)memoryPackWriter.WrittenCount);
+            span.WriteValue(memoryPackWriter.WrittenCount);
         }
         base.SerializeParameter(ref writer, serializationType, parameter);
     }
