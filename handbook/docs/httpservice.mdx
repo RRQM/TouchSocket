@@ -124,141 +124,76 @@ flowchart TD;
 
 ## 七、请求数据获取
 
-### HttpContext生命周期
+### 7.1 HttpContext生命周期
 
 每当HTTP客户端与服务器建立连接时，系统会创建：
+
 - 一个`HttpSessionClient`实例 - 负责管理客户端连接
 - 一个`HttpContext`实例 - 负责处理HTTP请求/响应上下文
 
 对于同一个连接的所有HTTP请求，都会复用同一个`HttpContext`实例，通过其`Request`和`Response`属性可以访问请求数据和构建响应内容。
 
-```csharp showLineNumbers
-var request = e.Context.Request;   //获取HTTP请求对象
-var response = e.Context.Response; //获取HTTP响应对象
-```
+<CustomCodeBlock region="HttpContext生命周期"/>
 
 <BilibiliCard title="Http方法解析与使用" link="https://www.bilibili.com/cheese/play/ep1618492" isPro="true"/>
 
-### 7.1 获取Query参数
+### 7.2 获取Query参数
 
-```csharp showLineNumbers
-string value = e.Context.Request.Query["key"];
-```
+<CustomCodeBlock region="Http服务器获取Query参数"/>
 
 <BilibiliCard title="Query参数及用法" link="https://www.bilibili.com/cheese/play/ep1618493" isPro="true"/>
 
-### 7.2 获取Header参数
+### 7.3 获取Header参数
 
-```csharp showLineNumbers
-string value = e.Context.Request.Headers["key"];
-```
+<CustomCodeBlock region="Http服务器获取Header参数"/>
 
 亦或者
 
-```csharp showLineNumbers
-string value = e.Context.Request.Headers[HttpHeaders.Cookie];
-```
+<CustomCodeBlock region="Http服务器从预设获取Header参数"/>
 
 <BilibiliCard title="Header参数及用法" link="https://www.bilibili.com/cheese/play/ep1618495" isPro="true"/>
 
-### 7.3 获取Form参数
+### 7.4 获取Form参数
 
-```csharp showLineNumbers
-var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
-foreach (var item in multifileCollection)
-{
-    Console.WriteLine($"key={item.Key},value={item.Value}");
-}
-```
+<CustomCodeBlock region="Http服务器获取Form参数"/>
 
 <BilibiliCard title="Form参数及小文件传输" link="https://www.bilibili.com/cheese/play/ep1618496" isPro="true"/>
 <BilibiliCard title="Form-data与x-www-form-urlencod" link="https://www.bilibili.com/cheese/play/ep1618497" isPro="true"/>
 
-### 7.4 获取字符串Body内容
+### 7.5 获取字符串Body内容
 
-```csharp showLineNumbers
-string bodyString = await e.Context.Request.GetBodyAsync();
-```
+<CustomCodeBlock region="Http服务器获取字符串Body内容"/>
 
-### 7.5 获取小体量字节Body内容
+### 7.6 获取小体量字节Body内容
 
-```csharp showLineNumbers
-ReadOnlyMemory<byte> content = await e.Context.Request.GetContentAsync();
-```
+<CustomCodeBlock region="Http服务器获取内存Body内容"/>
 
 <BilibiliCard title="接收并处理Json、Xml类Body数据" link="https://www.bilibili.com/cheese/play/ep1618500" isPro="true"/>
 <BilibiliCard title="接收Binary(小文件)类Body数据" link="https://www.bilibili.com/cheese/play/ep1618501" isPro="true"/>
 
-### 7.6 持续读取Body内容
+### 7.7 持续读取Body内容
 
 当数据太大时，可持续读取
 
-```csharp showLineNumbers
-while (true)
-{
-    var buffer = new byte[1024 * 64];
-
-    using (var blockResult = await e.Context.Request.ReadAsync())
-    {
-        //这里可以一直处理读到的数据。
-        blockResult.Memory.CopyTo(buffer);
-
-        if (blockResult.IsCompleted)
-        {
-            //结束
-            break;
-        }
-    }
-}
-```
+<CustomCodeBlock region="Http服务器持续读取Body内容"/>
 
 <BilibiliCard title="接收超大文件字节流" link="https://www.bilibili.com/cheese/play/ep1618502" isPro="true"/>
 
-### 7.7 获取Body持续写入Stream中
+### 7.8 获取Body持续写入Stream中
 
 当数据太大时，可持续读取数据直接到流容器中。
 
-```csharp showLineNumbers
-using (var stream = new MemoryStream())
-{
-    //
-    await e.Context.Request.ReadCopyToAsync(stream);
-}
-```
+<CustomCodeBlock region="Http服务器获取Body持续写入Stream中"/>
 
 <BilibiliCard title="接收超大文件时显示进度和速度(1)" link="https://www.bilibili.com/cheese/play/ep1618503" isPro="true"/>
 <BilibiliCard title="接收超大文件时显示进度和速度(2)" link="https://www.bilibili.com/cheese/play/ep1618504" isPro="true"/>
 
-### 7.8 获取Body小文件
+### 7.9 获取Body小文件集合
 
 当Body内容为小文件集合时，可以使用该功能。
 
-```csharp {11,13-19} showLineNumbers
-if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
-{
-    await e.Context.Response
-         .SetStatus(403, "数据过大")
-         .AnswerAsync();
-    return;
-}
+<CustomCodeBlock region="Http服务器获取Body小文件集合"/>
 
-//此操作会先接收全部数据，然后再分割数据。
-//所以上传文件不宜过大，不然会内存溢出。
-var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
-
-foreach (var file in multifileCollection.Files)
-{
-    var stringBuilder = new StringBuilder();
-    stringBuilder.Append($"文件名={file.FileName}\t");
-    stringBuilder.Append($"数据长度={file.Length}");
-    client.Logger.Info(stringBuilder.ToString());
-}
-
-await e.Context.Response
-         .SetStatusWithSuccess()
-         .FromText("Ok")
-         .AnswerAsync();
-```
 <BilibiliCard title="Form参数及小文件传输" link="https://www.bilibili.com/cheese/play/ep1618496" isPro="true"/>
 <BilibiliCard title="Form-data与x-www-form-urlencod" link="https://www.bilibili.com/cheese/play/ep1618497" isPro="true"/>
 
@@ -269,6 +204,7 @@ await e.Context.Response
 ### 响应构建流程
 
 HTTP响应的构建遵循以下基本流程：
+
 1. **设置状态码** - 指定HTTP状态码和状态描述
 2. **添加响应头** - 设置必要的HTTP头部信息  
 3. **设置响应体** - 添加响应内容数据
@@ -276,33 +212,21 @@ HTTP响应的构建遵循以下基本流程：
 
 ### 8.1 设置响应状态
 
-```csharp showLineNumbers
-e.Context.Response.SetStatus(200,"success");
-```
+<CustomCodeBlock region="Http服务器设置响应状态"/>
 
 ### 8.2 设置响应Header
 
-```csharp showLineNumbers
-e.Context.Response.AddHeader("key","value");
-```
-
-或者
-
-```csharp showLineNumbers
-e.Context.Response.AddHeader(HttpHeaders.Origin, "*");
-```
+<CustomCodeBlock region="Http服务器设置响应Header"/>
 
 ### 8.3 设置响应内容
 
-```csharp showLineNumbers
-e.Context.Response.SetContent("hello");
-```
+<CustomCodeBlock region="Http服务器设置响应内容"/>
 
 或者直接返回`Json`、`Xml`、`Text`等内容。使用此快捷方式，会同时添加对应的`ContentType`Header。
 
-```csharp showLineNumbers
-e.Context.Response.FromJson("{}");
-```
+<CustomCodeBlock region="Http服务器设置响应Json内容"/>
+
+<CustomCodeBlock region="Http服务器设置响应Xml内容"/>
 
 <BilibiliCard title="从Json格式进行响应" link="https://www.bilibili.com/cheese/play/ep1618507" isPro="true"/>
 
@@ -310,86 +234,27 @@ e.Context.Response.FromJson("{}");
 
 当通过上述步骤，完成了响应体的构建后，即可使用`AnswerAsync`直接进行响应。
 
-例如：响应一个`hello`文本内容，代码大致如下
-
-```csharp showLineNumbers
-await e.Context.Response
-      .SetStatus(200, "success")
-      .AddHeader("key", "value")//如需要
-      .FromText("hello")
-      .AnswerAsync();
-```
+例如：响应一个`hello`文本内容，代码大致如下：
 
 <BilibiliCard title="从Binary进行响应" link="https://www.bilibili.com/cheese/play/ep1618509" isPro="true"/>
 
+<CustomCodeBlock region="Http服务器执行响应"/>
+
+当然可以链式调用API：
+
+<CustomCodeBlock region="Http服务器链式响应"/>
+
 ### 8.5 插件响应Get请求
 
-```csharp showLineNumbers
-public class MyHttpPlug1 : PluginBase, IHttpPlugin
-{
-    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-    {
-        var request = e.Context.Request;//http请求体
-        var response = e.Context.Response;//http响应体
-
-        if (request.IsGet()&&request.UrlEquals("/success"))
-        {
-            //直接响应文字
-           await response
-                .SetStatus(200, "success")
-                .FromText("Success")
-                .AnswerAsync();//直接回应
-            Console.WriteLine("处理/success");
-            return;
-        }
-
-        //无法处理，调用下一个插件
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="Http服务器使用插件"/>
 
 ### 8.6 响应文件请求
 
-```csharp showLineNumbers
-public class MyHttpPlug2 : PluginBase, IHttpPlugin
-{
-    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-    {
-        var request = e.Context.Request;//http请求体
-        var response = e.Context.Response;//http响应体
-        if (request.IsGet() && request.UrlEquals("/file"))
-        {
-            try
-            {
-                //直接回应文件。
+<BilibiliCard title="响应小文件" link="https://www.bilibili.com/cheese/play/ep1618510" isPro="true"/>
+<BilibiliCard title="响应超大文件" link="https://www.bilibili.com/cheese/play/ep1618511" isPro="true"/>
+<BilibiliCard title="响应超大文件并显示进度和速度" link="https://www.bilibili.com/cheese/play/ep1618512" isPro="true"/>
 
-                var fileInfo = new FileInfo(@"D:\System\Windows.iso");
-                var fileName = fileInfo.Name;//可以重新制定文件名称，届时，header中会添加Content-Disposition内容
-                var maxSpeed = 1024 * 1024;//最大传输速度
-                var bufferLength = 1024 * 64;//一般该值越大，效率越高，但同时内存占用也更大
-                var autoGzip = true;//自动判断是否应用gzip压缩。
-
-                await response
-                    .SetStatusWithSuccess()//必须要有状态
-                    .FromFileAsync(fileInfo, e.Context.Request, fileName, maxSpeed, bufferLength, autoGzip);
-
-                //或者直接使用HttpContext
-                //await e.Context.FromFileAsync(fileInfo, fileName, maxSpeed, bufferLength, autoGzip);
-            }
-            catch (Exception ex)
-            {
-                await response.SetStatus(403, "error")
-                      .FromText(ex.Message)
-                      .AnswerAsync();
-            }
-
-            return;
-        }
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="Http服务器响应文件"/>
 
 :::caution 注意
 
@@ -409,71 +274,13 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
 
 :::  
 
-<BilibiliCard title="响应小文件" link="https://www.bilibili.com/cheese/play/ep1618510" isPro="true"/>
-<BilibiliCard title="响应超大文件" link="https://www.bilibili.com/cheese/play/ep1618511" isPro="true"/>
-<BilibiliCard title="响应超大文件并显示进度和速度" link="https://www.bilibili.com/cheese/play/ep1618512" isPro="true"/>
-
 
 ### 8.7 响应页面请求
 
-```csharp showLineNumbers
-public class MyHttpPlug3 : PluginBase, IHttpPlugin
-{
-    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-    {
-        var request = e.Context.Request;//http请求体
-        var response = e.Context.Response;//http响应体
-        if (request.IsGet() && request.UrlEquals("/html"))
-        {
-            //构建html
-            var sb = new StringBuilder();
-            sb.Append("<!DOCTYPE html>");
-            sb.Append("<html lang=\"zh\">");
-            sb.Append("<head>");
-            sb.Append("    <meta charset=\"UTF-8\">");
-            sb.Append("    <title>TouchSocket绚丽展示</title>");
-            sb.Append("    <style>");
-            sb.Append("        body {");
-            sb.Append("            font-family: Arial, sans-serif;");
-            sb.Append("            background-color: #f0f0f0;");
-            sb.Append("            display: flex;");
-            sb.Append("            justify-content: center;");
-            sb.Append("            align-items: center;");
-            sb.Append("            height: 100vh;");
-            sb.Append("            margin: 0;");
-            sb.Append("            padding: 0;");
-            sb.Append("            color: transparent;");
-            sb.Append("        }");
-            sb.Append("        h1 {");
-            sb.Append("            font-size: 48px;");
-            sb.Append("            letter-spacing: 2px;");
-            sb.Append("            background-image: linear-gradient(to right, #ff8a00, #ffcd38);");
-            sb.Append("            -webkit-background-clip: text;");
-            sb.Append("            background-clip: text;");
-            sb.Append("            font-weight: bold;");
-            sb.Append("        }");
-            sb.Append("    </style>");
-            sb.Append("</head>");
-            sb.Append("<body>");
-            sb.Append("    <h1>TouchSocket</h1>");
-            sb.Append("</body>");
-            sb.Append("</html>");
-
-            //回应html
-            await response
-                 .SetStatusWithSuccess()//必须要有状态
-                 .SetContentTypeByExtension(".html")
-                 .SetContent(sb.ToString())
-                 .AnswerAsync();
-            return;
-        }
-
-        await e.InvokeNext();
-    }
-}
-```
-
 <BilibiliCard title="从Xml、Html进行响应" link="https://www.bilibili.com/cheese/play/ep1618508" isPro="true"/>
+
+<CustomCodeBlock region="Http服务器响应页面请求"/>
+
 
 ## 九、进阶响应操作
 
@@ -481,72 +288,28 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
 
 当响应的数据，在响应时，已知数据长度的话，可以使用此方法。
 
-```csharp showLineNumbers
-var request = e.Context.Request;//http请求体
-var response = e.Context.Response;//http响应体
-
-//先设置需要响应的地方
-response.SetStatus(200, "success");
-//然后设置数据总长度
-response.ContentLength = 1024 * 1024;
-
-for (int i = 0; i < 1024; i++)
-{
-    //将数据持续写入
-    await response.WriteAsync(new byte[1024]);
-}
-```
+<CustomCodeBlock region="Http服务器响应有长度大数据"/>
 
 ### 9.2 响应不知长度数据（Chunk模式）
 
 当响应的数据，在响应时，不知数据长度的话，可以使用此方法。
 
-```csharp showLineNumbers
-var request = e.Context.Request;//http请求体
-var response = e.Context.Response;//http响应体
-
-//先设置需要响应的地方
-response.SetStatus(200, "success");
-//设置使用Chunk模式
-response.IsChunk = true;
-
-for (int i = 0; i < 1024; i++)
-{
-    //将数据持续写入
-    await response.WriteAsync(new byte[1024]);
-}
-
-//在正式数据传输完成后，调用此方法，客户端才知道数据结束了
-await response.CompleteChunkAsync();
-```
-
 <BilibiliCard title="使用Chunk编码传输不定长数据" link="https://www.bilibili.com/cheese/play/ep1618513" isPro="true"/>
+
+<CustomCodeBlock region="Http服务器响应无长度大数据"/>
 
 
 ## 九、HTTPS安全服务
 
-### 启用SSL/TLS加密
+### 9.1 启用SSL/TLS加密
 
-HttpService支持完整的HTTPS功能，只需在配置中添加SSL选项即可。HTTPS服务器的配置与HTTP服务器基本相同，仅需增加SSL证书配置。
+`HttpService`支持完整的`HTTPS`功能，只需在配置中添加`SSL`选项即可，详细配置可看[Tcp服务器](./tcpservice.mdx) 。
 
-```csharp showLineNumbers
-var service = new HttpService();
-await service.SetupAsync(new TouchSocketConfig()
-     .SetListenIPHosts(443) //HTTPS默认端口为443
-     .SetServiceSslOption(new ServiceSslOption() 
-     { 
-         Certificate = new X509Certificate2("Socket.pfx", "Socket"), //SSL证书
-         SslProtocols = SslProtocols.Tls12 //TLS协议版本
-     })
-     // ...其他配置
-);
-```
+例如：
 
-### SSL配置参数
+<CustomCodeBlock region="创建Ssl的Http服务器"/>
 
-有关SSL证书的详细配置方法和参数说明，请参考：[TcpService SSL配置](./tcpservice.mdx#ssl配置)
-
-### 注意事项
+### 9.2 注意事项
 
 - **证书格式** - 支持.pfx、.crt等标准证书格式
 - **端口选择** - HTTPS服务通常使用443端口
@@ -554,7 +317,8 @@ await service.SetupAsync(new TouchSocketConfig()
 
 ## 十、示例项目
 
-以下是完整的HttpService使用示例，可以帮助您快速上手：
+以下是完整的`HttpService`使用示例，可以帮助您快速上手：
 
 <CardLink link="examples/Http/HttpServiceConsoleApp"/>
+
 <CardLink link="examples/Http/HttpServiceForCorsConsoleApp"/>
