@@ -10,9 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,6 +88,33 @@ internal class Program
         var service = new HttpService();
         await service.SetupAsync(new TouchSocketConfig()//加载配置
               .SetListenIPHosts(7789)
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .ConfigurePlugins(a =>
+              {
+                  a.Add<MyHttpPlug1>();
+                  //default插件应该最后添加，其作用是
+                  //1、为找不到的路由返回404
+                  //2、处理 header 为Option的探视跨域请求。
+                  a.UseDefaultHttpServicePlugin();
+              }));
+        await service.StartAsync();
+        #endregion
+    }
+
+    static async Task CreateHttpService1()
+    {
+        #region 创建Ssl的Http服务器 {4-8}
+        var service = new HttpService();
+        await service.SetupAsync(new TouchSocketConfig()//加载配置
+              .SetListenIPHosts(7789)
+              .SetServiceSslOption(new ServiceSslOption()
+              {
+                  Certificate = new X509Certificate2("TouchSocketTestCert.pfx", "123456"),
+                  SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+              })
               .ConfigureContainer(a =>
               {
                   a.AddConsoleLogger();
@@ -202,32 +232,40 @@ public class MyHttpPlugin4 : PluginBase, IHttpPlugin
                     var content = await e.Context.Request.GetContentAsync();
 
                     //情况2，当数据太大时，可持续读取
+                    #region Http服务器持续读取Body内容
                     while (true)
                     {
                         var buffer = new byte[1024 * 64];
 
                         using (var blockResult = await e.Context.Request.ReadAsync())
                         {
+                            var memory = blockResult.Memory;//本次读取的数据
+
+                            //把本次读取的数据写入缓冲区，或者直接处理
+                            memory.CopyTo(buffer);
+
                             if (blockResult.IsCompleted)
                             {
+                                //读取完毕
                                 break;
                             }
-
-                            //这里可以一直处理读到的数据。
-                            blockResult.Memory.CopyTo(buffer);
                         }
                     }
+                    #endregion
 
                     //情况3，或者把数据读到流
+                    #region Http服务器获取Body持续写入Stream中
                     using (var stream = new MemoryStream())
                     {
                         //
                         await e.Context.Request.ReadCopyToAsync(stream);
                     }
+                    #endregion
+
 
 
                     //情况4，接收小文件。
-
+                    #region Http服务器获取Body小文件集合
                     if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
                         await e.Context.Response
@@ -251,12 +289,14 @@ public class MyHttpPlugin4 : PluginBase, IHttpPlugin
                         var data = file.Data;
 
                         //开始保存数据到磁盘
-                        using (var fileStream = File.OpenWrite(file.Name))
+                        using (var fileStream = File.Create(file.Name))
                         {
                             await fileStream.WriteAsync(data);
                             await fileStream.FlushAsync();
                         }
                     }
+                    #endregion
+
 
                     await e.Context.Response
                              .SetStatusWithSuccess()
@@ -277,6 +317,7 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
+        #region Http服务器响应页面请求
         if (e.Context.Request.IsGet())
         {
             if (e.Context.Request.UrlEquals("/html"))
@@ -306,11 +347,12 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
                 return;
             }
         }
-
+        #endregion
         await e.InvokeNext();
     }
 }
 
+#region Http服务器响应文件
 public class MyHttpPlug2 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
@@ -321,14 +363,45 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
             {
                 try
                 {
+                    //假设这是一个很大的文件
+                    var fileInfo = new FileInfo(@"D:\System\Windows.iso");
+
+                    //可以重新命名下载的文件名，不设置则为本地文件名
+                    string fileName = null;
+
+                    //是否自动启用gzip压缩，前提是HttpRequest请求了gzip
+                    var autoGzip = true;
+
+                    //流式传输操作，可以控制流速、获取当前流速、进度等
+                    var httpFlowOperator = new HttpFlowOperator();
+
+                    //流速控制，当前设置为最大512KB/秒
+                    httpFlowOperator.MaxSpeed = 1024 * 512;
+
+                    //每次读取文件长度，数值越大，效率越高，但对内存要求也越高
+                    httpFlowOperator.BlockSize = 1024 * 8;
+
+                    //可以设置可取消令箭操作
+                    using var cts = new CancellationTokenSource();
+                    httpFlowOperator.Token = cts.Token;
+
+                    using var timer = new Timer(state =>
+                     {
+                         //每秒打印当前流速、进度等信息
+                         Console.WriteLine($"当前流速：{httpFlowOperator.Speed() / 1024.0}KB/s，进度：{httpFlowOperator.Progress}");
+                     }, null, 1000, 1000);
+
                     //直接回应文件。
                     await e.Context.Response
                           .SetStatusWithSuccess()//必须要有状态
-                          .FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), e.Context.Request);
+                          .FromFileAsync(fileInfo, httpFlowOperator, e.Context.Request, fileName, autoGzip);
                 }
                 catch (Exception ex)
                 {
-                    await e.Context.Response.SetStatus(403, ex.Message).FromText(ex.Message).AnswerAsync();
+                    await e.Context.Response
+                        .SetStatus(403, ex.Message)
+                        .FromText(ex.Message)
+                        .AnswerAsync();
                 }
 
                 return;
@@ -337,14 +410,18 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
         await e.InvokeNext();
     }
 }
+#endregion
+
 
 #region Http服务器使用插件
 public class MyHttpPlug1 : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
+        #region HttpContext生命周期
         var request = e.Context.Request;//http请求体
         var response = e.Context.Response;//http响应体
+        #endregion
 
         if (request.IsGet() && request.UrlEquals("/success"))
         {
@@ -363,6 +440,125 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin
     }
 }
 #endregion
+
+public class MyHttpPlug11 : PluginBase, IHttpPlugin
+{
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var request = e.Context.Request;//http请求体
+        var response = e.Context.Response;//http响应体
+
+        #region Http服务器获取Query参数
+        var name = e.Context.Request.Query.Get("name");
+        //或者
+        var name2 = e.Context.Request.Query["name"];
+        //或者
+        if (e.Context.Request.Query.TryGetValue("name", out var nameValue))
+        {
+            //获取成功
+        }
+        #endregion
+
+        #region Http服务器获取Header参数
+        var nameHeader1 = e.Context.Request.Headers.Get("name");
+        //或者
+        var name2Header1 = e.Context.Request.Headers["name"];
+        //或者
+        if (e.Context.Request.Headers.TryGetValue("name", out var nameValueHeader1))
+        {
+            //获取成功
+        }
+        #endregion
+
+        #region Http服务器从预设获取Header参数
+        var nameHeader2 = e.Context.Request.Headers.Get(HttpHeaders.Authorization);
+        //或者
+        var name2Header2 = e.Context.Request.Headers[HttpHeaders.Authorization];
+        //或者
+        if (e.Context.Request.Headers.TryGetValue(HttpHeaders.Authorization, out var nameValueHeader2))
+        {
+            //获取成功
+        }
+        #endregion
+
+        #region Http服务器获取字符串Body内容
+        string bodyString = await e.Context.Request.GetBodyAsync();
+        #endregion
+
+        #region Http服务器获取内存Body内容
+        ReadOnlyMemory<byte> content = await e.Context.Request.GetContentAsync();
+        #endregion
+
+        if (request.IsGet() && request.UrlEquals("/success"))
+        {
+            #region Http服务器设置响应状态
+            e.Context.Response.SetStatus(200, "success");
+
+            //或者
+            e.Context.Response.SetStatusWithSuccess();
+            #endregion
+
+            #region Http服务器设置响应Header
+            e.Context.Response.Headers.Add("1", "1");
+
+            //或者
+            e.Context.Response.Headers["1"] = "1";
+
+            //或者
+            e.Context.Response.Headers.TryAdd("1", "1");
+
+            //或者
+            e.Context.Response.AddHeader("1", "1");
+
+            //或者
+            e.Context.Response.AddHeader(HttpHeaders.Authorization, "Authorization");
+            #endregion
+
+            #region Http服务器设置响应内容
+            e.Context.Response.SetContent("Hello World");
+
+            //或者
+            e.Context.Response.FromText("Hello World");
+
+            //或者
+            e.Context.Response.SetContent(Encoding.UTF8.GetBytes("Hello World"));
+            #endregion
+
+            #region Http服务器设置响应Json内容
+            var obj = new
+            {
+                Name = "TouchSocket",
+                Author = "若汝棋茗",
+                Blog = "https://blog.csdn.net/qq_40374647"
+            };
+            e.Context.Response.FromJson(JsonConvert.SerializeObject(obj));
+            #endregion
+
+            #region Http服务器设置响应Xml内容
+            var xml = @"
+<?xml version=""1.0"" encoding=""utf-8"" ?>
+<root>
+    <Name>TouchSocket</Name>
+    <Author>若汝棋茗</Author>
+    <Blog>https://blog.csdn.net/qq_40374647</Blog>
+</root>";
+            e.Context.Response.FromXml(xml);
+            #endregion
+
+            #region Http服务器执行响应
+            //直接响应文字
+            await e.Context.Response.AnswerAsync();
+            #endregion
+
+            Console.WriteLine("处理/success");
+            return;
+        }
+
+
+        //无法处理，调用下一个插件
+        await e.InvokeNext();
+    }
+}
 public class TestFormPlugin : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
@@ -371,15 +567,21 @@ public class TestFormPlugin : PluginBase, IHttpPlugin
         {
             if (e.Context.Request.UrlEquals("/form"))
             {
+                #region Http服务器获取Form参数
                 var formCollection = await e.Context.Request.GetFormCollectionAsync();
                 foreach (var item in formCollection)
                 {
                     Console.WriteLine($"{item.Key}={item.Value}");
                 }
+                #endregion
+
+                #region Http服务器链式响应
                 await e.Context.Response
                          .SetStatusWithSuccess()
                          .FromText("Ok")
                          .AnswerAsync();
+                #endregion
+
             }
         }
         await e.InvokeNext();
@@ -388,11 +590,11 @@ public class TestFormPlugin : PluginBase, IHttpPlugin
 
 public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
 {
-    private readonly ILog logger;
+    private readonly ILog m_logger;
 
     public MyCustomDownloadHttpPlug(ILog logger)
     {
-        this.logger = logger;
+        this.m_logger = logger;
     }
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
@@ -442,11 +644,11 @@ public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
                 }
             }
 
-            this.logger.Info("Success");
+            this.m_logger.Info("Success");
         }
         catch (Exception ex)
         {
-            this.logger.Exception(ex);
+            this.m_logger.Exception(ex);
             //await response.SetStatus(403, ex.Message)
             //    .AnswerAsync();
         }
@@ -564,3 +766,58 @@ class MyDelayResponsePlugin2 : PluginBase, IHttpPlugin
         public HttpContext Context { get; }
     }
 }
+
+#region Http服务器响应有长度大数据 {10,13,18}
+class MyHttpPlugin22 : PluginBase, IHttpPlugin
+{
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var request = e.Context.Request;//http请求体
+        var response = e.Context.Response;//http响应体
+        if (e.Context.Request.IsGet() && e.Context.Request.UrlEquals("/data1"))
+        {
+            //1.先设置需要响应的相关配置
+            response.SetStatusWithSuccess();
+
+            //2.然后设置数据总长度
+            response.ContentLength = 1024 * 1024;
+
+            for (int i = 0; i < 1024; i++)
+            {
+                //3.将数据持续写入
+                await response.WriteAsync(new byte[1024]);
+            }
+        }
+        await e.InvokeNext();
+    }
+}
+#endregion
+
+#region Http服务器响应无长度大数据 {10,13,18,22}
+class MyHttpPlugin33 : PluginBase, IHttpPlugin
+{
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        var request = e.Context.Request;//http请求体
+        var response = e.Context.Response;//http响应体
+        if (e.Context.Request.IsGet() && e.Context.Request.UrlEquals("/data2"))
+        {
+            //1.先设置需要响应的相关配置
+            response.SetStatusWithSuccess();
+
+            //2.设置使用Chunk模式
+            response.IsChunk = true;
+
+            for (int i = 0; i < 1024; i++)
+            {
+                //3.将数据持续写入
+                await response.WriteAsync(new byte[1024]);
+            }
+
+            //4.在正式数据传输完成后，调用此方法，客户端才知道数据结束了
+            await response.CompleteChunkAsync();
+        }
+        await e.InvokeNext();
+    }
+}
+#endregion
