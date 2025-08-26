@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -67,7 +66,7 @@ internal class Program
             var str = Console.ReadLine();
             if (service.TryGetClient(str.Split(' ')[0], out var socketClient))
             {
-                var result =await socketClient.GetDmtpRpcActor().InvokeTAsync<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
+                var result = await socketClient.GetDmtpRpcActor().InvokeTAsync<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
 
                 service.Logger.Info($"调用结果{result}");
             }
@@ -82,7 +81,7 @@ public partial class MyRpcServer : SingletonRpcServer
     private readonly ILog m_logger;
     private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
 
-    public MyRpcServer(ILog logger,IRpcCallContextAccessor rpcCallContextAccessor)
+    public MyRpcServer(ILog logger, IRpcCallContextAccessor rpcCallContextAccessor)
     {
         this.m_logger = logger;
         this.m_rpcCallContextAccessor = rpcCallContextAccessor;
@@ -145,7 +144,7 @@ public partial class MyRpcServer : SingletonRpcServer
         {
             if (socketClient.TrySubscribeChannel(channelID, out var channel))
             {
-               await foreach (var item in channel)
+                await foreach (var item in channel)
                 {
                     size += item.Length;//此处处理流数据
                 }

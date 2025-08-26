@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -28,9 +40,9 @@ internal class Program
                 var byteBlock = new ByteBlock(1024);
                 try
                 {
-                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.DataType);//然后数据类型
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.OrderType);//然后指令类型
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.OrderType);//然后指令类型
                     byteBlock.Write(myRequestInfo.Body);//再写数据
 
                     await client.SendAsync(byteBlock.Memory);
@@ -130,7 +142,7 @@ internal class MyDataClass : IBigUnfixedHeaderRequestInfo
     private int m_headerLength;
     private long m_bodyLength;
 
-    
+
     int IBigUnfixedHeaderRequestInfo.HeaderLength => this.m_headerLength;
 
     long IBigUnfixedHeaderRequestInfo.BodyLength => this.m_bodyLength;

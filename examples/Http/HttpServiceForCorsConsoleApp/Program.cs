@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.Http.Headers;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -60,7 +59,7 @@ internal class Program
     }
 }
 
-class MyPlugin : PluginBase, IHttpPlugin
+internal class MyPlugin : PluginBase, IHttpPlugin
 {
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {

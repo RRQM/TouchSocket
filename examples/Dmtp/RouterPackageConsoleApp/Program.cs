@@ -30,7 +30,7 @@ internal class Program
         {
             ConsoleLogger.Default.Info(ex.Message);
         }
-        var service =await GetTcpDmtpService();
+        var service = await GetTcpDmtpService();
 
         var consoleAction = new ConsoleAction();
         consoleAction.OnException += ConsoleAction_OnException;
@@ -164,7 +164,7 @@ internal class Program
         {
             base.UnpackageBody(ref byteBlock);
 
-            this.ByteBlock =ReaderExtension.ReadByteBlock(ref byteBlock);
+            this.ByteBlock = ReaderExtension.ReadByteBlock(ref byteBlock);
         }
     }
 

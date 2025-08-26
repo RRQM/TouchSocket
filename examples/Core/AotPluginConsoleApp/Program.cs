@@ -33,7 +33,7 @@ namespace PluginConsoleApp
                 //}
                 //Console.WriteLine("end print interfaceMethods------");
 
-                PluginManager pluginManager = new PluginManager(new Container())
+                var pluginManager = new PluginManager(new Container())
                 {
                     Enable = true//必须启用
                 };

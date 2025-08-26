@@ -36,17 +36,17 @@ internal class Program
         await master.WriteSingleRegisterAsync(1, 0, 1);//默认short ABCD端序
         await master.WriteSingleRegisterAsync(1, 1, 1000);//默认short ABCD端序
 
-   
+
         var valueByteBlock = new ValueByteBlock(1024);
         try
         {
             WriterExtension.WriteValue(ref valueByteBlock, (ushort)2, EndianType.Big);//ABCD端序
             WriterExtension.WriteValue(ref valueByteBlock, (ushort)2000, EndianType.Little);//DCBA端序
-            WriterExtension.WriteValue(ref valueByteBlock, (int)int.MaxValue, EndianType.BigSwap);//BADC端序
-            WriterExtension.WriteValue(ref valueByteBlock, (long)long.MaxValue, EndianType.LittleSwap);//CDAB端序
+            WriterExtension.WriteValue(ref valueByteBlock, int.MaxValue, EndianType.BigSwap);//BADC端序
+            WriterExtension.WriteValue(ref valueByteBlock, long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
             //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-            WriterExtension.WriteString(ref valueByteBlock, (string)"Hello1");
+            WriterExtension.WriteString(ref valueByteBlock, "Hello1");
 
             //如果想要直接写入字符串，可以使用WriteNormalString方法
             //valueByteBlock.WriteNormalString("Hello1", System.Text.Encoding.UTF8);
@@ -65,7 +65,7 @@ internal class Program
         var response = await master.ReadHoldingRegistersAsync(1, 0, 30);
 
         //创建一个读取器
-        var span= response.Data.Span;
+        var span = response.Data.Span;
 
         Console.WriteLine(span.ReadValue<ushort>(EndianType.Big));
         Console.WriteLine(span.ReadValue<ushort>(EndianType.Big));
@@ -184,7 +184,7 @@ public static class MasterReconnectionPluginExtension
 {
     public static ReconnectionPlugin<IModbusTcpMaster> UseModbusTcpMasterReconnectionPlugin(this IPluginManager pluginManager)
     {
-        ModbusTcpMasterReconnectionPlugin modbusTcpMasterReconnectionPlugin = new ModbusTcpMasterReconnectionPlugin();
+        var modbusTcpMasterReconnectionPlugin = new ModbusTcpMasterReconnectionPlugin();
         pluginManager.Add(modbusTcpMasterReconnectionPlugin);
         return modbusTcpMasterReconnectionPlugin;
     }

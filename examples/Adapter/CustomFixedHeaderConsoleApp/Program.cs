@@ -40,9 +40,9 @@ internal class Program
                 var byteBlock = new ByteBlock(1024);
                 try
                 {
-                    WriterExtension.WriteValue(ref byteBlock, (byte)(byte)(myRequestInfo.Data.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.DataType);//然后数据类型
-                    WriterExtension.WriteValue(ref byteBlock, (byte)myRequestInfo.OrderType);//然后指令类型
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(myRequestInfo.Data.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.OrderType);//然后指令类型
                     byteBlock.Write(myRequestInfo.Data);//再写数据
 
                     await client.SendAsync(byteBlock.Memory);
@@ -152,7 +152,7 @@ public class MyDataClass : IFixedHeaderRequestInfo
 
     bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
     {
-        var data= body.Slice(0, body.Length - 2);//最后2个字节是CRC16校验码
+        var data = body.Slice(0, body.Length - 2);//最后2个字节是CRC16校验码
         var crc16 = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(body.Length - 2, 2));
 
         //计算CRC16
@@ -179,8 +179,8 @@ public class MyDataClass : IFixedHeaderRequestInfo
 
         var payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
 
-        
-        this.m_length = payloadLength+2;//+2是因为还包含Crc16的长度
+
+        this.m_length = payloadLength + 2;//+2是因为还包含Crc16的长度
 
         return true;
     }

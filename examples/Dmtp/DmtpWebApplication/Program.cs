@@ -29,14 +29,14 @@ public class Program
         }
         var builder = WebApplication.CreateBuilder(args);
 
-      
+
         builder.Services.ConfigureContainer(container =>
         {
             container.AddConsoleLogger();
             container.AddDmtpRouteService();
         });
 
-       
+
         builder.Services.AddWebSocketDmtpService(config =>
         {
             config
@@ -46,12 +46,12 @@ public class Program
                 })
                 .ConfigurePlugins(a =>
                 {
-                    
+
                     a.Add<MyClassPlugin>();
                 });
         });
 
-       
+
         builder.Services.AddHttpMiddlewareDmtpService(config =>
         {
             config.SetDmtpOption(new DmtpOption()
@@ -67,11 +67,11 @@ public class Program
 
         var app = builder.Build();
 
-        
+
         app.UseWebSockets();
         app.UseWebSocketDmtp("/WebSocketDmtp");
 
-      
+
         app.UseHttpDmtp();
 
         app.Run();

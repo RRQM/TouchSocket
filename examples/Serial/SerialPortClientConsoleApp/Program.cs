@@ -157,14 +157,14 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin
 
 
 #region 继承实现串口客户端
-class MySerialClient : SerialPortClientBase
+internal class MySerialClient : SerialPortClientBase
 {
     protected override async Task OnSerialReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = e.Memory.Span.ToString(Encoding.UTF8);
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
 
         await base.OnSerialReceived(e);

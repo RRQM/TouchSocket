@@ -90,7 +90,7 @@ public partial class Form1 : Form
                 var cur = new System.Windows.Forms.Cursor(pci.hCursor);
                 cur.Draw(g, new Rectangle(pci.ptScreenPos.x, pci.ptScreenPos.y, cur.Size.Width, cur.Size.Height));
             }
-            catch (Exception ex) { }    // 若获取鼠标异常则不显示
+            catch (Exception) { }    // 若获取鼠标异常则不显示
         }
 
         //Size halfSize = new Size((int)(tmp.Size.Width * 0.8), (int)(tmp.Size.Height * 0.8));  // 按一半尺寸存储图像

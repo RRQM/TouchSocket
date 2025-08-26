@@ -16,7 +16,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
 internal interface ISimpleDmtpRpcActor : IActor
 {
-    Task Invoke(string methodName,CancellationToken token);
+    Task Invoke(string methodName, CancellationToken token);
 
-    Task Invoke(string targetId, string methodName,CancellationToken token);
+    Task Invoke(string targetId, string methodName, CancellationToken token);
 }

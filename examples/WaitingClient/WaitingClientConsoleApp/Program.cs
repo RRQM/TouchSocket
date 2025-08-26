@@ -18,14 +18,14 @@ namespace WaitingClientConsoleApp;
 
 internal class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         Console.WriteLine("Hello, World!");
     }
 
 
 
-    static async Task TcpService_WaitingClient()
+    private static async Task TcpService_WaitingClient()
     {
         #region Tcp服务器WaitingClient示例
         var service = new TcpService();
@@ -44,17 +44,17 @@ internal class Program
             });
 
             //发送数据，并等待响应
-            using (ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM")))
+            using (var responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM")))
             {
                 var memory = responsedData.Memory;
                 Console.WriteLine(memory.Span.ToString(Encoding.UTF8));
 
-                IRequestInfo requestInfo = responsedData.RequestInfo;//如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时
+                var requestInfo = responsedData.RequestInfo;//如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时
             }
         }
         #endregion
     }
-    static async Task TcpClient_WaitingClient()
+    private static async Task TcpClient_WaitingClient()
     {
         #region Tcp客户端WaitingClient示例
         var client = new TcpClient();
@@ -100,7 +100,7 @@ internal class Program
             await Task.Delay(5000);
             cts.Cancel();//5秒后取消等待，不再等待服务端的消息。这里模拟的是客户端主动取消等待
         });
-        using var responsed2 = await waitingClient.SendThenResponseAsync("hello",cts.Token);
+        using var responsed2 = await waitingClient.SendThenResponseAsync("hello", cts.Token);
         #endregion
 
     }

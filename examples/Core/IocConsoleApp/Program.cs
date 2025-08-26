@@ -17,7 +17,7 @@ internal class Program
     private static void Main(string[] args)
     {
         NormalContainer.Run();// 常规Ioc容器，使用IL和反射实现，支持运行时注册和获取
-       
+
         Console.ReadKey();
     }
 }

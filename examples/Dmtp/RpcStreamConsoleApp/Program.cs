@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -174,7 +173,7 @@ internal class Program
             {
                 if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                   await foreach (var byteBlock in channel)
+                    await foreach (var byteBlock in channel)
                     {
                         size += byteBlock.Length;
                     }
