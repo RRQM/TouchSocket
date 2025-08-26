@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -74,17 +75,18 @@ internal class Program
 
     private static async Task<HttpClient> TestHttpClient()
     {
-        var client = new HttpClient();
+        using var client = new HttpClient();
         await client.ConnectAsync("127.0.0.1:7789");
         Console.WriteLine("连接成功");
 
-        var responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20");
+        using var cts = new CancellationTokenSource(1000 * 10);
+        var responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20", cts.Token);
         return client;
     }
 
     private static async Task<WebApiClient> CreateWebApiClient()
     {
-        var client = new WebApiClient();
+        using var client = new WebApiClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
              .ConfigurePlugins(a =>
@@ -98,7 +100,7 @@ internal class Program
 
     private static async Task<WebApiClientSlim> CreateWebApiClientSlim()
     {
-        var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
+        using var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("http://127.0.0.1:7789")
              .ConfigurePlugins(a =>

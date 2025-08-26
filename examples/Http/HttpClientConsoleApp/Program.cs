@@ -136,27 +136,31 @@ internal class Program
 
     private static async Task GetString()
     {
-        var client = await GetHttpClient();
+        using var client = await GetHttpClient();
         //直接发起一个Get请求，然后返回Body字符串。
-        var body = await client.GetStringAsync("/WeatherForecast");
+
+        using var cts = new CancellationTokenSource(1000 * 10);
+        var body = await client.GetStringAsync("/WeatherForecast", cts.Token);
     }
 
     private static async Task GetFile()
     {
-        var client = await GetHttpClient();
+        using var client = await GetHttpClient();
         //直接发起一个Get请求文件，然后写入到流中。
+
+        using var cts = new CancellationTokenSource(1000 * 10);
         using (var stream = File.Create("1.txt"))
         {
-            await client.GetFileAsync("/WeatherForecast", stream);
+            await client.GetFileAsync("/WeatherForecast", stream, cts.Token);
         }
     }
 
     private static async Task GetBytesArray()
     {
-        var client = await GetHttpClient();
-
+        using var client = await GetHttpClient();
+        using var cts = new CancellationTokenSource(1000 * 10);
         //直接发起一个Get请求，然后返回Body数组。
-        var bodyBytes = await client.GetByteArrayAsync("/WeatherForecast");
+        var bodyBytes = await client.GetByteArrayAsync("/WeatherForecast", cts.Token);
     }
 
     private static async Task<HttpClient> GetHttpClient()
@@ -200,7 +204,7 @@ internal class BigDataHttpContent : HttpContent
         var buffer = new byte[this.bufferLength];
         for (var i = 0; i < this.count; i++)
         {
-            await writeFunc.Invoke(buffer,token);
+            await writeFunc.Invoke(buffer, token);
             //Console.WriteLine(i);
         }
     }
