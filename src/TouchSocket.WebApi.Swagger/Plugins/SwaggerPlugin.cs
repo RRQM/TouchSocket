@@ -536,10 +536,27 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             var schema = this.CreateSchema(type);
             var properties = new Dictionary<string, OpenApiProperty>();
+
+
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
+                // 2. 如果已经有同名属性，优先选择当前类的（隐藏/重写 new 的情况）
+                if (properties.ContainsKey(propertyInfo.Name))
+                {
+                    if (propertyInfo.DeclaringType == type)
+                    {
+                        // 覆盖基类的属性
+                        properties[propertyInfo.Name] = this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription());
+                    }
+                    // 否则跳过（基类的被丢弃）
+                }
+                else
+                {
+                    properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
+                }
             }
+
+
             schema.Properties = properties.Count == 0 ? default : properties;
             components.Schemas.TryAdd(this.GetSchemaName(type), schema);
         }
