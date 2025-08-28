@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
+#if SystemNetHttp
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

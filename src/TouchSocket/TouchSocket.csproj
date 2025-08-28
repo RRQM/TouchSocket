@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
 		<PackageTags>Tcp;Udp;Ssl;Socket;Saea;TouchSocket</PackageTags>
 		<Description>TouchSocket是.Net(包括 C# 、VB.Net、F#)的一个整合性的socket网络通信框架。包含了 tcp、udp、ssl等一系列的通信模块。一键式解决 tcp 黏分包问题，udp大数据包分片组合问题等。使用协议模板，可快速实现「固定包头」、「固定长度」、「区间字符」等一系列的数据报文解析。
 
