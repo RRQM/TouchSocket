@@ -237,8 +237,8 @@ public static class ClientExtension
 
     }
 
-    /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, System.Threading.CancellationToken)"/>
-    public static async Task ConnectAsync<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, IConnectableClient
+    /// <inheritdoc cref="IConnectableClient.ConnectAsync(CancellationToken)"/>
+    public static async Task ConnectAsync<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, ITcpConnectableClient
     {
         TouchSocketConfig config;
         if (client.Config == null)
@@ -306,7 +306,7 @@ public static class ClientExtension
     /// 同步执行连接操作。
     /// </summary>
     /// <remarks>
-    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>，所以请谨慎使用。
+    /// 注意，本同步操作是直接等待的<see cref="IConnectableClient.ConnectAsync(CancellationToken)"/>，所以请谨慎使用。
     /// </remarks>
     /// <param name="client">要连接的客户端对象。</param>
     /// <param name="cancellationToken">用于取消操作的令牌。</param>
@@ -329,7 +329,7 @@ public static class ClientExtension
     /// <param name="ipHost">连接的目标IP地址和端口信息。</param>
     /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒，默认为5000毫秒。</param>
     [AsyncToSyncWarning]
-    public static void Connect<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, IConnectableClient
+    public static void Connect<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ISetupConfigObject, ITcpConnectableClient
     {
         ConnectAsync(client, ipHost, millisecondsTimeout).GetFalseAwaitResult();
     }

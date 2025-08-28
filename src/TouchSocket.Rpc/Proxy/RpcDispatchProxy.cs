@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER || NET481_OR_GREATER
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -146,4 +145,3 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
 
     }
 }
-#endif

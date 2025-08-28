@@ -43,7 +43,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; }
 
     /// <inheritdoc/>
-    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken token = default)
+    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken token)
     {
         var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
@@ -53,17 +53,17 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         {
             cache.Value = this.Converter.Serialize(null, value);
         }
-        return await this.AddCacheAsync(cache).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.AddCacheAsync(cache,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken token = default)
+    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken token)
     {
-        return !await this.ContainsCacheAsync(entity.Key).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return !await this.ContainsCacheAsync(entity.Key,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task ClearCacheAsync(CancellationToken token = default)
+    public async Task ClearCacheAsync(CancellationToken token)
     {
         var package = new RedisRequestWaitPackage
         {
@@ -154,7 +154,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     /// <inheritdoc/>
     public async Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default)
     {
-        var cache = await this.GetCacheAsync(key).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var cache = await this.GetCacheAsync(key, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         if (cache != null)
         {
@@ -334,7 +334,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
@@ -366,7 +366,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             Duration = TimeSpan.FromSeconds(duration),
             Value = value is ReadOnlyMemory<byte> bytes ? bytes : this.Converter.Serialize(null, value)
         };
-        return await this.SetCacheAsync(cache).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.SetCacheAsync(cache, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

@@ -78,7 +78,6 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net9.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;AsyncLocal</DefineConstants>
-		<!--<DefineConstants>AllowsRefStruct</DefineConstants>-->
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;AsyncLocal</DefineConstants>

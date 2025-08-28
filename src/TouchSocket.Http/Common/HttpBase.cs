@@ -300,7 +300,7 @@ public abstract class HttpBase : IRequestInfo
                     if (!blockResult.Memory.IsEmpty)
                     {
                         var memory = blockResult.Memory;
-                        await stream.WriteAsync(memory, cancellationToken);
+                        await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     if (blockResult.IsCompleted)

@@ -60,6 +60,10 @@ public abstract partial class DisposableObject : IDisposableObject
     /// </summary>
     public void Dispose()
     {
+        if (this.m_disposedValue)
+        {
+            return;
+        }
         this.Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

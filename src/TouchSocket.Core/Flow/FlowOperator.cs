@@ -80,11 +80,6 @@ public abstract class FlowOperator
     public Result Result { get; protected set; }
 
     /// <summary>
-    /// 超时时间，默认10*1000ms。
-    /// </summary>
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
-
-    /// <summary>
     /// 可取消令箭
     /// </summary>
     public virtual CancellationToken Token { get; set; }
