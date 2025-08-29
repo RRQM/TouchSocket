@@ -28,12 +28,12 @@ internal class Program
         var redis = client.GetDmtpRedisActor();
 
         //执行Set
-        var result = await redis.SetAsync("1", "1");
+        var result = await redis.SetAsync("1", "1",60*1000,CancellationToken.None);
         client.Logger.Info($"Set result={result}");
         client.Logger.Info($"ContainsCache result={await redis.ContainsCacheAsync("1")}");
 
         //执行Get
-        var result1 = await redis.GetAsync<string>("1");
+        var result1 = await redis.GetAsync<string>("1", CancellationToken.None);
         client.Logger.Info($"Get result={result}");
 
         //执行Remove
