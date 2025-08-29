@@ -56,7 +56,7 @@ internal class Program
             };
 
             //发起请求，然后等待一个自定义的响应包。
-            var response = await client.GetDmtpRouterPackageActor().RequestAsync(requestPackage);
+            var response = await client.GetDmtpRouterPackageActor().RequestAsync(requestPackage, CancellationToken.None);
 
             client.Logger.Info($"自定义响应成功，{response}");
         }
@@ -76,7 +76,7 @@ internal class Program
             };
 
             //发起请求，然后等待一个自定义的响应包。
-            var response = await client.GetDmtpRouterPackageActor().RequestAsync<MyResponsePackage>(requestPackage);
+            var response = await client.GetDmtpRouterPackageActor().RequestAsync<MyResponsePackage>(requestPackage, CancellationToken.None);
 
             client.Logger.Info($"自定义响应成功，{response.Message}");
         }
