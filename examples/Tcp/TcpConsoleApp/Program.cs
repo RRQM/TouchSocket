@@ -108,6 +108,38 @@ internal class Program
             await tcpSessionClient.SendAsync("消息内容");
         }
         #endregion
+
+        #region Tcp清理当前所有连接
+        await service.ClearAsync();
+        #endregion
+
+        #region Tcp清理指定连接
+        foreach (var item in service.Clients)
+        {
+            if (item.Id == "targetId")
+            {
+                await item.CloseAsync();
+
+                //在断开连接后，释放对象。
+                item.Dispose();
+            }
+        }
+        #endregion
+
+        #region Tcp服务器停止监听
+        foreach (var item in service.Monitors)
+        {
+            service.RemoveListen(item);
+        }
+        #endregion
+
+        #region Tcp停止服务器
+        await service.StopAsync();
+        #endregion
+
+        #region Tcp释放服务器资源
+        service.Dispose();
+        #endregion
     }
 
     private static async Task CreateCustomService()
