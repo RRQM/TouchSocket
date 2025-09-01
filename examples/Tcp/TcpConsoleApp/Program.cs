@@ -247,13 +247,13 @@ internal class Program
         #endregion
 
         #region 服务器端口复用
-        config.UseReuseAddress();
+        config.SetReuseAddress(true);
         #endregion
 
         #region 接收缓存池的设定场景
         //此配置已在4.0中无实际意义，TouchSocket会根据实际情况动态分配缓存。
-        config.SetMaxBufferSize(1024);
-        config.SetMinBufferSize(1024);
+        //config.SetMaxBufferSize(1024);
+        //config.SetMinBufferSize(1024);
         #endregion
 
         #region 服务器名称设置
@@ -453,7 +453,7 @@ internal class Program
         #endregion
 
         #region 设置客户端端口复用
-        config.UseReuseAddress();
+        config.SetReuseAddress(true);
         #endregion
     }
 
