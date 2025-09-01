@@ -40,8 +40,10 @@ public partial class Form1 : Form
     {
         while (true)
         {
-            var byteArray = this.ImageToByte(this.getScreen());
-            using var bb = new ByteBlock(byteArray);
+            using var bb = new ByteBlock(1024 * 1024 * 5);
+            using var img = this.getScreen();
+            this.ImageToByte(bb.AsStream(), img);
+
             await this.udpSession.SendAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb.Memory);
             await Task.Delay((int)(1000.0 / (int)this.numericUpDown1.Value));
         }
@@ -76,7 +78,7 @@ public partial class Form1 : Form
         if (height == -1) height = SystemInformation.VirtualScreen.Height;
 
         var tmp = new Bitmap(width, height);                 //按指定大小创建位图
-        var g = Graphics.FromImage(tmp);                   //从位图创建Graphics对象
+        using var g = Graphics.FromImage(tmp);                   //从位图创建Graphics对象
         g.CopyFromScreen(x, y, 0, 0, new Size(width, height));  //绘制
 
         // 绘制鼠标
@@ -103,25 +105,16 @@ public partial class Form1 : Form
 
     #region 格式转换
 
-    private byte[] ImageToByte(Image Picture)
+    private void ImageToByte(Stream stream, Image Picture)
     {
-        var ms = new MemoryStream();
         if (Picture == null)
-            return new byte[ms.Length];
-        Picture.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-        var BPicture = new byte[ms.Length];
-        BPicture = ms.GetBuffer();
-        return BPicture;
+        {
+            return;
+        }
+
+        Picture.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
     }
 
-    private Image ByteToImage(byte[] btImage)
-    {
-        if (btImage.Length == 0)
-            return null;
-        var ms = new System.IO.MemoryStream(btImage);
-        var image = System.Drawing.Image.FromStream(ms);
-        return image;
-    }
 
     #endregion 格式转换
 
@@ -134,6 +127,7 @@ public partial class Form1 : Form
 
             this.udpSession.SetupAsync(
             new TouchSocketConfig()
+            .SetUdpConnReset(true)
             .SetBindIPHost(new IPHost(7789))
             .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
             this.udpSession.StartAsync();

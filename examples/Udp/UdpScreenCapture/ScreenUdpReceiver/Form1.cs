@@ -21,7 +21,7 @@ using TouchSocket.Sockets;
 namespace ScreenUdpReceiver;
 
 /// <summary>
-/// 本程序源码由网友“木南白水”提供。
+/// 本程序源码由网友"木南白水"提供。
 /// </summary>
 public partial class Form1 : Form
 {
@@ -40,10 +40,30 @@ public partial class Form1 : Form
 
             this.udpSession.Received = (c, e) =>
             {
-                //var reader = new ReadOnlySequence(e.Memory);
-             
-                //var stream = reader.as();
-                //this.pictureBox1.Image = Image.FromStream(stream);
+
+                try
+                {
+                    using var stream = new ReadOnlyMemoryStream(e.Memory);
+
+                    // Update UI on the main thread
+                    this.Invoke(() =>
+                    {
+                        try
+                        {
+                            this.pictureBox1.Image = Image.FromStream(stream);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle image conversion errors silently or log them
+                            Console.WriteLine($"Error converting image: {ex.Message}");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                }
+                
+                
                 return EasyTask.CompletedTask;
             };
             this.udpSession.SetupAsync(new TouchSocketConfig()
@@ -56,15 +76,5 @@ public partial class Form1 : Form
             MessageBox.Show($"错误：{ex.Message},程序将退出");
             Environment.Exit(0);
         }
-    }
-}
-
-class ReadOnlyMemoryStream:Stream
-{
-    private readonly ReadOnlyMemory<byte> m_memory;
-
-    public ReadOnlyMemoryStream(ReadOnlyMemory<byte> memory)
-    {
-        this.m_memory = memory;
     }
 }
