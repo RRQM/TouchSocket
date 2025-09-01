@@ -8,7 +8,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Dmtp" Version="4.0.0-beta.6" />
-		<PackageReference Include="TouchSocket.Rpc.RateLimiting" Version="4.0.0-beta.6" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="4.0.0-beta.7" />
+		<PackageReference Include="TouchSocket.Rpc.RateLimiting" Version="4.0.0-beta.7" />
 	</ItemGroup>
 </Project>
