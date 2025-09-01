@@ -231,8 +231,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <param name="e">包含接收到的数据事件的相关信息。</param>
     protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
-        // 提高插件管理器，让所有实现ITcpReceivedPlugin接口的插件处理接收到的数据。
-        await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseITcpReceivedPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -244,7 +243,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// </returns>
     protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
-        return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(reader));
+        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, new BytesReaderEventArgs(reader));
     }
 
     /// <summary>
@@ -254,7 +253,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <returns>返回值意义：表示是否继续发送数据的指示，true为继续，false为取消发送。</returns>
     protected virtual ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
+        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this, new SendingEventArgs(memory));
     }
 
     /// <summary>
@@ -332,10 +331,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
 
-        ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
-
-        // 如果当前实例的配置对象不为空，则将配置应用到适配器上
         if (this.Config != null)
         {
             adapter.Config(this.Config);

@@ -10,10 +10,28 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-namespace TouchSocket.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
-[PluginRaise(typeof(ILoadingConfigPlugin))]
-[PluginRaise(typeof(ILoadedConfigPlugin))]
+namespace TouchSocket.Sockets;
+
+[PluginRaise(typeof(IIdChangedPlugin))]
+[PluginRaise(typeof(IServerStartedPlugin))]
+[PluginRaise(typeof(IServerStoppedPlugin))]
+[PluginRaise(typeof(ITcpClosedPlugin))]
+[PluginRaise(typeof(ITcpClosingPlugin))]
+[PluginRaise(typeof(ITcpConnectedPlugin))]
+[PluginRaise(typeof(ITcpConnectingPlugin))]
+[PluginRaise(typeof(ITcpReceivedPlugin))]
+[PluginRaise(typeof(ITcpReceivingPlugin))]
+[PluginRaise(typeof(ITcpSendingPlugin))]
+[PluginRaise(typeof(IUdpReceivedPlugin))]
+[PluginRaise(typeof(IUdpReceivingPlugin))]
+[PluginRaise(typeof(IUdpSendingPlugin))]
 internal static partial class PluginRaiseExtension
 {
 }

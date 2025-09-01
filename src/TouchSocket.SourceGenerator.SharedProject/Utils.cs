@@ -35,6 +35,11 @@ internal static class Utils
         return symbol.ToDisplayString().Equals(fullName);
     }
 
+    public static bool IsDependencyProperty(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol.IsInheritFrom(Utils.DependencyPropertyBase);
+    }
+
     public static string GetAccessModifierString(this Accessibility accessibility)
     {
         return accessibility switch

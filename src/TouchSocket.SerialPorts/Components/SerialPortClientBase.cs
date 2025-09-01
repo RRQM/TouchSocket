@@ -346,6 +346,12 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
         this.ThrowIfDisposed();
 
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
+
         if (this.Config != null)
         {
             adapter.Config(this.Config);
@@ -353,7 +359,6 @@ public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSessi
 
         adapter.OnLoaded(this);
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-
         this.m_dataHandlingAdapter = adapter;
     }
 

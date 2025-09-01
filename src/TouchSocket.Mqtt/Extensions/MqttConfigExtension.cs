@@ -23,19 +23,6 @@ public static class MqttConfigExtension
     /// <summary>
     /// Mqtt连接选项的依赖属性。
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig),ActionMode =true)]
     public static readonly DependencyProperty<MqttConnectOptions> MqttConnectOptionsProperty = new DependencyProperty<MqttConnectOptions>("MqttConnectOptions", null);
-
-    /// <summary>
-    /// 设置Mqtt连接选项。
-    /// </summary>
-    /// <param name="config">TouchSocket配置。</param>
-    /// <param name="options">用于配置Mqtt连接选项的操作。</param>
-    /// <returns>更新后的TouchSocket配置。</returns>
-    public static TouchSocketConfig SetMqttConnectOptions(this TouchSocketConfig config, Action<MqttConnectOptions> options)
-    {
-        var mqttConnectOptions = new MqttConnectOptions();
-        options?.Invoke(mqttConnectOptions);
-        config.SetValue(MqttConnectOptionsProperty, mqttConnectOptions);
-        return config;
-    }
 }

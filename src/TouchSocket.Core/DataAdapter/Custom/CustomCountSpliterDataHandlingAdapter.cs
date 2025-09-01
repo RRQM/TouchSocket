@@ -22,16 +22,6 @@ namespace TouchSocket.Core;
 public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequestInfo> : CustomDataHandlingAdapter<TCountSpliterRequestInfo> where TCountSpliterRequestInfo : IRequestInfo
 {
     /// <summary>
-    /// 获取计数。
-    /// </summary>
-    public int Count { get; }
-
-    /// <summary>
-    /// 获取分隔符。
-    /// </summary>
-    public ReadOnlyMemory<byte> Spliter { get; }
-
-    /// <summary>
     /// 初始化 <see cref="CustomCountSpliterDataHandlingAdapter{TCountSpliterRequestInfo}"/> 类的新实例。
     /// </summary>
     /// <param name="count">计数。</param>
@@ -47,6 +37,16 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
         this.Count = count;
         this.Spliter = spliter;
     }
+
+    /// <summary>
+    /// 获取计数。
+    /// </summary>
+    public int Count { get; }
+
+    /// <summary>
+    /// 获取分隔符。
+    /// </summary>
+    public ReadOnlyMemory<byte> Spliter { get; }
 
     /// <inheritdoc/>
     protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TCountSpliterRequestInfo request)
@@ -98,6 +98,7 @@ public abstract class CustomCountSpliterDataHandlingAdapter<TCountSpliterRequest
     /// <param name="dataSpan">数据跨度。</param>
     /// <returns>请求信息实例。</returns>
     protected abstract TCountSpliterRequestInfo GetInstance(in ReadOnlySpan<byte> dataSpan);
+
     protected virtual TCountSpliterRequestInfo GetInstance(in ReadOnlySequence<byte> dataSequence)
     {
         using (var memoryBuffer = new ContiguousMemoryBuffer(dataSequence))

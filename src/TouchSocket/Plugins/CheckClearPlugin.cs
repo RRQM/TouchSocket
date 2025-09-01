@@ -21,7 +21,8 @@ namespace TouchSocket.Sockets;
 /// 检查清理连接插件。服务器与客户端均适用。
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IDependencyClient, IClosableClient, IOnlineClient
+public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
+    where TClient : class, IDependencyClient, IClosableClient
 {
     private static readonly DependencyProperty<bool> s_checkClearProperty =
         new("CheckClear", false);
@@ -86,22 +87,6 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
     public CheckClearPlugin<TClient> SetCheckClearType(CheckClearType clearType)
     {
         this.CheckClearType = clearType;
-        return this;
-    }
-
-    /// <summary>
-    /// 设置在超出时间限定而关闭时的回调操作。
-    /// </summary>
-    /// <param name="action">一个Action委托，包含客户端对象和检查清除类型作为参数，在关闭操作执行时会被调用。</param>
-    /// <returns>返回当前的CheckClearPlugin实例，以支持链式调用。</returns>
-    public CheckClearPlugin<TClient> SetOnClose(Action<TClient, CheckClearType> action)
-    {
-        Task Func(TClient client, CheckClearType checkClearType)
-        {
-            action.Invoke(client, checkClearType);
-            return EasyTask.CompletedTask;
-        }
-        this.SetOnClose(Func);
         return this;
     }
 
@@ -190,7 +175,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
 
     private async Task CheckWithClient(TClient client)
     {
-        if (!client.Online)
+        if (client is IOnlineClient onlineClient && !onlineClient.Online)
         {
             return;
         }

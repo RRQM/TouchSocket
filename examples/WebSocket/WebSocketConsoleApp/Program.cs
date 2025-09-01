@@ -222,6 +222,8 @@ internal class Program
     private static async Task<HttpService> CreateHttpService()
     {
         var service = new HttpService();
+
+        TouchSocketConfig config=new TouchSocketConfig();
         await service.SetupAsync(new TouchSocketConfig()//加载配置
              .SetListenIPHosts(7789)
              .ConfigureContainer(a =>

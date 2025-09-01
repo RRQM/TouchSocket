@@ -88,17 +88,6 @@ public static class DataHandlingAdapterExtension
     /// <summary>
     /// 设置适配器相关的配置
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = new("AdapterOption", new AdapterOption());
-
-    /// <summary>
-    /// 设置适配器相关的配置
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetAdapterOption(this TouchSocketConfig config, AdapterOption value)
-    {
-        config.SetValue(AdapterOptionProperty, value);
-        return config;
-    }
 }

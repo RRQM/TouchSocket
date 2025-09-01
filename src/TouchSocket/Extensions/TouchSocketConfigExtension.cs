@@ -25,111 +25,25 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public static class TouchSocketConfigExtension
 {
-    #region Extension
-    //extension(TouchSocketConfig config)
-    //{ 
-
-    //   public int Available { get=>1; set=>value=10; }
-    //}
-    //extension(TouchSocketConfig config)
-    //{
-
-    //    public int Available3 { get => 1; set => value = 10; }
-    //}
-    #endregion
     #region 数据
 
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<TransportOption> TransportOptionProperty = new("TransportOption", new TransportOption());
 
-    public static TouchSocketConfig SetTransportOption(this TouchSocketConfig config, TransportOption value)
-    {
-        config.SetValue(TransportOptionProperty, value);
-        return config;
-    }
+
     /// <summary>
     /// 数据处理适配器
     /// 所需类型<see cref="Func{TResult}"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = new("TcpDataHandlingAdapter", null);
 
     /// <summary>
     /// 数据处理适配器
     /// 所需类型<see cref="Func{TResult}"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = new("UdpDataHandlingAdapter", null);
-
-    /// <summary>
-    /// 最小缓存池尺寸
-    /// 所需类型<see cref="int"/>
-    /// </summary>
-    public static readonly DependencyProperty<int> MinBufferSizeProperty = new("MinBufferSize", 1024);
-
-    /// <summary>
-    /// 最大缓存池尺寸
-    /// 所需类型<see cref="int"/>
-    /// </summary>
-    public static readonly DependencyProperty<int> MaxBufferSizeProperty = new("MaxBufferSize", 1024 * 1024 * 10);
-
-    /// <summary>
-    /// 最小缓存容量，默认缺省。
-    /// <list type="number">
-    /// </list>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetMinBufferSize(this TouchSocketConfig config, int value)
-    {
-        if (value < 1024)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
-        }
-        config.SetValue(MinBufferSizeProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 最大缓存容量，默认缺省。
-    /// <list type="number">
-    /// </list>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetMaxBufferSize(this TouchSocketConfig config, int value)
-    {
-        if (value < 1024)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
-        }
-
-        config.SetValue(MaxBufferSizeProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置(Tcp系)数据处理适配器。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetTcpDataHandlingAdapter(this TouchSocketConfig config, Func<SingleStreamDataHandlingAdapter> value)
-    {
-        config.SetValue(TcpDataHandlingAdapterProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置(Udp系)数据处理适配器。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetUdpDataHandlingAdapter(this TouchSocketConfig config, Func<UdpDataHandlingAdapter> value)
-    {
-        config.SetValue(UdpDataHandlingAdapterProperty, value);
-        return config;
-    }
 
     #endregion 数据
 
@@ -138,6 +52,7 @@ public static class TouchSocketConfigExtension
     /// <summary>
     /// 服务名称，用于标识，无实际意义，所需类型<see cref="string"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<string> ServerNameProperty = new("ServerName", "TouchSocketServer");
 
     /// <summary>
@@ -145,32 +60,8 @@ public static class TouchSocketConfigExtension
     /// <para>UDP模式中，该值为重叠IO并发数</para>
     /// 所需类型<see cref="int"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<int> ThreadCountProperty = new("ThreadCount", -1);
-
-    /// <summary>
-    /// 服务名称，用于标识，无实际意义
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetServerName(this TouchSocketConfig config, string value)
-    {
-        config.SetValue(ServerNameProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 多线程数量，默认为-1缺省，实际上在udp中相当于1。
-    /// <para>UDP模式中，该值为重叠IO并发数</para>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetThreadCount(this TouchSocketConfig config, int value)
-    {
-        config.SetValue(ThreadCountProperty, value);
-        return config;
-    }
 
     #endregion ServiceBase
 
@@ -180,110 +71,67 @@ public static class TouchSocketConfigExtension
     /// Tcp固定端口绑定，
     /// 所需类型<see cref="IPHost"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IPHost> BindIPHostProperty = new("BindIPHost", null);
 
     /// <summary>
     /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
     /// 所需类型<see cref="bool"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = new("KeepAliveValue", default);
 
     /// <summary>
     /// 设置Socket不使用Delay算法，
     /// 所需类型<see cref="bool"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<bool?> NoDelayProperty = new("NoDelay", true);
 
     /// <summary>
     /// 远程目标地址，所需类型<see cref="IPHost"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IPHost> RemoteIPHostProperty = new("RemoteIPHost", null);
 
     /// <summary>
     /// ClientSslOption配置，为Null时则不启用
     /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<ClientSslOption> ClientSslOptionProperty = new("ClientSslOption", null);
 
     /// <summary>
     /// ServiceSslOption配置，为Null时则不启用
     /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<ServiceSslOption> ServiceSslOptionProperty = new("ServiceSslOption", null);
 
-    /// <summary>
-    /// 固定端口绑定。
-    /// <para>在<see cref="UdpSessionBase"/>中表示本地监听地址</para>
-    /// <para>在<see cref="TcpClientBase"/>中表示固定客户端端口号。</para>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetBindIPHost(this TouchSocketConfig config, IPHost value)
-    {
-        config.SetValue(BindIPHostProperty, value);
-        return config;
-    }
 
-    /// <summary>
-    /// 设置客户端Ssl配置，为Null时则不启用。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetClientSslOption(this TouchSocketConfig config, ClientSslOption value)
-    {
-        config.SetValue(ClientSslOptionProperty, value);
-        return config;
-    }
 
-    /// <summary>
-    /// 在Socket的KeepAlive属性。
-    /// <para>注意：这个是操作tcp底层的，如果你对底层不了解，建议不要动。</para>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetKeepAliveValue(this TouchSocketConfig config, KeepAliveValue value)
-    {
-        config.SetValue(KeepAliveValueProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置远程目标地址。在<see cref="UdpSessionBase"/>中，表示默认发送时的目标地址。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetRemoteIPHost(this TouchSocketConfig config, IPHost value)
-    {
-        config.SetValue(RemoteIPHostProperty, value);
-        if (value.Scheme.Equals("https", StringComparison.CurrentCultureIgnoreCase)
-                 || value.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase)
-                 || value.Scheme.Equals("ssl", StringComparison.CurrentCultureIgnoreCase)
-                 || value.Scheme.Equals("tls", StringComparison.CurrentCultureIgnoreCase))
-        {
-            config.SetClientSslOption(new ClientSslOption()
-            {
-                TargetHost = value.Host,
-                SslProtocols = SslProtocols.None
-            });
-        }
-        return config;
-    }
-
-    /// <summary>
-    /// 设置Socket的NoDelay属性，默认<see langword="true"/>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetNoDelay(this TouchSocketConfig config, bool value)
-    {
-        config.SetValue(NoDelayProperty, value);
-        return config;
-    }
+    ///// <summary>
+    ///// 设置远程目标地址。在<see cref="UdpSessionBase"/>中，表示默认发送时的目标地址。
+    ///// </summary>
+    ///// <param name="config"></param>
+    ///// <param name="value"></param>
+    ///// <returns></returns>
+    //public static TouchSocketConfig SetRemoteIPHost(this TouchSocketConfig config, IPHost value)
+    //{
+    //    config.SetValue(RemoteIPHostProperty, value);
+    //    if (value.Scheme.Equals("https", StringComparison.CurrentCultureIgnoreCase)
+    //             || value.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase)
+    //             || value.Scheme.Equals("ssl", StringComparison.CurrentCultureIgnoreCase)
+    //             || value.Scheme.Equals("tls", StringComparison.CurrentCultureIgnoreCase))
+    //    {
+    //        config.SetClientSslOption(new ClientSslOption()
+    //        {
+    //            TargetHost = value.Host,
+    //            SslProtocols = SslProtocols.None
+    //        });
+    //    }
+    //    return config;
+    //}
 
     #endregion TcpClient
 
@@ -292,116 +140,38 @@ public static class TouchSocketConfigExtension
     /// <summary>
     /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<int?> BacklogProperty = new("Backlog", null);
 
     /// <summary>
     /// 设置默认Id的获取方式，所需类型<see cref="Func{T, TResult}"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<Func<string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
 
     /// <summary>
     /// 服务器负责监听的地址组。所需类型<see cref="IPHost"/>数组
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IPHost[]> ListenIPHostsProperty = new("ListenIPHosts", null);
 
     /// <summary>
     /// 直接单个配置服务器监听的地址组。所需类型<see cref="Action"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<Action<List<TcpListenOption>>> ListenOptionsProperty = new("ListenOptions", null);
 
     /// <summary>
     /// 最大可连接数，默认为10000，所需类型<see cref="int"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<int> MaxCountProperty = new("MaxCount", 10000);
 
     /// <summary>
     /// 端口复用，默认为<see langword="false"/>，所需类型<see cref="bool"/>
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<bool> ReuseAddressProperty = new("ReuseAddress", false);
-
-    /// <summary>
-    /// 挂起连接队列的最大长度，默认不设置值。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetBacklog(this TouchSocketConfig config, int value)
-    {
-        config.SetValue(BacklogProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置Tcp服务器默认Id的获取方式。仅服务器生效。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetGetDefaultNewId(this TouchSocketConfig config, Func<string> value)
-    {
-        config.SetValue(GetDefaultNewIdProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 服务器负责监听的地址组。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="values"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetListenIPHosts(this TouchSocketConfig config, params IPHost[] values)
-    {
-        config.SetValue(ListenIPHostsProperty, values);
-        return config;
-    }
-
-    /// <summary>
-    /// 直接单个配置服务器监听的地址组。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetListenOptions(this TouchSocketConfig config, Action<List<TcpListenOption>> value)
-    {
-        config.SetValue(ListenOptionsProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 最大可连接数，默认为10000。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetMaxCount(this TouchSocketConfig config, int value)
-    {
-        config.SetValue(MaxCountProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置客户端Ssl配置，为Null时则不启用。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetServiceSslOption(this TouchSocketConfig config, ServiceSslOption value)
-    {
-        config.SetValue(ServiceSslOptionProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 启用端口复用。
-    /// <para>该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题</para>
-    /// </summary>
-    /// <param name="config"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig UseReuseAddress(this TouchSocketConfig config)
-    {
-        config.SetValue(ReuseAddressProperty, true);
-        return config;
-    }
 
     #endregion TcpService
 
@@ -410,27 +180,17 @@ public static class TouchSocketConfigExtension
     /// <summary>
     /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<bool> EnableBroadcastProperty = new("EnableBroadcast", false);
 
     /// <summary>
-    /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig UseBroadcast(this TouchSocketConfig config)
-    {
-        config.SetValue(EnableBroadcastProperty, true);
-        return config;
-    }
-
-    /// <summary>
-    /// 当udp作为客户端时，开始接收数据。起作用相当于<see cref="SetBindIPHost(TouchSocketConfig, IPHost)"/>随机端口。
+    /// 当udp作为客户端时，开始接收数据。起作用相当于<see cref="BindIPHostProperty"/>0端口。
     /// </summary>
     /// <param name="config"></param>
     /// <returns></returns>
     public static TouchSocketConfig UseUdpReceive(this TouchSocketConfig config)
     {
-        return SetBindIPHost(config, 0);
+        return config.SetBindIPHost(0);
     }
 
     /// <summary>
@@ -439,22 +199,8 @@ public static class TouchSocketConfigExtension
 #if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<bool> UdpConnResetProperty = new("UdpConnReset", false);
-
-    /// <summary>
-    /// 解决Windows下UDP连接被重置错误10054。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <returns></returns>
-#if NET6_0_OR_GREATER
-    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-#endif
-
-    public static TouchSocketConfig UseUdpConnReset(this TouchSocketConfig config)
-    {
-        config.SetValue(UdpConnResetProperty, true);
-        return config;
-    }
 
     #endregion UDP
 

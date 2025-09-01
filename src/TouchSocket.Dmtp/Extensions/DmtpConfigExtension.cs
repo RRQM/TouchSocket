@@ -22,18 +22,7 @@ public static class DmtpConfigExtension
     /// <summary>
     /// 设置Dmtp相关配置。
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<DmtpOption> DmtpOptionProperty =
         new("DmtpOption", new DmtpOption());
-
-    /// <summary>
-    /// 设置Dmtp相关配置。
-    /// </summary>
-    /// <param name="config">待设置的配置对象</param>
-    /// <param name="value">要设置的Dmtp配置值</param>
-    /// <returns>返回更新后的配置对象</returns>
-    public static TouchSocketConfig SetDmtpOption(this TouchSocketConfig config, DmtpOption value)
-    {
-        config.SetValue(DmtpOptionProperty, value);
-        return config;
-    }
 }

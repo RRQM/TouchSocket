@@ -12,6 +12,7 @@
 
 using System;
 using TouchSocket.Http;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Core;
 
@@ -79,4 +80,43 @@ public static class HttpPluginManagerExtension
         // 为插件管理器添加一个CorsPlugin，使用给定的跨域策略名称
         return pluginManager.Add(resolver => new CorsPlugin(resolver.Resolve<ICorsService>(), policyName));
     }
+
+
+    /// <summary>
+    /// 启用HttpSession的定期检查与清理插件。
+    /// 该插件用于定期检查<see cref="IHttpSession"/>会话并进行清理操作，防止资源泄漏。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器实例，用于添加和管理插件。</param>
+    /// <returns>返回创建并添加到插件管理器的实例。</returns>
+    public static CheckClearPlugin<IHttpSession> UseHttpSessionCheckClear(this IPluginManager pluginManager)
+    {
+        return pluginManager.UseCheckClear<IHttpSession>();
+    }
+
+    #region HttpReconnection
+
+    /// <summary>
+    /// 使用断线重连。
+    /// </summary>
+    /// <typeparam name="TClient">指定的客户端类型，必须继承自IHttpClient。</typeparam>
+    /// <param name="pluginManager">插件管理器实例，用于添加断线重连插件。</param>
+    /// <returns>返回创建的重连实例。</returns>
+    public static ReconnectionPlugin<TClient> UseHttpReconnection<TClient>(this IPluginManager pluginManager) 
+        where TClient : IHttpClient
+    {
+        var reconnectionPlugin = new HttpReconnectionPlugin<TClient>();
+        pluginManager.Add(reconnectionPlugin);
+        return reconnectionPlugin;
+    }
+
+    /// <summary>
+    /// 为插件管理器添加HTTP重新连接插件。
+    /// </summary>
+    /// <param name="pluginManager">要添加插件的插件管理器。</param>
+    /// <returns>返回新创建的HTTP重新连接插件实例。</returns>
+    public static ReconnectionPlugin<IHttpClient> UseHttpReconnection(this IPluginManager pluginManager)
+    {
+        return UseHttpReconnection<IHttpClient>(pluginManager);
+    }
+    #endregion TcpReconnection
 }

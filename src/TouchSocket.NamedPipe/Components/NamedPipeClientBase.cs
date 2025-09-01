@@ -372,7 +372,11 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
 
-        ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
 
         if (this.Config != null)
         {

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -22,7 +23,6 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
 {
-    private Task m_beginReconnectTask;
     private bool m_polling;
     private TimeSpan m_tick = TimeSpan.FromSeconds(1);
 
@@ -46,13 +46,15 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     }
 
     /// <summary>
-    /// 每个周期可执行的委托。用于检验客户端活性。返回<see langword="true"/>表示存活，返回
+    /// 每个周期可执行的委托。用于检验客户端活性。
+    /// <list type="bullet">
+    /// <item>返回<see langword="true"/>表示存活</item>
+    /// <item>返回<see langword="false"/>表示失活，需要马上重连</item>
+    /// <item>当返回<see langword="null"/>时，表示跳过此次检查</item>
+    /// </list>
     /// </summary>
     public abstract Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
-    /// <summary>
-    /// ActionForConnect
-    /// </summary>
     public Func<TClient, Task<bool>> ActionForConnect { get; set; }
 
     /// <summary>
@@ -63,7 +65,10 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
-        this.m_beginReconnectTask = EasyTask.Run(this.BeginReconnect, sender);
+        if (sender is TClient client && this.m_polling)
+        {
+            _ = EasyTask.SafeRun(this.BeginReconnect, client);
+        }
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -76,23 +81,6 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     public ReconnectionPlugin<TClient> SetActionForCheck(Func<TClient, int, Task<bool?>> actionForCheck)
     {
         this.ActionForCheck = actionForCheck;
-        return this;
-    }
-
-    /// <summary>
-    /// 设置每个周期执行的委托。用于判断客户端是否存活。如果返回True，表示客户端存活。返回False，表示客户端失活，需要立即重连。返回null，则表示跳过此次检查。
-    /// </summary>
-    /// <param name="actionForCheck">一个委托，接受一个客户端实例和一个整型参数，返回一个可空的布尔值。</param>
-    /// <returns>返回当前ReconnectionPlugin实例，支持链式调用。</returns>
-    public ReconnectionPlugin<TClient> SetActionForCheck(Func<TClient, int, bool?> actionForCheck)
-    {
-        // 将传入的委托包装成异步方法，以适应可能的异步检查逻辑。
-        this.ActionForCheck = async (c, i) =>
-        {
-            // 不等待任务完成，直接返回委托的执行结果。
-            await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return actionForCheck.Invoke(c, i);
-        };
         return this;
     }
 
@@ -197,20 +185,6 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     }
 
     /// <summary>
-    /// 设置连接动作
-    /// </summary>
-    /// <param name="tryConnect">一个函数，用于尝试连接操作 参数为客户端实例，返回布尔值表示连接是否成功</param>
-    /// <returns>返回当前实例，以便链式调用</returns>
-    public ReconnectionPlugin<TClient> SetConnectAction(Func<TClient, bool> tryConnect)
-    {
-        // 将传入的连接动作设置为内部使用的异步操作
-        // 这样做是为了统一连接动作的处理方式，便于后续的异步重连逻辑
-        this.ActionForConnect = (c) => Task.FromResult(tryConnect.Invoke(c));
-        // 返回当前实例，支持链式调用
-        return this;
-    }
-
-    /// <summary>
     /// 使用轮询保持活性。
     /// </summary>
     /// <param name="tick">轮询的时间间隔。</param>
@@ -225,25 +199,9 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         return this;
     }
 
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    private async Task BeginReconnect(TClient client)
     {
-        base.Dispose(disposing);
-    }
-
-    private async Task BeginReconnect(IConfigObject sender)
-    {
-        if (!this.m_polling)
-        {
-            return;
-        }
-
-        if (sender is not TClient client)
-        {
-            return;
-        }
-
-        client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingBegin.Format(this.Tick));
+        client.Logger?.Debug(this, TouchSocketResource.PollingBegin.Format(this.Tick));
 
         var failCount = 0;
 
@@ -253,7 +211,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
             {
                 if (this.DisposedValue)
                 {
-                    client.Logger?.Debug(this, TouchSocket.Resources.TouchSocketResource.PollingWillEnd);
+                    client.Logger?.Debug(this, TouchSocketResource.PollingWillEnd);
                     return;
                 }
                 await Task.Delay(this.Tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -290,6 +248,20 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
         {
             client.Logger?.Debug(this, TouchSocketResource.PollingEnd);
         }
+    }
 
+    protected async Task ExecuteConnectLoop(TClient client)
+    {
+        while (true)
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+            if (await this.ActionForConnect.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            {
+                return;
+            }
+        }
     }
 }

@@ -14,11 +14,35 @@ using System;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 表示字节块的接口，提供字节缓冲区的读写和管理功能。
+/// 继承自<see cref="IByteBlockReader"/>、<see cref="IByteBlockWriter"/>和<see cref="IDisposable"/>接口。
+/// </summary>
+/// <remarks>
+/// IByteBlock接口结合了字节读取、写入和资源管理的功能，是字节块操作的核心接口。
+/// 实现此接口的类型应该提供完整的字节缓冲区管理能力。
+/// </remarks>
 public interface IByteBlock : IByteBlockReader, IByteBlockWriter, IDisposable
 {
+    /// <summary>
+    /// 获取一个值，该值指示字节块当前是否正在使用中。
+    /// </summary>
+    /// <value>如果字节块正在使用中，则为 <see langword="true"/>；否则为 <see langword="false"/>。</value>
     bool Using { get; }
 
+    /// <summary>
+    /// 清除字节块中的所有数据，将所有字节设置为零。
+    /// </summary>
+    /// <remarks>
+    /// 此方法不会改变字节块的容量或位置，只是清零数据内容。
+    /// </remarks>
     void Clear();
 
+    /// <summary>
+    /// 重置字节块到初始状态，将位置和长度重置为零。
+    /// </summary>
+    /// <remarks>
+    /// 调用此方法后，字节块可以重新开始写入操作。
+    /// </remarks>
     void Reset();
 }
