@@ -26,7 +26,7 @@ const TOUCHSOCKET_PACKAGES = {
   },
   TouchSocketHttp: {
     namespace: ['TouchSocket.Http', 'TouchSocket.Http.WebSockets'],
-    assembly: ['TouchSocket.Http.dll', 'TouchSocket.Http.WebSockets.dll'],
+    assembly: ['TouchSocket.Http.dll'],
     packageName: 'TouchSocket.Http',
     nugetUrl: ['https://www.nuget.org/packages/TouchSocket.Http', 'https://www.nuget.org/packages/TouchSocket.Http']
   },
@@ -45,10 +45,10 @@ const TOUCHSOCKET_PACKAGES = {
   
   // RPC包
   TouchSocketRpc: {
-    namespace: ['TouchSocket.Rpc', 'TouchSocket.Rpc.JsonRpc'],
-    assembly: ['TouchSocket.Rpc.dll', 'TouchSocket.Rpc.JsonRpc.dll'],
+    namespace: ['TouchSocket.Rpc'],
+    assembly: ['TouchSocket.Rpc.dll'],
     packageName: 'TouchSocket.Rpc',
-    nugetUrl: ['https://www.nuget.org/packages/TouchSocket.Rpc', 'https://www.nuget.org/packages/TouchSocket.Rpc']
+    nugetUrl: ['https://www.nuget.org/packages/TouchSocket.Rpc']
   },
   TouchSocketJsonRpc: {
     namespace: 'TouchSocket.JsonRpc',
@@ -153,9 +153,9 @@ const TOUCHSOCKET_PACKAGES = {
     nugetUrl: 'https://www.nuget.org/packages/TouchSocketPro.Modbus'
   },
   TouchSocketProPlcBridges: {
-    namespace: ['TouchSocketPro.PlcBridges', 'TouchSocketPro.Modbus'],
-    assembly: ['TouchSocketPro.PlcBridges.dll', 'TouchSocketPro.Modbus.dll'],
-    packageName: ['TouchSocketPro.PlcBridges', 'TouchSocketPro.Modbus'],
+    namespace: ['TouchSocketPro.PlcBridges'],
+    assembly: ['TouchSocketPro.PlcBridges.dll'],
+    packageName: ['TouchSocketPro.PlcBridges'],
     nugetUrl: ['https://www.nuget.org/packages/TouchSocketPro.PlcBridges', 'https://www.nuget.org/packages/TouchSocketPro.Modbus']
   },
   

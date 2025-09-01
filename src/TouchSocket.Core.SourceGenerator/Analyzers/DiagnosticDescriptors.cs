@@ -88,6 +88,6 @@ internal static class DiagnosticDescriptors
 "CodeAnalysis0002",
 "判断DependencyProperty属性是否为静态只读字段或者静态只读属性",
 "依赖属性{0}应该使用静态只读字段（static readonly）或者静态只读属性（不包含set访问器）可能更加推荐。",
-"CodeAnalysis", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+"CodeAnalysis", DiagnosticSeverity.Error, isEnabledByDefault: true);
     #endregion
 }

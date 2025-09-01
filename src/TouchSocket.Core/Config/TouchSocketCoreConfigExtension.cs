@@ -64,12 +64,14 @@ public static class TouchSocketCoreConfigExtension
     /// <summary>
     /// 容器注册
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IRegistrator> RegistratorProperty =
         new("Registrator", default);
 
     /// <summary>
     /// 容器提供者
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IResolver> ResolverProperty =
         new("Resolver", null);
 
@@ -97,32 +99,5 @@ public static class TouchSocketCoreConfigExtension
         // 返回配置对象，以支持链式调用
         return config;
     }
-
-    /// <summary>
-    /// 设置<see cref="IResolver"/>
-    /// </summary>
-    /// <param name="config">待设置的配置对象</param>
-    /// <param name="value">要设置的解析器实例</param>
-    /// <returns>返回配置对象</returns>
-    public static TouchSocketConfig SetResolver(this TouchSocketConfig config, IResolver value)
-    {
-        config.SetValue(ResolverProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置<see cref="IRegistrator"/>
-    /// </summary>
-    /// <param name="config">当前的<see cref="TouchSocketConfig"/>配置对象</param>
-    /// <param name="value">要设置的<see cref="IRegistrator"/>实例</param>
-    /// <returns>返回配置对象自身，以便进行链式调用</returns>
-    public static TouchSocketConfig SetRegistrator(this TouchSocketConfig config, IRegistrator value)
-    {
-        // 使用扩展方法的特性，通过调用config的SetValue方法来为RegistratorProperty属性设置值
-        config.SetValue(RegistratorProperty, value);
-        // 返回配置对象自身，以支持链式调用
-        return config;
-    }
-
     #endregion 容器
 }

@@ -9,9 +9,18 @@
 		<Authors>若汝棋茗;Diego</Authors>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'!='net481'">
+	<!-- .NET Standard 需要 System.IO.Ports 包，使用兼容版本 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.IO.Ports" Version="6.0.0" />
+	</ItemGroup>
+	
+	<!-- .NET 6+ 使用最新版本的 System.IO.Ports 包 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'">
 		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
 	</ItemGroup>
+
+	<!-- .NET Framework 4.6.2 不需要额外的包引用，SerialPort 类已内置 -->
+
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\BaseTransport.cs" Link="Transports\BaseTransport.cs" />

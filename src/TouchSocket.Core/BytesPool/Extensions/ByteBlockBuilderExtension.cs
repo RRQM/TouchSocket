@@ -25,7 +25,7 @@ public static class ByteBlockBuilderExtension
     //    where T : IBytesReader
     //{
 
-    //    public int Available { get => 1; set => value = 10; }
+    //    public int Available { get => 1; init => value = 10; }
     //}
     //extension(TouchSocketConfig config)
     //{

@@ -17,36 +17,103 @@ using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 提供快速二进制序列化和反序列化功能的静态工具类。
+/// </summary>
+/// <remarks>
+/// FastBinaryFormatter使用高性能的二进制序列化算法，支持基本数据类型、集合、数组、字典和自定义对象的序列化。
+/// 内置魔数校验机制，支持自定义转换器，适用于高频序列化场景。
+/// 所有序列化数据都包含协议头，用于反序列化时的快速校验。
+/// </remarks>
 public static class FastBinaryFormatter
 {
+    /// <summary>
+    /// 动态访问成员类型的常量，指定序列化时需要访问的成员类型。
+    /// </summary>
+    /// <value>包含公共构造函数、方法、字段和属性的<see cref="DynamicallyAccessedMemberTypes"/>组合。</value>
     public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties;
     private static readonly DefaultFastSerializerContext s_defaultFastSerializerContext = new DefaultFastSerializerContext();
+    
+    /// <summary>
+    /// 获取默认的快速序列化上下文。
+    /// </summary>
+    /// <value>全局共享的<see cref="FastSerializerContext"/>实例。</value>
+    /// <remarks>
+    /// 此上下文包含了所有注册的转换器和序列化对象缓存，在整个应用程序生命周期内重复使用。
+    /// </remarks>
     public static FastSerializerContext DefaultFastSerializerContext => s_defaultFastSerializerContext;
 
     #region Converter Register
+
+    /// <summary>
+    /// 为指定类型添加快速二进制转换器。
+    /// </summary>
+    /// <typeparam name="TType">要序列化的类型。</typeparam>
+    /// <typeparam name="TConverter">实现<see cref="IFastBinaryConverter"/>接口的转换器类型。</typeparam>
+    /// <remarks>
+    /// 转换器必须有公共无参构造函数。注册后，该类型的所有实例都将使用指定的转换器进行序列化。
+    /// </remarks>
     public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType, [DynamicallyAccessedMembers(DynamicallyAccessed)] TConverter>() where TConverter : IFastBinaryConverter, new()
     {
         AddFastBinaryConverter(typeof(TType), (IFastBinaryConverter)Activator.CreateInstance(typeof(TConverter)));
     }
 
+    /// <summary>
+    /// 为指定类型添加快速二进制转换器实例。
+    /// </summary>
+    /// <typeparam name="TType">要序列化的类型。</typeparam>
+    /// <param name="converter">转换器实例。</param>
+    /// <remarks>
+    /// 注册后，该类型的所有实例都将使用指定的转换器进行序列化。
+    /// </remarks>
     public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType>(IFastBinaryConverter converter)
     {
         AddFastBinaryConverter(typeof(TType), converter);
     }
 
+    /// <summary>
+    /// 为指定类型添加快速二进制转换器实例。
+    /// </summary>
+    /// <param name="type">要序列化的<see cref="Type"/>。</param>
+    /// <param name="converter">转换器实例。</param>
+    /// <remarks>
+    /// 注册后，该类型的所有实例都将使用指定的转换器进行序列化。
+    /// </remarks>
     public static void AddFastBinaryConverter([DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
     {
         s_defaultFastSerializerContext.AddFastBinaryConverter(type, converter);
     }
-    #endregion
+
+    #endregion Converter Register
 
     #region Serialize
 
+    /// <summary>
+    /// 将对象序列化到字节块中。
+    /// </summary>
+    /// <typeparam name="T">要序列化的对象类型。</typeparam>
+    /// <param name="byteBlock">目标<see cref="ByteBlock"/>。</param>
+    /// <param name="graph">要序列化的对象实例。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <remarks>
+    /// 此方法会在序列化数据前写入魔数（协议头），用于反序列化时的校验。
+    /// </remarks>
     public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, in T graph, FastSerializerContext serializerContext = null)
     {
         Serialize(ref byteBlock, graph, serializerContext);
     }
 
+    /// <summary>
+    /// 将对象序列化到字节写入器中。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <typeparam name="T">要序列化的对象类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="graph">要序列化的对象实例。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <remarks>
+    /// 此方法会在序列化数据前写入魔数（值为1的字节），用于反序列化时的快速校验。
+    /// </remarks>
     public static void Serialize<TWriter, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TWriter writer, in T graph, FastSerializerContext serializerContext = null)
         where TWriter : IBytesWriter
     {
@@ -57,6 +124,16 @@ public static class FastBinaryFormatter
         SerializeObject(ref writer, graph, serializerContext);
     }
 
+    /// <summary>
+    /// 将对象序列化为字节数组。
+    /// </summary>
+    /// <typeparam name="T">要序列化的对象类型。</typeparam>
+    /// <param name="graph">要序列化的对象实例。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>包含序列化数据的字节数组。</returns>
+    /// <remarks>
+    /// 此方法内部使用64KB的<see cref="ValueByteBlock"/>进行序列化，完成后返回数据副本。
+    /// </remarks>
     public static byte[] SerializeToBytes<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(in T graph, FastSerializerContext serializerContext = null)
     {
         var byteBlock = new ValueByteBlock(1024 * 64);
@@ -100,35 +177,6 @@ public static class FastBinaryFormatter
     }
 
     /// <summary>
-    /// 写入基础(可直接写)类型。返回 true 表示已完成写入，外层不再处理。
-    /// </summary>
-    private static bool TryWriteBasic<TWriter, T>(ref TWriter writer, T graph) where TWriter : IBytesWriter
-    {
-        if (graph is null)
-        {
-            WriterExtension.WriteNull(ref writer);
-            return true;
-        }
-
-        WriterExtension.WriteNotNull(ref writer);
-
-        // 原生/基础类型
-        if (FastBinaryPrimitiveHelper.TryWritePrimitive(ref writer, graph))
-        {
-            return true;
-        }
-
-        // 枚举
-        if (graph is Enum enumValue)
-        {
-            WriterExtension.WriteEnum(ref writer, enumValue);
-            return true;
-        }
-
-        return false; // 不是基础类型，后续继续序列化复杂结构
-    }
-
-    /// <summary>
     /// 序列化对象（包含复杂类型递归）
     /// </summary>
     private static void SerializeObject<TWriter, T>(ref TWriter writer, T graph, FastSerializerContext serializerContext)
@@ -156,6 +204,7 @@ public static class FastBinaryFormatter
                 case InstanceType.List:
                     SerializeIListOrArray(ref writer, (IEnumerable)graph, serializerContext);
                     break;
+
                 case InstanceType.Array:
                     {
                         var array = Unsafe.As<T, Array>(ref graph);
@@ -209,32 +258,118 @@ public static class FastBinaryFormatter
         startPositionSpan.WriteValue<int>(length - 4);
     }
 
+    /// <summary>
+    /// 写入基础(可直接写)类型。返回 true 表示已完成写入，外层不再处理。
+    /// </summary>
+    private static bool TryWriteBasic<TWriter, T>(ref TWriter writer, T graph) where TWriter : IBytesWriter
+    {
+        if (graph is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+            return true;
+        }
+
+        WriterExtension.WriteNotNull(ref writer);
+
+        // 原生/基础类型
+        if (FastBinaryPrimitiveHelper.TryWritePrimitive(ref writer, graph))
+        {
+            return true;
+        }
+
+        // 枚举
+        if (graph is Enum enumValue)
+        {
+            WriterExtension.WriteEnum(ref writer, enumValue);
+            return true;
+        }
+
+        return false; // 不是基础类型，后续继续序列化复杂结构
+    }
+
     #endregion Serialize
 
     #region Deserialize
 
+    /// <summary>
+    /// 从字节块中反序列化对象。
+    /// </summary>
+    /// <typeparam name="T">要反序列化的对象类型。</typeparam>
+    /// <param name="byteBlock">包含序列化数据的<see cref="ByteBlock"/>。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>反序列化的对象实例。</returns>
+    /// <exception cref="Exception">当数据流解析错误时抛出。</exception>
+    /// <remarks>
+    /// 此方法会先校验魔数（协议头），确保数据格式正确。
+    /// </remarks>
     public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, FastSerializerContext serializerContext = null)
     {
         return Deserialize<ByteBlock, T>(ref byteBlock, serializerContext);
     }
 
+    /// <summary>
+    /// 从值类型字节块中反序列化对象。
+    /// </summary>
+    /// <typeparam name="T">要反序列化的对象类型。</typeparam>
+    /// <param name="byteBlock">包含序列化数据的<see cref="ValueByteBlock"/>。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>反序列化的对象实例。</returns>
+    /// <exception cref="Exception">当数据流解析错误时抛出。</exception>
+    /// <remarks>
+    /// 此方法会先校验魔数（协议头），确保数据格式正确。
+    /// </remarks>
     public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref ValueByteBlock byteBlock, FastSerializerContext serializerContext = null)
     {
         return Deserialize<ValueByteBlock, T>(ref byteBlock, serializerContext);
     }
 
+    /// <summary>
+    /// 从字节数组中反序列化对象。
+    /// </summary>
+    /// <typeparam name="T">要反序列化的对象类型。</typeparam>
+    /// <param name="bytes">包含序列化数据的字节数组。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>反序列化的对象实例。</returns>
+    /// <exception cref="Exception">当数据流解析错误时抛出。</exception>
+    /// <remarks>
+    /// 此方法内部创建<see cref="ValueByteBlock"/>包装字节数组，然后进行反序列化。
+    /// </remarks>
     public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(byte[] bytes, FastSerializerContext serializerContext = null)
     {
         var byteBlock = new ValueByteBlock(bytes);
         return Deserialize<ValueByteBlock, T>(ref byteBlock, serializerContext);
     }
 
+    /// <summary>
+    /// 从字节读取器中反序列化指定类型的对象。
+    /// </summary>
+    /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>
+    /// <typeparam name="T">要反序列化的对象类型。</typeparam>
+    /// <param name="reader">字节读取器实例。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>反序列化的对象实例。</returns>
+    /// <exception cref="Exception">当数据流解析错误时抛出。</exception>
+    /// <remarks>
+    /// 此方法会先校验魔数（协议头），确保数据格式正确。
+    /// </remarks>
     public static T Deserialize<TReader, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TReader reader, FastSerializerContext serializerContext = null)
         where TReader : IBytesReader
     {
         return (T)Deserialize(ref reader, typeof(T), serializerContext);
     }
 
+    /// <summary>
+    /// 从字节读取器中反序列化指定类型的对象。
+    /// </summary>
+    /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>
+    /// <param name="reader">字节读取器实例。</param>
+    /// <param name="type">要反序列化的对象<see cref="Type"/>。</param>
+    /// <param name="serializerContext">序列化上下文，为 <see langword="null"/> 时使用默认上下文。</param>
+    /// <returns>反序列化的对象实例。</returns>
+    /// <exception cref="Exception">当数据流解析错误时抛出。</exception>
+    /// <remarks>
+    /// 此方法会先校验魔数（协议头），确保数据格式正确。魔数必须为1，否则抛出异常。
+    /// </remarks>
     public static object Deserialize<TReader>(ref TReader reader, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, FastSerializerContext serializerContext = null)
         where TReader : IBytesReader
     {
@@ -247,38 +382,8 @@ public static class FastBinaryFormatter
         return Deserialize(type, ref reader, serializerContext);
     }
 
-    /// <summary>
-    /// 读取基础类型（含 null、枚举、原生数值等）。返回 true 表示已完成，外层无需再处理。
-    /// </summary>
-    private static bool TryReadBasic<TReader>(Type type, bool nullable, ref TReader reader, out object value) where TReader : IBytesReader
-    {
-        // Null 标记
-        if (ReaderExtension.ReadIsNull(ref reader))
-        {
-            value = nullable ? null : type.GetDefault();
-            return true;
-        }
-
-        // 枚举
-        if (type.IsEnum)
-        {
-            value = ReaderExtension.ReadEnum<TReader>(ref reader, type);
-            return true;
-        }
-
-        // 原生/基础
-        if (FastBinaryPrimitiveHelper.TryReadPrimitive(ref reader, type, out var primitiveObj))
-        {
-            value = primitiveObj;
-            return true;
-        }
-
-        value = null;
-        return false;
-    }
-
     private static object Deserialize<TReader>(Type type, ref TReader reader, FastSerializerContext serializerContext)
-        where TReader : IBytesReader
+            where TReader : IBytesReader
     {
         var nullable = type.IsNullableType();
         if (nullable)
@@ -303,7 +408,7 @@ public static class FastBinaryFormatter
     }
 
     private static object DeserializeClass<TReader>(Type type, SerializObject serializeObject, ref TReader reader, int length, FastSerializerContext serializerContext)
-        where TReader : IBytesReader
+            where TReader : IBytesReader
     {
         object instance;
         switch (serializeObject.InstanceType)
@@ -435,7 +540,7 @@ public static class FastBinaryFormatter
     }
 
     private static void FillArrayRecursive<TReader>(SerializObject serializObject, ref TReader reader, FastSerializerContext serializerContext, Array array, int[] rankArray, int[] indices, int dimension)
-        where TReader : IBytesReader
+            where TReader : IBytesReader
     {
         if (dimension == rankArray.Length)
         {
@@ -451,7 +556,7 @@ public static class FastBinaryFormatter
     }
 
     private static void IgnoreLength<TReader>(ref TReader reader, Type type)
-        where TReader : IBytesReader
+            where TReader : IBytesReader
     {
         switch (Type.GetTypeCode(type))
         {
@@ -475,6 +580,36 @@ public static class FastBinaryFormatter
                 reader.Advance(len);
                 break;
         }
+    }
+
+    /// <summary>
+    /// 读取基础类型（含 null、枚举、原生数值等）。返回 true 表示已完成，外层无需再处理。
+    /// </summary>
+    private static bool TryReadBasic<TReader>(Type type, bool nullable, ref TReader reader, out object value) where TReader : IBytesReader
+    {
+        // Null 标记
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            value = nullable ? null : type.GetDefault();
+            return true;
+        }
+
+        // 枚举
+        if (type.IsEnum)
+        {
+            value = ReaderExtension.ReadEnum<TReader>(ref reader, type);
+            return true;
+        }
+
+        // 原生/基础
+        if (FastBinaryPrimitiveHelper.TryReadPrimitive(ref reader, type, out var primitiveObj))
+        {
+            value = primitiveObj;
+            return true;
+        }
+
+        value = null;
+        return false;
     }
 
     #endregion Deserialize

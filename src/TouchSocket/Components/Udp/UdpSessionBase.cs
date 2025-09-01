@@ -272,8 +272,13 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
-        // 如果适配器参数为空，则抛出ArgumentNullException异常
-        ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
+
+       
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
 
         // 如果当前实例的配置信息不为空，则将配置信息应用到适配器上
         if (this.Config != null)
@@ -286,7 +291,6 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
         // 设置适配器发送数据时的异步回调方法
         adapter.SendCallBackAsync = this.ProtectedDefaultSendAsync;
-        // 将提供的适配器设置为当前实例的数据处理适配器
         this.m_dataHandlingAdapter = adapter;
     }
 

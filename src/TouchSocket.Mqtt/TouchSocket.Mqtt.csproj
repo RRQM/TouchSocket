@@ -22,17 +22,11 @@
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
-		<PackageReference Include="System.Threading.Channels" Version="6.0.0" />
-	</ItemGroup>
-
+	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="System.Threading.Channels" Version="6.0.0" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-		<PackageReference Include="System.Threading.Channels" Version="6.0.0" />
-	</ItemGroup>
-
+	
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.Threading.Channels" Version="6.0.0" />
 	</ItemGroup>

@@ -15,4 +15,4 @@
 | Plugin0004			       | Plugin			       | Error    | Plugin0004_AnalyzerName        |
 | FastSerialize0001		 | FastSerialize		 | Error    | FastSerialize0001_AnalyzerName |
 | CodeAnalysis0001		 | CodeAnalysis		 | Warning    | CodeAnalysis0001_AnalyzerName |
-| CodeAnalysis0002		 | CodeAnalysis		 | Warning    | CodeAnalysis0002_AnalyzerName |
+| CodeAnalysis0002		 | CodeAnalysis		 | Error    | CodeAnalysis0002_AnalyzerName |

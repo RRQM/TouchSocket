@@ -24,8 +24,8 @@ public class TransportOption
     /// </summary>
     public TransportOption()
     {
-        this.ReceivePipeOptions = this.GetDefaultReceive();
-        this.SendPipeOptions = this.GetDefaultSend();
+        this.ReceivePipeOptions = GetDefaultReceive();
+        this.SendPipeOptions = GetDefaultSend();
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public class TransportOption
     /// </summary>
     public PipeOptions SendPipeOptions { get; set; }
 
-    private PipeOptions GetDefaultReceive()
+    private static PipeOptions GetDefaultReceive()
     {
         return new PipeOptions(
                 pool: null,
@@ -60,7 +60,7 @@ public class TransportOption
                 useSynchronizationContext: true);
     }
 
-    private PipeOptions GetDefaultSend()
+    private static PipeOptions GetDefaultSend()
     {
         return new PipeOptions(
                 pool: null,

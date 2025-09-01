@@ -310,6 +310,13 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
     /// <param name="adapter">要设置的适配器实例</param>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
+        this.ThrowIfDisposed();
+
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
 
         // 检查当前实例是否已有配置
         if (this.Config != null)
@@ -318,11 +325,9 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
             adapter.Config(this.Config);
         }
 
-
         adapter.OnLoaded(this);
 
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-
         this.m_dataHandlingAdapter = adapter;
     }
 

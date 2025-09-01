@@ -79,7 +79,7 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
         foreach (var variable in field.Declaration.Variables)
         {
             var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
-            if (!this.IsDependencyProperty(fieldSymbol?.Type))
+            if (!Utils.IsDependencyProperty(fieldSymbol?.Type))
             {
                 return;
             }
@@ -90,14 +90,14 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            this.ReportDiagnostic(field.Declaration.Type.GetLocation(), fieldSymbol.Name, context);
+            this.ReportDiagnostic_CodeAnalysis0002(field.Declaration.Type.GetLocation(), fieldSymbol.Name, context);
         }
     }
 
     private void AnalyzeProperty(PropertyDeclarationSyntax property, SyntaxNodeAnalysisContext context)
     {
         var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
-        if (!this.IsDependencyProperty(propertySymbol?.Type))
+        if (!Utils.IsDependencyProperty(propertySymbol?.Type))
         {
             return;
         }
@@ -107,15 +107,10 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
         {
             return;
         }
-        this.ReportDiagnostic(property.Type.GetLocation(), propertySymbol.Name, context);
+        this.ReportDiagnostic_CodeAnalysis0002(property.Type.GetLocation(), propertySymbol.Name, context);
     }
 
-    private bool IsDependencyProperty(ITypeSymbol typeSymbol)
-    {
-        return typeSymbol.IsInheritFrom(Utils.DependencyPropertyBase);
-    }
-
-    private void ReportDiagnostic(Location location, string memberName, SyntaxNodeAnalysisContext context)
+    private void ReportDiagnostic_CodeAnalysis0002(Location location, string memberName, SyntaxNodeAnalysisContext context)
     {
         var diagnostic = Diagnostic.Create(
             DiagnosticDescriptors.m_rule_CodeAnalysis0002,

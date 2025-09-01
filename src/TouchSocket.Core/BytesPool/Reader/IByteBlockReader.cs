@@ -12,7 +12,22 @@
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 表示字节块读取器接口，提供字节块的读取功能。
+/// 继承自<see cref="IBytesReader"/>和<see cref="IByteBlockCore"/>接口。
+/// </summary>
+/// <remarks>
+/// IByteBlockReader接口结合了通用字节读取和字节块核心功能，
+/// 为字节块的读取操作提供了专门的接口定义。
+/// </remarks>
 public interface IByteBlockReader : IBytesReader, IByteBlockCore
 {
+    /// <summary>
+    /// 获取当前可读取的字节长度。
+    /// </summary>
+    /// <value>表示从当前位置到数据末尾还可以读取的字节数。</value>
+    /// <remarks>
+    /// 此值等于<see cref="IByteBlockCore.Length"/>与<see cref="IByteBlockCore.Position"/>的差值。
+    /// </remarks>
     int CanReadLength { get; }
 }

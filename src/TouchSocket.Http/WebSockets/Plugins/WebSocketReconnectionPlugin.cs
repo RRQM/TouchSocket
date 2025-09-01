@@ -17,7 +17,8 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
 
-internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IWebSocketClosedPlugin where TClient : IWebSocketClient
+internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IWebSocketClosedPlugin 
+    where TClient : IWebSocketClient
 {
     public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -42,20 +43,6 @@ internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<
         {
             return;
         }
-
-        _ = EasyTask.SafeRun(async () =>
-        {
-            while (true)
-            {
-                if (this.DisposedValue)
-                {
-                    return;
-                }
-                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    return;
-                }
-            }
-        });
+        _=base.ExecuteConnectLoop(tClient);
     }
 }

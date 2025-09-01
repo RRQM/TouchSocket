@@ -503,10 +503,12 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     /// <exception cref="ArgumentNullException">如果提供的适配器为<see langword="null"/>，则抛出此异常。</exception>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
-        // 检查适配器是否为<see langword="null"/>，如果是则抛出异常
+        this.ThrowIfDisposed();
+
         if (adapter is null)
         {
-            throw new ArgumentNullException(nameof(adapter));
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
         }
 
         // 如果当前实例的配置不为空，则将配置应用到适配器
@@ -519,9 +521,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
         // 将接收到数据时的异步回调和发送数据时的异步回调设置到适配器中
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-
-        // 将当前的数据处理适配器设置为传入的适配器实例
-        this.m_dataHandlingAdapter = adapter;
+        this.m_dataHandlingAdapter=adapter;
     }
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)

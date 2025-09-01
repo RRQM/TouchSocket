@@ -15,6 +15,14 @@ using System.Buffers;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 表示一个分段字节写入器，提供高效的多段缓冲区写入功能。
+/// 继承自<see cref="SafetyDisposableObject"/>并实现<see cref="IBytesWriter"/>接口。
+/// </summary>
+/// <remarks>
+/// SegmentedBytesWriter使用链表结构的缓冲段来管理内存，当单个段不足时会自动创建新段。
+/// 每个段的最小大小为1024字节，支持动态扩展。所有缓冲区都使用<see cref="ArrayPool{T}.Shared"/>进行内存池管理。
+/// </remarks>
 public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
 {
     private const int MinBufferSize = 1024;
@@ -22,17 +30,38 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
     private BufferSegment m_firstSegment;
     private long m_totalBytesWritten;
 
+    /// <summary>
+    /// 使用指定的初始容量初始化<see cref="SegmentedBytesWriter"/>的新实例。
+    /// </summary>
+    /// <param name="initialCapacity">初始容量，最小为1024字节。</param>
+    /// <remarks>
+    /// 初始容量如果小于1024字节，将自动调整为1024字节。
+    /// </remarks>
     public SegmentedBytesWriter(int initialCapacity)
     {
         this.m_firstSegment = new BufferSegment(Math.Max(initialCapacity, MinBufferSize));
         this.m_currentSegment = this.m_firstSegment;
     }
 
+    /// <summary>
+    /// 获取当前写入器的字节序列。
+    /// </summary>
+    /// <value>表示所有已写入数据的<see cref="ReadOnlySequence{T}"/>。</value>
+    /// <remarks>
+    /// 返回的序列包含所有段中的有效数据，如果没有写入任何数据则返回空序列。
+    /// </remarks>
     public ReadOnlySequence<byte> Sequence => this.GetSequence();
+    
+    /// <inheritdoc/>
     public bool SupportsRewind => false;
+    
+    /// <inheritdoc/>
     public short Version => 0;
+    
+    /// <inheritdoc/>
     public long WrittenCount => this.m_totalBytesWritten;
 
+    /// <inheritdoc/>
     public void Advance(int count)
     {
         if (count < 0)
@@ -49,6 +78,12 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
         this.m_totalBytesWritten += count;
     }
 
+    /// <summary>
+    /// 清空所有段的数据，重置写入器到初始状态。
+    /// </summary>
+    /// <remarks>
+    /// 此方法不会释放已分配的内存段，只是将其重置为可重复使用状态。
+    /// </remarks>
     public void Clear()
     {
         var current = this.m_firstSegment;
@@ -61,6 +96,7 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
         this.m_totalBytesWritten = 0;
     }
 
+    /// <inheritdoc/>
     public Memory<byte> GetMemory(int sizeHint = 0)
     {
         sizeHint = Math.Max(sizeHint, 16);
@@ -68,16 +104,25 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
         return this.m_currentSegment.GetMemory();
     }
 
+    /// <summary>
+    /// 获取一个字节读取器，用于读取已写入的数据。
+    /// </summary>
+    /// <returns>基于当前序列的<see cref="BytesReader"/>实例。</returns>
+    /// <remarks>
+    /// 返回的读取器可以用于读取写入器中的所有数据，读取器的生命周期与写入器无关。
+    /// </remarks>
     public BytesReader GetReader()
     {
         return new BytesReader(this.Sequence);
     }
 
+    /// <inheritdoc/>
     public Span<byte> GetSpan(int sizeHint = 0)
     {
         return this.GetMemory(sizeHint).Span;
     }
 
+    /// <inheritdoc/>
     public void Write(scoped ReadOnlySpan<byte> span)
     {
         var length = span.Length;
@@ -90,6 +135,7 @@ public sealed class SegmentedBytesWriter : SafetyDisposableObject, IBytesWriter
         this.Advance(length);
     }
 
+    /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
         if (disposing)

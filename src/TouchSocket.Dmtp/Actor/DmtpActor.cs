@@ -60,16 +60,17 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public Func<DmtpActor, IdChangedEventArgs, Task> IdChanged { get; set; }
 
     /// <summary>
-    /// 当需要路由的时候
-    /// </summary>
-    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; set; }
-
-    /// <summary>
     /// 异步发送数据接口
     /// </summary>
     public Func<DmtpActor, ReadOnlyMemory<byte>, CancellationToken, Task> OutputSendAsync { get; set; }
 
-    //public ITransport Transport { get; set; }
+    /// <summary>
+    /// 当需要路由的时候
+    /// </summary>
+    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; set; }
+
+    public ITransport Transport { get; set; }
+
     #endregion 委托
 
     #region 属性
@@ -81,10 +82,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public IDmtpActorObject Client { get; set; }
 
     /// <inheritdoc/>
-    public string Id { get; set; }
+    public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
 
     /// <inheritdoc/>
-    public virtual bool Online => this.m_online;
+    public string Id { get; set; }
 
     /// <inheritdoc/>
     public bool IsReliable { get; }
@@ -96,21 +97,23 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public ILog Logger { get; set; }
 
     /// <inheritdoc/>
-    public WaitHandlePool<IWaitResult> WaitHandlePool { get; }
+    public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
-    public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
+    public WaitHandlePool<IWaitResult> WaitHandlePool { get; }
 
     #endregion 属性
 
     #region 字段
-    private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
+
+    private readonly Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
     private readonly AsyncManualResetEvent m_handshakeFinished = new(false);
+    private readonly Lock m_syncRoot = new Lock();
+    private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
     private CancellationTokenSource m_cancellationTokenSource;
     private bool m_online;
-    private readonly Lock m_syncRoot = new Lock();
-    private readonly Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
-    #endregion
+
+    #endregion 字段
 
     /// <summary>
     /// 创建一个Dmtp协议的最基础功能件
@@ -132,7 +135,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public DmtpActor(bool allowRoute) : this(allowRoute, true)
     {
     }
-
 
     /// <summary>
     /// 建立对点
@@ -232,15 +234,15 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <summary>
-    /// 正在握手连接
+    /// 当完成创建通道时
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    protected virtual Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual Task OnCreatedChannel(CreateChannelEventArgs e)
     {
-        if (this.Handshaking != null)
+        if (this.CreatedChannel != null)
         {
-            return this.Handshaking.Invoke(this, e);
+            return this.CreatedChannel.Invoke(this, e);
         }
         return EasyTask.CompletedTask;
     }
@@ -260,6 +262,20 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <summary>
+    /// 正在握手连接
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    protected virtual Task OnHandshaking(DmtpVerifyEventArgs e)
+    {
+        if (this.Handshaking != null)
+        {
+            return this.Handshaking.Invoke(this, e);
+        }
+        return EasyTask.CompletedTask;
+    }
+
+    /// <summary>
     /// 当Id修改时
     /// </summary>
     /// <param name="e"></param>
@@ -273,25 +289,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
-    /// <summary>
-    /// 当完成创建通道时
-    /// </summary>
-    /// <param name="e"></param>
-    /// <returns></returns>
-    protected virtual Task OnCreatedChannel(CreateChannelEventArgs e)
-    {
-        if (this.CreatedChannel != null)
-        {
-            return this.CreatedChannel.Invoke(this, e);
-        }
-        return EasyTask.CompletedTask;
-    }
-
-    private async Task PrivateOnHandshaked(DmtpVerifyEventArgs e)
-    {
-        await this.OnHandshaked(e);
-    }
-
     private async Task PrivateOnCreatedChannel(object obj)
     {
         try
@@ -301,6 +298,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         catch
         {
         }
+    }
+
+    private async Task PrivateOnHandshaked(DmtpVerifyEventArgs e)
+    {
+        await this.OnHandshaked(e);
     }
 
     #endregion 委托触发
@@ -737,18 +739,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private Task SendJsonObjectAsync<T>(ushort protocol, in T obj, CancellationToken token = default)
-    {
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
-        return this.SendAsync(protocol, bytes, token);
-    }
-
-    private static T ResolveJsonObject<T>(string json)
-    {
-        return (T)System.Text.Json.JsonSerializer.Deserialize(json, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
-    }
-
-
     /// <inheritdoc/>
     public virtual async Task<DmtpActor> TryFindDmtpActor(string targetId)
     {
@@ -785,6 +775,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
+    private static T ResolveJsonObject<T>(string json)
+    {
+        return (T)System.Text.Json.JsonSerializer.Deserialize(json, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
+    }
+
     private async Task<Result> PrivatePingAsync(string targetId, CancellationToken token = default)
     {
         if (!this.Online)
@@ -818,8 +813,31 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             }
         }
     }
-
     #region Actor
+
+    /// <inheritdoc/>
+    public void AddActor<TActor>(TActor actor) where TActor : class, IActor
+    {
+        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
+        var type = typeof(TActor);
+
+        lock (this.m_syncRoot)
+        {
+            this.m_actors.AddOrUpdate(type, actor);
+        }
+    }
+
+    /// <inheritdoc/>
+    public TActor GetActor<TActor>() where TActor : class, IActor
+    {
+        var type = typeof(TActor);
+        if (this.m_actors.TryGetValue(type, out var actor))
+        {
+            return (TActor)actor;
+        }
+        return default;
+    }
+
     /// <inheritdoc/>
     public bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor
     {
@@ -835,72 +853,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             this.m_actors.Add(type, actor);
             return true;
         }
-
     }
 
-    /// <inheritdoc/>
-    public void AddActor<TActor>(TActor actor) where TActor : class, IActor
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
-        var type = typeof(TActor);
-
-        lock (this.m_syncRoot)
-        {
-            this.m_actors.AddOrUpdate(type, actor);
-        }
-
-    }
-
-    /// <inheritdoc/>
-    public TActor GetActor<TActor>() where TActor : class, IActor
-    {
-        var type = typeof(TActor);
-        if (this.m_actors.TryGetValue(type, out var actor))
-        {
-            return (TActor)actor;
-        }
-        return default;
-    }
-
-    #endregion
+    #endregion Actor
 
     #region 断开
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            lock (this.m_syncRoot)
-            {
-                if (!this.m_online)
-                {
-                    return;
-                }
-                this.m_online = false;
-
-                this.Closing = null;
-                this.Routing = null;
-                this.FindDmtpActor = null;
-                this.Handshaked = null;
-                this.Handshaking = null;
-                this.IdChanged = null;
-                //this.OutputSend = null;
-
-                foreach (var item in this.m_actors)
-                {
-                    item.Value.SafeDispose();
-                }
-
-                this.m_handshakeFinished.Set();
-
-                this.m_actors.Clear();
-                this.WaitHandlePool.CancelAll();
-            }
-        }
-
-        base.Dispose(disposing);
-    }
 
     /// <inheritdoc/>
     public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
@@ -939,9 +896,52 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            lock (this.m_syncRoot)
+            {
+                if (!this.m_online)
+                {
+                    return;
+                }
+                this.m_online = false;
+
+                this.Closing = null;
+                this.Routing = null;
+                this.FindDmtpActor = null;
+                this.Handshaked = null;
+                this.Handshaking = null;
+                this.IdChanged = null;
+                //this.OutputSend = null;
+
+                foreach (var item in this.m_actors)
+                {
+                    item.Value.SafeDispose();
+                }
+
+                this.m_handshakeFinished.Set();
+
+                this.m_actors.Clear();
+                this.WaitHandlePool.CancelAll();
+            }
+        }
+
+        base.Dispose(disposing);
+    }
+
     #endregion 断开
 
     #region 协议异步发送
+
+    private Task SendJsonObjectAsync<T>(ushort protocol, in T obj, CancellationToken token = default)
+    {
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
+        return this.SendAsync(protocol, bytes, token);
+    }
+
 
     ///// <inheritdoc/>
     //public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
@@ -1007,6 +1007,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //    }
     //}
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <inheritdoc/>
     public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
     {
@@ -1030,7 +1032,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             this.m_semaphoreSlim.Release();
         }
     }
-    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken token = default)
         where TPackage : IPackage
     {
@@ -1060,17 +1062,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             byteBlock.Dispose();
         }
     }
+
     #endregion 协议异步发送
 
     #region IDmtpChannel
-
-    private void CheckChannelShouldBeReliable()
-    {
-        if (!this.IsReliable)
-        {
-            throw new NotSupportedException("Channel不支持在不可靠协议使用。");
-        }
-    }
 
     /// <inheritdoc/>
     public virtual bool ChannelExisted(int id)
@@ -1156,6 +1151,14 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             var block = byteBlock;
             channelPackage.Package(ref block);
             await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+    }
+
+    private void CheckChannelShouldBeReliable()
+    {
+        if (!this.IsReliable)
+        {
+            throw new NotSupportedException("Channel不支持在不可靠协议使用。");
         }
     }
 

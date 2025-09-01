@@ -16,6 +16,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
+[PluginOption(Singleton = true)]
 internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : ITcpClient
 {
     public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
@@ -28,30 +29,17 @@ internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClien
     public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
     {
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (e.Manual)
+        {
+            return;
+        }
+
 
         if (client is not TClient tClient)
         {
             return;
         }
 
-        if (e.Manual)
-        {
-            return;
-        }
-
-        _ = EasyTask.SafeRun(async () =>
-        {
-            while (true)
-            {
-                if (this.DisposedValue)
-                {
-                    return;
-                }
-                if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    return;
-                }
-            }
-        });
+        _ = this.ExecuteConnectLoop(tClient);
     }
 }
