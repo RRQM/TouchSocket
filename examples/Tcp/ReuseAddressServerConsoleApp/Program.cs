@@ -21,7 +21,7 @@ internal class Program
     {
         var service = new TcpService();
         service.SetupAsync(new TouchSocketConfig()//载入配置
-            .UseReuseAddress()
+            .SetReuseAddress(true)
             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
             .ConfigureContainer(a =>//容器的配置顺序应该在最前面
             {

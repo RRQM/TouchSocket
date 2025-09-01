@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -38,9 +40,10 @@ public partial class Form1 : Form
 
             this.udpSession.Received = (c, e) =>
             {
-                var reader = new ByteBlockReader(e.Memory);
-                var stream = reader.AsReadStream();
-                this.pictureBox1.Image = Image.FromStream(stream);
+                //var reader = new ReadOnlySequence(e.Memory);
+             
+                //var stream = reader.as();
+                //this.pictureBox1.Image = Image.FromStream(stream);
                 return EasyTask.CompletedTask;
             };
             this.udpSession.SetupAsync(new TouchSocketConfig()
@@ -53,5 +56,15 @@ public partial class Form1 : Form
             MessageBox.Show($"错误：{ex.Message},程序将退出");
             Environment.Exit(0);
         }
+    }
+}
+
+class ReadOnlyMemoryStream:Stream
+{
+    private readonly ReadOnlyMemory<byte> m_memory;
+
+    public ReadOnlyMemoryStream(ReadOnlyMemory<byte> memory)
+    {
+        this.m_memory = memory;
     }
 }

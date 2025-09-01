@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
@@ -23,14 +24,13 @@ public class Program
 
         builder.ConfigureServices(services =>
         {
-            //����TcpService��
+            
             services.AddTcpService(config =>
             {
                 config.SetListenIPHosts(7789);
             });
 
-            //����TcpClient
-            //ע�⣬Client��ķ�������������StartAsyncʱ������ִ��ConnectAsync��������Ҫ�������ӣ�������������ֵ������
+            
             services.AddSingletonTcpClient(config =>
             {
                 config.SetRemoteIPHost("127.0.0.1:7789");
@@ -41,7 +41,7 @@ public class Program
                 config.SetListenIPHosts(7790);
             });
 
-            //���������ܵ�����
+           
             services.AddServiceHostedService<INamedPipeService, NamedPipeService>(config =>
             {
                 config.SetPipeName("pipe7789");

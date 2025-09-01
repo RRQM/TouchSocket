@@ -25,7 +25,7 @@ internal class Program
         var udpService = new UdpSession();
         await udpService.SetupAsync(new TouchSocketConfig()
              .SetBindIPHost(new IPHost(7789))
-             .UseBroadcast()
+             .SetEnableBroadcast(true)
              .ConfigurePlugins(a =>
              {
                  a.Add<MyPluginClass1>();
@@ -42,7 +42,7 @@ internal class Program
         await udpClient.SetupAsync(new TouchSocketConfig()
               //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
               .SetBindIPHost(new IPHost(7788))
-              .UseBroadcast()//该配置在广播时是必须的
+              .SetEnableBroadcast(true)//该配置在广播时是必须的
              );
         await udpClient.StartAsync();
 
