@@ -38,7 +38,7 @@ internal class Program
         var metadata = new Metadata();
         metadata.Add("tag", "tag1");
 
-        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata);
+        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata,CancellationToken.None);
 
         client.Logger.Info("已经成功载入流，请输入任意字符");
 
@@ -133,7 +133,7 @@ internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin
             //此处加载的是一个内存流，实际上只要是Stream，都可以，例如：FileStream
             using (var stream = new MemoryStream())
             {
-                await e.WaitingLoadStreamAsync(stream, TimeSpan.FromSeconds(60));
+                await e.WaitingLoadStreamAsync(stream, CancellationToken.None);
 
                 this.m_logger.Info($"载入的流已被释放，流中信息：{Encoding.UTF8.GetString(stream.ToArray())}");
             }

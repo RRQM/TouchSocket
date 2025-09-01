@@ -363,7 +363,49 @@ Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运
 :::  
 
 
-## 十一、示例Demo
+## 十一、清理和释放
+
+### 11.1 清理（断开）连接
+
+可以使用`Clear`方法，清理所有连接。
+
+<CustomCodeBlock region="Tcp清理当前所有连接"/>
+
+或者，如果你知道目标客户端的`Id`，那么可以使用`Close`方法，清理指定连接。
+
+<CustomCodeBlock region="Tcp清理指定连接"/>
+
+### 11.2 移除监听
+
+可以使用`RemoveListen`方法，停止指定Tcp监听器。
+
+<CustomCodeBlock region="Tcp服务器停止监听"/>
+
+:::tip 提示
+
+停止监听时，已完成连接的客户端不受影响。
+
+:::  
+
+### 11.3 停止服务器
+
+可以使用`Stop`方法，停止服务器。
+
+<CustomCodeBlock region="Tcp停止服务器"/>
+
+:::info
+
+停止服务器时，会断开连接的所有客户端。随后可以重新启动服务器。
+
+:::  
+
+### 11.4 释放资源
+
+可以使用`Dispose`方法，释放服务器资源。
+
+<CustomCodeBlock region="Tcp释放服务器资源"/>
+
+## 十二、示例Demo
 
 <CardLink link="examples/Tcp"/>
 

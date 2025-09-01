@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets;
 
-
 /// <summary>
 /// 定义可连接客户端的行为。
 /// </summary>

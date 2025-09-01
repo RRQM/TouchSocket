@@ -48,7 +48,7 @@ public partial class WebApiEventArgs : PluginEventArgs
     public HttpResponse Response { get; }
 }
 
-#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
+#if SystemNetHttp
 
 /// <summary>
 /// WebAPI事件参数类，用于封装HTTP请求和响应信息

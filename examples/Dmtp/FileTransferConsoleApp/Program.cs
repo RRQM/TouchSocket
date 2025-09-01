@@ -90,7 +90,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512,//分包大小，当网络较差时，应该适当减小该值
             MultithreadingCount = 10//多线程数量
@@ -150,7 +149,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512,//分包大小，当网络较差时，应该适当减小该值
             MultithreadingCount = 10//多线程数量
@@ -202,7 +200,7 @@ internal class Program
         metadata.Add("2", "2");
 
         //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-        var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata);
+        var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata, CancellationToken.None);
         if (result.IsSuccess)
         {
             //成功
@@ -241,7 +239,7 @@ internal class Program
         metadata.Add("2", "2");
 
         //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-        var result = await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata);
+        var result = await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata, CancellationToken.None);
         var data = result.Value;//此处即是下载的小文件的实际数据
         result.Save(saveFilePath, overwrite: true);//将数据保存到指定路径。
 
@@ -289,7 +287,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -350,7 +347,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -415,7 +411,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//服务器文件的资源路径
             Metadata = metadata,//传递到客户端的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -480,7 +475,6 @@ internal class Program
             SavePath = saveFilePath,//服务器本地保存路径
             ResourcePath = filePath,//请求客户端文件的资源路径
             Metadata = metadata,//传递到客户端的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -539,7 +533,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -622,7 +615,6 @@ internal class Program
             SavePath = saveFilePath,//服务器本地保存路径
             ResourcePath = filePath,//客户端本地即将上传文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };

@@ -47,10 +47,9 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="targetId">目标客户端Id</param>
     /// <param name="path">请求路径</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata,  CancellationToken token);
 
     /// <summary>
     /// 推送小文件。默认设置1024*1024字节大小。
@@ -59,10 +58,9 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="savePath">保存路径</param>
     /// <param name="fileInfo">推送的文件信息</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken token);
 
     #endregion Id小文件
 
@@ -74,10 +72,10 @@ public interface IDmtpFileTransferActor : IActor
     /// </summary>
     /// <param name="path">请求路径</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata, CancellationToken token);
 
 
     /// <summary>
@@ -86,10 +84,10 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="savePath">保存路径</param>
     /// <param name="fileInfo">推送的文件信息</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken token);
 
     #endregion 小文件
 
@@ -105,10 +103,10 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileResourceInfo">文件资源信息</param>
     /// <param name="code">状态代码</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken token);
 
 
     /// <summary>
@@ -116,17 +114,17 @@ public interface IDmtpFileTransferActor : IActor
     /// <para>注意：</para>
     /// <list type="number">
     /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-    /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,int,System.Threading.CancellationToken)"/></item>
+    /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,System.Threading.CancellationToken)"/></item>
     /// </list>
     /// </summary>
     /// <param name="targetId">目标客户端Id</param>
     /// <param name="path">资源路径</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="fileSectionSize">文件分块尺寸。</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata = null, int fileSectionSize = 1024 * 512, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken token);
 
 
     /// <summary>
@@ -135,10 +133,10 @@ public interface IDmtpFileTransferActor : IActor
     /// </summary>
     /// <param name="targetId">目标客户端Id</param>
     /// <param name="fileSection">文件块</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken token);
 
 
     /// <summary>
@@ -146,17 +144,17 @@ public interface IDmtpFileTransferActor : IActor
     /// <para>注意：</para>
     /// <list type="number">
     /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-    /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,int,System.Threading.CancellationToken)"/></item>
+    /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,System.Threading.CancellationToken)"/></item>
     /// </list>
     /// </summary>
     /// <param name="targetId">目标客户端Id</param>
     /// <param name="savePath">保存路径</param>
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken token);
 
 
     /// <summary>
@@ -166,10 +164,10 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="targetId">目标客户端Id</param>
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="fileSection">文件块</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
+    
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken token);
 
     #endregion Id
 
@@ -184,10 +182,9 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileResourceInfo">文件资源信息</param>
     /// <param name="code">状态代码</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken token);
 
 
     /// <summary>
@@ -195,16 +192,15 @@ public interface IDmtpFileTransferActor : IActor
     /// <para>注意：</para>
     /// <list type="number">
     /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-    /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,int,System.Threading.CancellationToken)"/></item>
+    /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,System.Threading.CancellationToken)"/></item>
     /// </list>
     /// </summary>
     /// <param name="path">资源路径</param>
     /// <param name="metadata">元数据</param>
     /// <param name="fileSectionSize">文件分块尺寸</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata = null, int fileSectionSize = 1024 * 512, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata, int fileSectionSize, CancellationToken token);
 
 
     /// <summary>
@@ -212,10 +208,9 @@ public interface IDmtpFileTransferActor : IActor
     /// <para>注意：拉取文件块时，两个成功块之间的时间应该在设定时间（60秒）内完成。</para>
     /// </summary>
     /// <param name="fileSection">文件块</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, CancellationToken token);
 
 
     /// <summary>
@@ -223,16 +218,15 @@ public interface IDmtpFileTransferActor : IActor
     /// <para>注意：</para>
     /// <list type="number">
     /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-    /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,int,System.Threading.CancellationToken)"/></item>
+    /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfoAsync(string,TouchSocket.Dmtp.FileTransfer.FileResourceInfo,TouchSocket.Core.ResultCode,TouchSocket.Core.Metadata,System.Threading.CancellationToken)"/></item>
     /// </list>
     /// </summary>
     /// <param name="savePath">保存路径</param>
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="metadata">元数据</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken token);
 
     /// <summary>
     /// 推送文件块。
@@ -240,10 +234,9 @@ public interface IDmtpFileTransferActor : IActor
     /// </summary>
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="fileSection">文件块</param>
-    /// <param name="millisecondsTimeout">超时设置</param>
     /// <param name="token">可取消令箭</param>
     /// <returns></returns>
-    Task<Result> PushFileSectionAsync(FileResourceLocator fileResourceLocator, FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
+    Task<Result> PushFileSectionAsync(FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken token);
 
     #endregion 文件传输
 }

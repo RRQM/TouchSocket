@@ -28,11 +28,10 @@ public static class HttpClientExtension
     /// </summary>
     /// <param name="httpClient">发起HTTP请求的客户端。</param>
     /// <param name="url">要请求的URL。</param>
-    /// <param name="millisecondsTimeout">请求超时时间，以毫秒为单位，默认为10秒。</param>
     /// <param name="token">用于取消操作的取消令牌。</param>
     /// <returns>包含从URL获取的字节的数组。</returns>
     /// <exception cref="Exception">如果HTTP请求失败，将抛出异常。</exception>
-    public static async Task<byte[]> GetByteArrayAsync(this IHttpClient httpClient, string url, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    public static async Task<byte[]> GetByteArrayAsync(this IHttpClient httpClient, string url, CancellationToken token)
     {
         // 创建HTTP请求对象
         var request = new HttpRequest();
@@ -65,13 +64,12 @@ public static class HttpClientExtension
     /// </summary>
     /// <param name="httpClient">用于发送HTTP请求的客户端。</param>
     /// <param name="url">要请求的URL。</param>
-    /// <param name="millisecondsTimeout">请求超时时间，以毫秒为单位，默认为10秒。</param>
     /// <param name="token">用于取消操作的取消令牌。</param>
     /// <returns>返回从指定URL获取的字符串。</returns>
-    public static async Task<string> GetStringAsync(this IHttpClient httpClient, string url, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    public static async Task<string> GetStringAsync(this IHttpClient httpClient, string url, CancellationToken token)
     {
         // 将获取到的字节数组转换为UTF-8编码的字符串
-        return (await GetByteArrayAsync(httpClient, url, millisecondsTimeout, token)).ToUtf8String();
+        return (await GetByteArrayAsync(httpClient, url, token)).ToUtf8String();
     }
 
     #region Download
@@ -82,10 +80,9 @@ public static class HttpClientExtension
     /// <param name="httpClient">HTTP客户端接口</param>
     /// <param name="request">HTTP请求对象</param>
     /// <param name="stream">用于存储文件内容的目标流</param>
-    /// <param name="millisecondsTimeout">请求超时时间，以毫秒为单位，默认为10秒</param>
     /// <param name="token">用于取消操作的取消令牌</param>
     /// <returns>返回一个异步任务</returns>
-    public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, CancellationToken token)
     {
         // 使用using语句确保响应对象正确地被释放
         using (var responseResult = await httpClient.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
@@ -109,7 +106,7 @@ public static class HttpClientExtension
     public static async Task<Result> GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, HttpFlowOperator flowOperator)
     {
         var token = flowOperator.Token;
-        var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
+       
         // 使用using语句确保响应对象正确地被释放
         using (var responseResult = await httpClient.RequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
@@ -127,10 +124,9 @@ public static class HttpClientExtension
     /// <param name="httpClient">用于发送HTTP请求的客户端。</param>
     /// <param name="url">要获取的文件的URL。</param>
     /// <param name="stream">将文件内容写入的流。</param>
-    /// <param name="millisecondsTimeout">操作超时时间，以毫秒为单位，默认为10秒。</param>
     /// <param name="token">用于取消异步操作的取消令牌。</param>
     /// <returns>返回一个Task对象，表示异步操作。</returns>
-    public static Task GetFileAsync(this IHttpClient httpClient, string url, Stream stream, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    public static Task GetFileAsync(this IHttpClient httpClient, string url, Stream stream, CancellationToken token)
     {
         // 创建并初始化HttpRequest对象，用于封装HTTP请求的相关信息和操作
         var request = new HttpRequest();
@@ -138,7 +134,7 @@ public static class HttpClientExtension
         request.URL = (url); // 设置请求的URL
         request.SetHost(httpClient.RemoteIPHost.Host);
         // 调用重载的GetFileAsync方法，传入封装好的请求对象
-        return GetFileAsync(httpClient, request, stream, millisecondsTimeout, token);
+        return GetFileAsync(httpClient, request, stream, token);
     }
 
     /// <summary>
@@ -170,10 +166,9 @@ public static class HttpClientExtension
     /// <param name="client">HttpClient实例，用于发送HTTP请求。</param>
     /// <param name="url">文件上传的URL地址。</param>
     /// <param name="fileInfo">包含文件信息的FileInfo对象，用于获取文件内容和属性。</param>
-    /// <param name="millisecondsTimeout">请求的超时时间，默认为10秒。如果在此时间内未完成上传，请求将被取消。</param>
     /// <param name="token">用于取消操作的取消令牌。</param>
     /// <typeparam name="TClient">客户端类型，必须继承自HttpClientBase并实现IHttpClient接口。</typeparam>
-    public static async Task<Result> UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+    public static async Task<Result> UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, CancellationToken token)
         where TClient : HttpClientBase, IHttpClient
     {
         using (var stream = fileInfo.OpenRead())
@@ -214,8 +209,7 @@ public static class HttpClientExtension
         try
         {
             var token = flowOperator.Token;
-            var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
-
+           
             //创建一个请求
             request.SetContent(new StreamHttpContent(stream, flowOperator));
 
