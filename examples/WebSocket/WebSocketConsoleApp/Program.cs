@@ -56,7 +56,7 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseWebSocketReconnection();
+                 a.UseReconnection<WebSocketClient>();
                  a.Add(typeof(IWebSocketReceivedPlugin), async (IHttpSession c, WSDataFrameEventArgs e) =>
                  {
                      client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
@@ -142,7 +142,7 @@ internal class Program
                  a.UseWebSocketHeartbeat()
                  .SetTick(TimeSpan.FromSeconds(1));
 
-                 a.UseWebSocketReconnection();
+                 a.UseReconnection<WebSocketClient>();
              })
              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
         await client.ConnectAsync();

@@ -288,8 +288,8 @@ internal class Program
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseTcpReconnection<TcpClient>()
-                    .UsePolling(TimeSpan.FromSeconds(1));
+                    a.UseReconnection<TcpClient>()
+                    .SetPollingTick(TimeSpan.FromSeconds(1));
                 })
                 .ConfigureContainer(a =>
                 {
@@ -322,8 +322,8 @@ internal class Program
                 .SetRemoteIPHost(new IPHost("[::1]:7791"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseTcpReconnection()
-                    .UsePolling(TimeSpan.FromSeconds(1));
+                    a.UseReconnection<TcpClient>()
+                    .SetPollingTick(TimeSpan.FromSeconds(1));
                 })
                 .ConfigureContainer(a =>
                 {
@@ -349,7 +349,7 @@ internal class Program
               .SetRemoteIPHost("127.0.0.1:7789")
               .ConfigurePlugins(a =>
               {
-                  a.UseTcpReconnection();
+                  a.UseReconnection<TcpClient>();
               }));
 
         await tcpClient.ConnectAsync();//调用连接
@@ -366,8 +366,8 @@ internal class Program
               .SetRemoteIPHost("127.0.0.1:7789")
               .ConfigurePlugins(a =>
               {
-                  a.UseTcpReconnection()
-                  .UsePolling(TimeSpan.FromSeconds(1));
+                  a.UseReconnection<TcpClient>()
+                  .SetPollingTick(TimeSpan.FromSeconds(1));
               }));
 
         await tcpClient.ConnectAsync();//调用连接

@@ -48,7 +48,7 @@ internal class Program
              .SetPipeName("touchsocketpipe")//管道名称
              .ConfigurePlugins(a =>
              {
-                 a.UseNamedPipeReconnection();
+                 a.UseReconnection<NamedPipeClient>();
              })
              .ConfigureContainer(a =>
              {

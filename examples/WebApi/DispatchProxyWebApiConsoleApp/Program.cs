@@ -59,7 +59,7 @@ internal class MyWebApiDispatchProxy : WebApiDispatchProxy
             .SetRemoteIPHost("127.0.0.1:7789")
             .ConfigurePlugins(a =>
             {
-                a.UseTcpReconnection();
+                a.UseReconnection<WebApiClient>();
             }));
         client.ConnectAsync();
         Console.WriteLine("连接成功");

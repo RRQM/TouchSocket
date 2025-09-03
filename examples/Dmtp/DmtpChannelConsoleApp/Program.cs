@@ -104,8 +104,8 @@ internal class Program
                    a.Add<MyPlugin>();
 
                    //使用重连
-                   a.UseDmtpReconnection<TcpDmtpClient>()
-                   .UsePolling(TimeSpan.FromSeconds(3))//使用轮询，每3秒检测一次
+                   a.UseReconnection<TcpDmtpClient>()
+                   .SetPollingTick(TimeSpan.FromSeconds(3))//使用轮询，每3秒检测一次
                    .SetActionForCheck(async (c, i) =>//重新定义检活策略
                    {
                        //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用。因为如果直接断网，则检测不出来
@@ -115,17 +115,17 @@ internal class Program
                        //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
                        if ((await c.PingAsync()).IsSuccess)
                        {
-                           return true;
+                           return  ConnectionCheckResult.Alive;
                        }
                        //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
                        else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
                        {
-                           return null;
+                           return  ConnectionCheckResult.Skip;
                        }
                        //否则，直接重连。
                        else
                        {
-                           return false;
+                           return  ConnectionCheckResult.Dead;
                        }
                    });
 
