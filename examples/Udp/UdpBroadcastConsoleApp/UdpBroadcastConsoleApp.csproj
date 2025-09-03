@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="4.0.0-beta.7" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.7" />
-    <PackageReference Include="TouchSocket.Rpc" Version="4.0.0-beta.7" />
-    <PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.7" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="4.0.0-beta.7" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.7" />
+    <PackageReference Include="TouchSocket" Version="4.0.0-beta.11" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.11" />
+    <PackageReference Include="TouchSocket.Rpc" Version="4.0.0-beta.11" />
+    <PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.11" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="4.0.0-beta.11" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.11" />
   </ItemGroup>
 
 </Project>

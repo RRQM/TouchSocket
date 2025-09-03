@@ -67,8 +67,8 @@ namespace TcpConsoleApp
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                   .ConfigurePlugins(a =>
                   {
-                      a.UseTcpReconnection()
-                      .UsePolling(TimeSpan.FromSeconds(1));
+                      a.UseReconnection<TcpClient>()
+                      .SetPollingTick(TimeSpan.FromSeconds(1));
                   })
                   .ConfigureContainer(a =>
                   {
