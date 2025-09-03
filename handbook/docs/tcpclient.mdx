@@ -225,38 +225,21 @@ import CardLink from "@site/src/components/CardLink.js";
 
 断线重连，即tcp客户端在断开服务器后，主动发起的再次连接请求。
 
-### 9.1 触发型重连
+### 9.1 启用断线重连
 
-触发型重连，依靠的是Tcp断开事件（Closed）发生时，再次尝试连接。所以，这就要求客户端在初始时，至少完成一次连接。
+断线重连，依靠的是Tcp断开后，或者初始化后，Online属性为false时，会尝试连接。
 
-<BilibiliCard title="客户端触发式断线重连" link="https://www.bilibili.com/cheese/play/ep1541437" isPro="true"/>
+所以，重连机制在Setup完成后，即会生效。
+
+<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
 
 <CustomCodeBlock region="Tcp客户端启用断线重连"/>
 
 :::caution 注意
 
-**触发重连，必须满足以下几个要求：**
+**断线重连，必须满足以下几个要求：**
 
-1. 必须完成第一次连接。
-2. 必须是被动断开，如果是客户端主动调用`Close`、`Disposed`等方法主动断开的话，则不会生效。
-3. 必须有显式的断开信息，也就是说，直接拔网线的话，**不会**立即生效，会等tcp保活到期后再生效。
-
-:::  
-
-
-### 9.2 使用Polling轮询连接插件
-
-使用`Polling`断线重连，是一种无人值守的连接方式，它不要求首次连接。
-
-<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
-
-<CustomCodeBlock region="Tcp客户端启用轮询断线重连"/>
-
-:::caution 注意
-
-**Polling重连，必须满足以下几个要求：**
-
-1. 必须有显式的断开信息，也就是说，直接拔网线的话，也不会立即生效，会等tcp保活到期后再生效。
+1. 必须有显式的断开信息，也就是说，直接拔网线的话，**不会**立即生效，会等tcp保活到期后再生效。此处可以结合[健康活性检验插件](./tcpcommonplugins.mdx)来绝对保活。
 
 :::  
 
@@ -266,10 +249,11 @@ import CardLink from "@site/src/components/CardLink.js";
 
 :::  
 
-### 9.3 绝对保活
+### 9.2 暂停重连
 
-绝对保活，是一种不依赖于任何事件的保活方式。只要连接链路在持续时间内没有数据交互，则视为断开，详情请看[健康活性检验插件](./tcpcommonplugins.mdx)
+适用于重连的客户端，都提供了`SetPauseReconnection`方法，可以暂停或者恢复重连。
 
+<CustomCodeBlock region="Reconnection重连插件暂停重连"/>
 
 ## 十、示例Demo
 
