@@ -341,21 +341,20 @@ internal class Program
 
     private static async Task CreateReconnectionTcpClient()
     {
-        #region Tcp客户端启用断线重连
         var client = new TcpClient();
 
         //载入配置
         await client.SetupAsync(new TouchSocketConfig()
               .SetRemoteIPHost("127.0.0.1:7789")
+        #region Tcp客户端启用断线重连
               .ConfigurePlugins(a =>
               {
                   a.UseReconnection<TcpClient>()
                   .SetPollingTick(TimeSpan.FromSeconds(1));//轮询间隔
               }));
-
-        await client.ConnectAsync();//调用连接
         #endregion
-
+        await client.ConnectAsync();//调用连接
+        
         #region Reconnection重连插件暂停重连
         client.SetPauseReconnection(true);//暂停重连
         await Task.Delay(5000);

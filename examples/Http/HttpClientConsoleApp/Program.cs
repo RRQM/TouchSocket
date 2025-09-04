@@ -47,6 +47,14 @@ internal class Program
         config.SetRemoteIPHost("https://touchsocket.net/");
         #endregion
 
+        #region Http客户端启用断线重连
+        config.ConfigurePlugins(a => 
+        {
+            a.UseReconnection<HttpClient>()
+            .SetPollingTick(TimeSpan.FromSeconds(1));
+        });
+        #endregion
+
         await Task.CompletedTask;
     }
 
@@ -270,6 +278,17 @@ internal class Program
         var config = new TouchSocketConfig();
         #region Http设置远程服务器地址
         config.SetRemoteIPHost("http://127.0.0.1:7789");
+        #endregion
+
+        #region Http客户端获取断线通知
+        config.ConfigurePlugins(a =>
+        {
+            a.AddTcpClosedPlugin(async (c, e) =>
+            {
+                Console.WriteLine("客户端断开连接");
+                await e.InvokeNext();
+            });
+        });
         #endregion
 
         //配置config
