@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,12 +39,113 @@ internal class Program
         consoleAction.Add("5", "发送字符串", SendText);
         consoleAction.Add("6", "发送部分字符串", SendSubstringText);
         consoleAction.Add("7", "调用Add", SendAdd);
+        consoleAction.Add("8", "发送二进制", SendBinary);
+        consoleAction.Add("9", "发送自定义消息", SendCustomMessage);
+        consoleAction.Add("10", "发送Ping消息", SendPingMessage);
+        consoleAction.Add("11", "发送分包消息", SendContMessage);
 
         consoleAction.ShowAll();
 
         var service = await CreateHttpService();
 
         await consoleAction.RunCommandLineAsync();
+    }
+
+    private static async Task SendContMessage()
+    {
+        using var webSocket = new WebSocketClient();
+        await webSocket.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+        await webSocket.ConnectAsync();
+
+        #region WebSocket发送分包数据
+        for (int i = 0; i < 10; i++)
+        {
+            //发送文本分包消息
+            //最后一个参数表示是否为最后一个包
+            await webSocket.SendAsync($"hello{i}", i == 9);
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            //发送二进制分包消息
+            //最后一个参数表示是否为最后一个包
+            await webSocket.SendAsync(new byte[] { 0, 1, 2, 3, 4 }, i == 9);
+        }
+        #endregion
+
+        #region WebSocket关闭连接
+        await webSocket.CloseAsync("正常关闭");
+
+        //或者使用关闭状态码
+        await webSocket.CloseAsync( WebSocketCloseStatus.NormalClosure,"正常关闭");
+        #endregion
+    }
+
+    private static async Task SendPingMessage()
+    {
+        using var webSocket = new WebSocketClient();
+        await webSocket.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+        await webSocket.ConnectAsync();
+
+        for (int i = 0; i < 10; i++)
+        {
+            #region WebSocket发送Ping或者Pong消息
+            await webSocket.PingAsync();
+
+            //如果收到了Ping消息，则需要回应Pong。
+            //await webSocket.PongAsync();
+            #endregion
+        }
+    }
+
+    private static async Task SendCustomMessage()
+    {
+        using var webSocket = new WebSocketClient();
+        await webSocket.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+        await webSocket.ConnectAsync();
+
+        #region WebSocket发送自定义消息
+        var frame = new WSDataFrame(Encoding.UTF8.GetBytes("Hello"));
+        frame.Opcode = WSDataType.Text;
+        frame.FIN = true;
+
+        //设置RSV位，一般情况下，RSV位不允许随意设置，除非你非常清楚你在做什么。
+        frame.RSV1 = true;
+        frame.RSV2 = true;
+        frame.RSV3 = true;
+        await webSocket.SendAsync(frame);
+        #endregion
+    }
+
+    private static async Task SendBinary()
+    {
+        using var webSocket = new WebSocketClient();
+        await webSocket.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+        await webSocket.ConnectAsync();
+
+        #region WebSocket发送二进制
+        await webSocket.SendAsync(new byte[] { 1, 2, 3, 4, 5 });
+        #endregion
     }
 
     private static async Task SendAdd()
@@ -95,15 +197,18 @@ internal class Program
 
     private static async Task SendText()
     {
-        var client = new WebSocketClient();
-        await client.SetupAsync(new TouchSocketConfig()
+        using var webSocket = new WebSocketClient();
+        await webSocket.SetupAsync(new TouchSocketConfig()
               .ConfigureContainer(a =>
               {
                   a.AddConsoleLogger();
               })
               .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-        await client.ConnectAsync();
-        await client.SendAsync("hello");
+        await webSocket.ConnectAsync();
+
+        #region WebSocket发送文本
+        await webSocket.SendAsync("hello");
+        #endregion
     }
 
     private static void ConsoleAction_OnException(Exception obj)
@@ -218,12 +323,111 @@ internal class Program
 
         client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
     }
+    private static async Task<HttpService> CreateHttpService2()
+    {
+        #region 创建WebSocket服务器 {11-16}
+        var service = new HttpService();
 
+        var config = new TouchSocketConfig();
+        config.SetListenIPHosts(7789)
+             .ConfigureContainer(a =>
+             {
+                 a.AddConsoleLogger();
+             })
+             .ConfigurePlugins(a =>
+             {
+                 //添加WebSocket功能
+                 a.UseWebSocket(options =>
+                 {
+                     options.SetUrl("/ws");//设置Url，当客户端使用ws://127.0.0.1:7789/ws直接可以连接。
+                     options.SetAutoPong(true);//当收到Ping报文时自动回应Pong
+                 });
+             });
+
+        //加载配置
+        await service.SetupAsync(config);
+
+        //启动服务
+        await service.StartAsync();
+
+        service.Logger.Info("WebSocket服务器已启动，地址: ws://127.0.0.1:7789/ws");
+        #endregion
+
+        #region WebSocket服务器遍历所有连接并发送数据
+        var clients = service.Clients;
+        foreach (var client in clients)
+        {
+            if (client.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
+            {
+                if (client.Id == "id")//再按指定id发送，或者直接广播发送
+                {
+                    var webSocket = client.WebSocket;
+                    await webSocket.SendAsync("hello");
+                }
+            }
+        }
+        #endregion
+
+        return service;
+    }
+
+    private static async Task CreateHttpService3()
+    {
+        var config = new TouchSocketConfig();
+        config.SetListenIPHosts(7789)
+             .ConfigureContainer(a =>
+             {
+                 a.AddConsoleLogger();
+             })
+             .ConfigurePlugins(a =>
+             {
+                 //添加WebSocket功能
+                 a.UseWebSocket(options =>
+                 {
+                     options.SetAutoPong(true);//当收到Ping报文时自动回应Pong
+
+                     #region WebSocket连接验证
+                     //添加自定义验证逻辑后，必须自己验证Url
+                     options.SetVerifyConnection(async (client, context) =>
+                     {
+                         if (!context.Request.IsUpgrade())
+                         {
+                             //如果不包含升级协议的header，就直接返回false。
+                             return false;
+                         }
+                         // 在此处添加验证逻辑，例如：匹配特定的URL
+                         if (context.Request.UrlEquals("/ws"))
+                         {
+                             return true; // 允许连接
+                         }
+
+                         //如果url不匹配，则可以直接拒绝。
+                         //await context.Response
+                         //.SetStatus(403, "url不正确")
+                         //.AnswerAsync();
+                         return false;
+                     });
+                     #endregion
+                 });
+             });
+
+        #region 使用WebSocket接收插件
+        config.ConfigurePlugins(a =>
+        {
+            //添加WebSocket功能
+            a.UseWebSocket("/ws");
+
+            a.Add<MyWebSocketReceivePlugin>();
+        });
+        #endregion
+
+
+    }
     private static async Task<HttpService> CreateHttpService()
     {
         var service = new HttpService();
 
-        TouchSocketConfig config=new TouchSocketConfig();
+        var config = new TouchSocketConfig();
         await service.SetupAsync(new TouchSocketConfig()//加载配置
              .SetListenIPHosts(7789)
              .ConfigureContainer(a =>
@@ -236,11 +440,12 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseWebSocket()//添加WebSocket功能
-                                 //.SetWSUrl("/ws")//设置url直接可以连接。
-                        .SetVerifyConnection(VerifyConnection)
-                        //.UseAutoPong()//当收到ping报文时自动回应pong
-                        ;
+                 a.UseWebSocket(options =>
+                 {
+                     options.SetUrl("/ws");//设置url直接可以连接。
+                     options.SetVerifyConnection(VerifyConnection);
+                     options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                 });
 
                  //a.Add<MyReadTextWebSocketPlugin>();
 
@@ -316,138 +521,61 @@ internal class Program
     }
 
 
+    #region WebSocket服务器使用ReadAsync读取数据
     internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
     {
-        private readonly ILog m_logger;
-
-        public MyReadTextWebSocketPlugin(ILog logger)
-        {
-            this.m_logger = logger;
-        }
-
         public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             //当WebSocket想要使用ReadAsync时，需要设置此值为true
             client.AllowAsyncRead = true;
 
-            //此处即表明websocket已连接
-
-            MemoryStream stream = default;//中继包缓存
-            var isText = false;//标识是否为文本
             while (true)
             {
                 using (var receiveResult = await client.ReadAsync(CancellationToken.None))
                 {
                     if (receiveResult.IsCompleted)
                     {
+                        Console.WriteLine($"WebSocket连接已关闭，关闭代码：{client.CloseStatus}，信息：{receiveResult.Message}");
                         break;
                     }
 
+                    //处理接收的数据
                     var dataFrame = receiveResult.DataFrame;
-                    var data = receiveResult.DataFrame.PayloadData;
-
                     switch (dataFrame.Opcode)
                     {
                         case WSDataType.Cont:
-                            {
-                                //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
-                                //var segment = data.AsSegment();
-                                //stream.Write(segment.Array, segment.Offset, segment.Count);
-
-                                //如果是net9.0以上，直接写入span即可
-                                stream.Write(data.Span);
-
-                                //收到的是中继包
-                                if (dataFrame.FIN)//判断是否为最终包
-                                {
-                                    //是
-
-                                    if (isText)//判断是否为文本
-                                    {
-                                        this.m_logger.Info($"WebSocket文本：{Encoding.UTF8.GetString(stream.ToArray())}");
-                                    }
-                                    else
-                                    {
-                                        this.m_logger.Info($"WebSocket二进制：{stream.Length}长度");
-                                    }
-                                }
-                                else
-                                {
-                                    //否，继续缓存
-                                }
-                            }
+                            //处理中继包
                             break;
                         case WSDataType.Text:
-                            {
-                                if (dataFrame.FIN)//判断是不是最后的包
-                                {
-                                    //是，则直接输出
-                                    //说明上次并没有中继数据缓存，直接输出本次内容即可
-                                    this.m_logger.Info($"WebSocket文本：{dataFrame.ToText()}");
-                                }
-                                else
-                                {
-                                    isText = true;
-
-                                    //否，则说明数据太大了，分中继包了。
-                                    //则，初始化缓存容器
-                                    stream ??= new MemoryStream();
-
-                                    //下面则是缓存逻辑
-
-                                    //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
-                                    //var segment = data.AsSegment();
-                                    //stream.Write(segment.Array, segment.Offset, segment.Count);
-
-                                    //如果是net9.0以上，直接写入span即可
-                                    stream.Write(data.Span);
-                                }
-                            }
+                            //处理文本包
+                            Console.WriteLine(dataFrame.ToText());
                             break;
                         case WSDataType.Binary:
-                            {
-                                if (dataFrame.FIN)//判断是不是最后的包
-                                {
-                                    //是，则直接输出
-                                    //说明上次并没有中继数据缓存，直接输出本次内容即可
-                                    this.m_logger.Info($"WebSocket二进制：{data.Length}长度");
-                                }
-                                else
-                                {
-                                    isText = false;
-
-                                    //否，则说明数据太大了，分中继包了。
-                                    //则，初始化缓存容器
-                                    stream ??= new MemoryStream();
-
-                                    //下面则是缓存逻辑
-
-                                    //如果是非net9.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
-                                    //var segment = data.AsSegment();
-                                    //stream.Write(segment.Array, segment.Offset, segment.Count);
-
-                                    //如果是net9.0以上，直接写入span即可
-                                    stream.Write(data.Span);
-                                }
-                            }
+                            //处理二进制包
+                            var data = dataFrame.PayloadData;
+                            Console.WriteLine($"收到二进制数据，长度：{data.Length}");
                             break;
                         case WSDataType.Close:
+                            //处理关闭包
                             break;
                         case WSDataType.Ping:
+                            //处理Ping包
                             break;
                         case WSDataType.Pong:
+                            //处理Pong包
                             break;
                         default:
+                            //处理其他包
                             break;
                     }
                 }
             }
 
-            //此处即表明websocket已断开连接
-            this.m_logger.Info("WebSocket断开连接");
             await e.InvokeNext();
         }
     }
+    #endregion
+
 
     public class MyWebSocketPlugin : PluginBase,
         IWebSocketHandshakingPlugin,
@@ -485,29 +613,15 @@ internal class Program
 
         private readonly ILog m_logger;
 
+        #region WebSocket服务器处理中继数据
         public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
-            switch (e.DataFrame.Opcode)
+            var dataFrame = e.DataFrame;
+            switch (dataFrame.Opcode)
             {
                 case WSDataType.Close:
                     {
                         this.m_logger.Info("远程请求断开");
-
-                        //var byteBlock = e.DataFrame.PayloadData;
-                        //byteBlock.SeekToStart();
-                        //var ss = ReaderExtension.ReadValue<TReader,ushort>(ref byteBlockEndianType.Big);
-                        //using (var frame = new WSDataFrame())
-                        //{
-                        //    frame.Opcode = WSDataType.Close;
-                        //    frame.FIN = true;
-                        //    frame.PayloadData=new ByteBlock(1024*64);
-                        //    frame.PayloadData.WriteUInt16(1000, EndianType.Big);
-                        //    frame.PayloadData.Write(Encoding.UTF8.GetBytes("hello"));
-                        //    await client.SendAsync(frame);
-                        //}
-
-                        //client.Client.TryShutdown();
-
                         await client.CloseAsync("断开");
                     }
                     return;
@@ -572,6 +686,8 @@ internal class Program
 
             await e.InvokeNext();
         }
+        #endregion
+
 
         public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
@@ -586,22 +702,45 @@ internal class Program
         }
     }
 
-    private class MyHttpPlugin : PluginBase, IHttpPlugin
+    #region 创建WebSocket接收插件
+    class MyWebSocketReceivePlugin : PluginBase, IWebSocketReceivedPlugin
     {
-        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        public async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
-            if (e.Context.Request.IsGet())
+            //处理接收的数据
+            var dataFrame = e.DataFrame;
+            switch (dataFrame.Opcode)
             {
-                if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
-                {
-                    var result = await client.SwitchProtocolToWebSocketAsync(e.Context);
-                    return;
-                }
+                case WSDataType.Cont:
+                    //处理中继包
+                    break;
+                case WSDataType.Text:
+                    //处理文本包
+                    Console.WriteLine(dataFrame.ToText());
+                    break;
+                case WSDataType.Binary:
+                    //处理二进制包
+                    var data = dataFrame.PayloadData;
+                    Console.WriteLine($"收到二进制数据，长度：{data.Length}");
+                    break;
+                case WSDataType.Close:
+                    //处理关闭包
+                    break;
+                case WSDataType.Ping:
+                    //处理Ping包
+                    break;
+                case WSDataType.Pong:
+                    //处理Pong包
+                    break;
+                default:
+                    //处理其他包
+                    break;
             }
-
             await e.InvokeNext();
         }
     }
+    #endregion
+
 
     /// <summary>
     /// 命令行插件。
@@ -660,4 +799,31 @@ internal class Program
             }
         }
     }
+
+    #region 自定义转换WebSocket
+    class CustomWebSocketPlugin : PluginBase, IHttpPlugin
+    {
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.IsUpgrade())
+            {
+                if (e.Context.Request.UrlEquals("/customws"))
+                {
+                    var result = await client.SwitchProtocolToWebSocketAsync(e.Context);
+                    if (!result.IsSuccess)
+                    {
+                        //切换协议失败
+                        return;
+                    }
+                    //切换协议成功，下面可以使用wsClient进行收发数据了。
+                    var webSocket = client.WebSocket;
+
+                }
+            }
+            await e.InvokeNext();
+        }
+    }
+    #endregion
+
 }
+
