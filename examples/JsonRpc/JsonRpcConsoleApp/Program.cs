@@ -85,8 +85,12 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseWebSocket()
-                  .SetWSUrl("/ws");
+                  //添加WebSocket功能
+                  a.UseWebSocket(options =>
+                  {
+                      options.SetUrl("/ws");//设置url直接可以连接。
+                      options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                  });
 
                   a.UseWebSocketJsonRpc()
                   .SetAllowJsonRpc((socketClient, context) =>

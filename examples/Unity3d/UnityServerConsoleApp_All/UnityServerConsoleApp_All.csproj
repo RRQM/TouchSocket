@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.13" />
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.13" />
+		<PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.15" />
+		<PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.15" />
 	</ItemGroup>
 
 </Project>
