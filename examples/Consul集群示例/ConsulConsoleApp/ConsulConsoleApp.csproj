@@ -7,12 +7,12 @@
 
   <ItemGroup>
     <PackageReference Include="Consul" Version="1.7.14.9" />
-    <PackageReference Include="TouchSocket" Version="4.0.0-beta.13" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.13" />
-    <PackageReference Include="TouchSocket.Rpc" Version="4.0.0-beta.13" />
-    <PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.13" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="4.0.0-beta.13" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.13" />
+    <PackageReference Include="TouchSocket" Version="4.0.0-beta.15" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.15" />
+    <PackageReference Include="TouchSocket.Rpc" Version="4.0.0-beta.15" />
+    <PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.15" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="4.0.0-beta.15" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.15" />
   </ItemGroup>
 
 </Project>
