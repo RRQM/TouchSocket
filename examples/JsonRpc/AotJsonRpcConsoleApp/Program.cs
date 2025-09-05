@@ -155,8 +155,7 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseWebSocket()
-                  .SetWSUrl("/ws");
+                  a.UseWebSocket("/ws");
 
                   a.UseWebSocketJsonRpc()
                   .UseSystemTextJson(option =>
