@@ -53,6 +53,7 @@ internal class Program
 
     private static async Task SendContMessage()
     {
+        #region WebSocket直接连接服务器
         using var webSocket = new WebSocketClient();
         await webSocket.SetupAsync(new TouchSocketConfig()
               .ConfigureContainer(a =>
@@ -61,6 +62,8 @@ internal class Program
               })
               .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
         await webSocket.ConnectAsync();
+        #endregion
+
 
         #region WebSocket发送分包数据
         for (int i = 0; i < 10; i++)
@@ -221,38 +224,29 @@ internal class Program
     /// </summary>
     private static async Task ConnectWith_ws()
     {
+        #region 简单创建WebSocket客户端
         using var client = new WebSocketClient();
-        await client.SetupAsync(new TouchSocketConfig()
-             .ConfigureContainer(a =>
-             {
-                 a.AddConsoleLogger();
-             })
-             .ConfigurePlugins(a =>
-             {
-                 a.AddWebSocketConnectedPlugin(() =>
-                 {
-                     Console.WriteLine("WebSocketConnected");
-                 });
+        client.Connected=(c,e)=>
+        {
+            Console.WriteLine("Connected");
+            return EasyTask.CompletedTask;
+        };
+        client.Received=(c,e)=>
+        {
+            Console.WriteLine(e.DataFrame.ToText());
+            return EasyTask.CompletedTask;
+        };
+        client.Closed=(c,e)=>
+        {
+            Console.WriteLine("Closed");
+            return EasyTask.CompletedTask;
+        };
 
-                 a.AddWebSocketClosingPlugin(() =>
-                 {
-                     Console.WriteLine("WebSocketClosing");
-                 });
-
-                 a.AddWebSocketClosedPlugin(() =>
-                 {
-                     Console.WriteLine("WebSocketClosed");
-                 });
-
-                 a.UseWebSocketHeartbeat()
-                 .SetTick(TimeSpan.FromSeconds(1));
-
-                 a.UseReconnection<WebSocketClient>();
-             })
-             .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-        await client.ConnectAsync();
+        await client.ConnectAsync("ws://127.0.0.1:7789/ws");
 
         client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
+        #endregion
+
 
         await Task.Delay(1000000);
     }
@@ -260,27 +254,31 @@ internal class Program
     /// <summary>
     /// 通过/wsquery，传入参数连接
     /// </summary>
-    private static void ConnectWith_wsquery()
+    private static async Task ConnectWith_wsquery()
     {
+        #region WebSocket带Query参数连接
         using var client = new WebSocketClient();
-        client.SetupAsync(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
             })
             .SetRemoteIPHost("ws://127.0.0.1:7789/wsquery?token=123456"));
-        client.ConnectAsync();
+        await client.ConnectAsync();
 
         client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功");
+        #endregion
+
     }
 
     /// <summary>
     /// 通过/wsheader,传入header连接
     /// </summary>
-    private static void ConnectWith_wsheader()
+    private static async Task ConnectWith_wsheader()
     {
+        #region WebSocket使用特定Header连接
         using var client = new WebSocketClient();
-        client.SetupAsync(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
@@ -294,18 +292,21 @@ internal class Program
                 });
             })
             .SetRemoteIPHost("ws://127.0.0.1:7789/wsheader"));
-        client.ConnectAsync();
+        await client.ConnectAsync();
 
         client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
+        #endregion
+
     }
 
     /// <summary>
     /// 使用Post方式连接
     /// </summary>
-    private static void ConnectWith_Post_ws()
+    private static async Task ConnectWith_Post_ws()
     {
+        #region WebSocket使用Post方式连接
         using var client = new WebSocketClient();
-        client.SetupAsync(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
@@ -319,9 +320,11 @@ internal class Program
                 });
             })
             .SetRemoteIPHost("ws://127.0.0.1:7789/postws"));
-        client.ConnectAsync();
+        await client.ConnectAsync();
 
         client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
+        #endregion
+
     }
     private static async Task<HttpService> CreateHttpService2()
     {
@@ -825,5 +828,15 @@ internal class Program
     }
     #endregion
 
+
+    #region 从继承创建WebSocket客户端
+    class MyWebSocketClient:WebSocketClient
+    {
+        protected override Task OnWebSocketReceived(WSDataFrameEventArgs e)
+        {
+            return base.OnWebSocketReceived(e);
+        }
+    }
+    #endregion
 }
 
