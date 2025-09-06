@@ -74,7 +74,7 @@ public class Touch_JsonWebSocket_2D : BaseTouchServer
 /// <summary>
 /// 状态日志打印插件
 /// </summary>
-internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlugin, IWebSocketClosedPlugin
+internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketConnectedPlugin, IWebSocketClosedPlugin
 {
     private readonly ILog m_log;
     public Touch_JsonWebSocket_Log_Plguin(ILog Log)
@@ -103,7 +103,7 @@ internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshaked
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
 
         if (webSocket.Client is JsonHttpSessionClient client)

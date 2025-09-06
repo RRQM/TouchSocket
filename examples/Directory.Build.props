@@ -7,36 +7,36 @@
 		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
 		<!-- Enable Central Package Management -->
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<!--<DebugMode>DebugProSources</DebugMode>-->
+		<TouchSocketVersion>4.0.0-beta.16</TouchSocketVersion>
 	</PropertyGroup>
 
 	<!-- Centralized Package Version Management -->
 	<ItemGroup>
 		<!-- TouchSocket Core Packages -->
-		<PackageVersion Include="TouchSocket" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Core" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Core.DependencyInjection" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Http" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.JsonRpc" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Rpc" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.WebApi" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.WebApi.Swagger" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.XmlRpc" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Hosting" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.AspNetCore" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.NamedPipe" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.SerialPorts" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Dmtp" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Mqtt" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Modbus" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocket.Rpc.RateLimiting" Version="4.0.0-beta.15" />
+		<PackageVersion Include="TouchSocket" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Core" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Core.DependencyInjection" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Http" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.JsonRpc" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Rpc" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.WebApi" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.WebApi.Swagger" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.XmlRpc" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Hosting" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.AspNetCore" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.NamedPipe" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.SerialPorts" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Dmtp" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Mqtt" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Modbus" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocket.Rpc.RateLimiting" Version="$(TouchSocketVersion)" />
 
 		<!-- TouchSocketPro Packages -->
-		<PackageVersion Include="TouchSocketPro" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocketPro.AspNetCore" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocketPro.Modbus" Version="4.0.0-beta.15" />
-		<PackageVersion Include="TouchSocketPro.PlcBridges" Version="4.0.0-beta.15" />
+		<PackageVersion Include="TouchSocketPro" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocketPro.Dmtp" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocketPro.AspNetCore" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocketPro.Modbus" Version="$(TouchSocketVersion)" />
+		<PackageVersion Include="TouchSocketPro.PlcBridges" Version="$(TouchSocketVersion)" />
 
 		<!-- Microsoft Packages -->
 		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.7" />

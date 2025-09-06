@@ -154,9 +154,9 @@ internal class MyWebSocketCommand : WebSocketCommandLinePlugin
 /// <summary>
 /// WS收到数据等业务。
 /// </summary>
-internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+internal class MyWebSocketPlug : PluginBase, IWebSocketConnectedPlugin, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         if (client.Client is IHttpSessionClient socketClient)
         {
