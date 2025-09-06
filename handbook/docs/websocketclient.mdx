@@ -69,21 +69,10 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 一般继承实现的话，可以从`WebSocketClient`继承。
 
 <CustomCodeBlock region="从继承创建WebSocket客户端"/>
+
 ### 6.3 创建WSS客户端
 
-**当需要连接到由证书机构颁发的网址（例如：小程序、物联网等）时，仅需要设置带有`wss`的url即可。**
-
-<CustomCodeBlock region="创建WSS客户端"/>
-
-**当连接自定义证书的SSL：**
-
-<CustomCodeBlock region="WebSocket连接自定义SSL证书"/>
-
-:::caution 注意
-
-当使用域名连接时，`TargetHost`为域名，例如连接到`IPHost("wss://baidu.com")`时，`TargetHost`应当填写：`baidu.com`
-
-:::
+当需要连接到由证书机构颁发的网址（例如：小程序、物联网等）时，仅需要设置带有`wss`的url即可。当需要连接到自签名证书的网站时，则需要额外设置，详情请参考[HttpClient证书配置](./httpclient.mdx)。
 
 ## 七、连接服务器
 
@@ -106,12 +95,6 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 一般的，当某些服务器安全级别较高时，可能会定制特定的`header`用于验证连接。
 
 <CustomCodeBlock region="WebSocket使用特定Header连接"/>
-
-:::tip 提示
-
-实际上`OnWebSocketHandshaking`就是插件委托，也可以自己封装到插件使用。
-
-:::
 
 ### 7.4 使用Post方式连接
 
