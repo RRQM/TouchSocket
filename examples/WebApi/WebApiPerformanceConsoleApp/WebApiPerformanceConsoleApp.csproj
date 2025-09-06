@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -13,10 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FastEndpoints" Version="6.2.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="TouchSocket.Hosting" Version="4.0.0-beta.15" />
-		<PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.15" />
-		<PackageReference Include="TouchSocket.WebApi.Swagger" Version="4.0.0-beta.15" />
+		<PackageReference Include="FastEndpoints" />
+		<PackageReference Include="Newtonsoft.Json" />
+		<PackageReference Include="TouchSocket.Hosting" />
+		<PackageReference Include="TouchSocket.WebApi" />
+		<PackageReference Include="TouchSocket.WebApi.Swagger" />
 	</ItemGroup>
 </Project>

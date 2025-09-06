@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
   <PropertyGroup>
     <TargetFramework>net8.0-browser</TargetFramework>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Browser" />
   </ItemGroup>
 
   <ItemGroup>

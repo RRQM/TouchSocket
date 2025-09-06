@@ -8,13 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="3.2.0" />
-    <PackageReference Include="TouchSocket" Version="4.0.0-beta.15" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="4.0.0-beta.15" />
-    <PackageReference Include="TouchSocket.Rpc" Version="4.0.0-beta.15" />
-    <PackageReference Include="TouchSocket.WebApi" Version="4.0.0-beta.15" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="4.0.0-beta.15" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="4.0.0-beta.15" />
+    <PackageReference Include="log4net" />
+    <PackageReference Include="TouchSocket" />
+    <PackageReference Include="TouchSocket.JsonRpc" />
+    <PackageReference Include="TouchSocket.Rpc" />
+    <PackageReference Include="TouchSocket.WebApi" />
+    <PackageReference Include="TouchSocket.XmlRpc" />
+    <PackageReference Include="TouchSocketPro.Dmtp" />
   </ItemGroup>
 
   <ItemGroup>
