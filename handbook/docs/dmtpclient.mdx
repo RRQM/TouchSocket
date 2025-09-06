@@ -39,8 +39,8 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 
 |  插件方法 | 功能 |
 | --- | --- |
-| IDmtpHandshakingPlugin | 客户端在验证连接。默认情况下，框架会首先验证连接Token是否正确，如果不正确则直接拒绝。不会有任何投递。用户也可以使用Metadata进行动态验证。 |
-| IDmtpHandshakedPlugin | 客户端完成握手连接验证 |
+| IDmtpConnectingPlugin | 客户端在验证连接。默认情况下，框架会首先验证连接Token是否正确，如果不正确则直接拒绝。不会有任何投递。用户也可以使用Metadata进行动态验证。 |
+| IDmtpConnectedPlugin | 客户端完成握手连接验证 |
 | IDmtpReceivedPlugin | 在收到Dmtp格式的数据包时触发 |
 | IDmtpRoutingPlugin | 当需要路由数据时触发，并且必须返回e.IsPermitOperation=true时，才允许路由 |
 | IDmtpCreatedChannelPlugin | 在收到创建通道的请求时候触发。 |

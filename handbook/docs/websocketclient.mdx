@@ -122,87 +122,59 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 如6.2所示，如果需要更自定义的接收逻辑，可以从`WebSocketClient`继承，然后重写`OnWebSocketReceived`方法。
 
-### 8.3 插件处理 <Tag>推荐</Tag>
+### 8.3 使用插件接收数据
 
-<Tabs
-    defaultValue="tab1"
-    values=
-    {[
-        { label: "文档",value: "tab1"},
-        { label: "视频", value: "tab2" }
-    ]}
->
-<TabItem value="tab1">
-按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
+使用插件接收消息是最推荐的方式，它提供了高度解耦和灵活的数据处理能力。
 
-（1）声明插件
+**（1）定义插件：**
 
-插件可以先继承`PluginBase`，然后再实现需要的功能插件接口，可以按需选择泛型或者非泛型实现。
+<CustomCodeBlock region="创建WebSocket接收插件"/>
 
-如果已经有继承类，直接实现`IPlugin`接口即可。
+**（2）配置使用插件：**
 
-<CustomCodeBlock region="WebSocket客户端创建接收插件"/>
-
-（2）创建使用插件处理的客户端
-
-<CustomCodeBlock region="WebSocket客户端配置插件"/>
-
-</TabItem>
-<TabItem value="tab2">
-<BilibiliCard title="使用插件接收消息" link="https://www.bilibili.com/cheese/play/ep1504559" isPro="true"/>
-<BilibiliCard title="注册插件的三种方式" link="https://www.bilibili.com/cheese/play/ep1504563" isPro="true"/>
-<BilibiliCard title="插件的封装性和扩展性详解" link="https://www.bilibili.com/cheese/play/ep1504564" isPro="true"/>
-<BilibiliCard title="插件的链式调用机制详解(1)" link="https://www.bilibili.com/cheese/play/ep1504565" isPro="true"/>
-<BilibiliCard title="插件的链式调用机制详解(2)" link="https://www.bilibili.com/cheese/play/ep1504567" isPro="true"/>
-<BilibiliCard title="在插件中获取IOC服务" link="https://www.bilibili.com/cheese/play/ep1504569" isPro="true"/>
-<BilibiliCard title="插件的卸载" link="https://www.bilibili.com/cheese/play/ep1504575" isPro="true"/>
-</TabItem>
-</Tabs>
-
-### 8.4 异步阻塞接收
-
-异步阻塞接收，即使用await的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。
-
-<BilibiliCard title="使用ReadAsync的方式读取ws数据" link="https://www.bilibili.com/cheese/play/ep1709028" isPro="true"/>
-
-<CustomCodeBlock region="WebSocket客户端异步阻塞接收"/>
+<CustomCodeBlock region="使用WebSocket接收插件"/>
 
 :::tip 提示
 
-异步阻塞接收，在等待接收数据时，不会阻塞线程资源，所以即使大量使用，也不会影响性能。
-使用该方式，会阻塞`IWebSocketReceivedPlugin`的插件传递。在收到`WebSocket`消息的时候，不会再触发插件。
+在客户端端，默认情况下插件的所有函数都是线程安全的。
+
+:::
+
+### 8.4 异步阻塞接收
+
+异步阻塞接收是通过直接调用`WebSocket`的`ReadAsync`方法来同步阻塞式读取数据。这种方式的特点是能在代码上下文中直接获取数据，便于处理复杂的数据逻辑。
+
+一般的，在刚连接成功调用`ReadAsync`方法来接收数据。
+
+<BilibiliCard title="使用ReadAsync的方式读取ws数据" link="https://www.bilibili.com/cheese/play/ep1709028" isPro="true"/>
+
+<CustomCodeBlock region="WebSocket客户端使用ReadAsync读取数据"/>
+
+:::info 信息
+
+`ReadAsync`方式是**异步非阻塞**的接收方式，不会占用线程资源，只会阻塞当前`Task`。因此可以大量使用，不需要考虑性能问题。
+
+:::
+
+:::caution 注意
+
+使用`ReadAsync`方式会终止触发`IWebSocketReceivedPlugin`插件。
 
 :::
 
 ### 8.5 接收中继数据
 
-`WebSocket`协议本身是支持超大数据包的，但是这些包不会一次性接收，而是分多次接收的，同时会通过`Opcode`来表明其为中继数据。
+WebSocket在接收大数据时，可能会分包接收。可以通过`WSDataFrame.Opcode`的值是不是`WSDataType.Cont`来判断是不是分包数据。
 
-<BilibiliCard title="ws接收并处理中继数据" link="https://www.bilibili.com/cheese/play/ep1709029" isPro="true"/>
+分包数据的处理方式有很多，下面提供一种内存缓存的方式：
 
-**方法1：使用ReadAsync手动处理中继包**
-
-<CustomCodeBlock region="WebSocket客户端手动处理中继包"/>
-
-**方法2：使用内置扩展方法**
-
-<CustomCodeBlock region="WebSocket客户端使用扩展方法接收"/>
+<CustomCodeBlock region="WebSocket处理中继数据"/>
 
 :::caution 注意
 
-`ReadStringAsync`或者`ReadBinaryAsync`，都只接收对应的数据类型，如果收到非匹配数据则会抛出异常。
+内存缓存的方式适合数据量不大的场景，如果数据量较大，建议使用其他缓存等方式。
 
-:::
-
-**方法3：使用消息组合器**
-
-<CustomCodeBlock region="WebSocket客户端使用消息组合器"/>
-
-:::caution 注意
-
-使用消息组合器，实际上是由框架缓存了数据，所以，整体数据不要太大，不然可能会有爆内存的风险。
-
-:::
+:::  
 
 ## 九、发送数据
 
@@ -234,6 +206,12 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 <BilibiliCard title="ws的Ping和Pong的使用" link="https://www.bilibili.com/cheese/play/ep1709027" isPro="true"/>
 
+:::tip 建议
+
+`WebSocket`是双向通讯，所以支持客户端和服务器双向操作`Ping`和`Pong`报文。但是一般来说都是客户端执行`Ping`，服务器回应`Pong`。
+
+:::
+
 ### 9.5 发送大数据（分包）
 
 发送大数据时，可能需要分包发送，可以使用`SendAsync`的重载方法，设置`FIN`标志。
@@ -246,21 +224,15 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 `WebSocket`拥有独立的握手机制，可以通过`Online`属性检查连接状态。
 
-<CustomCodeBlock region="WebSocket检查连接状态"/>
+### 10.2 关闭连接
 
-### 10.2 Ping/Pong心跳机制
+在使用`WebSocket`时，如果想主动关闭连接，可以使用`CloseAsync`方法，同时可以携带一个关闭原因。
 
-`WebSocket`有自己的`Ping`、`Pong`机制，用于保持连接活跃和检测连接状态。
+默认关闭状态码为1000，意为：正常关闭。
 
-<CustomCodeBlock region="WebSocket心跳机制"/>
+<CustomCodeBlock region="WebSocket关闭连接"/>
 
-<BilibiliCard title="ws的Ping和Pong的使用" link="https://www.bilibili.com/cheese/play/ep1709027" isPro="true"/>
-
-:::tip 建议
-
-`WebSocket`是双向通讯，所以支持客户端和服务器双向操作`Ping`和`Pong`报文。但是一般来说都是客户端执行`Ping`，服务器回应`Pong`。
-
-:::
+<BilibiliCard title="主动处理ws的Close报文" link="https://www.bilibili.com/cheese/play/ep1709025" isPro="true"/>
 
 ### 10.3 断线重连
 
@@ -270,15 +242,7 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 <BilibiliCard title="WebSocket的断线重连以及无人值守模式" link="https://www.bilibili.com/cheese/play/ep1709031" isPro="true"/>
 
-### 10.4 主动关闭连接
 
-在使用`WebSocket`时，如果想主动关闭连接，可以使用`CloseAsync`方法，同时可以携带一个关闭原因。
-
-默认关闭状态码为1000，意为：正常关闭。
-
-<CustomCodeBlock region="WebSocket关闭连接"/>
-
-<BilibiliCard title="主动处理ws的Close报文" link="https://www.bilibili.com/cheese/play/ep1709025" isPro="true"/>
 
 ## 十一、示例Demo
 

@@ -404,9 +404,9 @@ await jsonRpcClient.ConnectAsync();
 下列示例演示的是，当`WebSocket`连接上时，服务器主动调用客户端。
 
 ```csharp  {8,10} showLineNumbers
-class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+class MyPluginClass : PluginBase, IWebSocketConnectedPlugin
 {
-    public async Task OnWebSocketHandshaked(IHttpSessionClient client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IHttpSessionClient client, HttpContextEventArgs e)
     {
         try
         {

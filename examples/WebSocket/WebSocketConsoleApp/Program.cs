@@ -43,6 +43,7 @@ internal class Program
         consoleAction.Add("9", "发送自定义消息", SendCustomMessage);
         consoleAction.Add("10", "发送Ping消息", SendPingMessage);
         consoleAction.Add("11", "发送分包消息", SendContMessage);
+        
 
         consoleAction.ShowAll();
 
@@ -231,11 +232,15 @@ internal class Program
             Console.WriteLine("Connected");
             return EasyTask.CompletedTask;
         };
-        client.Received=(c,e)=>
+
+        #region WebSocket客户端使用Received委托接收数据
+        client.Received = (c, e) =>
         {
             Console.WriteLine(e.DataFrame.ToText());
             return EasyTask.CompletedTask;
         };
+        #endregion
+
         client.Closed=(c,e)=>
         {
             Console.WriteLine("Closed");
@@ -523,63 +528,6 @@ internal class Program
         return false;
     }
 
-
-    #region WebSocket服务器使用ReadAsync读取数据
-    internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketConnectedPlugin
-    {
-        public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
-        {
-            //当WebSocket想要使用ReadAsync时，需要设置此值为true
-            client.AllowAsyncRead = true;
-
-            while (true)
-            {
-                using (var receiveResult = await client.ReadAsync(CancellationToken.None))
-                {
-                    if (receiveResult.IsCompleted)
-                    {
-                        Console.WriteLine($"WebSocket连接已关闭，关闭代码：{client.CloseStatus}，信息：{receiveResult.Message}");
-                        break;
-                    }
-
-                    //处理接收的数据
-                    var dataFrame = receiveResult.DataFrame;
-                    switch (dataFrame.Opcode)
-                    {
-                        case WSDataType.Cont:
-                            //处理中继包
-                            break;
-                        case WSDataType.Text:
-                            //处理文本包
-                            Console.WriteLine(dataFrame.ToText());
-                            break;
-                        case WSDataType.Binary:
-                            //处理二进制包
-                            var data = dataFrame.PayloadData;
-                            Console.WriteLine($"收到二进制数据，长度：{data.Length}");
-                            break;
-                        case WSDataType.Close:
-                            //处理关闭包
-                            break;
-                        case WSDataType.Ping:
-                            //处理Ping包
-                            break;
-                        case WSDataType.Pong:
-                            //处理Pong包
-                            break;
-                        default:
-                            //处理其他包
-                            break;
-                    }
-                }
-            }
-
-            await e.InvokeNext();
-        }
-    }
-    #endregion
-
-
     public class MyWebSocketPlugin : PluginBase,
         IWebSocketConnectingPlugin,
         IWebSocketConnectedPlugin,
@@ -616,9 +564,10 @@ internal class Program
 
         private readonly ILog m_logger;
 
-        #region WebSocket服务器处理中继数据
+       
         public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
+            #region WebSocket处理中继数据
             var dataFrame = e.DataFrame;
             switch (dataFrame.Opcode)
             {
@@ -686,11 +635,11 @@ internal class Program
                     }
                     break;
             }
+            #endregion
+
 
             await e.InvokeNext();
         }
-        #endregion
-
 
         public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
