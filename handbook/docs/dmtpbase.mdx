@@ -32,7 +32,7 @@ var config = new TouchSocketConfig()
 
 ### 1.2 动态验证
 
-使用插件，实现**IDmtpHandshakingPlugin**插件。然后可以自行判断一些信息，例如元数据等。
+使用插件，实现**IDmtpConnectingPlugin**插件。然后可以自行判断一些信息，例如元数据等。
 
 如果是特定协议的`Dmtp`，还可以判断一些特定信息，例如，在`TcpDmtp`中，可以判断`IP`地址等。
 
@@ -49,9 +49,9 @@ var config = new TouchSocketConfig()
 服务端使用插件验证连接信息。
 
 ```csharp showLineNumbers
-internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
+internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
 {
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         if (e.Metadata["a"] != "a")
         {

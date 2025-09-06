@@ -146,7 +146,7 @@ WebSocket服务器有多种接收消息的方式，可以根据不同的使用�
 
 异步阻塞接收是通过直接调用`WebSocket`的`ReadAsync`方法来同步阻塞式读取数据。这种方式的特点是能在代码上下文中直接获取数据，便于处理复杂的数据逻辑。
 
-一般的，在`IWebSocketHandshakedPlugin`插件中（即刚连接成功）调用`ReadAsync`方法来接收数据。
+一般的，在`IWebSocketConnectedPlugin`插件中（即刚连接成功）调用`ReadAsync`方法来接收数据。
 
 <BilibiliCard title="使用ReadAsync的方式读取ws数据" link="https://www.bilibili.com/cheese/play/ep1709028" isPro="true"/>
 
@@ -160,7 +160,7 @@ WebSocket服务器有多种接收消息的方式，可以根据不同的使用�
 
 :::caution 注意
 
-使用`ReadAsync`方式会阻塞`IWebSocketHandshakedPlugin`的插件传递链，在收到`WebSocket`消息时不会触发`IWebSocketReceivedPlugin`插件。
+使用`ReadAsync`方式会阻塞`IWebSocketConnectedPlugin`的插件传递链，在收到`WebSocket`消息时不会触发`IWebSocketReceivedPlugin`插件。
 
 :::
 
@@ -170,7 +170,7 @@ WebSocket在接收大数据时，可能会分包接收。可以通过`WSDataFram
 
 分包数据的处理方式有很多，下面提供一种内存缓存的方式：
 
-<CustomCodeBlock region="WebSocket服务器处理中继数据"/>
+<CustomCodeBlock region="WebSocket处理中继数据"/>
 
 :::caution 注意
 
@@ -180,7 +180,7 @@ WebSocket在接收大数据时，可能会分包接收。可以通过`WSDataFram
 
 ## 九、发送数据
 
-按照WebSocket服务器架构，每个成功连接的客户端都会在服务器端创建一个`HttpSessionClient`实例。要发送WebSocket消息，需要通过这些实例进行操作。
+按照`WebSocket`服务器架构，每个成功连接的客户端都会在服务器端创建一个`HttpSessionClient`实例。要发送WebSocket消息，需要通过这些实例进行操作。
 
 ### 9.1 获取客户端实例
 
