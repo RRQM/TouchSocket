@@ -55,11 +55,11 @@ internal static class Program
                })
                .ConfigurePlugins(a =>
                {
-                   a.Add(typeof(IDmtpHandshakingPlugin), async (c, e) =>
+                   a.Add(typeof(IDmtpConnectingPlugin), async (c, e) =>
                    {
                        await e.InvokeNext();
                    });
-                   a.Add(typeof(IDmtpHandshakedPlugin), async (c, e) =>
+                   a.Add(typeof(IDmtpConnectedPlugin), async (c, e) =>
                    {
                        await e.InvokeNext();
                    });

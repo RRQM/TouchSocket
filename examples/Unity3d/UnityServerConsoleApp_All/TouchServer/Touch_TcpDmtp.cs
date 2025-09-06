@@ -67,7 +67,7 @@ public class Touch_TcpDmtp : BaseTouchServer
     /// <summary>
     /// 状态日志打印插件
     /// </summary>
-    internal class Touch_Dmtp_Log_Plguin : PluginBase, IDmtpHandshakedPlugin, IDmtpClosedPlugin, IDmtpCreatedChannelPlugin
+    internal class Touch_Dmtp_Log_Plguin : PluginBase, IDmtpConnectedPlugin, IDmtpClosedPlugin, IDmtpCreatedChannelPlugin
     {
         public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
@@ -103,7 +103,7 @@ public class Touch_TcpDmtp : BaseTouchServer
             await e.InvokeNext();
         }
 
-        public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public async Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             if (client is TcpDmtpSessionClient clientSession)
             {
