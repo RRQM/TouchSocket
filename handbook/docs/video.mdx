@@ -3,6 +3,10 @@ id: video
 title: 视频教学
 ---
 
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 ## 🚀【零基础逆袭】B站爆款课程《C# TouchSocket！零基础网络通信入门》重磅来袭！助你成为领域大神！🎉
 
 ✨ **为什么选择这门课？看这里！** ✨
@@ -40,57 +44,150 @@ title: 视频教学
 ✅ QQ群答疑 + 直播答疑 📝
 
 ---
-⏳ **限时福利（以下活动截止2025.6.22）** 🚨
 
-✨TouchSocket VIP感恩回馈活动✨
-
-🎁【已授权客户专属】
-
-截至**2025.6.22**凡购买过Pro版（个人/企业）的新老朋友
-🎉立享课程5折（实际为100￥）返现优惠！
-
-💎【打赏达人专属】
-
-**2025.5.1**前打赏过的朋友看这里！
-📸凭打赏截图联系若汝棋茗（QQ505554090）
-💰双倍金额抵扣！上限100元！
-（例：累计打赏10元→购课减20元）
-
-🚀【开源贡献者专属】
-
-**2025.5.1**前提交过PR的开发者大大请注意！
-📎已合并的代码/文档PR均可
-✨每次贡献兑换20元优惠！上限100元！
-（例：合并2次→购课减40元）
-
-🐛【Bug猎手专属】
-
-**2025.5.1**前提交过框架Bug的小伙伴看过来！
-🔗已证实的Bug类Issue均可（必须提交过issue，不限git平台）
-💥每次Issue兑换10元优惠！上限100元！
-（例：提交2次→购课减20元）
-
-
-📢【活动规则】
-
- 1. 所有优惠可叠加使用，总上限100元
- 2. 优惠凭证仅限本人使用，禁止转让
-
-
-💸【返现/优惠操作指南】
-
- 1. 先到B站课堂下单：https://www.bilibili.com/cheese/play/ss489296905
- 2. 保留购课截图+对应凭证（打赏/PR/Issue）
- 3. 添加QQ505554090提交材料
- 4. **次日**18点后核对订单，无误后立即返现
- 5. 支持微信/支付宝收款码
-
-💖感谢每一位伙伴的支持与陪伴！
-如有疑问可随时联系客服哦~ (๑•̀ㅂ•́)و✧
-
----
 
 📱 **马上行动** 👇
 点击课程 👉 [立即抢位](https://www.bilibili.com/cheese/play/ss489296905)
 
 🎯 **今日投资自己，明日惊艳所有人！** 💪
+
+## 主要课程内容
+
+课程的大多数内容，都和本文档内容是关联的，所以都嵌入在文档的相关章节中，方便学习和查阅。
+
+此处展示的仅仅是课程中，独立体系的内容。
+
+## Tcp在WPF、Winform中的企业级应用
+
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "文字",value: "tab1"},
+        { label: "视频", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
+### 📋 课程概述
+
+本课程是一门深度实战型的企业级桌面应用开发教程，专注于TCP网络通信在WPF和Winform应用中的高级应用实践。💻✨
+
+课程以实际项目开发为导向，从零开始构建一套完整的企业级通信框架，涵盖了从基础架构设计到高级功能实现的全过程。通过32个精心设计的章节，学员将掌握如何在桌面应用中实现稳定、高效的网络通信解决方案。🏗️
+
+### 🎯 核心技术栈
+
+#### 🔧 开发框架
+- **WPF (Windows Presentation Foundation)** - 现代Windows桌面应用开发
+- **Winform** - 传统Windows桌面应用开发
+- **Baboon框架** - 轻量级IoC依赖注入框架
+- **TouchSocket** - 高性能TCP通信库
+
+#### 🌐 网络通信技术
+- **TCP协议深度应用** - 企业级网络通信实现
+- **自定义通信协议设计** - TLV格式协议架构
+- **数据适配器模式** - 高效数据解析与封装
+- **断线重连机制** - 网络异常自动恢复
+
+#### 💬 业务功能模块
+- **用户登录认证系统** - 安全的用户身份验证
+- **即时聊天通信** - 实时消息传输与转发
+- **好友列表管理** - 用户关系维护
+- **文件传输系统** - 大文件分块上传下载
+
+### 📚 课程结构
+
+#### 🏛️ 第一部分：架构设计与框架搭建
+- 解决方案架构设计与项目框架介绍
+- 服务器端解决方案创建与配置
+- 客户端与通用模块解决方案设计
+- Baboon框架集成与IoC容器配置
+
+#### 🔌 第二部分：通信协议与适配器开发
+- 自定义TCP通信协议设计（TLV格式）
+- 数据适配器实现与性能优化
+- 服务器与客户端通信框架完善
+- 一问一答通信模式设计与Ping业务实现
+
+#### 🔐 第三部分：用户认证与连接管理
+- 断线重连机制实现
+- 界面通知系统设计
+- 登录通信逻辑开发
+- WPF与Winform登录界面实现
+
+#### 💭 第四部分：即时聊天系统开发
+- 客户端聊天通信功能实现
+- 服务器消息队列与转发机制
+- 消息接收通信机制完善
+- 好友列表获取与管理
+
+#### 📁 第五部分：文件传输系统
+- 文件传输架构设计
+- 文件分块下载技术实现
+- 服务器端文件传输逻辑
+- 下载进度与速度显示
+
+### 🎓 学习收获
+
+通过本课程的学习，您将获得：
+
+- 🏢 **企业级开发经验**：掌握真实项目中的架构设计思路和开发模式
+- 🔧 **核心技术能力**：深入理解TCP通信、数据协议、异步编程等关键技术
+- 💡 **解决方案思维**：学会分析复杂业务需求并设计可扩展的技术方案
+- 🚀 **实战项目经验**：完整的聊天系统和文件传输系统开发经历
+
+### 👥 适用人群
+
+- 有一定C#基础的.NET开发者 👨‍💻
+- 希望学习网络编程的桌面应用开发者 🖥️
+- 需要开发企业级通信系统的工程师 🔧
+- 想要提升架构设计能力的程序员 🏗️
+
+### 🔥 课程亮点
+
+- ✅ **实战导向**：每个章节都基于真实项目需求
+- ✅ **技术深度**：深入TCP协议底层实现细节  
+- ✅ **架构思维**：培养企业级系统设计能力
+- ✅ **跨平台支持**：同时支持WPF和Winform开发
+
+---
+
+💪 准备好开启您的企业级TCP通信开发之旅了吗？让我们一起构建高性能的桌面通信应用！🚀✨
+</TabItem>
+<TabItem value="tab2">
+
+<BilibiliCard title="解决方案框架介绍" link="https://www.bilibili.com/cheese/play/ep1541464" isPro="true"/>
+<BilibiliCard title="创建服务器解决方案" link="https://www.bilibili.com/cheese/play/ep1541466" isPro="true"/>
+<BilibiliCard title="创建客户端和通用解决方案" link="https://www.bilibili.com/cheese/play/ep1541468" isPro="true"/>
+<BilibiliCard title="配置解决方案和启动项(1)" link="https://www.bilibili.com/cheese/play/ep1541474" isPro="true"/>
+<BilibiliCard title="配置解决方案和启动项(2)" link="https://www.bilibili.com/cheese/play/ep1541476" isPro="true"/>
+<BilibiliCard title="使用Baboon框架改造客户端" link="https://www.bilibili.com/cheese/play/ep1541482" isPro="true"/>
+<BilibiliCard title="设计通信协议并实现适配器" link="https://www.bilibili.com/cheese/play/ep1541486" isPro="true"/>
+<BilibiliCard title="优化通信协议和适配器性能" link="https://www.bilibili.com/cheese/play/ep1541490" isPro="true"/>
+<BilibiliCard title="完善服务器和客户都端通信框架" link="https://www.bilibili.com/cheese/play/ep1541494" isPro="true"/>
+<BilibiliCard title="完善客户端通信框架(1)" link="https://www.bilibili.com/cheese/play/ep1541499" isPro="true"/>
+<BilibiliCard title="完善客户端通信框架(2)" link="https://www.bilibili.com/cheese/play/ep1541503" isPro="true"/>
+<BilibiliCard title="完善客户端通信(3)" link="https://www.bilibili.com/cheese/play/ep1541510" isPro="true"/>
+<BilibiliCard title="设计一问一答通信模式，并实现Ping业务" link="https://www.bilibili.com/cheese/play/ep1541514" isPro="true"/>
+<BilibiliCard title="完善应答模式，支持响应数据" link="https://www.bilibili.com/cheese/play/ep1541517" isPro="true"/>
+<BilibiliCard title="添加断线重连和断线界面通知" link="https://www.bilibili.com/cheese/play/ep1541522" isPro="true"/>
+<BilibiliCard title="优化断线消息通知" link="https://www.bilibili.com/cheese/play/ep1541536" isPro="true"/>
+<BilibiliCard title="添加登录通信逻辑" link="https://www.bilibili.com/cheese/play/ep1541551" isPro="true"/>
+<BilibiliCard title="Winform添加登录窗体和逻辑" link="https://www.bilibili.com/cheese/play/ep1541553" isPro="true"/>
+<BilibiliCard title="Wpf添加登录窗体和逻辑" link="https://www.bilibili.com/cheese/play/ep1541568" isPro="true"/>
+<BilibiliCard title="添加客户端聊天通信功能" link="https://www.bilibili.com/cheese/play/ep1541578" isPro="true"/>
+<BilibiliCard title="添加服务器通过队列转发消息" link="https://www.bilibili.com/cheese/play/ep1541587" isPro="true"/>
+<BilibiliCard title="完善客户端接收消息通信机制" link="https://www.bilibili.com/cheese/play/ep1541593" isPro="true"/>
+<BilibiliCard title="Winform获取好友列表" link="https://www.bilibili.com/cheese/play/ep1541602" isPro="true"/>
+<BilibiliCard title="Wpf获取好友列表" link="https://www.bilibili.com/cheese/play/ep1541608" isPro="true"/>
+<BilibiliCard title="完善客户端发送消息" link="https://www.bilibili.com/cheese/play/ep1541611" isPro="true"/>
+<BilibiliCard title="完成简易聊天系统的开发" link="https://www.bilibili.com/cheese/play/ep1541624" isPro="true"/>
+<BilibiliCard title="设计文件传输架构" link="https://www.bilibili.com/cheese/play/ep1548644" isPro="true"/>
+<BilibiliCard title="实现文件分块下载(1)" link="https://www.bilibili.com/cheese/play/ep1548666" isPro="true"/>
+<BilibiliCard title="实现文件分块下载(2)" link="https://www.bilibili.com/cheese/play/ep1548670" isPro="true"/>
+<BilibiliCard title="实现文件下载服务器部分逻辑" link="https://www.bilibili.com/cheese/play/ep1548671" isPro="true"/>
+<BilibiliCard title="完成文件下载功能" link="https://www.bilibili.com/cheese/play/ep1548672" isPro="true"/>
+<BilibiliCard title="显示下载进度和速度" link="https://www.bilibili.com/cheese/play/ep1548683" isPro="true"/>
+<BilibiliCard title="总结与优化分析" link="https://www.bilibili.com/cheese/play/ep1548684" isPro="true"/>
+</TabItem>
+</Tabs>
+
