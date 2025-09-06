@@ -16,11 +16,11 @@ using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
-internal class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
+internal class SimpleDmtpRpcFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlugin
 {
     private readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
 
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var actor = new SimpleDmtpRpcActor(client.DmtpActor)
         {

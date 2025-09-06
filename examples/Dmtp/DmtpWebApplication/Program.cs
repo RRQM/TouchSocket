@@ -78,7 +78,7 @@ public class Program
     }
 }
 
-internal class MyClassPlugin : PluginBase, IDmtpHandshakedPlugin
+internal class MyClassPlugin : PluginBase, IDmtpConnectedPlugin
 {
     private readonly ILogger<MyClassPlugin> m_logger;
 
@@ -87,9 +87,9 @@ internal class MyClassPlugin : PluginBase, IDmtpHandshakedPlugin
         this.m_logger = logger;
     }
 
-    public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
-        this.m_logger.LogInformation("DmtpHandshaked");
+        this.m_logger.LogInformation("DmtpConnected");
         await e.InvokeNext();
     }
 }

@@ -224,9 +224,9 @@ internal class Program
     }
 }
 
-internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
+internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
 {
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         if (e.Metadata["a"] != "a")
         {
