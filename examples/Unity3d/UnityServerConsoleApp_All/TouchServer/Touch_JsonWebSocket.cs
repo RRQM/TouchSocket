@@ -73,7 +73,7 @@ public class Touch_JsonWebSocket : BaseTouchServer
 /// <summary>
 /// 状态日志打印插件
 /// </summary>
-internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlugin, IWebSocketClosedPlugin
+internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketConnectedPlugin, IWebSocketClosedPlugin
 //,IWebSocketReceivedPlugin
 {
 
@@ -83,7 +83,7 @@ internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshaked
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
         webSocket.Client.Logger.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已连接");
         await e.InvokeNext();

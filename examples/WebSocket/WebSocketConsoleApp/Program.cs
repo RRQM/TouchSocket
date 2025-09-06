@@ -229,17 +229,17 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.Add(typeof(IWebSocketHandshakedPlugin), () =>
+                 a.AddWebSocketConnectedPlugin(() =>
                  {
-                     Console.WriteLine("WebSocketHandshaked");
+                     Console.WriteLine("WebSocketConnected");
                  });
 
-                 a.Add(typeof(IWebSocketClosingPlugin), () =>
+                 a.AddWebSocketClosingPlugin(() =>
                  {
                      Console.WriteLine("WebSocketClosing");
                  });
 
-                 a.Add(typeof(IWebSocketClosedPlugin), () =>
+                 a.AddWebSocketClosedPlugin(() =>
                  {
                      Console.WriteLine("WebSocketClosed");
                  });
@@ -287,7 +287,7 @@ internal class Program
             })
             .ConfigurePlugins(a =>
             {
-                a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket webSocket, HttpContextEventArgs e) =>
+                a.AddWebSocketConnectedPlugin(async (IWebSocket webSocket, HttpContextEventArgs e) =>
                 {
                     e.Context.Request.Headers.Add("token", "123456");
                     await e.InvokeNext();
@@ -312,7 +312,7 @@ internal class Program
             })
             .ConfigurePlugins(a =>
             {
-                a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket webSocket, HttpContextEventArgs e) =>
+                a.AddWebSocketConnectedPlugin(async (IWebSocket webSocket, HttpContextEventArgs e) =>
                 {
                     e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
                     await e.InvokeNext();
@@ -522,9 +522,9 @@ internal class Program
 
 
     #region WebSocket服务器使用ReadAsync读取数据
-    internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
+    internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketConnectedPlugin
     {
-        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
         {
             //当WebSocket想要使用ReadAsync时，需要设置此值为true
             client.AllowAsyncRead = true;
@@ -578,8 +578,8 @@ internal class Program
 
 
     public class MyWebSocketPlugin : PluginBase,
-        IWebSocketHandshakingPlugin,
-        IWebSocketHandshakedPlugin,
+        IWebSocketConnectingPlugin,
+        IWebSocketConnectedPlugin,
         IWebSocketReceivedPlugin,
         IWebSocketClosingPlugin,
         IWebSocketClosedPlugin
@@ -589,7 +589,7 @@ internal class Program
             this.m_logger = logger;
         }
 
-        public async Task OnWebSocketHandshaking(IWebSocket client, HttpContextEventArgs e)
+        public async Task OnWebSocketConnecting(IWebSocket client, HttpContextEventArgs e)
         {
             if (client.Client is IHttpSessionClient socketClient)
             {
@@ -605,7 +605,7 @@ internal class Program
             await e.InvokeNext();
         }
 
-        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
         {
             this.m_logger.Info("WebSocket成功连接");
             await e.InvokeNext();

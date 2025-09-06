@@ -77,7 +77,7 @@ internal class Program
     }
 }
 
-internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
+internal class MyReadWebSocketPlugin : PluginBase, IWebSocketConnectedPlugin
 {
     private readonly ILog m_logger;
 
@@ -86,7 +86,7 @@ internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
         this.m_logger = logger;
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         //当WebSocket想要使用ReadAsync时，需要设置此值为true
         client.AllowAsyncRead = true;

@@ -56,7 +56,7 @@ public class Touch_WebSocket : BaseTouchServer
 /// <summary>
 /// 状态日志打印插件
 /// </summary>
-internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin, IWebSocketClosedPlugin
+internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketConnectedPlugin, IWebSocketReceivedPlugin, IWebSocketClosedPlugin
 {
 
     public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
@@ -65,7 +65,7 @@ internal class Touch_WebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlug
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
         webSocket.Client.Logger.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已连接");
         await e.InvokeNext();

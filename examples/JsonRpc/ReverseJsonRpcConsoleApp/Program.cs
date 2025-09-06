@@ -82,9 +82,9 @@ internal class Program
     }
 }
 
-internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+internal class MyPluginClass : PluginBase, IWebSocketConnectedPlugin
 {
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         try
         {
