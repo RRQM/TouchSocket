@@ -9,5 +9,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="TouchSocketPro.Dmtp" />
+		<PackageReference Include="TouchSocketPro.AspNetCore" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+
 	</ItemGroup>
 </Project>

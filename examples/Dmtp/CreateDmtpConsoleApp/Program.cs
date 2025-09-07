@@ -10,16 +10,21 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
+using TouchSocket.NamedPipe;
+using TouchSocket.Sockets;
 
 namespace CreateDmtpConsoleApp;
 
 internal class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        var tcpDmtpService = await CreateTcpDmtpService();
     }
 
     private static async Task<TcpDmtpService> CreateTcpDmtpService()
@@ -47,5 +52,118 @@ internal class Program
 
         service.Logger.Info($"{service.GetType().Name}已启动");
         return service;
+    }
+
+    static async Task<UdpDmtp> CreateUdpDmtpService()
+    {
+
+        var udpDmtp = new UdpDmtp();
+
+        var config = new TouchSocketConfig();
+        config.SetBindIPHost(new IPHost(7789))
+             .ConfigureContainer(a =>
+             {
+                 a.AddConsoleLogger();
+             });
+
+        await udpDmtp.SetupAsync(config);
+
+        await udpDmtp.StartAsync();
+
+        udpDmtp.Logger.Info($"{udpDmtp.GetType().Name}已启动");
+        return udpDmtp;
+    }
+    static async Task<HttpDmtpService> CreateHttpDmtpService()
+    {
+        var service = new HttpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(7789)
+               .ConfigureContainer(a =>
+               {
+                   a.AddConsoleLogger();
+               })
+               .SetDmtpOption(options =>
+               {
+                   options.VerifyToken = "Dmtp";
+               });
+
+        await service.SetupAsync(config);
+
+        await service.StartAsync();
+
+        service.Logger.Info($"{service.GetType().Name}已启动");
+        return service;
+    }
+
+    static async Task<NamedPipeDmtpService> CreateNamedPipeDmtpService()
+    {
+        var service = new NamedPipeDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetPipeName("TouchSocketPipe")//设置管道名称
+               .ConfigureContainer(a =>
+               {
+                   a.AddConsoleLogger();
+               })
+               .SetDmtpOption(options =>
+               {
+                   options.VerifyToken = "Dmtp";
+               });
+
+        await service.SetupAsync(config);
+
+        await service.StartAsync();
+
+        service.Logger.Info($"{service.GetType().Name}已启动");
+        return service;
+    }
+    static async Task CreateAspNetCoreWebSocketDmtpService(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+
+        builder.Services.ConfigureContainer(container =>
+        {
+            container.AddAspNetCoreLogger();
+        });
+
+        builder.Services.AddWebSocketDmtpService(config =>
+        {
+            config.SetDmtpOption(options =>
+                {
+                    options.VerifyToken = "Dmtp";
+                })
+                .ConfigurePlugins(a =>
+                {
+                });
+        });
+
+        var app = builder.Build();
+        app.UseWebSockets();
+        app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
+    }
+
+    static async Task CreateAspNetCoreHttpDmtpService(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.ConfigureContainer(container =>
+        {
+            container.AddAspNetCoreLogger();
+        });
+
+        builder.Services.AddHttpMiddlewareDmtpService(config =>
+        {
+            config.SetDmtpOption(options=>
+            {
+                options.VerifyToken = "Dmtp";
+            })
+            .ConfigurePlugins(a =>
+            {
+                //添加插件
+            });
+        });
+
+        var app = builder.Build();
+        app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
     }
 }
