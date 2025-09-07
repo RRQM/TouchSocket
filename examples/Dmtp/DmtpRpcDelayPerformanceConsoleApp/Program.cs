@@ -68,9 +68,9 @@ namespace RpcDelayPerConsoleApp
                    {
                        a.UseDmtpRpc();
                    })
-                   .SetDmtpOption(new DmtpOption()
+                   .SetDmtpOption(options=>
                    {
-                       VerifyToken = "Rpc"
+                       options.VerifyToken = "Rpc";
                    });
 
             await service.SetupAsync(config);
@@ -89,9 +89,9 @@ namespace RpcDelayPerConsoleApp
                   {
                       a.UseDmtpRpc();
                   })
-                  .SetDmtpOption(new DmtpOption()
+                  .SetDmtpOption(options=>
                   {
-                      VerifyToken = "Rpc"
+                      options.VerifyToken = "Rpc";
                   }));
             await client.ConnectAsync();
 

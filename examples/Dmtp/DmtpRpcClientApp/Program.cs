@@ -70,9 +70,9 @@ internal static class Program
                {
                    a.AddConsoleLogger();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Rpc"
+                   options.VerifyToken = "Rpc";
                });
 
         await service.SetupAsync(config);

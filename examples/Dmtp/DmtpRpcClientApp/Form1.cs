@@ -102,10 +102,10 @@ public partial class Form1 : Form
                     }
                 });
             })
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Rpc",
-                Id = "asdasd"
+                options.VerifyToken = "Rpc";
+                options.Id = "asdasd";
             }));
             this.m_client.ConnectAsync();
 

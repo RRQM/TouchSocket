@@ -190,9 +190,9 @@ internal class Program
                  .SetMaxFailCount(3);
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              }));
         await client.ConnectAsync();
 

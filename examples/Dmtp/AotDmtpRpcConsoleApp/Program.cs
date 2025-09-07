@@ -81,9 +81,9 @@ namespace DmtpRpcConsoleApp
                          });
                      });
                  })
-                 .SetDmtpOption(new DmtpOption()
+                 .SetDmtpOption(options=>
                  {
-                     VerifyToken = "Rpc"
+                     options.VerifyToken = "Rpc";
                  }));
             await client.ConnectAsync();
             client.Logger.Info($"客户端已连接");
@@ -117,9 +117,9 @@ namespace DmtpRpcConsoleApp
                            });
                        });
                    })
-                   .SetDmtpOption(new DmtpOption()
+                   .SetDmtpOption(options=>
                    {
-                       VerifyToken = "Rpc"
+                       options.VerifyToken = "Rpc";
                    });
 
             await service.SetupAsync(config);

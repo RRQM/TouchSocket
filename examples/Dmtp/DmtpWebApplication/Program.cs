@@ -40,9 +40,9 @@ public class Program
         builder.Services.AddWebSocketDmtpService(config =>
         {
             config
-                .SetDmtpOption(new DmtpOption()
+                .SetDmtpOption(options=>
                 {
-                    VerifyToken = "Dmtp"
+                    options.VerifyToken = "Dmtp";
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -54,9 +54,9 @@ public class Program
 
         builder.Services.AddHttpMiddlewareDmtpService(config =>
         {
-            config.SetDmtpOption(new DmtpOption()
+            config.SetDmtpOption(options=>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             })
             .ConfigurePlugins(a =>
             {

@@ -40,9 +40,9 @@ internal class Program
             {
                 a.UseDmtpRpc();
             })
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options =>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             }));
         client.ConnectAsync();
         return client;
@@ -65,9 +65,9 @@ internal class Program
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Rpc"
+                   options.VerifyToken = "Rpc";
                });
 
         service.SetupAsync(config);

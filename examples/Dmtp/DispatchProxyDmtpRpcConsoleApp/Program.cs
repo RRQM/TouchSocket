@@ -58,9 +58,9 @@ internal class Program
                     a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             }));
             client.ConnectAsync();
             client.Logger.Info($"连接成功，Id={client.Id}");

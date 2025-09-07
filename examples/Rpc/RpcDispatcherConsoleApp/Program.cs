@@ -39,9 +39,9 @@ internal class Program
                    a.UseDmtpRpc()
                    .UseConcurrencyDispatcher();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Rpc"//连接验证口令。
+                   options.VerifyToken = "Rpc";//连接验证口令。
                });
 
         await service.SetupAsync(config);
@@ -57,9 +57,9 @@ internal class Program
             {
                 a.UseDmtpRpc();
             })
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Rpc"//连接验证口令。
+                options.VerifyToken = "Rpc";//连接验证口令。
             }));
         await client.ConnectAsync();
 

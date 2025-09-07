@@ -91,9 +91,9 @@ internal class Program
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"
+                   options.VerifyToken = "Dmtp";
                })
                .ConfigureContainer(a =>
                {
@@ -128,9 +128,9 @@ internal class Program
                    a.Add<MyPlugin1>();
                    a.Add<MyPlugin2>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//连接验证口令。
+                   options.VerifyToken = "Dmtp";//连接验证口令。
                });
 
         await service.SetupAsync(config);

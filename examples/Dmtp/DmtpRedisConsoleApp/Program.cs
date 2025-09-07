@@ -49,9 +49,9 @@ internal class Program
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
             .SetRemoteIPHost("127.0.0.1:7789")
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             })
             .ConfigureContainer(a =>
             {
@@ -78,9 +78,9 @@ internal class Program
                    a.UseDmtpRedis()//必须添加Redis访问插件
                    .SetCache(new MemoryCache<string, ReadOnlyMemory<byte>>());//这里可以设置缓存持久化，此处仍然是使用内存缓存。
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//连接验证口令。
+                   options.VerifyToken = "Dmtp";//连接验证口令。
                })
                .BuildServiceAsync<TcpDmtpService>();//此处build相当于new TcpDmtpService，然后SetupAsync，然后StartAsync。
         service.Logger.Info("服务器成功启动");

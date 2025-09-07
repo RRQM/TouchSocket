@@ -52,9 +52,9 @@ internal class Program
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"
+                   options.VerifyToken = "Dmtp";
                });
 
         service.SetupAsync(config);
@@ -81,9 +81,9 @@ internal class Program
              {
                  a.UseDmtpRpc();
              })
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             }));
         client.ConnectAsync();
 

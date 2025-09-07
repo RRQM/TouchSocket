@@ -23,9 +23,9 @@ internal class Program
         //WebSocketDmtpClient连接
         var websocketDmtpClient = new WebSocketDmtpClient();
         await websocketDmtpClient.SetupAsync(new TouchSocketConfig()
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              })
              .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
         await websocketDmtpClient.ConnectAsync();
@@ -34,9 +34,9 @@ internal class Program
         //HttpDmtpClient连接
         var httpDmtpClient = new HttpDmtpClient();
         await httpDmtpClient.SetupAsync(new TouchSocketConfig()
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              })
              .SetRemoteIPHost("http://127.0.0.1:5174"));
         await httpDmtpClient.ConnectAsync();

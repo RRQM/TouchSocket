@@ -48,9 +48,9 @@ internal class Program
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "File"
+                   options.VerifyToken = "File";
                })
                .ConfigureContainer(a =>
                {
@@ -87,9 +87,9 @@ internal class Program
                    a.UseSimpleDmtpRpc()
                    .RegisterRpc(new MyServer());
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "File"//连接验证口令。
+                   options.VerifyToken = "File";//连接验证口令。
                });
 
         await service.SetupAsync(config);
