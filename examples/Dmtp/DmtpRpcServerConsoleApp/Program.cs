@@ -50,9 +50,9 @@ internal class Program
 
                    a.Add<MyRpcPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);

@@ -59,9 +59,9 @@ internal class Program
                   //        SerializationBinder = default,
                   //    });
               })
-              .SetDmtpOption(new DmtpOption()
+              .SetDmtpOption(options=>
               {
-                  VerifyToken = "Dmtp"
+                  options.VerifyToken = "Dmtp";
               }));
         await client.ConnectAsync();
         return client;
@@ -85,9 +85,9 @@ internal class Program
                        store.RegisterServer<MyRpcServer>();
                    });
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"
+                   options.VerifyToken = "Dmtp";
                });
 
         await service.SetupAsync(config);

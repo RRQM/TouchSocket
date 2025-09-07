@@ -71,9 +71,9 @@ internal class Program
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              })
              .ConfigureContainer(a =>
              {
@@ -104,9 +104,9 @@ internal class Program
                    a.UseDmtpRemoteStream();//必须添加远程流访问插件
                    a.Add<MyRemoteStreamPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//连接验证口令。
+                   options.VerifyToken = "Dmtp";//连接验证口令。
                })
                .BuildServiceAsync<TcpDmtpService>();//此处build相当于new TcpDmtpService，然后SetupAsync，然后StartAsync。
         service.Logger.Info("服务器成功启动");

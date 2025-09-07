@@ -648,9 +648,9 @@ internal class Program
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "File"
+                   options.VerifyToken = "File";
                })
                .ConfigureContainer(a =>
                {
@@ -691,9 +691,9 @@ internal class Program
                    .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
                    a.Add<MyPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "File"//连接验证口令。
+                   options.VerifyToken = "File";//连接验证口令。
                });
 
         await service.SetupAsync(config);
@@ -720,9 +720,9 @@ internal class Program
             {
                 return new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
+                .SetDmtpOption(options =>
                 {
-                    VerifyToken = "File"
+                    options.VerifyToken = "File";
                 })
                 .ConfigurePlugins(a =>
                 {

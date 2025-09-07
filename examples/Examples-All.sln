@@ -116,7 +116,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpWebApplication", "Dmtp\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteStreamConsoleApp", "Dmtp\RemoteStreamConsoleApp\RemoteStreamConsoleApp.csproj", "{4019C53F-2185-4ACF-A816-C659607B05E5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dmtp", "Dmtp", "{57B547B6-D725-4C3E-82A7-39ED03BD438B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "创建", "创建", "{57B547B6-D725-4C3E-82A7-39ED03BD438B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpConsoleApp", "Dmtp\DmtpConsoleApp\DmtpConsoleApp.csproj", "{44AE2CE8-5EE2-42F6-A1CA-E562EC697445}"
 EndProject
@@ -350,6 +350,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaitingClientConsoleApp", "WaitingClient\WaitingClientConsoleApp\WaitingClientConsoleApp.csproj", "{9CC9DEE5-C96B-454E-8CBF-67A359055121}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultipacketAdapterConsoleApp", "Adapter\MultipacketAdapterConsoleApp\MultipacketAdapterConsoleApp.csproj", "{3B17545F-6B5B-C98E-9EA2-27E6FCFFE9AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateDmtpConsoleApp", "Dmtp\CreateDmtpConsoleApp\CreateDmtpConsoleApp.csproj", "{D791EA02-3EC8-44A0-9877-614DE92BA9B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -813,6 +815,10 @@ Global
 		{3B17545F-6B5B-C98E-9EA2-27E6FCFFE9AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B17545F-6B5B-C98E-9EA2-27E6FCFFE9AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B17545F-6B5B-C98E-9EA2-27E6FCFFE9AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D791EA02-3EC8-44A0-9877-614DE92BA9B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D791EA02-3EC8-44A0-9877-614DE92BA9B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D791EA02-3EC8-44A0-9877-614DE92BA9B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D791EA02-3EC8-44A0-9877-614DE92BA9B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -964,6 +970,7 @@ Global
 		{90FE56EA-94C2-820D-6E26-012E0BC1BDA9} = {432C7F0A-B01D-4113-8DF3-C588B147A4C6}
 		{9CC9DEE5-C96B-454E-8CBF-67A359055121} = {432C7F0A-B01D-4113-8DF3-C588B147A4C6}
 		{3B17545F-6B5B-C98E-9EA2-27E6FCFFE9AF} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{D791EA02-3EC8-44A0-9877-614DE92BA9B5} = {57B547B6-D725-4C3E-82A7-39ED03BD438B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

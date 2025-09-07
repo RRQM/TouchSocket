@@ -56,9 +56,9 @@ namespace RpcPerformanceConsoleApp
                    {
                        a.UseDmtpRpc();
                    })
-                   .SetDmtpOption(new DmtpOption()
+                   .SetDmtpOption(options=>
                    {
-                       VerifyToken = "Rpc"//设定连接口令，作用类似账号密码
+                       options.VerifyToken = "Rpc";//设定连接口令，作用类似账号密码
                    });
 
             await service.SetupAsync(config);
@@ -98,9 +98,9 @@ namespace RpcPerformanceConsoleApp
                      a.UseDmtpRpc();
                  })
                  .SetRemoteIPHost("127.0.0.1:7789")
-                 .SetDmtpOption(new DmtpOption()
+                 .SetDmtpOption(options=>
                  {
-                     VerifyToken = "Rpc"
+                     options.VerifyToken = "Rpc";
                  }));
             await client.ConnectAsync();
             return client;

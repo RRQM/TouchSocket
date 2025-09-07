@@ -44,9 +44,9 @@ internal class Program
                  a.AddConsoleLogger();
              })
              .SetPipeName("TouchSocketPipe")//设置管道名称
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              }));
         await client.ConnectAsync();
 
@@ -63,9 +63,9 @@ internal class Program
                {
                    a.AddConsoleLogger();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);

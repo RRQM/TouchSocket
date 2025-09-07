@@ -52,9 +52,9 @@ public class Touch_TcpDmtp : BaseTouchServer
                  a.Add<Touch_Dmtp_Log_Plguin>();
 
              })
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"//设置验证token
+                 options.VerifyToken = "Dmtp";//设置验证token
              });
 
         await this.dmtpService.SetupAsync(config);

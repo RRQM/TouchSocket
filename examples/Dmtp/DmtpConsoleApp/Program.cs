@@ -59,11 +59,11 @@ internal class Program
                  });
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp",//设置Token验证连接
-                 Id = "defaultId",//设置默认Id
-                 Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 options.VerifyToken = "Dmtp";//设置Token验证连接
+                 options.Id = "defaultId";//设置默认Id
+                 options.Metadata = new Metadata().Add("a", "a");//设置Metadata，可以传递更多的验证信息
              }));
         await client.ConnectAsync();
 
@@ -184,11 +184,11 @@ internal class Program
                  a.AddConsoleLogger();
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp",//设置Token验证连接
-                 Id = "defaultId",//设置默认Id
-                 Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 options.VerifyToken = "Dmtp";//设置Token验证连接
+                 options.Id = "defaultId";//设置默认Id
+                 options.Metadata = new Metadata().Add("a", "a");//设置Metadata，可以传递更多的验证信息
              }));
         await client.ConnectAsync();
 
@@ -211,9 +211,9 @@ internal class Program
                    a.Add<MyVerifyPlugin>();
                    a.Add<MyFlagsPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);
