@@ -112,7 +112,26 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
 
     void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
     {
-        this.m_core.OnCompleted(continuation, state, token, flags);
+        try
+        {
+            this.m_core.OnCompleted(continuation, state, token, flags);
+        }
+        catch (Exception ex)
+        {
+            // 记录异常并尝试设置异常状态，防止continuation执行异常影响整个应用
+            // 这里可以根据需要添加日志记录
+            // Logger?.LogError(ex, "Error in OnCompleted continuation execution");
+            
+            // 如果可能，尝试通知异常
+            try
+            {
+                this.m_core.SetException(ex);
+            }
+            catch
+            {
+                // 忽略SetException的异常，避免递归异常
+            }
+        }
     }
 
     public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)

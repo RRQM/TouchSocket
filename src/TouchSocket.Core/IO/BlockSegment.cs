@@ -28,7 +28,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
 
     private readonly SemaphoreSlim m_resetEventForCompleteRead = new(0, 1);
     private CancellationTokenRegistration m_tokenRegistration;
-    private ManualResetValueTaskSourceCore<TBlockResult> m_valueTaskSourceCore;
+    private ManualResetValueTaskSourceCore<TBlockResult> m_core;
     private readonly TBlockResult m_blockResult;
 
     #endregion 字段
@@ -39,7 +39,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// <param name="runContinuationsAsynchronously">指示是否异步运行延续。</param>
     public BlockSegment(bool runContinuationsAsynchronously = false)
     {
-        this.m_valueTaskSourceCore = new ManualResetValueTaskSourceCore<TBlockResult>()
+        this.m_core = new ManualResetValueTaskSourceCore<TBlockResult>()
         {
             RunContinuationsAsynchronously = runContinuationsAsynchronously
         };
@@ -52,7 +52,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// </summary>
     protected void Cancel()
     {
-        this.m_valueTaskSourceCore.SetException(new OperationCanceledException());
+        this.m_core.SetException(new OperationCanceledException());
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// </summary>
     protected virtual void CompleteRead()
     {
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
         this.m_resetEventForCompleteRead.Release();
     }
 
@@ -114,7 +114,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
             }
         }
 
-        return new ValueTask<TBlockResult>(this, this.m_valueTaskSourceCore.Version);
+        return new ValueTask<TBlockResult>(this, this.m_core.Version);
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// <param name="ex">异常实例。</param>
     protected void SetException(Exception ex)
     {
-        this.m_valueTaskSourceCore.SetException(ex);
+        this.m_core.SetException(ex);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// <returns>表示异步操作的任务。</returns>
     protected async Task TriggerAsync()
     {
-        this.m_valueTaskSourceCore.SetResult(this.m_blockResult);
+        this.m_core.SetResult(this.m_blockResult);
         await this.m_resetEventForCompleteRead.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -141,19 +141,38 @@ public abstract class BlockSegment<TBlockResult> : DisposableObject, IValueTaskS
     /// <inheritdoc/>
     TBlockResult IValueTaskSource<TBlockResult>.GetResult(short token)
     {
-        return this.m_valueTaskSourceCore.GetResult(token);
+        return this.m_core.GetResult(token);
     }
 
     /// <inheritdoc/>
     ValueTaskSourceStatus IValueTaskSource<TBlockResult>.GetStatus(short token)
     {
-        return this.m_valueTaskSourceCore.GetStatus(token);
+        return this.m_core.GetStatus(token);
     }
 
     /// <inheritdoc/>
     void IValueTaskSource<TBlockResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
     {
-        this.m_valueTaskSourceCore.OnCompleted(continuation, state, token, flags);
+        try
+        {
+            this.m_core.OnCompleted(continuation, state, token, flags);
+        }
+        catch (Exception ex)
+        {
+            // 记录异常并尝试设置异常状态，防止continuation执行异常影响整个应用
+            // 这里可以根据需要添加日志记录
+            // Logger?.LogError(ex, "Error in OnCompleted continuation execution");
+
+            // 如果可能，尝试通知异常
+            try
+            {
+                this.m_core.SetException(ex);
+            }
+            catch
+            {
+                // 忽略SetException的异常，避免递归异常
+            }
+        }
     }
 
     #endregion IValueTaskSource
