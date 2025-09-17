@@ -246,9 +246,11 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 筛选器
     /// </summary>
-    public IReadOnlyList<IRpcActionFilter> GetFilters()
+    /// <param name="g_actionFilters">全局筛选器</param>
+    /// <returns></returns>
+    public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<IRpcActionFilter> g_actionFilters)
     {
-        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3])
+        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3] || (g_actionFilters?.Any()) == true)
         {
             var actionFilters = new List<IRpcActionFilter>();
             //注册方法
@@ -297,6 +299,14 @@ public sealed class RpcMethod : Method
                 }
             }
 
+            if (g_actionFilters?.Any() == true)
+            {
+                //全局筛选器
+                foreach (var filter in g_actionFilters)
+                {
+                    this.AddActionFilter(filter, ref actionFilters);
+                }
+            }
             return actionFilters;
         }
         return new IRpcActionFilter[0];
