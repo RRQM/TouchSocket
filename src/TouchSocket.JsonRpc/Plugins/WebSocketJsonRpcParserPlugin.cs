@@ -23,7 +23,7 @@ namespace TouchSocket.JsonRpc;
 /// WebSocketJsonRpcParserPlugin
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketConnectedPlugin, IWebSocketReceivedPlugin
 {
     /// <summary>
     /// WebSocketJsonRpcParserPlugin
@@ -39,7 +39,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
     public Func<IWebSocket, HttpContext, Task<bool>> AllowJsonRpc { get; set; }
 
     /// <inheritdoc/>
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         if (this.AllowJsonRpc != null)
         {

@@ -11,6 +11,7 @@
 // ------------------------------------------------------------------------------
 
 using System;
+using System.IO.Pipelines;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,6 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
-
 internal sealed class TcpTransport : BaseTransport
 {
     private readonly TcpCore m_tcpCore;
@@ -26,6 +26,7 @@ internal sealed class TcpTransport : BaseTransport
 
     public TcpTransport(TcpCore tcpCore, TransportOption option) : base(option)
     {
+        
         this.m_tcpCore = tcpCore ?? throw new ArgumentNullException(nameof(tcpCore));
         this.m_socket = tcpCore.Socket;
         this.Start();

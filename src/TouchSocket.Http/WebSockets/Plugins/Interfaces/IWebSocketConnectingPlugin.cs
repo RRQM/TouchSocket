@@ -16,16 +16,15 @@ using TouchSocket.Core;
 namespace TouchSocket.Http.WebSockets;
 
 /// <summary>
-/// IWebSocketHandshakedPlugin
+/// IWebSocketConnectingPlugin
 /// </summary>
 [DynamicMethod]
-public interface IWebSocketHandshakedPlugin : IPlugin
+public interface IWebSocketConnectingPlugin : IPlugin
 {
     /// <summary>
-    /// 表示完成握手后。
+    /// 表示WebSocket即将连接。
     /// </summary>
     /// <param name="webSocket"></param>
     /// <param name="e"></param>
-    /// <returns></returns>
-    Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e);
+    Task OnWebSocketConnecting(IWebSocket webSocket, HttpContextEventArgs e);
 }

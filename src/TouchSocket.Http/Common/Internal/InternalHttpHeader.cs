@@ -47,4 +47,22 @@ internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHead
         ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
         return this.TryGetValue(key, out var value) ? value : null;
     }
+
+    public bool Contains(string key, string value, bool ignoreCase = true)
+    {
+        ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+        
+        if (!this.TryGetValue(key, out var headerValue))
+        {
+            return false;
+        }
+
+        if (value == null)
+        {
+            return headerValue == null;
+        }
+
+        var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(headerValue, value, comparison);
+    }
 }

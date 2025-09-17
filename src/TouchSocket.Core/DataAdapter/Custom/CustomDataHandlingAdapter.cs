@@ -39,8 +39,15 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
         return this.ParseRequestCore(ref reader, out request);
     }
 
+    /// <summary>
+    /// 尝试从字节读取器中解析出请求信息的核心方法。
+    /// </summary>
+    /// <typeparam name="TReader">字节读取器类型。</typeparam>
+    /// <param name="reader">字节读取器的引用。</param>
+    /// <param name="request">解析出的请求信息。</param>
+    /// <returns>解析成功返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
     protected virtual bool ParseRequestCore<TReader>(ref TReader reader, out TRequest request)
-       where TReader : IBytesReader
+        where TReader : IBytesReader
     {
         var result = this.Filter(ref reader, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest);
         switch (result)

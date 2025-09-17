@@ -30,5 +30,5 @@ public interface IIdClient
     /// </summary>
     /// <param name="newId">新的Id值</param>
     /// <param name="token"></param>
-    Task ResetIdAsync(string newId, CancellationToken token);
+    Task ResetIdAsync(string newId, CancellationToken token = default);
 }

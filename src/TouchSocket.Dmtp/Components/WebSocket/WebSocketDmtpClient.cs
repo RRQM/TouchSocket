@@ -68,8 +68,8 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             {
                 OutputSendAsync = this.OnDmtpActorSendAsync,
                 Routing = this.OnDmtpActorRouting,
-                Handshaking = this.OnDmtpActorHandshaking,
-                Handshaked = this.OnDmtpActorHandshaked,
+                Connecting = this.OnDmtpActorConnecting,
+                Connected = this.OnDmtpActorConnected,
                 Closing = this.OnDmtpActorClose,
                 Logger = this.Logger,
                 Client = this,
@@ -81,9 +81,10 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             this.m_dmtpAdapter.Config(this.Config);
             this.m_tokenSourceForReceive = new CancellationTokenSource();
 
-            var option = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
+            var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
+            ThrowHelper.ThrowArgumentNullExceptionIf(dmtpOption, nameof(dmtpOption));
 
-            await this.m_dmtpActor.HandshakeAsync(option.VerifyToken, option.Id, option.Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -188,14 +189,14 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         return this.OnCreateChannel(e);
     }
 
-    private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaked(e);
+        return this.OnConnected(e);
     }
 
-    private Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaking(e);
+        return this.OnConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -270,7 +271,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     /// 在完成握手连接时
     /// </summary>
     /// <param name="e">包含握手信息的事件参数</param>
-    protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnected(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则不再执行后续操作
         if (e.Handled)
@@ -278,14 +279,14 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 即将握手连接时
     /// </summary>
     /// <param name="e">参数</param>
-    protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnecting(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则直接返回
         if (e.Handled)
@@ -293,7 +294,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 触发握手过程的插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

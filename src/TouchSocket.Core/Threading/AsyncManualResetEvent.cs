@@ -24,6 +24,8 @@ namespace TouchSocket.Core;
 /// </summary>
 /// <remarks>
 /// 此代码摘抄自微软VS相关库。
+/// 这是一个可异步等待的手动重置事件实现，提供了与<see cref="ManualResetEvent"/>类似的功能，
+/// 但支持异步操作模式。允许多个任务异步等待事件的设置，并在事件被设置时唤醒所有等待的任务。
 /// </remarks>
 [DebuggerDisplay("Signaled: {IsSet}")]
 public class AsyncManualResetEvent
@@ -62,15 +64,13 @@ public class AsyncManualResetEvent
     private bool m_isSet;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncManualResetEvent"/> class.
+    /// 初始化<see cref="AsyncManualResetEvent"/>类的新实例。
     /// </summary>
-    /// <param name="initialState">A value indicating whether the event should be initially signaled.</param>
+    /// <param name="initialState">指示事件是否应初始处于已设置状态的值。</param>
     /// <param name="allowInliningAwaiters">
-    /// A value indicating whether to allow <see cref="WaitOneAsync()"/> callers' continuations to execute
-    /// on the thread that calls <see cref="SetAsync()"/> before the call returns.
-    /// <see cref="SetAsync()"/> callers should not hold private locks if this value is <see langword="true" /> to avoid deadlocks.
-    /// When <see langword="false" />, the task returned from <see cref="WaitOneAsync()"/> may not have fully transitioned to
-    /// its completed state by the time <see cref="SetAsync()"/> returns to its caller.
+    /// 指示是否允许<see cref="WaitOneAsync()"/>调用者的延续在调用<see cref="SetAsync()"/>的线程上执行的值，
+    /// 在调用返回之前执行。如果此值为<see langword="true"/>，则<see cref="SetAsync()"/>调用者不应持有私有锁以避免死锁。
+    /// 当为<see langword="false"/>时，从<see cref="WaitOneAsync()"/>返回的任务可能在<see cref="SetAsync()"/>返回给其调用者时尚未完全转换到其完成状态。
     /// </param>
     public AsyncManualResetEvent(bool initialState = false, bool allowInliningAwaiters = false)
     {
@@ -85,8 +85,9 @@ public class AsyncManualResetEvent
     }
 
     /// <summary>
-    /// Gets a value indicating whether the event is currently in a signaled state.
+    /// 获取一个值，指示事件当前是否处于已设置状态。
     /// </summary>
+    /// <value>如果事件已设置，则为<see langword="true"/>；否则为<see langword="false"/>。</value>
     public bool IsSet
     {
         get
@@ -99,8 +100,13 @@ public class AsyncManualResetEvent
     }
 
     /// <summary>
-    /// Returns a task that will be completed when this event is set.
+    /// 返回一个在此事件被设置时完成的任务。
     /// </summary>
+    /// <returns>表示异步等待操作的<see cref="Task"/>。</returns>
+    /// <remarks>
+    /// 此方法返回一个任务，当事件被设置时该任务将完成。
+    /// 如果事件已经被设置，则返回一个已完成的任务。
+    /// </remarks>
     public Task WaitOneAsync()
     {
         lock (this.m_syncObject)
@@ -109,6 +115,18 @@ public class AsyncManualResetEvent
         }
     }
 
+    /// <summary>
+    /// 返回一个在此事件被设置或超时时完成的任务。
+    /// </summary>
+    /// <param name="millisecondsTimeout">等待的超时时间。</param>
+    /// <returns>
+    /// 表示异步等待操作的<see cref="ValueTask{TResult}"/>。
+    /// 如果事件在超时前被设置，则返回<see langword="true"/>；如果超时，则返回<see langword="false"/>。
+    /// </returns>
+    /// <remarks>
+    /// 此方法在指定的超时时间内等待事件被设置。
+    /// 如果在超时前事件被设置，则返回<see langword="true"/>；否则返回<see langword="false"/>。
+    /// </remarks>
     public async ValueTask<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
     {
         try
@@ -126,10 +144,14 @@ public class AsyncManualResetEvent
     }
 
     /// <summary>
-    /// Returns a task that will be completed when this event is set.
+    /// 返回一个在此事件被设置时完成的任务。
     /// </summary>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A task that completes when the event is set, or cancels with the <paramref name="cancellationToken"/>.</returns>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>一个在事件被设置时完成的任务，或者在<paramref name="cancellationToken"/>被取消时取消。</returns>
+    /// <remarks>
+    /// 此方法返回一个任务，当事件被设置时该任务将完成。
+    /// 如果提供的取消令牌被取消，则返回的任务也将被取消。
+    /// </remarks>
     public Task WaitOneAsync(CancellationToken cancellationToken) => this.WaitOneAsync().WithCancellation(cancellationToken);
 
     private Task SetAsync()
@@ -158,16 +180,25 @@ public class AsyncManualResetEvent
     }
 
     /// <summary>
-    /// Sets this event to unblock callers of <see cref="WaitOneAsync()"/>.
+    /// 设置此事件以解除对<see cref="WaitOneAsync()"/>调用者的阻塞。
     /// </summary>
+    /// <remarks>
+    /// 此方法将事件设置为已设置状态，使所有等待此事件的任务完成。
+    /// 一旦调用此方法，所有当前和将来的<see cref="WaitOneAsync()"/>调用都将立即返回已完成的任务，
+    /// 直到调用<see cref="Reset()"/>方法。
+    /// </remarks>
     public void Set()
     {
         this.SetAsync();
     }
 
     /// <summary>
-    /// Resets this event to a state that will block callers of <see cref="WaitOneAsync()"/>.
+    /// 将此事件重置为将阻塞<see cref="WaitOneAsync()"/>调用者的状态。
     /// </summary>
+    /// <remarks>
+    /// 此方法将事件重置为未设置状态，使后续的<see cref="WaitOneAsync()"/>调用将等待直到事件再次被设置。
+    /// 如果事件已经处于未设置状态，则此方法不执行任何操作。
+    /// </remarks>
     public void Reset()
     {
         lock (this.m_syncObject)
@@ -205,16 +236,25 @@ public class AsyncManualResetEvent
     }
 
     /// <summary>
-    /// Sets and immediately resets this event, allowing all current waiters to unblock.
+    /// 设置并立即重置此事件，允许所有当前等待者解除阻塞。
     /// </summary>
+    /// <remarks>
+    /// 此方法执行一个脉冲操作：瞬间设置事件以释放所有当前等待的任务，然后立即将事件重置为未设置状态。
+    /// 这确保只有在调用此方法时正在等待的任务会被释放，而在脉冲操作完成后开始等待的新任务将继续阻塞。
+    /// </remarks>
     public void PulseAll()
     {
         this.PulseAllAsync();
     }
 
     /// <summary>
-    /// Gets an awaiter that completes when this event is signaled.
+    /// 获取一个在此事件被设置时完成的等待器。
     /// </summary>
+    /// <returns>一个<see cref="TaskAwaiter"/>，可用于异步等待事件。</returns>
+    /// <remarks>
+    /// 此方法使<see cref="AsyncManualResetEvent"/>能够直接在await表达式中使用。
+    /// 它是编辑器隐藏的方法，通常不应直接调用。
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public TaskAwaiter GetAwaiter()
     {

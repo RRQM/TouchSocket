@@ -66,7 +66,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     {
         var e = new HttpContextEventArgs(httpContext);
 
-        await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIHttpPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

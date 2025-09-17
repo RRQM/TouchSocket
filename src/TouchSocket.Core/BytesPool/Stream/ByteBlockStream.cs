@@ -14,6 +14,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -25,7 +27,6 @@ internal sealed partial class ByteBlockStream : Stream
 {
     private readonly ByteBlock m_byteBlock;
     private readonly bool m_releaseTogether;
-
 
     /// <summary>
     /// 初始化 ByteBlockStream 类的新实例。
@@ -46,7 +47,7 @@ internal sealed partial class ByteBlockStream : Stream
     /// <summary>
     /// 仅当内存块可用，且<see cref="CanReadLength"/>>0时为<see langword="true"/>。
     /// </summary>
-    public override bool CanRead => this.Using && this.CanReadLength > 0;
+    public override bool CanRead => this.m_byteBlock.Using && this.CanReadLength > 0;
 
     /// <summary>
     /// 还能读取的长度，计算为<see cref="Length"/>与<see cref="Position"/>的差值。
@@ -56,12 +57,12 @@ internal sealed partial class ByteBlockStream : Stream
     /// <summary>
     /// 支持查找
     /// </summary>
-    public override bool CanSeek => this.Using;
+    public override bool CanSeek => this.m_byteBlock.Using;
 
     /// <summary>
     /// 可写入
     /// </summary>
-    public override bool CanWrite => this.Using;
+    public override bool CanWrite => this.m_byteBlock.Using;
 
     /// <summary>
     /// 容量
@@ -88,21 +89,6 @@ internal sealed partial class ByteBlockStream : Stream
     }
 
     /// <summary>
-    /// 使用状态
-    /// </summary>
-    public bool Using => this.m_byteBlock.Using;
-
-    /// <summary>
-    /// 清空所有内存数据
-    /// </summary>
-    /// <exception cref="ObjectDisposedException">内存块已释放</exception>
-    public void Clear()
-    {
-        this.ThrowIfDisposed();
-        this.m_byteBlock.Clear();
-    }
-
-    /// <summary>
     /// 无实际效果
     /// </summary>
     public override void Flush()
@@ -110,13 +96,27 @@ internal sealed partial class ByteBlockStream : Stream
     }
 
     /// <summary>
+    /// 异步刷新（无实际效果）
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>已完成的任务</returns>
+    public override Task FlushAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return CreateCanceledTask(cancellationToken);
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// 读取数据，然后递增Pos
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    /// <exception cref="ObjectDisposedException"></exception>
+    /// <param name="buffer">目标缓冲区</param>
+    /// <param name="offset">偏移量</param>
+    /// <param name="length">读取长度</param>
+    /// <returns>实际读取的字节数</returns>
+    /// <exception cref="ObjectDisposedException">对象已释放</exception>
     public override int Read(byte[] buffer, int offset, int length)
     {
         this.ThrowIfDisposed();
@@ -124,10 +124,46 @@ internal sealed partial class ByteBlockStream : Stream
     }
 
     /// <summary>
+    /// 异步读取数据
+    /// </summary>
+    /// <param name="buffer">目标缓冲区</param>
+    /// <param name="offset">偏移量</param>
+    /// <param name="count">读取字节数</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>实际读取的字节数</returns>
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return CreateCanceledTask<int>(cancellationToken);
+        }
+
+        this.ThrowIfDisposed();
+
+        try
+        {
+            var result = this.Read(buffer, offset, count);
+            return Task.FromResult(result);
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException<int>(ex);
+        }
+    }
+
+    /// <summary>
     /// 从当前流位置读取一个<see cref="byte"/>值
     /// </summary>
+    /// <returns>读取的字节值，如果到达流末尾则返回-1</returns>
     public override int ReadByte()
     {
+        this.ThrowIfDisposed();
+
+        if (this.CanReadLength <= 0)
+        {
+            return -1;
+        }
+
         var value = this.m_byteBlock.GetSpan(1)[0];
         this.m_byteBlock.Advance(1);
         return value;
@@ -136,10 +172,10 @@ internal sealed partial class ByteBlockStream : Stream
     /// <summary>
     /// 设置流位置
     /// </summary>
-    /// <param name="offset"></param>
-    /// <param name="origin"></param>
-    /// <returns></returns>
-    /// <exception cref="ObjectDisposedException"></exception>
+    /// <param name="offset">偏移量</param>
+    /// <param name="origin">起始位置</param>
+    /// <returns>新的流位置</returns>
+    /// <exception cref="ObjectDisposedException">对象已释放</exception>
     public override long Seek(long offset, SeekOrigin origin)
     {
         this.ThrowIfDisposed();
@@ -162,38 +198,10 @@ internal sealed partial class ByteBlockStream : Stream
     }
 
     /// <summary>
-    /// 移动游标
-    /// </summary>
-    /// <param name="position"></param>
-    /// <returns></returns>
-    public void Seek(int position)
-    {
-        this.Position = position;
-    }
-
-    /// <summary>
-    /// 设置游标到末位
-    /// </summary>
-    /// <returns></returns>
-    public void SeekToEnd()
-    {
-        this.Position = this.m_byteBlock.Length;
-    }
-
-    /// <summary>
-    /// 设置游标到首位
-    /// </summary>
-    /// <returns></returns>
-    public void SeekToStart()
-    {
-        this.Position = 0;
-    }
-
-    /// <summary>
     /// 设置实际长度
     /// </summary>
-    /// <param name="value"></param>
-    /// <exception cref="ObjectDisposedException"></exception>
+    /// <param name="value">新长度</param>
+    /// <exception cref="ObjectDisposedException">对象已释放</exception>
     public override void SetLength(long value)
     {
         this.ThrowIfDisposed();
@@ -201,61 +209,127 @@ internal sealed partial class ByteBlockStream : Stream
     }
 
     /// <summary>
-    /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
+    /// 写入数据
     /// </summary>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public byte[] ToArray(int offset, int length)
-    {
-        this.ThrowIfDisposed();
-        return this.m_byteBlock.ToArray(offset, length);
-    }
-
-    /// <summary>
-    /// 转换为有效内存。本操作不递增<see cref="Position"/>
-    /// </summary>
-    /// <returns></returns>
-    public byte[] ToArray()
-    {
-        return this.ToArray(0, (int)this.Length);
-    }
-
-    /// <summary>
-    /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
-    /// </summary>
-    /// <param name="offset"></param>
-    /// <returns></returns>
-    public byte[] ToArray(int offset)
-    {
-        return this.ToArray(offset, (int)(this.Length - offset));
-    }
-
-    /// <summary>
-    /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
-    /// </summary>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public byte[] ToArrayTake(int length)
-    {
-        return this.ToArray((int)this.Position, length);
-    }
-
-    /// <summary>
-    /// 写入
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="count"></param>
-    /// <exception cref="ObjectDisposedException"></exception>
+    /// <param name="buffer">源数据缓冲区</param>
+    /// <param name="offset">偏移量</param>
+    /// <param name="count">写入字节数</param>
+    /// <exception cref="ObjectDisposedException">对象已释放</exception>
     public override void Write(byte[] buffer, int offset, int count)
     {
         this.ThrowIfDisposed();
         this.m_byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, count));
     }
 
+    /// <summary>
+    /// 异步写入数据
+    /// </summary>
+    /// <param name="buffer">源数据缓冲区</param>
+    /// <param name="offset">偏移量</param>
+    /// <param name="count">写入字节数</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步写入操作的任务</returns>
+    public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return CreateCanceledTask(cancellationToken);
+        }
+
+        this.ThrowIfDisposed();
+
+        try
+        {
+            this.Write(buffer, offset, count);
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 写入单个字节
+    /// </summary>
+    /// <param name="value">要写入的字节值</param>
+    public override void WriteByte(byte value)
+    {
+        this.ThrowIfDisposed();
+
+        var span = this.m_byteBlock.GetSpan(1);
+        span[0] = value;
+        this.m_byteBlock.Advance(1);
+    }
+
+    /// <summary>
+    /// 高效复制到目标流
+    /// </summary>
+    /// <param name="destination">目标流</param>
+    public new void CopyTo(Stream destination)
+    {
+        this.CopyTo(destination, 81920);
+    }
+
+    /// <summary>
+    /// 高效复制到目标流
+    /// </summary>
+    /// <param name="destination">目标流</param>
+    /// <param name="bufferSize">缓冲区大小（此参数被忽略，因为我们直接使用内存块）</param>
+    public new void CopyTo(Stream destination, int bufferSize)
+    {
+        this.ThrowIfDisposed();
+        if (destination == null) throw new ArgumentNullException(nameof(destination));
+
+        if (!destination.CanWrite)
+        {
+            throw new NotSupportedException("目标流不支持写入");
+        }
+
+        // 直接使用内存块复制，避免额外的缓冲区分配
+        var remainingLength = (int)this.CanReadLength;
+        if (remainingLength > 0)
+        {
+            var remainingData = this.m_byteBlock.Memory.Slice(this.m_byteBlock.Position, remainingLength);
+            WritePlatformOptimized(destination, remainingData);
+            this.m_byteBlock.Position = this.m_byteBlock.Length;
+        }
+    }
+
+    /// <summary>
+    /// 异步复制到目标流
+    /// </summary>
+    /// <param name="destination">目标流</param>
+    /// <param name="bufferSize">缓冲区大小（此参数被忽略，因为我们直接使用内存块）</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>表示异步复制操作的任务</returns>
+    public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        if (destination == null) throw new ArgumentNullException(nameof(destination));
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            await CreateCanceledTask(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (!destination.CanWrite)
+        {
+            throw new NotSupportedException("目标流不支持写入");
+        }
+
+        // 直接使用内存块异步复制
+        var remainingLength = (int)this.CanReadLength;
+        if (remainingLength > 0)
+        {
+            var remainingData = this.m_byteBlock.Memory.Slice(this.m_byteBlock.Position, remainingLength);
+            await WriteAsyncPlatformOptimized(destination, remainingData, cancellationToken).ConfigureAwait(false);
+            this.m_byteBlock.Position = this.m_byteBlock.Length;
+        }
+    }
+
     /// <inheritdoc/>
-    /// <param name="disposing"></param>
+    /// <param name="disposing">是否正在处置托管资源</param>
     protected override void Dispose(bool disposing)
     {
         if (disposing && this.m_releaseTogether)
@@ -266,10 +340,14 @@ internal sealed partial class ByteBlockStream : Stream
         base.Dispose(disposing);
     }
 
+    /// <summary>
+    /// 检查对象是否已释放，如果已释放则抛出异常
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">对象已释放</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfDisposed()
     {
-        if (!this.Using)
+        if (!this.m_byteBlock.Using)
         {
             throw new ObjectDisposedException(this.GetType().FullName);
         }

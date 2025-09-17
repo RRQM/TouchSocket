@@ -201,6 +201,21 @@ public class IPHost : Uri
         return iPs.ToArray();
     }
 
+    /// <summary>
+    /// 指示是否为安全连接（SSL/TLS）
+    /// </summary>
+    public bool IsSsl => this.Scheme.ToLowerInvariant() switch
+    {
+        "https" => true,  // HTTP over SSL/TLS
+        "wss" => true,    // WebSocket Secure
+        "ftps" => true,   // FTP over SSL/TLS
+        "tcps" => true,   // TCP over SSL/TLS
+        "ssl" => true,   // Generic SSL/TLS
+        "tls" => true,   // Generic TLS
+        "mqtts" => true, // MQTT over SSL/TLS
+        _ => false
+    };
+
     private static string VerifyUri(string uriString)
     {
         return TouchSocketCoreUtility.IsUrl(uriString) ? uriString : $"tcp://{uriString}";

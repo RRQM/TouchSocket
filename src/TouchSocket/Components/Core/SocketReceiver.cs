@@ -21,7 +21,7 @@ internal sealed class SocketReceiver : SocketAwaitableEventArgs<TcpOperationResu
 {
     public ValueTask<TcpOperationResult> ReceiveAsync(Socket socket, Memory<byte> buffer)
     {
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
 #if NET6_0_OR_GREATER
         this.SetBuffer(buffer);
 #else
@@ -32,7 +32,7 @@ internal sealed class SocketReceiver : SocketAwaitableEventArgs<TcpOperationResu
 
         if (socket.ReceiveAsync(this))
         {
-            return new ValueTask<TcpOperationResult>(this, this.m_valueTaskSourceCore.Version);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
         return new ValueTask<TcpOperationResult>(this.GetResult());

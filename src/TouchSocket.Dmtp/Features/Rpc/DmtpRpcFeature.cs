@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp.Rpc;
 /// <summary>
 /// 能够基于Dmtp协议，提供Rpc的功能
 /// </summary>
-public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
+public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, IDmtpReceivedPlugin
 {
     private readonly IRpcServerProvider m_rpcServerProvider;
 
@@ -222,7 +222,7 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpHandshakingPlugin, 
     #region Config
 
     /// <inheritdoc/>
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.CreateDispatcher.Invoke(client.DmtpActor));
 

@@ -85,6 +85,16 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
         return elapsed;
     }
 
+    /// <summary>
+    /// 以指定的超时时间异步运行测试。
+    /// </summary>
+    /// <param name="memory">要发送的数据内存块。</param>
+    /// <param name="testCount">测试发送次数。</param>
+    /// <param name="expectedCount">预期接收次数。</param>
+    /// <param name="bufferLength">每次写入的缓冲区长度。</param>
+    /// <param name="millisecondsTimeout">超时时间（毫秒）。</param>
+    /// <returns>返回测试所用的时间。</returns>
+    /// <exception cref="TimeoutException">超时未完成时抛出。</exception>
     public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, int millisecondsTimeout)
     {
         using (var cancellationToken = new CancellationTokenSource(millisecondsTimeout))

@@ -29,8 +29,9 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     private static readonly ClosedEventArgs s_defaultClosedEventArgs = new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
     private readonly int m_maxBufferSize;
     private readonly int m_minBufferSize;
-    private readonly SemaphoreSlim m_semaphoreSlimForWriter = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim m_readLocker = new SemaphoreSlim(1, 1);
     private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
+    private readonly SemaphoreSlim m_WriteLocker = new SemaphoreSlim(1, 1);
     private int m_receiveBufferSize = 1024 * 10;
     private int m_sendBufferSize = 1024 * 10;
 
@@ -57,12 +58,9 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// <summary>
     /// 获取用于读取数据的管道读取器
     /// </summary>
-    public PipeReader Input => this.m_pipeReceive.Reader;
+    public PipeReader Reader => this.m_pipeReceive.Reader;
 
-    /// <summary>
-    /// 获取用于写入数据的管道写入器
-    /// </summary>
-    public PipeWriter Output => this.m_pipeSend.Writer;
+    public SemaphoreSlim ReadLocker => m_readLocker;
 
     /// <summary>
     /// 接收缓存池，运行时的值会根据流速自动调整
@@ -74,8 +72,6 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// </summary>
     public ValueCounter ReceiveCounter => this.m_receiveCounter;
 
-    public SemaphoreSlim SemaphoreSlimForWriter => this.m_semaphoreSlimForWriter;
-
     /// <summary>
     /// 发送缓存池，运行时的值会根据流速自动调整
     /// </summary>
@@ -85,6 +81,13 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// 发送计数器
     /// </summary>
     public ValueCounter SendCounter => this.m_sentCounter;
+
+    public SemaphoreSlim WriteLocker => this.m_WriteLocker;
+
+    /// <summary>
+    /// 获取用于写入数据的管道写入器
+    /// </summary>
+    public PipeWriter Writer => this.m_pipeSend.Writer;
 
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
@@ -121,6 +124,12 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 
     protected abstract Task RunSend(CancellationToken token);
 
+    protected override void SafetyDispose(bool disposing)
+    {
+        this.m_tokenSource.Cancel();
+        this.m_tokenSource.Dispose();
+    }
+
     protected void Start()
     {
         _ = EasyTask.SafeRun(this.RunReceive, this.m_tokenSource.Token);
@@ -135,11 +144,5 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     private void OnSendPeriod(long value)
     {
         this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.m_minBufferSize);
-    }
-
-    protected override void SafetyDispose(bool disposing)
-    {
-        this.m_tokenSource.Cancel();
-        this.m_tokenSource.Dispose();
     }
 }

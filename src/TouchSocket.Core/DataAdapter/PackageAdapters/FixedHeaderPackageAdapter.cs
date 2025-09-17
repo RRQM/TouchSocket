@@ -34,6 +34,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
     /// </summary>
     public int MinPackageSize { get; set; } = 0;
 
+    /// <inheritdoc/>
     public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         this.ThrowIfLengthValidationFailed(memory.Length);

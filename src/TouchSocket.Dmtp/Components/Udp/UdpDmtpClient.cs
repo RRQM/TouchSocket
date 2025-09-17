@@ -56,7 +56,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
             Id = this.Id,
             IsPermitOperation = true
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await pluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         if (args.IsPermitOperation == false)
         {
@@ -67,7 +67,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
         {
             Id = this.Id
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await pluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         return true;
     }

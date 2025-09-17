@@ -47,6 +47,11 @@ public readonly record struct HttpMethod
     public static readonly HttpMethod Delete = new HttpMethod("delete");
 
     /// <summary>
+    /// Connect
+    /// </summary>
+    public static readonly HttpMethod Connect = new HttpMethod("connect");
+
+    /// <summary>
     /// 表示
     /// </summary>
     /// <param name="value">值</param>

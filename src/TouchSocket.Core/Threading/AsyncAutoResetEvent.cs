@@ -19,10 +19,17 @@ using System.Threading.Tasks;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// An asynchronous implementation of an AutoResetEvent.
+/// 表示一个异步自动重置事件，提供基于<see cref="Task"/>的异步等待机制。
 /// </summary>
 /// <remarks>
+/// AsyncAutoResetEvent是<see cref="AutoResetEvent"/>的异步版本实现，
+/// 允许多个任务异步等待信号，当信号被设置时，只有一个等待者会被唤醒，然后信号自动重置。
+/// 此实现基于微软VS相关库的代码。
+/// <para>
+/// 与传统的<see cref="AutoResetEvent"/>不同，此类不会阻塞线程，而是返回可等待的<see cref="Task"/>，
+/// 更适合在异步编程模式中使用，能够避免线程阻塞并提高系统的并发性能。
 /// 此代码摘抄自微软VS相关库。
+/// </para>
 /// </remarks>
 [DebuggerDisplay("Signaled: {signaled}")]
 public class AsyncAutoResetEvent
@@ -53,21 +60,24 @@ public class AsyncAutoResetEvent
     private bool signaled;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncAutoResetEvent"/> class
-    /// that does not inline awaiters.
+    /// 初始化<see cref="AsyncAutoResetEvent"/>类的新实例，默认不允许内联等待者。
     /// </summary>
+    /// <remarks>
+    /// 使用默认设置创建异步自动重置事件，等待者的完成操作将异步执行，
+    /// 这样能更好地模拟<see cref="AutoResetEvent"/>的行为。
+    /// </remarks>
     public AsyncAutoResetEvent()
         : this(allowInliningAwaiters: false)
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncAutoResetEvent"/> class.
+    /// 初始化<see cref="AsyncAutoResetEvent"/>类的新实例。
     /// </summary>
     /// <param name="allowInliningAwaiters">
-    /// A value indicating whether to complete the task synchronously in the <see cref="Set"/> method,
-    /// as opposed to asynchronously. <see langword="false" /> better simulates the behavior of the
-    /// <see cref="AutoResetEvent"/> class, but <see langword="true" /> can result in slightly better performance.
+    /// 指示是否在<see cref="Set"/>方法中同步完成任务，而不是异步完成。
+    /// <see langword="false"/>能更好地模拟<see cref="AutoResetEvent"/>类的行为，
+    /// 但<see langword="true"/>可能会带来略好的性能。
     /// </param>
     public AsyncAutoResetEvent(bool allowInliningAwaiters)
     {
@@ -76,14 +86,30 @@ public class AsyncAutoResetEvent
     }
 
     /// <summary>
-    /// Returns an awaitable that may be used to asynchronously acquire the next signal.
+    /// 返回一个可等待对象，用于异步获取下一个信号。
     /// </summary>
-    /// <returns>An awaitable.</returns>
+    /// <returns>表示异步等待操作的<see cref="Task"/>。</returns>
+    /// <remarks>
+    /// 如果当前事件已处于信号状态，则立即返回已完成的任务；
+    /// 否则返回一个将在信号设置时完成的任务。
+    /// </remarks>
     public Task WaitOneAsync()
     {
         return this.WaitOneAsync(CancellationToken.None);
     }
 
+    /// <summary>
+    /// 返回一个可等待对象，用于异步获取下一个信号，并支持超时。
+    /// </summary>
+    /// <param name="millisecondsTimeout">等待超时时间。</param>
+    /// <returns>
+    /// 表示异步等待操作的<see cref="Task{TResult}"/>，
+    /// 如果在超时时间内获得信号则返回<see langword="true"/>，否则返回<see langword="false"/>。
+    /// </returns>
+    /// <remarks>
+    /// 此方法在指定的超时时间内等待信号，如果超时则取消等待操作。
+    /// 超时机制通过<see cref="CancellationTokenSource"/>实现。
+    /// </remarks>
     public async Task<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
     {
         try
@@ -101,10 +127,16 @@ public class AsyncAutoResetEvent
     }
 
     /// <summary>
-    /// Returns an awaitable that may be used to asynchronously acquire the next signal.
+    /// 返回一个可等待对象，用于异步获取下一个信号，并支持取消操作。
     /// </summary>
-    /// <param name="cancellationToken">A token whose cancellation removes the caller from the queue of those waiting for the event.</param>
-    /// <returns>An awaitable.</returns>
+    /// <param name="cancellationToken">用于取消等待操作的取消令牌，取消时会将调用方从等待队列中移除。</param>
+    /// <returns>表示异步等待操作的<see cref="Task"/>。</returns>
+    /// <exception cref="OperationCanceledException">当<paramref name="cancellationToken"/>被取消时抛出。</exception>
+    /// <remarks>
+    /// 如果当前事件已处于信号状态，则立即返回已完成的任务；
+    /// 否则将调用方加入等待队列，并返回一个将在信号设置时完成的任务。
+    /// 如果取消令牌被触发，等待者将从队列中移除并抛出<see cref="OperationCanceledException"/>。
+    /// </remarks>
     public Task WaitOneAsync(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -137,8 +169,13 @@ public class AsyncAutoResetEvent
     }
 
     /// <summary>
-    /// Unblocks one waiter or sets the signal if no waiters are present so the next waiter may proceed immediately.
+    /// 解除阻塞一个等待者，或者如果没有等待者则设置信号，使下一个等待者可以立即继续执行。
     /// </summary>
+    /// <remarks>
+    /// 如果有等待者在队列中，则唤醒队列中的第一个等待者；
+    /// 如果没有等待者且事件未处于信号状态，则设置信号状态，使下一个调用<see cref="WaitOneAsync()"/>的等待者可以立即继续。
+    /// 每次调用此方法只会唤醒一个等待者，符合自动重置事件的语义。
+    /// </remarks>
     public void Set()
     {
         WaiterCompletionSource? toRelease = null;
@@ -161,6 +198,13 @@ public class AsyncAutoResetEvent
         }
     }
 
+    /// <summary>
+    /// 解除阻塞所有当前等待的等待者。
+    /// </summary>
+    /// <remarks>
+    /// 此方法会唤醒队列中的所有等待者，与标准的自动重置事件语义不同。
+    /// 通常用于需要同时唤醒所有等待者的特殊场景，如应用程序关闭时的清理操作。
+    /// </remarks>
     public void SetAll()
     {
         lock (this.signalAwaiters)

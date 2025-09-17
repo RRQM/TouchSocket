@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp.Redis;
 /// <summary>
 /// RedisFeature
 /// </summary>
-public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin, IDmtpFeature
+public class RedisFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlugin, IDmtpFeature
 {
     /// <summary>
     /// RedisFeature
@@ -50,7 +50,7 @@ public class RedisFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlu
     public ushort StartProtocol { get; set; }
 
     /// <inheritdoc/>
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var dmtpRedisActor = new DmtpRedisActor(client.DmtpActor)
         {

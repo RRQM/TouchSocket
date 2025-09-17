@@ -36,6 +36,7 @@ public readonly struct HttpReadOnlyMemoryBlockResult : IDisposable
     public bool IsCompleted { get; }
     public ReadOnlyMemory<byte> Memory { get; }
 
+    
     public void Dispose()
     {
         this.m_disposeAction?.Invoke();

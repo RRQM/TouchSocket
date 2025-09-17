@@ -56,11 +56,11 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken token)
     {
-        var locker = base.Transport.SemaphoreSlimForWriter;
+        var locker = base.Transport.WriteLocker;
         await locker.WaitAsync(token);
         try
         {
-            var writer = new PipeBytesWriter(base.Transport.Output);
+            var writer = new PipeBytesWriter(base.Transport.Writer);
             message.Build(ref writer);
             await writer.FlushAsync(token);
         }

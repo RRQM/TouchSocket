@@ -118,7 +118,7 @@ public class HttpRequest : HttpBase
     /// <summary>
     /// 相对路径（不含参数）
     /// </summary>
-    public string RelativeURL { get => this.m_relativeURL; }
+    public string RelativeURL => this.m_relativeURL;
 
     /// <summary>
     /// Url全地址，包含参数
@@ -128,9 +128,12 @@ public class HttpRequest : HttpBase
         get => this.m_url;
         set
         {
-            // 确保URL以斜杠开始，如果不是，则添加斜杠
+            if (this.Method== HttpMethod.Connect)
+            {
+                this.m_relativeURL = value;
+                return;
+            }
             this.m_url = value.StartsWith("/") ? value : $"/{value}";
-            // 解析设置后的URL，以进行进一步的操作
             this.ParseUrl(this.m_url.AsSpan());
         }
     }

@@ -32,44 +32,44 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <summary>
     /// 请求关闭
     /// </summary>
-    public Func<DmtpActor, string, Task> Closing { get; set; }
+    public Func<DmtpActor, string, Task> Closing { get; init; }
 
     /// <summary>
     /// 当创建通道时
     /// </summary>
-    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; set; }
+    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; init; }
 
     /// <summary>
     /// 查找其他IDmtpActor
     /// </summary>
-    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
+    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; init; }
 
     /// <summary>
     /// 在完成握手连接时
     /// </summary>
-    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Handshaked { get; set; }
+    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connected { get; init; }
 
     /// <summary>
     /// 握手
     /// </summary>
-    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Handshaking { get; set; }
+    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connecting { get; init; }
 
     /// <summary>
     /// 重设Id
     /// </summary>
-    public Func<DmtpActor, IdChangedEventArgs, Task> IdChanged { get; set; }
+    public Func<DmtpActor, IdChangedEventArgs, Task> IdChanged { get; init; }
 
     /// <summary>
     /// 异步发送数据接口
     /// </summary>
-    public Func<DmtpActor, ReadOnlyMemory<byte>, CancellationToken, Task> OutputSendAsync { get; set; }
+    public Func<DmtpActor, ReadOnlyMemory<byte>, CancellationToken, Task> OutputSendAsync { get; init; }
 
     /// <summary>
     /// 当需要路由的时候
     /// </summary>
-    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; set; }
+    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; init; }
 
-    public ITransport Transport { get; set; }
+    public ITransportWriter TransportWriter { get; init; }
 
     #endregion 委托
 
@@ -85,7 +85,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
 
     /// <inheritdoc/>
-    public string Id { get; set; }
+    public string Id { get => m_id; init => m_id = value; }
 
     /// <inheritdoc/>
     public bool IsReliable { get; }
@@ -112,6 +112,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
     private CancellationTokenSource m_cancellationTokenSource;
     private bool m_online;
+    private string m_id;
 
     #endregion 字段
 
@@ -142,8 +143,12 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <exception cref="Exception"></exception>
     /// <exception cref="TokenVerifyException"></exception>
     /// <exception cref="TimeoutException"></exception>
-    public virtual async Task HandshakeAsync(string verifyToken, string id, Metadata metadata, CancellationToken token)
+    public virtual async Task ConnectAsync(DmtpOption dmtpOption, CancellationToken token)
     {
+        var verifyToken = dmtpOption.VerifyToken;
+        var id = dmtpOption.Id;
+        var metadata = dmtpOption.Metadata;
+
         if (this.m_online)
         {
             return;
@@ -157,7 +162,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         this.m_handshakeFinished.Reset();
 
-        await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         var waitVerify = new WaitVerify()
         {
@@ -176,9 +181,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         var verifyResult = (WaitVerify)waitData.CompletedData;
                         if (verifyResult.Status == 1)
                         {
-                            this.Id = verifyResult.Id;
+                            this.m_id = verifyResult.Id;
                             this.m_online = true;
-                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
+                            _ = EasyTask.SafeRun(this.PrivateOnConnected, new DmtpVerifyEventArgs()
                             {
                                 Id = verifyResult.Id,
                                 Metadata = verifyResult.Metadata,
@@ -252,11 +257,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    protected virtual Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual Task OnConnected(DmtpVerifyEventArgs e)
     {
-        if (this.Handshaked != null)
+        if (this.Connected != null)
         {
-            return this.Handshaked.Invoke(this, e);
+            return this.Connected.Invoke(this, e);
         }
         return EasyTask.CompletedTask;
     }
@@ -266,11 +271,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    protected virtual Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual Task OnConnecting(DmtpVerifyEventArgs e)
     {
-        if (this.Handshaking != null)
+        if (this.Connecting != null)
         {
-            return this.Handshaking.Invoke(this, e);
+            return this.Connecting.Invoke(this, e);
         }
         return EasyTask.CompletedTask;
     }
@@ -300,9 +305,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private async Task PrivateOnHandshaked(DmtpVerifyEventArgs e)
+    private async Task PrivateOnConnected(DmtpVerifyEventArgs e)
     {
-        await this.OnHandshaked(e);
+        await this.OnConnected(e);
     }
 
     #endregion 委托触发
@@ -403,17 +408,17 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             Metadata = waitVerify.Metadata,
                             Id = waitVerify.Id,
                         };
-                        await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         if (args.Id.HasValue())
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.Id = args.Id;
+                            await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            this.m_id = args.Id;
                         }
 
                         if (args.IsPermitOperation)
                         {
-                            waitVerify.Id = this.Id;
+                            waitVerify.Id = this.m_id;
                             waitVerify.Status = 1;
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = args.Message ?? TouchSocketCoreResource.OperationSuccessful;
@@ -421,7 +426,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             this.m_online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                             this.m_cancellationTokenSource = new CancellationTokenSource();
-                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, args);
+                            _ = EasyTask.SafeRun(this.PrivateOnConnected, args);
                         }
                         else//不允许连接
                         {
@@ -462,7 +467,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         try
                         {
                             await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.Id = waitSetId.NewId;
+                            this.m_id = waitSetId.NewId;
                             waitSetId.Status = 1;
                         }
                         catch (Exception ex)
@@ -707,7 +712,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <inheritdoc/>
     public virtual async Task ResetIdAsync(string newId, CancellationToken token)
     {
-        var waitSetId = new WaitSetId(this.Id, newId);
+        var waitSetId = new WaitSetId(this.m_id, newId);
 
         var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
@@ -719,8 +724,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 {
                     if (waitData.CompletedData.Status == 1)
                     {
-                        await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.Id = newId;
+                        await this.OnIdChanged(new IdChangedEventArgs(this.m_id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_id = newId;
                     }
                     else
                     {
@@ -742,7 +747,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <inheritdoc/>
     public virtual async Task<DmtpActor> TryFindDmtpActor(string targetId)
     {
-        if (targetId == this.Id)
+        if (targetId == this.m_id)
         {
             return this;
         }
@@ -789,7 +794,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         var waitPing = new WaitPing
         {
             TargetId = targetId,
-            SourceId = this.Id
+            SourceId = this.m_id
         };
         using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing))
         {
@@ -813,6 +818,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             }
         }
     }
+
     #region Actor
 
     /// <inheritdoc/>
@@ -908,15 +914,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     return;
                 }
                 this.m_online = false;
-
-                this.Closing = null;
-                this.Routing = null;
-                this.FindDmtpActor = null;
-                this.Handshaked = null;
-                this.Handshaking = null;
-                this.IdChanged = null;
-                //this.OutputSend = null;
-
                 foreach (var item in this.m_actors)
                 {
                     item.Value.SafeDispose();
@@ -936,12 +933,103 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     #region 协议异步发送
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
+    //    try
+    //    {
+    //        writer.Write(DmtpMessage.Head);
+    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
+    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer, 4);
+    //        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
+    //        var lengthSpan = writerAnchor.Rewind(ref writer, out var length);
+    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
+    //        await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        this.LastActiveTime = DateTimeOffset.UtcNow;
+    //    }
+    //    finally
+    //    {
+    //        writer.Dispose();
+    //    }
+    //}
+    /// <inheritdoc/>
+    public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    {
+        var writer = new SegmentedBytesWriter(memory.Length + 8);
+        await this.m_semaphoreSlim.WaitAsync(token);
+        try
+        {
+            writer.Write(DmtpMessage.Head);
+            writer.WriteValue(protocol, EndianType.Big);
+            WriterExtension.WriteValue<SegmentedBytesWriter, int>(ref writer, memory.Length, EndianType.Big);
+            writer.Write(memory.Span);
+
+            foreach (var item in writer.Sequence)
+            {
+                await this.OutputSendAsync.Invoke(this, item, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+        finally
+        {
+            writer.Dispose();
+            this.m_semaphoreSlim.Release();
+        }
+    }
+
+    ///// <inheritdoc/>
+    //public async Task SendAsync(ushort protocol, string value, CancellationToken token = default)
+    //{
+    //    var writer = await this.Transport.CreateWriter(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken token = default)
+        where TPackage : IPackage
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
+        {
+            package.Package(ref byteBlock);
+            await this.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
+    //    try
+    //    {
+    //        writer.Write(DmtpMessage.Head);
+    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
+    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer,4);
+    //        package.Package(ref writer);
+    //        var lengthSpan=writerAnchor.Rewind(ref writer, out var length);
+    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
+    //        await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        this.LastActiveTime = DateTimeOffset.UtcNow;
+    //    }
+    //    finally
+    //    {
+    //        writer.Dispose();
+    //    }
+    //}
+    /// <inheritdoc/>
+    public async Task SendAsync(ushort protocol, string value, CancellationToken token = default)
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
+        {
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
+            await this.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
     private Task SendJsonObjectAsync<T>(ushort protocol, in T obj, CancellationToken token = default)
     {
         var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
         return this.SendAsync(protocol, bytes, token);
     }
-
 
     ///// <inheritdoc/>
     //public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
@@ -967,101 +1055,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //    where TPackage:IPackage
     //{
     //    var writer = await this.Transport.CreateWriter(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-    //    try
-    //    {
-    //        writer.Write(DmtpMessage.Head);
-    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
-    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer,4);
-    //        package.Package(ref writer);
-    //        var lengthSpan=writerAnchor.Rewind(ref writer, out var length);
-    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    //        this.LastActiveTime = DateTimeOffset.UtcNow;
-    //    }
-    //    finally
-    //    {
-    //        writer.Dispose();
-    //    }
-    //}
-
-    ///// <inheritdoc/>
-    //public async Task SendAsync(ushort protocol, string value, CancellationToken token = default)
-    //{
-    //    var writer = await this.Transport.CreateWriter(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-    //    try
-    //    {
-    //        writer.Write(DmtpMessage.Head);
-    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
-    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer, 4);
-    //        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
-    //        var lengthSpan = writerAnchor.Rewind(ref writer, out var length);
-    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    //        this.LastActiveTime = DateTimeOffset.UtcNow;
-    //    }
-    //    finally
-    //    {
-    //        writer.Dispose();
-    //    }
-    //}
-
-    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-
-    /// <inheritdoc/>
-    public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
-    {
-        var writer = new SegmentedBytesWriter(memory.Length + 8);
-        await this.m_semaphoreSlim.WaitAsync(token);
-        try
-        {
-            writer.Write(DmtpMessage.Head);
-            writer.WriteValue(protocol, EndianType.Big);
-            WriterExtension.WriteValue<SegmentedBytesWriter, int>(ref writer, memory.Length, EndianType.Big);
-            writer.Write(memory.Span);
-
-            foreach (var item in writer.Sequence)
-            {
-                await this.OutputSendAsync.Invoke(this, item, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        }
-        finally
-        {
-            writer.Dispose();
-            this.m_semaphoreSlim.Release();
-        }
-    }
-
-    public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken token = default)
-        where TPackage : IPackage
-    {
-        var byteBlock = new ByteBlock(1024 * 64);
-        try
-        {
-            package.Package(ref byteBlock);
-            await this.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task SendAsync(ushort protocol, string value, CancellationToken token = default)
-    {
-        var byteBlock = new ByteBlock(1024 * 64);
-        try
-        {
-            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            await this.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
 
     #endregion 协议异步发送
 
@@ -1144,13 +1137,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return this.m_userChannels.TryRemove(id, out _);
     }
 
-    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage)
+    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage,CancellationToken cancellationToken)
     {
         using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
         {
             var block = byteBlock;
             channelPackage.Package(ref block);
-            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory,cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -1184,7 +1177,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             {
                 Random = random,
                 ChannelId = id,
-                SourceId = this.Id,
+                SourceId = this.m_id,
                 TargetId = targetId,
                 Metadata = metadata
             };

@@ -14,13 +14,24 @@ using System;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 表示一个GZip数据压缩器，提供基于GZip算法的数据压缩和解压缩功能。
+/// 实现了<see cref="IDataCompressor"/>接口。
+/// </summary>
+/// <remarks>
+/// GZipDataCompressor使用GZip压缩算法对数据进行压缩和解压缩操作。
+/// GZip是一种广泛使用的无损数据压缩算法，具有良好的压缩率和兼容性。
+/// 适用于需要减少数据传输量或存储空间的场景。
+/// </remarks>
 public sealed partial class GZipDataCompressor : IDataCompressor
 {
+    /// <inheritdoc/>
     public void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
         GZip.Compress(ref writer, data);
     }
 
+    /// <inheritdoc/>
     public void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
         GZip.Decompress(ref writer, data);

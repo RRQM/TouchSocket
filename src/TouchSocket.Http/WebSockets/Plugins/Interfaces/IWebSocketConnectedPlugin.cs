@@ -10,36 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Http.WebSockets;
 
-[PluginOption(Singleton = true)]
-internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : ITcpClient
+/// <summary>
+/// IWebSocketConnectedPlugin
+/// </summary>
+[DynamicMethod]
+public interface IWebSocketConnectedPlugin : IPlugin
 {
-    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
-
-    public TcpReconnectionPlugin()
-    {
-        this.ActionForCheck = (c, i) => Task.FromResult<bool?>(c.Online);
-    }
-
-    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
-    {
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (e.Manual)
-        {
-            return;
-        }
-
-
-        if (client is not TClient tClient)
-        {
-            return;
-        }
-
-        _ = this.ExecuteConnectLoop(tClient);
-    }
+    /// <summary>
+    /// 表示WebSocket已经连接成功。
+    /// </summary>
+    /// <param name="webSocket"></param>
+    /// <param name="e"></param>
+    Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e);
 }

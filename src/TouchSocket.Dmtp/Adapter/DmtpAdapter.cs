@@ -24,6 +24,7 @@ public sealed class DmtpAdapter : CustomDataHandlingAdapter<DmtpMessage>
     /// <inheritdoc/>
     public override bool CanSendRequestInfo => true;
 
+    /// <inheritdoc/>
     protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref DmtpMessage request)
     {
         if (reader.BytesRemaining < 8)

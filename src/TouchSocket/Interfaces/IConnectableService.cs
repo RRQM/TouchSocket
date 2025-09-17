@@ -48,7 +48,7 @@ public interface IConnectableService : IServiceBase
     /// <param name="sourceId">源Id</param>
     /// <param name="targetId">目标Id</param>
     /// <param name="token"></param>
-    Task ResetIdAsync(string sourceId, string targetId, CancellationToken token);
+    Task ResetIdAsync(string sourceId, string targetId, CancellationToken token=default);
 
     /// <summary>
     /// 根据Id判断对应的客户端是否存在

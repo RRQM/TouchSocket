@@ -64,11 +64,11 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
         {
             this.m_mqttAdapter.Version = message.Version;
         }
-        var locker = base.Transport.SemaphoreSlimForWriter;
+        var locker = base.Transport.WriteLocker;
         await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            var writer = new PipeBytesWriter(base.Transport.Output);
+            var writer = new PipeBytesWriter(base.Transport.Writer);
             message.Build(ref writer);
             await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }

@@ -685,7 +685,12 @@ public static class SystemExtension
 #endif
     }
 
-    public static unsafe string ToUtf8String(this ReadOnlySpan<byte> span)
+    /// <summary>
+    /// 将只读的字节连续内存表示形式按 UTF-8 编码转换为字符串。
+    /// </summary>
+    /// <param name="span">要转换为字符串的只读字节范围。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToUtf8String(this ReadOnlySpan<byte> span)
     {
         return ToString(span, Encoding.UTF8);
     }
@@ -801,6 +806,12 @@ public static class SystemExtension
         return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
     }
 
+    /// <summary>
+    /// 获取 <see cref="ReadOnlyMemory{T}"/> 的第一个元素。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    /// <param name="memory">要获取第一个元素的只读内存。</param>
+    /// <returns>第一个元素。</returns>
     public static T First<T>(this ReadOnlyMemory<T> memory)
     {
         if (memory.IsEmpty)

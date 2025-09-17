@@ -90,7 +90,37 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
             client.InternalSetConfig(this.Config);
             client.InternalSetContainer(this.Resolver);
             client.InternalSetPluginManager(this.PluginManager);
-            client.SetDmtpActor(this.CreateDmtpActor(client));
+
+            var allowRoute = false;
+            Func<string, Task<IDmtpActor>> findDmtpActor = default;
+            var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+            if (dmtpRouteService != null)
+            {
+                allowRoute = true;
+                findDmtpActor = dmtpRouteService.FindDmtpActor;
+            }
+
+            async Task<IDmtpActor> FindDmtpActor(string id)
+            {
+                if (allowRoute)
+                {
+                    if (findDmtpActor != null)
+                    {
+                        return await findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    if (this.Clients.TryGetClient(id, out var client) && client is IDmtpActorObject dmtpActorObject)
+                    {
+                        return dmtpActorObject.DmtpActor;
+                    }
+                    return null;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            client.InitDmtpActor(allowRoute,FindDmtpActor);
             await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
@@ -128,34 +158,6 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     public override IClientCollection<WebSocketDmtpSessionClient> Clients => this.m_clients;
 
     #endregion 属性
-
-    /// <summary>
-    /// 创建DmtpActor对象。
-    /// </summary>
-    /// <param name="client">关联的WebSocketDmtpSessionClient对象。</param>
-    /// <returns>SealedDmtpActor对象。</returns>
-    private SealedDmtpActor CreateDmtpActor(WebSocketDmtpSessionClient client)
-    {
-        return new SealedDmtpActor(true)
-        {
-            FindDmtpActor = this.OnServiceFindDmtpActor,
-            Id = client.Id
-        };
-    }
-
-    /// <summary>
-    /// 服务查找DmtpActor的方法。
-    /// </summary>
-    /// <param name="id">DmtpActor的标识符。</param>
-    /// <returns>DmtpActor对象或默认值。</returns>
-    private Task<IDmtpActor> OnServiceFindDmtpActor(string id)
-    {
-        if (this.TryGetClient(id, out var client))
-        {
-            return Task.FromResult(client.DmtpActor);
-        }
-        return Task.FromResult<IDmtpActor>(default);
-    }
 
     #region override
 

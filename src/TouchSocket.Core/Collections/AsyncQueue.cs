@@ -330,6 +330,9 @@ public class AsyncQueue<T>
         }
     }
 
+    /// <summary>
+    /// 清空队列中的所有元素。
+    /// </summary>
     public void Clear()
     {
         lock (this.SyncRoot)

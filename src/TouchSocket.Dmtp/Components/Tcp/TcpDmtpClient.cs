@@ -95,7 +95,10 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
                 await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
+            ThrowHelper.ThrowArgumentNullExceptionIf(dmtpOption, nameof(dmtpOption));
+
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -129,8 +132,8 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         {
             OutputSendAsync = this.DmtpActorSendAsync,
             Routing = this.OnDmtpActorRouting,
-            Handshaking = this.OnDmtpActorHandshaking,
-            Handshaked = this.OnDmtpActorHandshaked,
+            Connecting = this.OnDmtpActorConnecting,
+            Connected = this.OnDmtpActorConnected,
             Closing = this.OnDmtpActorClose,
             Logger = this.Logger,
             Client = this,
@@ -162,14 +165,14 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         return this.OnDmtpCreatedChannel(e);
     }
 
-    private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnDmtpHandshaked(e);
+        return this.OnDmtpConnected(e);
     }
 
-    private Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnDmtpHandshaking(e);
+        return this.OnDmtpConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -240,7 +243,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// 在完成握手连接时
     /// </summary>
     /// <param name="e">包含握手信息的事件参数</param>
-    protected virtual async Task OnDmtpHandshaked(DmtpVerifyEventArgs e)
+    protected virtual async Task OnDmtpConnected(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则不再执行后续操作
         if (e.Handled)
@@ -248,14 +251,14 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 即将握手连接时
     /// </summary>
     /// <param name="e">参数</param>
-    protected virtual async Task OnDmtpHandshaking(DmtpVerifyEventArgs e)
+    protected virtual async Task OnDmtpConnecting(DmtpVerifyEventArgs e)
     {
         //如果参数已经被处理，则直接返回，不再执行后续操作
         if (e.Handled)
@@ -263,7 +266,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             return;
         }
         //调用插件管理器，触发即将握手连接的事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -356,7 +359,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             try
             {
                 // 等待接收数据
-                var readResult = await transport.Input.ReadAsync(token);
+                var readResult = await transport.Reader.ReadAsync(token);
 
                 var sequence = readResult.Buffer;
                 var reader = new BytesReader(sequence);
@@ -374,7 +377,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
                 }
                 finally
                 {
-                    transport.Input.AdvanceTo(sequence.GetPosition(reader.BytesRead), sequence.End);
+                    transport.Reader.AdvanceTo(sequence.GetPosition(reader.BytesRead), sequence.End);
                     reader.Dispose();
                 }
             }
