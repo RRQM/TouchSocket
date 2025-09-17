@@ -91,13 +91,24 @@ public sealed class WaitHandlePool<T>
     private int GetSign()
     {
         var sign = Interlocked.Increment(ref this.m_currentSign);
+
         if (sign >= this.m_maxSign)
         {
-            // 使用CAS操作来安全地重置计数器，避免竞态条件
-            Interlocked.CompareExchange(ref this.m_currentSign, this.m_minSign, sign);
+            if (Interlocked.CompareExchange(ref this.m_currentSign, this.m_minSign, sign) == sign)
+            {
+                return this.m_minSign;
+            }
+            else
+            {
+                var current = Volatile.Read(ref this.m_currentSign);
+                return current >= this.m_maxSign ? this.m_minSign : current;
+            }
         }
+
+
         return sign;
     }
+
 
     private void Remove(int sign)
     {
