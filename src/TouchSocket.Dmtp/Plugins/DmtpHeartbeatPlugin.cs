@@ -21,10 +21,10 @@ namespace TouchSocket.Dmtp;
 /// 基于Dmtp的心跳插件。服务器和客户端均适用
 /// </summary>
 [PluginOption(Singleton = true)]
-public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
+public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpConnectedPlugin
 {
     /// <inheritdoc/>
-    public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         _ = EasyTask.Run(async () =>
         {

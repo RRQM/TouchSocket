@@ -12,6 +12,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
@@ -20,10 +21,20 @@ namespace TouchSocket.Http;
 /// </summary>
 public class HttpClient : HttpClientBase, IHttpClient
 {
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(token);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        try
+        {
+            await base.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     /// <inheritdoc/>

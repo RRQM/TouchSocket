@@ -10,25 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
+using System;
 
-namespace TouchSocket.Dmtp;
-
+namespace TouchSocket.Http;
 
 /// <summary>
-/// IDmtpHandshakingPlugin接口定义了插件在Dmtp握手过程中需要实现的方法。
-/// 它继承自IPlugin接口。
+/// 代理身份验证异常
 /// </summary>
-[DynamicMethod]
-public interface IDmtpHandshakingPlugin : IPlugin
+public class ProxyAuthenticationException : Exception
 {
     /// <summary>
-    /// 在Dmtp建立握手连接之前执行的操作。
-    /// 此方法允许插件在握手过程中进行自定义的验证或处理。
+    /// 构造函数
     /// </summary>
-    /// <param name="client">正在与之建立握手连接的客户端对象。</param>
-    /// <param name="e">包含验证过程中需要的信息的事件参数。</param>
-    /// <returns>一个Task对象，表示异步操作的结果。</returns>
-    Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e);
+    /// <param name="message">异常消息</param>
+    public ProxyAuthenticationException(string message) : base(message) { }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="message">异常消息</param>
+    /// <param name="innerException">内部异常</param>
+    public ProxyAuthenticationException(string message, Exception innerException) : base(message, innerException) { }
 }

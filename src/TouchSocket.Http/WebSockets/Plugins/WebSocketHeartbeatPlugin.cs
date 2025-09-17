@@ -20,10 +20,10 @@ namespace TouchSocket.Http.WebSockets;
 /// 初始化一个适用于WebSocket的心跳插件
 /// </summary>
 [PluginOption(Singleton = true)]
-public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
+public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketConnectedPlugin
 {
     /// <inheritdoc/>
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         _ = EasyTask.SafeRun(async () =>
         {

@@ -10,15 +10,22 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.IO.Pipelines;
-using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TouchSocket.Dmtp;
 
-namespace TouchSocket.Sockets;
+namespace TouchSocket.Core;
 
-public interface ITransport : ITransportReader, ITransportWriter, IClosableClient
+[PluginRaise(typeof(IDmtpConnectingPlugin))]
+[PluginRaise(typeof(IDmtpConnectedPlugin))]
+[PluginRaise(typeof(IDmtpReceivedPlugin))]
+[PluginRaise(typeof(IDmtpRoutingPlugin))]
+[PluginRaise(typeof(IDmtpCreatedChannelPlugin))]
+[PluginRaise(typeof(IDmtpClosingPlugin))]
+[PluginRaise(typeof(IDmtpClosedPlugin))]
+internal static partial class DmtpPluginRaiseExtension
 {
-    /// <summary>
-    /// 获取连接关闭时的事件参数。
-    /// </summary>
-    ClosedEventArgs ClosedEventArgs { get; }
 }

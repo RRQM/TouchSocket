@@ -42,60 +42,6 @@ public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpServ
 /// <typeparam name="TClient">客户端会话类型，必须继承自<see cref="TcpDmtpSessionClient"/>。</typeparam>
 public abstract class TcpDmtpService<TClient> : TcpServiceBase<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSessionClient
 {
-    #region 字段
-
-    private bool m_allowRoute;
-    private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-
-    #endregion 字段
-
     /// <inheritdoc/>
     public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
-
-    /// <inheritdoc/>
-    protected override void ClientInitialized(TClient client)
-    {
-        base.ClientInitialized(client);
-        client.InternalSetAction(this.PrivateConnecting);
-    }
-
-    /// <inheritdoc/>
-    protected override void LoadConfig(TouchSocketConfig config)
-    {
-        config.SetTcpDataHandlingAdapter(default);
-        base.LoadConfig(config);
-
-        var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
-        if (dmtpRouteService != null)
-        {
-            this.m_allowRoute = true;
-            this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
-        }
-    }
-
-    private async Task<IDmtpActor> FindDmtpActor(string id)
-    {
-        if (this.m_allowRoute)
-        {
-            if (this.m_findDmtpActor != null)
-            {
-                return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    private Task PrivateConnecting(TcpDmtpSessionClient sessionClient, ConnectingEventArgs e)
-    {
-        sessionClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
-        {
-            Id = e.Id,
-            FindDmtpActor = this.FindDmtpActor
-        });
-        return EasyTask.CompletedTask;
-    }
 }

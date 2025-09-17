@@ -24,12 +24,6 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
 {
-    /// <inheritdoc/>
-    public bool AllowAsyncRead { get => this.WebSocket.AllowAsyncRead; set => this.WebSocket.AllowAsyncRead = value; }
-
-    /// <inheritdoc/>
-    public IHttpSession Client => this;
-
     #region 事件
 
     /// <inheritdoc/>
@@ -39,10 +33,10 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     public ClosingEventHandler<IWebSocketClient> Closing { get; set; }
 
     /// <inheritdoc/>
-    public HttpContextEventHandler<IWebSocketClient> Handshaked { get; set; }
+    public HttpContextEventHandler<IWebSocketClient> Connected { get; set; }
 
     /// <inheritdoc/>
-    public HttpContextEventHandler<IWebSocketClient> Handshaking { get; set; }
+    public HttpContextEventHandler<IWebSocketClient> Connecting { get; set; }
 
     /// <inheritdoc/>
     public WSDataFrameEventHandler<IWebSocketClient> Received { get; set; }
@@ -90,33 +84,33 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     }
 
     /// <inheritdoc/>
-    protected override async Task OnWebSocketHandshaked(HttpContextEventArgs e)
+    protected override async Task OnWebSocketConnected(HttpContextEventArgs e)
     {
-        if (this.Handshaked != null)
+        if (this.Connected != null)
         {
-            await this.Handshaked.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnWebSocketHandshaked(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override async Task OnWebSocketHandshaking(HttpContextEventArgs e)
+    protected override async Task OnWebSocketConnecting(HttpContextEventArgs e)
     {
-        if (this.Handshaking != null)
+        if (this.Connecting != null)
         {
-            await this.Handshaking.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnWebSocketHandshaking(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
@@ -135,51 +129,19 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
 
     #endregion 事件
 
-    /// <inheritdoc/>
-    public string Version => this.WebSocket.Version;
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
     /// <inheritdoc/>
-    public WebSocketCloseStatus CloseStatus => this.WebSocket.CloseStatus;
-
-    /// <inheritdoc/>
-    public Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default)
+    public async Task ConnectAsync(CancellationToken token)
     {
-        return this.WebSocket.CloseAsync(closeStatus, statusDescription, token);
-    }
-
-    /// <inheritdoc/>
-    public Task<Result> PingAsync(CancellationToken token = default)
-    {
-        return this.WebSocket.PingAsync(token);
-    }
-
-    /// <inheritdoc/>
-    public Task<Result> PongAsync(CancellationToken token = default)
-    {
-        return this.WebSocket.PongAsync(token);
-    }
-
-    /// <inheritdoc/>
-    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
-    {
-        return this.WebSocket.ReadAsync(token);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
-    {
-        return this.WebSocket.SendAsync(dataFrame, endOfMessage, token);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
-    {
-        return this.WebSocket.SendAsync(text, endOfMessage, token);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
-    {
-        return this.WebSocket.SendAsync(memory, endOfMessage, token);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.ProtectedWebSocketConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 }

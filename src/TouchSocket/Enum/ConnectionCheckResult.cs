@@ -10,22 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
-namespace TouchSocket.Http.WebSockets;
+namespace TouchSocket.Sockets;
 
 /// <summary>
-/// IWebSocketHandshakingPlugin
+/// 连接检查结果枚举
 /// </summary>
-[DynamicMethod]
-public interface IWebSocketHandshakingPlugin : IPlugin
+public enum ConnectionCheckResult : byte
 {
     /// <summary>
-    /// 表示在即将握手连接时。
+    /// 跳过此次检查
     /// </summary>
-    /// <param name="webSocket"></param>
-    /// <param name="e"></param>
-    /// <returns></returns>
-    Task OnWebSocketHandshaking(IWebSocket webSocket, HttpContextEventArgs e);
+    Skip,
+    
+    /// <summary>
+    /// 连接存活
+    /// </summary>
+    Alive,
+    
+    /// <summary>
+    /// 连接失活，需要重连
+    /// </summary>
+    Dead
 }

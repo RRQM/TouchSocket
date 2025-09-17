@@ -388,4 +388,13 @@ public static class ClientExtension
     }
 
     #endregion Connect
+
+    #region PauseReconnection
+
+    /// <summary>
+    /// 指示是否暂停重新连接。
+    /// </summary>
+    [GeneratorProperty(TargetType =typeof(IDependencyClient))]
+    public static readonly DependencyProperty<bool> PauseReconnectionProperty = new DependencyProperty<bool>("PauseReconnection", false);
+    #endregion
 }

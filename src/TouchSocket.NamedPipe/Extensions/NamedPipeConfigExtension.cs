@@ -91,34 +91,4 @@ public static class NamedPipeConfigExtension
         config.SetValue(PipeServerNameProperty, value);
         return config;
     }
-
-    #region Reconnection
-
-    /// <summary>
-    /// 使用命名管道断线重连。
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="pluginManager"></param>
-    /// <returns></returns>
-    public static ReconnectionPlugin<TClient> UseNamedPipeReconnection<TClient>(this IPluginManager pluginManager) where TClient : INamedPipeClient
-    {
-        var reconnectionPlugin = new NamedPipeReconnectionPlugin<TClient>();
-        pluginManager.Add(reconnectionPlugin);
-        return reconnectionPlugin;
-    }
-
-    /// <summary>
-    /// 使用命名管道断线重连。
-    /// </summary>
-    /// <param name="pluginManager"></param>
-    /// <returns></returns>
-    public static ReconnectionPlugin<INamedPipeClient> UseNamedPipeReconnection(this IPluginManager pluginManager)
-    {
-        var reconnectionPlugin = new NamedPipeReconnectionPlugin<INamedPipeClient>();
-        pluginManager.Add(reconnectionPlugin);
-        return reconnectionPlugin;
-    }
-
-
-    #endregion Reconnection
 }

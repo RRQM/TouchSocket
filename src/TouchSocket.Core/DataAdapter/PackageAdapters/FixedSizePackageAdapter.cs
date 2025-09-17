@@ -55,6 +55,7 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
         }
     }
 
+    /// <inheritdoc/>
     public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         var dataLen = memory.Length;

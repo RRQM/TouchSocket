@@ -145,7 +145,9 @@ public static class SpanExtension
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), span.Length, size);
         }
-        return TouchSocketBitConverter.Default.To<T>(span);
+        var value= TouchSocketBitConverter.Default.To<T>(span);
+        span = span.Slice(size);
+        return value;
     }
 
     /// <summary>
@@ -167,7 +169,9 @@ public static class SpanExtension
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), span.Length, size);
         }
-        return TouchSocketBitConverter.GetBitConverter(endianType).To<T>(span);
+        var value = TouchSocketBitConverter.GetBitConverter(endianType).To<T>(span);
+        span = span.Slice(size);
+        return value;
     }
 
     #endregion ReadValue

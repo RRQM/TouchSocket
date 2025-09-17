@@ -255,7 +255,7 @@ public static class FastBinaryFormatter
 
         // 回写长度
         var startPositionSpan = writerAnchor.Rewind(ref writer, out var length);
-        startPositionSpan.WriteValue<int>(length - 4);
+        startPositionSpan.WriteValue<int>(length);
     }
 
     /// <summary>

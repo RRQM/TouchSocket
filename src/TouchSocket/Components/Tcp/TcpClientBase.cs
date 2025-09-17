@@ -271,7 +271,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 {
                     return;
                 }
-                var result = await transport.Input.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.Buffer.Length == 0)
                 {
                     break;
@@ -296,7 +296,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                         }
                     }
                     var position = result.Buffer.GetPosition(reader.BytesRead);
-                    transport.Input.AdvanceTo(position, result.Buffer.End);
+                    transport.Reader.AdvanceTo(position, result.Buffer.End);
 
                     if (result.IsCanceled || result.IsCompleted)
                     {
@@ -347,13 +347,28 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private async Task AuthenticateAsync()
+    private async Task AuthenticateAsync(IPHost iPHost)
     {
-        if (this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
+        if (!this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
         {
-            await this.m_tcpCore.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (!iPHost.IsSsl)
+            {
+                return;
+            }
+
+            sslOption = new ClientSslOption()
+            {
+                TargetHost = iPHost.Host
+            };
         }
+        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
+
+    protected Task AuthenticateAsync(ClientSslOption sslOption)
+    {
+        return this.m_tcpCore.AuthenticateAsync(sslOption);
+    }
+
 
     #region Receiver
 
@@ -447,7 +462,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
-        var locker = transport.SemaphoreSlimForWriter;
+        var locker = transport.WriteLocker;
 
         await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
@@ -455,11 +470,11 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Output.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                var writer = new PipeBytesWriter(transport.Output);
+                var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
                 await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
@@ -489,12 +504,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
-        var locker = transport.SemaphoreSlimForWriter;
+        var locker = transport.WriteLocker;
 
         await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            var writer = new PipeBytesWriter(transport.Output);
+            var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
             await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }

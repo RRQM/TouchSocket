@@ -35,7 +35,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     private WebSocket m_client;
     private ClosedEventArgs m_closedEventArgs;
     private TouchSocketConfig m_config;
-    private DmtpActor m_dmtpActor;
+    private SealedDmtpActor m_dmtpActor;
     private DmtpAdapter m_dmtpAdapter;
     private HttpContext m_httpContext;
     private string m_id;
@@ -168,17 +168,22 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         this.m_service = service;
     }
 
-    internal void SetDmtpActor(DmtpActor actor)
+    internal void InitDmtpActor(bool allowRoute, Func<string, Task<IDmtpActor>> onServiceFindDmtpActor)
     {
-        actor.IdChanged = this.ThisOnResetId;
-        actor.OutputSendAsync = this.OnDmtpActorSendAsync;
-        actor.Client = this;
-        actor.Closing = this.OnDmtpActorClose;
-        actor.Routing = this.OnDmtpActorRouting;
-        actor.Handshaked = this.OnDmtpActorHandshaked;
-        actor.Handshaking = this.OnDmtpActorHandshaking;
-        actor.CreatedChannel = this.OnDmtpActorCreateChannel;
-        actor.Logger = this.Logger;
+        var actor = new SealedDmtpActor(allowRoute,true)
+        {
+            Id=this.Id,
+            FindDmtpActor = onServiceFindDmtpActor,
+            IdChanged = this.ThisOnResetId,
+            OutputSendAsync = this.OnDmtpActorSendAsync,
+            Client = this,
+            Closing = this.OnDmtpActorClose,
+            Routing = this.OnDmtpActorRouting,
+            Connected = this.OnDmtpActorConnected,
+            Connecting = this.OnDmtpActorConnecting,
+            CreatedChannel = this.OnDmtpActorCreateChannel,
+            Logger = this.Logger
+        };
         this.m_dmtpActor = actor;
     }
 
@@ -351,12 +356,12 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         return this.OnCreateChannel(e);
     }
 
-    private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaked(e);
+        return this.OnConnected(e);
     }
 
-    private async Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+    private async Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
         if (e.Token == this.VerifyToken)
         {
@@ -366,7 +371,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         {
             e.Message = "Token不受理";
         }
-        await this.OnHandshaking(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -402,26 +407,26 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     /// 在完成握手连接时
     /// </summary>
     /// <param name="e"></param>
-    protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnected(DmtpVerifyEventArgs e)
     {
         if (e.Handled)
         {
             return;
         }
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 在验证Token时
     /// </summary>
     /// <param name="e">参数</param>
-    protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnecting(DmtpVerifyEventArgs e)
     {
         if (e.Handled)
         {
             return;
         }
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

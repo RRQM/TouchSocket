@@ -11,15 +11,50 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.Sockets;
 
-/// <summary>
-/// HttpConfigExtensions
-/// </summary>
 public static class HttpConfigExtensions
 {
-    
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    public static readonly DependencyProperty<IWebProxy> ProxyProperty = new DependencyProperty<IWebProxy>("Proxy", default);
+
+    public static TouchSocketConfig SetProxy(this TouchSocketConfig config, Uri proxyUri)
+    {
+        config.SetProxy(new WebProxy(proxyUri));
+        return config;
+    }
+
+    public static TouchSocketConfig SetProxy(this TouchSocketConfig config, string host, int port)
+    {
+        config.SetProxy(new WebProxy(host, port));
+        return config;
+    }
+
+    public static TouchSocketConfig SetProxy(this TouchSocketConfig config, Uri proxyUri, string username, string password)
+    {
+        config.SetProxy(new WebProxy(proxyUri)
+        {
+            Credentials = new NetworkCredential(username, password)
+        });
+        return config;
+    }
+
+    public static TouchSocketConfig SetProxy(this TouchSocketConfig config, string host, int port, string username, string password)
+    {
+        config.SetProxy(new WebProxy(host, port)
+        {
+            Credentials = new NetworkCredential(username, password)
+        });
+        return config;
+    }
+
+    public static TouchSocketConfig SetSystemProxy(this TouchSocketConfig config)
+    {
+        config.SetProxy(WebRequest.GetSystemWebProxy());
+        return config;
+    }
 }

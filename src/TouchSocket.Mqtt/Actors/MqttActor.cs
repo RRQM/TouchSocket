@@ -405,9 +405,8 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
-    protected async Task ProtectedMqttOnConnected(object o)
+    protected async Task ProtectedMqttOnConnected(MqttConnectedEventArgs e)
     {
-        var e = (MqttConnectedEventArgs)o;
         if (this.Connected != null)
         {
             await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

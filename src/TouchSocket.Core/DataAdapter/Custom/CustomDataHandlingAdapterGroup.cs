@@ -15,21 +15,32 @@ using System.Collections.Generic;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 用户自定义数据处理适配器组，用于管理多个自定义数据处理适配器。
+/// 该类可以组合多个适配器，并按顺序尝试解析请求信息。
+/// </summary>
+/// <typeparam name="TRequest">请求信息类型，必须实现 <see cref="IRequestInfo"/> 接口。</typeparam>
 public class CustomDataHandlingAdapterGroup<TRequest> : CustomDataHandlingAdapter<TRequest>
     where TRequest : IRequestInfo
 {
     private readonly List<CustomDataHandlingAdapterGroup<TRequest>> m_dataHandlingAdapterSlims;
 
+    /// <summary>
+    /// 初始化 <see cref="CustomDataHandlingAdapterGroup{TRequest}"/> 类的新实例。
+    /// </summary>
+    /// <param name="adapters">适配器数组，用于组合多个数据处理适配器。</param>
     public CustomDataHandlingAdapterGroup(params CustomDataHandlingAdapterGroup<TRequest>[] adapters)
     {
         this.m_dataHandlingAdapterSlims = new(adapters);
     }
 
+    /// <inheritdoc/>
     protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TRequest request)
     {
         throw new NotImplementedException();
     }
 
+    /// <inheritdoc/>
     protected override bool ParseRequestCore<TReader>(ref TReader reader, out TRequest request)
     {
         foreach (var item in this.m_dataHandlingAdapterSlims)

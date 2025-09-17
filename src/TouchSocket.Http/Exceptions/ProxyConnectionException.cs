@@ -11,44 +11,24 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
 
 /// <summary>
-/// Http代理
+/// 代理连接异常
 /// </summary>
-[Obsolete("此配置已被弃用，不再支持代理", true)]
-public class HttpProxy
+public class ProxyConnectionException : Exception
 {
     /// <summary>
-    /// 不带基本验证的代理
+    /// 构造函数
     /// </summary>
-    /// <param name="host"></param>
-    public HttpProxy(IPHost host)
-    {
-        this.Host = host;
-    }
+    /// <param name="message">异常消息</param>
+    public ProxyConnectionException(string message) : base(message) { }
 
     /// <summary>
-    /// 带基本验证的代理
+    /// 构造函数
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="userName"></param>
-    /// <param name="passWord"></param>
-    public HttpProxy(IPHost host, string userName, string passWord)
-    {
-        this.Host = host;
-        this.Credential = new NetworkCredential(userName, passWord, $"{host.Authority}");
-    }
-
-    /// <summary>
-    /// 验证代理
-    /// </summary>
-    public NetworkCredential Credential { get; set; }
-
-    /// <summary>
-    /// 代理的地址
-    /// </summary>
-    public IPHost Host { get; set; }
+    /// <param name="message">异常消息</param>
+    /// <param name="innerException">内部异常</param>
+    public ProxyConnectionException(string message, Exception innerException) : base(message, innerException) { }
 }

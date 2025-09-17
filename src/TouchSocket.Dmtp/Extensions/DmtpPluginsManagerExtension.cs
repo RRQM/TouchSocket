@@ -34,33 +34,4 @@ public static class DmtpPluginManagerExtension
         pluginManager.Add(heartbeat);
         return heartbeat;
     }
-
-    #region WebSocketReconnection
-
-    /// <summary>
-    /// 使用<see cref="IDmtpClient"/>断线重连。
-    /// </summary>
-    /// <typeparam name="TClient">要重连的客户端类型，必须实现<see cref="IDmtpClient"/>接口。</typeparam>
-    /// <param name="pluginManager">插件管理器，用于添加重连插件。</param>
-    /// <returns>返回创建的重连插件实例。</returns>
-    public static ReconnectionPlugin<TClient> UseDmtpReconnection<TClient>(this IPluginManager pluginManager) where TClient : IDmtpClient
-    {
-        var reconnectionPlugin = new DmtpReconnectionPlugin<TClient>();
-        pluginManager.Add(reconnectionPlugin);
-        return reconnectionPlugin;
-    }
-
-    /// <summary>
-    /// 使用<see cref="IDmtpClient"/>断线重连。
-    /// </summary>
-    /// <param name="pluginManager">插件管理器，用于添加重连插件。</param>
-    /// <returns>返回创建的重连插件实例。</returns>
-    public static ReconnectionPlugin<IDmtpClient> UseWebSocketReconnection(this IPluginManager pluginManager)
-    {
-        var reconnectionPlugin = new DmtpReconnectionPlugin<IDmtpClient>();
-        pluginManager.Add(reconnectionPlugin);
-        return reconnectionPlugin;
-    }
-
-    #endregion WebSocketReconnection
 }

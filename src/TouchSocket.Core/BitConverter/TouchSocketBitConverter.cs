@@ -876,7 +876,7 @@ public sealed class TouchSocketBitConverter
                 byte value = 0;
                 TSource source;
 
-                for (var k = 7; k >= 0; k--)
+                for (var k = 0; k < 8; k++)
                 {
                     if (sourceIndex < sourceSpan.Length)
                     {
@@ -921,7 +921,7 @@ public sealed class TouchSocketBitConverter
             {
                 var sourceByte = bytes[j];
 
-                for (var bit = 7; bit >= 0; bit--)
+                for (var bit = 0; bit < 8; bit++)
                 {
                     var b = sourceByte.GetBit(bit);
                     targetSpan[targetIndex] = Unsafe.As<bool, TTarget>(ref b);

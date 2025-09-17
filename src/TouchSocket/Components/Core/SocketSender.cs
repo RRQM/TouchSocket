@@ -31,13 +31,13 @@ internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult
             return this.SendAsync(socket, buffers.First);
         }
 
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
 
         this.SetBufferList(buffers);
 
         if (socket.SendAsync(this))
         {
-            return new ValueTask<TcpOperationResult>(this, this.m_valueTaskSourceCore.Version);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
         return new ValueTask<TcpOperationResult>(this.GetResult());
@@ -45,12 +45,12 @@ internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult
 
     public ValueTask<TcpOperationResult> SendAsync(Socket socket, List<ArraySegment<byte>> buffers)
     {
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
         this.SetBufferList(buffers);
 
         if (socket.SendAsync(this))
         {
-            return new ValueTask<TcpOperationResult>(this, this.m_valueTaskSourceCore.Version);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
         return new ValueTask<TcpOperationResult>(this.GetResult());
@@ -72,7 +72,7 @@ internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult
 
     public ValueTask<TcpOperationResult> SendAsync(Socket socket, in ReadOnlyMemory<byte> memory)
     {
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
 #if NET6_0_OR_GREATER
         this.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
@@ -82,7 +82,7 @@ internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult
 #endif
         if (socket.SendAsync(this))
         {
-            return new ValueTask<TcpOperationResult>(this, this.m_valueTaskSourceCore.Version);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
         return new ValueTask<TcpOperationResult>(this.GetResult());

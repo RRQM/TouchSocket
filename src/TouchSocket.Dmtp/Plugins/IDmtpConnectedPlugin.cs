@@ -10,32 +10,22 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
-namespace TouchSocket.Http;
+namespace TouchSocket.Dmtp;
 
 /// <summary>
-/// 代理身份认证类型
+/// 定义了一个插件接口，该插件在完成与Dmtp的握手连接后需要被调用。
 /// </summary>
-[Obsolete("此配置已被弃用，不再支持代理", true)]
-public enum AuthenticationType
-{  /// <summary>
-   /// 不允许身份认证
-   /// </summary>
-    None,
-
+[DynamicMethod]
+public interface IDmtpConnectedPlugin : IPlugin
+{
     /// <summary>
-    /// 指定摘要身份验证。
+    /// 在完成握手连接时被调用的方法。
     /// </summary>
-    Digest = 1,
-
-    /// <summary>
-    /// 指定基本身份验证。
-    /// </summary>
-    Basic = 8,
-
-    /// <summary>
-    /// 指定匿名身份验证。
-    /// </summary>
-    Anonymous = 0x8000
+    /// <param name="client">参与握手的Dmtp客户端对象。</param>
+    /// <param name="e">握手验证事件参数。</param>
+    /// <returns>一个Task对象，表示异步操作的结果。</returns>
+    Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e);
 }

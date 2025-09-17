@@ -104,7 +104,22 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
 
     void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
     {
-        this.m_core.OnCompleted(continuation, state, token, flags);
+        try
+        {
+            this.m_core.OnCompleted(continuation, state, token, flags);
+        }
+        catch (Exception ex)
+        {
+            // 如果可能，尝试通知异常
+            try
+            {
+                this.m_core.SetException(ex);
+            }
+            catch
+            {
+                // 忽略SetException的异常，避免递归异常
+            }
+        }
     }
 
     public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock, CancellationToken token)

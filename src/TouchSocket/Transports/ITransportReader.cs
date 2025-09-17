@@ -15,10 +15,18 @@ using System.Threading;
 
 namespace TouchSocket.Sockets;
 
-public interface ITransport : ITransportReader, ITransportWriter, IClosableClient
+/// <summary>
+/// 传输读取器接口，提供管道读取器和读取锁定器
+/// </summary>
+public interface ITransportReader
 {
     /// <summary>
-    /// 获取连接关闭时的事件参数。
+    /// 获取管道读取器，用于从传输层读取数据
     /// </summary>
-    ClosedEventArgs ClosedEventArgs { get; }
+    PipeReader Reader { get; }
+
+    /// <summary>
+    /// 获取读取锁定器，用于同步读取操作
+    /// </summary>
+    SemaphoreSlim ReadLocker { get; }
 }

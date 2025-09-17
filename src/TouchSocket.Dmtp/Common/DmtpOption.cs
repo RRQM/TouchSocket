@@ -28,7 +28,7 @@ public class DmtpOption
     /// <summary>
     /// 连接时指定Id。
     /// <para>
-    /// 使用该功能时，仅在服务器的Handshaking之后生效。且如果id重复，则会连接失败。
+    /// 使用该功能时，仅在服务器的Connecting之后生效。且如果id重复，则会连接失败。
     /// </para>
     /// </summary>
     public string Id { get; set; }

@@ -20,28 +20,43 @@ internal abstract class SocketAwaitableEventArgs<TResult> : SocketAsyncEventArgs
     where TResult : struct
 {
 
-    protected ManualResetValueTaskSourceCore<TResult> m_valueTaskSourceCore = new ManualResetValueTaskSourceCore<TResult>();
+    protected ManualResetValueTaskSourceCore<TResult> m_core = new ManualResetValueTaskSourceCore<TResult>();
 
-    public bool RunContinuationsAsynchronously { get => this.m_valueTaskSourceCore.RunContinuationsAsynchronously; set => this.m_valueTaskSourceCore.RunContinuationsAsynchronously = value; }
+    public bool RunContinuationsAsynchronously { get => this.m_core.RunContinuationsAsynchronously; set => this.m_core.RunContinuationsAsynchronously = value; }
 
     TResult IValueTaskSource<TResult>.GetResult(short token)
     {
-        return this.m_valueTaskSourceCore.GetResult(token);
+        return this.m_core.GetResult(token);
     }
 
     ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short token)
     {
-        return this.m_valueTaskSourceCore.GetStatus(token);
+        return this.m_core.GetStatus(token);
     }
 
     void IValueTaskSource<TResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
     {
-        this.m_valueTaskSourceCore.OnCompleted(continuation, state, token, flags);
+        try
+        {
+            this.m_core.OnCompleted(continuation, state, token, flags);
+        }
+        catch (Exception ex)
+        {
+            // 如果可能，尝试通知异常
+            try
+            {
+                this.m_core.SetException(ex);
+            }
+            catch
+            {
+                // 忽略SetException的异常，避免递归异常
+            }
+        }
     }
 
     protected override void OnCompleted(SocketAsyncEventArgs e)
     {
-        this.m_valueTaskSourceCore.SetResult(this.GetResult());
+        this.m_core.SetResult(this.GetResult());
         base.OnCompleted(e);
     }
 

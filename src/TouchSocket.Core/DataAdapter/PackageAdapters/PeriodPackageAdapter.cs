@@ -24,6 +24,8 @@ namespace TouchSocket.Core;
 public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 {
     private readonly ConcurrentQueue<ValueByteBlock> m_bytes = new ConcurrentQueue<ValueByteBlock>();
+    private readonly CancellationTokenSource m_cts = new CancellationTokenSource();
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
     private int m_dataCount;
     private ExceptionDispatchInfo m_exceptionDispatchInfo;
     private long m_fireCount;
@@ -52,6 +54,17 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
         return EasyTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_cts.SafeCancel();
+            this.m_cts.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
+    }
+
     private async Task DelayGo()
     {
         await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -70,6 +83,7 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
                 byteBlock.SeekToStart();
 
+                await this.m_semaphoreSlim.WaitAsync(this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
                     await this.GoReceivedAsync(byteBlock.Memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -77,6 +91,10 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
                 catch (Exception ex)
                 {
                     this.m_exceptionDispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                }
+                finally
+                {
+                    this.m_semaphoreSlim.Release();
                 }
             }
         }

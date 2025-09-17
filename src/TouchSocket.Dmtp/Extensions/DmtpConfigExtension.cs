@@ -22,7 +22,7 @@ public static class DmtpConfigExtension
     /// <summary>
     /// 设置Dmtp相关配置。
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig),ActionMode =true)]
     public static readonly DependencyProperty<DmtpOption> DmtpOptionProperty =
         new("DmtpOption", new DmtpOption());
 }

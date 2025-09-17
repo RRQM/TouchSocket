@@ -22,10 +22,10 @@ public class PipeTcpClient : TcpClientBase, IPipeTcpClient
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
     /// <inheritdoc/>
-    public PipeReader Input => base.Transport.Input;
+    public PipeReader Input => base.Transport.Reader;
 
     /// <inheritdoc/>
-    public PipeWriter Output => base.Transport.Output;
+    public PipeWriter Output => base.Transport.Writer;
 
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken token)

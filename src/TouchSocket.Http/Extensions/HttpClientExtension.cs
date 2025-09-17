@@ -66,7 +66,7 @@ public static class HttpClientExtension
     /// <param name="url">要请求的URL。</param>
     /// <param name="token">用于取消操作的取消令牌。</param>
     /// <returns>返回从指定URL获取的字符串。</returns>
-    public static async Task<string> GetStringAsync(this IHttpClient httpClient, string url, CancellationToken token)
+    public static async Task<string> GetStringAsync(this IHttpClient httpClient, string url, CancellationToken token=default)
     {
         // 将获取到的字节数组转换为UTF-8编码的字符串
         return (await GetByteArrayAsync(httpClient, url, token)).ToUtf8String();

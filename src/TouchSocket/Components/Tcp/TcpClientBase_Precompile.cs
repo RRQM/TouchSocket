@@ -66,7 +66,7 @@ public partial class TcpClientBase
 
         this.SetSocket(socket);
 
-        await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.AuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
@@ -101,7 +101,7 @@ public partial class TcpClientBase
 
         this.SetSocket(socket);
 
-        await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.AuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));

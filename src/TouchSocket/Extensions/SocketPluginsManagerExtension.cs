@@ -46,7 +46,7 @@ public static class SocketPluginManagerExtension
         return pluginManager.Add<CheckClearPlugin<TClient>>();
     }
 
-    #region TcpReconnection
+    #region Reconnection
 
     /// <summary>
     /// 使用断线重连。
@@ -54,22 +54,12 @@ public static class SocketPluginManagerExtension
     /// <typeparam name="TClient">指定的客户端类型，必须继承自<see cref="ITcpClient"/>。</typeparam>
     /// <param name="pluginManager">插件管理器实例，用于添加断线重连插件。</param>
     /// <returns>返回创建的重连实例。</returns>
-    public static ReconnectionPlugin<TClient> UseTcpReconnection<TClient>(this IPluginManager pluginManager)
-        where TClient : ITcpClient
+    public static ReconnectionPlugin<TClient> UseReconnection<TClient>(this IPluginManager pluginManager)
+        where TClient : IConnectableClient, IOnlineClient, IDependencyClient
     {
-        var reconnectionPlugin = new TcpReconnectionPlugin<TClient>();
+        var reconnectionPlugin = new ReconnectionPlugin<TClient>();
         pluginManager.Add(reconnectionPlugin);
         return reconnectionPlugin;
     }
-
-    /// <summary>
-    /// 为插件管理器添加TCP重新连接插件。
-    /// </summary>
-    /// <param name="pluginManager">要添加插件的插件管理器。</param>
-    /// <returns>返回新创建的TCP重新连接插件实例。</returns>
-    public static ReconnectionPlugin<ITcpClient> UseTcpReconnection(this IPluginManager pluginManager)
-    {
-        return UseTcpReconnection<ITcpClient>(pluginManager);
-    }
-    #endregion TcpReconnection
+    #endregion Reconnection
 }

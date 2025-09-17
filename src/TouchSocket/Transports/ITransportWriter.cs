@@ -15,10 +15,18 @@ using System.Threading;
 
 namespace TouchSocket.Sockets;
 
-public interface ITransport : ITransportReader, ITransportWriter, IClosableClient
+/// <summary>
+/// 传输写入器接口，提供管道写入器和写入锁定器
+/// </summary>
+public interface ITransportWriter
 {
     /// <summary>
-    /// 获取连接关闭时的事件参数。
+    /// 获取管道写入器，用于向传输层写入数据
     /// </summary>
-    ClosedEventArgs ClosedEventArgs { get; }
+    PipeWriter Writer { get; }
+
+    /// <summary>
+    /// 获取写入锁定器，用于同步写入操作
+    /// </summary>
+    SemaphoreSlim WriteLocker { get; }
 }

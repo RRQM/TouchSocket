@@ -19,6 +19,14 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 多线程数据适配器测试器，用于在多线程环境下测试 <see cref="UdpDataHandlingAdapter"/> 的性能和正确性。
+/// 该类提供了高并发场景下的数据处理适配器测试功能，可以模拟多线程发送和接收数据。
+/// </summary>
+/// <remarks>
+/// 测试器通过内部智能队列管理数据传输，支持异步操作和性能统计。
+/// 可用于验证数据适配器在高负载情况下的稳定性和性能表现。
+/// </remarks>
 public class MultithreadingDataAdapterTester : SafetyDisposableObject
 {
     private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
@@ -35,6 +43,10 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
 
     private Stopwatch m_stopwatch;
 
+    /// <summary>
+    /// 初始化 <see cref="MultithreadingDataAdapterTester"/> 类的新实例。
+    /// </summary>
+    /// <param name="multiThread">并发多线程数量，用于确定同时处理数据的线程数。</param>
     protected MultithreadingDataAdapterTester(int multiThread)
     {
         this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
@@ -45,12 +57,15 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
     }
 
     /// <summary>
-    /// 获取测试器
+    /// 创建数据适配器测试器实例。
     /// </summary>
-    /// <param name="adapter">待测试适配器</param>
-    /// <param name="multiThread">并发多线程数量</param>
-    /// <param name="receivedCallBack">收到数据回调</param>
-    /// <returns></returns>
+    /// <param name="adapter">待测试的 <see cref="UdpDataHandlingAdapter"/> 适配器。</param>
+    /// <param name="multiThread">并发多线程数量，决定测试的并发程度。</param>
+    /// <param name="receivedCallBack">收到数据时的回调函数，可选参数。如果为 <see langword="null"/>，则不执行额外的回调处理。</param>
+    /// <returns>返回配置完成的 <see cref="MultithreadingDataAdapterTester"/> 实例。</returns>
+    /// <remarks>
+    /// 该方法会自动配置适配器的发送和接收回调函数，建立测试器与适配器之间的数据流转机制。
+    /// </remarks>
     public static MultithreadingDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<ReadOnlyMemory<byte>, IRequestInfo, Task> receivedCallBack = default)
     {
         var tester = new MultithreadingDataAdapterTester(multiThread);
@@ -62,13 +77,18 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
     }
 
     /// <summary>
-    /// 模拟测试运行发送
+    /// 异步执行模拟测试运行，发送指定的数据并统计处理时间。
     /// </summary>
-    /// <param name="memory">待测试的内存块</param>
-    /// <param name="testCount">测试次数</param>
-    /// <param name="expectedCount">期待测试次数</param>
-    /// <param name="millisecondsTimeout">超时时间（毫秒）</param>
-    /// <returns>测试运行的时间差</returns>
+    /// <param name="memory">待测试的内存数据块，包含要发送的字节数据。</param>
+    /// <param name="testCount">测试发送的总次数。</param>
+    /// <param name="expectedCount">期望接收到的数据包数量，用于判断测试是否完成。</param>
+    /// <param name="millisecondsTimeout">测试超时时间，单位为毫秒。如果在指定时间内未完成测试，将抛出超时异常。</param>
+    /// <returns>返回一个 <see cref="Task{TimeSpan}"/>，表示测试完成所用的时间。</returns>
+    /// <exception cref="TimeoutException">当测试在指定超时时间内未完成时抛出。</exception>
+    /// <remarks>
+    /// 该方法会启动计时器，发送指定次数的数据包，然后等待接收到期望数量的响应。
+    /// 测试过程是异步的，支持高并发数据发送和处理。
+    /// </remarks>
     public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int millisecondsTimeout)
     {
         this.m_count = 0;
@@ -89,6 +109,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
         throw new TimeoutException();
     }
 
+    /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
     }

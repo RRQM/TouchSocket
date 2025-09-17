@@ -22,7 +22,7 @@ internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs<UdpOperationR
 {
     public ValueTask<UdpOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
     {
-        this.m_valueTaskSourceCore.Reset();
+        this.m_core.Reset();
 #if NET6_0_OR_GREATER
         this.SetBuffer(buffer);
 #else
@@ -33,7 +33,7 @@ internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs<UdpOperationR
         this.RemoteEndPoint = endPoint;
         if (socket.ReceiveFromAsync(this))
         {
-            return new ValueTask<UdpOperationResult>(this, this.m_valueTaskSourceCore.Version);
+            return new ValueTask<UdpOperationResult>(this, this.m_core.Version);
         }
 
         return new ValueTask<UdpOperationResult>(this.GetResult());

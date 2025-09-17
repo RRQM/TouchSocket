@@ -10,15 +10,19 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.IO.Pipelines;
-using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TouchSocket.Http.WebSockets;
 
-namespace TouchSocket.Sockets;
-
-public interface ITransport : ITransportReader, ITransportWriter, IClosableClient
+namespace TouchSocket.Core;
+[PluginRaise(typeof(IWebSocketClosedPlugin))]
+[PluginRaise(typeof(IWebSocketClosingPlugin))]
+[PluginRaise(typeof(IWebSocketConnectedPlugin))]
+[PluginRaise(typeof(IWebSocketConnectingPlugin))]
+[PluginRaise(typeof(IWebSocketReceivedPlugin))]
+internal static partial class WebSocketPluginRaiseExtension
 {
-    /// <summary>
-    /// 获取连接关闭时的事件参数。
-    /// </summary>
-    ClosedEventArgs ClosedEventArgs { get; }
 }

@@ -68,6 +68,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
     public bool ReserveTerminatorCode { get; set; }
 
 
+    /// <inheritdoc/>
     protected override async Task PreviewReceivedAsync<TReader>(TReader reader)
     {
         while (reader.BytesRemaining > 0)
@@ -89,6 +90,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
         }
     }
 
+    /// <inheritdoc/>
     public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
     {
         if (memory.Length > this.MaxPackageSize)

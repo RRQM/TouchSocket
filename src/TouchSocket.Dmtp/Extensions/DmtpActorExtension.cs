@@ -288,7 +288,7 @@ public static class DmtpActorExtension
         return channelStatus switch
         {
             ChannelStatus.Default => ResultCode.Default,
-            ChannelStatus.Overtime => ResultCode.Overtime,
+            ChannelStatus.HoldOn => ResultCode.Default,
             ChannelStatus.Cancel => ResultCode.Canceled,
             ChannelStatus.Completed => ResultCode.Success,
             _ => ResultCode.Error,

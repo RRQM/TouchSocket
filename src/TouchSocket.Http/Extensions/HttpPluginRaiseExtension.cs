@@ -15,35 +15,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
+using TouchSocket.Http;
+using TouchSocket.Http.WebSockets;
 
-namespace TouchSocket.Http;
+namespace TouchSocket.Core;
 
-[PluginOption(Singleton = true)]
-internal sealed class HttpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : IHttpClient
+[PluginRaise(typeof(IHttpPlugin))]
+internal static partial class HttpPluginRaiseExtension
 {
-    public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
-
-    public HttpReconnectionPlugin()
-    {
-        this.ActionForCheck = (c, i) => Task.FromResult<bool?>(c.Online);
-    }
-
-    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
-    {
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (e.Manual)
-        {
-            return;
-        }
-
-
-        if (client is not TClient tClient)
-        {
-            return;
-        }
-
-        _ = this.ExecuteConnectLoop(tClient);
-    }
 }
