@@ -51,7 +51,7 @@
     "github.copilot.editor.enableAutoCompletions": true,
     // 图片粘贴配置
     "markdown.copyFiles.destination": {
-        "**/*": "static/img/"
+        "**/*": "static/img/${documentBaseName}.png"
     },
     // 文件关联配置 - 让 mdx 文件享受 markdown 的功能
     "files.associations": {
