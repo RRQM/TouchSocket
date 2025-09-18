@@ -53,8 +53,17 @@
     "markdown.copyFiles.destination": {
         "**/*": "static/img/${documentBaseName}.png"
     },
-    // 文件关联配置 - 让 mdx 文件享受 markdown 的功能
-    "files.associations": {
-        "*.mdx": "markdown"
-    }
+    // Paste Image 插件配置
+    "pasteImage.path": "${currentFileDir}/static/img",
+    "pasteImage.basePath": "${currentFileDir}",
+    "pasteImage.forceUnixStyleSeparator": true,
+    "pasteImage.prefix": "static/img/",
+    "pasteImage.suffix": "",
+    "pasteImage.insertPattern": "<img src=\"${imageFilePath}\" alt=\"${imageFileName}\" />",
+    "pasteImage.namePrefix": "",
+    "pasteImage.nameSuffix": "",
+    "pasteImage.encodePath": "urlEncodeSpace",
+    "pasteImage.showFilePathConfirmInputBox": false,
+    "pasteImage.filePathConfirmInputBoxMode": "onlyName",
+    "pasteImage.defaultName": "${currentFileNameWithoutExt}-YYYYMMDDHHmmss"
 }
