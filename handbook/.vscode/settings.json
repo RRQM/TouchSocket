@@ -49,17 +49,13 @@
     },
     // Git 提交相关的 Copilot 提示
     "github.copilot.editor.enableAutoCompletions": true,
-    // 图片粘贴配置
-    "markdown.copyFiles.destination": {
-        "**/*": "static/img/${documentBaseName}.png"
-    },
     // Paste Image 插件配置
-    "pasteImage.path": "${currentFileDir}/static/img",
-    "pasteImage.basePath": "${currentFileDir}",
+    "pasteImage.path": "${projectRoot}/static/img/docs/",
+    "pasteImage.basePath": "${projectRoot}",
     "pasteImage.forceUnixStyleSeparator": true,
-    "pasteImage.prefix": "static/img/",
+    "pasteImage.prefix": "",
     "pasteImage.suffix": "",
-    "pasteImage.insertPattern": "<img src=\"${imageFilePath}\" alt=\"${imageFileName}\" />",
+    "pasteImage.insertPattern": "<img src={require('@site/${imageFilePath}').default} width=\"500\" />",
     "pasteImage.namePrefix": "",
     "pasteImage.nameSuffix": "",
     "pasteImage.encodePath": "urlEncodeSpace",
