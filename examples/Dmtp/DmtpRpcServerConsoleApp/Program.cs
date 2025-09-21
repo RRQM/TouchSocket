@@ -50,7 +50,7 @@ internal class Program
 
                    a.Add<MyRpcPlugin>();
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
@@ -144,9 +144,12 @@ public partial class MyRpcServer : SingletonRpcServer
         {
             if (socketClient.TrySubscribeChannel(channelID, out var channel))
             {
-                await foreach (var item in channel)
+                while (channel.CanRead)
                 {
-                    size += item.Length;//此处处理流数据
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    //这里处理数据
+                    size += memory.Length;
                 }
             }
         }
