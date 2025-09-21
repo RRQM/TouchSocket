@@ -35,4 +35,13 @@
 	<ItemGroup>
 	  <Folder Include="Exceptions\" />
 	</ItemGroup>
+
+	<!--全局命名空间-->
+	<ItemGroup>
+		<Using Include="TouchSocket.Sockets" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="../TouchSocket/Components/Tcp/TcpClientBase.cs" />
+	</ItemGroup>
 </Project>

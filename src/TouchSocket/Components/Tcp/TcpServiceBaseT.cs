@@ -401,11 +401,13 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                     return;
                 }
 
+                var transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+
                 if (monitor.Option.UseSsl)
                 {
                     try
                     {
-                        await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption)
+                        await transport.AuthenticateAsync(monitor.Option.ServiceSslOption)
                             .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
@@ -416,7 +418,6 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                 }
                 if (this.m_clients.TryAdd(client))
                 {
-                    var transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
                     await client.InternalConnected(transport).SafeWaitAsync()
                         .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }

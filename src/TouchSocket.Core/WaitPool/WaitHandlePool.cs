@@ -159,7 +159,7 @@ public sealed class WaitHandlePool<T>
     /// <returns>生成的唯一签名值。</returns>
     /// <remarks>
     /// 使用原子递增操作确保签名的唯一性和线程安全性。
-    /// 当签名达到最大值时，使用CAS操作安全地重置到最小值，避免竞态条件。
+    /// 当签名达到最大值时，会重新开始分配以避免溢出。
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetSign()

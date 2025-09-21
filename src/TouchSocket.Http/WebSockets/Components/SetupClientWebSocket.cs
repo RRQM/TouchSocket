@@ -71,7 +71,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
             this.m_tokenSourceForOnline = new CancellationTokenSource();
 
-            this.m_runTask = EasyTask.Run(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
+            this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
 
             this.m_online = true;
         }

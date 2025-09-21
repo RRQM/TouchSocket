@@ -10,14 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe;
 
@@ -154,7 +148,9 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             switch (this.m_serverState)
             {
                 case ServerState.None:
+                case ServerState.Stopped:
                     {
+                        this.m_serverState = ServerState.Running;
                         this.BeginListen(optionList);
                         break;
                     }
@@ -162,18 +158,13 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                     {
                         return;
                     }
-                case ServerState.Stopped:
-                    {
-                        this.BeginListen(optionList);
-                        break;
-                    }
                 default:
                     {
                         ThrowHelper.ThrowInvalidEnumArgumentException(this.m_serverState);
                         return;
                     }
             }
-            this.m_serverState = ServerState.Running;
+
 
             await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }

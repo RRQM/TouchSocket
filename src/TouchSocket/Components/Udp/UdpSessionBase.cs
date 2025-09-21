@@ -10,15 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -79,7 +74,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     public Protocol Protocol { get; protected set; }
 
     /// <inheritdoc/>
-    public IPHost RemoteIPHost => this.Config?.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+    public IPHost RemoteIPHost => this.Config?.RemoteIPHost;
 
     /// <inheritdoc/>
     public override ServerState ServerState => this.m_serverState;
@@ -153,25 +148,17 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             switch (this.m_serverState)
             {
                 case ServerState.None:
+                case ServerState.Stopped:
                     {
+                        this.m_serverState = ServerState.Running;
                         if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
-
                         break;
                     }
                 case ServerState.Running:
                     return;
-
-                case ServerState.Stopped:
-                    {
-                        if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                        {
-                            this.BeginReceive(iPHost);
-                        }
-                        break;
-                    }
                 default:
                     {
                         ThrowHelper.ThrowInvalidEnumArgumentException(this.m_serverState);
@@ -179,14 +166,15 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                     }
             }
 
-            this.m_serverState = ServerState.Running;
-
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default))
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message })
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             throw;
         }
     }
@@ -273,7 +261,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
 
-       
+
         if (adapter is null)
         {
             this.m_dataHandlingAdapter = null;//允许Null赋值
@@ -310,8 +298,8 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
     private void BeginReceive(IPHost iPHost)
     {
-        var threadCount = this.Config.GetValue(TouchSocketConfigExtension.ThreadCountProperty);
-        threadCount = threadCount < 0 ? 1 : threadCount;
+        var overlappedCount = this.Config.GetValue(TouchSocketConfigExtension.UdpOverlappedCountProperty);
+
         var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
         {
             EnableBroadcast = this.Config.GetValue(TouchSocketConfigExtension.EnableBroadcastProperty)
@@ -348,7 +336,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
         this.m_monitor = new UdpNetworkMonitor(iPHost, socket);
 
-        for (var i = 0; i < threadCount; i++)
+        for (var i = 0; i < overlappedCount; i++)
         {
             var task = EasyTask.SafeRun(this.RunReceive);
             this.m_receiveTasks.Add(task);
@@ -361,37 +349,37 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         {
             while (true)
             {
-                using (var byteBlock = new ByteBlock(1024 * 64))
-                {
-                    try
-                    {
-                        if (this.m_serverState != ServerState.Running)
-                        {
-                            return;
-                        }
-                        var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                //UDP单次接收最大64k数据，所以此处直接申请64k内存。
+                var memory = new Memory<byte>(new byte[1024 * 64]);
 
-                        if (result.BytesTransferred > 0)
-                        {
-                            byteBlock.SetLength(result.BytesTransferred);
-                            await this.HandleReceivingData(byteBlock.Memory, result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        else if (result.SocketError != SocketError.Success)
-                        {
-                            this.Logger?.Debug(this, result.SocketError.ToString());
-                            return;
-                        }
-                        else
-                        {
-                            this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
+                try
+                {
+                    if (this.m_serverState != ServerState.Running)
                     {
-                        this.Logger?.Exception(this, ex);
                         return;
                     }
+                    var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, memory)
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                    if (result.BytesTransferred > 0)
+                    {
+                        await this.HandleReceivingData(memory.Slice(0, result.BytesTransferred), result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    else if (result.SocketError != SocketError.Success)
+                    {
+                        this.Logger?.Debug(this, result.SocketError.ToString());
+                        return;
+                    }
+                    else
+                    {
+                        this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    return;
                 }
             }
         }

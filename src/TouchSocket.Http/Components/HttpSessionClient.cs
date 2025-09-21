@@ -91,9 +91,9 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     {
         if (e.RequestInfo is HttpRequest request)
         {
-            this.m_httpContext ??= new HttpContext(request, new HttpResponse(request, this));
+            this.m_httpContext ??= new HttpContext(request, new ServerHttpResponse(request, this));
             await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_httpContext.Response.ResetHttp();
+            this.m_httpContext.Response.Reset();
         }
         else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
         {

@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -33,7 +29,8 @@ namespace TouchSocket.Sockets;
 /// <seealso cref="IClient"/>
 /// <seealso cref="IIdClient"/>
 [DebuggerDisplay("Id={Id},IP={IP},Port={Port}")]
-public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, ITcpListenableClient, IIdClient
+[CodeInject.RegionInject(FileName = "TcpClientBase.cs", RegionName = "ReceiveLoopAsync")]
+public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpSession, ITcpListenableClient, IIdClient
 {
     /// <summary>
     /// TcpSessionClientBase 类的构造函数。
@@ -76,7 +73,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
 
     /// <inheritdoc/>
-    public sealed override TouchSocketConfig Config => this.Service?.Config;
+    public override sealed TouchSocketConfig Config => this.Service?.Config;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -124,8 +121,11 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     public int ServicePort => this.m_servicePort;
 
     /// <inheritdoc/>
-    public bool UseSsl => this.m_tcpCore.UseSsl;
+    public bool UseSsl => this.m_transport.UseSsl;
 
+    /// <summary>
+    /// 获取底层传输对象
+    /// </summary>
     protected ITransport Transport => this.m_transport;
 
     #endregion 属性
@@ -309,7 +309,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     }
 
     /// <inheritdoc/>
-    public virtual Task ResetIdAsync(string newId, CancellationToken token=default)
+    public virtual Task ResetIdAsync(string newId, CancellationToken token = default)
     {
         return this.ProtectedResetIdAsync(newId);
     }
@@ -420,72 +420,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
         return this.m_tryGet(id, out sessionClient);
     }
 
-    protected virtual async Task ReceiveLoopAsync(ITransport transport)
-    {
-        var token = transport.ClosedToken;
-        try
-        {
-            while (true)
-            {
-                if (this.DisposedValue || token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (result.Buffer.Length == 0)
-                {
-                    break;
-                }
-                var reader = new ClassBytesReader(result.Buffer);
-                if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    try
-                    {
-                        if (this.m_dataHandlingAdapter == null)
-                        {
-                            foreach (var item in reader.Sequence)
-                            {
-                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                reader.Advance(item.Length);
-                            }
-                        }
-                        else
-                        {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger?.Exception(this, ex);
-                    }
-                }
-                var position = result.Buffer.GetPosition(reader.BytesRead);
-                transport.Reader.AdvanceTo(position, result.Buffer.End);
-
-                if (result.IsCanceled || result.IsCompleted)
-                {
-                    return;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // 如果发生异常，记录日志并退出接收循环
-            this.Logger?.Debug(this, ex);
-            return;
-        }
-        finally
-        {
-            var receiver = this.m_receiver;
-            var e_closed = transport.ClosedEventArgs;
-            if (receiver != null)
-            {
-                receiver.Complete(e_closed.Message);
-            }
-        }
-    }
-
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
@@ -521,7 +455,7 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
 
         // 将接收到数据时的异步回调和发送数据时的异步回调设置到适配器中
         adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-        this.m_dataHandlingAdapter=adapter;
+        this.m_dataHandlingAdapter = adapter;
     }
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
@@ -581,7 +515,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
-
 
         await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
@@ -643,7 +576,6 @@ public abstract class TcpSessionClientBase : ResolverConfigObject, ITcpSession, 
             locker.Release();
         }
     }
-
 
     #endregion 发送
 

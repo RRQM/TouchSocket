@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Security.Authentication;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 
@@ -56,12 +50,12 @@ public static class TouchSocketConfigExtension
     public static readonly DependencyProperty<string> ServerNameProperty = new("ServerName", "TouchSocketServer");
 
     /// <summary>
-    /// 多线程数量。默认-1缺省。
+    /// 重叠IO并发数。默认1。
     /// <para>UDP模式中，该值为重叠IO并发数</para>
     /// 所需类型<see cref="int"/>
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<int> ThreadCountProperty = new("ThreadCount", -1);
+    public static readonly DependencyProperty<int> UdpOverlappedCountProperty = new("UdpOverlappedCount", 1);
 
     #endregion ServiceBase
 

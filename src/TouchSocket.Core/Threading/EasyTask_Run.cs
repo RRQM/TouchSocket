@@ -19,33 +19,120 @@ namespace TouchSocket.Core;
 
 public static partial class EasyTask
 {
-    /// <summary>
-    /// 运行一个带有状态和取消令牌的异步方法。
-    /// </summary>
-    /// <typeparam name="T">状态的类型。</typeparam>
-    /// <param name="func">要运行的异步方法。</param>
-    /// <param name="status">传递给方法的状态。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static Task Run<T>(Func<T, CancellationToken, Task> func, T status, CancellationToken ct = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
+    #region SafeRun
 
-        return Task.Run(() => func(status, ct), ct);
+    /// <summary>
+    /// 安全地运行一个异步方法。
+    /// </summary>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result> SafeRun(Func<Task> func)
+    {
+        if (func is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        try
+        {
+            await func().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 
     /// <summary>
-    /// 运行一个带有状态的异步方法。
+    /// 安全地运行一个支持取消令牌的异步方法。
     /// </summary>
-    /// <typeparam name="T">状态的类型。</typeparam>
     /// <param name="func">要运行的异步方法。</param>
-    /// <param name="status">传递给方法的状态。</param>
     /// <param name="ct">取消令牌。</param>
     /// <returns>表示异步操作的任务。</returns>
-    public static Task Run<T>(Func<T, Task> func, T status, CancellationToken ct = default)
+    public static async Task<Result> SafeRun(Func<CancellationToken, Task> func, CancellationToken ct)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
-        return Task.Run(() => func(status), ct);
+        if (func is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+
+        try
+        {
+            await func(ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个带有返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<TResult>(Func<Task<TResult>> func)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        try
+        {
+            var result = await func().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个支持取消令牌且带有返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<TResult>(Func<CancellationToken, Task<TResult>> func, CancellationToken ct)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+
+        try
+        {
+            var result = await func(ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 
     /// <summary>
@@ -54,43 +141,266 @@ public static partial class EasyTask
     /// <typeparam name="T1">状态的类型。</typeparam>
     /// <param name="func">要运行的异步方法。</param>
     /// <param name="status">传递给方法的状态。</param>
-    /// <param name="ct">取消令牌。</param>
     /// <returns>表示异步操作的任务。</returns>
-    public static async Task SafeRun<T1>(Func<T1, Task> func, T1 status, CancellationToken ct = default)
+    public static async Task<Result> SafeRun<T1>(Func<T1, Task> func, T1 status)
     {
         if (func is null)
         {
-            return;
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
         }
-        if (ct.IsCancellationRequested)
-        {
-            return;
-        }
+
         try
         {
-            await Task.Run(() => func(status), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(status).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex);
         }
     }
+
+    /// <summary>
+    /// 安全地运行一个支持取消令牌且带有状态的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">状态的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status">传递给方法的状态。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result> SafeRun<T1>(Func<T1, CancellationToken, Task> func, T1 status, CancellationToken ct)
+    {
+        if (func is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+
+        try
+        {
+            await func(status, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个带有状态和返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">状态的类型。</typeparam>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status">传递给方法的状态。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<T1, TResult>(Func<T1, Task<TResult>> func, T1 status)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        try
+        {
+            var result = await func(status).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个支持取消令牌且带有状态和返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">状态的类型。</typeparam>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status">传递给方法的状态。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<T1, TResult>(Func<T1, CancellationToken, Task<TResult>> func, T1 status, CancellationToken ct)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+
+        try
+        {
+            var result = await func(status, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个带有两个状态的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">第一个状态的类型。</typeparam>
+    /// <typeparam name="T2">第二个状态的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status1">传递给方法的第一个状态。</param>
+    /// <param name="status2">传递给方法的第二个状态。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result> SafeRun<T1, T2>(Func<T1, T2, Task> func, T1 status1, T2 status2)
+    {
+        if (func is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        try
+        {
+            await func(status1, status2).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个支持取消令牌且带有两个状态的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">第一个状态的类型。</typeparam>
+    /// <typeparam name="T2">第二个状态的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status1">传递给方法的第一个状态。</param>
+    /// <param name="status2">传递给方法的第二个状态。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result> SafeRun<T1, T2>(Func<T1, T2, CancellationToken, Task> func, T1 status1, T2 status2, CancellationToken ct)
+    {
+        if (func is null)
+        {
+            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+
+        try
+        {
+            await func(status1, status2, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个带有两个状态和返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">第一个状态的类型。</typeparam>
+    /// <typeparam name="T2">第二个状态的类型。</typeparam>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status1">传递给方法的第一个状态。</param>
+    /// <param name="status2">传递给方法的第二个状态。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<T1, T2, TResult>(Func<T1, T2, Task<TResult>> func, T1 status1, T2 status2)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        try
+        {
+            var result = await func(status1, status2).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地运行一个支持取消令牌且带有两个状态和返回值的异步方法。
+    /// </summary>
+    /// <typeparam name="T1">第一个状态的类型。</typeparam>
+    /// <typeparam name="T2">第二个状态的类型。</typeparam>
+    /// <typeparam name="TResult">返回值的类型。</typeparam>
+    /// <param name="func">要运行的异步方法。</param>
+    /// <param name="status1">传递给方法的第一个状态。</param>
+    /// <param name="status2">传递给方法的第二个状态。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    public static async Task<Result<TResult>> SafeRun<T1, T2, TResult>(Func<T1, T2, CancellationToken, Task<TResult>> func, T1 status1, T2 status2, CancellationToken ct)
+    {
+        if (func is null)
+        {
+            return new Result<TResult>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+
+        try
+        {
+            var result = await func(status1, status2, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<TResult>(result);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return new Result<TResult>(ResultCode.Canceled, Result.Canceled.Message);
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    #endregion SafeRun
 
     /// <summary>
     /// 安全地等待一个任务完成。
     /// </summary>
     /// <param name="task">要等待的任务。</param>
-    /// <param name="ct">取消令牌。</param>
     /// <returns>表示任务结果的 <see cref="Result"/> 对象。</returns>
-    public static async Task<Result> SafeWaitAsync(this Task task, CancellationToken ct = default)
+    public static async Task<Result> SafeWaitAsync(this Task task)
     {
         if (task is null)
         {
             return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(task)));
         }
-        if (ct.IsCancellationRequested)
-        {
-            return Result.Canceled;
-        }
+
         try
         {
             await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -107,127 +417,22 @@ public static partial class EasyTask
     /// </summary>
     /// <typeparam name="T">任务结果的类型。</typeparam>
     /// <param name="task">要等待的任务。</param>
-    /// <param name="ct">取消令牌。</param>
     /// <returns>表示任务结果的 <see cref="Result{T}"/> 对象。</returns>
-    public static async Task<Result<T>> SafeWaitAsync<T>(this Task<T> task, CancellationToken ct = default)
+    public static async Task<Result<T>> SafeWaitAsync<T>(this Task<T> task)
     {
         if (task is null)
         {
-            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(task)));
+            return new Result<T>(ResultCode.Failure, TouchSocketCoreResource.ArgumentIsNull.Format(nameof(task)));
         }
-        if (ct.IsCancellationRequested)
-        {
-            return Result.Canceled;
-        }
+
         try
         {
-            return new Result<T>(await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            var result = await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return new Result<T>(result);
         }
         catch (Exception ex)
         {
             return Result.FromException(ex);
         }
     }
-
-    /// <summary>
-    /// 安全地运行一个带有状态的异步方法。
-    /// </summary>
-    /// <param name="func">要运行的异步方法。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static async Task<Result> SafeRun(Func<Task> func, CancellationToken ct = default)
-    {
-        if (func is null)
-        {
-            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
-        }
-        if (ct.IsCancellationRequested)
-        {
-            return Result.Canceled;
-        }
-        try
-        {
-            await Task.Run(() => func(), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
-    }
-
-    /// <summary>
-    /// 安全地运行一个带有两个状态的异步方法。
-    /// </summary>
-    /// <typeparam name="T1">第一个状态的类型。</typeparam>
-    /// <typeparam name="T2">第二个状态的类型。</typeparam>
-    /// <param name="func">要运行的异步方法。</param>
-    /// <param name="status1">传递给方法的第一个状态。</param>
-    /// <param name="status2">传递给方法的第二个状态。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static async Task<Result> SafeRun<T1, T2>(Func<T1, T2, Task> func, T1 status1, T2 status2, CancellationToken ct = default)
-    {
-        if (func is null)
-        {
-            return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(func)));
-        }
-        if (ct.IsCancellationRequested)
-        {
-            return Result.Canceled;
-        }
-        try
-        {
-            await Task.Run(() => func(status1, status2), ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
-    }
-
-    /// <summary>
-    /// 运行一个无状态的异步方法。
-    /// </summary>
-    /// <param name="func">要运行的异步方法。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static Task Run(Func<Task> func, CancellationToken ct = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
-
-        return Task.Run(func, ct);
-    }
-
-    /// <summary>
-    /// 运行一个带有状态的同步方法。
-    /// </summary>
-    /// <typeparam name="T">状态的类型。</typeparam>
-    /// <param name="func">要运行的同步方法。</param>
-    /// <param name="status">传递给方法的状态。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static Task Run<T>(Action<T> func, T status, CancellationToken ct = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
-
-        return Task.Run(() => func(status), ct);
-    }
-
-    /// <summary>
-    /// 运行一个带有状态和取消令牌的同步方法。
-    /// </summary>
-    /// <typeparam name="T">状态的类型。</typeparam>
-    /// <param name="func">要运行的同步方法。</param>
-    /// <param name="status">传递给方法的状态。</param>
-    /// <param name="ct">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public static Task Run<T>(Action<T, CancellationToken> func, T status, CancellationToken ct = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(func, nameof(func));
-
-        return Task.Run(() => func(status, ct), ct);
-    }
-
 }

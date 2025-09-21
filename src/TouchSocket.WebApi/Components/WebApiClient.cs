@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -35,15 +30,25 @@ public class WebApiClient : HttpClientBase, IWebApiClient
             new JsonStringToClassSerializerFormatter<HttpRequest>());
     }
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <summary>
     /// 字符串转化器
     /// </summary>
     public StringSerializerConverter<HttpRequest> Converter { get; }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(token);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await base.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     #region Rpc调用

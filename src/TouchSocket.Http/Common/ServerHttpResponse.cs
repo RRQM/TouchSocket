@@ -10,27 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+namespace TouchSocket.Http;
 
-namespace TouchSocket.Http.WebSockets;
-
-
-internal sealed class WebSocketDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
+internal sealed class ServerHttpResponse : HttpResponse
 {
-    /// <inheritdoc/>
-    protected override WSDataFrame GetInstance()
+    public ServerHttpResponse(HttpRequest request, HttpSessionClient httpSessionClient) : base(request, httpSessionClient)
     {
-        return new WSDataFrame();
     }
 
-    protected override async Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
+    public override ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
-        await base.GoReceivedAsync(memory, requestInfo);
-        if (requestInfo is WSDataFrame wsDataFrame)
-        {
-            wsDataFrame.Dispose();
-        }
+        throw new NotImplementedException();
+    }
+
+    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 }

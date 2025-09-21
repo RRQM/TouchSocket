@@ -19,32 +19,22 @@ namespace TouchSocket.Http;
 /// </summary>
 public readonly struct HttpResponseResult : IDisposable
 {
-    /// <summary>
-    /// 一个操作委托，用于在Dispose时执行特定操作以释放资源。
-    /// </summary>
-    private readonly Action m_action;
+    private readonly ClientHttpResponse m_response;
 
-    /// <summary>
-    /// 初始化HttpResponseResult结构体。
-    /// </summary>
-    /// <param name="response">HTTP响应对象，用于处理HTTP请求的响应。</param>
-    /// <param name="action">一个Action委托，将在Dispose方法中调用，用于执行资源释放操作。</param>
-    public HttpResponseResult(HttpResponse response, Action action)
+    internal HttpResponseResult(ClientHttpResponse response)
     {
-        this.Response = response;
-        this.m_action = action;
+        this.m_response = response;
     }
 
     /// <summary>
     /// 获取HTTP响应对象。
     /// </summary>
-    public HttpResponse Response { get; }
+    public HttpResponse Response => this.m_response;
 
-    /// <summary>
-    /// 执行资源释放操作。调用构造函数中传入的Action委托以执行具体释放逻辑。
-    /// </summary>
+    
+    /// <inheritdoc/>
     public void Dispose()
     {
-        this.m_action.Invoke();
+        this.m_response.Reset();
     }
 }

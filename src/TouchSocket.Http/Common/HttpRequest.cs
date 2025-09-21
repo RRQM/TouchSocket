@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -27,7 +21,6 @@ public class HttpRequest : HttpBase
 {
     private readonly bool m_isServer;
     private readonly InternalHttpParams m_query = new InternalHttpParams();
-    private ReadOnlyMemory<byte> m_contentMemory;
     private string m_relativeURL = "/";
     private string m_url = "/";
 
@@ -37,31 +30,18 @@ public class HttpRequest : HttpBase
     /// <remarks>
     /// 初始化HttpRequest对象的基本属性。
     /// </remarks>
-    public HttpRequest() : base(false)
+    public HttpRequest()
     {
         this.m_isServer = false;
     }
 
-    internal HttpRequest(HttpSessionClient httpSessionClient) : base(true)
+    internal HttpRequest(HttpSessionClient httpSessionClient)
     {
         this.m_isServer = true;
     }
 
     /// <inheritdoc/>
-    public override HttpContent Content
-    {
-        get => base.Content;
-        set
-        {
-            if (value is ReadonlyMemoryHttpContent readonlyMemoryHttpContent)
-            {
-                this.ContentLength = readonlyMemoryHttpContent.Memory.Length;
-                this.ContentCompleted = true;
-                this.m_contentMemory = readonlyMemoryHttpContent.Memory;
-            }
-            base.Content = value;
-        }
-    }
+    public override bool IsServer => this.m_isServer;
 
     /// <summary>
     /// 保持连接。
@@ -101,10 +81,6 @@ public class HttpRequest : HttpBase
         }
     }
 
-
-    /// <inheritdoc/>
-    public override bool IsServer => this.m_isServer;
-
     /// <summary>
     /// HTTP请求方式。
     /// </summary>
@@ -128,106 +104,19 @@ public class HttpRequest : HttpBase
         get => this.m_url;
         set
         {
-            if (this.Method== HttpMethod.Connect)
-            {
-                this.m_relativeURL = value;
-                return;
-            }
-            this.m_url = value.StartsWith("/") ? value : $"/{value}";
+            this.m_url = value;
             this.ParseUrl(this.m_url.AsSpan());
         }
     }
 
-    /// <inheritdoc/>
-    public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
-        if (!this.ContentCompleted.HasValue)
-        {
-            if (!this.IsServer)
-            {
-                //非Server模式下不允许获取
-                return default;
-            }
-            if (this.ContentLength == 0)
-            {
-                this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
-                this.ContentCompleted = true;
-                return this.m_contentMemory;
-            }
-
-            if (this.ContentLength > MaxCacheSize)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
-            }
-
-            try
-            {
-                using (var memoryStream = new MemoryStream((int)this.ContentLength))
-                {
-                    while (true)
-                    {
-                        using (var blockResult = await this.ReadAsync(cancellationToken))
-                        {
-                            var segment = blockResult.Memory.GetArray();
-                            if (blockResult.IsCompleted)
-                            {
-                                break;
-                            }
-                            memoryStream.Write(segment.Array, segment.Offset, segment.Count);
-                        }
-                    }
-                    this.ContentCompleted = true;
-                    this.m_contentMemory = memoryStream.ToArray();
-                    return this.m_contentMemory;
-                }
-            }
-            catch
-            {
-                this.ContentCompleted = false;
-                return default;
-            }
-            finally
-            {
-            }
-        }
-        else
-        {
-            return this.ContentCompleted == true ? this.m_contentMemory : default;
-        }
+        throw new NotImplementedException();
     }
 
-    /// <inheritdoc/>
-    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
     {
-        if (this.ContentLength == 0)
-        {
-            return HttpReadOnlyMemoryBlockResult.Completed;
-        }
-        if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
-        {
-            return new HttpReadOnlyMemoryBlockResult(this.m_contentMemory);
-        }
-
-        var readLeaseTask = base.ReadExchangeAsync(cancellationToken);
-
-        ReadLease<ReadOnlyMemory<byte>> readLease;
-        if (readLeaseTask.IsCompleted)
-        {
-            readLease = readLeaseTask.Result;
-        }
-        else
-        {
-            readLease = await readLeaseTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-
-        var memory = readLease.Value;
-
-        if (readLease.IsCompleted)
-        {
-            this.ContentCompleted = true;
-        }
-
-        return new HttpReadOnlyMemoryBlockResult(readLease.Dispose, memory, readLease.IsCompleted);
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -287,22 +176,13 @@ public class HttpRequest : HttpBase
     }
 
     /// <inheritdoc/>
-    internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
+    protected internal override void Reset()
     {
-        this.m_contentMemory = content;
-        this.ContentLength = content.Length;
-        this.ContentCompleted = true;
-    }
+        base.Reset();
 
-    /// <inheritdoc/>
-    internal override void ResetHttp()
-    {
-        base.ResetHttp();
-        this.m_contentMemory = null;
-        //this.m_sentHeader = false;
         this.m_relativeURL = "/";
         this.m_url = "/";
-        //this.m_sentLength = 0;
+
         this.m_query.Clear();
     }
 

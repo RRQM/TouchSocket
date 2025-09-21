@@ -106,7 +106,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 {
                     //fileTransferRouterPackage.UnpackageBody(byteBlock);
 
-                    _ = EasyTask.Run(this.RequestPullFileResourceInfo, fileTransferRouterPackage);
+                    _ = EasyTask.SafeRun(this.RequestPullFileResourceInfo, fileTransferRouterPackage);
                 }
             }
             catch (Exception ex)
@@ -351,7 +351,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 else
                 {
                     waitFinishedPackage.UnpackageBody(ref reader);
-                    _ = EasyTask.Run(this.RequestFinishedFileResourceInfo, waitFinishedPackage);
+                    _ = EasyTask.SafeRun(this.RequestFinishedFileResourceInfo, waitFinishedPackage);
                 }
             }
             catch (Exception ex)
@@ -416,7 +416,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 else
                 {
                     waitSmallFilePackage.UnpackageBody(ref reader);
-                    _ = EasyTask.Run(this.RequestPullSmallFile, waitSmallFilePackage);
+                    _ = EasyTask.SafeRun(this.RequestPullSmallFile, waitSmallFilePackage);
                 }
             }
             catch (Exception ex)

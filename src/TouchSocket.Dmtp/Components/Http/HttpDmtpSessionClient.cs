@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
@@ -124,8 +120,8 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
 
         var actor = new SealedDmtpActor(allowRoute, true)
         {
-            FindDmtpActor = FindDmtpActor,
             Id = this.Id,
+            FindDmtpActor = FindDmtpActor,
             IdChanged = this.OnDmtpIdChanged,
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
@@ -136,6 +132,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             CreatedChannel = this.OnDmtpActorCreatedChannel,
             Logger = this.Logger
         };
+
         this.m_dmtpActor = actor;
 
         this.Protocol = DmtpUtility.DmtpProtocol;
@@ -173,7 +170,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
         await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.OnTcpClosed(e);
+        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

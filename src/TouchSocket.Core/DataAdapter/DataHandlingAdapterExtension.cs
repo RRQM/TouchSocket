@@ -88,6 +88,6 @@ public static class DataHandlingAdapterExtension
     /// <summary>
     /// 设置适配器相关的配置
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = new("AdapterOption", new AdapterOption());
 }

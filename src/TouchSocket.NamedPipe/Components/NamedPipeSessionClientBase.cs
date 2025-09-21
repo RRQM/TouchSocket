@@ -10,14 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe;
 
@@ -25,7 +20,8 @@ namespace TouchSocket.NamedPipe;
 /// 命名管道服务器辅助客户端类
 /// </summary>
 [DebuggerDisplay("Id={Id},IP={IP},Port={Port}")]
-public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedPipeSession, INamedPipeListenableClient, IIdClient
+[CodeInject.RegionInject(FileName = "TcpClientBase.cs", RegionName = "ReceiveLoopAsync", Placeholders = new[] { "OnTcpReceiving", "OnNamedPipeReceiving" })]
+public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject, INamedPipeSession, INamedPipeListenableClient, IIdClient
 {
     #region 字段
 
@@ -141,7 +137,7 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
         this.m_id = id;
     }
 
-    private async Task PrivateConnected(NamedPipeTransport transport)
+    private async Task PrivateConnected(ITransport transport)
     {
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         var e_connected = new ConnectedEventArgs();
@@ -351,76 +347,6 @@ public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedP
             await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
-
-    protected virtual async Task ReceiveLoopAsync(ITransport transport)
-    {
-        var token = transport.ClosedToken;
-
-        try
-        {
-            while (true)
-            {
-                if (this.DisposedValue || token.IsCancellationRequested)
-                {
-                    return;
-                }
-                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (result.Buffer.Length == 0)
-                {
-                    break;
-                }
-                var reader = new ClassBytesReader(result.Buffer);
-                if (!await this.OnNamedPipeReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    try
-                    {
-                        if (this.m_dataHandlingAdapter == null)
-                        {
-                            foreach (var item in reader.Sequence)
-                            {
-                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                reader.Advance(item.Length);
-                            }
-
-                        }
-                        else
-                        {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger?.Exception(this, ex);
-                    }
-                }
-                var position = result.Buffer.GetPosition(reader.BytesRead);
-                transport.Reader.AdvanceTo(position, result.Buffer.End);
-
-                if (result.IsCanceled || result.IsCompleted)
-                {
-                    return;
-                }
-
-            }
-        }
-        catch (Exception ex)
-        {
-            // 如果发生异常，记录日志并退出接收循环
-            this.Logger?.Debug(this, ex);
-            return;
-        }
-        finally
-        {
-            var receiver = this.m_receiver;
-            var e_closed = transport.ClosedEventArgs;
-            if (receiver != null)
-            {
-                receiver.Complete(e_closed.Message);
-            }
-        }
-
-    }
-
 
     #region 事件&委托
 

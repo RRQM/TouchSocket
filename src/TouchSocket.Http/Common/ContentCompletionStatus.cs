@@ -10,27 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+namespace TouchSocket.Http;
 
-namespace TouchSocket.Http.WebSockets;
-
-
-internal sealed class WebSocketDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
+/// <summary>
+/// 内容完成状态枚举
+/// </summary>
+public enum ContentCompletionStatus
 {
-    /// <inheritdoc/>
-    protected override WSDataFrame GetInstance()
-    {
-        return new WSDataFrame();
-    }
+    /// <summary>
+    /// 未知状态，初始状态
+    /// </summary>
+    Unknown = 0,
 
-    protected override async Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
-    {
-        await base.GoReceivedAsync(memory, requestInfo);
-        if (requestInfo is WSDataFrame wsDataFrame)
-        {
-            wsDataFrame.Dispose();
-        }
-    }
+    /// <summary>
+    /// 内容已完成，可以多次获取
+    /// </summary>
+    ContentCompleted = 1,
+
+    /// <summary>
+    /// 持续读取已完成，只能获取一次
+    /// </summary>
+    ReadCompleted = 2,
+
+    /// <summary>
+    /// 内容未完成，仍在进行中
+    /// </summary>
+    Incomplete = 3
 }

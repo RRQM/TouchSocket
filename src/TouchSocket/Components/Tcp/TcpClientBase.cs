@@ -175,7 +175,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public IPHost RemoteIPHost => this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
 
     /// <inheritdoc/>
-    public bool UseSsl => this.m_tcpCore.UseSsl;
+    public bool UseSsl => this.m_transport.UseSsl;
 
     /// <summary>
     /// 获取当前TCP传输层对象。
@@ -225,6 +225,11 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #endregion 断开操作
 
+    protected Task AuthenticateAsync(ClientSslOption sslOption)
+    {
+        return this.m_transport.AuthenticateAsync(sslOption);
+    }
+
     /// <summary>
     /// 当收到适配器处理的数据时。
     /// </summary>
@@ -256,13 +261,16 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this, new SendingEventArgs(memory));
     }
 
+    #region ReceiveLoopAsync
     /// <summary>
     /// 数据接收主循环，负责从传输层读取数据并分发给适配器或插件。
     /// </summary>
-    /// <param name="transport">TCP传输层对象</param>
+    /// <param name="transport">传输层对象</param>
     protected virtual async Task ReceiveLoopAsync(ITransport transport)
     {
         var token = transport.ClosedToken;
+
+        await transport.ReadLocker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             while (true)
@@ -298,7 +306,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                     var position = result.Buffer.GetPosition(reader.BytesRead);
                     transport.Reader.AdvanceTo(position, result.Buffer.End);
 
-                    if (result.IsCanceled || result.IsCompleted)
+                    if (result.IsCompleted || result.IsCanceled)
                     {
                         return;
                     }
@@ -306,7 +314,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 catch (Exception ex)
                 {
                     this.Logger?.Exception(this, ex);
+
+                    // 处理数据出现异常时，关闭连接并退出循环
                     await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break; // 关闭连接后退出循环
                 }
             }
         }
@@ -320,8 +331,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             var receiver = this.m_receiver;
             var e_closed = transport.ClosedEventArgs;
             receiver?.Complete(e_closed.Message);
+            transport.ReadLocker.Release();
         }
     }
+    #endregion
 
     /// <summary>
     /// 设置适配器。
@@ -347,51 +360,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private async Task AuthenticateAsync(IPHost iPHost)
-    {
-        if (!this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
-        {
-            if (!iPHost.IsSsl)
-            {
-                return;
-            }
-
-            sslOption = new ClientSslOption()
-            {
-                TargetHost = iPHost.Host
-            };
-        }
-        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    protected Task AuthenticateAsync(ClientSslOption sslOption)
-    {
-        return this.m_tcpCore.AuthenticateAsync(sslOption);
-    }
-
-
-    #region Receiver
-
-    /// <summary>
-    /// 清除内部接收器。
-    /// </summary>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <summary>
-    /// 创建内部接收器。
-    /// </summary>
-    /// <param name="receiverObject">接收器客户端对象</param>
-    /// <returns>接收器实例</returns>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
-
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         var receiver = this.m_receiver;
@@ -416,6 +384,45 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.m_port = socket.RemoteEndPoint.GetPort();
         this.m_tcpCore.Reset(socket);
     }
+
+    private async Task TryAuthenticateAsync(IPHost iPHost)
+    {
+        if (!this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
+        {
+            if (!iPHost.IsSsl)
+            {
+                return;
+            }
+
+            sslOption = new ClientSslOption()
+            {
+                TargetHost = iPHost.Host
+            };
+        }
+        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    #region Receiver
+
+    /// <summary>
+    /// 清除内部接收器。
+    /// </summary>
+    protected void ProtectedClearReceiver()
+    {
+        this.m_receiver = null;
+    }
+
+    /// <summary>
+    /// 创建内部接收器。
+    /// </summary>
+    /// <param name="receiverObject">接收器客户端对象</param>
+    /// <returns>接收器实例</returns>
+    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
+    {
+        return this.m_receiver ??= new InternalReceiver(receiverObject);
+    }
+
+    #endregion Receiver
 
     #region Throw
 
@@ -456,7 +463,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
-
 
         await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 

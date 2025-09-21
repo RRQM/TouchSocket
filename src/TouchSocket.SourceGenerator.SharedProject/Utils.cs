@@ -592,6 +592,8 @@ internal abstract class CodeBuilder
             yield return "using System;";
             yield return "using System.Diagnostics;";
             yield return "using TouchSocket.Core;";
+            yield return "using System.Threading;";
+            yield return "using System.Collections.Generic;";
             yield return "using System.Threading.Tasks;";
         }
     }

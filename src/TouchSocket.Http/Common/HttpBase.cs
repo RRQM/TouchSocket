@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -39,17 +40,7 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-    private readonly AsyncExchange<ReadOnlyMemory<byte>> m_asyncExchange;
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
-
-    public HttpBase(bool initBlockSegment)
-    {
-        if (initBlockSegment)
-        {
-            this.m_asyncExchange = new AsyncExchange<ReadOnlyMemory<byte>>();
-            this.m_asyncExchange.Complete();
-        }
-    }
 
     /// <summary>
     /// 可接受MIME类型
@@ -75,9 +66,9 @@ public abstract class HttpBase : IRequestInfo
     public virtual HttpContent Content { get; set; }
 
     /// <summary>
-    /// 内容填充完成
+    /// 内容填充完成状态
     /// </summary>
-    public bool? ContentCompleted { get; protected set; } = null;
+    public ContentCompletionStatus ContentStatus { get; protected set; } = ContentCompletionStatus.Unknown;
 
     /// <summary>
     /// 内容长度
@@ -121,16 +112,6 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public string ProtocolVersion { get; set; } = "1.1";
 
-    internal void CompleteInput()
-    {
-        this.m_asyncExchange?.Complete();
-    }
-
-    internal ValueTask InternalInputAsync(in ReadOnlyMemory<byte> memory)
-    {
-        return this.m_asyncExchange.WriteAsync(memory, CancellationToken.None);
-    }
-
     internal bool ParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
     {
         var index = ReaderExtension.IndexOf(ref reader, StringExtension.Default_RNRN_Utf8Span);
@@ -150,11 +131,10 @@ public abstract class HttpBase : IRequestInfo
         }
     }
 
-    internal virtual void ResetHttp()
+    protected internal virtual void Reset()
     {
         this.m_headers.Clear();
-        this.ContentCompleted = null;
-        this.m_asyncExchange?.Reset();
+        this.ContentStatus = ContentCompletionStatus.Unknown;
     }
 
     /// <summary>
@@ -240,8 +220,6 @@ public abstract class HttpBase : IRequestInfo
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
     public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
 
-    internal abstract void InternalSetContent(in ReadOnlyMemory<byte> content);
-
     #endregion Content
 
     #region Read
@@ -259,24 +237,14 @@ public abstract class HttpBase : IRequestInfo
     /// <param name="stream">需要读取并复制的流</param>
     /// <param name="cancellationToken">异步操作的取消令牌</param>
     /// <returns>一个异步任务，表示复制操作的完成</returns>
-    public async Task ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
+    public async Task<Result> ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
     {
-        while (true)
+        var flowOperator = new HttpFlowOperator()
         {
-            using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!blockResult.Memory.IsEmpty)
-                {
-                    var memory = blockResult.Memory;
-                    await stream.WriteAsync(memory, cancellationToken);
-                }
-                if (blockResult.IsCompleted)
-                {
-                    break;
-                }
-            }
-        }
+            Token = cancellationToken,
+            MaxSpeed = int.MaxValue
+        };
+        return await this.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -296,10 +264,16 @@ public abstract class HttpBase : IRequestInfo
             {
                 using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!blockResult.Memory.IsEmpty)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        var memory = blockResult.Memory;
+                        return flowOperator.SetResult(Result.Canceled);
+                    }
+
+                    var memory = blockResult.Memory;
+                    Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
+                    if (!memory.IsEmpty)
+                    {
+                        
                         await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
@@ -319,11 +293,6 @@ public abstract class HttpBase : IRequestInfo
         {
             return flowOperator.SetResult(Result.FromException(ex));
         }
-    }
-
-    protected ValueTask<ReadLease<ReadOnlyMemory<byte>>> ReadExchangeAsync(CancellationToken token)
-    {
-        return this.m_asyncExchange.ReadAsync(token);
     }
 
     #endregion Read

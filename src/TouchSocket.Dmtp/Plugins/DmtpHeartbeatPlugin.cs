@@ -26,7 +26,7 @@ public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpConnectedPlugin
     /// <inheritdoc/>
     public async Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
-        _ = EasyTask.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             var failedCount = 0;
             while (true)

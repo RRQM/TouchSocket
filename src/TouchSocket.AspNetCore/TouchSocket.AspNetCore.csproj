@@ -9,6 +9,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Dmtp\Actor\SealedDmtpActor.cs" Link="Dmtp\Actor\SealedDmtpActor.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Dmtp\Common\InternalClientCollection.cs" />
 	</ItemGroup>
 
@@ -23,6 +24,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Dmtp\Common\" />
+	  <Folder Include="Dmtp\Actor\" />
 	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 </Project>

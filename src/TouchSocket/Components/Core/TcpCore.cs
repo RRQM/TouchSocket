@@ -39,86 +39,19 @@ internal sealed class TcpCore : SafetyDisposableObject
     private readonly SocketReceiver m_socketReceiver = new SocketReceiver();
     private readonly SocketSender m_socketSender = new SocketSender();
     private Socket m_socket;
-    private SslStream m_sslStream;
-    private bool m_useSsl;
 
     #endregion 字段
 
-    public bool SendRunContinuationsAsynchronously { get => this.m_socketSender.RunContinuationsAsynchronously; set => this.m_socketSender.RunContinuationsAsynchronously = value; }
-
     public bool ReceiveRunContinuationsAsynchronously { get => this.m_socketReceiver.RunContinuationsAsynchronously; set => this.m_socketReceiver.RunContinuationsAsynchronously = value; }
-
+    public bool SendRunContinuationsAsynchronously { get => this.m_socketSender.RunContinuationsAsynchronously; set => this.m_socketSender.RunContinuationsAsynchronously = value; }
     public Socket Socket => this.m_socket;
-
-    /// <summary>
-    /// 提供一个用于客户端-服务器通信的流，该流使用安全套接字层 (SSL) 安全协议对服务器和（可选）客户端进行身份验证。
-    /// </summary>
-    public SslStream SslStream => this.m_sslStream;
-
-    /// <summary>
-    /// 是否启用了Ssl
-    /// </summary>
-    public bool UseSsl => this.m_useSsl;
-
-    /// <summary>
-    /// 以Ssl服务器模式授权
-    /// </summary>
-    /// <param name="sslOption"></param>
-    /// <returns></returns>
-    public async Task AuthenticateAsync(ServiceSslOption sslOption)
-    {
-        if (this.m_useSsl)
-        {
-            return;
-        }
-        var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-
-        await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
-            , sslOption.SslProtocols
-            , sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        //await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        this.m_sslStream = sslStream;
-        this.m_useSsl = true;
-    }
-
-    /// <summary>
-    /// 以Ssl客户端模式授权
-    /// </summary>
-    /// <param name="sslOption"></param>
-    /// <returns></returns>
-    public async Task AuthenticateAsync(ClientSslOption sslOption)
-    {
-        if (this.m_useSsl)
-        {
-            return;
-        }
-
-        var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-
-        await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        this.m_sslStream = sslStream;
-        this.m_useSsl = true;
-    }
 
     #region Receive
 
     public ValueTask<TcpOperationResult> ReceiveAsync(in Memory<byte> memory, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        if (this.m_useSsl)
-        {
-            return this.SslReceiveAsync(memory, token);
-        }
         return this.m_socketReceiver.ReceiveAsync(this.m_socket, memory);
-    }
-
-    private async ValueTask<TcpOperationResult> SslReceiveAsync(Memory<byte> memory, CancellationToken token)
-    {
-        var r = await this.m_sslStream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        return new TcpOperationResult(r, SocketError.Success);
     }
 
     #endregion Receive
@@ -144,10 +77,35 @@ internal sealed class TcpCore : SafetyDisposableObject
     /// </summary>
     public void Reset()
     {
-        this.m_useSsl = false;
-        this.m_sslStream?.Dispose();
-        this.m_sslStream = null;
         this.m_socket = null;
+    }
+
+    public async Task SendAsync(ReadOnlySequence<byte> buffer, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var length = 0;
+        try
+        {
+            var result = await this.m_socketSender.SendAsync(this.m_socket, buffer).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (result.SocketError != SocketError.Success)
+            {
+                throw new SocketException((int)result.SocketError);
+            }
+
+            foreach (var memory in buffer)
+            {
+                length += memory.Length;
+            }
+
+            if (result.BytesTransferred != length)
+            {
+                ThrowHelper.ThrowException(TouchSocketResource.IncompleteDataTransmission);
+            }
+        }
+        finally
+        {
+            this.m_socketSender.Reset();
+        }
     }
 
     protected override void SafetyDispose(bool disposing)
@@ -158,44 +116,4 @@ internal sealed class TcpCore : SafetyDisposableObject
             this.m_socketSender.SafeDispose();
         }
     }
-
-    public async Task SendAsync(ReadOnlySequence<byte> buffer, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        var length = 0;
-        if (this.m_useSsl)
-        {
-            foreach (var memory in buffer)
-            {
-                await this.SslStream.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                length += memory.Length;
-            }
-        }
-        else
-        {
-            try
-            {
-                var result = await this.m_socketSender.SendAsync(this.m_socket, buffer).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (result.SocketError != SocketError.Success)
-                {
-                    throw new SocketException((int)result.SocketError);
-                }
-
-                foreach (var memory in buffer)
-                {
-                    length += memory.Length;
-                }
-
-                if (result.BytesTransferred != length)
-                {
-                    ThrowHelper.ThrowException(TouchSocketResource.IncompleteDataTransmission);
-                }
-            }
-            finally
-            {
-                this.m_socketSender.Reset();
-            }
-        }
-    }
-
 }

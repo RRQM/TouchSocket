@@ -34,7 +34,7 @@ public partial class TcpClientBase
     /// <exception cref="ObjectDisposedException">如果对象已被处置，则抛出此异常</exception>
     /// <exception cref="ArgumentNullException">如果必要参数为空，则抛出此异常</exception>
     /// <exception cref="TimeoutException">如果连接超时，则抛出此异常</exception>
-    protected async Task TcpConnectAsync(CancellationToken token)
+    protected virtual async Task TcpConnectAsync(CancellationToken token)
     {
 
         this.ThrowIfDisposed();
@@ -66,12 +66,10 @@ public partial class TcpClientBase
 
         this.SetSocket(socket);
 
-        await this.AuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
         await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-
+        await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
 #else
@@ -81,7 +79,7 @@ public partial class TcpClientBase
     /// </summary>
     /// <param name="token">取消令牌</param>
     /// <returns>返回任务</returns>
-    protected async Task TcpConnectAsync(CancellationToken token)
+    protected virtual async Task TcpConnectAsync(CancellationToken token)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
@@ -101,11 +99,10 @@ public partial class TcpClientBase
 
         this.SetSocket(socket);
 
-        await this.AuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
         await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
 
+        await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
