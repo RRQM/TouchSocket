@@ -68,6 +68,13 @@ Http基本没有专用配置，但是下面依然会介绍一些在使用Http时
 
 如果是自定义证书，则需要手动加载证书，详情见[创建Ssl的TcpClient配置](./tcpclient.mdx)。
 
+### 4.3 代理配置
+`HttpClient`支持HTTP代理，可以通过`SetProxy`方法进行配置。
+<CustomCodeBlock region="Http客户端配置代理"/>
+
+或者直接使用系统代理：
+<CustomCodeBlock region="Http客户端配置系统代理"/>
+
 ## 五、支持插件接口
 
 支持**ITcpPlugin**所有接口，无特殊接口。

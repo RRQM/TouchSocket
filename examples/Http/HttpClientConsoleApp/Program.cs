@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,11 +49,23 @@ internal class Program
         #endregion
 
         #region Http客户端启用断线重连
-        config.ConfigurePlugins(a => 
+        config.ConfigurePlugins(a =>
         {
             a.UseReconnection<HttpClient>()
             .SetPollingTick(TimeSpan.FromSeconds(1));
         });
+        #endregion
+
+        #region Http客户端配置代理
+        config.SetProxy(new WebProxy()
+        {
+            Address = new Uri("http://127.0.0.1"),
+            //其他属性自行设置
+        });
+        #endregion
+
+        #region Http客户端配置系统代理
+        config.SetSystemProxy();
         #endregion
 
         await Task.CompletedTask;
