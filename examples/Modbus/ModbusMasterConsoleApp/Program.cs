@@ -103,14 +103,21 @@ internal class Program
     /// <returns></returns>
     public static async Task<IModbusMaster> GetModbusTcpMasterAsync()
     {
+        #region 创建ModbusTcpMaster
         var client = new ModbusTcpMaster();
-        await client.SetupAsync(new TouchSocketConfig()
-             .ConfigurePlugins(a =>
-             {
-                 a.UseReconnection<ModbusTcpMaster>()
-                        .SetPollingTick(TimeSpan.FromSeconds(1));
-             }));
-        await client.ConnectAsync("127.0.0.1:502");
+
+        var config = new TouchSocketConfig();
+        config.SetRemoteIPHost("127.0.0.1:502");
+        config.ConfigurePlugins(a =>
+        {
+            a.UseReconnection<ModbusTcpMaster>()
+                .SetPollingTick(TimeSpan.FromSeconds(1));
+        });
+
+        await client.SetupAsync(config);
+        await client.ConnectAsync();
+        #endregion
+
         return client;
     }
 
@@ -120,11 +127,14 @@ internal class Program
     /// <returns></returns>
     public static async Task<IModbusMaster> GetModbusUdpMaster()
     {
+        #region 创建ModbusUdpMaster
         var client = new ModbusUdpMaster();
         await client.SetupAsync(new TouchSocketConfig()
              .UseUdpReceive()
              .SetRemoteIPHost("127.0.0.1:502"));
         await client.StartAsync();
+        #endregion
+
         return client;
     }
 
@@ -134,6 +144,7 @@ internal class Program
     /// <returns></returns>
     public static async Task<IModbusMaster> GetModbusRtuMaster()
     {
+        #region 创建ModbusRtuMaster
         var client = new ModbusRtuMaster();
         await client.SetupAsync(new TouchSocketConfig()
              .SetSerialPortOption(new SerialPortOption()
@@ -145,6 +156,8 @@ internal class Program
                  StopBits = System.IO.Ports.StopBits.One
              }));
         await client.ConnectAsync();
+        #endregion
+
         return client;
     }
 
@@ -154,8 +167,11 @@ internal class Program
     /// <returns></returns>
     public static async Task<IModbusMaster> GetModbusRtuOverTcpMaster()
     {
+        #region 创建ModbusRtuOverTcpMaster
         var client = new ModbusRtuOverTcpMaster();
         await client.ConnectAsync("127.0.0.1:502");
+        #endregion
+
         return client;
     }
 
@@ -165,11 +181,14 @@ internal class Program
     /// <returns></returns>
     public static async Task<IModbusMaster> GetModbusRtuOverUdpMaster()
     {
+        #region 创建ModbusRtuOverUdpMaster
         var client = new ModbusRtuOverUdpMaster();
         await client.SetupAsync(new TouchSocketConfig()
              .UseUdpReceive()
              .SetRemoteIPHost("127.0.0.1:502"));
         await client.StartAsync();
+        #endregion
+
         return client;
     }
 }

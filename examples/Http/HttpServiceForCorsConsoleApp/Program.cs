@@ -24,10 +24,9 @@ internal class Program
         var service = new HttpService();
         await service.SetupAsync(new TouchSocketConfig()//加载配置
              .SetListenIPHosts(7789)
+        #region Http服务器添加跨域服务
              .ConfigureContainer(a =>
              {
-                 a.AddConsoleLogger();
-
                  //添加跨域服务
                  a.AddCors(corsOption =>
                  {
@@ -39,18 +38,20 @@ internal class Program
                      });
                  });
              })
-             .ConfigurePlugins(a =>
-             {
-                 //应用名称为cors的跨域策略。
-                 a.UseCors("cors");
+        #endregion
 
-                 a.Add<MyPlugin>();
+        #region 应用跨域策略
+              .ConfigurePlugins(a =>
+              {
+                  //应用名称为cors的跨域策略。
+                  a.UseCors("cors");
 
-                 //default插件应该最后添加，其作用是
-                 //1、为找不到的路由返回404
-                 //2、处理header为Option的探视跨域请求。
-                 a.UseDefaultHttpServicePlugin();
-             }));
+                  a.UseDefaultHttpServicePlugin();
+              })
+        #endregion
+
+
+             );
         await service.StartAsync();
 
         Console.WriteLine("Http服务器已启动");
