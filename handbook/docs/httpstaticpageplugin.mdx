@@ -4,6 +4,7 @@ title: 静态页面插件
 ---
 
 import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 ### 定义
 
@@ -34,24 +35,7 @@ import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
 
 在创建`HttpService`实例后，只需要使用`UseHttpStaticPage`插件，然后指定根文件夹路径即可。
 
-```csharp showLineNumbers
-var service = new HttpService();
-
-var config = new TouchSocketConfig();
-config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-    .ConfigurePlugins(a =>
-    {
-        a.UseHttpStaticPage()//添加静态页面文件夹
-        .AddFolder("../../../../../api");
-
-    });
-
-await service.SetupAsync(config);
-
-await service.StartAsync();
-
-Console.WriteLine("Http服务器已启动");
-```
+<CustomCodeBlock region="Http服务器启用静态页面插件"/>
 
 :::tip 提示
 
@@ -63,19 +47,7 @@ Console.WriteLine("Http服务器已启动");
 
 在使用`UseHttpStaticPage`插件时，可以指定请求资源定向。例如，当请求的`URL`为`/api`时，将重定向到`/api/index.html`。
 
-```csharp {4-7} showLineNumbers
-a.UseHttpStaticPage()
-.SetNavigateAction(request =>
-{
-    if (request.RelativeURL.EndsWith("/"))
-    {
-        return $"{request.RelativeURL}/index.html";
-    }
-    //此处可以设置重定向
-    return request.RelativeURL;
-})
-.AddFolder("api/");
-```
+<CustomCodeBlock region="静态页面请求资源定向"/>
 
 :::info 信息
 
@@ -87,14 +59,7 @@ a.UseHttpStaticPage()
 
 可以通过配置响应头，例如添加自定义头。
 
-```csharp {2-5} showLineNumbers
-a.UseHttpStaticPage()
-.SetResponseAction(response =>
-{
-    //可以设置响应头
-})
-.AddFolder("api/");
-```
+<CustomCodeBlock region="静态页面响应设置"/>
 
 ### 4.4 配置ContentType
 
@@ -102,14 +67,7 @@ a.UseHttpStaticPage()
 
 但是，也可以通过配置`ContentTypeMapper`来覆盖默认的映射关系。
 
-```csharp {2-5} showLineNumbers
-a.UseHttpStaticPage()
-.SetContentTypeProvider(mapper =>
-{
-    mapper.Add(".txt", "text/plain");
-})
-.AddFolder("api/");
-```
+<CustomCodeBlock region="静态页面配置ContentType"/>
 
 :::info 信息
 
