@@ -89,9 +89,12 @@ internal class Program
         {
             using (channel)
             {
-                await foreach (var byteBlock in channel)
+                while (channel.CanRead)
                 {
-                    size += byteBlock.Length;
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    //这里处理数据
+                    size += memory.Length;
                 }
             }
         });
@@ -173,9 +176,12 @@ internal class Program
             {
                 if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                    await foreach (var byteBlock in channel)
+                    while (channel.CanRead)
                     {
-                        size += byteBlock.Length;
+                        using var cts = new CancellationTokenSource(10 * 1000);
+                        var memory = await channel.ReadAsync(cts.Token);
+                        //这里处理数据
+                        size += memory.Length;
                     }
                     Console.WriteLine($"服务器接收结束，状态：{channel.Status}，长度：{size}");
                 }

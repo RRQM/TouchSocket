@@ -132,9 +132,11 @@ internal class Program
         {
             using (channel)
             {
-                await foreach (var currentByteBlock in channel)
+                while (channel.CanRead)
                 {
-                    size += currentByteBlock.Length;//此处可以处理传递来的流数据
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    size += memory.Length;
                 }
                 status = channel.Status;//最后状态
             }
@@ -190,7 +192,7 @@ internal class Program
                  .SetMaxFailCount(3);
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(options=>
+             .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";
              }));

@@ -91,9 +91,9 @@ internal class Program
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
-                  options.VerifyToken = "Channel";
+                   options.VerifyToken = "Channel";
                })
                .ConfigureContainer(a =>
                {
@@ -115,17 +115,17 @@ internal class Program
                        //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
                        if ((await c.PingAsync()).IsSuccess)
                        {
-                           return  ConnectionCheckResult.Alive;
+                           return ConnectionCheckResult.Alive;
                        }
                        //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
                        else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
                        {
-                           return  ConnectionCheckResult.Skip;
+                           return ConnectionCheckResult.Skip;
                        }
                        //否则，直接重连。
                        else
                        {
-                           return  ConnectionCheckResult.Dead;
+                           return ConnectionCheckResult.Dead;
                        }
                    });
 
@@ -151,7 +151,7 @@ internal class Program
                {
                    a.Add<MyPlugin>();
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Channel";//连接验证口令。
                });
@@ -183,10 +183,13 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
                 this.m_logger.Info("通道开始接收");
 
                 long count = 0;
-                await foreach (var byteBlock in channel)
+
+                while (channel.CanRead)
                 {
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
                     //这里处理数据
-                    count += byteBlock.Length;
+                    count += memory.Length;
                     this.m_logger.Info($"通道已接收：{count}字节");
                 }
 

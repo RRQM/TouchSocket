@@ -52,7 +52,7 @@ public class Touch_HttpDmtp : BaseTouchServer
                  a.Add<Touch_Dmtp_Log_Plguin>();
 
              })
-             .SetDmtpOption(options=>
+             .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";//设置验证token
              });
@@ -89,13 +89,13 @@ public class Touch_HttpDmtp : BaseTouchServer
                 {
                     client.DmtpActor.Logger.Info("通道开始接收");
                     long count = 0;
-                    await foreach (var byteBlock in channel)
+                    while (channel.CanRead)
                     {
+                        using var cts = new CancellationTokenSource(10 * 1000);
+                        var memory = await channel.ReadAsync(cts.Token);
                         //这里处理数据
-                        count += byteBlock.Length;
-                        client.DmtpActor.Logger.Info($"通道已接收：{count}字节");
+                        count += memory.Length;
                     }
-
                     client.DmtpActor.Logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
                 }
             }
