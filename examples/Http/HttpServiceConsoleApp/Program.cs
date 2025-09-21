@@ -35,8 +35,9 @@ internal class Program
         //最后客户端需要先安装证书。
 
         var service = new HttpService();
-        await service.SetupAsync(new TouchSocketConfig()//加载配置
-              .SetListenIPHosts(7789)
+
+        var config = new TouchSocketConfig();
+        config.SetListenIPHosts(7789)
               .ConfigureContainer(a =>
               {
                   a.AddConsoleLogger();
@@ -54,23 +55,16 @@ internal class Program
                   a.Add<MyDelayResponsePlugin>();
                   a.Add<MyDelayResponsePlugin2>();
 
-                  a.UseHttpStaticPage()
-                  .SetNavigateAction(request =>
-                  {
-                      //此处可以设置重定向
-                      return request.RelativeURL;
-                  })
-                  .SetResponseAction(response =>
-                  {
-                      //可以设置响应头
-                  })
-                  .AddFolder("api/");//添加静态页面文件夹
-
                   //default插件应该最后添加，其作用是
                   //1、为找不到的路由返回404
                   //2、处理 header 为Option的探视跨域请求。
                   a.UseDefaultHttpServicePlugin();
-              }));
+              });
+
+        ConfigureStaticPage(config);
+
+        await service.SetupAsync(new TouchSocketConfig()//加载配置
+              );
         await service.StartAsync();
 
         Console.WriteLine("Http服务器已启动");
@@ -80,6 +74,43 @@ internal class Program
         Console.WriteLine("访问 http://127.0.0.1:7789/html 返回html");
         Console.WriteLine("Post访问 http://127.0.0.1:7789/uploadfile 上传文件");
         Console.ReadKey();
+    }
+
+    private static void ConfigureStaticPage(TouchSocketConfig config)
+    {
+        #region Http服务器启用静态页面插件
+        config.ConfigurePlugins(a =>
+        {
+            a.UseHttpStaticPage(options =>
+            {
+                //添加静态页面文件夹
+                options.AddFolder("api/");
+
+                #region 静态页面请求资源定向
+                options.SetNavigateAction(request =>
+                {
+                    //此处可以设置重定向
+                    return request.RelativeURL;
+                });
+                #endregion
+
+                #region 静态页面响应设置
+                options.SetResponseAction(response =>
+                {
+                    //可以设置响应头
+                });
+                #endregion
+
+                #region 静态页面配置ContentType
+                options.SetContentTypeProvider(provider =>
+                {
+                    provider.Add(".txt", "text/plain");
+                });
+                #endregion
+
+            });
+        });
+        #endregion
     }
 
     private static async Task CreateHttpService()
@@ -640,7 +671,7 @@ public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
                         break;
                     }
 
-                    await response.WriteAsync(buffer.Slice(0, readLen));
+                    await response.WriteAsync(buffer[..readLen]);
                 }
             }
 
