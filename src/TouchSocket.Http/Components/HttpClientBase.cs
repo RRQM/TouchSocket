@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -27,13 +26,18 @@ namespace TouchSocket.Http;
 /// </summary>
 public abstract class HttpClientBase : TcpClientBase, IHttpSession
 {
-    #region 字段
+    /// <summary>
+    /// 初始化 <see cref="HttpClientBase"/> 类的新实例。
+    /// </summary>
+    public HttpClientBase()
+    {
+        this.m_httpClientResponse = new ClientHttpResponse(this);
+    }
 
-    private readonly SemaphoreSlim m_semaphoreForRequest = new SemaphoreSlim(1, 1);
-    private HttpClientDataHandlingAdapter m_dataHandlingAdapter;
-    private TaskCompletionSource<HttpResponse> m_responseTaskSource;
-
-    #endregion 字段
+    /// <summary>
+    /// 获取内部传输层对象，用于HTTP响应内容读取
+    /// </summary>
+    internal ITransport InternalTransport => this.Transport;
 
     internal Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
     {
@@ -45,7 +49,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// </summary>
     /// <param name="token">用于取消操作的CancellationToken</param>
     /// <returns>返回一个任务，表示异步连接操作</returns>
-    protected async Task HttpConnectAsync(CancellationToken token)
+    protected virtual async Task HttpConnectAsync(CancellationToken token)
     {
         this.ThrowIfDisposed();
 
@@ -58,41 +62,38 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         }
         else
         {
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+    }
+
+    /// <summary>
+    /// 此方法会一直抛出异常，请使用<see cref="HttpConnectAsync(CancellationToken)"/>进行连接
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    [Obsolete("请使用HttpConnectAsync进行连接",true)]
+    protected sealed override Task TcpConnectAsync(CancellationToken token)
+    {
+        throw new NotImplementedException("请使用HttpConnectAsync进行连接");
+        //return base.TcpConnectAsync(token);
     }
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        if (disposing)
-        {
-            this.m_semaphoreForRequest.Dispose();
-            this.m_responseTaskSource.TrySetException(new ObjectDisposedException(nameof(HttpClientBase)));
-        }
         base.SafetyDispose(disposing);
-    }
-
-    /// <summary>
-    /// 设置用于处理单流数据的转换适配器
-    /// </summary>
-    /// <param name="adapter">要设置的SingleStreamDataHandlingAdapter实例</param>
-    protected void SetWarpAdapter(SingleStreamDataHandlingAdapter adapter)
-    {
-        // 将提供的适配器设置为当前数据处理适配器的WarpAdapter
-        this.m_dataHandlingAdapter.WarpAdapter = adapter;
     }
 
     private async Task ConnectThroughProxyAsync(IWebProxy proxy, CancellationToken token)
     {
         var targetHost = this.RemoteIPHost;
         var proxyUri = proxy.GetProxy(targetHost);
-        //proxyUri = new Uri("http://127.0.0.1:8089");
-        if (proxyUri == null || proxyUri.Equals(new Uri($"http://{targetHost.Host}:{targetHost.Port}")))
+
+        if (proxyUri == null || proxyUri.Equals(targetHost))
         {
             // 代理返回原始URI或null，直接连接
-
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
@@ -101,23 +102,18 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         try
         {
             // 临时设置代理服务器作为连接目标
-            var proxyHost = $"{proxyUri.Host}:{proxyUri.Port}";
-            var proxyIPHost = new IPHost(proxyHost);
+            var proxyIPHost = new IPHost(proxyUri.ToString());
             var config = this.Config;
+
             config.SetRemoteIPHost(proxyIPHost);
 
             // 连接到代理服务器
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             // 发送 CONNECT 请求建立隧道
             await this.EstablishProxyTunnelAsync(proxy, targetHost, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            var sslOption = new ClientSslOption()
-            {
-                SslProtocols = System.Security.Authentication.SslProtocols.None,
-                TargetHost = targetHost.Host
-            };
-            await base.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.TryAuthenticateAsync(originalRemoteIPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -126,21 +122,36 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         }
     }
 
+    private async Task TryAuthenticateAsync(IPHost iPHost)
+    {
+        if (!this.Config.TryGetValue(TouchSocketConfigExtension.ClientSslOptionProperty, out var sslOption))
+        {
+            if (!iPHost.IsSsl)
+            {
+                return;
+            }
+
+            sslOption = new ClientSslOption()
+            {
+                TargetHost = iPHost.Host
+            };
+        }
+        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
     private async Task EstablishProxyTunnelAsync(IWebProxy proxy, IPHost targetHost, CancellationToken token)
     {
         // 构建 CONNECT 请求
         var connectRequest = new HttpRequest();
-        connectRequest.Method = new HttpMethod("CONNECT");
+        connectRequest.Method = HttpMethod.Connect;
         connectRequest.URL = $"{targetHost.Host}:{targetHost.Port}";
-        //connectRequest.ContentLength = 0;
         connectRequest.Headers.Add(HttpHeaders.Host, $"{targetHost.Host}:{targetHost.Port}");
-        connectRequest.Headers.Add(HttpHeaders.UserAgent, "GitHub-File-Downloader/1.0");
 
         // 处理代理身份验证
         var credentials = proxy.Credentials;
         if (credentials != null)
         {
-            var networkCredential = credentials.GetCredential(new Uri($"http://{targetHost.Host}:{targetHost.Port}"), "Basic");
+            var networkCredential = credentials.GetCredential(targetHost, "Basic");
             if (networkCredential != null && !string.IsNullOrEmpty(networkCredential.UserName))
             {
                 var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{networkCredential.UserName}:{networkCredential.Password}"));
@@ -174,6 +185,8 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
     #region Request
 
+    private readonly ClientHttpResponse m_httpClientResponse;
+
     /// <summary>
     /// 异步发送Http请求，并仅等待响应头
     /// </summary>
@@ -185,23 +198,16 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
     protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken token)
     {
-        await this.m_semaphoreForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            this.m_responseTaskSource = new TaskCompletionSource<HttpResponse>();
-            request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
-            await this.BuildAndSendAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        // 设置Host头部
+        request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
 
-            // 等待响应状态，超时设定
-            var response = await this.m_responseTaskSource.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        // 发送请求
+        await this.BuildAndSendAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            return new HttpResponseResult(response, this.ReleaseLock);
-        }
-        catch
-        {
-            this.m_semaphoreForRequest.Release();
-            throw;
-        }
+        // 直接从Transport的Reader读取响应
+        var response = await this.ReadHttpResponseAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        return new HttpResponseResult(response);
     }
 
     private async Task BuildAndSendAsync(HttpRequest request, CancellationToken token)
@@ -229,10 +235,16 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         }
     }
 
-    private void ReleaseLock()
+    /// <summary>
+    /// 直接从Transport读取HTTP响应
+    /// </summary>
+    /// <param name="token">取消令牌</param>
+    /// <returns>HTTP响应对象</returns>
+    private async Task<ClientHttpResponse> ReadHttpResponseAsync(CancellationToken token)
     {
-        this.m_semaphoreForRequest.Release();
-        this.m_dataHandlingAdapter.SetCompleteLock();
+        this.m_httpClientResponse.Reset();
+        await this.m_httpClientResponse.ReadHeader(token);
+        return this.m_httpClientResponse;
     }
 
     private async Task UnsafeSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
@@ -251,7 +263,6 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        this.m_responseTaskSource.TrySetException(new ClientNotConnectedException());
         await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -259,21 +270,28 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         this.Protocol = Protocol.Http;
-        this.m_dataHandlingAdapter = new HttpClientDataHandlingAdapter();
-        this.SetAdapter(this.m_dataHandlingAdapter);
+
         await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override Task OnTcpReceived(ReceivedDataEventArgs e)
+    /// <remarks>Http客户端中，不再允许子类在<see cref="ReceiveLoopAsync"/>中自动接收数据</remarks>
+    protected sealed override async Task ReceiveLoopAsync(ITransport transport)
     {
-        if (e.RequestInfo is HttpResponse response)
+        if (transport.ClosedToken.IsCancellationRequested)
         {
-            var taskSource = this.m_responseTaskSource;
-            taskSource?.TrySetResult(response);
+            return;
         }
-
-        return EasyTask.CompletedTask;
+        try
+        {
+            //重写接收循环，阻止基类自动接收。
+            //http的接收由适配器自行处理。
+            await Task.Delay(-1, transport.ClosedToken);
+        }
+        catch
+        {
+            //忽略异常
+        }
     }
 
     #endregion override

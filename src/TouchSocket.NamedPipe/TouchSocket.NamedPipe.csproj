@@ -22,7 +22,16 @@
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
 
+	<!--全局命名空间-->
+	<ItemGroup>
+		<Using Include="TouchSocket.Sockets" />
+	</ItemGroup>
+
 	<ItemGroup>
 	  <Folder Include="Exceptions\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="../TouchSocket/Components/Tcp/TcpClientBase.cs" />
 	</ItemGroup>
 </Project>

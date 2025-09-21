@@ -33,7 +33,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     }
 
     /// <inheritdoc/>
-    public bool AllowAsyncRead { get => this.WebSocket.AllowAsyncRead; set => this.WebSocket.AllowAsyncRead = value; }
+    public bool AllowAsyncRead { get => this.m_webSocket.AllowAsyncRead; set => this.m_webSocket.AllowAsyncRead = value; }
 
     /// <inheritdoc/>
     public IHttpSession Client => this;
@@ -45,48 +45,48 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     public override bool Online => this.m_webSocket.Online;
 
     /// <inheritdoc/>
-    public string Version => this.WebSocket.Version;
+    public string Version => this.m_webSocket.Version;
 
     /// <inheritdoc/>
     public Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default)
     {
-        return this.WebSocket.CloseAsync(closeStatus, statusDescription, token);
+        return this.m_webSocket.CloseAsync(closeStatus, statusDescription, token);
     }
 
     /// <inheritdoc/>
     public Task<Result> PingAsync(CancellationToken token = default)
     {
-        return this.WebSocket.PingAsync(token);
+        return this.m_webSocket.PingAsync(token);
     }
 
     /// <inheritdoc/>
     public Task<Result> PongAsync(CancellationToken token = default)
     {
-        return this.WebSocket.PongAsync(token);
+        return this.m_webSocket.PongAsync(token);
     }
 
     /// <inheritdoc/>
     public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
     {
-        return this.WebSocket.ReadAsync(token);
+        return this.m_webSocket.ReadAsync(token);
     }
 
     /// <inheritdoc/>
     public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(dataFrame, endOfMessage, token);
+        return this.m_webSocket.SendAsync(dataFrame, endOfMessage, token);
     }
 
     /// <inheritdoc/>
     public Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(text, endOfMessage, token);
+        return this.m_webSocket.SendAsync(text, endOfMessage, token);
     }
 
     /// <inheritdoc/>
     public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
     {
-        return this.WebSocket.SendAsync(memory, endOfMessage, token);
+        return this.m_webSocket.SendAsync(memory, endOfMessage, token);
     }
 
     #region Connect
@@ -100,33 +100,34 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     {
         if (!base.Online)
         {
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
-        var option = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
+        var option = this.Config.WebSocketOption;
 
         var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
-        await this.OnWebSocketConnecting(new HttpContextEventArgs(new HttpContext(request, default))).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketConnecting(new HttpContextEventArgs(new HttpContext(request, default)))
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        using (var responseResult = await this.ProtectedRequestAsync(request, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        //这里不要释放responseResult，主要是这是http最后一次请求，后续不会再用到http了。
+        //如果释放了，会导致响应数据在PrivateOnConnected中失效。
+        var responseResult = await this.ProtectedRequestAsync(request, token)
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = responseResult.Response;
+        if (response.StatusCode != 101)
         {
-            var response = responseResult.Response;
-            if (response.StatusCode != 101)
-            {
-                throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-            }
-            var accept = response.Headers.Get("sec-websocket-accept").Trim();
-            if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
-            {
-                await base.CloseAsync("WS服务器返回的应答码不正确", token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-            }
-
-            this.InitWebSocket();
-
-            _ = EasyTask.Run(this.PrivateOnConnected, new HttpContextEventArgs(new HttpContext(request, response)));
+            throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
         }
+        var accept = response.Headers.Get("sec-websocket-accept").Trim();
+        if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            await base.CloseAsync("WS服务器返回的应答3码不正确", token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
+        }
+        this.InitWebSocket();
+
+        _ = EasyTask.SafeRun(this.PrivateOnConnected, new HttpContextEventArgs(new HttpContext(request, response)));
     }
 
     #endregion Connect
@@ -134,7 +135,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     #region 字段
 
     private readonly InternalWebSocket m_webSocket;
-
+    private WebSocketDataHandlingAdapter m_dataHandlingAdapter;
     #endregion 字段
 
     #region 事件
@@ -146,7 +147,6 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个 <see cref="Task"/> 对象，表示异步操作的完成。</returns>
     protected virtual async Task OnWebSocketClosed(ClosedEventArgs e)
     {
-        // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
         await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -157,7 +157,6 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>A <see cref="Task"/> 表示事件处理的异步操作。</returns>
     protected virtual async Task OnWebSocketClosing(ClosingEventArgs e)
     {
-        // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
         await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -196,7 +195,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         await this.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private Task PrivateWebSocketClosing(ClosedEventArgs e)
+    private Task PrivateWebSocketClosing(ClosingEventArgs e)
     {
         return this.OnWebSocketClosing(e);
     }
@@ -205,9 +204,19 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     {
         if (dataFrame.IsClose)
         {
-            var msg = dataFrame.PayloadData.Span.ToUtf8String();
-            await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await this.m_webSocket.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var payloadMemory = dataFrame.PayloadData;
+            var payloadSpan = payloadMemory.Span;
+            if (payloadSpan.Length >= 2)
+            {
+                var closeStatus = (WebSocketCloseStatus)payloadSpan.ReadValue<ushort>(EndianType.Big);
+                this.m_webSocket.CloseStatus = closeStatus;
+            }
+
+            var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
+
+            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         if (this.m_webSocket.AllowAsyncRead)
@@ -233,11 +242,15 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
 
     private void InitWebSocket()
     {
-        var adapter = new WebSocketDataHandlingAdapter();
-        base.SetWarpAdapter(adapter);
-        this.SetAdapter(adapter);
+        var webSocketDataHandlingAdapter = new WebSocketDataHandlingAdapter();
+        this.SetAdapter(webSocketDataHandlingAdapter);
+        this.m_dataHandlingAdapter = webSocketDataHandlingAdapter;
+
         this.Protocol = Protocol.WebSocket;
         this.m_webSocket.Online = true;
+
+        var transport = base.Transport;
+        _ = EasyTask.SafeRun(this.WebSocketReceiveLoopAsync, transport);
     }
 
     #region Properties
@@ -248,6 +261,59 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     protected IWebSocket WebSocket => this.m_webSocket;
 
     #endregion Properties
+
+    private async Task WebSocketReceiveLoopAsync(ITransport transport)
+    {
+        var token = transport.ClosedToken;
+
+        await transport.ReadLocker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            while (true)
+            {
+                if (this.DisposedValue || token.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
+                {
+                    break;
+                }
+
+                try
+                {
+                    var reader = new ClassBytesReader(result.Buffer);
+                    if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    {
+                        await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    var position = result.Buffer.GetPosition(reader.BytesRead);
+                    transport.Reader.AdvanceTo(position, result.Buffer.End);
+
+                    if (result.IsCompleted || result.IsCanceled)
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.ReadLocker.Release();
+        }
+    }
+
 
     #region Override
 

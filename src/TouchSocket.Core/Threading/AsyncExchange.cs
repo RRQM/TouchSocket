@@ -10,10 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Core;

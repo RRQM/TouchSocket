@@ -30,6 +30,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
 
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private bool m_allowRoute;
+    private DmtpAdapter m_adapter;
     private SealedDmtpActor m_dmtpActor;
     private Func<string, Task<IDmtpActor>> m_findDmtpActor;
 
@@ -67,15 +68,13 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 如果基础连接不在状态，则尝试建立TCP连接
             if (!base.Online)
             {
-                await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             // 创建并配置HttpRequest，为升级到Dmtp协议做准备
-            var request = new HttpRequest()
-                .SetHost(this.RemoteIPHost.Host);
+            var request = new HttpRequest();
             request.Headers.Add(HttpHeaders.Connection, "upgrade");
             request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());
-
             request.AsMethod(DmtpUtility.Dmtp);
 
             // 发送请求并处理响应
@@ -91,7 +90,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
                 else
                 {
                     // 其他状态码视为错误，抛出异常
-                    throw new Exception(response.StatusMessage);
+                   ThrowHelper.ThrowException($"无法升级协议，状态码：{response.StatusCode}，内容：{response.StatusMessage}");
                 }
             }
 
@@ -204,8 +203,8 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     {
         this.Protocol = DmtpUtility.DmtpProtocol;
         var adapter = new DmtpAdapter();
-        base.SetWarpAdapter(adapter);
         this.SetAdapter(adapter);
+        this.m_adapter = adapter;
         this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
         {
             //OutputSend = this.DmtpActorSend,
@@ -219,6 +218,61 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             Client = this,
             FindDmtpActor = this.m_findDmtpActor
         };
+
+        var transport = base.Transport;
+        _ = EasyTask.SafeRun(this.DmtpReceiveLoopAsync, transport);
+    }
+
+    private async Task DmtpReceiveLoopAsync(ITransport transport)
+    {
+        var token = transport.ClosedToken;
+
+        await transport.ReadLocker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            while (true)
+            {
+                if (this.DisposedValue || token.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
+                {
+                    break;
+                }
+
+                try
+                {
+                    var reader = new ClassBytesReader(result.Buffer);
+                    if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    {
+                        await this.m_adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    var position = result.Buffer.GetPosition(reader.BytesRead);
+                    transport.Reader.AdvanceTo(position, result.Buffer.End);
+
+                    if (result.IsCompleted || result.IsCanceled)
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.ReadLocker.Release();
+        }
     }
 
     #region 内部委托绑定

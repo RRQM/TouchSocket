@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -25,10 +21,19 @@ namespace TouchSocket.XmlRpc;
 /// </summary>
 public class XmlRpcClient : HttpClientBase, IXmlRpcClient
 {
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken token)
     {
-        return this.TcpConnectAsync(token);
+        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await base.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     /// <inheritdoc/>

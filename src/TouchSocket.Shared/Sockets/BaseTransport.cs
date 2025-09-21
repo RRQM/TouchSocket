@@ -30,8 +30,8 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     private readonly int m_maxBufferSize;
     private readonly int m_minBufferSize;
     private readonly SemaphoreSlim m_readLocker = new SemaphoreSlim(1, 1);
-    private readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
-    private readonly SemaphoreSlim m_WriteLocker = new SemaphoreSlim(1, 1);
+    protected readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
+    private readonly SemaphoreSlim m_writeLocker = new SemaphoreSlim(1, 1);
     private int m_receiveBufferSize = 1024 * 10;
     private int m_sendBufferSize = 1024 * 10;
 
@@ -58,9 +58,9 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// <summary>
     /// 获取用于读取数据的管道读取器
     /// </summary>
-    public PipeReader Reader => this.m_pipeReceive.Reader;
+    public virtual PipeReader Reader => this.m_pipeReceive.Reader;
 
-    public SemaphoreSlim ReadLocker => m_readLocker;
+    public SemaphoreSlim ReadLocker => this.m_readLocker;
 
     /// <summary>
     /// 接收缓存池，运行时的值会根据流速自动调整
@@ -82,12 +82,12 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// </summary>
     public ValueCounter SendCounter => this.m_sentCounter;
 
-    public SemaphoreSlim WriteLocker => this.m_WriteLocker;
+    public SemaphoreSlim WriteLocker => this.m_writeLocker;
 
     /// <summary>
     /// 获取用于写入数据的管道写入器
     /// </summary>
-    public PipeWriter Writer => this.m_pipeSend.Writer;
+    public virtual PipeWriter Writer => this.m_pipeSend.Writer;
 
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
@@ -126,8 +126,8 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_tokenSource.Cancel();
-        this.m_tokenSource.Dispose();
+        this.m_tokenSource.SafeCancel();
+        this.m_tokenSource.SafeDispose();
     }
 
     protected void Start()

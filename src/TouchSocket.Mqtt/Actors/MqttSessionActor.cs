@@ -156,7 +156,7 @@ public class MqttSessionActor : MqttActor
 
         this.Online = true;
 
-        _ = EasyTask.Run(this.ProtectedMqttOnConnected, new MqttConnectedEventArgs(message, mqttConnAckMessage));
+        _ = EasyTask.SafeRun(this.ProtectedMqttOnConnected, new MqttConnectedEventArgs(message, mqttConnAckMessage));
     }
 
     /// <inheritdoc/>

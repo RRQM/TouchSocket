@@ -22,6 +22,7 @@ namespace TouchSocket.Http;
 public class HttpClient : HttpClientBase, IHttpClient
 {
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken token)
     {
@@ -38,7 +39,7 @@ public class HttpClient : HttpClientBase, IHttpClient
     }
 
     /// <inheritdoc/>
-    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token)
+    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token = default)
     {
         return this.ProtectedRequestAsync(request, token);
     }

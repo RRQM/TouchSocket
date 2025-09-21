@@ -12,6 +12,7 @@
 
 using System;
 using System.IO.Pipelines;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,23 +20,90 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
+
 internal sealed class TcpTransport : BaseTransport
 {
     private readonly TcpCore m_tcpCore;
     private readonly Socket m_socket;
+    private PipeReader m_reader;
+    private PipeWriter m_writer;
 
+    public override PipeReader Reader => this.m_reader ?? base.Reader;
+    public override PipeWriter Writer => this.m_writer ?? base.Writer;
+
+    public bool UseSsl { get; private set; }
     public TcpTransport(TcpCore tcpCore, TransportOption option) : base(option)
     {
-        
         this.m_tcpCore = tcpCore ?? throw new ArgumentNullException(nameof(tcpCore));
         this.m_socket = tcpCore.Socket;
         this.Start();
+    }
+
+    public async Task AuthenticateAsync(ServiceSslOption sslOption)
+    {
+        if (this.UseSsl)
+        {
+            return;
+        }
+        var sourceStream = new TransportStream(this);
+        SslStream sslStream;
+        if (sslOption.CertificateValidationCallback != null)
+        {
+            sslStream = new SslStream(sourceStream, false, sslOption.CertificateValidationCallback);
+        }
+        else
+        {
+            sslStream = new SslStream(sourceStream, false);
+        }
+
+        await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
+            , sslOption.SslProtocols
+            , sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        this.m_reader = PipeReader.Create(sslStream);
+        this.m_writer = PipeWriter.Create(sslStream);
+        this.UseSsl = true;
+    }
+
+    public async Task AuthenticateAsync(ClientSslOption sslOption)
+    {
+        if (this.UseSsl)
+        {
+            return;
+        }
+        var sourceStream = new TransportStream(this);
+        SslStream sslStream;
+        if (sslOption.CertificateValidationCallback != null)
+        {
+            sslStream = new SslStream(sourceStream, false, sslOption.CertificateValidationCallback);
+        }
+        else
+        {
+            sslStream = new SslStream(sourceStream, false);
+        }
+
+        await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        this.m_reader = PipeReader.Create(sslStream);
+        this.m_writer = PipeWriter.Create(sslStream);
+        this.UseSsl = true;
     }
 
     public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
     {
         try
         {
+            if (this.m_writer!=null)
+            {
+                // 完成发送管道
+                await this.m_writer.CompleteAsync().SafeWaitAsync(token);
+            }
+
+            if (this.m_reader!=null)
+            {
+                // 等待发送管道读取器完成
+                await this.m_reader.CompleteAsync().SafeWaitAsync(token);
+            }
             await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.Close();
             return Result.Success;
@@ -105,6 +173,11 @@ internal sealed class TcpTransport : BaseTransport
         {
             this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
             await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            // 取消内置接收和发送任务。
+            base.m_tokenSource.SafeCancel();
         }
     }
 

@@ -11,12 +11,8 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.AspNetCore.Http;
-using System;
 using System.Buffers;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
@@ -170,9 +166,9 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
     internal void InitDmtpActor(bool allowRoute, Func<string, Task<IDmtpActor>> onServiceFindDmtpActor)
     {
-        var actor = new SealedDmtpActor(allowRoute,true)
+        var actor = new SealedDmtpActor(allowRoute, true)
         {
-            Id=this.Id,
+            Id = this.m_id,
             FindDmtpActor = onServiceFindDmtpActor,
             IdChanged = this.ThisOnResetId,
             OutputSendAsync = this.OnDmtpActorSendAsync,
@@ -184,6 +180,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             CreatedChannel = this.OnDmtpActorCreateChannel,
             Logger = this.Logger
         };
+
         this.m_dmtpActor = actor;
     }
 

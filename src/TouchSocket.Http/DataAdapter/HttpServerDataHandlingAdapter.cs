@@ -18,8 +18,8 @@ namespace TouchSocket.Http;
 
 internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    private HttpRequest m_currentRequest;
-    private HttpRequest m_requestRoot;
+    private ServerHttpRequest m_currentRequest;
+    private ServerHttpRequest m_requestRoot;
     private long m_surLen;
     private Task m_task;
 
@@ -31,7 +31,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
             throw new Exception($"此适配器必须适用于{nameof(IHttpService)}");
         }
 
-        this.m_requestRoot = new HttpRequest(httpSessionClient);
+        this.m_requestRoot = new ServerHttpRequest(httpSessionClient);
         base.OnLoaded(owner);
     }
 
@@ -52,7 +52,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                     this.m_task = null;
                 }
 
-                this.m_requestRoot.ResetHttp();
+                this.m_requestRoot.Reset();
                 this.m_currentRequest = this.m_requestRoot;
                 if (this.m_currentRequest.ParsingHeader(ref reader))
                 {

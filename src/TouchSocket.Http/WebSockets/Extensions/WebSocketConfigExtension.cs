@@ -23,7 +23,7 @@ public static class WebSocketConfigExtension
     /// <summary>
     /// WebSocket配置属性
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig),ActionMode =true)]
     public static readonly DependencyProperty<WebSocketOption> WebSocketOptionProperty =
        new("WebSocketOption", new WebSocketOption());
 }

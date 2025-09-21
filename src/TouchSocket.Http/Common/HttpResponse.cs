@@ -22,7 +22,7 @@ namespace TouchSocket.Http;
 /// <summary>
 /// Http响应
 /// </summary>
-public class HttpResponse : HttpBase
+public abstract class HttpResponse : HttpBase
 {
     #region 字段
 
@@ -30,7 +30,7 @@ public class HttpResponse : HttpBase
     private readonly HttpSessionClient m_httpSessionClient;
     private readonly bool m_isServer;
     private bool m_canWrite;
-    private ReadOnlyMemory<byte> m_contentMemory;
+
     private bool m_sentHeader;
     private long m_sentLength;
 
@@ -40,14 +40,14 @@ public class HttpResponse : HttpBase
     /// Http响应
     /// </summary>
     /// <param name="httpClientBase"></param>
-    internal HttpResponse(HttpClientBase httpClientBase) : base(true)
+    internal HttpResponse(HttpClientBase httpClientBase)
     {
         this.m_isServer = false;
         this.m_canWrite = false;
         this.m_httpClientBase = httpClientBase;
     }
 
-    internal HttpResponse(HttpRequest request, HttpSessionClient httpSessionClient) : base(false)
+    internal HttpResponse(HttpRequest request, HttpSessionClient httpSessionClient)
     {
         this.m_canWrite = true;
         this.m_isServer = true;
@@ -196,100 +196,6 @@ public class HttpResponse : HttpBase
         }
     }
 
-    /// <inheritdoc/>
-    public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
-    {
-        if (!this.ContentCompleted.HasValue)
-        {
-            var contentLength = this.ContentLength;
-            if (!this.IsChunk && contentLength == 0)
-            {
-                this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
-                return this.m_contentMemory;
-            }
-
-            if (!this.IsChunk && contentLength > MaxCacheSize)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(contentLength), contentLength, MaxCacheSize);
-            }
-
-            try
-            {
-                using (var byteBlock = new ValueByteBlock((int)contentLength))
-                {
-                    while (true)
-                    {
-                        using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            if (blockResult.IsCompleted)
-                            {
-                                break;
-                            }
-                            byteBlock.Write(blockResult.Memory.Span);
-                        }
-
-                        if (byteBlock.Length > MaxCacheSize)
-                        {
-                            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(contentLength), contentLength, MaxCacheSize);
-                        }
-                    }
-                    this.ContentCompleted = true;
-                    this.m_contentMemory = byteBlock.Span.ToArray();
-                    return this.m_contentMemory;
-                }
-            }
-            catch
-            {
-                this.ContentCompleted = false;
-                this.m_contentMemory = null;
-                return this.m_contentMemory;
-            }
-        }
-        else
-        {
-            return this.ContentCompleted == true ? this.m_contentMemory : default;
-        }
-    }
-
-    /// <inheritdoc/>
-    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
-    {
-        if (this.ContentLength == 0 && !this.IsChunk)
-        {
-            return HttpReadOnlyMemoryBlockResult.Completed;
-        }
-
-        if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
-        {
-            return new HttpReadOnlyMemoryBlockResult(this.m_contentMemory);
-        }
-        var readLeaseTask = base.ReadExchangeAsync(cancellationToken);
-
-        ReadLease<ReadOnlyMemory<byte>> readLease;
-        if (readLeaseTask.IsCompleted)
-        {
-            readLease = readLeaseTask.Result;
-        }
-        else
-        {
-            readLease = await readLeaseTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        if (readLease.IsCompleted)
-        {
-            this.ContentCompleted = true;
-        }
-
-        return new HttpReadOnlyMemoryBlockResult(readLease.Dispose, readLease.Value, readLease.IsCompleted);
-    }
-
-    /// <inheritdoc/>
-    internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
-    {
-        this.m_contentMemory = content;
-        this.ContentLength = content.Length;
-        this.ContentCompleted = true;
-    }
-
     #region Write
 
     /// <summary>
@@ -361,18 +267,17 @@ public class HttpResponse : HttpBase
 
     #endregion Write
 
-    internal override void ResetHttp()
+    protected internal override void Reset()
     {
         if (this.m_isServer)
         {
             this.m_canWrite = true;
-            this.CompleteInput();
         }
         else
         {
             this.m_canWrite = false;
         }
-        base.ResetHttp();
+        base.Reset();
         this.m_sentHeader = false;
         this.m_sentLength = 0;
         this.Responsed = false;

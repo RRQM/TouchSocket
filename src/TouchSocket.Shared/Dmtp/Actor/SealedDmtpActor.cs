@@ -15,7 +15,7 @@ namespace TouchSocket.Dmtp;
 /// <summary>
 /// 密封的<see cref="DmtpActor"/>
 /// </summary>
-public sealed class SealedDmtpActor : DmtpActor
+internal sealed class SealedDmtpActor : DmtpActor
 {
     /// <summary>
     /// 创建一个Dmtp协议的最基础功能件

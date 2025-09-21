@@ -25,7 +25,8 @@ namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 命名管道客户端客户端基类
 /// </summary>
-public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
+[CodeInject.RegionInject(FileName = "TcpClientBase.cs", RegionName = "ReceiveLoopAsync", Placeholders = new[] { "OnTcpReceiving", "OnNamedPipeReceiving" })]
+public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
 {
     /// <summary>
     /// 命名管道客户端客户端基类
@@ -295,72 +296,6 @@ public abstract class NamedPipeClientBase : SetupConfigObject, INamedPipeSession
     {
         // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
         return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
-    }
-
-    protected virtual async Task ReceiveLoopAsync(ITransport transport)
-    {
-        var token = transport.ClosedToken;
-
-        try
-        {
-            while (true)
-            {
-                if (this.DisposedValue || token.IsCancellationRequested)
-                {
-                    return;
-                }
-                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                if (result.Buffer.Length == 0)
-                {
-                    break;
-                }
-                var reader = new ClassBytesReader(result.Buffer);
-                if (!await this.OnNamedPipeReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                {
-                    try
-                    {
-                        if (this.m_dataHandlingAdapter == null)
-                        {
-                            foreach (var item in reader.Sequence)
-                            {
-                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                                reader.Advance(item.Length);
-                            }
-                        }
-                        else
-                        {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Logger?.Exception(this, ex);
-                    }
-                }
-                var position = result.Buffer.GetPosition(reader.BytesRead);
-                transport.Reader.AdvanceTo(position, result.Buffer.End);
-
-                if (result.IsCanceled || result.IsCompleted)
-                {
-                    return;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // 如果发生异常，记录日志并退出接收循环
-            this.Logger?.Debug(this, ex);
-            return;
-        }
-        finally
-        {
-            var receiver = this.m_receiver;
-            var e_closed = transport.ClosedEventArgs;
-            if (receiver != null)
-            {
-                receiver.Complete(e_closed.Message);
-            }
-        }
     }
 
     /// <summary>

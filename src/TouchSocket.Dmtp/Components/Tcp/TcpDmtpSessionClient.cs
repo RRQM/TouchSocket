@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -237,7 +233,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     #endregion ResetId
 
-    private void InitDmtpActor()
+    private void InitDmtpActor(string id)
     {
         var allowRoute = false;
         Func<string, Task<IDmtpActor>> findDmtpActor = default;
@@ -268,9 +264,9 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             }
         }
 
-        var actor = new SealedDmtpActor(allowRoute,true)
+        var actor = new SealedDmtpActor(allowRoute, true)
         {
-            Id = this.Id,
+            Id = id,
             FindDmtpActor = FindDmtpActor,
             IdChanged = this.ThisOnResetId,
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
@@ -282,6 +278,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             CreatedChannel = this.OnDmtpActorCreateChannel,
             Logger = this.Logger
         };
+
         this.m_dmtpActor = actor;
         this.m_dmtpAdapter.Config(this.Config);
     }
@@ -320,7 +317,6 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async Task OnTcpConnected(ConnectedEventArgs e)
     {
-        this.InitDmtpActor();
         _ = EasyTask.SafeRun(async () =>
         {
             await Task.Delay(this.VerifyTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -337,25 +333,24 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        
+        this.InitDmtpActor(e.Id);
     }
 
-    /// <inheritdoc/>
-    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    {
-        var message = (DmtpMessage)e.RequestInfo;
-        if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-        {
-            await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
+    ///// <inheritdoc/>
+    //protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+    //{
+    //    var message = (DmtpMessage)e.RequestInfo;
+    //    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+    //    {
+    //        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    }
+    //}
 
     /// <inheritdoc/>
     protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
         while (reader.BytesRemaining > 0)
         {
-            //Console.WriteLine(reader.BytesRemaining);
             if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
             {
                 if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))

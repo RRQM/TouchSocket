@@ -21,10 +21,7 @@ namespace TouchSocket.Http;
 /// </summary>
 public static class TouchSocketHttpUtility
 {
-    /// <summary>
-    /// 非缓存上限
-    /// </summary>
-    public const int NoCacheMaxSize = 1024 * 1024;
+    public const int MaxReadSize = 1024 * 1024;
 
     /// <summary>
     /// 获取一个只读的字节序列，表示回车换行(CRLF)。

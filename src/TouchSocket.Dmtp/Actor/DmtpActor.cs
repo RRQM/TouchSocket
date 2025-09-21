@@ -10,13 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -35,16 +29,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public Func<DmtpActor, string, Task> Closing { get; init; }
 
     /// <summary>
-    /// 当创建通道时
-    /// </summary>
-    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; init; }
-
-    /// <summary>
-    /// 查找其他IDmtpActor
-    /// </summary>
-    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; init; }
-
-    /// <summary>
     /// 在完成握手连接时
     /// </summary>
     public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connected { get; init; }
@@ -53,6 +37,16 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// 握手
     /// </summary>
     public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connecting { get; init; }
+
+    /// <summary>
+    /// 当创建通道时
+    /// </summary>
+    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; init; }
+
+    /// <summary>
+    /// 查找其他IDmtpActor
+    /// </summary>
+    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; init; }
 
     /// <summary>
     /// 重设Id
@@ -85,7 +79,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
 
     /// <inheritdoc/>
-    public string Id { get => m_id; init => m_id = value; }
+    public string Id { get => this.m_id; init => this.m_id = value; }
 
     /// <inheritdoc/>
     public bool IsReliable { get; }
@@ -239,20 +233,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <summary>
-    /// 当完成创建通道时
-    /// </summary>
-    /// <param name="e"></param>
-    /// <returns></returns>
-    protected virtual Task OnCreatedChannel(CreateChannelEventArgs e)
-    {
-        if (this.CreatedChannel != null)
-        {
-            return this.CreatedChannel.Invoke(this, e);
-        }
-        return EasyTask.CompletedTask;
-    }
-
-    /// <summary>
     /// 握手连接完成
     /// </summary>
     /// <param name="e"></param>
@@ -281,6 +261,20 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <summary>
+    /// 当完成创建通道时
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    protected virtual Task OnCreatedChannel(CreateChannelEventArgs e)
+    {
+        if (this.CreatedChannel != null)
+        {
+            return this.CreatedChannel.Invoke(this, e);
+        }
+        return EasyTask.CompletedTask;
+    }
+
+    /// <summary>
     /// 当Id修改时
     /// </summary>
     /// <param name="e"></param>
@@ -294,6 +288,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
+    private async Task PrivateOnConnected(DmtpVerifyEventArgs e)
+    {
+        await this.OnConnected(e);
+    }
+
     private async Task PrivateOnCreatedChannel(object obj)
     {
         try
@@ -303,11 +302,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         catch
         {
         }
-    }
-
-    private async Task PrivateOnConnected(DmtpVerifyEventArgs e)
-    {
-        await this.OnConnected(e);
     }
 
     #endregion 委托触发
@@ -1137,13 +1131,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return this.m_userChannels.TryRemove(id, out _);
     }
 
-    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage,CancellationToken cancellationToken)
+    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage, CancellationToken cancellationToken)
     {
         using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
         {
             var block = byteBlock;
             channelPackage.Package(ref block);
-            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory,cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
