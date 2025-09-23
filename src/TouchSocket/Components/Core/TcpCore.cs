@@ -420,7 +420,7 @@ internal sealed class TcpCore : DisposableObject
             var offset = 0;
             while (length > 0 && !this.m_cancellationToken.IsCancellationRequested)
             {
-                var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_socketSender.SendAsync(this.m_socket, memory.Slice(offset)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.SocketError != null)
                 {
                     throw result.SocketError;
