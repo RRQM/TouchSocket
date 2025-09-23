@@ -51,7 +51,7 @@ internal class Program
                 for (var j = 0; j < 10; j++)
                 {
                     //2.持续写入数据
-                    await channel.SendAsync(bytes);
+                    await channel.WriteAsync(bytes);
                 }
                 //3.在某个阶段完成数据传输时，可以调用HoldOn
                 await channel.HoldOnAsync("等一下下");
@@ -78,7 +78,7 @@ internal class Program
             for (var i = 0; i < count; i++)
             {
                 //2.持续写入数据
-                await channel.SendAsync(bytes);
+                await channel.WriteAsync(bytes);
             }
 
             //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等

@@ -38,13 +38,13 @@ internal class Program
 
         var config = new TouchSocketConfig();
         #region 串口通信参数的核心配置
-        config.SetSerialPortOption(new SerialPortOption()
+        config.SetSerialPortOption(options =>
         {
-            BaudRate = 9600,//波特率
-            DataBits = 8,//数据位
-            Parity = System.IO.Ports.Parity.None,//校验位
-            PortName = "COM1",//COM
-            StopBits = System.IO.Ports.StopBits.One,//停止位
+            options.BaudRate = 9600;//波特率
+            options.DataBits = 8;//数据位
+            options.Parity = System.IO.Ports.Parity.None;//校验位
+            options.PortName = "COM1";//COM
+            options.StopBits = System.IO.Ports.StopBits.One;//停止位
             //其他配置                                 
         });
         #endregion

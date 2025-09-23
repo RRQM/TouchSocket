@@ -12,7 +12,6 @@
 
 using TouchSocket.Core;
 using TouchSocket.Modbus;
-using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
 namespace ModbusClientConsoleApp;
@@ -32,11 +31,33 @@ internal class Program
     /// </summary>
     public static async Task ReadWriteHoldingRegisters(IModbusMaster master)
     {
-        //写入单个寄存器
-        await master.WriteSingleRegisterAsync(1, 0, 1);//默认short ABCD端序
+        #region ModbusMaster写单个寄存器
+        try
+        {
+            //1:写入的站号
+            //0:起始地址
+            //1:值
+            var modbusResponse = await master.WriteSingleRegisterAsync(1, 0, 1);//默认short ABCD端序
+            if (modbusResponse.IsSuccess)
+            {
+                Console.WriteLine("操作成功");
+            }
+            else
+            {
+                Console.WriteLine($"操作失败，异常码：{modbusResponse.ErrorCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        #endregion
+
         await master.WriteSingleRegisterAsync(1, 1, 1000);//默认short ABCD端序
 
-
+        #region ModbusMaster写入多个寄存器
+        //先构建一个内存块，按照modbus单次最大长度计算，1024字节足够
         var valueByteBlock = new ValueByteBlock(1024);
         try
         {
@@ -49,24 +70,30 @@ internal class Program
             WriterExtension.WriteString(ref valueByteBlock, "Hello1");
 
             //如果想要直接写入字符串，可以使用WriteNormalString方法
-            //valueByteBlock.WriteNormalString("Hello1", System.Text.Encoding.UTF8);
+            //WriterExtension.WriteNormalString(ref valueByteBlock,"Hello1", System.Text.Encoding.UTF8);
 
             //注意：写入字符串时，应当保证写入后的字节总数为双数。如果是单数，则会报错。
 
             //写入到寄存器
-            await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
+            await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.Memory);
         }
         finally
         {
             valueByteBlock.Dispose();
         }
+        #endregion
 
-        //读取寄存器
+        #region ModbusMaster读取保持寄存器
+        //1:读取的站号
+        //0:起始地址
+        //30:读取长度
         var response = await master.ReadHoldingRegistersAsync(1, 0, 30);
 
-        //创建一个读取器
-        var span = response.Data.Span;
+        //获取原始数据
+        var memory = response.Data;
 
+        //或者从Span直接读取值
+        var span = response.Data.Span;
         Console.WriteLine(span.ReadValue<ushort>(EndianType.Big));
         Console.WriteLine(span.ReadValue<ushort>(EndianType.Big));
         Console.WriteLine(span.ReadValue<ushort>(EndianType.Big));
@@ -74,6 +101,58 @@ internal class Program
         Console.WriteLine(span.ReadValue<int>(EndianType.BigSwap));
         Console.WriteLine(span.ReadValue<long>(EndianType.LittleSwap));
         Console.WriteLine(span.ReadString());
+        #endregion
+    }
+
+    public static async Task ReadWriteHoldingRegisters2(IModbusMaster master)
+    {
+        #region ModbusMaster读取多个寄存器到指定类型
+        //读取寄存器
+        var response = await master.ReadHoldingRegistersAsync(1, 0, 10);//站点1，从0开始读取10个寄存器
+
+        //获取原始数据
+        var memory = response.Data;
+
+        //将数据全部读为无符号32为，且使用大端序，即ABCD
+        var values = TouchSocketBitConverter.ConvertValues<byte, uint>(memory.Span, EndianType.Big);
+        #endregion
+
+    }
+
+    public static async Task ReadCoilsByInterfaces(IModbusMaster master)
+    {
+        #region ModbusMaster通过原生接口操作
+        //通过原生接口调用
+        var modbusRequest = new ModbusRequest(FunctionCode.ReadCoils);
+        modbusRequest.SlaveId = (1);//设置站号。如果是Tcp可以不设置
+        modbusRequest.StartingAddress = (0);//设置起始
+        modbusRequest.Quantity = (1);//设置数量
+        modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
+
+        //设置超时
+        var cts = new CancellationTokenSource(1000);
+        try
+        {
+            //发送请求，并获取响应
+            var response = await master.SendModbusRequestAsync(modbusRequest, cts.Token);
+
+            if (response.IsSuccess)
+            {
+                //操作成功
+                Console.WriteLine("操作成功");
+
+                //获取原始数据
+                var memory = response.Data;
+
+                //把数据按位bit转换为bool数组
+                var bools = TouchSocketBitConverter.ConvertValues<byte, bool>(memory.Span);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+        #endregion
     }
 
     /// <summary>
@@ -82,19 +161,66 @@ internal class Program
     /// <param name="master"></param>
     public static async Task ReadWriteCoilsShouldBeOk(IModbusMaster master)
     {
-        //写单个线圈
+        #region ModbusMaster写单个线圈
+        //1:写入的站号
+        //0:起始地址
+        //true:线圈状态
         await master.WriteSingleCoilAsync(1, 0, true);
+        #endregion
+
         await master.WriteSingleCoilAsync(1, 1, false);
 
-        //写多个线圈
+        #region ModbusMaster写入多个线圈
+        //1:写入的站号
+        //2:起始地址
+        //new bool[] { true, false, true }:线圈状态
         await master.WriteMultipleCoilsAsync(1, 2, new bool[] { true, false, true });
+        #endregion
 
-        //读取线圈
+
+        #region ModbusMaster读取线圈
+        //1:读取的站号
+        //0:起始地址
+        //5:读取长度
         var values = await master.ReadCoilsAsync(1, 0, 5);
         foreach (var value in values.Span)
         {
             Console.WriteLine(value);
         }
+        #endregion
+
+    }
+
+    public static async Task ReadDiscreteInputsShouldBeOk(IModbusMaster master)
+    {
+        #region ModbusMaster离散输入
+        //1:读取的站号
+        //0:起始地址
+        //5:读取长度
+        var values = await master.ReadDiscreteInputsAsync(1, 0, 5);
+        foreach (var value in values.Span)
+        {
+            Console.WriteLine(value);
+        }
+        #endregion
+
+    }
+
+    public static async Task ReadInputRegistersShouldBeOk(IModbusMaster master)
+    {
+        #region ModbusMaster读取输入寄存器
+        //1:读取的站号
+        //0:起始地址
+        //5:读取长度
+        var response = await master.ReadInputRegistersAsync(1, 0, 5);
+
+        //获取原始数据
+        var memory = response.Data;
+
+        //或者从Span直接读取值
+        var span = response.Data.Span;
+        var value = span.ReadValue<ushort>(EndianType.Big);
+        #endregion
     }
 
     /// <summary>
@@ -147,13 +273,13 @@ internal class Program
         #region 创建ModbusRtuMaster
         var client = new ModbusRtuMaster();
         await client.SetupAsync(new TouchSocketConfig()
-             .SetSerialPortOption(new SerialPortOption()
+             .SetSerialPortOption(options =>
              {
-                 BaudRate = 9600,
-                 DataBits = 8,
-                 Parity = System.IO.Ports.Parity.Even,
-                 PortName = "COM2",
-                 StopBits = System.IO.Ports.StopBits.One
+                 options.BaudRate = 9600;
+                 options.DataBits = 8;
+                 options.Parity = System.IO.Ports.Parity.Even;
+                 options.PortName = "COM2";
+                 options.StopBits = System.IO.Ports.StopBits.One;
              }));
         await client.ConnectAsync();
         #endregion
@@ -191,6 +317,16 @@ internal class Program
 
         return client;
     }
+}
+
+internal class MyModbusMaster : DependencyObject, IModbusMaster
+{
+    #region ModbusMaster原生接口实现
+    public Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
+    #endregion
 }
 
 internal class MyClass

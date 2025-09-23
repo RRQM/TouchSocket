@@ -12,7 +12,6 @@
 
 using TouchSocket.Core;
 using TouchSocket.Modbus;
-using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
 namespace ModbusSlaveConsoleApp;
@@ -141,13 +140,13 @@ internal class Program
         var slave = new ModbusRtuSlave();
         await slave.SetupAsync(new TouchSocketConfig()
              //设置串口
-             .SetSerialPortOption(new SerialPortOption()
+             .SetSerialPortOption(options =>
              {
-                 BaudRate = 9600,
-                 DataBits = 8,
-                 Parity = System.IO.Ports.Parity.Even,
-                 PortName = "COM1",
-                 StopBits = System.IO.Ports.StopBits.One
+                 options.BaudRate = 9600;
+                 options.DataBits = 8;
+                 options.Parity = System.IO.Ports.Parity.Even;
+                 options.PortName = "COM1";
+                 options.StopBits = System.IO.Ports.StopBits.One;
              })
              .ConfigurePlugins(a =>
              {
