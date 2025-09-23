@@ -158,7 +158,7 @@ internal class Program
             for (var i = 0; i < 1024; i++)
             {
                 size += package;
-                await channel.SendAsync(new byte[package]);
+                await channel.WriteAsync(new byte[package]);
             }
             await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
 

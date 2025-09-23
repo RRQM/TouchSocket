@@ -73,89 +73,53 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 所有的`Modbus`主站都支持以下原生接口操作：
 
-```csharp showLineNumbers
-//异步发送Modbus请求，并等待响应
-Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
-```
+<CustomCodeBlock region="ModbusMaster原生接口实现"/>
 
 以读线圈操作为例：
 
-```csharp showLineNumbers
-ModbusRequest modbusRequest = new ModbusRequest(FunctionCode.ReadCoils);
-modbusRequest.SetSlaveId(1);//设置站号。如果是Tcp可以不设置
-modbusRequest.SetStartingAddress(0);//设置起始
-modbusRequest.SetQuantity(1);//设置数量
-//modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
-
-var response =await master.SendModbusRequestAsync(modbusRequest, 1000, CancellationToken.None);
-
-bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
-```
+<CustomCodeBlock region="ModbusMaster通过原生接口操作"/>
 
 ### 7.2 快捷扩展实现
 
 因为`Modbus`的操作一般比较固化，所以`ModbusMaster`扩展了以下快捷操作：
 
-读取线圈（FC1）。
+#### 7.2.1 读取线圈（FC1）。
 
-```csharp showLineNumbers
-bool[] bools =await master.ReadCoilsAsync(0, 1);
-```
+<CustomCodeBlock region="ModbusMaster读取线圈"/>
 
-读取离散输入（FC2）。
+#### 7.2.2 读取离散输入（FC2）。
 
-```csharp showLineNumbers
-bool[] bools =await master.ReadDiscreteInputsAsync(0, 1);
-```
+<CustomCodeBlock region="ModbusMaster离散输入"/>
 
-读取保持寄存器（FC3）。
+#### 7.2.3 读取保持寄存器（FC3）。
 
-```csharp showLineNumbers
-var response =await master.ReadHoldingRegistersAsync(0, 1);
-var reader = response.CreateReader();
-var value=reader.ReadInt16();
-```
+<CustomCodeBlock region="ModbusMaster读取保持寄存器"/>
 
-读取输入寄存器（FC4）。
+#### 7.2.4 读取输入寄存器（FC4）。
 
-```csharp showLineNumbers
-var response =await master.ReadInputRegistersAsync(0, 1);
-var reader = response.CreateReader();
-var value=reader.ReadInt16();
-```
+<CustomCodeBlock region="ModbusMaster读取输入寄存器"/>
 
-写入单个线圈（FC5）。
+#### 7.2.5 写入单个线圈（FC5）。
 
-```csharp showLineNumbers
-await master.WriteSingleCoilAsync(0, true);
-```
+<CustomCodeBlock region="ModbusMaster写单个线圈"/>
 
-写入单个寄存器（FC6）。
+#### 7.2.6 写入单个寄存器（FC6）。
 
-```csharp showLineNumbers
-await master.WriteSingleRegisterAsync(0, (short)100);
-```
+<CustomCodeBlock region="ModbusMaster写单个寄存器"/>
 
-写入多个线圈（FC15）。
+#### 7.2.7 写入多个线圈（FC15）。
 
-```csharp showLineNumbers
-await master.WriteMultipleCoilsAsync(0, new bool[] { true, false, true });
-```
+<CustomCodeBlock region="ModbusMaster写入多个线圈"/>
 
-写入多个寄存器（FC16）。
+#### 7.2.8 写入多个寄存器（FC16）。
 
-```csharp showLineNumbers
-using (var valueByteBlock = new ValueByteBlock(1024))
-{
-    valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
-    valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
-    valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
-    valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+<CustomCodeBlock region="ModbusMaster写入多个寄存器"/>
 
-    //写入到寄存器
-    await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
-}
-```
+:::caution 注意
+
+写入字符串时，应当保证写入后的字节总数为双数。如果是单数，则会报错。
+
+:::  
 
 :::tip 提示
 
@@ -165,25 +129,17 @@ using (var valueByteBlock = new ValueByteBlock(1024))
 
 ## 八、更多写入与读取
 
-线圈与离散输入的写入与读取比较单一，上述操作即可满足大部分需求。下面介绍读写保持寄存器、读取输入寄存器的多元化方式。
+线圈与离散输入的写入与读取比较单一，上述操作即可满足大部分需求。
 
+下面介绍读写保持寄存器、读取输入寄存器的多元化方式。
 
-读取寄存器到集合。如果该集合中的数据是一类数据，例如全是uint32类型。那么可以使用下列方式：
+读取寄存器到集合。如果该集合中的数据是一类数据，例如全是`uint32`类型。那么可以使用下列方式：
 
-```csharp showLineNumbers
-//读取寄存器
-var response =await master.ReadHoldingRegistersAsync(1, 0, 10);//站点1，从0开始读取10个寄存器
-
-//创建一个读取器
-var reader = response.CreateReader();
-
-//将数据全部读为无符号32为，且使用大端序，即ABCD
-uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
-```
+<CustomCodeBlock region="ModbusMaster读取多个寄存器到指定类型"/>
 
 :::tip 提示
 
-该集合支持全部基础数据类型，以及DataTime和TimeSpan。
+该集合支持全部基础数据类型，和非托管类型，例如：`DataTime`和`TimeSpan`。
 
 :::  
 
@@ -191,54 +147,12 @@ uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
 
 当写入下列数据时：
 
-```csharp showLineNumbers
-using (var valueByteBlock = new ValueByteBlock(1024))
-{
-    valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
-    valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
-    valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
-    valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
-
-    //写入到寄存器
-    await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
-}
-```
+<CustomCodeBlock region="ModbusMaster写入多个寄存器"/>
 
 就需要依次读取：
 
-```csharp showLineNumbers
-//读取寄存器
-var response =await master.ReadHoldingRegistersAsync(1, 0, 1 + 1 + 2 + 4);
+<CustomCodeBlock region="ModbusMaster读取保持寄存器"/>
 
-//创建一个读取器
-var reader = response.CreateReader();
-
-//依次读取
-Console.WriteLine(reader.ReadInt16(EndianType.Big));
-Console.WriteLine(reader.ReadInt16(EndianType.Little));
-Console.WriteLine(reader.ReadInt32(EndianType.BigSwap));
-Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
-```
-
-读写字符串：
-
-```csharp showLineNumbers
-using (var valueByteBlock = new ValueByteBlock(1024))
-{
-    //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-    valueByteBlock.WriteString("Hello");
-
-    //写入到寄存器
-    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
-}
-
-//读取寄存器
-var response =await master.ReadHoldingRegistersAsync(1, 0, 5);//5个长度，10字节
-
-//创建一个读取器
-var reader = response.CreateReader();
-Console.WriteLine(reader.ReadString());
-```
 
 读写任意类型：
 
@@ -254,6 +168,14 @@ Console.WriteLine(reader.ReadString());
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusMasterConsoleApp)
 
 ## 九、ModbusObject操作 <Pro/> 
+
+:::danger 注意
+
+ModbusObject的操作由于性能和其它设计缺陷问题，以后版本不再维护，也可能会废弃，请谨慎使用。
+
+此处更为推荐使用[Plc Modbus](./plcbridgemodbus.mdx)配合[PlcObject](./plcbridgeservice.mdx)
+
+:::  
 
 ### 9.1 基本使用
 

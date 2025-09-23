@@ -120,7 +120,7 @@ internal class Program
             for (var i = 0; i < Program.Count; i++)
             {
                 size += package;
-                await channel.SendAsync(new byte[package]);
+                await channel.WriteAsync(new byte[package]);
             }
             await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
         });
@@ -153,7 +153,7 @@ internal class Program
                     for (var i = 0; i < Program.Count; i++)
                     {
                         size += package;
-                        await channel.SendAsync(new byte[package]);
+                        await channel.WriteAsync(new byte[package]);
                     }
                     await channel.CompleteAsync();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
                 }

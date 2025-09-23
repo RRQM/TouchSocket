@@ -13,7 +13,6 @@
 using TouchSocket.Core;
 using TouchSocket.Modbus;
 using TouchSocket.PlcBridges;
-using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
 namespace ModbusPlcBridgeConsoleApp;
@@ -110,13 +109,13 @@ internal class Program
         // 6) 对于串口协议的Modbus设备，我们同样需要先初始化连接器。
         var modbusRtuMaster = new ModbusRtuMaster();
         await modbusRtuMaster.SetupAsync(new TouchSocketConfig()
-             .SetSerialPortOption(new SerialPortOption()
+             .SetSerialPortOption(options =>
              {
-                 BaudRate = 9600,
-                 DataBits = 8,
-                 Parity = System.IO.Ports.Parity.Even,
-                 PortName = "COM2",
-                 StopBits = System.IO.Ports.StopBits.One
+                 options.BaudRate = 9600;
+                 options.DataBits = 8;
+                 options.Parity = System.IO.Ports.Parity.Even;
+                 options.PortName = "COM2";
+                 options.StopBits = System.IO.Ports.StopBits.One;
              }));
         await modbusRtuMaster.ConnectAsync();
 
