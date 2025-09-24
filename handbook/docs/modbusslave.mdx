@@ -6,6 +6,8 @@ title: Modbus从站（Slave）
 import Tag from "@site/src/components/Tag.js";
 import Pro from "@site/src/components/Pro.js";
 import { TouchSocketProModbusDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 ### 定义
 
@@ -14,8 +16,13 @@ import { TouchSocketProModbusDefinition } from "@site/src/components/Definition.
 
 ## 一、说明 <Pro/> 
 
-Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便大家使用。
+`Modbus`是OSI模型第7层上的应用层报文传输协议，它在连接至不同类型总线或网络的设备之间提供客户机/服务器通信。
 
+自从 1979 年出现工业串行链路的事实标准以来，`Modbus`使成千上万的自动化设备能够通信。目前，继续增加对简单而雅观的`Modbus`结构支持。互联网组织能够使TCP/IP栈上的保留系统端口502 访问`Modbus`。
+
+`Modbus`采用主从（Master-Slave）通信架构，其中主站（Master）发起通信请求，从站（Slave）响应主站的请求。在这种架构中，从站作为数据提供者和执行者，负责维护数据存储区域，并响应主站的读写操作。
+
+所以我们开发了这个从站组件，方便大家快速构建`Modbus`从站服务。
 
 ## 二、特点
 
@@ -35,168 +42,58 @@ Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便�
 
 ## 五、支持插件
 
+`ModbusSlave`支持插件机制，可以通过插件对Modbus请求进行拦截和处理。
+
 |  插件方法| 功能 |
 | --- | --- |
 | IModbusSlaveExecutingPlugin | 当有主站请求读写该从站时触发。如果想要拒绝请求，可以通过e.IsPermitOperation = false执行。并且e.ErrorCode可以携带返回错误码。|
 | IModbusSlaveExecutedPlugin | 当有主站完成请求读写该从站时触发 |
 
+### 5.1 插件使用示例
+
+<CustomCodeBlock region="ModbusSlave插件使用示例"/>
+
+:::tip 提示
+
+插件可以用于实现访问控制、数据验证、日志记录、性能监控等功能。通过插件机制，可以在不修改核心代码的情况下，灵活扩展从站的功能。
+
+:::  
+
 ## 六、创建
 
-目前`TouchSokcet.Modbus`从站支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
+目前`TouchSocket.Modbus`从站支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
 
 #### 6.1 创建ModbusTcpSlave
 
-```csharp showLineNumbers
-var slave = new ModbusTcpSlave();
-await slave.SetupAsync(new TouchSocketConfig()
-     //监听端口
-     .SetListenIPHosts(7808)
-     .ConfigurePlugins(a =>
-     {
-         a.AddModbusSlavePoint()//添加一个从站站点
-         .SetSlaveId(1)//设置站点号
-         //.UseIgnoreSlaveId()//忽略站号验证
-         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-     })
-     );
-await slave.StartAsync();
-Console.WriteLine("服务已启动");
-```
+<CustomCodeBlock region="创建ModbusTcpSlave"/>
 
 #### 6.2 创建ModbusUdpSlave
 
-```csharp showLineNumbers
-var slave = new ModbusUdpSlave();
-await slave.SetupAsync(new TouchSocketConfig()
-     //监听端口
-     .SetBindIPHost(7809)
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyModbusSlavePlugin>();
-
-         a.AddModbusSlavePoint()//添加一个从站站点
-         .SetSlaveId(1)//设置站点号
-         .UseIgnoreSlaveId()//忽略站号验证
-         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-     })
-     );
-await slave.StartAsync();
-Console.WriteLine("服务已启动");
-```
+<CustomCodeBlock region="创建ModbusUdpSlave"/>
 
 #### 6.3 创建ModbusRtuSlave
 
-```csharp showLineNumbers
-var slave = new ModbusRtuSlave();
-await slave.SetupAsync(new TouchSocketConfig()
-     //设置串口
-     .SetSerialPortOption(new SerialPortOption()
-     {
-         BaudRate = 9600,
-         DataBits = 8,
-         Parity = System.IO.Ports.Parity.Even,
-         PortName = "COM1",
-         StopBits = System.IO.Ports.StopBits.One
-     })
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyModbusSlavePlugin>();
-
-         a.AddModbusSlavePoint()//添加一个从站站点
-         .SetSlaveId(1)//设置站点号
-                       //.UseIgnoreSlaveId()//如果不调用，默认会进行站号验证
-         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-     })
-     );
-
-await slave.ConnectAsync();
-Console.WriteLine("已连接COM端口");
-```
+<CustomCodeBlock region="创建ModbusRtuSlave"/>
 
 #### 6.4 创建ModbusRtuOverTcpSlave
 
-```csharp showLineNumbers
-var slave = new ModbusRtuOverTcpSlave();
-await slave.SetupAsync(new TouchSocketConfig()
-      //监听端口
-      .SetListenIPHosts(7810)
-      .ConfigurePlugins(a =>
-      {
-          a.Add<MyModbusSlavePlugin>();
-
-          a.AddModbusSlavePoint()//添加一个从站站点
-          .SetSlaveId(1)//设置站点号
-          .UseIgnoreSlaveId()//忽略站号验证
-          .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-      })
-      );
-await slave.StartAsync();
-Console.WriteLine("服务已启动");
-```
+<CustomCodeBlock region="创建ModbusRtuOverTcpSlave"/>
 
 #### 6.5 创建ModbusRtuOverUdpSlave
 
-```csharp showLineNumbers
-var slave = new ModbusRtuOverUdpSlave();
-await slave.SetupAsync(new TouchSocketConfig()
-     //监听端口
-     .SetBindIPHost(7811)
-     .ConfigurePlugins(a =>
-     {
-         a.Add<MyModbusSlavePlugin>();
-
-         a.AddModbusSlavePoint()//添加一个从站站点
-         .SetSlaveId(1)//设置站点号
-         .UseIgnoreSlaveId()//忽略站号验证
-         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-     })
-     );
-await slave.StartAsync();
-Console.WriteLine("服务已启动");
-```
+<CustomCodeBlock region="创建ModbusRtuOverUdpSlave"/>
 
 ## 七、添加多个站点
 
-`Modbus`是一主多从的架构。在实际使用时，一个`ModbusSlave`部署至一个机器（这里不考虑虚拟机），即视为一个从机。但事实上，按照`Modbus`协议，一个`ModbusSlave`可以有多个站点。以`ModbusTcpSlave`为例，他可以通过`IP地址`确定到唯一的设备，同时还可以通过`SlaveId`区分不同的站点。
+`Modbus`是一主多从的架构。在实际使用时，一个`ModbusSlave`部署至一个机器（这里不考虑虚拟机），即视为一个从机。
+
+但事实上，按照`Modbus`协议，一个`ModbusSlave`可以有多个站点。
+
+以`ModbusTcpSlave`为例，他可以通过`IP地址`确定到唯一的设备，同时还可以通过`SlaveId`区分不同的站点。
 
 所以，我们的`ModbusSlave`也可以有多个站点。以`ModbusTcpSlave`为例，具体操作如下：
 
-```csharp {18-28} showLineNumbers
-static ModbusTcpSlave CreateModbusTcpSlave()
-{
-    var service = new ModbusTcpSlave();
-    await service.SetupAsync(new TouchSocketConfig()
-        //监听端口
-        .SetListenIPHosts(7808)
-        .ConfigurePlugins(a =>
-        {
-            a.Add<MyModbusSlavePlugin>();
-
-            //当添加多个站点时，需要禁用IgnoreSlaveId的设定
-
-            a.AddModbusSlavePoint()//添加一个从站站点
-            .SetSlaveId(1)//设置站点号
-            //.UseIgnoreSlaveId()//忽略站号验证
-            .SetModbusDataLocater(new ModbusDataLocater(10,10,10,10));//设置数据区
-
-            a.AddModbusSlavePoint()//再添加一个从站站点
-            .SetSlaveId(2)//设置站点号
-            //.UseIgnoreSlaveId()//忽略站号验证
-            .SetModbusDataLocater(new ModbusDataLocater()//设置数据区
-            {
-                //下列配置表示，起始地址从1000开始，10个长度
-                Coils = new BooleanDataPartition(1000, 10),
-                DiscreteInputs = new BooleanDataPartition(1000, 10),
-                HoldingRegisters = new ShortDataPartition(1000, 10),
-                InputRegisters = new ShortDataPartition(1000, 10)
-            });
-        })
-        );
-    await service.StartAsync();
-    Console.WriteLine("服务已启动");
-    return service;
-}
-```
+<CustomCodeBlock region="创建多站点ModbusTcpSlave"/>
 
 :::caution 警告
 
@@ -212,28 +109,36 @@ static ModbusTcpSlave CreateModbusTcpSlave()
 
 ## 八、本地读写操作
 
+### 8.1 获取IModbusSlavePoint实例
+
 所有的数据区均在`IModbusSlavePoint`中。所以需要先找到`IModbusSlavePoint`实例。
 
 一般的，如果你使用了插件`IModbusSlaveExecutingPlugin`或者`IModbusSlaveExecutedPlugin`。插件的sender即为`IModbusSlavePoint`。
 
 如果你只能访问到`IModbusSlave`接口（例如：`ModbusTcpSlave`），那么你可以通过`ModbusSlave`的`GetSlavePointBySlaveId`方法获取到`IModbusSlavePoint`。
 
-```csharp showLineNumbers
-var modbusSlavePoint= slave.GetSlavePointBySlaveId(slaveId: 1);
-```
+<CustomCodeBlock region="获取ModbusSlavePoint"/>
 
-然后在`IModbusSlavePoint`接口中有`ModbusDataLocater`属性，该属性是`Modbus`数据存储区，即`线圈`、`离散输入`、`保持寄存器`、`输入寄存器`。
+### 8.2 数据区操作
+
+在`IModbusSlavePoint`接口中有`ModbusDataLocater`属性，该属性是`Modbus`数据存储区，包含四个基本数据区域：
+
+- **线圈（Coils）**：可读写的布尔值，对应功能码01、05、15
+- **离散输入（DiscreteInputs）**：只读的布尔值，对应功能码02
+- **保持寄存器（HoldingRegisters）**：可读写的16位寄存器，对应功能码03、06、16
+- **输入寄存器（InputRegisters）**：只读的16位寄存器，对应功能码04
 
 该属性是可读可写的。所以，即使是不同`IModbusSlavePoint`。也可以二次赋值，使其实现更多功能。
 
-同时。可以通过该属性，创建一个本地`ModbusMaster`，用于直接读写。
+### 8.3 创建本地Master进行读写
 
-具体读写操作和[ModbusMaster读写](./modbusmaster.mdx)一致。
+可以通过`ModbusDataLocater`属性，创建一个本地`ModbusMaster`，用于直接读写数据区。
 
-```csharp  showLineNumbers
-var localMaster = modbusSlavePoint.ModbusDataLocater.CreateDataLocaterMaster();
-var coils = localMaster.ReadCoils(0, 1);
-```
+<CustomCodeBlock region="ModbusSlave本地读写操作"/>
+
+### 8.4 更多读写操作
+
+具体读写操作和[ModbusMaster读写](./modbusmaster.mdx)一致，支持以下操作：
 
 :::tip 提示
 
@@ -241,6 +146,13 @@ var coils = localMaster.ReadCoils(0, 1);
 
 :::  
 
+:::caution 注意
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusSlaveConsoleApp)
+本地读写操作直接操作内存数据，不经过网络通信，适用于从站内部的数据处理和业务逻辑。如果需要通过网络与其他设备通信，请使用标准的`ModbusMaster`。
+
+:::  
+
+## 九、示例
+
+<CardLink link="/examples/Modbus/ModbusSlaveConsoleApp"/>
 
