@@ -53,11 +53,8 @@ function Banner()
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
-            <li>
-              支持 .NET Framework 4.5及以上，.NET Standard2.0及以上
-            </li>
-            <li>轻量级设计，最小化依赖包</li>
-            <li>开箱即用，几行代码即可构建网络应用</li>
+            <li>支持 .NET Framework 462及以上，.NET Standard2.0及.NET6.0以上</li>
+            <li>轻量级设计，开箱即用，几行代码即可构建网络应用</li>
             <li>高性能异步通讯，支撑海量并发连接</li>
             <li>丰富的协议支持：TCP、UDP、HTTP、WebSocket、MQTT等</li>
             <li>内置断线重连、心跳检测、流量控制等企业级特性</li>
