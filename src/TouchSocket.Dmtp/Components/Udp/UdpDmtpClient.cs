@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -88,13 +84,13 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     /// 不支持该操作
     /// </summary>
     /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
-    public override Task ResetIdAsync(string id, CancellationToken token)
+    public override Task ResetIdAsync(string id, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
     }
 
-    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory, token);
+        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory, cancellationToken);
     }
 }

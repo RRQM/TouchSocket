@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>  
@@ -30,7 +26,7 @@ public interface IClosableClient
     /// 关闭客户端。  
     /// </summary>  
     /// <param name="msg">关闭时的提示信息。</param>  
-    /// <param name="token">可取消令箭。</param>  
+    /// <param name="cancellationToken">可取消令箭。</param>  
     /// <returns>表示异步操作结果的 <see cref="Task{Result}"/>。</returns>  
-    Task<Result> CloseAsync(string msg, CancellationToken token = default);
+    Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default);
 }

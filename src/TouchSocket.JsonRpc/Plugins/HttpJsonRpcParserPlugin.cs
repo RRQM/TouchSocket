@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -60,12 +58,12 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                     jsonRpcActor = new JsonRpcActor()
                     {
                         Resolver = client.Resolver,
-                        SendAction = async (data, token) =>
+                        SendAction = async (data, cancellationToken) =>
                         {
                             var response = e.Context.Response;
                             response.SetContent(data);
                             response.SetStatusWithSuccess();
-                            await response.AnswerAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await response.AnswerAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         },
                         SerializerConverter = this.SerializerConverter,
                         RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()

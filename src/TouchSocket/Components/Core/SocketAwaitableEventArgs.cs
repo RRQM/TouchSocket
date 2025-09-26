@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
 using System.Threading.Tasks.Sources;
 
@@ -24,21 +23,21 @@ internal abstract class SocketAwaitableEventArgs<TResult> : SocketAsyncEventArgs
 
     public bool RunContinuationsAsynchronously { get => this.m_core.RunContinuationsAsynchronously; set => this.m_core.RunContinuationsAsynchronously = value; }
 
-    TResult IValueTaskSource<TResult>.GetResult(short token)
+    TResult IValueTaskSource<TResult>.GetResult(short cancellationToken)
     {
-        return this.m_core.GetResult(token);
+        return this.m_core.GetResult(cancellationToken);
     }
 
-    ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short token)
+    ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short cancellationToken)
     {
-        return this.m_core.GetStatus(token);
+        return this.m_core.GetStatus(cancellationToken);
     }
 
-    void IValueTaskSource<TResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+    void IValueTaskSource<TResult>.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
     {
         try
         {
-            this.m_core.OnCompleted(continuation, state, token, flags);
+            this.m_core.OnCompleted(continuation, state, cancellationToken, flags);
         }
         catch (Exception ex)
         {

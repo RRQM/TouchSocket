@@ -10,13 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using TouchSocket.Resources;
 

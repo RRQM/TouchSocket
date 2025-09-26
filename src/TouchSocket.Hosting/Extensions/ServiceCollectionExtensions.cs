@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
 using TouchSocket.Hosting.Sockets.HostService;

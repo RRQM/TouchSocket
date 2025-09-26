@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -394,7 +388,7 @@ public static class ClientExtension
     /// <summary>
     /// 指示是否暂停重新连接。
     /// </summary>
-    [GeneratorProperty(TargetType =typeof(IDependencyClient))]
+    [GeneratorProperty(TargetType = typeof(IDependencyClient))]
     public static readonly DependencyProperty<bool> PauseReconnectionProperty = new DependencyProperty<bool>("PauseReconnection", false);
     #endregion
 }

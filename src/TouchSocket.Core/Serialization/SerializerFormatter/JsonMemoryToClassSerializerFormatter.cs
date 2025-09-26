@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
-using System.Text;
 
 namespace TouchSocket.Core;
 

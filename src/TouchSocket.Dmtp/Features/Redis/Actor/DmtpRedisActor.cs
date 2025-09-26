@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis;
@@ -43,7 +39,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; }
 
     /// <inheritdoc/>
-    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken token)
+    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken cancellationToken)
     {
         var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
@@ -53,17 +49,17 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         {
             cache.Value = this.Converter.Serialize(null, value);
         }
-        return await this.AddCacheAsync(cache,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.AddCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken token)
+    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken cancellationToken)
     {
-        return !await this.ContainsCacheAsync(entity.Key,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return !await this.ContainsCacheAsync(entity.Key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task ClearCacheAsync(CancellationToken token)
+    public async Task ClearCacheAsync(CancellationToken cancellationToken)
     {
         var package = new RedisRequestWaitPackage
         {
@@ -79,7 +75,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.Success:
                     {
@@ -107,7 +103,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ContainsCacheAsync(string key, CancellationToken token = default)
+    public async Task<bool> ContainsCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -129,7 +125,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.Success:
                     {
@@ -152,9 +148,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default)
+    public async Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken = default)
     {
-        var cache = await this.GetCacheAsync(key, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var cache = await this.GetCacheAsync(key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         if (cache != null)
         {
@@ -173,7 +169,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<ICacheEntry<string, ReadOnlyMemory<byte>>> GetCacheAsync(string key, CancellationToken token = default)
+    public async Task<ICacheEntry<string, ReadOnlyMemory<byte>>> GetCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -195,7 +191,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.Success:
                     {
@@ -314,7 +310,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<bool> RemoveCacheAsync(string key, CancellationToken token = default)
+    public async Task<bool> RemoveCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -334,9 +330,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.Success:
                     {
@@ -359,18 +355,18 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken token = default)
+    public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken cancellationToken = default)
     {
         var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
             Duration = TimeSpan.FromSeconds(duration),
             Value = value is ReadOnlyMemory<byte> bytes ? bytes : this.Converter.Serialize(null, value)
         };
-        return await this.SetCacheAsync(cache, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.SetCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> SetCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> cache, CancellationToken token = default)
+    public async Task<bool> SetCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> cache, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(cache.Key))
         {
@@ -399,7 +395,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 case WaitDataStatus.Success:
                     {

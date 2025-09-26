@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
 namespace TouchSocket.Http;
 
 /// <summary>

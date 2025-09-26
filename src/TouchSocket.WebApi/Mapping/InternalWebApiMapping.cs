@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using TouchSocket.Http;
 using TouchSocket.Rpc;

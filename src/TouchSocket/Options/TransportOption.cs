@@ -54,8 +54,8 @@ public class TransportOption
                 pool: null,
                 readerScheduler: null,
                 writerScheduler: null,
-                pauseWriterThreshold: 1024 * 1024 * 1024,
-                resumeWriterThreshold: 1024 * 1024 * 512,
+                pauseWriterThreshold: -1,
+                resumeWriterThreshold: -1,
                 minimumSegmentSize: -1,
                 useSynchronizationContext: true);
     }

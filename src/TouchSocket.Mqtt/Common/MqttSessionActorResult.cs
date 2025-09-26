@@ -12,7 +12,7 @@
 
 namespace TouchSocket.Mqtt;
 
-public struct MqttSessionActorResult
+public readonly struct MqttSessionActorResult
 {
     public MqttSessionActorResult(MqttSessionActor sessionActor, bool isNew)
     {

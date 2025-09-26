@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
@@ -48,45 +44,45 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     public string Version => this.m_webSocket.Version;
 
     /// <inheritdoc/>
-    public Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default)
+    public Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.CloseAsync(closeStatus, statusDescription, token);
+        return this.m_webSocket.CloseAsync(closeStatus, statusDescription, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<Result> PingAsync(CancellationToken token = default)
+    public Task<Result> PingAsync(CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.PingAsync(token);
+        return this.m_webSocket.PingAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<Result> PongAsync(CancellationToken token = default)
+    public Task<Result> PongAsync(CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.PongAsync(token);
+        return this.m_webSocket.PongAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
     {
-        return this.m_webSocket.ReadAsync(token);
+        return this.m_webSocket.ReadAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
+    public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.SendAsync(dataFrame, endOfMessage, token);
+        return this.m_webSocket.SendAsync(dataFrame, endOfMessage, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
+    public Task SendAsync(string text, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.SendAsync(text, endOfMessage, token);
+        return this.m_webSocket.SendAsync(text, endOfMessage, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
+    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
-        return this.m_webSocket.SendAsync(memory, endOfMessage, token);
+        return this.m_webSocket.SendAsync(memory, endOfMessage, cancellationToken);
     }
 
     #region Connect
@@ -94,13 +90,13 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <summary>
     /// 异步建立 WebSocket 连接。
     /// </summary>
-    /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
+    /// <param name="cancellationToken">用于取消操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示异步操作的 <see cref="Task"/>。</returns>
-    protected virtual async Task ProtectedWebSocketConnectAsync(CancellationToken token)
+    protected virtual async Task ProtectedWebSocketConnectAsync(CancellationToken cancellationToken)
     {
         if (!base.Online)
         {
-            await this.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         var option = this.Config.WebSocketOption;
@@ -112,7 +108,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
 
         //这里不要释放responseResult，主要是这是http最后一次请求，后续不会再用到http了。
         //如果释放了，会导致响应数据在PrivateOnConnected中失效。
-        var responseResult = await this.ProtectedRequestAsync(request, token)
+        var responseResult = await this.ProtectedRequestAsync(request, cancellationToken)
             .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var response = responseResult.Response;
         if (response.StatusCode != 101)
@@ -122,7 +118,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         var accept = response.Headers.Get("sec-websocket-accept").Trim();
         if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            await base.CloseAsync("WS服务器返回的应答3码不正确", token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync("WS服务器返回的应答3码不正确", cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
         }
         this.InitWebSocket();
@@ -264,18 +260,18 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
 
     private async Task WebSocketReceiveLoopAsync(ITransport transport)
     {
-        var token = transport.ClosedToken;
+        var cancellationToken = transport.ClosedToken;
 
-        await transport.ReadLocker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             while (true)
             {
-                if (this.DisposedValue || token.IsCancellationRequested)
+                if (this.DisposedValue || cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
-                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await transport.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.Buffer.Length == 0)
                 {
                     break;

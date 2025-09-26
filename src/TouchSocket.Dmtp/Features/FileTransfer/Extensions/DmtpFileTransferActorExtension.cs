@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.FileTransfer;
@@ -209,7 +206,7 @@ public static class DmtpFileTransferActorExtension
             var result1 = locator.TryFinished();
             if (actor.DmtpActor.Online)
             {
-                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata,  fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             return result1.IsSuccess ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
@@ -259,7 +256,7 @@ public static class DmtpFileTransferActorExtension
             fileOperator.SetLength(fileOperator.ResourceInfo.FileInfo.Length);
 
             using var locator = new FileResourceLocator(fileOperator.ResourceInfo);
-            var resultInfo = await actor.PushFileResourceInfoAsync(targetId, fileOperator.SavePath, locator, fileOperator.Metadata,  fileOperator.Token);
+            var resultInfo = await actor.PushFileResourceInfoAsync(targetId, fileOperator.SavePath, locator, fileOperator.Metadata, fileOperator.Token);
             if (!resultInfo.IsSuccess)
             {
                 return fileOperator.SetResult(resultInfo);
@@ -297,7 +294,7 @@ public static class DmtpFileTransferActorExtension
                     }
                     try
                     {
-                        var result = await actor.PushFileSectionAsync(targetId, locator, fileSection,fileOperator.Token);
+                        var result = await actor.PushFileSectionAsync(targetId, locator, fileSection, fileOperator.Token);
                         if (result.IsSuccess)
                         {
                             await fileOperator.AddFlowAsync(fileSection.Length);

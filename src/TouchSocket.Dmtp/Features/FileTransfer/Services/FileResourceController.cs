@@ -10,13 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer;
 

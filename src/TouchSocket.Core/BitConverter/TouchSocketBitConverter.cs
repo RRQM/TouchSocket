@@ -10,8 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using Newtonsoft.Json.Linq;
 using System.Buffers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -171,7 +172,7 @@ public sealed class TouchSocketBitConverter
         }
         fixed (byte* p = &span[0])
         {
-            if (this.IsSameOfSet()||size==1)
+            if (this.IsSameOfSet() || size == 1)
             {
                 return Unsafe.Read<T>(p);
             }
@@ -920,10 +921,11 @@ public sealed class TouchSocketBitConverter
             for (var j = 0; j < bytes.Length; j++)
             {
                 var sourceByte = bytes[j];
-
+                var accessor = new BitAccessor<byte>(ref sourceByte);
+                
                 for (var bit = 0; bit < 8; bit++)
                 {
-                    var b = sourceByte.GetBit(bit);
+                    var b = accessor.Get(bit);
                     targetSpan[targetIndex] = Unsafe.As<bool, TTarget>(ref b);
                     targetIndex++;
                 }

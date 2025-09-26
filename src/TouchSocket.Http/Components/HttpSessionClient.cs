@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -36,9 +32,9 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     #region Send
 
-    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken token)
+    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.ProtectedSendAsync(memory, token);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     #endregion Send

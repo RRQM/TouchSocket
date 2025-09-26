@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -187,7 +183,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     #region 断开操作
 
     /// <inheritdoc/>
-    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -200,7 +196,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             var transport = this.m_transport;
             if (transport != null)
             {
-                await transport.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
@@ -268,18 +264,18 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <param name="transport">传输层对象</param>
     protected virtual async Task ReceiveLoopAsync(ITransport transport)
     {
-        var token = transport.ClosedToken;
+        var cancellationToken = transport.ClosedToken;
 
-        await transport.ReadLocker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             while (true)
             {
-                if (this.DisposedValue || token.IsCancellationRequested)
+                if (this.DisposedValue || cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
-                var result = await transport.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await transport.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.Buffer.Length == 0)
                 {
                     break;
@@ -457,9 +453,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
     /// <param name="memory">待发送的只读字节内存块。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个异步任务，表示发送操作。</returns>
-    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
@@ -470,19 +466,19 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Writer.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
         finally
@@ -498,9 +494,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
     /// </summary>
     /// <param name="requestInfo">要发送的请求信息。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
-    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
+    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         // 检查是否具备发送请求的条件，如果不具备则抛出异常
         this.ThrowIfCannotSendRequestInfo();
@@ -512,12 +508,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {

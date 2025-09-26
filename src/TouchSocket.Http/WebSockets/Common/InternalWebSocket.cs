@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
@@ -53,11 +48,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
     public IResolver Resolver => this.m_isServer ? this.m_httpSocketClient.Resolver : this.m_httpClientBase.Resolver;
     public string Version { get; set; }
 
-    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, token);
+            return await this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -65,7 +60,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken token = default)
+    public async Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken = default)
     {
         if (!this.Online)
         {
@@ -85,7 +80,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
                     WriterExtension.WriteNormalString(ref byteBlock, statusDescription, Encoding.UTF8);
                 }
                 var frame = new WSDataFrame(byteBlock.Memory) { FIN = true, Opcode = WSDataType.Close };
-                await this.SendAsync(frame, true, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAsync(frame, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -94,11 +89,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
             if (this.m_isServer)
             {
-                await this.m_httpSocketClient.CloseAsync(statusDescription, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_httpSocketClient.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                await this.m_httpClientBase.CloseAsync(statusDescription, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             return Result.Success;
         }
@@ -108,11 +103,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task<Result> PingAsync(CancellationToken token = default)
+    public async Task<Result> PingAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, token: token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -121,11 +116,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task<Result> PongAsync(CancellationToken token = default)
+    public async Task<Result> PongAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, token: token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -136,14 +131,14 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
     #region 发送
 
-    public async Task SendAsync(string text, bool endOfMessage = true, CancellationToken token = default)
+    public async Task SendAsync(string text, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         var byteBlock = new ByteBlock(1024);
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, text, Encoding.UTF8);
             var frame = new WSDataFrame(byteBlock.Memory) { FIN = endOfMessage, Opcode = WSDataType.Text };
-            await this.SendAsync(frame, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -151,13 +146,13 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken token = default)
+    public async Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         var frame = new WSDataFrame(memory) { FIN = endOfMessage, Opcode = WSDataType.Binary };
-        await this.SendAsync(frame, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    public async Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken token = default)
+    public async Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         WSDataType dataType;
         if (this.m_isCont)
@@ -184,12 +179,12 @@ internal sealed partial class InternalWebSocket : IWebSocket
             if (this.m_isServer)
             {
                 dataFrame.BuildResponse(ref byteBlock);
-                await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 dataFrame.BuildRequest(ref byteBlock);
-                await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
         finally

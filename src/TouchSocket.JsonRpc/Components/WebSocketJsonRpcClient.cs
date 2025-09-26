@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
 
@@ -51,9 +47,9 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(memory, WebSocketMessageType.Text, true, token);
+        return base.ProtectedSendAsync(memory, WebSocketMessageType.Text, true, cancellationToken);
     }
 
     #endregion JsonRpcActor

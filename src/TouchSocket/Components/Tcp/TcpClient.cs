@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 
@@ -111,12 +106,12 @@ public class TcpClient : TcpClientBase, ITcpClient
 
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -163,15 +158,15 @@ public class TcpClient : TcpClientBase, ITcpClient
     #region 异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(memory, token);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo, token);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
     #endregion 异步发送
 }

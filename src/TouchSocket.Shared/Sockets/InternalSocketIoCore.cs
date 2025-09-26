@@ -123,12 +123,12 @@ namespace TouchSocket.SocketIo
             await this.SendAsync(dataItems);
         }
 
-        public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, int millisecondsTimeout, CancellationToken token)
+        public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, int millisecondsTimeout, CancellationToken cancellationToken)
         {
             var waitData = this.m_waitHandlePoolForEmit.GetWaitDataAsync(out var sign);
             var dataItems = this.SerializeEvent(eventName, sign, this.Namespace, data);
             await this.SendAsync(dataItems);
-            waitData.SetCancellationToken(token);
+            waitData.SetCancellationToken(cancellationToken);
             (await waitData.WaitAsync(millisecondsTimeout)).ThrowIfNotRunning();
             return new InternalSocketIoResponse(waitData.WaitResult, this);
         }

@@ -13,6 +13,7 @@
 using System.Reflection;
 
 namespace TouchSocket.Core;
+
 internal class ReflectDynamicMethodInfo : DynamicMethodInfoBase
 {
     private readonly MethodInfo m_method;

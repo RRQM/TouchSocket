@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -76,9 +70,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken)
     {
-        await writeFunc(this.m_memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writeFunc(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

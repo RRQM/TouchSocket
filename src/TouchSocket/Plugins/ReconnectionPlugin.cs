@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -32,11 +28,11 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     /// </summary>
     public ReconnectionPlugin()
     {
-        this.ActionForConnect = async (c, token) =>
+        this.ActionForConnect = async (c, cancellationToken) =>
         {
             try
             {
-                await c.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await c.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
             catch
@@ -131,10 +127,10 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
         Func<TClient, int, Exception, bool> failCallback = default,
         Action<TClient> successCallback = default)
     {
-        this.SetConnectAction(async (client, token) =>
+        this.SetConnectAction(async (client, cancellationToken) =>
         {
             var tryT = 0;
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -144,8 +140,8 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     }
                     else
                     {
-                        await Task.Delay(1000, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await client.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await Task.Delay(1000, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
 
                     successCallback?.Invoke(client);
@@ -153,7 +149,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 }
                 catch (Exception ex)
                 {
-                    await Task.Delay(sleepTime, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await Task.Delay(sleepTime, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (failCallback?.Invoke(client, ++tryT, ex) != true)
                     {
                         return true;
@@ -175,7 +171,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     /// <returns></returns>
     public ReconnectionPlugin<TClient> SetConnectAction(int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<TClient> successCallback = null)
     {
-        this.SetConnectAction(async (client, token) =>
+        this.SetConnectAction(async (client, cancellationToken) =>
         {
             var tryT = tryCount;
             while (tryCount < 0 || tryT-- > 0)
@@ -188,8 +184,8 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     }
                     else
                     {
-                        await Task.Delay(1000, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await client.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await Task.Delay(1000, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     successCallback?.Invoke(client);
                     return true;
@@ -200,7 +196,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     {
                         client.Logger?.Exception(this, ex);
                     }
-                    await Task.Delay(sleepTime, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await Task.Delay(sleepTime, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             return true;
@@ -237,10 +233,10 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     /// <returns>表示异步操作的任务。</returns>
     protected async Task ExecuteConnectLoop(TClient client)
     {
-        var token = this.m_cts.Token;
-        while (!token.IsCancellationRequested)
+        var cancellationToken = this.m_cts.Token;
+        while (!cancellationToken.IsCancellationRequested)
         {
-            if (await this.ActionForConnect.Invoke(client, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.ActionForConnect.Invoke(client, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 return;
             }

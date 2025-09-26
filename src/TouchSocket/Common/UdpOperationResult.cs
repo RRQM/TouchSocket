@@ -14,6 +14,7 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace TouchSocket.Sockets;
+
 internal readonly struct UdpOperationResult
 {
     public UdpOperationResult(int bytesTransferred, EndPoint remoteEndPoint, SocketError socketError, IPPacketInformation receiveMessageFromPacketInfo)

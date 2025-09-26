@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Rpc;
 
@@ -232,7 +228,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
     }
 
-    private async Task CanceledInvokeAsync(CanceledPackage canceled,CancellationToken token)
+    private async Task CanceledInvokeAsync(CanceledPackage canceled, CancellationToken cancellationToken)
     {
         using (var byteBlock = new ByteBlock(1024 * 64))
         {
@@ -241,7 +237,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
             try
             {
-                await this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -299,7 +295,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                 //调用方不关心结果
                 return;
             }
-            else if (rpcMethod != null && rpcMethod.HasCallContext)
+            else
             {
                 this.m_callContextDic.TryRemove(rpcRequestPackage.Sign, out _);
             }
@@ -391,12 +387,12 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     {
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        var token = invokeOption.Token;
+        var cancellationToken = invokeOption.Token;
         CancellationTokenSource cts = null;
-        if (!token.CanBeCanceled)
+        if (!cancellationToken.CanBeCanceled)
         {
-            cts=new CancellationTokenSource(invokeOption.Timeout);
-            token = cts.Token;
+            cts = new CancellationTokenSource(invokeOption.Timeout);
+            cancellationToken = cts.Token;
         }
         var rpcPackage = new DmtpRpcRequestPackage(invokeKey, invokeOption, parameters, returnType, this.m_serializationSelector)
         {
@@ -426,15 +422,15 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     }
                 case FeedbackType.WaitSend:
                     {
-                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                         return returnType?.GetDefault();
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        var waitDataStatus = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
-                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         ThrowExceptionIfNotSetRunning(waitDataStatus);
                         var resultRpcPackage = (DmtpRpcResponsePackage)waitData.CompletedData;
@@ -467,12 +463,12 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        var token = invokeOption.Token;
+        var cancellationToken = invokeOption.Token;
         CancellationTokenSource cts = null;
-        if (!token.CanBeCanceled)
+        if (!cancellationToken.CanBeCanceled)
         {
             cts = new CancellationTokenSource(invokeOption.Timeout);
-            token = cts.Token;
+            cancellationToken = cts.Token;
         }
 
         var rpcPackage = new DmtpRpcRequestPackage(invokeKey, invokeOption, parameters, returnType, this.m_serializationSelector)
@@ -510,15 +506,15 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     }
                 case FeedbackType.WaitSend:
                     {
-                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        ThrowExceptionIfNotSetRunning(await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                         return returnType?.GetDefault();
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        var waitDataStatus = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
-                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
 
                         ThrowExceptionIfNotSetRunning(waitDataStatus);

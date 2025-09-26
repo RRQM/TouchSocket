@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -49,9 +45,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     #region 连接
 
     /// <inheritdoc/>
-    public override async Task ConnectAsync(CancellationToken token)
+    public override async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_connectionSemaphore.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_connectionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (this.Online)
@@ -61,7 +57,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
             if (!base.Online)
             {
-                await base.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
@@ -84,7 +80,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
             ThrowHelper.ThrowArgumentNullExceptionIf(dmtpOption, nameof(dmtpOption));
 
-            await this.m_dmtpActor.ConnectAsync(dmtpOption, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -108,7 +104,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -121,10 +117,10 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
                 await dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 关闭IDmtpActor对象
-                await dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
         }
@@ -135,9 +131,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     }
 
     /// <inheritdoc/>
-    public Task ResetIdAsync(string newId, CancellationToken token)
+    public Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId, token);
+        return this.m_dmtpActor.ResetIdAsync(newId, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -204,9 +200,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         return this.OnRouting(e);
     }
 
-    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 内部委托绑定

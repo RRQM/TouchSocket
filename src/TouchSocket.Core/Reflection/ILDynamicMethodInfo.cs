@@ -10,11 +10,11 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace TouchSocket.Core;
+
 internal class ILDynamicMethodInfo : DynamicMethodInfoBase
 {
     private readonly Func<object, object[], object> m_func;

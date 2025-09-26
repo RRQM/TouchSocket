@@ -29,6 +29,12 @@ public class SerialPortOption
     /// </summary>
     public int DataBits { get; set; } = 8;
 
+    ///<inheritdoc cref = "SerialPort.DtrEnable" />
+    public bool DtrEnable { get; set; }
+
+    ///<inheritdoc cref = "SerialPort.Handshake" />
+    public Handshake Handshake { get; set; }
+
     /// <summary>
     /// 校验位
     /// </summary>
@@ -39,25 +45,13 @@ public class SerialPortOption
     /// </summary>
     public string PortName { get; set; } = "COM1";
 
-    /// <summary>
-    /// 停止位
-    /// </summary>
-    public StopBits StopBits { get; set; } = StopBits.One;
-
-    ///<inheritdoc cref = "SerialPort.Handshake" />
-    public Handshake Handshake { get; set; }
-
-    ///<inheritdoc cref = "SerialPort.DtrEnable" />
-    public bool DtrEnable { get; set; }
-
     ///<inheritdoc cref = "SerialPort.RtsEnable" />
     public bool RtsEnable { get; set; }
 
     /// <summary>
-    /// 流异步操作
+    /// 停止位
     /// </summary>
-    public bool StreamAsync { get; set; }
-
+    public StopBits StopBits { get; set; } = StopBits.One;
     /// <inheritdoc/>
     public override string ToString()
     {

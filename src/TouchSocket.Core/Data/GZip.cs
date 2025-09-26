@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.IO;
 using System.IO.Compression;
 
 namespace TouchSocket.Core;
@@ -42,7 +40,7 @@ public static partial class GZip
             gZipStream.Close();
         }
     }
-    
+
     /// <summary>
     /// 将字节跨度压缩并写入到字节写入器中。
     /// </summary>
@@ -74,7 +72,7 @@ public static partial class GZip
     {
         Compress(byteBlock.AsStream(), span);
     }
-    
+
     /// <summary>
     /// 压缩字节跨度并返回压缩后的数据。
     /// </summary>

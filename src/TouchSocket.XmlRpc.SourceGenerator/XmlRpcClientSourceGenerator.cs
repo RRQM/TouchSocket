@@ -18,6 +18,7 @@ using System.Linq;
 using TouchSocket.Rpc;
 
 namespace TouchSocket;
+
 [Generator]
 public class XmlRpcClientSourceGenerator : IIncrementalGenerator
 {

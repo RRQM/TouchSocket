@@ -180,7 +180,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token = default)
+    public override async Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -482,25 +482,25 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// 异步发送数据，使用提供的内存数据。
     /// </summary>
     /// <param name="memory">要发送的字节数据的内存段。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
-    protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传递目的端点和内存数据。
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory, token);
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken);
     }
 
     /// <summary>
     /// 异步发送数据，使用提供的请求信息。
     /// </summary>
     /// <param name="requestInfo">包含要发送数据的请求信息的对象。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
-    protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken token)
+    protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         this.ThrowIfRemoteIPHostNull();
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo, token);
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向默认远程异步发送
@@ -513,14 +513,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的目标端点。</param>
     /// <param name="memory">待发送的字节数据。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的结果。</returns>
-    protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         // 根据m_dataHandlingAdapter是否已设置，选择不同的发送方式
         return this.m_dataHandlingAdapter == null
-            ? this.ProtectedDefaultSendAsync(endPoint, memory, token) // 使用默认发送方式
-            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory, token); // 通过适配器发送数据
+            ? this.ProtectedDefaultSendAsync(endPoint, memory, cancellationToken) // 使用默认发送方式
+            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory, cancellationToken); // 通过适配器发送数据
     }
 
     /// <summary>
@@ -529,14 +529,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的目标端点。</param>
     /// <param name="requestInfo">待发送的请求信息。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的结果。</returns>
-    protected virtual Task ProtectedSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token)
+    protected virtual Task ProtectedSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         // 检查是否具备发送请求信息的能力
         this.ThrowIfCannotSendRequestInfo();
         // 通过适配器发送请求信息
-        return this.m_dataHandlingAdapter.SendInputAsync(endPoint, requestInfo, token);
+        return this.m_dataHandlingAdapter.SendInputAsync(endPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向设置的远程异步发送
@@ -548,16 +548,16 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// 此方法提供了一种默认的发送方式，确保只有在可以发送且远程IP主机不为空时才尝试发送数据。
     /// </summary>
     /// <param name="memory">要发送的只读字节内存。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个等待任务，表示异步操作。</returns>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         // 如果不能发送数据，则抛出异常。
         this.ThrowIfCannotSend();
         // 如果远程IP主机为空，则抛出异常。
         this.ThrowIfRemoteIPHostNull();
         // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
-        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
 #if NET6_0_OR_GREATER
@@ -568,7 +568,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的端点。</param>
     /// <param name="memory">待发送的数据，以只读内存块的形式。</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken"></param>
     /// <remarks>
     /// <para>在执行实际的数据发送之前，方法会：</para>
     /// <list type="bullet">
@@ -579,12 +579,12 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <para>之后，使用<see cref="Socket.SendToAsync(ArraySegment{byte}, SocketFlags, EndPoint)"/>方法异步地将数据发送到指定的端点。</para>
     /// <para>发送完成后，更新最后一次发送时间（<see cref="m_lastSendTime"/>）为当前的UTC时间。</para>
     /// </remarks>
-    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
         this.ThrowIfCannotSend();
         await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint, token);
+        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint, cancellationToken);
         this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
 #else
@@ -594,14 +594,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的端点。</param>
     /// <param name="memory">待发送的数据，以只读内存形式提供。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <remarks>
     /// 此方法为异步发送操作提供保护措施，确保数据在发送前进行必要的检查，
     /// 并通过UDP协议进行发送。
     /// </remarks>
-    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        token.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         // 检查是否具备发送条件，如果不具备则抛出异常。
         this.ThrowIfCannotSend();
         // 检查对象是否已被释放，如果已被释放则抛出异常。

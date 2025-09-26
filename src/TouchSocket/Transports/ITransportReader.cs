@@ -11,7 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System.IO.Pipelines;
-using System.Threading;
 
 namespace TouchSocket.Sockets;
 

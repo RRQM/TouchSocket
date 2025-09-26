@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -48,15 +44,15 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向默认远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(memory, token);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo, token);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
 
     #endregion 向默认远程异步发送
@@ -64,15 +60,15 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向设置的远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(endPoint, memory, token);
+        return this.ProtectedSendAsync(endPoint, memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token = default)
+    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(endPoint, requestInfo, token);
+        return this.ProtectedSendAsync(endPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向设置的远程异步发送

@@ -10,11 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 

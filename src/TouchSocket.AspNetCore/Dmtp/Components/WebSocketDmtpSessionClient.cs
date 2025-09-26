@@ -89,7 +89,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
     /// <inheritdoc/>
-    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -106,10 +106,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
                 await dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 // 关闭IDmtpActor对象
-                await dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            await this.m_client.SafeCloseClientAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
         }
@@ -120,7 +120,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     }
 
     /// <inheritdoc/>
-    public async Task ResetIdAsync(string newId, CancellationToken token)
+    public async Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(newId, nameof(newId));
         if (this.m_id == newId)
@@ -128,7 +128,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             return;
         }
 
-        await this.DmtpActor.ResetIdAsync(newId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.DmtpActor.ResetIdAsync(newId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await this.ProtectedResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -186,10 +186,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
     internal async Task Start(WebSocket client, HttpContext context)
     {
-        var token = context.RequestAborted;
+        var cancellationToken = context.RequestAborted;
         this.m_client = client;
         this.m_httpContext = context;
-        await this.ReceiveLoopAsync(client, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ReceiveLoopAsync(client, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_service.TryRemove(this.m_id, out _);
     }
 
@@ -280,12 +280,12 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         }
     }
 
-    private async Task ReceiveLoopAsync(WebSocket client, CancellationToken token)
+    private async Task ReceiveLoopAsync(WebSocket client, CancellationToken cancellationToken)
     {
         try
         {
             SegmentedBytesWriter writer = default;
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -295,15 +295,15 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
                     }
                     writer ??= new SegmentedBytesWriter(1024 * 64);
                     var segment = writer.GetMemory(1024 * 64).GetArray();
-                    var result = await client.ReceiveAsync(segment, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await client.ReceiveAsync(segment, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         try
                         {
-                            if (!token.IsCancellationRequested)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         catch
@@ -376,9 +376,9 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         return this.OnRouting(e);
     }
 
-    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_sentCounter.Increment(memory.Length);
     }
 

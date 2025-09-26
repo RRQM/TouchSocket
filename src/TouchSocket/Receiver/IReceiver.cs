@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 
@@ -27,7 +23,7 @@ public interface IReceiver<TResult> : IDisposableObject where TResult : IReceive
     /// <summary>
     /// 异步读取操作。
     /// </summary>
-    /// <param name="token">用于取消异步读取操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消异步读取操作的取消令牌。</param>
     /// <returns>一个<see cref="ValueTask{TResult}"/>，其结果是异步读取的数据。</returns>
-    ValueTask<TResult> ReadAsync(CancellationToken token);
+    ValueTask<TResult> ReadAsync(CancellationToken cancellationToken);
 }

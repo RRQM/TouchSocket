@@ -10,11 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -250,7 +246,7 @@ public class AsyncAutoResetEvent
         /// </summary>
         /// <param name="owner">The event that is initializing this value.</param>
         /// <param name="allowInliningContinuations"><see langword="true" /> to allow continuations to be inlined upon the completer's callstack.</param>
-        /// <param name="cancellationToken">The cancellation token associated with the waiter.</param>
+        /// <param name="cancellationToken">The cancellation cancellationToken associated with the waiter.</param>
         internal WaiterCompletionSource(AsyncAutoResetEvent owner, bool allowInliningContinuations, CancellationToken cancellationToken)
             : base(allowInliningContinuations)
         {

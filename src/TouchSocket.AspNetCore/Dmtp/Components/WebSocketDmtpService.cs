@@ -11,11 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -43,7 +38,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
@@ -54,7 +49,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -120,7 +115,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
                 }
             }
 
-            client.InitDmtpActor(allowRoute,FindDmtpActor);
+            client.InitDmtpActor(allowRoute, FindDmtpActor);
             await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
@@ -195,7 +190,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     /// </summary>
     /// <returns>异步任务。</returns>
     /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
-    public override Task<Result> StopAsync(CancellationToken token = default)
+    public override Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("此服务的生命周期跟随主Host");
     }

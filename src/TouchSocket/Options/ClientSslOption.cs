@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
 namespace TouchSocket.Sockets;
 
 /// <summary>

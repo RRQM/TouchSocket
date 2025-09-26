@@ -10,14 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -61,12 +53,12 @@ public static partial class HttpExtensions
     /// </summary>
     /// <param name="httpBase">HttpBase 实例，用于发起 HTTP 请求。</param>
     /// <param name="encoding">编码格式</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
-    public static async Task<string> GetBodyAsync(this HttpBase httpBase, Encoding encoding, CancellationToken token = default)
+    public static async Task<string> GetBodyAsync(this HttpBase httpBase, Encoding encoding, CancellationToken cancellationToken = default)
     {
         // 异步获取 HTTP 响应的内容作为字节数组
-        var bytes = await httpBase.GetContentAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var bytes = await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         // 如果字节数组为空，则返回 null，否则使用 UTF-8 编码将字节数组转换为字符串并返回
         return bytes.IsEmpty ? null : bytes.Span.ToString(encoding);
     }
@@ -75,11 +67,11 @@ public static partial class HttpExtensions
     /// 异步获取utf8编码的 HTTP 请求的主体内容。
     /// </summary>
     /// <param name="httpBase">HttpBase 实例，用于发起 HTTP 请求。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回主体内容的字符串表示，如果内容为空则返回 null。</returns>
-    public static Task<string> GetBodyAsync(this HttpBase httpBase, CancellationToken token = default)
+    public static Task<string> GetBodyAsync(this HttpBase httpBase, CancellationToken cancellationToken = default)
     {
-        return GetBodyAsync(httpBase, Encoding.UTF8, token);
+        return GetBodyAsync(httpBase, Encoding.UTF8, cancellationToken);
     }
 
     /// <summary>

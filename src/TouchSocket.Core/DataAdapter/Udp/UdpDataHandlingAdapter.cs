@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -52,15 +49,15 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <param name="endPoint">要发送数据的端点。</param>
     /// <param name="memory">包含要发送的数据的只读内存。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示发送操作。</returns>
     /// <remarks>
     /// 此方法是一个异步操作，用于向指定的端点发送输入数据。
     /// 它使用PreviewSendAsync方法来执行实际的发送操作。
     /// </remarks>
-    public Task SendInputAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public Task SendInputAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.PreviewSendAsync(endPoint, memory, token);
+        return this.PreviewSendAsync(endPoint, memory, cancellationToken);
     }
 
     /// <summary>
@@ -68,10 +65,10 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <param name="endPoint"></param>
     /// <param name="requestInfo"></param>
-    /// <param name="token">可取消令箭</param>
-    public Task SendInputAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token)
+    /// <param name="cancellationToken">可取消令箭</param>
+    public Task SendInputAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        return this.PreviewSendAsync(endPoint, requestInfo, token);
+        return this.PreviewSendAsync(endPoint, requestInfo, cancellationToken);
     }
     #endregion SendInputAsync
 
@@ -93,11 +90,11 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <param name="endPoint">目标端点，表示数据发送的目的地址</param>
     /// <param name="memory">已经经过预先处理的字节数据，以 ReadOnlyMemory 方式传递以提高性能</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个 Task 对象，表示异步操作的完成</returns>
-    protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.SendCallBackAsync.Invoke(endPoint, memory, token);
+        return this.SendCallBackAsync.Invoke(endPoint, memory, cancellationToken);
     }
     /// <summary>
     /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(EndPoint,IByteBlockReader, IRequestInfo)"/>处理数据
@@ -114,8 +111,8 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <param name="endPoint"></param>
     /// <param name="requestInfo"></param>
-    /// <param name="token">可取消令箭</param>
-    protected virtual async Task PreviewSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken token)
+    /// <param name="cancellationToken">可取消令箭</param>
+    protected virtual async Task PreviewSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
 
@@ -125,7 +122,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
         try
         {
             requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(endPoint, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -138,11 +135,11 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <param name="endPoint">数据发送的目标端点。</param>
     /// <param name="memory">待发送的字节数据内存。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个表示异步操作完成的 <see cref="Task"/> 对象。</returns>
-    protected virtual Task PreviewSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    protected virtual Task PreviewSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.GoSendAsync(endPoint, memory, token);
+        return this.GoSendAsync(endPoint, memory, cancellationToken);
     }
 
     /// <inheritdoc/>

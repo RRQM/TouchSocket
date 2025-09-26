@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -30,11 +26,11 @@ public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClie
 public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
 {
     /// <inheritdoc/>
-    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config, CancellationToken token)
+    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config, CancellationToken cancellationToken)
     {
         var client = new TcpClient();
         await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await client.ConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return client;
     }
 }

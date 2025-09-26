@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using TouchSocket.Core;
-using TouchSocket.Http;
 
 namespace TouchSocket.Sockets;
 

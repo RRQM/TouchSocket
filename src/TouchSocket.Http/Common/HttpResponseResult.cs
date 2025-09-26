@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -31,7 +29,7 @@ public readonly struct HttpResponseResult : IDisposable
     /// </summary>
     public HttpResponse Response => this.m_response;
 
-    
+
     /// <inheritdoc/>
     public void Dispose()
     {

@@ -11,9 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System.IO.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -28,12 +25,12 @@ public class PipeTcpClient : TcpClientBase, IPipeTcpClient
     public PipeWriter Output => base.Transport.Writer;
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await this.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -44,7 +41,7 @@ public class PipeTcpClient : TcpClientBase, IPipeTcpClient
     /// <inheritdoc/>
     protected sealed override async Task ReceiveLoopAsync(ITransport transport)
     {
-        var token = transport.ClosedToken;
-        await Task.Delay(-1, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var cancellationToken = transport.ClosedToken;
+        await Task.Delay(-1, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

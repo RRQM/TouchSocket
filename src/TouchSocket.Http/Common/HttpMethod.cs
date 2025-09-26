@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Diagnostics;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 

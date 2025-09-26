@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -50,10 +46,10 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     #region 连接
 
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
-        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (this.m_online)
@@ -67,7 +63,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                 this.m_client = new ClientWebSocket();
             }
 
-            await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_tokenSourceForOnline = new CancellationTokenSource();
 
@@ -81,9 +77,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         }
     }
 
-    private async Task PrivateOnConnected(CancellationToken token)
+    private async Task PrivateOnConnected(CancellationToken cancellationToken)
     {
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, token);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, cancellationToken);
 
         await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_online = false;
@@ -125,7 +121,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     public CancellationToken ClosedToken => this.m_tokenSourceForOnline.GetTokenOrCanceled();
 
     /// <inheritdoc/>
-    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -135,7 +131,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
             }
 
             this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
-            await this.m_client.SafeCloseClientAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.CancelReceive();
             await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
@@ -187,26 +183,26 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     /// <param name="memory">数据</param>
     /// <param name="messageType"></param>
     /// <param name="endOfMessage"></param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns></returns>
-    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, WebSocketMessageType messageType, bool endOfMessage, CancellationToken token)
+    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
     {
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-        await this.m_client.SendAsync(memory, messageType, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(memory, messageType, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #else
         var array = memory.GetArray();
-        await this.m_client.SendAsync(array, messageType, endOfMessage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(array, messageType, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #endif
 
         this.m_sendCounter.Increment(memory.Length);
     }
 
-    private async Task ReceiveLoopAsync(CancellationToken token)
+    private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
         try
         {
             SegmentedBytesWriter writer = default;
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -218,15 +214,15 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     }
                     writer ??= new SegmentedBytesWriter(1024 * 64);
                     var segment = writer.GetMemory(1024 * 64).GetArray();
-                    var result = await client.ReceiveAsync(segment, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await client.ReceiveAsync(segment, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         try
                         {
-                            if (!token.IsCancellationRequested)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         catch

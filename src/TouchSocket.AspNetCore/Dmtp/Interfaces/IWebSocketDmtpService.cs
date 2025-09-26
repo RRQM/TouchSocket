@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp.AspNetCore;

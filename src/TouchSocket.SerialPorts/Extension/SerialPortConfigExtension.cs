@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.SerialPorts;
 
 /// <summary>
@@ -23,36 +20,14 @@ public static class SerialPortConfigExtension
     /// <summary>
     /// 设置串口适配器
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> SerialDataHandlingAdapterProperty =
         new("SerialDataHandlingAdapter", null);
 
     /// <summary>
     /// 串口属性。
     /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<SerialPortOption> SerialPortOptionProperty =
-        new("SerialPortOption", new SerialPortOption());
-
-    /// <summary>
-    /// 设置(串口系)数据处理适配器。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetSerialDataHandlingAdapter(this TouchSocketConfig config, Func<SingleStreamDataHandlingAdapter> value)
-    {
-        config.SetValue(SerialDataHandlingAdapterProperty, value);
-        return config;
-    }
-
-    /// <summary>
-    /// 设置串口属性。
-    /// </summary>
-    /// <param name="config"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TouchSocketConfig SetSerialPortOption(this TouchSocketConfig config, SerialPortOption value)
-    {
-        config.SetValue(SerialPortOptionProperty, value);
-        return config;
-    }
+        new("SerialPortOption", default);
 }

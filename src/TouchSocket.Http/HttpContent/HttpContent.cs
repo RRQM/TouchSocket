@@ -10,13 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -57,11 +50,11 @@ public abstract class HttpContent
     /// 内部方法，用于写入HTTP响应内容
     /// </summary>
     /// <param name="func">一个函数，用于处理字节块的写入操作</param>
-    /// <param name="token">用于取消操作的令牌</param>
+    /// <param name="cancellationToken">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> func, CancellationToken token)
+    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> func, CancellationToken cancellationToken)
     {
-        return this.WriteContent(func, token);
+        return this.WriteContent(func, cancellationToken);
     }
 
     /// <summary>
@@ -89,9 +82,9 @@ public abstract class HttpContent
     /// 抽象方法，由子类实现，用于写入HTTP响应内容
     /// </summary>
     /// <param name="writeFunc">一个函数，用于处理字节块的写入操作</param>
-    /// <param name="token">用于取消操作的令牌</param>
+    /// <param name="cancellationToken">用于取消操作的令牌</param>
     /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token);
+    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken);
 
     #region implicit
 

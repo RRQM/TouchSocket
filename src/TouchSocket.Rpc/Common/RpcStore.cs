@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -39,6 +35,11 @@ public sealed class RpcStore
     /// 服务类型
     /// </summary>
     public Type[] ServerTypes => this.m_serverTypes.Keys.ToArray();
+
+    /// <summary>
+    /// 全局筛选器
+    /// </summary>
+    public List<Type> Filters => this.m_filters;
 
     /// <summary>
     /// 获取所有已注册的函数。
@@ -107,6 +108,40 @@ public sealed class RpcStore
     {
         return this.m_serverTypes[serverType].ToArray();
     }
+
+    #region 全局筛选器
+
+    private readonly List<Type> m_filters = new();
+
+    /// <summary>
+    /// 添加全局筛选器
+    /// </summary>
+    /// <typeparam name="TFilter"></typeparam>
+    public void AddFilter<TFilter>() where TFilter : class, IRpcActionFilter
+    {
+        var filterType = typeof(TFilter);
+        this.AddFilter(filterType);
+    }
+
+    /// <summary>
+    /// 添加全局过滤器
+    /// </summary>
+    public void AddFilter(Type filterType)
+    {
+        if (!typeof(IRpcActionFilter).IsAssignableFrom(filterType))
+        {
+            throw new RpcException($"注册类型必须与{nameof(IRpcActionFilter)}有继承关系");
+        }
+
+        if (!this.m_filters.Any(s => s == filterType))
+        {
+            this.m_filters.Add(filterType);
+            this.m_registrator.RegisterTransient(filterType);
+        }
+    }
+
+
+    #endregion
 
     #region 注册
 

@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.FileTransfer;
@@ -594,92 +589,92 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     #region Id传输
 
     /// <inheritdoc/>
-    public async Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken token)
+    public async Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(targetId))
         {
-            return await this.PrivateFinishedFileResourceInfoAsync(targetId, fileResourceInfo, code, metadata, token);
+            return await this.PrivateFinishedFileResourceInfoAsync(targetId, fileResourceInfo, code, metadata, cancellationToken);
         }
 
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.FinishedFileResourceInfoAsync(fileResourceInfo, code, metadata, token);
+            return await actor.FinishedFileResourceInfoAsync(fileResourceInfo, code, metadata, cancellationToken);
         }
         else
         {
-            return await this.PrivateFinishedFileResourceInfoAsync(targetId, fileResourceInfo, code, metadata, token);
+            return await this.PrivateFinishedFileResourceInfoAsync(targetId, fileResourceInfo, code, metadata, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken token = default)
+    public async Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(targetId))
         {
-            return await this.PrivatePullFileResourceInfoAsync(targetId, path, metadata, fileSectionSize, token);
+            return await this.PrivatePullFileResourceInfoAsync(targetId, path, metadata, fileSectionSize, cancellationToken);
         }
 
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PullFileResourceInfoAsync(path, metadata, fileSectionSize, token);
+            return await actor.PullFileResourceInfoAsync(path, metadata, fileSectionSize, cancellationToken);
         }
         else
         {
-            return await this.PrivatePullFileResourceInfoAsync(targetId, path, metadata, fileSectionSize, token);
+            return await this.PrivatePullFileResourceInfoAsync(targetId, path, metadata, fileSectionSize, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken token)
+    public async Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(targetId))
         {
-            return await this.PrivatePullFileSectionAsync(targetId, fileSection, token);
+            return await this.PrivatePullFileSectionAsync(targetId, fileSection, cancellationToken);
         }
 
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PullFileSectionAsync(fileSection, token);
+            return await actor.PullFileSectionAsync(fileSection, cancellationToken);
         }
         else
         {
-            return await this.PrivatePullFileSectionAsync(targetId, fileSection, token);
+            return await this.PrivatePullFileSectionAsync(targetId, fileSection, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken token)
+    public async Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(targetId))
         {
-            return await this.PrivatePushFileResourceInfoAsync(targetId, savePath, fileResourceLocator, metadata, token);
+            return await this.PrivatePushFileResourceInfoAsync(targetId, savePath, fileResourceLocator, metadata, cancellationToken);
         }
 
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PushFileResourceInfoAsync(savePath, fileResourceLocator, metadata, token);
+            return await actor.PushFileResourceInfoAsync(savePath, fileResourceLocator, metadata, cancellationToken);
         }
         else
         {
-            return await this.PrivatePushFileResourceInfoAsync(targetId, savePath, fileResourceLocator, metadata, token);
+            return await this.PrivatePushFileResourceInfoAsync(targetId, savePath, fileResourceLocator, metadata, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public async Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken token)
+    public async Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(targetId))
         {
-            return await this.PrivatePushFileSectionAsync(targetId, fileResourceLocator, fileSection, token);
+            return await this.PrivatePushFileSectionAsync(targetId, fileResourceLocator, fileSection, cancellationToken);
         }
 
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PushFileSectionAsync(fileResourceLocator, fileSection, token);
+            return await actor.PushFileSectionAsync(fileResourceLocator, fileSection, cancellationToken);
         }
         else
         {
-            return await this.PrivatePushFileSectionAsync(targetId, fileResourceLocator, fileSection, token);
+            return await this.PrivatePushFileSectionAsync(targetId, fileResourceLocator, fileSection, cancellationToken);
         }
     }
 
@@ -688,38 +683,38 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     #region 传输
 
     /// <inheritdoc/>
-    public Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken token)
+    public Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken cancellationToken)
     {
-        return this.PrivateFinishedFileResourceInfoAsync(default, fileResourceInfo, code, metadata, token);
+        return this.PrivateFinishedFileResourceInfoAsync(default, fileResourceInfo, code, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata, int fileSectionSize, CancellationToken token)
+    public Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata, int fileSectionSize, CancellationToken cancellationToken)
     {
-        return this.PrivatePullFileResourceInfoAsync(default, path, metadata, fileSectionSize, token);
+        return this.PrivatePullFileResourceInfoAsync(default, path, metadata, fileSectionSize, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, CancellationToken token)
+    public Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, CancellationToken cancellationToken)
     {
-        return this.PrivatePullFileSectionAsync(default, fileSection, token);
+        return this.PrivatePullFileSectionAsync(default, fileSection, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken token)
+    public Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken cancellationToken)
     {
-        return this.PrivatePushFileResourceInfoAsync(default, savePath, fileResourceLocator, metadata, token);
+        return this.PrivatePushFileResourceInfoAsync(default, savePath, fileResourceLocator, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<Result> PushFileSectionAsync(FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken token)
+    public Task<Result> PushFileSectionAsync(FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken cancellationToken)
     {
-        return this.PrivatePushFileSectionAsync(default, fileResourceLocator, fileSection, token);
+        return this.PrivatePushFileSectionAsync(default, fileResourceLocator, fileSection, cancellationToken);
     }
 
     #region Private
 
-    private async Task<FinishedResult> PrivateFinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken token)
+    private async Task<FinishedResult> PrivateFinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken cancellationToken)
     {
         var waitFinishedPackage = new WaitFinishedPackage()
         {
@@ -737,9 +732,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFinishedPackage.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {
@@ -788,7 +783,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         }
     }
 
-    private async Task<FileResourceInfoResult> PrivatePullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken token)
+    private async Task<FileResourceInfoResult> PrivatePullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken cancellationToken)
     {
         var waitFileResource = new FileTransferRouterPackage()
         {
@@ -806,8 +801,8 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileResource.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {
@@ -855,7 +850,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         }
     }
 
-    private async Task<FileSectionResult> PrivatePullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken token)
+    private async Task<FileSectionResult> PrivatePullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken cancellationToken)
     {
         fileSection.Status = FileSectionStatus.Transferring;
         var waitFileSection = new WaitFileSection()
@@ -872,9 +867,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileSection.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pullFileSection_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pullFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {
@@ -926,7 +921,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         }
     }
 
-    private async Task<Result> PrivatePushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken token)
+    private async Task<Result> PrivatePushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken cancellationToken)
     {
         var fileResourceInfo = fileResourceLocator.FileResourceInfo;
 
@@ -949,9 +944,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileResource.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {
@@ -999,7 +994,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         }
     }
 
-    private async Task<Result> PrivatePushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken token)
+    private async Task<Result> PrivatePushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken cancellationToken)
     {
         fileSection.Status = FileSectionStatus.Transferring;
         using var fileSectionResult = fileResourceLocator.ReadFileSection(fileSection);
@@ -1023,9 +1018,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileSection.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pushFileSection_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pushFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {
@@ -1438,44 +1433,44 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     #region 小文件
 
     /// <inheritdoc/>
-    public async Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata, CancellationToken token)
+    public async Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PullSmallFileAsync(path, metadata, token);
+            return await actor.PullSmallFileAsync(path, metadata, cancellationToken);
         }
         else
         {
-            return await this.PrivatePullSmallFileAsync(targetId, path, metadata, token);
+            return await this.PrivatePullSmallFileAsync(targetId, path, metadata, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata, CancellationToken token)
+    public Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivatePullSmallFileAsync(default, path, metadata, token);
+        return this.PrivatePullSmallFileAsync(default, path, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken token)
+    public async Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
         if (this.DmtpActor.AllowRoute && (await this.TryFindDmtpFileTransferActor(targetId)) is DmtpFileTransferActor actor)
         {
-            return await actor.PushSmallFileAsync(savePath, fileInfo, metadata, token);
+            return await actor.PushSmallFileAsync(savePath, fileInfo, metadata, cancellationToken);
         }
         else
         {
-            return await this.PrivatePushSmallFileAsync(targetId, savePath, fileInfo, metadata, token);
+            return await this.PrivatePushSmallFileAsync(targetId, savePath, fileInfo, metadata, cancellationToken);
         }
     }
 
     /// <inheritdoc/>
-    public Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken token)
+    public Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivatePushSmallFileAsync(default, savePath, fileInfo, metadata, token);
+        return this.PrivatePushSmallFileAsync(default, savePath, fileInfo, metadata, cancellationToken);
     }
 
-    private async Task<PullSmallFileResult> PrivatePullSmallFileAsync(string targetId, string path, Metadata metadata, CancellationToken token)
+    private async Task<PullSmallFileResult> PrivatePullSmallFileAsync(string targetId, string path, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
         var waitSmallFilePackage = new WaitSmallFilePackage()
         {
@@ -1493,10 +1488,10 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Request, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            var status = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var status = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (status)
             {
@@ -1544,7 +1539,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         }
     }
 
-    private async Task<Result> PrivatePushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken token)
+    private async Task<Result> PrivatePushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata, CancellationToken cancellationToken)
     {
         if (!File.Exists(fileInfo.FullName))
         {
@@ -1581,7 +1576,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
 
             await this.DmtpActor.SendAsync(this.m_pushSmallFile_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             switch (waitData.Status)
             {

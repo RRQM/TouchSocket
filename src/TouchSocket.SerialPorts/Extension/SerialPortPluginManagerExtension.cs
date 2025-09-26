@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.SerialPorts;
 /// <summary>
 /// 提供扩展方法以支持串口插件管理功能。

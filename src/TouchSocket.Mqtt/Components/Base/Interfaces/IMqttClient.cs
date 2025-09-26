@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -22,5 +19,5 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public interface IMqttClient : IMqttSession, IConnectableClient
 {
-    ValueTask<Result> PingAsync(CancellationToken token = default);
+    ValueTask<Result> PingAsync(CancellationToken cancellationToken = default);
 }

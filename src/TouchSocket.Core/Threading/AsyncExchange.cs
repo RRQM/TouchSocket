@@ -84,13 +84,13 @@ public sealed class AsyncExchange<T> : IValueTaskSource<ReadLease<T>>, IValueTas
     /// 返回的 <see cref="ReadLease{T}"/> 需在读取后调用 <see cref="ReadLease{T}.Dispose"/> 以释放资源并通知写端完成。
     /// 若已完成交接，则返回已完成的租约。
     /// </summary>
-    /// <param name="token">用于取消等待操作的 <see cref="CancellationToken"/>。</param>
+    /// <param name="cancellationToken">用于取消等待操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示异步读取操作的 <see cref="ValueTask{ReadLease}"/>。</returns>
-    public ValueTask<ReadLease<T>> ReadAsync(CancellationToken token = default)
+    public ValueTask<ReadLease<T>> ReadAsync(CancellationToken cancellationToken = default)
     {
         lock (this.m_lock)
         {
-            token.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             if (this.m_hasItem)
             {
                 return new ValueTask<ReadLease<T>>(this.CreateReadLease(this.m_item, false));
@@ -105,13 +105,13 @@ public sealed class AsyncExchange<T> : IValueTaskSource<ReadLease<T>>, IValueTas
             }
             this.m_readerCore.Reset();
             this.m_readerWaiting = true;
-            if (token.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled)
             {
                 this.m_readerCancelReg.Dispose();
 #if NET6_0_OR_GREATER
-                this.m_readerCancelReg = token.UnsafeRegister(s_cancelReader, this);
+                this.m_readerCancelReg = cancellationToken.UnsafeRegister(s_cancelReader, this);
 #else
-                this.m_readerCancelReg = token.Register(s_cancelReader, this);
+                this.m_readerCancelReg = cancellationToken.Register(s_cancelReader, this);
 #endif
             }
             return new ValueTask<ReadLease<T>>(this, this.m_readerCore.Version);
@@ -124,13 +124,13 @@ public sealed class AsyncExchange<T> : IValueTaskSource<ReadLease<T>>, IValueTas
     /// 若已完成交接，则抛出异常。
     /// </summary>
     /// <param name="value">要写入的数据。</param>
-    /// <param name="token">用于取消等待操作的 <see cref="CancellationToken"/>。</param>
+    /// <param name="cancellationToken">用于取消等待操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示异步写入操作的 <see cref="ValueTask"/>。</returns>
-    public ValueTask WriteAsync(T value, CancellationToken token = default)
+    public ValueTask WriteAsync(T value, CancellationToken cancellationToken = default)
     {
         lock (this.m_lock)
         {
-            token.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             if (this.m_completed)
             {
                 throw new InvalidOperationException("Completed; cannot write.");
@@ -148,13 +148,13 @@ public sealed class AsyncExchange<T> : IValueTaskSource<ReadLease<T>>, IValueTas
             }
             this.m_writerCore.Reset();
             this.m_writerWaiting = true;
-            if (token.CanBeCanceled)
+            if (cancellationToken.CanBeCanceled)
             {
                 this.m_writerCancelReg.Dispose();
 #if NET6_0_OR_GREATER
-                this.m_writerCancelReg = token.UnsafeRegister(s_cancelWriter, this);
+                this.m_writerCancelReg = cancellationToken.UnsafeRegister(s_cancelWriter, this);
 #else
-                this.m_writerCancelReg = token.Register(s_cancelWriter, this);
+                this.m_writerCancelReg = cancellationToken.Register(s_cancelWriter, this);
 #endif
             }
             return new ValueTask(this, this.m_writerCore.Version);
@@ -236,23 +236,23 @@ public sealed class AsyncExchange<T> : IValueTaskSource<ReadLease<T>>, IValueTas
     }
 
     #region IValueTaskSource
-    ReadLease<T> IValueTaskSource<ReadLease<T>>.GetResult(short token)
+    ReadLease<T> IValueTaskSource<ReadLease<T>>.GetResult(short cancellationToken)
     {
-        var r = this.m_readerCore.GetResult(token);
+        var r = this.m_readerCore.GetResult(cancellationToken);
         this.m_readerCancelReg.Dispose();
         return r;
     }
-    void IValueTaskSource.GetResult(short token)
+    void IValueTaskSource.GetResult(short cancellationToken)
     {
-        this.m_writerCore.GetResult(token);
+        this.m_writerCore.GetResult(cancellationToken);
         this.m_writerCancelReg.Dispose();
     }
-    ValueTaskSourceStatus IValueTaskSource<ReadLease<T>>.GetStatus(short token) => this.m_readerCore.GetStatus(token);
-    ValueTaskSourceStatus IValueTaskSource.GetStatus(short token) => this.m_writerCore.GetStatus(token);
-    void IValueTaskSource<ReadLease<T>>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-        => this.m_readerCore.OnCompleted(continuation, state, token, flags);
-    void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-        => this.m_writerCore.OnCompleted(continuation, state, token, flags);
+    ValueTaskSourceStatus IValueTaskSource<ReadLease<T>>.GetStatus(short cancellationToken) => this.m_readerCore.GetStatus(cancellationToken);
+    ValueTaskSourceStatus IValueTaskSource.GetStatus(short cancellationToken) => this.m_writerCore.GetStatus(cancellationToken);
+    void IValueTaskSource<ReadLease<T>>.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
+        => this.m_readerCore.OnCompleted(continuation, state, cancellationToken, flags);
+    void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
+        => this.m_writerCore.OnCompleted(continuation, state, cancellationToken, flags);
     #endregion
 
 }

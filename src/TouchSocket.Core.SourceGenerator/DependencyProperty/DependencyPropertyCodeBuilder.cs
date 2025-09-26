@@ -43,25 +43,25 @@ internal class DependencyPropertyCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
 
                 // 如果选择生成扩展属性（默认或包含属性访问器）
                 if (options == PropertyGenerationOptions.All ||
-                    HasFlag(options, PropertyGenerationOptions.IncludePropertyGetter) ||
-                    HasFlag(options, PropertyGenerationOptions.IncludePropertySetter))
+                    this.HasFlag(options, PropertyGenerationOptions.IncludePropertyGetter) ||
+                    this.HasFlag(options, PropertyGenerationOptions.IncludePropertySetter))
                 {
                     //生成扩展属性，供依赖对象调用
                     codeBuilder.AppendLine($"extension<TDependencyObject>(TDependencyObject dependencyObject)");
                     codeBuilder.AppendLine($"where TDependencyObject:{this.m_dependencyPropertyInfo.TargetType.Name}");
                     using (this.CreateCodeSpace(codeBuilder))
                     {
-                        codeBuilder.AppendLine($"/// <inheritdoc cref=\"{GetDependencyPropertyTypeString()}\"/>");
+                        codeBuilder.AppendLine($"/// <inheritdoc cref=\"{this.GetDependencyPropertyTypeString()}\"/>");
                         var propertyDeclaration = $"public {this.m_dependencyPropertyInfo.DependencyPropertyType.ToDisplayString()} {this.m_dependencyPropertyInfo.Name} {{";
 
                         // 根据选项生成getter
-                        if (options == PropertyGenerationOptions.All || HasFlag(options, PropertyGenerationOptions.IncludePropertyGetter))
+                        if (options == PropertyGenerationOptions.All || this.HasFlag(options, PropertyGenerationOptions.IncludePropertyGetter))
                         {
                             propertyDeclaration += $" get => dependencyObject.GetValue({this.GetDependencyPropertyTypeString()});";
                         }
 
                         // 根据选项生成setter
-                        if (options == PropertyGenerationOptions.All || HasFlag(options, PropertyGenerationOptions.IncludePropertySetter))
+                        if (options == PropertyGenerationOptions.All || this.HasFlag(options, PropertyGenerationOptions.IncludePropertySetter))
                         {
                             propertyDeclaration += $" set => dependencyObject.SetValue({this.GetDependencyPropertyTypeString()}, value);";
                         }
@@ -73,9 +73,9 @@ internal class DependencyPropertyCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
                 }
 
                 // 如果选择生成方法形式的Getter（默认或包含方法Getter）
-                if (options == PropertyGenerationOptions.All || HasFlag(options, PropertyGenerationOptions.IncludeMethodGetter))
+                if (options == PropertyGenerationOptions.All || this.HasFlag(options, PropertyGenerationOptions.IncludeMethodGetter))
                 {
-                    codeBuilder.AppendLine($"///<inheritdoc cref=\"{GetDependencyPropertyTypeString()}\"/>");
+                    codeBuilder.AppendLine($"///<inheritdoc cref=\"{this.GetDependencyPropertyTypeString()}\"/>");
                     //生成扩展读取方法，供依赖对象调用
                     codeBuilder.AppendLine($"public static {this.m_dependencyPropertyInfo.DependencyPropertyType.ToDisplayString()} Get{this.m_dependencyPropertyInfo.Name}<TDependencyObject>(this TDependencyObject dependencyObject)");
                     codeBuilder.AppendLine($"where TDependencyObject:{this.m_dependencyPropertyInfo.TargetType.Name}");
@@ -87,10 +87,10 @@ internal class DependencyPropertyCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
                 }
 
                 // 如果选择生成方法形式的Setter（默认或包含方法Setter）
-                if (options == PropertyGenerationOptions.All || HasFlag(options, PropertyGenerationOptions.IncludeMethodSetter))
+                if (options == PropertyGenerationOptions.All || this.HasFlag(options, PropertyGenerationOptions.IncludeMethodSetter))
                 {
                     //生成扩展设置方法，供依赖对象调用
-                    codeBuilder.AppendLine($"///<inheritdoc cref=\"{GetDependencyPropertyTypeString()}\"/>");
+                    codeBuilder.AppendLine($"///<inheritdoc cref=\"{this.GetDependencyPropertyTypeString()}\"/>");
 
                     if (this.m_dependencyPropertyInfo.ActionMode)
                     {
@@ -126,7 +126,7 @@ internal class DependencyPropertyCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
                             codeBuilder.AppendLine("return dependencyObject;");
                         }
                     }
-                    
+
                 }
             }
         }

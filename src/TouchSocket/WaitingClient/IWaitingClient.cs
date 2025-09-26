@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -40,19 +35,19 @@ public interface IWaitingClient<TClient, TResult>
     /// 异步发送
     /// </summary>
     /// <param name="memory">要发送的数据，使用内存表示</param>
-    /// <param name="token">取消令箭，用于取消操作</param>
+    /// <param name="cancellationToken">取消令箭，用于取消操作</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据，类型为ResponsedData</returns>
-    Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token);
+    Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken);
 
 
     /// <summary>
     /// 异步发送请求并等待响应
     /// </summary>
     /// <param name="requestInfo">请求信息，包含发送请求所需的所有细节</param>
-    /// <param name="token">用于取消操作的取消令牌</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌</param>
     /// <returns>返回一个任务，该任务的结果是服务器的响应数据</returns>
-    Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken token);
+    Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken cancellationToken);
 }

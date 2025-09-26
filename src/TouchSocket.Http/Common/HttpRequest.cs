@@ -114,7 +114,7 @@ public class HttpRequest : HttpBase
         throw new NotImplementedException();
     }
 
-    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
+    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

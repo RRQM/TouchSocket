@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp;
 
 /// <summary>
@@ -22,7 +20,7 @@ public static class DmtpConfigExtension
     /// <summary>
     /// 设置Dmtp相关配置。
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig),ActionMode =true)]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<DmtpOption> DmtpOptionProperty =
         new("DmtpOption", new DmtpOption());
 }

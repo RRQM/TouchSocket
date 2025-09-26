@@ -10,11 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
@@ -23,18 +20,15 @@ public partial class TcpClientBase
 {
     #region Connect
 
-
-#if NET6_0_OR_GREATER
-
     /// <summary>
     /// 异步连接服务器
     /// </summary>
-    /// <param name="token">用于取消操作的令牌</param>
+    /// <param name="cancellationToken">用于取消操作的令牌</param>
     /// <returns>返回一个异步任务</returns>
     /// <exception cref="ObjectDisposedException">如果对象已被处置，则抛出此异常</exception>
     /// <exception cref="ArgumentNullException">如果必要参数为空，则抛出此异常</exception>
     /// <exception cref="TimeoutException">如果连接超时，则抛出此异常</exception>
-    protected virtual async Task TcpConnectAsync(CancellationToken token)
+    protected virtual async Task TcpConnectAsync(CancellationToken cancellationToken)
     {
 
         this.ThrowIfDisposed();
@@ -45,7 +39,6 @@ public partial class TcpClientBase
         {
             return;
         }
-
 
         var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
 
@@ -54,60 +47,34 @@ public partial class TcpClientBase
         var args = new ConnectingEventArgs();
         await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        if (token.CanBeCanceled)
+        try
         {
-            await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        this.m_online = true;
-
-        this.SetSocket(socket);
-
-        await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-        await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
-    }
+#if NET6_0_OR_GREATER
+            await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #else
+            var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
 
-    /// <summary>
-    /// 异步连接服务器
-    /// </summary>
-    /// <param name="token">取消令牌</param>
-    /// <returns>返回任务</returns>
-    protected virtual async Task TcpConnectAsync(CancellationToken token)
-    {
-        this.ThrowIfDisposed();
-        this.ThrowIfConfigIsNull();
-        if (this.m_online)
-        {
-            return;
+            await task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+#endif
         }
-        var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
+        catch
+        {
+            socket.Dispose();
+            throw;
+        }
 
-        var socket = this.CreateSocket(iPHost);
-        await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
 
-        await task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         this.m_online = true;
 
         this.SetSocket(socket);
 
         await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
         this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-
         await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
         this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
-
-#endif
 
     #endregion Connect
 

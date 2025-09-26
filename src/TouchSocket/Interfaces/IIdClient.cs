@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -29,6 +26,6 @@ public interface IIdClient
     /// 重新设置Id
     /// </summary>
     /// <param name="newId">新的Id值</param>
-    /// <param name="token"></param>
-    Task ResetIdAsync(string newId, CancellationToken token = default);
+    /// <param name="cancellationToken"></param>
+    Task ResetIdAsync(string newId, CancellationToken cancellationToken = default);
 }

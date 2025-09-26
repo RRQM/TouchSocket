@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -53,13 +50,13 @@ public static class SystemThreadingExtension
     /// </summary>
     /// <param name="semaphoreSlim">要等待的信号量。</param>
     /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
-    /// <param name="token">用于取消操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>
     /// <remarks>
     /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
     /// </remarks>
-    public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+    public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        if (!semaphoreSlim.Wait(millisecondsTimeout, token))
+        if (!semaphoreSlim.Wait(millisecondsTimeout, cancellationToken))
         {
             ThrowHelper.ThrowTimeoutException();
         }
@@ -70,14 +67,14 @@ public static class SystemThreadingExtension
     /// </summary>
     /// <param name="semaphoreSlim">要等待的信号量。</param>
     /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
-    /// <param name="token">用于取消操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>
     /// <returns>一个Task对象，表示异步等待操作。</returns>
     /// <remarks>
     /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
     /// </remarks>
-    public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+    public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             ThrowHelper.ThrowTimeoutException();
         }
@@ -87,13 +84,13 @@ public static class SystemThreadingExtension
     /// 异步等待信号量并返回结果，支持取消令牌。  
     /// </summary>  
     /// <param name="semaphoreSlim">要等待的信号量。</param>  
-    /// <param name="token">用于取消操作的取消令牌。</param>  
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>  
     /// <returns>一个 <see cref="Result"/> 对象，表示操作的结果。</returns>  
-    public static async ValueTask<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken token)
+    public static async ValueTask<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken cancellationToken)
     {
         try
         {
-            await semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (OperationCanceledException)
@@ -454,12 +451,12 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// Wraps a task with one that will complete as cancelled based on a cancellation token,
-    /// allowing someone to await a task but be able to break out early by cancelling the token.
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
     /// </summary>
     /// <typeparam name="T">The type of value returned by the task.</typeparam>
     /// <param name="task">The task to wrap.</param>
-    /// <param name="cancellationToken">The token that can be canceled to break out of the await.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
     /// <returns>The wrapping task.</returns>
     public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
     {
@@ -475,11 +472,11 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// Wraps a task with one that will complete as cancelled based on a cancellation token,
-    /// allowing someone to await a task but be able to break out early by cancelling the token.
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
     /// </summary>
     /// <param name="task">The task to wrap.</param>
-    /// <param name="cancellationToken">The token that can be canceled to break out of the await.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
     /// <returns>The wrapping task.</returns>
     public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
     {
@@ -495,12 +492,12 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// Wraps a task with one that will complete as cancelled based on a cancellation token,
-    /// allowing someone to await a task but be able to break out early by cancelling the token.
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
     /// </summary>
     /// <param name="task">The task to wrap.</param>
     /// <param name="continueOnCapturedContext">A value indicating whether *internal* continuations required to respond to cancellation should run on the current <see cref="SynchronizationContext"/>.</param>
-    /// <param name="cancellationToken">The token that can be canceled to break out of the await.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
     /// <returns>The wrapping task.</returns>
     internal static Task WithCancellation(this Task task, bool continueOnCapturedContext, CancellationToken cancellationToken)
     {
@@ -516,12 +513,12 @@ public static class SystemThreadingExtension
 
 
     /// <summary>
-    /// Wraps a task with one that will complete as cancelled based on a cancellation token,
-    /// allowing someone to await a task but be able to break out early by cancelling the token.
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
     /// </summary>
     /// <typeparam name="T">The type of value returned by the task.</typeparam>
     /// <param name="task">The task to wrap.</param>
-    /// <param name="cancellationToken">The token that can be canceled to break out of the await.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
     /// <returns>The wrapping task.</returns>
     private static async Task<T> WithCancellationSlow<T>(Task<T> task, CancellationToken cancellationToken)
     {
@@ -541,12 +538,12 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// Wraps a task with one that will complete as cancelled based on a cancellation token,
-    /// allowing someone to await a task but be able to break out early by cancelling the token.
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
     /// </summary>
     /// <param name="task">The task to wrap.</param>
     /// <param name="continueOnCapturedContext">A value indicating whether *internal* continuations required to respond to cancellation should run on the current <see cref="SynchronizationContext"/>.</param>
-    /// <param name="cancellationToken">The token that can be canceled to break out of the await.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
     /// <returns>The wrapping task.</returns>
     private static async Task WithCancellationSlow(this Task task, bool continueOnCapturedContext, CancellationToken cancellationToken)
     {

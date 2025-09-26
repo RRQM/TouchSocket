@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -76,11 +72,11 @@ public class WaitDataAsync<T> : DisposableObject
     }
 
     /// <inheritdoc/>
-    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken token)
+    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await this.m_asyncWaitHandle.WaitOneAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_asyncWaitHandle.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return this.m_status;
         }
         catch (OperationCanceledException)

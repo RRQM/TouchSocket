@@ -21,12 +21,12 @@ public enum ConnectionCheckResult : byte
     /// 跳过此次检查
     /// </summary>
     Skip,
-    
+
     /// <summary>
     /// 连接存活
     /// </summary>
     Alive,
-    
+
     /// <summary>
     /// 连接失活，需要重连
     /// </summary>

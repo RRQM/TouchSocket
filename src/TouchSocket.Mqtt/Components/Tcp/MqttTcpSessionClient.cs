@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -54,15 +51,15 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
         await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken token)
+    private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)
     {
         var locker = base.Transport.WriteLocker;
-        await locker.WaitAsync(token);
+        await locker.WaitAsync(cancellationToken);
         try
         {
             var writer = new PipeBytesWriter(base.Transport.Writer);
             message.Build(ref writer);
-            await writer.FlushAsync(token);
+            await writer.FlushAsync(cancellationToken);
         }
         finally
         {

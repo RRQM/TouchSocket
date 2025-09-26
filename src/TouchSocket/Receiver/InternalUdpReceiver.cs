@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -28,7 +24,7 @@ internal sealed class InternalUdpReceiver : SafetyDisposableObject, IReceiver<IU
 
     #endregion 字段
 
-   
+
     public InternalUdpReceiver(IReceiverClient<IUdpReceiverResult> client)
     {
         this.m_client = client;
@@ -41,19 +37,19 @@ internal sealed class InternalUdpReceiver : SafetyDisposableObject, IReceiver<IU
     }
 
     /// <inheritdoc/>
-    public async Task InputReceive(System.Net.EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken token)
+    public async Task InputReceive(System.Net.EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         if (this.DisposedValue)
         {
             return;
         }
-        await this.m_asyncExchange.WriteAsync((memory, requestInfo, remoteEndPoint), token);
+        await this.m_asyncExchange.WriteAsync((memory, requestInfo, remoteEndPoint), cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken token)
+    public async ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken cancellationToken)
     {
-        var readLease = await this.m_asyncExchange.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var (memory, requestInfo, endpoint) = readLease.Value;
         return new UdpReceiverResult(readLease.Dispose)
         {

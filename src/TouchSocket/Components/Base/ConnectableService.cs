@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -57,7 +51,7 @@ public abstract class ConnectableService : ServiceBase, IConnectableService
     public abstract IEnumerable<string> GetIds();
 
     /// <inheritdoc/>
-    public abstract Task ResetIdAsync(string sourceId, string targetId, CancellationToken token=default);
+    public abstract Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default);
 
     /// <inheritdoc cref="IConnectableService.GetClients"/>
     protected abstract IEnumerable<IClient> GetClients();

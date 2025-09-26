@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -114,12 +108,12 @@ public static class WaitingClientExtension
     /// </summary>
     /// <param name="client">等待客户端接口</param>
     /// <param name="value">要发送的消息</param>
-    /// <param name="token">取消令箭</param>
+    /// <param name="cancellationToken">取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据</returns>
-    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string value, CancellationToken token)
+    public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string value, CancellationToken cancellationToken)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
@@ -128,7 +122,7 @@ public static class WaitingClientExtension
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            return await client.SendThenResponseAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await client.SendThenResponseAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -236,15 +230,15 @@ public static class WaitingClientExtension
     /// <typeparam name="TResult">接收结果类型，必须实现IReceiverResult接口。</typeparam>
     /// <param name="client">实现等待客户端接口<see cref="IWaitingClient{TClient, TResult}"/>的实例。</param>
     /// <param name="memory">要发送的数据，以只读内存形式提供。</param>
-    /// <param name="token">用于取消操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>
     /// <returns>包含操作结果的ResponsedData对象。</returns>
     [AsyncToSyncWarning]
-    public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
        where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
        where TResult : IReceiverResult
     {
         // 调用异步版本的SendThenResponse方法，并直接获取其结果。
-        return client.SendThenResponseAsync(memory, token).GetFalseAwaitResult();
+        return client.SendThenResponseAsync(memory, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -252,18 +246,18 @@ public static class WaitingClientExtension
     /// </summary>
     /// <param name="client">等待客户端接口</param>
     /// <param name="msg">要发送的消息</param>
-    /// <param name="token">取消令箭</param>
+    /// <param name="cancellationToken">取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>返回的数据</returns>
     [AsyncToSyncWarning]
-    public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, CancellationToken token)
+    public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, CancellationToken cancellationToken)
         where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
         // 将字符串消息转换为字节数组
-        return client.SendThenResponseAsync(msg, token).GetFalseAwaitResult();
+        return client.SendThenResponseAsync(msg, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>

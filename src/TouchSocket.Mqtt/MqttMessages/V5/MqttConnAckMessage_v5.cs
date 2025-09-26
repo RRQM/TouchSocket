@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 public partial class MqttConnAckMessage

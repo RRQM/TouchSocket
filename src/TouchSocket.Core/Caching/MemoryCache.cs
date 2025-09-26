@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -61,7 +57,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken token = default)
+    public Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(this.AddCache(entity));
     }
@@ -73,7 +69,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task ClearCacheAsync(CancellationToken token = default)
+    public Task ClearCacheAsync(CancellationToken cancellationToken = default)
     {
         this.ClearCache();
         return EasyTask.CompletedTask;
@@ -105,7 +101,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> ContainsCacheAsync(TKey key, CancellationToken token = default)
+    public Task<bool> ContainsCacheAsync(TKey key, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(this.ContainsCache(key));
     }
@@ -136,7 +132,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key, CancellationToken token = default)
+    public Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(this.GetCache(key));
     }
@@ -165,7 +161,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> RemoveCacheAsync(TKey key, CancellationToken token = default)
+    public Task<bool> RemoveCacheAsync(TKey key, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(this.RemoveCache(key));
     }
@@ -181,7 +177,7 @@ public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>,
     }
 
     /// <inheritdoc/>
-    public Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken token = default)
+    public Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(this.SetCache(entity));
     }

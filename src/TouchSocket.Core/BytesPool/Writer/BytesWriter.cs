@@ -10,8 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -42,7 +40,7 @@ public struct BytesWriter : IBytesWriter
     /// </summary>
     /// <value>表示完整内存块的<see cref="Memory{T}"/>。</value>
     public readonly Memory<byte> TotalMemory => this.m_memory;
-    
+
     /// <summary>
     /// 获取已写入数据的只读跨度。
     /// </summary>

@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
@@ -41,9 +37,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     #endregion JsonRpcActor
@@ -57,9 +53,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(token);
+        return this.TcpConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>

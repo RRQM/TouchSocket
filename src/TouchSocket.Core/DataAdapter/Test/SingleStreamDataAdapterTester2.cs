@@ -10,11 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using System.IO.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -41,25 +38,25 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
         this.m_receivedCallBack = receivedCallBack;
     }
 
-    public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, CancellationToken token)
+    public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, CancellationToken cancellationToken)
     {
         this.m_count = 0;
         this.m_expectedCount = expectedCount;
         this.m_bufferLength = bufferLength;
-        var receivedTask = EasyTask.SafeRun(this.ReceivedLoopAsync, token);
+        var receivedTask = EasyTask.SafeRun(this.ReceivedLoopAsync, cancellationToken);
 
         var m_stopwatch = new Stopwatch();
         m_stopwatch.Start();
 
         for (var i = 0; i < testCount; i++)
         {
-            token.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             var valueByteBlock = new ValueByteBlock(memory.Length + 1024);
             try
             {
                 this.m_adapter.SendInput(ref valueByteBlock, memory);
 
-                await this.SendCallback(valueByteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -69,7 +66,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
 
         await this.m_pipe.Writer.CompleteAsync();
 
-        await receivedTask.WithCancellation(token);
+        await receivedTask.WithCancellation(cancellationToken);
 
         if (this.m_count != this.m_expectedCount)
         {
@@ -114,11 +111,11 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
         }
     }
 
-    private async Task ReceivedLoopAsync(CancellationToken token)
+    private async Task ReceivedLoopAsync(CancellationToken cancellationToken)
     {
-        while (!token.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            var readResult = await this.m_pipe.Reader.ReadAsync(token);
+            var readResult = await this.m_pipe.Reader.ReadAsync(cancellationToken);
 
             var reader = new BytesReader(readResult.Buffer);
 
@@ -143,12 +140,12 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
         }
     }
 
-    private async Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private async Task SendCallback(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var offset = 0;
         while (true)
         {
-            token.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
 
             var remainingLength = memory.Length - offset;
             if (remainingLength <= 0)
@@ -156,7 +153,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
                 break;
             }
             var sliceMemory = memory.Slice(offset, Math.Min(remainingLength, this.m_bufferLength));
-            await this.m_pipe.Writer.WriteAsync(sliceMemory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_pipe.Writer.WriteAsync(sliceMemory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             offset += sliceMemory.Length;
         }
     }

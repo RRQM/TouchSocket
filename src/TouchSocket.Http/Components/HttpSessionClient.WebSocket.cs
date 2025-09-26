@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
@@ -110,7 +107,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// <returns>一个表示事件处理完成的Task对象。</returns>
     protected virtual async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketConnectedPluginAsync( this.Resolver, webSocket, e)
+        await this.PluginManager.RaiseIWebSocketConnectedPluginAsync(this.Resolver, webSocket, e)
             .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 

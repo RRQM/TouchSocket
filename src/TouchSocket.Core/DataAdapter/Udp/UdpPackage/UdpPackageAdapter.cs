@@ -10,11 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -83,7 +80,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
     }
 
     /// <inheritdoc/>
-    protected override async Task PreviewSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    protected override async Task PreviewSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         this.ThrowIfMoreThanMaxPackageSize(memory.Length);
 
@@ -109,7 +106,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     //Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
                     off += freeRoom;
                     surLen -= freeRoom;
-                    await this.GoSendAsync(endPoint, byteBlock.Memory, token);
+                    await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken);
                 }
                 else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
                 {
@@ -126,7 +123,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     //Buffer.BlockCopy(Crc.Crc16(memory.Span), 0, data, 11 + surLen, 2);
 
                     //await this.GoSendAsync(endPoint, data, 0, surLen + 11 + 2);
-                    await this.GoSendAsync(endPoint, byteBlock.Memory, token);
+                    await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken);
 
                     off += surLen;
                     surLen -= surLen;
@@ -136,7 +133,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     WriterExtension.WriteValue<ByteBlock, byte>(ref byteBlock, 0);
                     byteBlock.Write(memory.Span.Slice(off, surLen));
                     //Buffer.BlockCopy(buffer, off, data, 11, surLen);
-                    await this.GoSendAsync(endPoint, byteBlock.Memory, token);
+                    await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken);
 
                     byteBlock.Reset();
 
@@ -155,7 +152,7 @@ public class UdpPackageAdapter : UdpDataHandlingAdapter
                     //byte flag = 0;
                     //finData[10] = flag.SetBit(7, 1);
                     //Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, finData, 11, 2);
-                    await this.GoSendAsync(endPoint, byteBlock.Memory, token);
+                    await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken);
                 }
             }
             finally

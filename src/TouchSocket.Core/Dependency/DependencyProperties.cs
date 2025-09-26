@@ -10,10 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -45,7 +42,7 @@ internal class DependencyProperties : Dictionary<int, object>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public object GetValueOrDefault(int key, object defaultValue = null)
     {
-        return TryGetValue(key, out var value) ? value : defaultValue;
+        return this.TryGetValue(key, out var value) ? value : defaultValue;
     }
 
     /// <summary>
@@ -58,7 +55,7 @@ internal class DependencyProperties : Dictionary<int, object>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetValueOrDefault<T>(int key, T defaultValue = default)
     {
-        if (TryGetValue(key, out var value) && value is T typedValue)
+        if (this.TryGetValue(key, out var value) && value is T typedValue)
         {
             return typedValue;
         }
@@ -74,9 +71,9 @@ internal class DependencyProperties : Dictionary<int, object>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRemove(int key, out object value)
     {
-        if (TryGetValue(key, out value))
+        if (this.TryGetValue(key, out value))
         {
-            Remove(key);
+            this.Remove(key);
             return true;
         }
         value = null;
@@ -91,7 +88,7 @@ internal class DependencyProperties : Dictionary<int, object>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasProperty(int propertyId)
     {
-        return ContainsKey(propertyId);
+        return this.ContainsKey(propertyId);
     }
 
     /// <summary>
@@ -100,23 +97,23 @@ internal class DependencyProperties : Dictionary<int, object>
     /// <returns>包含属性名称和值的键值对数组</returns>
     public KeyValuePair<string, object>[] GetNamedProperties()
     {
-        if (Count == 0)
+        if (this.Count == 0)
         {
             return Array.Empty<KeyValuePair<string, object>>();
         }
 
-        var result = new KeyValuePair<string, object>[Count];
+        var result = new KeyValuePair<string, object>[this.Count];
         var index = 0;
-        
+
         foreach (var kvp in this)
         {
             var propertyName = DependencyPropertyBase.s_keyNameMap.TryGetValue(kvp.Key, out var name)
                 ? name
                 : $"UnknownProperty_{kvp.Key}";
-            
+
             result[index++] = new KeyValuePair<string, object>(propertyName, kvp.Value);
         }
-        
+
         return result;
     }
 
@@ -126,7 +123,7 @@ internal class DependencyProperties : Dictionary<int, object>
     public new void Clear()
     {
         // 对于实现了IDisposable的值，进行资源释放
-        foreach (var value in Values)
+        foreach (var value in this.Values)
         {
             if (value is IDisposable disposable)
             {
@@ -140,7 +137,7 @@ internal class DependencyProperties : Dictionary<int, object>
                 }
             }
         }
-        
+
         base.Clear();
     }
 
@@ -157,9 +154,9 @@ internal class DependencyProperties : Dictionary<int, object>
         /// 初始化调试视图。
         /// </summary>
         /// <param name="instance">依赖属性实例</param>
-        public DependencyPropertiesDebugView(DependencyProperties instance) 
+        public DependencyPropertiesDebugView(DependencyProperties instance)
         {
-            _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+            this._instance = instance ?? throw new ArgumentNullException(nameof(instance));
         }
 
         /// <summary>
@@ -171,15 +168,15 @@ internal class DependencyProperties : Dictionary<int, object>
         {
             get
             {
-                if (_instance.Count == 0)
+                if (this._instance.Count == 0)
                 {
                     return Array.Empty<DependencyPropertyDebugItem>();
                 }
 
-                var items = new DependencyPropertyDebugItem[_instance.Count];
+                var items = new DependencyPropertyDebugItem[this._instance.Count];
                 var index = 0;
 
-                foreach (var kvp in _instance)
+                foreach (var kvp in this._instance)
                 {
                     var propertyName = DependencyPropertyBase.s_keyNameMap.TryGetValue(kvp.Key, out var name)
                         ? name
@@ -199,7 +196,7 @@ internal class DependencyProperties : Dictionary<int, object>
         /// <summary>
         /// 获取属性总数。
         /// </summary>
-        public int Count => _instance.Count;
+        public int Count => this._instance.Count;
     }
 
     /// <summary>
@@ -216,10 +213,10 @@ internal class DependencyProperties : Dictionary<int, object>
         /// <param name="value">属性值</param>
         public DependencyPropertyDebugItem(string propertyName, int propertyId, object value)
         {
-            PropertyName = propertyName;
-            PropertyId = propertyId;
-            Value = value;
-            ValueType = value?.GetType()?.Name ?? "null";
+            this.PropertyName = propertyName;
+            this.PropertyId = propertyId;
+            this.Value = value;
+            this.ValueType = value?.GetType()?.Name ?? "null";
         }
 
         /// <summary>
