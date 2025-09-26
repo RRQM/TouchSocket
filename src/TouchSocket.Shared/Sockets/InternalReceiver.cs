@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 internal class InternalReceiver : SafetyDisposableObject, IReceiver<IReceiverResult>
@@ -36,14 +31,14 @@ internal class InternalReceiver : SafetyDisposableObject, IReceiver<IReceiverRes
         this.m_asyncExchange.Complete();
     }
 
-    public ValueTask InputReceiveAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken token)
+    public ValueTask InputReceiveAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        return this.m_asyncExchange.WriteAsync((memory, requestInfo), token);
+        return this.m_asyncExchange.WriteAsync((memory, requestInfo), cancellationToken);
     }
 
-    public async ValueTask<IReceiverResult> ReadAsync(CancellationToken token)
+    public async ValueTask<IReceiverResult> ReadAsync(CancellationToken cancellationToken)
     {
-        var readLease = await this.m_asyncExchange.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var (memory, requestInfo) = readLease.Value;
         return new Sockets.InternalReceiverResult(readLease.Dispose)
         {

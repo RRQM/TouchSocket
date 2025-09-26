@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp;
 
 /// <summary>
@@ -25,15 +20,15 @@ public static class DmtpActorExtension
     #region Ping
 
     /// <inheritdoc cref="IDmtpActor.PingAsync(CancellationToken)"/>
-    public static Task<Result> PingAsync(this IDmtpActorObject client, CancellationToken token = default)
+    public static Task<Result> PingAsync(this IDmtpActorObject client, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.PingAsync(token);
+        return client.DmtpActor.PingAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IDmtpActor.PingAsync(string,CancellationToken)"/>
-    public static Task<Result> PingAsync(this IDmtpActorObject client, string targetId, CancellationToken token = default)
+    public static Task<Result> PingAsync(this IDmtpActorObject client, string targetId, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.PingAsync(targetId, token);
+        return client.DmtpActor.PingAsync(targetId, cancellationToken);
     }
 
     #endregion Ping
@@ -164,8 +159,8 @@ public static class DmtpActorExtension
     /// <param name="protocol">发送数据包所使用的协议。</param>
     /// <param name="package">要发送的数据包实例。</param>
     /// <param name="maxSize">数据包的预估最大大小，用于指导<see cref="ByteBlock"/>内存的分配。</param>
-    /// <param name="token">可取消令箭</param>
-    public static async Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize, CancellationToken token = default)
+    /// <param name="cancellationToken">可取消令箭</param>
+    public static async Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize, CancellationToken cancellationToken = default)
     {
         // 使用ByteBlock管理内存，根据预估的最大大小来分配内存。
         using (var byteBlock = new ByteBlock(maxSize))
@@ -175,7 +170,7 @@ public static class DmtpActorExtension
             // 准备数据包，将数据写入到block中。
             package.Package(ref block);
             // 使用异步方法发送数据包和协议。
-            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -186,12 +181,12 @@ public static class DmtpActorExtension
     /// <param name="client">要发送包的客户端对象。</param>
     /// <param name="protocol">发送包所使用的协议。</param>
     /// <param name="package">要发送的包实例。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个Task对象，表示异步操作的结果。</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, CancellationToken token = default)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, CancellationToken cancellationToken = default)
     {
         // 调用重载的SendAsync方法，使用默认的最大传输单元大小64K
-        return SendAsync(client, protocol, package, 1024 * 64, token);
+        return SendAsync(client, protocol, package, 1024 * 64, cancellationToken);
     }
 
     #endregion 发送Package
@@ -256,11 +251,11 @@ public static class DmtpActorExtension
     /// <param name="client">客户端对象，实现IDmtpActorObject接口</param>
     /// <param name="protocol">协议标识符</param>
     /// <param name="memory">待发送的数据，以只读内存块形式提供</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个Task对象，标识异步操作</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.SendAsync(protocol, memory, token);
+        return client.DmtpActor.SendAsync(protocol, memory, cancellationToken);
     }
 
     /// <summary>
@@ -268,11 +263,11 @@ public static class DmtpActorExtension
     /// </summary>
     /// <param name="client">客户端对象，实现IDmtpActorObject接口</param>
     /// <param name="protocol">协议标识符</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个Task对象，标识异步操作</returns>
-    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, CancellationToken token = default)
+    public static Task SendAsync(this IDmtpActorObject client, ushort protocol, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty, token);
+        return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty, cancellationToken);
     }
 
     #endregion 发送

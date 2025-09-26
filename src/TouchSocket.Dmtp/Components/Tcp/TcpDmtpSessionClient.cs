@@ -199,19 +199,19 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         // 检查是否已初始化IDmtpActor接口
         if (this.m_dmtpActor != null)
         {
             // 如果已初始化，则调用IDmtpActor的CloseAsync方法发送关闭消息
-            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的CloseAsync方法发送关闭消息
-        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
@@ -226,9 +226,9 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     #region ResetId
 
     ///<inheritdoc/>
-    public override Task ResetIdAsync(string newId, CancellationToken token)
+    public override Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId, token);
+        return this.m_dmtpActor.ResetIdAsync(newId, cancellationToken);
     }
 
     #endregion ResetId
@@ -283,14 +283,14 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
         this.m_dmtpAdapter.Config(this.Config);
     }
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
 
-        return base.ProtectedSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     private async Task ThisOnResetId(DmtpActor rpcActor, IdChangedEventArgs e)

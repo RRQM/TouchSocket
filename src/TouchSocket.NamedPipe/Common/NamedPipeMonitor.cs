@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using TouchSocket.Core;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>

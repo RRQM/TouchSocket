@@ -613,7 +613,7 @@ internal abstract class RpcClientCodeBuilder : CodeBuilder
         foreach (var parameter in parameters)
         {
             codeBuilder.Append(parameter.Name);
-            if (!parameter.Equals(parameters[parameters.Length - 1], SymbolEqualityComparer.Default))
+            if (!parameter.Equals(parameters[^1], SymbolEqualityComparer.Default))
             {
                 codeBuilder.Append(",");
             }

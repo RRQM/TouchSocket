@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -25,6 +21,8 @@ namespace TouchSocket.JsonRpc;
 public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 {
     private readonly JsonRpcActor m_jsonRpcActor;
+
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
     /// <summary>
     /// 初始化 <see cref="HttpJsonRpcClient"/> 类的新实例。
@@ -46,7 +44,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 
     #region JsonRpcActor
 
-    private async Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private async Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var request = new HttpRequest
         {
@@ -55,27 +53,31 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
         };
         request.SetContent(memory);
 
-        using (var responseResult = await base.ProtectedRequestAsync(request,token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await base.ProtectedRequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             var response = responseResult.Response;
 
             if (response.IsSuccess())
             {
-                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
+                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
             }
         }
     }
 
     #endregion JsonRpcActor
 
-    /// <summary>
-    /// 异步连接到服务器。
-    /// </summary>
-    /// <param name="token">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public Task ConnectAsync(CancellationToken token)
+    /// <inheritdoc/>
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(token);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     /// <summary>
@@ -91,16 +93,6 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }
 
-    /// <inheritdoc/>
-    protected override void SafetyDispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_jsonRpcActor.SafeDispose();
-        }
-        base.SafetyDispose(disposing);
-    }
-
     /// <summary>
     /// 加载配置。
     /// </summary>
@@ -109,5 +101,15 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
         base.LoadConfig(config);
         this.m_jsonRpcActor.Logger = this.Logger;
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_jsonRpcActor.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
     }
 }

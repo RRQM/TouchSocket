@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO.Ports;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
-using TouchSocket.Core;
 
 namespace TouchSocket.SerialPorts;
 
@@ -92,21 +88,21 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
 
     public SerialPort SerialPort => this.m_serialPort;
 
-    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short token)
+    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short cancellationToken)
     {
-        return this.m_core.GetResult(token);
+        return this.m_core.GetResult(cancellationToken);
     }
 
-    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short token)
+    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short cancellationToken)
     {
-        return this.m_core.GetStatus(token);
+        return this.m_core.GetStatus(cancellationToken);
     }
 
-    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
     {
         try
         {
-            this.m_core.OnCompleted(continuation, state, token, flags);
+            this.m_core.OnCompleted(continuation, state, cancellationToken, flags);
         }
         catch (Exception ex)
         {
@@ -122,7 +118,7 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
         }
     }
 
-    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock, CancellationToken token)
+    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock, CancellationToken cancellationToken)
     {
         if (this.m_streamAsync)
         {
@@ -130,7 +126,7 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
             // 如果是异步流，则使用异步读取方式
             var stream = this.m_serialPort.BaseStream;
             var memory = byteBlock.TotalMemory;
-            var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var r = await stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_receiveCounter.Increment(r);
             return new SerialOperationResult(r, SerialData.Chars);
         }
@@ -140,14 +136,14 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
         }
     }
 
-    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         this.m_cancellationTokenSource.Token.ThrowIfCancellationRequested();
-        await this.m_semaphoreForSend.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForSend.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             var stream = this.m_serialPort.BaseStream;
-            await stream.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_sendCounter.Increment(memory.Length);
         }
         finally
@@ -192,8 +188,8 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
 
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        var token = this.m_cancellationTokenSource.Token;
-        if (token.IsCancellationRequested)
+        var cancellationToken = this.m_cancellationTokenSource.Token;
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
@@ -203,7 +199,7 @@ internal class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOpera
             var bytesToRead = this.m_serialPort.BytesToRead;
             while (bytesToRead > 0)
             {
-                this.m_receiveLock.Wait(token);
+                this.m_receiveLock.Wait(cancellationToken);
 
                 var eventType = e.EventType;
 

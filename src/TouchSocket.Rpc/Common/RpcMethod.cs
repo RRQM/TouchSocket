@@ -10,12 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
-using TouchSocket.Core;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Rpc;
 
@@ -105,12 +102,6 @@ public sealed class RpcMethod : Method
 
         return null;
     }
-
-    /// <summary>
-    /// 是否可用
-    /// </summary>
-    [Obsolete("此属性已被弃用", true)]
-    public bool IsEnable { get; set; } = true;
 
     /// <summary>
     /// 参数名集合
@@ -246,9 +237,12 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 筛选器
     /// </summary>
-    public IReadOnlyList<IRpcActionFilter> GetFilters()
+    /// <param name="filters">全局筛选器</param>
+    /// <param name="resolver"></param>
+    /// <returns></returns>
+    public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<Type> filters, IResolver resolver)
     {
-        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3])
+        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3] || filters.Count > 0)
         {
             var actionFilters = new List<IRpcActionFilter>();
             //注册方法
@@ -257,7 +251,7 @@ public sealed class RpcMethod : Method
                 foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false))
                 {
                     this.m_hasFilters[0] = true;
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                 }
             }
 
@@ -269,7 +263,7 @@ public sealed class RpcMethod : Method
                     foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
                         this.m_hasFilters[1] = true;
-                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
             }
@@ -280,7 +274,7 @@ public sealed class RpcMethod : Method
                 foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                 {
                     this.m_hasFilters[2] = true;
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                 }
             }
 
@@ -292,17 +286,23 @@ public sealed class RpcMethod : Method
                     foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
                         this.m_hasFilters[3] = true;
-                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
             }
 
+            //全局筛选器
+            foreach (var filterType in filters)
+            {
+                var filter = resolver.Resolve(filterType);
+                AddActionFilter(Unsafe.As<object, IRpcActionFilter>(ref filter), ref actionFilters);
+            }
             return actionFilters;
         }
-        return new IRpcActionFilter[0];
+        return [];
     }
 
-    private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
+    private static void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
     {
         foreach (var item in filters)
         {

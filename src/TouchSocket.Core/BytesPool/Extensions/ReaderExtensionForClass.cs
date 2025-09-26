@@ -10,9 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace TouchSocket.Core;
 

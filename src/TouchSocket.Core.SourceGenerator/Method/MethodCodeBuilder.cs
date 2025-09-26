@@ -13,6 +13,7 @@
 using Microsoft.CodeAnalysis;
 
 namespace TouchSocket;
+
 internal abstract class MethodCodeBuilder : TypeCodeBuilder<INamedTypeSymbol>
 {
     protected MethodCodeBuilder(INamedTypeSymbol typeSymbol) : base(typeSymbol)

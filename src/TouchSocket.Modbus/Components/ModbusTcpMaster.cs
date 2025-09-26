@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
@@ -36,12 +33,12 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     }
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await this.TcpConnectAsync(token);
+            await this.TcpConnectAsync(cancellationToken);
         }
         finally
         {
@@ -50,9 +47,9 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
@@ -62,14 +59,14 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
             try
             {
                 modbusTcpRequest.Build(ref valueByteBlock);
-                await this.ProtectedSendAsync(valueByteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(valueByteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
                 valueByteBlock.Dispose();
             }
 
-            var waitDataStatus = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.CompletedData;

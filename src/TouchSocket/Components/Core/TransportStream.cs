@@ -10,13 +10,8 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.IO;
 using System.IO.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -159,7 +154,7 @@ public class TransportStream : Stream
         try
         {
             var result = await this.m_reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-            
+
             if (result.IsCanceled)
             {
                 throw new OperationCanceledException();
@@ -167,7 +162,7 @@ public class TransportStream : Stream
 
             var sequence = result.Buffer;
             var bytesToRead = (int)Math.Min(buffer.Length, sequence.Length);
-            
+
             if (bytesToRead == 0)
             {
                 this.m_reader.AdvanceTo(sequence.Start);
@@ -176,9 +171,9 @@ public class TransportStream : Stream
 
             var sliced = sequence.Slice(0, bytesToRead);
             sliced.CopyTo(buffer.Span);
-            
+
             this.m_reader.AdvanceTo(sliced.End);
-            
+
             return bytesToRead;
         }
         finally
@@ -300,7 +295,7 @@ public class TransportStream : Stream
         {
             this.m_disposed = true;
         }
-        
+
         await base.DisposeAsync().ConfigureAwait(false);
     }
 #endif

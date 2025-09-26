@@ -10,13 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
 using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets;
 
@@ -26,7 +20,7 @@ namespace TouchSocket.Http.WebSockets;
 public static class WebSocketExtension
 {
     #region WebSocket
-    public static async Task<Result> SafeCloseClientAsync(this WebSocket webSocket, string msg, CancellationToken token)
+    public static async Task<Result> SafeCloseClientAsync(this WebSocket webSocket, string msg, CancellationToken cancellationToken)
     {
         if (webSocket is null)
         {
@@ -40,7 +34,7 @@ public static class WebSocketExtension
 
         try
         {
-            await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, token);
+            await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
             return Result.Success;
         }
         catch (Exception ex)
@@ -61,9 +55,9 @@ public static class WebSocketExtension
     /// </summary>
     /// <param name="webSocket">要读取数据的WebSocket实例</param>
     /// <param name="byteBlock">用于存储接收到的数据的字节块</param>
-    /// <param name="token">用于取消操作的取消令牌</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌</param>
     /// <returns>返回一个任务，该任务在完成后将包含读取到的字符串</returns>
-    public static async Task ReadStringAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken token = default)
+    public static async Task ReadStringAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken cancellationToken = default)
     {
         if (!webSocket.AllowAsyncRead)
         {
@@ -71,7 +65,7 @@ public static class WebSocketExtension
         }
         while (true)
         {
-            using (var receiveResult = await webSocket.ReadAsync(token))
+            using (var receiveResult = await webSocket.ReadAsync(cancellationToken))
             {
                 if (receiveResult.IsCompleted)
                 {
@@ -128,13 +122,13 @@ public static class WebSocketExtension
     /// </para>
     /// </summary>
     /// <param name="webSocket">要读取数据的WebSocket实例</param>
-    /// <param name="token">用于取消异步读取操作的取消令牌</param>
+    /// <param name="cancellationToken">用于取消异步读取操作的取消令牌</param>
     /// <returns>返回异步读取到的字符串</returns>
-    public static async Task<string> ReadStringAsync(this IWebSocket webSocket, CancellationToken token = default)
+    public static async Task<string> ReadStringAsync(this IWebSocket webSocket, CancellationToken cancellationToken = default)
     {
         using (var byteBlock = new ByteBlock(1024 * 64))
         {
-            await ReadStringAsync(webSocket, byteBlock, token);
+            await ReadStringAsync(webSocket, byteBlock, cancellationToken);
 
             return byteBlock.Span.ToString(Encoding.UTF8);
         }
@@ -153,9 +147,9 @@ public static class WebSocketExtension
     /// </summary>
     /// <param name="webSocket">要读取数据的WebSocket实例。</param>
     /// <param name="byteBlock">用于存储读取的二进制数据的容器。</param>
-    /// <param name="token">用于取消异步读取操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消异步读取操作的取消令牌。</param>
     /// <returns>返回一个Task对象，表示异步读取操作。</returns>
-    public static async Task ReadBinaryAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken token = default)
+    public static async Task ReadBinaryAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken cancellationToken = default)
     {
         if (!webSocket.AllowAsyncRead)
         {
@@ -163,7 +157,7 @@ public static class WebSocketExtension
         }
         while (true)
         {
-            using (var receiveResult = await webSocket.ReadAsync(token))
+            using (var receiveResult = await webSocket.ReadAsync(cancellationToken))
             {
                 if (receiveResult.IsCompleted)
                 {
@@ -221,9 +215,9 @@ public static class WebSocketExtension
     /// </summary>
     /// <param name="webSocket">要读取数据的WebSocket实例。</param>
     /// <param name="stream">用于存储读取的二进制数据的流。</param>
-    /// <param name="token">用于取消异步读取操作的取消令牌。默认值为<see cref="CancellationToken.None"/>。</param>
+    /// <param name="cancellationToken">用于取消异步读取操作的取消令牌。默认值为<see cref="CancellationToken.None"/>。</param>
     /// <returns>返回一个<see cref="Task"/>对象，表示异步读取操作。</returns>
-    public static async Task ReadBinaryAsync(this IWebSocket webSocket, Stream stream, CancellationToken token = default)
+    public static async Task ReadBinaryAsync(this IWebSocket webSocket, Stream stream, CancellationToken cancellationToken = default)
     {
         if (!webSocket.AllowAsyncRead)
         {
@@ -231,7 +225,7 @@ public static class WebSocketExtension
         }
         while (true)
         {
-            using (var receiveResult = await webSocket.ReadAsync(token))
+            using (var receiveResult = await webSocket.ReadAsync(cancellationToken))
             {
                 if (receiveResult.IsCompleted)
                 {

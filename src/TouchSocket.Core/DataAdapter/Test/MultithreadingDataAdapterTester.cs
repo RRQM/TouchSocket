@@ -10,12 +10,8 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -148,7 +144,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
         Interlocked.Increment(ref this.m_count);
     }
 
-    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var array = memory.ToArray();
         var asyncByte = new QueueDataBytes(array, 0, array.Length);

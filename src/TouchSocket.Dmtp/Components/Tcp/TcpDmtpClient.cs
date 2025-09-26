@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -58,9 +54,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         // 检查是否已初始化IDmtpActor对象
         if (this.m_dmtpActor != null)
@@ -68,11 +64,11 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             // 向IDmtpActor对象发送关闭消息
             await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的CloseAsync方法完成后续关闭操作
-        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 断开
@@ -80,9 +76,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #region 连接
 
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(CancellationToken token)
+    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreForConnect.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -92,13 +88,13 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             }
             if (!base.Online)
             {
-                await base.TcpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
             ThrowHelper.ThrowArgumentNullExceptionIf(dmtpOption, nameof(dmtpOption));
 
-            await this.m_dmtpActor.ConnectAsync(dmtpOption, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -111,9 +107,9 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #region ResetId
 
     ///<inheritdoc/>
-    public Task ResetIdAsync(string newId, CancellationToken token)
+    public Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId, token);
+        return this.m_dmtpActor.ResetIdAsync(newId, cancellationToken);
     }
 
     #endregion ResetId
@@ -144,14 +140,14 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
     #region 内部委托绑定
 
-    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         this.ThrowIfClientNotConnected();
         if (memory.Length > this.m_dmtpAdapter.MaxPackageSize)
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length), memory.Length, this.m_dmtpAdapter.MaxPackageSize);
         }
-        return base.ProtectedSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
@@ -353,13 +349,13 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     protected async Task ReceiveLoopAsync1111(ITransport transport)
     {
         var dmtpAdapter2 = new DmtpAdapter();
-        var token = transport.ClosedToken;
-        while (!token.IsCancellationRequested)
+        var cancellationToken = transport.ClosedToken;
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 // 等待接收数据
-                var readResult = await transport.Reader.ReadAsync(token);
+                var readResult = await transport.Reader.ReadAsync(cancellationToken);
 
                 var sequence = readResult.Buffer;
                 var reader = new BytesReader(sequence);

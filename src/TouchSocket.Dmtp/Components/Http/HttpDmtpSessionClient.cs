@@ -41,14 +41,14 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region 断开
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         if (this.m_dmtpActor != null)
         {
-            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
-        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
@@ -70,14 +70,14 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region ResetId
 
     ///<inheritdoc/>
-    public override async Task ResetIdAsync(string newId, CancellationToken token)
+    public override async Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
         if (this.m_dmtpActor == null)
         {
-            await base.ResetIdAsync(newId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.ResetIdAsync(newId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.m_dmtpActor.ResetIdAsync(newId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_dmtpActor.ResetIdAsync(newId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion ResetId
@@ -139,9 +139,9 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         this.SetAdapter(new DmtpAdapter());
     }
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     #region Override

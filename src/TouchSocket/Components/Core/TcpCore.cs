@@ -10,13 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -48,9 +43,9 @@ internal sealed class TcpCore : SafetyDisposableObject
 
     #region Receive
 
-    public ValueTask<TcpOperationResult> ReceiveAsync(in Memory<byte> memory, CancellationToken token)
+    public ValueTask<TcpOperationResult> ReceiveAsync(in Memory<byte> memory, CancellationToken cancellationToken)
     {
-        token.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
         return this.m_socketReceiver.ReceiveAsync(this.m_socket, memory);
     }
 
@@ -80,21 +75,16 @@ internal sealed class TcpCore : SafetyDisposableObject
         this.m_socket = null;
     }
 
-    public async Task SendAsync(ReadOnlySequence<byte> buffer, CancellationToken token)
+    public async Task SendAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
     {
-        token.ThrowIfCancellationRequested();
-        var length = 0;
+        cancellationToken.ThrowIfCancellationRequested();
+        var length = buffer.Length;
         try
         {
             var result = await this.m_socketSender.SendAsync(this.m_socket, buffer).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (result.SocketError != SocketError.Success)
             {
-                throw new SocketException((int)result.SocketError);
-            }
-
-            foreach (var memory in buffer)
-            {
-                length += memory.Length;
+                ThrowHelper.ThrowSocketException((int)result.SocketError);
             }
 
             if (result.BytesTransferred != length)

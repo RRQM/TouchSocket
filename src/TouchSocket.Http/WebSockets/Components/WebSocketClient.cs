@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
@@ -132,12 +127,12 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await this.ProtectedWebSocketConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedWebSocketConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {

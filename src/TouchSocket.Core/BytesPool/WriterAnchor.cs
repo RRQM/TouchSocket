@@ -10,8 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -73,9 +71,9 @@ public readonly ref struct WriterAnchor<TWriter>
         }
         else if (writer.SupportsRewind)
         {
-            writer.Advance(-(length+m_size));
+            writer.Advance(-(length + this.m_size));
             var span = writer.GetSpan(this.m_span.Length).Slice(0, this.m_span.Length);
-            writer.Advance(length + m_size);
+            writer.Advance(length + this.m_size);
             return span;
         }
         else

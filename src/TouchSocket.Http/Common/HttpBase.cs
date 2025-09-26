@@ -10,14 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -229,7 +223,7 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
     /// <returns>返回一个<see cref="IReadOnlyMemoryBlockResult"/>，表示异步读取操作的结果。</returns>
-    public abstract ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken);
+    public abstract ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步读取并复制流数据
@@ -273,7 +267,7 @@ public abstract class HttpBase : IRequestInfo
                     Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
                     if (!memory.IsEmpty)
                     {
-                        
+
                         await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }

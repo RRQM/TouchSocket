@@ -10,8 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -34,7 +32,7 @@ public interface IByteBlockCore
     /// </summary>
     /// <value>返回一个<see cref="ReadOnlyMemory{T}"/>，表示字节块中从索引0到<see cref="Length"/>的有效数据。</value>
     ReadOnlyMemory<byte> Memory { get; }
-    
+
     /// <summary>
     /// 获取或设置字节块中的当前位置。
     /// </summary>
@@ -43,7 +41,7 @@ public interface IByteBlockCore
     /// 位置用于跟踪读取或写入操作的当前位置，通常在0到<see cref="Length"/>之间。
     /// </remarks>
     int Position { get; set; }
-    
+
     /// <summary>
     /// 获取字节块的只读跨度表示形式。
     /// </summary>

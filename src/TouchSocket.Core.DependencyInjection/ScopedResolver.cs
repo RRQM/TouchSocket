@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace TouchSocket.Core.AspNetCore;
 

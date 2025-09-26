@@ -10,13 +10,10 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
 
 namespace TouchSocket.Core;
 
@@ -95,10 +92,10 @@ public sealed class ByteBlock : IByteBlock
 
     /// <inheritdoc/>
     public int Capacity => this.m_memory.Length;
-    
+
     /// <inheritdoc/>
     public int FreeLength => this.Capacity - this.Position;
-    
+
     /// <inheritdoc/>
     public int Length => this.m_length;
 
@@ -110,25 +107,25 @@ public sealed class ByteBlock : IByteBlock
 
     /// <inheritdoc/>
     public ReadOnlySpan<byte> Span => this.Memory.Span;
-    
+
     /// <inheritdoc/>
     public bool SupportsRewind => true;
-    
+
     /// <inheritdoc/>
     public Memory<byte> TotalMemory => this.m_memory;
 
     /// <inheritdoc/>
     public bool Using => this.m_dis == 0;
-    
+
     /// <inheritdoc/>
     public short Version => this.m_version;
-    
+
     /// <inheritdoc/>
     long IBytesWriter.WrittenCount => this.Position;
 
     /// <inheritdoc/>
     public ReadOnlySequence<byte> TotalSequence => new ReadOnlySequence<byte>(this.Memory);
-    
+
     /// <inheritdoc/>
     public ReadOnlySequence<byte> Sequence => this.TotalSequence.Slice(this.Position);
 
@@ -203,7 +200,7 @@ public sealed class ByteBlock : IByteBlock
             this.Dispose();
         }
     }
-    
+
     /// <summary>
     /// 返回当前字节块的UTF-8字符串表示形式。
     /// </summary>

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -26,7 +23,7 @@ public interface IHttpClient : IHttpSession, ISetupConfigObject, IOnlineClient, 
     /// 发起请求
     /// </summary>
     /// <param name="request">请求体</param>
-    /// <param name="token">结束等待令箭</param>
+    /// <param name="cancellationToken">结束等待令箭</param>
     /// <returns></returns>
-    ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken token=default);
+    ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken cancellationToken = default);
 }

@@ -10,13 +10,8 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -28,7 +23,7 @@ internal sealed class ClientHttpResponse : HttpResponse
     private ByteBlock m_contentByteBlock;
     private ReadOnlyMemory<byte> m_contentMemory;
     private bool m_isContentReadingStarted = false;
-   
+
     internal ClientHttpResponse(HttpClientBase httpClientBase) : base(httpClientBase)
     {
         this.m_httpClientBase = httpClientBase;
@@ -194,8 +189,8 @@ internal sealed class ClientHttpResponse : HttpResponse
 
     protected internal override void Reset()
     {
-        m_contentByteBlock?.Dispose();
-        m_contentByteBlock = null;
+        this.m_contentByteBlock?.Dispose();
+        this.m_contentByteBlock = null;
         this.m_contentMemory = null;
         this.m_bytesRead = 0;
         this.m_isContentReadingStarted = false;
@@ -374,7 +369,7 @@ internal sealed class ClientHttpResponse : HttpResponse
         }
 
         var remainingBytes = totalBytesToRead - this.m_bytesRead;
-        var bytesToRead =Math.Min( Math.Min(remainingBytes, buffer.Length), TouchSocketHttpUtility.MaxReadSize);
+        var bytesToRead = Math.Min(Math.Min(remainingBytes, buffer.Length), TouchSocketHttpUtility.MaxReadSize);
 
         var contentSlice = buffer.Slice(0, bytesToRead);
 
@@ -384,11 +379,11 @@ internal sealed class ClientHttpResponse : HttpResponse
         if (this.m_bytesRead >= totalBytesToRead)
         {
             this.ContentStatus = ContentCompletionStatus.ReadCompleted;
-            result= new HttpReadOnlyMemoryBlockResult(contentSlice, true);
+            result = new HttpReadOnlyMemoryBlockResult(contentSlice, true);
         }
         else
         {
-            result= new HttpReadOnlyMemoryBlockResult(contentSlice, false);
+            result = new HttpReadOnlyMemoryBlockResult(contentSlice, false);
         }
         reader.AdvanceTo(buffer.GetPosition(bytesToRead));
 
@@ -404,21 +399,21 @@ internal sealed class ClientHttpResponse : HttpResponse
             this.ContentStatus = ContentCompletionStatus.ContentCompleted;
             return;
         }
-        m_contentByteBlock = new ByteBlock((int)content.Length);
+        this.m_contentByteBlock = new ByteBlock((int)content.Length);
 
         foreach (var item in content)
         {
-            m_contentByteBlock.Write(item.Span);
+            this.m_contentByteBlock.Write(item.Span);
         }
-        this.m_contentMemory = m_contentByteBlock.Memory;
+        this.m_contentMemory = this.m_contentByteBlock.Memory;
         this.ContentLength = content.Length;
         this.ContentStatus = ContentCompletionStatus.ContentCompleted;
     }
 
     internal void InternalSetContent(ByteBlock byteBlock)
     {
-        m_contentByteBlock = byteBlock;
-        this.m_contentMemory = m_contentByteBlock.Memory;
+        this.m_contentByteBlock = byteBlock;
+        this.m_contentMemory = this.m_contentByteBlock.Memory;
         this.ContentLength = byteBlock.Length;
         this.ContentStatus = ContentCompletionStatus.ContentCompleted;
     }

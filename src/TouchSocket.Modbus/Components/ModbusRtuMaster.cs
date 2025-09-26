@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
@@ -34,15 +31,15 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return base.SerialPortConnectAsync(token);
+        return base.SerialPortConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -52,7 +49,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             try
             {
                 modbusRequest.Build(ref byteBlock);
-                await this.ProtectedSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -60,7 +57,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             }
 
             this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var response = await this.m_waitDataAsync.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
 

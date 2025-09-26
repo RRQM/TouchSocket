@@ -11,9 +11,9 @@
 // ------------------------------------------------------------------------------
 
 using System.IO.Ports;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts;
+
 internal sealed class SerialPortTransport : StreamTransport
 {
     private readonly SerialPort m_serialPort;

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -21,7 +18,7 @@ namespace TouchSocket.Sockets;
 /// 检查清理连接插件。服务器与客户端均适用。
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin 
+public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     where TClient : class, IDependencyClient, IClosableClient
 {
     private static readonly DependencyProperty<bool> s_checkClearProperty =

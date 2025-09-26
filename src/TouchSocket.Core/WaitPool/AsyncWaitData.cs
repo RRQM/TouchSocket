@@ -10,10 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -123,7 +119,7 @@ public sealed class AsyncWaitData<T> : DisposableObject
     /// <summary>
     /// 异步等待操作完成，支持取消操作。
     /// </summary>
-    /// <param name="token">用于取消等待操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消等待操作的取消令牌。</param>
     /// <returns>
     /// 表示异步等待操作的<see cref="ValueTask{TResult}"/>，
     /// 返回等待操作的最终状态。
@@ -132,13 +128,13 @@ public sealed class AsyncWaitData<T> : DisposableObject
     /// 如果取消令牌可以被取消，则在取消时会将状态设置为<see cref="WaitDataStatus.Canceled"/>。
     /// 否则将一直等待直到操作完成。此方法配置为不捕获同步上下文。
     /// </remarks>
-    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken token)
+    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken)
     {
-        if (token.CanBeCanceled)
+        if (cancellationToken.CanBeCanceled)
         {
             try
             {
-                await this.m_asyncWaitHandle.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_asyncWaitHandle.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (OperationCanceledException)
             {

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
@@ -28,5 +29,11 @@ internal static partial class ThrowHelper
     public static void ThrowClientNotFindException(string id)
     {
         throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(id));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowSocketException(int errorCode)
+    {
+        throw new SocketException(errorCode);
     }
 }

@@ -12,11 +12,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -146,12 +141,12 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 
         parameters ??= [];
 
-        var token = invokeOption.Token;
+        var cancellationToken = invokeOption.Token;
         CancellationTokenSource cts = default;
-        if (!token.CanBeCanceled)
+        if (!cancellationToken.CanBeCanceled)
         {
             cts = new CancellationTokenSource(invokeOption.Timeout);
-            token = cts.Token;
+            cancellationToken = cts.Token;
         }
 
         var strs = new string[parameters.Length];
@@ -174,7 +169,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             {
                 var str = this.BuildJsonRpcRequest(jsonRpcRequest);
                 WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
-                await this.SendAction(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAction(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -191,7 +186,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 case FeedbackType.WaitInvoke:
                 default:
                     {
-                        switch (await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             case WaitDataStatus.Success:
                                 {

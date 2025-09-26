@@ -10,19 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using Newtonsoft.Json.Linq;
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -117,89 +112,61 @@ public static class SystemExtension
     /// <summary>
     /// 对于给定的无符号长整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到63。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static ulong SetBit(this ulong b, int index, bool bitvalue)
+    public static ulong SetBit(this ulong value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 63)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        ulong baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
+        var accessor = new BitAccessor<ulong>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到31。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static uint SetBit(this uint b, int index, bool bitvalue)
+    public static uint SetBit(this uint value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 31)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        uint baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
+        var accessor = new BitAccessor<uint>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号短整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到15。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static ushort SetBit(this ushort b, int index, bool bitvalue)
+    public static ushort SetBit(this ushort value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 15)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        ushort baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? (ushort)(b | baseNumber << index) : (ushort)(b & ~(baseNumber << index));
+        var accessor = new BitAccessor<ushort>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号字节型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到7。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static byte SetBit(this byte b, int index, bool bitvalue)
+    public static byte SetBit(this byte value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 7)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        byte baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? (byte)(b | baseNumber << index) : (byte)(b & ~(baseNumber << index));
+        var accessor = new BitAccessor<byte>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     #endregion
@@ -208,65 +175,53 @@ public static class SystemExtension
     /// <summary>
     /// 获取无符号长整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号长整型数值。</param>
+    /// <param name="value">要检查的无符号长整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到63。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到63之间时，抛出此异常。</exception>
-    public static bool GetBit(this ulong b, int index)
+    public static bool GetBit(this ulong value, int index)
     {
-        if (index > 63 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
-        }
-        return (b & (ulong)1 << index) != 0;
+        var accessor = new BitAccessor<ulong>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取无符号整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号整型数值。</param>
+    /// <param name="value">要检查的无符号整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到31。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到31之间时，抛出此异常。</exception>
-    public static bool GetBit(this uint b, int index)
+    public static bool GetBit(this uint value, int index)
     {
-        if (index > 31 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
-        }
-        return (b & (uint)1 << index) != 0;
+        var accessor = new BitAccessor<uint>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取无符号短整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号短整型数值。</param>
+    /// <param name="value">要检查的无符号短整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到15。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到15之间时，抛出此异常。</exception>
-    public static bool GetBit(this ushort b, int index)
+    public static bool GetBit(this ushort value, int index)
     {
-        if (index > 15 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
-        }
-        return (b & 1 << index) != 0;
+        var accessor = new BitAccessor<ushort>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取字节型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的字节型数值。</param>
+    /// <param name="value">要检查的字节型数值。</param>
     /// <param name="index">要检查的位的位置，从0到7。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到7之间时，抛出此异常。</exception>
-    public static bool GetBit(this byte b, int index)
+    public static bool GetBit(this byte value, int index)
     {
-        if (index > 7 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        }
-        return (b & 1 << index) != 0;
+        var accessor = new BitAccessor<byte>(ref value);
+        return accessor.Get(index);
     }
     #endregion
 
@@ -960,14 +915,14 @@ public static class SystemExtension
     /// </summary>
     /// <param name="stream">此方法扩展的流对象，表示要写入的流。</param>
     /// <param name="memory">只读内存块，其中包含要写入的字节数据。</param>
-    /// <param name="token">用于取消异步写入操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消异步写入操作的取消令牌。</param>
     /// <remarks>
     /// 此方法利用内存块的 GetArray 方法获取数组段信息，然后使用现有的 WriteAsync 方法异步地将内容写入流中，提高了写入操作的效率和灵活性。
     /// </remarks>
-    public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var segment = memory.GetArray();
-        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

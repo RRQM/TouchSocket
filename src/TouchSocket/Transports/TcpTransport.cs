@@ -10,13 +10,9 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.IO.Pipelines;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -89,22 +85,22 @@ internal sealed class TcpTransport : BaseTransport
         this.UseSsl = true;
     }
 
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
-            if (this.m_writer!=null)
+            if (this.m_writer != null)
             {
                 // 完成发送管道
-                await this.m_writer.CompleteAsync().SafeWaitAsync(token);
+                await this.m_writer.CompleteAsync().SafeWaitAsync(cancellationToken);
             }
 
-            if (this.m_reader!=null)
+            if (this.m_reader != null)
             {
                 // 等待发送管道读取器完成
-                await this.m_reader.CompleteAsync().SafeWaitAsync(token);
+                await this.m_reader.CompleteAsync().SafeWaitAsync(cancellationToken);
             }
-            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.Close();
             return Result.Success;
         }
@@ -134,14 +130,14 @@ internal sealed class TcpTransport : BaseTransport
     }
 
 
-    protected override async Task RunReceive(CancellationToken token)
+    protected override async Task RunReceive(CancellationToken cancellationToken)
     {
         try
         {
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var memory = this.m_pipeReceive.Writer.GetMemory(this.ReceiveBufferSize);
-                var result = await this.m_tcpCore.ReceiveAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_tcpCore.ReceiveAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.SocketError == SocketError.Success)
                 {
                     if (result.BytesTransferred == 0)
@@ -154,7 +150,7 @@ internal sealed class TcpTransport : BaseTransport
                     this.m_receiveCounter.Increment(result.BytesTransferred);
 
                     this.m_pipeReceive.Writer.Advance(result.BytesTransferred);
-                    var flushResult = await this.m_pipeReceive.Writer.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var flushResult = await this.m_pipeReceive.Writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (flushResult.IsCompleted)
                     {
                         break;
@@ -181,13 +177,13 @@ internal sealed class TcpTransport : BaseTransport
         }
     }
 
-    protected override async Task RunSend(CancellationToken token)
+    protected override async Task RunSend(CancellationToken cancellationToken)
     {
         try
         {
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var readResult = await this.m_pipeSend.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (readResult.IsCanceled)
                 {
                     break;
@@ -200,7 +196,7 @@ internal sealed class TcpTransport : BaseTransport
 
                 try
                 {
-                    await this.m_tcpCore.SendAsync(readResult.Buffer, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_tcpCore.SendAsync(readResult.Buffer, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     this.m_pipeSend.Reader.AdvanceTo(readResult.Buffer.End);
 
                     this.m_sentCounter.Increment(readResult.Buffer.Length);

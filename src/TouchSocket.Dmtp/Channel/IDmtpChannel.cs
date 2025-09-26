@@ -10,18 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 提供一个基于Dmtp协议的，可以独立读写的通道。
 /// </summary>
-public partial interface IDmtpChannel : ISender, IDisposableObject
+public partial interface IDmtpChannel : IDisposableObject
 {
     /// <summary>
     /// 获取一个值，该值指示通道是否可以继续读取数据。
@@ -92,11 +86,24 @@ public partial interface IDmtpChannel : ISender, IDisposableObject
     /// <summary>
     /// 异步读取数据
     /// </summary>
-    /// <param name="token">取消令箭</param>
+    /// <param name="cancellationToken">取消令箭</param>
     /// <returns>返回读取到的数据。当通道状态发生变化或出现错误时会抛出相应异常。</returns>
     /// <exception cref="InvalidOperationException">通道状态不允许读取数据</exception>
     /// <exception cref="ObjectDisposedException">通道已被释放</exception>
     /// <exception cref="OperationCanceledException">操作被取消</exception>
     /// <exception cref="Exception">其他异常</exception>
-    Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken token = default);
+    Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 异步写入数据。
+    /// <para>将指定的字节数据写入通道。当通道状态不允许写入或出现错误时会抛出相应异常。</para>
+    /// </summary>
+    /// <param name="memory">要写入的数据内容。</param>
+    /// <param name="cancellationToken">取消令箭。</param>
+    /// <returns>表示异步写入操作的任务。</returns>
+    /// <exception cref="InvalidOperationException">通道状态不允许写入数据。</exception>
+    /// <exception cref="ObjectDisposedException">通道已被释放。</exception>
+    /// <exception cref="OperationCanceledException">操作被取消。</exception>
+    /// <exception cref="Exception">其他异常。</exception>
+    Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
 }

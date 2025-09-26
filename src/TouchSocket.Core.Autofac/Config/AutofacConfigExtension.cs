@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Autofac;
-using System;
 
 namespace TouchSocket.Core;
 

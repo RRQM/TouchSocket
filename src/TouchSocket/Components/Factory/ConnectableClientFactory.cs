@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -35,18 +30,18 @@ public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient>
     }
 
     /// <inheritdoc/>
-    protected sealed override Task<TClient> CreateClient(CancellationToken token)
+    protected sealed override Task<TClient> CreateClient(CancellationToken cancellationToken)
     {
-        return this.CreateClient(this.OnGetConfig(), token);
+        return this.CreateClient(this.OnGetConfig(), cancellationToken);
     }
 
     /// <summary>
     /// 创建客户端。
     /// </summary>
     /// <param name="config">传输客户端配置。</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回创建的客户端任务。</returns>
-    protected abstract Task<TClient> CreateClient(TouchSocketConfig config, CancellationToken token);
+    protected abstract Task<TClient> CreateClient(TouchSocketConfig config, CancellationToken cancellationToken);
 
     /// <summary>
     /// 获取配置。

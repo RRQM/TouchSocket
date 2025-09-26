@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis;

@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -24,8 +20,8 @@ public interface IConnectableClient
     /// <summary>
     /// 异步连接
     /// </summary>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <exception cref="TimeoutException">当连接超时时抛出</exception>
     /// <exception cref="Exception">当连接过程中发生错误时抛出</exception>
-    Task ConnectAsync(CancellationToken token);
+    Task ConnectAsync(CancellationToken cancellationToken);
 }

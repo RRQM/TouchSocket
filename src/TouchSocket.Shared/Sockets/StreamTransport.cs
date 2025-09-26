@@ -10,15 +10,11 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
+
 internal class StreamTransport : BaseTransport
 {
     private readonly Stream m_stream;
@@ -30,11 +26,11 @@ internal class StreamTransport : BaseTransport
         this.Start();
     }
 
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
-            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_stream.Close();
             return Result.Success;
         }
@@ -44,16 +40,16 @@ internal class StreamTransport : BaseTransport
         }
     }
 
-    protected override async Task RunReceive(CancellationToken token)
+    protected override async Task RunReceive(CancellationToken cancellationToken)
     {
         try
         {
             var pipeWriter = this.m_pipeReceive.Writer;
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var memory = pipeWriter.GetMemory(this.ReceiveBufferSize);
                 Debug.WriteLine($"StreamTransport RunReceive GetMemory Size:{memory.Length}");
-                var result = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (result == 0)
                 {
@@ -65,7 +61,7 @@ internal class StreamTransport : BaseTransport
                 this.m_receiveCounter.Increment(result);
 
                 pipeWriter.Advance(result);
-                var flushResult = await pipeWriter.FlushAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var flushResult = await pipeWriter.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (flushResult.IsCompleted)
                 {
                     break;
@@ -79,13 +75,13 @@ internal class StreamTransport : BaseTransport
         }
     }
 
-    protected override async Task RunSend(CancellationToken token)
+    protected override async Task RunSend(CancellationToken cancellationToken)
     {
         try
         {
-            while (!token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var readResult = await this.m_pipeSend.Reader.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (readResult.IsCanceled)
                 {
                     break;
@@ -100,7 +96,7 @@ internal class StreamTransport : BaseTransport
                 {
                     foreach (var item in readResult.Buffer)
                     {
-                        await this.m_stream.WriteAsync(item, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_stream.WriteAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
 
                     this.m_pipeSend.Reader.AdvanceTo(readResult.Buffer.End);

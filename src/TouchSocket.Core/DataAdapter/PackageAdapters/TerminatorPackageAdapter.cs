@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;

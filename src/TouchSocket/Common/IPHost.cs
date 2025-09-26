@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -90,6 +86,10 @@ public class IPHost : Uri
             if (this.HostNameType == UriHostNameType.Dns)
             {
                 this.m_endPoint = new DnsEndPoint(this.DnsSafeHost, this.Port);
+            }
+            else if (this.HostNameType == UriHostNameType.IPv4 || this.HostNameType == UriHostNameType.IPv6)
+            {
+                this.m_endPoint = new IPEndPoint(IPAddress.Parse(this.Host), this.Port);
             }
             else
             {

@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -47,8 +43,8 @@ public interface IConnectableService : IServiceBase
     /// </summary>
     /// <param name="sourceId">源Id</param>
     /// <param name="targetId">目标Id</param>
-    /// <param name="token"></param>
-    Task ResetIdAsync(string sourceId, string targetId, CancellationToken token=default);
+    /// <param name="cancellationToken"></param>
+    Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 根据Id判断对应的客户端是否存在

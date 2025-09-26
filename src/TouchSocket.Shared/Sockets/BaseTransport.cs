@@ -10,11 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.IO.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -89,7 +85,7 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// </summary>
     public virtual PipeWriter Writer => this.m_pipeSend.Writer;
 
-    public virtual async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -102,16 +98,16 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
             this.m_tokenSource.SafeCancel();
 
             // 完成发送管道
-            await this.m_pipeSend.Writer.CompleteAsync().SafeWaitAsync(token);
+            await this.m_pipeSend.Writer.CompleteAsync().SafeWaitAsync(cancellationToken);
 
             // 等待发送管道读取器完成
-            await this.m_pipeSend.Reader.CompleteAsync().SafeWaitAsync(token);
+            await this.m_pipeSend.Reader.CompleteAsync().SafeWaitAsync(cancellationToken);
 
             // 完成接收管道
-            await this.m_pipeReceive.Writer.CompleteAsync().SafeWaitAsync(token);
+            await this.m_pipeReceive.Writer.CompleteAsync().SafeWaitAsync(cancellationToken);
 
             // 等待接收管道读取器完成
-            await this.m_pipeReceive.Reader.CompleteAsync().SafeWaitAsync(token);
+            await this.m_pipeReceive.Reader.CompleteAsync().SafeWaitAsync(cancellationToken);
             return Result.Success;
         }
         catch (Exception ex)
@@ -120,9 +116,9 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
         }
     }
 
-    protected abstract Task RunReceive(CancellationToken token);
+    protected abstract Task RunReceive(CancellationToken cancellationToken);
 
-    protected abstract Task RunSend(CancellationToken token);
+    protected abstract Task RunSend(CancellationToken cancellationToken);
 
     protected override void SafetyDispose(bool disposing)
     {

@@ -38,12 +38,12 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     public StringSerializerConverter<HttpRequest> Converter { get; }
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
-            await base.HttpConnectAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {

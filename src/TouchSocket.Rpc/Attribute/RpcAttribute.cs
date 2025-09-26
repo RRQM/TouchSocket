@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -567,7 +562,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -615,7 +610,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -687,7 +682,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -735,7 +730,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }

@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Linq;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>

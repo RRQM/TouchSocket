@@ -10,12 +10,10 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace TouchSocket.Core;
 
@@ -38,7 +36,7 @@ public struct ValueByteBlock : IByteBlock
     private int m_length;
     private Memory<byte> m_memory;
     private short m_version;
-    
+
     /// <summary>
     /// 使用指定内存块初始化<see cref="ValueByteBlock"/>的新实例。
     /// </summary>
@@ -87,58 +85,58 @@ public struct ValueByteBlock : IByteBlock
 
     /// <inheritdoc/>
     public long BytesRead { readonly get => this.Position; set => this.Position = (int)value; }
-    
+
     /// <inheritdoc/>
     public readonly long BytesRemaining => this.Length - this.Position;
-    
+
     /// <inheritdoc/>
     public readonly int CanReadLength => this.Length - this.Position;
-    
+
     /// <inheritdoc/>
     public readonly int Capacity => this.m_memory.Length;
-    
+
     /// <inheritdoc/>
     public readonly int FreeLength => this.Capacity - this.Position;
-    
+
     /// <summary>
     /// 获取一个值，该值指示内存块是否为空。
     /// </summary>
     /// <value>如果内存块为空，则为 <see langword="true"/>；否则为 <see langword="false"/>。</value>
     public readonly bool IsEmpty => this.m_memory.IsEmpty;
-    
+
     /// <inheritdoc/>
     public readonly int Length => this.m_length;
-    
+
     /// <inheritdoc/>
     public readonly ReadOnlyMemory<byte> Memory => this.m_memory.Slice(0, this.m_length);
-    
+
     /// <inheritdoc/>
     public int Position { get; set; }
-    
+
     /// <inheritdoc/>
     public readonly ReadOnlySpan<byte> Span => this.Memory.Span;
-    
+
     /// <inheritdoc/>
     public readonly bool SupportsRewind => true;
-    
+
     /// <inheritdoc/>
     public readonly Memory<byte> TotalMemory => this.m_memory;
-    
+
     /// <inheritdoc/>
     public readonly bool Using => !this.m_dis;
-    
+
     /// <inheritdoc/>
     public readonly short Version => this.m_version;
 
     /// <inheritdoc/>
     public readonly ReadOnlySequence<byte> TotalSequence => new ReadOnlySequence<byte>(this.Memory);
-    
+
     /// <inheritdoc/>
     public readonly ReadOnlySequence<byte> Sequence => this.TotalSequence.Slice(this.Position);
-    
+
     /// <inheritdoc/>
     public readonly long WrittenCount => this.Position;
-    
+
     /// <inheritdoc/>
     public readonly void Clear()
     {
@@ -188,7 +186,7 @@ public struct ValueByteBlock : IByteBlock
     {
         this.Position = 0;
     }
-    
+
     /// <summary>
     /// 返回当前字节块的UTF-8字符串表示形式。
     /// </summary>
@@ -219,7 +217,7 @@ public struct ValueByteBlock : IByteBlock
     #endregion
 
     #region Writer
-    
+
     /// <inheritdoc/>
     public void Advance(int count)
     {
@@ -317,7 +315,7 @@ public struct ValueByteBlock : IByteBlock
         this.Position += span.Length;
         this.m_length = Math.Max(this.Position, this.m_length);
     }
-   
+
     private readonly Span<byte> GetCurrentSpan()
     {
         return this.m_memory.Span.Slice(this.Position);

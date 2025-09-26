@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -33,12 +27,12 @@ public static class NamedPipeClientExtension
     /// <param name="client">命名管道客户端实例</param>
     /// <param name="pipeName">要连接的命名管道名称</param>
     /// <param name="millisecondsTimeout">连接超时时间（毫秒），默认为 5000ms</param>
-    /// <param name="token">用于取消操作的取消令牌</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌</param>
     /// <returns>返回连接成功的客户端实例</returns>
     /// <exception cref="OperationCanceledException">当连接操作被取消或超时时抛出</exception>
     /// <exception cref="ArgumentNullException">当 pipeName 为空时抛出</exception>
     /// <exception cref="InvalidOperationException">当客户端状态不允许连接时抛出</exception>
-    public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000, CancellationToken token = default) where TClient : INamedPipeClient
+    public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000, CancellationToken cancellationToken = default) where TClient : INamedPipeClient
     {
         // 配置客户端连接参数
         TouchSocketConfig config;
@@ -57,7 +51,7 @@ public static class NamedPipeClientExtension
         }
 
         // 创建超时控制器，结合用户提供的取消令牌
-        using var timeoutTokenSource = new TimeoutTokenSource(millisecondsTimeout, token);
+        using var timeoutTokenSource = new TimeoutTokenSource(millisecondsTimeout, cancellationToken);
 
         try
         {

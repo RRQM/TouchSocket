@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
 

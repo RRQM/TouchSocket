@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO.Compression;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
@@ -21,7 +18,7 @@ namespace TouchSocket.Http;
 /// Http静态内容插件
 /// </summary>
 [PluginOption(Singleton = false)]
-public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
+public sealed class HttpStaticPagePlugin : PluginBase, IHttpPlugin
 {
     private readonly StaticFilesPool m_filesPool;
 
@@ -39,33 +36,22 @@ public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     /// <summary>
     /// 提供文件扩展名和MIME类型之间的映射。
     /// </summary>
-    public IContentTypeProvider ContentTypeProvider { get; set; }
+    public IContentTypeProvider ContentTypeProvider { get; }
+
+    /// <summary>
+    /// 重新导航
+    /// </summary>
+    public Func<HttpRequest, Task<string>> NavigateAction { get; }
+
+    /// <summary>
+    /// 在响应之前调用。
+    /// </summary>
+    public Func<HttpContext, Task> ResponseAction { get; }
 
     /// <summary>
     /// 静态文件池
     /// </summary>
     public StaticFilesPool StaticFilesPool => this.m_filesPool;
-
-    /// <summary>
-    /// 重新导航
-    /// </summary>
-    public Func<HttpRequest, Task<string>> NavigateAction { get; set; }
-
-    /// <summary>
-    /// 在响应之前调用。
-    /// </summary>
-    public Func<HttpContext, Task> ResponseAction { get; set; }
-
-    /// <summary>
-    /// 配置静态文件池
-    /// </summary>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin ConfigureStaticFilesPool(Action<StaticFilesPool> action)
-    {
-        action?.Invoke(this.m_filesPool);
-        return this;
-    }
 
     /// <summary>
     /// 添加静态文件目录
@@ -80,101 +66,12 @@ public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     }
 
     /// <summary>
-    /// 设置提供文件扩展名和MIME类型之间的映射。
-    /// </summary>
-    /// <param name="provider"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin SetContentTypeProvider(IContentTypeProvider provider)
-    {
-        this.ContentTypeProvider = provider ?? throw new ArgumentNullException(nameof(provider));
-        return this;
-    }
-
-    /// <summary>
-    /// 设置提供文件扩展名和MIME类型之间的映射。
-    /// </summary>
-    /// <param name="provider">提供文件扩展名和MIME类型之间的映射的操作</param>
-    /// <returns>返回当前的HttpStaticPagePlugin实例</returns>
-    public HttpStaticPagePlugin SetContentTypeProvider(Action<IContentTypeProvider> provider)
-    {
-        provider.Invoke(this.ContentTypeProvider);
-        return this;
-    }
-
-    /// <summary>
-    /// 设定重新导航
-    /// </summary>
-    /// <param name="func"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin SetNavigateAction(Func<HttpRequest, Task<string>> func)
-    {
-        this.NavigateAction = func;
-        return this;
-    }
-
-    /// <summary>
-    /// 设定重新导航
-    /// </summary>
-    /// <param name="func"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin SetNavigateAction(Func<HttpRequest, string> func)
-    {
-        this.NavigateAction = (request) =>
-        {
-            return Task.FromResult(func(request));
-        };
-        return this;
-    }
-
-    /// <summary>
-    /// 在响应之前调用。
-    /// </summary>
-    /// <param name="func"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin SetResponseAction(Func<HttpContext, Task> func)
-    {
-        this.ResponseAction = func;
-        return this;
-    }
-
-    /// <summary>
-    /// 在响应之前调用。
-    /// </summary>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    public HttpStaticPagePlugin SetResponseAction(Action<HttpContext> action)
-    {
-        this.ResponseAction = (response) =>
-        {
-            action.Invoke(response);
-            return EasyTask.CompletedTask;
-        };
-        return this;
-    }
-
-    #region Remove
-
-    /// <summary>
     /// 移除所有静态页面
     /// </summary>
     public void ClearFolder()
     {
         this.m_filesPool.Clear();
     }
-
-    /// <summary>
-    /// 移除指定路径的静态文件
-    /// </summary>
-    /// <param name="path">Static content path</param>
-    public void RemoveFolder(string path)
-    {
-        path = FileUtility.PathFormat(path);
-        path = path.EndsWith("/") ? path : path + "/";
-
-        this.m_filesPool.RemoveFolder(path);
-    }
-
-    #endregion Remove
 
     /// <inheritdoc/>
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
@@ -233,5 +130,17 @@ public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
         {
             await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+    }
+
+    /// <summary>
+    /// 移除指定路径的静态文件
+    /// </summary>
+    /// <param name="path">Static content path</param>
+    public void RemoveFolder(string path)
+    {
+        path = FileUtility.PathFormat(path);
+        path = path.EndsWith("/") ? path : path + "/";
+
+        this.m_filesPool.RemoveFolder(path);
     }
 }

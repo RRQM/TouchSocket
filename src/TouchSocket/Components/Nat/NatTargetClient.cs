@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -52,21 +47,21 @@ public sealed class NatTargetClient : TcpClientBase, ITcpConnectableClient, ICli
     public bool StandBy { get; }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return base.TcpConnectAsync(token);
+        return base.TcpConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return base.ProtectedSendAsync(memory, token);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(IRequestInfo requestInfo, CancellationToken token = default)
+    public Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo, token);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
 
     /// <inheritdoc/>

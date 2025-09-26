@@ -8,11 +8,9 @@
 // API首页：https://touchsocket.net/
 // 交流QQ群：234762506
 // 感谢您的下载和使用
-// --- -------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace TouchSocket.Core;
 
@@ -145,7 +143,7 @@ public static class SpanExtension
         {
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), span.Length, size);
         }
-        var value= TouchSocketBitConverter.Default.To<T>(span);
+        var value = TouchSocketBitConverter.Default.To<T>(span);
         span = span.Slice(size);
         return value;
     }

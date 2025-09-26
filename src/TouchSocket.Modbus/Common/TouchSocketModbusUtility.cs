@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
@@ -34,16 +31,16 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
     {
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
             var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            await this.ProtectedSendAsync(modbusTcpRequest, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            var waitDataStatus = await waitData.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.CompletedData;

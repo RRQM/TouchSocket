@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
@@ -32,9 +29,9 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
 
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForRequest.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -45,7 +42,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
             {
                 modbusRequest.Build(ref byteBlock);
 
-                await this.ProtectedSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -53,7 +50,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
             }
 
             this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var response = await this.m_waitDataAsync.Task.WithCancellation(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -90,8 +87,8 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(token);
+        return this.TcpConnectAsync(cancellationToken);
     }
 }

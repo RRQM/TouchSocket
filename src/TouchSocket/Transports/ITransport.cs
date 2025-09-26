@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.IO.Pipelines;
-using System.Threading;
-
 namespace TouchSocket.Sockets;
 
 public interface ITransport : ITransportReader, ITransportWriter, IClosableClient

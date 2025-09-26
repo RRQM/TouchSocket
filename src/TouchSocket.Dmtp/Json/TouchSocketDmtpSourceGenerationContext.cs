@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 using System.Text.Json.Serialization;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 

@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -22,7 +19,7 @@ namespace TouchSocket.Core;
 /// 此枚举用于跟踪异步操作的执行状态，特别是在涉及超时和取消的场景中。
 /// 提供了从初始化到完成或取消的完整状态转换。
 /// </remarks>
-public enum TimeoutTokenState:byte
+public enum TimeoutTokenState : byte
 {
     /// <summary>
     /// 初始化状态，操作尚未开始或正在进行中。
@@ -72,11 +69,11 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// </remarks>
     public TimeoutTokenSource(int timeoutMs, CancellationToken cancellationToken)
     {
-        m_timeoutMs = timeoutMs;
-        m_originalToken = cancellationToken;
-        m_timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
-        m_combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, m_timeoutCts.Token);
-        m_state = TimeoutTokenState.Initialized;
+        this.m_timeoutMs = timeoutMs;
+        this.m_originalToken = cancellationToken;
+        this.m_timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+        this.m_combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, this.m_timeoutCts.Token);
+        this.m_state = TimeoutTokenState.Initialized;
     }
 
     /// <summary>
@@ -86,7 +83,7 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// <remarks>
     /// 此属性反映了操作的当前执行状态，包括初始化、完成、超时或取消。
     /// </remarks>
-    public TimeoutTokenState State => m_state;
+    public TimeoutTokenState State => this.m_state;
 
     /// <summary>
     /// 获取组合后的取消令牌。
@@ -95,7 +92,7 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// <remarks>
     /// 此令牌结合了超时机制和用户取消请求，可用于需要同时响应这两种取消条件的异步操作。
     /// </remarks>
-    public CancellationToken Token => m_combinedCts.Token;
+    public CancellationToken Token => this.m_combinedCts.Token;
 
     /// <summary>
     /// 标记操作成功完成。
@@ -106,9 +103,9 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// </remarks>
     public void MarkCompleted()
     {
-        if (m_state == TimeoutTokenState.Initialized)
+        if (this.m_state == TimeoutTokenState.Initialized)
         {
-            m_state = TimeoutTokenState.Completed;
+            this.m_state = TimeoutTokenState.Completed;
         }
     }
 
@@ -128,17 +125,17 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// </remarks>
     public void HandleCancellation(OperationCanceledException ex)
     {
-        if (m_timeoutCts.Token.IsCancellationRequested && !m_originalToken.IsCancellationRequested)
+        if (this.m_timeoutCts.Token.IsCancellationRequested && !this.m_originalToken.IsCancellationRequested)
         {
             // 如果是超时取消（超时令牌被取消，但原始令牌没有被取消）
-            m_state = TimeoutTokenState.TimedOut;
-            throw new TimeoutException($"操作在 {m_timeoutMs} 毫秒内未完成");
+            this.m_state = TimeoutTokenState.TimedOut;
+            throw new TimeoutException($"操作在 {this.m_timeoutMs} 毫秒内未完成");
         }
-        else if (m_originalToken.IsCancellationRequested)
+        else if (this.m_originalToken.IsCancellationRequested)
         {
             // 如果是用户主动取消
-            m_state = TimeoutTokenState.Cancelled;
-            throw new OperationCanceledException("操作被用户取消", m_originalToken);
+            this.m_state = TimeoutTokenState.Cancelled;
+            throw new OperationCanceledException("操作被用户取消", this.m_originalToken);
         }
         else
         {
@@ -159,8 +156,8 @@ public sealed class TimeoutTokenSource : DisposableObject
     {
         if (disposing)
         {
-            m_timeoutCts?.Dispose();
-            m_combinedCts?.Dispose();
+            this.m_timeoutCts?.Dispose();
+            this.m_combinedCts?.Dispose();
         }
         base.Dispose(disposing);
     }
@@ -179,12 +176,12 @@ public sealed class TimeoutTokenSource : DisposableObject
     /// </remarks>
     public Result CheckCancellationResult(Result result)
     {
-        if (result.ResultCode== ResultCode.Canceled)
+        if (result.ResultCode == ResultCode.Canceled)
         {
-            if (m_timeoutCts.Token.IsCancellationRequested && !m_originalToken.IsCancellationRequested)
+            if (this.m_timeoutCts.Token.IsCancellationRequested && !this.m_originalToken.IsCancellationRequested)
             {
                 // 如果是超时取消（超时令牌被取消，但原始令牌没有被取消）
-                m_state = TimeoutTokenState.TimedOut;
+                this.m_state = TimeoutTokenState.TimedOut;
                 return Result.Overtime;
             }
         }

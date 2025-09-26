@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -115,7 +110,7 @@ public abstract class HttpResponse : HttpBase
     /// 构建数据并回应。
     /// <para>该方法仅在具有Client实例时有效。</para>
     /// </summary>
-    public async Task AnswerAsync(CancellationToken token = default)
+    public async Task AnswerAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfResponsed();
 
@@ -130,7 +125,7 @@ public abstract class HttpResponse : HttpBase
                 this.BuildHeader(ref byteBlock);
 
                 // 异步发送请求
-                await this.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -149,11 +144,11 @@ public abstract class HttpResponse : HttpBase
                 var result = content.InternalBuildingContent(ref byteBlock);
 
                 // 异步发送请求
-                await this.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (!result)
                 {
-                    await content.InternalWriteContent(this.InternalSendAsync, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await content.InternalWriteContent(this.InternalSendAsync, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             finally
@@ -168,7 +163,7 @@ public abstract class HttpResponse : HttpBase
     /// <summary>
     /// 当传输模式是Chunk时，用于结束传输。
     /// </summary>
-    public async Task CompleteChunkAsync(CancellationToken token = default)
+    public async Task CompleteChunkAsync(CancellationToken cancellationToken = default)
     {
         if (!this.m_canWrite)
         {
@@ -186,7 +181,7 @@ public abstract class HttpResponse : HttpBase
                 TouchSocketHttpUtility.AppendRn(ref byteBlock);
                 TouchSocketHttpUtility.AppendRn(ref byteBlock);
 
-                await this.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.Responsed = true;
             }
             finally
@@ -202,9 +197,9 @@ public abstract class HttpResponse : HttpBase
     /// 异步写入指定的只读内存数据。
     /// </summary>
     /// <param name="memory">要写入的只读内存数据。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个任务，表示异步写入操作。</returns>
-    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         this.ThrowIfResponsed();
 
@@ -214,7 +209,7 @@ public abstract class HttpResponse : HttpBase
             try
             {
                 this.BuildHeader(ref byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -234,7 +229,7 @@ public abstract class HttpResponse : HttpBase
                 TouchSocketHttpUtility.AppendRn(ref byteBlock);
                 byteBlock.Write(memory.Span);
                 TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_sentLength += count;
             }
             finally
@@ -254,7 +249,7 @@ public abstract class HttpResponse : HttpBase
         {
             if (this.m_sentLength + count <= this.ContentLength)
             {
-                await this.InternalSendAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.InternalSendAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_sentLength += count;
                 if (this.m_sentLength == this.ContentLength)
                 {
@@ -405,9 +400,9 @@ public abstract class HttpResponse : HttpBase
         //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    private Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+    private Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory, token) : this.m_httpClientBase.InternalSendAsync(memory, token);
+        return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory, cancellationToken) : this.m_httpClientBase.InternalSendAsync(memory, cancellationToken);
     }
 
     private void ParseProtocol(ReadOnlySpan<byte> protocolSpan)

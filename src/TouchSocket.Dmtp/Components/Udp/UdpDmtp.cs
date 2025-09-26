@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -65,9 +61,9 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
         return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(m_endPoint, memory, token);
+        return this.ProtectedSendAsync(m_endPoint, memory, cancellationToken);
     }
 
     /// <inheritdoc/>

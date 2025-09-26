@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 提供命名管道插件管理器的扩展方法。

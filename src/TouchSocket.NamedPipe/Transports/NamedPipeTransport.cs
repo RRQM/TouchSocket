@@ -11,7 +11,6 @@
 // ------------------------------------------------------------------------------
 
 using System.IO.Pipes;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe;
 

@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -70,18 +66,18 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// 在当前对点创建一个随机Id的通道
     /// </summary>
     /// <param name="metadata">可选的元数据参数，用于传递额外的信息</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将提供创建的IDmtpChannel对象</returns>
-    Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default, CancellationToken token = default);
+    Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在当前对点创建一个指定Id的通道
     /// </summary>
     /// <param name="id">要创建的通道的唯一标识符</param>
     /// <param name="metadata">可选参数，提供有关通道的元数据信息</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回创建的通道对象，类型为IDmtpChannel</returns>
-    Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default, CancellationToken token = default);
+    Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在指定路由点创建一个指定Id的通道
@@ -89,18 +85,18 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <param name="targetId">目标路由点的标识符</param>
     /// <param name="id">要创建的通道的唯一标识符</param>
     /// <param name="metadata">有关通道的元数据，可选，默认为default(Metadata)</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将包含新创建的IDmtpChannel接口实例</returns>
-    Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default, CancellationToken token = default);
+    Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在指定路由点创建一个随机Id的通道
     /// </summary>
     /// <param name="targetId">目标路由点的标识符</param>
     /// <param name="metadata">可选参数，用于传递附加信息</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将提供创建的IDmtpChannel对象</returns>
-    Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default, CancellationToken token = default);
+    Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 尝试订阅已存在的通道。
@@ -141,28 +137,28 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <summary>
     /// 向当前对点发送一个Ping报文，并且等待回应。
     /// </summary>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/>。该方法主要用于检测对端点的可达性。</returns>
-    Task<Result> PingAsync(CancellationToken token = default);
+    Task<Result> PingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 向指定路由点发送一个Ping报文，并且等待回应。
     /// </summary>
     /// <param name="targetId">目标路由点的标识符。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-    Task<Result> PingAsync(string targetId, CancellationToken token = default);
+    Task<Result> PingAsync(string targetId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步发送数据。
     /// </summary>
     /// <param name="protocol">指定通信协议的标识符。</param>
     /// <param name="memory">待发送的数据，以只读内存形式提供。</param>
-    /// <param name="token">可取消令箭</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <remarks>
     /// 此方法用于异步发送数据，通过指定协议标识符和数据内容，实现数据的异步传输。
     /// </remarks>
-    Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken token = default);
+    Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 尝试获取指定Id的DmtpActor。一般此方法仅在Service下有效。
@@ -177,8 +173,8 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <param name="e">包含路由信息的事件参数</param>
     /// <returns>一个Task布尔值，指示路由尝试是否成功</returns>
     Task<bool> TryRouteAsync(PackageRouterEventArgs e);
-    Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken token = default) where TPackage : IPackage;
-    Task SendAsync(ushort protocol, string value, CancellationToken token = default);
+    Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default) where TPackage : IPackage;
+    Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default);
 
     #endregion 方法
 }

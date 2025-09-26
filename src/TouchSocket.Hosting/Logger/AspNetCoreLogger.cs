@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.Logging;
-using System;
-using TouchSocket.Core;
 using LogLevel = TouchSocket.Core.LogLevel;
 
 namespace TouchSocket.Hosting;

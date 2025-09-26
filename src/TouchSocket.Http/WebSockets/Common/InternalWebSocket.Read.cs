@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Http.WebSockets;
@@ -36,10 +32,10 @@ internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSo
         }
     }
 
-    public async ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+    public async ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfNotAllowAsyncRead();
-        var readLease = await this.m_asyncExchange.ReadAsync(token);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken);
         var frame = readLease.Value;
         return new WebSocketReceiveBlockResult(readLease.Dispose)
         {
@@ -49,9 +45,9 @@ internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSo
         };
     }
 
-    internal ValueTask InputReceiveAsync(WSDataFrame dataFrame, CancellationToken token)
+    internal ValueTask InputReceiveAsync(WSDataFrame dataFrame, CancellationToken cancellationToken)
     {
-        return this.m_asyncExchange.WriteAsync(dataFrame, token);
+        return this.m_asyncExchange.WriteAsync(dataFrame, cancellationToken);
     }
 
     private void ThrowIfNotAllowAsyncRead()

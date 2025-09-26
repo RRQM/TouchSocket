@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -41,7 +36,7 @@ public interface IServiceBase : ISetupConfigObject
     /// <summary>
     /// 异步停止服务器
     /// </summary>
-    /// <param name="token">用于取消操作的 <see cref="CancellationToken"/>。</param>
+    /// <param name="cancellationToken">用于取消操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示操作结果的 <see cref="Task{Result}"/>。</returns>
-    Task<Result> StopAsync(CancellationToken token = default);
+    Task<Result> StopAsync(CancellationToken cancellationToken = default);
 }

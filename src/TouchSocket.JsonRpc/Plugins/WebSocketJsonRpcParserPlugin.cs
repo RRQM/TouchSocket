@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
@@ -49,7 +46,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
                 {
                     SerializerConverter = this.SerializerConverter,
                     Resolver = client.Client.Resolver,
-                    SendAction = (data, token) => client.SendAsync(data, WSDataType.Text, true, token)
+                    SendAction = (data, cancellationToken) => client.SendAsync(data, WSDataType.Text, true, cancellationToken)
                 };
 
                 jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);

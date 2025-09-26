@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 
@@ -61,7 +56,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
     #region 读取
 
     /// <inheritdoc/>
-    public async Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken token = default)
+    public async Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (!this.CanRead)
         {
@@ -73,7 +68,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             throw new ObjectDisposedException(nameof(InternalChannel), "通道已被释放");
         }
 
-        var channelPackage = await this.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var channelPackage = await this.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -201,7 +196,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     #endregion 操作
 
-    public async Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         if ((byte)this.Status > 1)
         {
@@ -215,7 +210,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             TargetId = this.TargetId,
             Data = memory
         };
-        await this.m_actor.SendChannelPackageAsync(channelPackage, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.m_lastOperationTime = DateTimeOffset.UtcNow;
     }
 
@@ -258,9 +253,9 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         }
     }
 
-    private async Task<ChannelPackage> WaitAsync(CancellationToken token)
+    private async Task<ChannelPackage> WaitAsync(CancellationToken cancellationToken)
     {
-        await this.m_dataAvailable.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_dataAvailable.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         lock (this.m_dataQueue)
         {
             if (this.m_dataQueue.Count > 0)

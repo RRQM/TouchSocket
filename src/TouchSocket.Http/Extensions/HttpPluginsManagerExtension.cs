@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
@@ -95,7 +94,7 @@ public static class HttpPluginManagerExtension
 
     #region HttpReconnection
 
-   
+
     /// <summary>
     /// 为插件管理器添加HTTP重新连接插件。
     /// </summary>

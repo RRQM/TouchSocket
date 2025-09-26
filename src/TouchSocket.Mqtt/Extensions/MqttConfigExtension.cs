@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -23,6 +20,6 @@ public static class MqttConfigExtension
     /// <summary>
     /// Mqtt连接选项的依赖属性。
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig),ActionMode =true)]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<MqttConnectOptions> MqttConnectOptionsProperty = new DependencyProperty<MqttConnectOptions>("MqttConnectOptions", null);
 }

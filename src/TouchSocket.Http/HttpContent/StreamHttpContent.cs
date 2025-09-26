@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
@@ -97,7 +92,7 @@ public class StreamHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken)
     {
         // 创建一个缓冲区，用于存储读取的数据
 
@@ -121,7 +116,7 @@ public class StreamHttpContent : HttpContent
                 {
                     while (true)
                     {
-                        var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (r == 0)
                         {
                             break;
@@ -134,7 +129,7 @@ public class StreamHttpContent : HttpContent
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
                         byteBlock.Write(target.Span);
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                        await writeFunc.Invoke(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await writeFunc.Invoke(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
 
@@ -143,7 +138,7 @@ public class StreamHttpContent : HttpContent
                     TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                    await writeFunc.Invoke(byteBlock.Memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writeFunc.Invoke(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -154,12 +149,12 @@ public class StreamHttpContent : HttpContent
             {
                 while (true)
                 {
-                    var r = await this.m_stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (r == 0)
                     {
                         break;
                     }
-                    await writeFunc.Invoke(memory.Slice(0, r), token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writeFunc.Invoke(memory.Slice(0, r), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }

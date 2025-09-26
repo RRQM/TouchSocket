@@ -97,7 +97,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
@@ -109,7 +109,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -178,7 +178,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token = default)
+    public override async Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -254,9 +254,9 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private async Task ThreadBegin(NamedPipeMonitor monitor)
     {
-        var token = monitor.MonitorToken;
+        var cancellationToken = monitor.MonitorToken;
         var option = monitor.Option;
-        while (!token.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
@@ -266,7 +266,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 }
                 var namedPipe = new NamedPipeServerStream(option.Name, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
 
-                await namedPipe.WaitForConnectionAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await namedPipe.WaitForConnectionAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 _ = EasyTask.SafeRun(this.OnClientSocketInit, namedPipe, monitor);
             }

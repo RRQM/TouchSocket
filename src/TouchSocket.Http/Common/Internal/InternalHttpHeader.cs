@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
 internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHeader
@@ -51,7 +47,7 @@ internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHead
     public bool Contains(string key, string value, bool ignoreCase = true)
     {
         ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
-        
+
         if (!this.TryGetValue(key, out var headerValue))
         {
             return false;

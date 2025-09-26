@@ -13,10 +13,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TouchSocket.Core;
@@ -230,7 +228,7 @@ public class DependencyPropertyGenerator : IIncrementalGenerator
         }
 
 
-        
+
         // 如果都没有设置，返回 null，将在调用处使用当前类型
         return null;
     }

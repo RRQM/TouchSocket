@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.Redis;
 
 /// <summary>
@@ -40,24 +35,24 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <param name="key">缓存项的键。</param>
     /// <param name="value">缓存项的值。</param>
     /// <param name="duration">缓存项的过期时间，单位为毫秒。默认为60000毫秒（1分钟）。</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>一个Task对象，表示异步操作的结果。结果为<see langword="true"/>表示添加成功，false表示失败（例如，键已经存在）。</returns>
     /// <exception cref="ArgumentNullException">如果键或值为<see langword="null"/>，则抛出该异常。</exception>
     /// <exception cref="TimeoutException">如果异步操作超时，则抛出该异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出该异常。</exception>
-    Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken token);
+    Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken cancellationToken);
 
     /// <summary>
     /// 异步获取缓存的键值对。
     /// </summary>
     /// <typeparam name="TValue">缓存值的类型</typeparam>
     /// <param name="key">缓存的键</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>缓存的值</returns>
     /// <exception cref="ArgumentNullException">如果 <paramref name="key"/> 为空或为 null，则抛出此异常。</exception>
     /// <exception cref="TimeoutException">如果获取操作超时，则抛出此异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出此异常。</exception>
-    Task<TValue> GetAsync<TValue>(string key, CancellationToken token);
+    Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken);
 
     /// <summary>
     /// 设置缓存值
@@ -67,10 +62,10 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <param name="key">缓存的键</param>
     /// <param name="value">缓存的值</param>
     /// <param name="duration">缓存的持续时间</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns>操作是否成功</returns>
     /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
-    Task<bool> SetAsync<TValue>(string key, TValue value, int duration, CancellationToken token);
+    Task<bool> SetAsync<TValue>(string key, TValue value, int duration, CancellationToken cancellationToken);
 }

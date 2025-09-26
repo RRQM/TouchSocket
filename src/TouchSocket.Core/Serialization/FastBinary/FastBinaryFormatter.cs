@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -33,7 +32,7 @@ public static class FastBinaryFormatter
     /// <value>包含公共构造函数、方法、字段和属性的<see cref="DynamicallyAccessedMemberTypes"/>组合。</value>
     public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties;
     private static readonly DefaultFastSerializerContext s_defaultFastSerializerContext = new DefaultFastSerializerContext();
-    
+
     /// <summary>
     /// 获取默认的快速序列化上下文。
     /// </summary>

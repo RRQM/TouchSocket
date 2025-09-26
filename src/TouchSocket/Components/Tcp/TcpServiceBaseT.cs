@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -123,7 +118,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken token)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
@@ -135,7 +130,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         if (this.m_clients.TryGetClient(sourceId, out var client))
         {
-            await client.ResetIdAsync(targetId, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -206,7 +201,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token = default)
+    public override async Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
 

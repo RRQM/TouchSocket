@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
 using System.Xml;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
