@@ -7,6 +7,44 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
 
+## v3.1.18
+
+**更新日期：** 2025.9.27
+
+**更新描述：**
+
+- 版本号升级至 v3.1.18。
+- 修复 TCP 发送数据分片问题，确保大数据包完整发送。（[#85](https://github.com/RRQM/TouchSocket/pull/85)）
+- RPC 全局筛选器注册与解析机制调整，支持按类型注册，由容器解析实例，接口命名更清晰。（[#83](https://github.com/RRQM/TouchSocket/pull/83)）
+- WebSocket 关闭帧处理完善，正确解析 CloseStatus 与关闭原因，增强标准兼容性。
+- Dmtp RPC 调用上下文清理逻辑优化，降低潜在内存占用风险。
+
+**更新详情：**
+
+#### TouchSocketVersion
+
+- &nbsp;<Tag>升级</Tag> 基础版本号由 `3.1.17` 升级为 `3.1.18`（`TouchSocketVersion.props`）。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TcpCore` 发送循环逻辑，改为使用 `sentLength` 进行切片发送与累计，避免出现“发送数据未切片导致大包未完整发送”的问题；当 `BytesTransferred == 0` 且仍有数据时抛出不完整传输异常。（[#85](https://github.com/RRQM/TouchSocket/pull/85)）
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>调整</Tag> 全局筛选器注册 API 更名：`Filter<T>()`/`Filter(Type)` 调整为 `AddFilter<T>()`/`AddFilter(Type)`，语义更清晰。
+- &nbsp;<Tag>新增</Tag> 暴露 `RpcStore.Filters` 只读属性，便于获取已注册的全局筛选器类型列表。
+- &nbsp;<Tag>优化</Tag> `RpcMethod.GetFilters` 签名与实现调整，接收筛选器类型列表与 `IResolver`，按需从容器解析筛选器实例，减少共享实例的副作用；`InternalRpcServerProvider` 同步适配新的调用方式。（[#83](https://github.com/RRQM/TouchSocket/pull/83)）
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `WebSocketClientBase` 在接收关闭帧时，解析前 2 字节（大端）为 `CloseStatus` 并赋值给连接对象，剩余负载按 UTF-8 作为关闭原因消息；触发关闭流程更符合规范。
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>修复</Tag> `DmtpRpcActor` 在处理响应时优先移除调用上下文项，避免因上下文残留导致的资源占用问题。
+
+***
+
 ## v3.1.17
 
 **更新日期：** 2025.9.9

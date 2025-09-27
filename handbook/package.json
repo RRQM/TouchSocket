@@ -16,9 +16,9 @@
     "generate-codes": "node docs/CodeBlocks/generateCodesModule.js"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.9.0",
-    "@docusaurus/preset-classic": "^3.9.0",
-    "@docusaurus/theme-mermaid": "^3.9.0",
+    "@docusaurus/core": "^3.9.1",
+    "@docusaurus/preset-classic": "^3.9.1",
+    "@docusaurus/theme-mermaid": "^3.9.1",
     "@easyops-cn/docusaurus-search-local": "^0.40.1",
     "@giscus/react": "^3.0.0",
     "@mdx-js/react": "^3.0.0",
