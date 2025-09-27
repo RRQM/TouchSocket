@@ -188,6 +188,12 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
                 {
                     using var cts = new CancellationTokenSource(10 * 1000);
                     var memory = await channel.ReadAsync(cts.Token);
+
+                    if (channel.Status == ChannelStatus.HoldOn)
+                    {
+                        Console.WriteLine($"HoldOn:{channel.LastOperationMes}");
+                    }
+
                     //这里处理数据
                     count += memory.Length;
                     this.m_logger.Info($"通道已接收：{count}字节");

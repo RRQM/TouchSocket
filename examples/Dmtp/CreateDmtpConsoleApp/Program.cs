@@ -296,6 +296,185 @@ internal class Program
         await client.ConnectAsync();
         #endregion
     }
+    private static async Task CreateWebSocketDmtpClient()
+    {
+        #region 创建WebSocketDmtpClient
+        var client = new WebSocketDmtpClient();
 
+        //配置项目
+        var config = new TouchSocketConfig();
+        config.SetRemoteIPHost("ws://127.0.0.1:7789/WebSocketDmtp");
+        config.SetDmtpOption(options =>
+        {
+            options.VerifyToken = "Dmtp";
+            options.Metadata = new Metadata().Add("a", "a");
+        });
+
+        //配置容器
+        config.ConfigureContainer(a =>
+        {
+            //注入日志组件
+            a.AddConsoleLogger();
+        });
+
+        //配置插件
+        config.ConfigurePlugins(a =>
+        {
+            //添加插件
+            //a.Add<MyPlugin>();
+            //a.UseDmtpRpc();
+        });
+
+        //应用配置
+        await client.SetupAsync(config);
+
+        //连接
+        await client.ConnectAsync();
+        #endregion
+    }
+
+    private static async Task CreateNamedPipeDmtpClient()
+    {
+        #region 创建NamedPipeDmtpClient
+        var client = new NamedPipeDmtpClient();
+
+        //配置项目
+        var config = new TouchSocketConfig();
+        config.SetPipeName("TouchSocketPipe");
+        config.SetDmtpOption(options =>
+        {
+            options.VerifyToken = "Dmtp";
+            options.Metadata = new Metadata().Add("a", "a");
+        });
+
+        //配置容器
+        config.ConfigureContainer(a =>
+        {
+            //注入日志组件
+            a.AddConsoleLogger();
+        });
+
+        //配置插件
+        config.ConfigurePlugins(a =>
+        {
+            //添加插件
+            //a.Add<MyPlugin>();
+            //a.UseDmtpRpc();
+        });
+
+        //应用配置
+        await client.SetupAsync(config);
+
+        //连接
+        await client.ConnectAsync();
+        #endregion
+    }
+    private static async Task CreateTcpDmtpClientFactory()
+    {
+        #region 创建TcpDmtpClientFactory
+        var clientFactory = new TcpDmtpClientFactory();
+
+        //配置工厂
+        clientFactory.GetConfig = () =>
+        {
+            //配置项目
+            var config = new TouchSocketConfig();
+            config.SetRemoteIPHost("tcp://127.0.0.1:7789");
+            config.SetDmtpOption(options =>
+            {
+                options.VerifyToken = "Dmtp";
+                options.Metadata = new Metadata().Add("a", "a");
+            });
+
+            //配置容器
+            config.ConfigureContainer(a =>
+            {
+                //注入日志组件
+                a.AddConsoleLogger();
+            });
+
+            //配置插件
+            config.ConfigurePlugins(a =>
+            {
+                //添加插件
+                //a.Add<MyPlugin>();
+                //a.UseDmtpRpc();
+            });
+
+            return config;
+        };
+
+        //在链接工厂获取客户端时，如果没有可用客户端时的最大等待时间。
+        //超过该时间将新创建客户端。
+        clientFactory.MaxWaitTime = TimeSpan.FromSeconds(1);
+
+        clientFactory.MinCount = 2;//最小连接数
+        clientFactory.MaxCount = 5;//最大连接数
+
+        using var cts = new CancellationTokenSource(10 * 1000);
+
+        //获取客户端
+        using (var clientFactoryResult = await clientFactory.GetClient(cts.Token))
+        {
+            //获取到的池中的客户端
+            //注意：该客户端只能在当前using作用域中使用。
+            var client = clientFactoryResult.Client;
+        }
+        #endregion
+    }
+
+    private static async Task CreateHttpDmtpClientFactory()
+    {
+        #region 创建HttpDmtpClientFactory
+        var clientFactory = new HttpDmtpClientFactory();
+
+        //配置工厂
+        clientFactory.GetConfig = () =>
+        {
+            //配置项目
+            var config = new TouchSocketConfig();
+            config.SetRemoteIPHost("http://127.0.0.1:7789");
+            config.SetDmtpOption(options =>
+            {
+                options.VerifyToken = "Dmtp";
+                options.Metadata = new Metadata().Add("a", "a");
+            });
+
+            //配置容器
+            config.ConfigureContainer(a =>
+            {
+                //注入日志组件
+                a.AddConsoleLogger();
+            });
+
+            //配置插件
+            config.ConfigurePlugins(a =>
+            {
+                //添加插件
+                //a.Add<MyPlugin>();
+                //a.UseDmtpRpc();
+            });
+
+            return config;
+        };
+
+        //在链接工厂获取客户端时，如果没有可用客户端时的最大等待时间。
+        //超过该时间将新创建客户端。
+        clientFactory.MaxWaitTime = TimeSpan.FromSeconds(1);
+
+        clientFactory.MinCount = 2;//最小连接数
+        clientFactory.MaxCount = 5;//最大连接数
+
+        using var cts = new CancellationTokenSource(10 * 1000);
+
+        //获取客户端
+        using (var clientFactoryResult = await clientFactory.GetClient(cts.Token))
+        {
+            //获取到的池中的客户端
+            //注意：该客户端只能在当前using作用域中使用。
+            var client = clientFactoryResult.Client;
+        }
+        #endregion
+    }
     #endregion
 }

@@ -6,6 +6,7 @@ title: Dmtp基础功能
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import CardLink from "@site/src/components/CardLink.js";
 import { TouchSocketDmtpDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 ### 定义
 
@@ -22,60 +23,20 @@ import { TouchSocketDmtpDefinition } from "@site/src/components/Definition.js";
 
 <BilibiliCard title="使用Token、或动态验证连接" link="https://www.bilibili.com/cheese/play/ep1726372" isPro="true"/>
 
-```csharp {4} showLineNumbers
-var config = new TouchSocketConfig()
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Dmtp"
-    });
-```
+<CustomCodeBlock region="Dmtp配置"/>
 
 ### 1.2 动态验证
 
-使用插件，实现**IDmtpConnectingPlugin**插件。然后可以自行判断一些信息，例如元数据等。
+使用插件，实现`IDmtpConnectingPlugin`插件。然后可以自行判断一些信息，例如元数据等。
 
 如果是特定协议的`Dmtp`，还可以判断一些特定信息，例如，在`TcpDmtp`中，可以判断`IP`地址等。
 
-客户端，在连接时，可以设置元数据。
+客户端，在连接时，可以通过`Metadata`设置元数据。
 
-```csharp {4} showLineNumbers
-var config = new TouchSocketConfig()
-    .SetDmtpOption(new DmtpOption()
-    {
-        Metadata=new Metadata().Add("a","a")
-    });
-```
 
 服务端使用插件验证连接信息。
 
-```csharp showLineNumbers
-internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
-{
-    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
-    {
-        if (e.Metadata["a"] != "a")
-        {
-            e.IsPermitOperation = false;//不允许连接
-            e.Message = "元数据不对";//同时返回消息
-            //表示该消息已在此处处理。
-            return;
-        }
-
-        if (client is ITcpDmtpSessionClient sessionClient)
-        {
-            //在特定协议的情况下，可以获取特定信息
-            var ip = sessionClient.IP;
-        }
-
-        if (e.Token == "Dmtp")
-        {
-            e.IsPermitOperation = true;//允许连接
-        }
-
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="Dmtp动态验证连接"/>
 
 ### 1.4 跨语言
 
@@ -83,50 +44,7 @@ internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
 
 以连接、操作`TcpDmtpService`为例。其基础协议即为`tcp`，则使用常规的`tcp`客户端即可模拟链接。
 
-```csharp showLineNumbers
-using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
-tcpClient.Received = (client, e) =>
-{
-    //此处接收服务器返回的消息
-
-    var head = e.Memory.ToArray(0, 2);
-    e.Memory.Seek(2, SeekOrigin.Begin);
-    var flags = e.Memory.ReadUInt16(EndianType.Big);
-    var length = e.Memory.ReadInt32(EndianType.Big);
-
-    var json = e.Memory.Span.ToString(Encoding.UTF8);
-
-    ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
-
-
-    return Task.CompletedTask;
-};
-
-//开始链接服务器
-await tcpClient.ConnectAsync("127.0.0.1:7789");
-
-//以json的数据方式。
-//其中Token、Metadata为连接的验证数据，分别为字符串、字符串字典类型。
-//Id则表示指定的默认id，字符串类型。
-//Sign为本次请求的序号，一般在连接时指定一个大于0的任意数字即可。
-var json = @"{""Token"":""Dmtp"",""Metadata"":{""a"":""a""},""Id"":null,""Sign"":1}";
-
-//将json转为utf-8编码。
-var jsonBytes = Encoding.UTF8.GetBytes(json);
-
-using (var byteBlock = new ByteBlock(1024*64))
-{
-    //按照Head+Flags+Length+Data的格式。
-    byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
-    byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)1));
-    byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
-    byteBlock.Write(jsonBytes);
-
-    await tcpClient.SendAsync(byteBlock.Memory);
-}
-
-await Task.Delay(2000);
-```
+<CustomCodeBlock region="Dmtp以普通Tcp模拟连接"/>
 
 接收输出：
 
@@ -163,6 +81,8 @@ await Task.Delay(2000);
 ```javascript
 {"Sign":0,"Status":0,"Message":null,"Route":false,"SourceId":null,"TargetId":null}
 ```
+
+<CustomCodeBlock region="Dmtp以普通Tcp模拟Ping"/>
 
 【Close】
 
@@ -207,24 +127,7 @@ client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
 
 在**接收方**订阅`IDmtpReceivedPlugin`，已经包含了协议参数，所以直接自行筛选即可。
 
-```csharp showLineNumbers
-internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
-{
-    public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
-    {
-        if (e.DmtpMessage.ProtocolFlags == 1000)
-        {
-            //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
-            string msg = e.DmtpMessage.BodyByteBlock.ToString();
-
-            return;
-        }
-
-        //flags不满足，调用下一个插件
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="Dmtp接收数据"/>
 
 ## 四、使用Channel发送数据
 
