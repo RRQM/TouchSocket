@@ -107,16 +107,7 @@ flowchart TD;
 
 <BilibiliCard title="创建Tcp协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726347" isPro="true"/>
 
-```csharp showLineNumbers
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Dmtp"
-    }));
-await client.ConnectAsync();
-```
+<CustomCodeBlock region="创建TcpDmtpClient"/>
 
 ### 7.2 UdpDmtp
 
@@ -124,24 +115,7 @@ await client.ConnectAsync();
 
 <BilibiliCard title="创建Udp协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726349" isPro="true"/>
 
-```csharp {1,4-6,11} showLineNumbers
-var client = new UdpDmtp();
-
- await client.SetupAsync(new TouchSocketConfig()
-     .SetRemoteIPHost("127.0.0.1:7797")
-     .UseUdpReceive()
-     .SetDmtpOption(new DmtpOption()
-     {
-         VerifyToken = "Dmtp"
-     })
-     .ConfigureContainer(a =>
-     {
-     })
-     .ConfigurePlugins(a =>
-     {
-     }));
- client.Start();
-```
+<CustomCodeBlock region="创建UdpDmtpClient"/>
 
 :::info 备注
 
@@ -155,87 +129,33 @@ var client = new UdpDmtp();
 
 <BilibiliCard title="创建Http协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726352" isPro="true"/>
 
-```csharp showLineNumbers
-var client = new HttpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-   .SetRemoteIPHost("127.0.0.1:7789")
-   .SetDmtpOption(new DmtpOption()
-   {
-       VerifyToken = "Dmtp"
-   }));
-await client.ConnectAsync();
-```
+<CustomCodeBlock region="创建HttpDmtpClient"/>
 
 ### 7.4 WebSocketDmtpClient
 
 <BilibiliCard title="创建WebSocket协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726355" isPro="true"/>
 
-```csharp showLineNumbers
-var websocketDmtpClient = new WebSocketDmtpClient();
-websocketDmtpClient.Setup(new TouchSocketConfig()
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Dmtp"
-    })
-    .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
-await websocketDmtpClient.ConnectAsync();
-```
+<CustomCodeBlock region="创建WebSocketDmtpClient"/>
 
-[基于Aspnetcore的Dmtp示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpWebApplication)
-
-
-### 7.5 DmtpClient工厂 <Pro/> 
-
-DmtpClient工厂工作模式是一种，由多个传输通讯连接组成的连接池。默认提供了两种类型的客户端工厂，分别为`TcpDmtpClientFactory`，`HttpDmtpClientFactory`。两者工作流程及配置基本相同，下面以`TcpDmtpClientFactory`为例。
-
-【创建】
-```csharp showLineNumbers
-var clientFactory = new TcpDmtpClientFactory()
-{
-    MinCount=5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
-    MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间。
-    ConnectTimeout = TimeSpan.FromSeconds(10),//连接超时时间
-    GetConfig = () =>
-    {
-        return new TouchSocketConfig()
-            .SetRemoteIPHost("tcp://127.0.0.1:7789");
-    }
-};
-```
-
-【使用】
-
-```csharp {3} showLineNumbers
-using (var clientFactoryResult = await clientFactory.GetClient())
-{
-    var client = clientFactoryResult.Client;
-}
-```
-
-:::tip 提示
-
-默认情况下，`clientFactory.GetClient()`会最大等待1秒，如果超过1秒还没有可用的`client`，会再新建一个客户端，并返回。然后在使用结束后，会判断是否需要释放该`client`，如果池中的`client`数量`大于MaxCount`，则会释放该`client`。
-
-:::  
-
-### 7.6 NamedPipeDmtpClient
+### 7.5 NamedPipeDmtpClient <Pro/> 
 
 `NamedPipeDmtpClient`对应`NamedPipeDmtpService`服务器。基本创建如下，支持[创建NamedPipeClient](./namedpipeclient.mdx)的所有配置。
 
 <BilibiliCard title="创建NamedPipe协议的Dmtp客户端" link="https://www.bilibili.com/cheese/play/ep1726360" isPro="true"/>
 
-```csharp showLineNumbers
-var client = new NamedPipeDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-      .SetPipeName("TouchSocketPipe")//设置管道名称
-      .SetDmtpOption(new DmtpOption()
-      {
-           VerifyToken = "Dmtp"
-      }));
-await client.ConnectAsync();
-```
+<CustomCodeBlock region="创建NamedPipeDmtpClient"/>
 
-[基于NamedPipe的Dmtp示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/NamedPipeDmtpConsoleApp)
+### 7.6 TcpDmtpClientFactory <Pro/> 
+
+DmtpClient工厂工作模式是一种，由多个传输通讯连接组成的连接池。
+
+<CustomCodeBlock region="创建TcpDmtpClientFactory"/>
+
+### 7.7 HttpDmtpClientFactory <Pro/>
+
+DmtpClient工厂工作模式是一种，由多个传输通讯连接组成的连接池。
+
+<CustomCodeBlock region="创建HttpDmtpClientFactory"/>
 
 ## 八、示例Demo
 

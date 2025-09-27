@@ -59,7 +59,7 @@ internal class Program
                  });
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(options=>
+             .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";//设置Token验证连接
                  options.Id = "defaultId";//设置默认Id
@@ -86,27 +86,7 @@ internal class Program
     /// <returns></returns>
     private static async Task Connect_2()
     {
-        using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
-        tcpClient.Received = (client, e) =>
-        {
-            //此处接收服务器返回的消息
-
-            var span = e.Memory.Span;
-            var head = span.Slice(0, 2);
-
-            span = span.Slice(2);
-            var flags = span.ReadValue<ushort>(EndianType.Big);
-            var length = span.ReadValue<ushort>(EndianType.Big);
-
-            var json = e.Memory.Span.ToString(Encoding.UTF8);
-
-            ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
-
-
-            return Task.CompletedTask;
-        };
-
-        #region 基础Flag协议
+        #region Dmtp基础Flag协议
 
         Console.WriteLine($"{nameof(DmtpActor.P0_Close)}-flag-->{DmtpActor.P0_Close}");
         Console.WriteLine($"{nameof(DmtpActor.P1_Handshake_Request)}-flag-->{DmtpActor.P1_Handshake_Request}");
@@ -121,7 +101,26 @@ internal class Program
 
         #endregion 基础Flag协议
 
-        #region 连接
+        #region Dmtp以普通Tcp模拟连接
+        using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
+        tcpClient.Received = (client, e) =>
+        {
+            //此处接收服务器返回的消息
+
+            var span = e.Memory.Span;
+            var head = span[..2];
+
+            span = span[2..];
+            var flags = span.ReadValue<ushort>(EndianType.Big);
+            var length = span.ReadValue<ushort>(EndianType.Big);
+
+            var json = e.Memory.Span.ToString(Encoding.UTF8);
+
+            ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
+
+
+            return Task.CompletedTask;
+        };
 
         //开始链接服务器
         await tcpClient.ConnectAsync("127.0.0.1:7789");
@@ -146,9 +145,9 @@ internal class Program
             await tcpClient.SendAsync(byteBlock.Memory);
         }
 
-        #endregion 连接
+        #endregion
 
-        #region Ping
+        #region Dmtp以普通Tcp模拟Ping
 
         json = "{\"Sign\":2,\"Route\":false,\"SourceId\":null,\"TargetId\":null}";
         jsonBytes = Encoding.UTF8.GetBytes(json);
@@ -165,6 +164,8 @@ internal class Program
         }
 
         #endregion Ping
+
+
 
         await Task.Delay(2000);
     }
@@ -184,7 +185,7 @@ internal class Program
                  a.AddConsoleLogger();
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(options=>
+             .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";//设置Token验证连接
                  options.Id = "defaultId";//设置默认Id
@@ -211,7 +212,7 @@ internal class Program
                    a.Add<MyVerifyPlugin>();
                    a.Add<MyFlagsPlugin>();
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
@@ -222,8 +223,25 @@ internal class Program
         service.Logger.Info($"{service.GetType().Name}已启动");
         return service;
     }
+
+    private static async Task CreateConfig()
+    {
+        var config = new TouchSocketConfig();
+
+        #region Dmtp配置
+        config.SetDmtpOption(options =>
+        {
+            options.Id = Guid.NewGuid().ToString();//仅当在客户端，连接时，如果指定Id，则该链接将使用设定的id。
+            options.VerifyToken = "Dmtp";//连接口令，作用类似账号密码
+            options.VerifyTimeout = TimeSpan.FromSeconds(3);//仅当在服务器，验证连接的超时时间
+            options.Metadata = new Metadata().Add("a", "a");//仅当在客户端，连接时，可以传递更多的验证信息
+        });
+        #endregion
+
+    }
 }
 
+#region Dmtp动态验证连接
 internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
 {
     public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
@@ -237,15 +255,18 @@ internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
         }
         if (e.Token == "Dmtp")
         {
-            e.IsPermitOperation = true;
-            e.Handled = true;
+            e.IsPermitOperation = true;//允许连接
+            e.Handled = true;//表示该消息已在此处处理。
             return;
         }
 
         await e.InvokeNext();
     }
 }
+#endregion
 
+
+#region Dmtp接收数据
 internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 {
     public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
@@ -265,3 +286,4 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
         await e.InvokeNext();
     }
 }
+#endregion
