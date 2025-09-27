@@ -42,7 +42,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             return new InvokeResult(InvokeStatus.UnFound);
         }
 
-        var filters = method.GetFilters(m_rpcStore.GetFilters(callContext));
+        var filters = method.GetFilters(this.m_rpcStore.Filters, callContext.Resolver);
         try
         {
             for (var i = 0; i < filters.Count; i++)

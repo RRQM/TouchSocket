@@ -40,6 +40,8 @@ public sealed class RpcStore
     /// </summary>
     public Type[] ServerTypes => this.m_serverTypes.Keys.ToArray();
 
+    public IReadOnlyList<Type> Filters => this.m_filters;
+
     /// <summary>
     /// 获取所有已注册的函数。
     /// </summary>
@@ -110,41 +112,31 @@ public sealed class RpcStore
 
     #region 全局筛选器
 
-    private readonly ConcurrentList<Type> m_filters = new ConcurrentList<Type>();
-
-    /// <summary>
-    /// 获取全局筛选器对象
-    /// </summary>
-    /// <param name="callContext"></param>
-    /// <returns></returns>
-    public IReadOnlyList<IRpcActionFilter> GetFilters(ICallContext callContext)
-    {
-        return m_filters.Select(s=>(IRpcActionFilter) callContext.Resolver.Resolve(s)).ToList();
-    }
+    private readonly List<Type> m_filters = new();
 
     /// <summary>
     /// 添加全局筛选器
     /// </summary>
     /// <typeparam name="TFilter"></typeparam>
-    public void Filter<TFilter>() where TFilter : class, IRpcActionFilter
+    public void AddFilter<TFilter>() where TFilter : class, IRpcActionFilter
     {
         var filterType = typeof(TFilter);
-        this.Filter(filterType);
+        this.AddFilter(filterType);
     }
 
     /// <summary>
     /// 添加全局过滤器
     /// </summary>
-    public void Filter(Type filterType)
+    public void AddFilter(Type filterType)
     {
         if (!typeof(IRpcActionFilter).IsAssignableFrom(filterType))
         {
             throw new RpcException($"注册类型必须与{nameof(IRpcActionFilter)}有继承关系");
         }
 
-        if (!m_filters.Any(s => s.FullName == filterType.FullName))
+        if (!this.m_filters.Any(s => s == filterType))
         {
-            m_filters.Add(filterType);
+            this.m_filters.Add(filterType);
             this.m_registrator.RegisterTransient(filterType);
         }
     }

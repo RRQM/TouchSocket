@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -162,7 +163,16 @@ public abstract class WebSocketClientBase : HttpClientBase
     {
         if (dataFrame.IsClose)
         {
-            var msg = dataFrame.PayloadData?.ToString();
+            var bytes = dataFrame.PayloadData;
+            bytes.SeekToStart();
+            if (bytes.Length >= 2)
+            {
+                var closeStatus = (WebSocketCloseStatus)bytes.ReadUInt16(EndianType.Big);
+                this.m_webSocket.CloseStatus = closeStatus;
+            }
+
+            var msg = bytes.ReadToSpan(bytes.CanReadLength).ToString(System.Text.Encoding.UTF8);
+
             await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             await this.m_webSocket.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
