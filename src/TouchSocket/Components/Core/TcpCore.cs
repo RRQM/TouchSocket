@@ -417,23 +417,21 @@ internal sealed class TcpCore : DisposableObject
 #endif
         else
         {
-            var offset = 0;
-            while (length > 0 && !this.m_cancellationToken.IsCancellationRequested)
+            var sentLength = 0;
+            while (sentLength < length && !this.m_cancellationToken.IsCancellationRequested)
             {
-                var result = await this.m_socketSender.SendAsync(this.m_socket, memory[offset..]).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_socketSender.SendAsync(this.m_socket, memory.Slice(sentLength))
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (result.SocketError != null)
                 {
                     throw result.SocketError;
                 }
-                if (result.BytesTransferred == 0 && length > 0)
+                if (result.BytesTransferred == 0 && memory.Length > 0)
                 {
                     throw new Exception(TouchSocketResource.IncompleteDataTransmission);
                 }
-                offset += result.BytesTransferred;
-                length -= result.BytesTransferred;
+                sentLength += result.BytesTransferred;
             }
-
-            //this.m_socketSender.Reset();
         }
         this.m_sentCounter.Increment(length);
     }

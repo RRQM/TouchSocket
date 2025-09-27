@@ -304,8 +304,9 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                 //调用方不关心结果
                 return;
             }
-            else if (rpcMethod != null && rpcMethod.HasCallContext)
+            else
             {
+                //首先移除调用上下文。
                 this.m_callContextDic.TryRemove(rpcRequestPackage.Sign, out _);
             }
 

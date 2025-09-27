@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
@@ -246,11 +247,11 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 筛选器
     /// </summary>
-    /// <param name="g_actionFilters">全局筛选器</param>
+    /// <param name="filters">全局筛选器</param>
     /// <returns></returns>
-    public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<IRpcActionFilter> g_actionFilters)
+    public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<Type> filters, IResolver resolver)
     {
-        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3] || (g_actionFilters?.Any()) == true)
+        if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3] || filters.Count > 0)
         {
             var actionFilters = new List<IRpcActionFilter>();
             //注册方法
@@ -299,17 +300,15 @@ public sealed class RpcMethod : Method
                 }
             }
 
-            if (g_actionFilters?.Any() == true)
+            //全局筛选器
+            foreach (var filterType in filters)
             {
-                //全局筛选器
-                foreach (var filter in g_actionFilters)
-                {
-                    this.AddActionFilter(filter, ref actionFilters);
-                }
+                var filter = resolver.Resolve(filterType);
+                this.AddActionFilter(Unsafe.As<object, IRpcActionFilter>(ref filter), ref actionFilters);
             }
             return actionFilters;
         }
-        return new IRpcActionFilter[0];
+        return [];
     }
 
     private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
