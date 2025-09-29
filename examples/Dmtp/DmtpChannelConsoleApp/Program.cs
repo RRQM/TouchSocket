@@ -40,11 +40,8 @@ internal class Program
         //1.创建通道，同时支持通道路由和元数据传递
         using (var channel = await client.CreateChannelAsync())
         {
-            //设置限速
-            //channel.MaxSpeed = 1024 * 1024;
-
             ConsoleLogger.Default.Info($"通道创建成功，即将写入");
-            var bytes = new byte[1024];
+            var bytes = new byte[100];
 
             for (var i = 0; i < 100; i++)//循环100次
             {
@@ -65,16 +62,18 @@ internal class Program
 
     private static async Task RunComplete(IDmtpActorObject client)
     {
-        var count = 1024 * 1;//测试1Gb数据
+        #region TcpDmtpClient创建Channel
+        var count = 1024;
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel = await client.CreateChannelAsync())
-        {
-            //设置限速
-            //channel.MaxSpeed = 1024 * 1024;
 
-            ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
-            var bytes = new byte[1024 * 1024];
+        var cts = new CancellationTokenSource(1000 * 10);
+        var metadata = new Metadata();
+
+        using (var channel = await client.CreateChannelAsync(metadata, cts.Token,))
+        {
+            ConsoleLogger.Default.Info($"通道创建成功");
+            var bytes = new byte[1000];
             for (var i = 0; i < count; i++)
             {
                 //2.持续写入数据
@@ -85,6 +84,8 @@ internal class Program
             await channel.CompleteAsync("我完成了");
             ConsoleLogger.Default.Info("通道写入结束");
         }
+        #endregion
+
     }
 
     private static async Task<TcpDmtpClient> GetTcpDmtpClient()

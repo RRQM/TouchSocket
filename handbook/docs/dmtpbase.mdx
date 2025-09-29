@@ -154,30 +154,9 @@ client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
 
 下列以`TcpDmtpClient`发送、`TcpDmtpService`接收为例：
 
-【创建服务器】
+【TcpDmtpClient创建Channel】
 
-```csharp showLineNumbers
-var service = new TcpDmtpService();
-
-var config = new TouchSocketConfig()//配置
-       .SetListenIPHosts(7789)
-       .ConfigureContainer(a =>
-       {
-           a.AddConsoleLogger();
-       })
-       .ConfigurePlugins(a =>
-       {
-           a.Add<MyPlugin>();
-       })
-       .SetDmtpOption(new DmtpOption()
-       {
-           VerifyToken = "Channel"//连接验证口令。
-       });
-
-await service.SetupAsync(config);
-await service.StartAsync();
-service.Logger.Info("服务器成功启动");
-```
+<CustomCodeBlock region="TcpDmtpClient创建Channel"/>
 
 【创建客户端】
 
