@@ -30,7 +30,7 @@ public sealed class WaitHandlePool<T>
     private readonly int m_maxSign;
     private readonly int m_minSign;
     private readonly ConcurrentDictionary<int, AsyncWaitData<T>> m_waitDic = new();
-
+    private readonly Action<int> _remove;
     private int m_currentSign;
 
     /// <summary>
@@ -47,6 +47,8 @@ public sealed class WaitHandlePool<T>
         this.m_minSign = minSign;
         this.m_currentSign = minSign;
         this.m_maxSign = maxSign;
+
+        _remove = this.Remove;
     }
 
     /// <summary>
@@ -85,7 +87,7 @@ public sealed class WaitHandlePool<T>
         {
             result.Sign = this.GetSign();
         }
-        var waitDataAsyncSlim = new AsyncWaitData<T>(result.Sign, this.Remove, result);
+        var waitDataAsyncSlim = new AsyncWaitData<T>(result.Sign, this._remove, result);
 
         if (!this.m_waitDic.TryAdd(result.Sign, waitDataAsyncSlim))
         {
@@ -107,7 +109,7 @@ public sealed class WaitHandlePool<T>
     public AsyncWaitData<T> GetWaitDataAsync(out int sign)
     {
         sign = this.GetSign();
-        var waitDataAsyncSlim = new AsyncWaitData<T>(sign, this.Remove, default);
+        var waitDataAsyncSlim = new AsyncWaitData<T>(sign, this._remove, default);
         if (!this.m_waitDic.TryAdd(sign, waitDataAsyncSlim))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{sign}' is already in use.");
