@@ -10,150 +10,150 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Threading.Tasks.Sources;
+
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 表示一个异步等待数据容器，提供基于<see cref="Task"/>的异步等待机制。
-/// 继承自<see cref="DisposableObject"/>类。
+/// 表示一个用于异步等待结果的容器，基于 <see cref="ValueTask{TResult}"/>/ <see cref="IValueTaskSource{TResult}"/> 实现。
 /// </summary>
-/// <typeparam name="T">等待数据的类型。</typeparam>
+/// <typeparam name="T">等待的数据类型。</typeparam>
 /// <remarks>
-/// AsyncWaitData用于异步等待特定数据的到达，支持取消操作和状态跟踪。
-/// 当数据到达或操作被取消时，等待的任务将被完成。
-/// 提供了完成数据、挂起数据、签名标识和状态管理等功能。
+/// 此类用于在等待池中挂起并等待特定签名的数据到达。它使用 <see cref="ManualResetValueTaskSourceCore{TResult}"/>
+/// 来实现高性能的 ValueTask 等待，并通过构造时传入的 <see cref="Action{Int32}"/> 回调在释放时将自身从池中移除。
 /// </remarks>
-public sealed class AsyncWaitData<T> : DisposableObject
+public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDataStatus>
 {
-    private readonly TaskCompletionSource<T> m_asyncWaitHandle = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-    private readonly Action<int> m_remove;
-    private T m_result;
-    private WaitDataStatus m_status;
+    // ManualResetValueTaskSourceCore 是一个结构体，避免了额外托管对象分配，但需要配合 token 使用。
+    private ManualResetValueTaskSourceCore<T> _core; // 核心结构体，不会分配额外对象
 
-    internal AsyncWaitData(int sign, Action<int> remove, T pendingData)
+    // 缓存的移除回调，由 WaitHandlePool 构造时传入，避免每次分配委托。
+    private readonly Action<int> _remove;
+
+    // 挂起时的临时数据
+    private T _pendingData;
+
+    // 完成时的数据
+    private T _completedData;
+
+    // 当前等待状态（成功/取消/未完成等）
+    private WaitDataStatus _status;
+
+    /// <summary>
+    /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
+    /// </summary>
+    /// <param name="sign">此等待项对应的签名（用于在池中查找）。</param>
+    /// <param name="remove">完成或释放时调用的回调，用于将此实例从等待池中移除。</param>
+    /// <param name="pendingData">可选的挂起数据，当创建时可以携带一个初始占位数据。</param>
+    public AsyncWaitData(int sign, Action<int> remove, T pendingData)
     {
-        this.Sign = sign;
-        this.m_remove = remove;
-        this.PendingData = pendingData;
+        Sign = sign;
+        _remove = remove;
+        _pendingData = pendingData;
+        _core.RunContinuationsAsynchronously = true; // 确保续体异步执行，避免潜在的栈内联执行问题
     }
 
     /// <summary>
-    /// 获取已完成的数据。
+    /// 获取此等待项的签名标识。
     /// </summary>
-    /// <value>当等待完成后返回的结果数据。</value>
-    /// <remarks>
-    /// 此属性在等待操作完成后包含实际的结果数据。
-    /// 在等待完成之前，此值可能为默认值或未定义。
-    /// </remarks>
-    public T CompletedData => this.m_result;
-
-    /// <summary>
-    /// 获取挂起状态下的数据。
-    /// </summary>
-    /// <value>在等待期间保持的挂起数据。</value>
-    /// <remarks>
-    /// 此属性包含在创建AsyncWaitData实例时提供的初始数据，
-    /// 通常用于在等待期间保存上下文信息或中间状态。
-    /// </remarks>
-    public T PendingData { get; }
-
-    /// <summary>
-    /// 获取等待数据的唯一签名标识。
-    /// </summary>
-    /// <value>用于标识此等待数据实例的唯一整数值。</value>
-    /// <remarks>
-    /// 签名用于在等待池中唯一标识此等待数据，便于管理和检索。
-    /// 当对象被释放时，此签名将用于从等待池中移除相应的条目。
-    /// </remarks>
     public int Sign { get; }
 
     /// <summary>
-    /// 获取当前等待数据的状态。
+    /// 获取挂起时的原始数据（如果在创建时传入）。
     /// </summary>
-    /// <value>表示等待操作当前状态的<see cref="WaitDataStatus"/>枚举值。</value>
-    /// <remarks>
-    /// 状态会随着等待操作的进行而发生变化，包括默认、成功、超时、取消和已释放等状态。
-    /// </remarks>
-    public WaitDataStatus Status => this.m_status;
+    public T PendingData => _pendingData;
 
     /// <summary>
-    /// 取消等待操作。
+    /// 获取已完成时的返回数据。
     /// </summary>
-    /// <remarks>
-    /// 此方法将等待状态设置为<see cref="WaitDataStatus.Canceled"/>，
-    /// 并使用默认值完成等待任务。调用此方法后，正在等待的任务将以取消状态完成。
-    /// </remarks>
+    public T CompletedData => _completedData;
+
+    /// <summary>
+    /// 获取当前等待状态（例如：Success、Canceled 等）。
+    /// </summary>
+    public WaitDataStatus Status => _status;
+
+    /// <summary>
+    /// 取消当前等待，标记为已取消并触发等待任务的异常（OperationCanceledException）。
+    /// </summary>
     public void Cancel()
     {
-        this.Set(WaitDataStatus.Canceled, default);
+        Set(WaitDataStatus.Canceled, default!);
     }
 
     /// <summary>
-    /// 使用指定结果完成等待操作。
+    /// 将等待项设置为成功并携带结果数据。
     /// </summary>
-    /// <param name="result">要设置的结果数据。</param>
-    /// <remarks>
-    /// 此方法将等待状态设置为<see cref="WaitDataStatus.Success"/>，
-    /// 并使用提供的结果完成等待任务。
-    /// </remarks>
+    /// <param name="result">要设置的完成数据。</param>
     public void Set(T result)
     {
-        this.Set(WaitDataStatus.Success, result);
+        Set(WaitDataStatus.Success, result);
     }
 
     /// <summary>
-    /// 使用指定状态和结果完成等待操作。
+    /// 设置等待项的状态和数据，并完成对应的 ValueTask。
     /// </summary>
-    /// <param name="status">要设置的等待状态。</param>
-    /// <param name="result">要设置的结果数据。</param>
-    /// <remarks>
-    /// 此方法设置等待操作的最终状态和结果，并完成底层的任务。
-    /// 一旦调用此方法，等待的任务将被标记为完成。
-    /// </remarks>
+    /// <param name="status">要设置的状态。</param>
+    /// <param name="result">要设置的完成数据。</param>
     public void Set(WaitDataStatus status, T result)
     {
-        this.m_result = result;
-        this.m_status = status;
-        this.m_asyncWaitHandle.TrySetResult(result);
+        _status = status;
+        _completedData = result;
+
+        if (status == WaitDataStatus.Canceled)
+            _core.SetException(new OperationCanceledException());
+        else
+            _core.SetResult(result);
     }
 
     /// <summary>
-    /// 异步等待操作完成，支持取消操作。
+    /// 异步等待此项完成，返回一个 <see cref="ValueTask{WaitDataStatus}"/>，可传入取消令牌以取消等待。
     /// </summary>
-    /// <param name="cancellationToken">用于取消等待操作的取消令牌。</param>
-    /// <returns>
-    /// 表示异步等待操作的<see cref="ValueTask{TResult}"/>，
-    /// 返回等待操作的最终状态。
-    /// </returns>
-    /// <remarks>
-    /// 如果取消令牌可以被取消，则在取消时会将状态设置为<see cref="WaitDataStatus.Canceled"/>。
-    /// 否则将一直等待直到操作完成。此方法配置为不捕获同步上下文。
-    /// </remarks>
-    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken)
+    /// <param name="cancellationToken">可选的取消令牌。若触发则会调用 <see cref="Cancel"/>。</param>
+    /// <returns>表示等待状态的 ValueTask。</returns>
+    public ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken.CanBeCanceled)
         {
-            try
-            {
-                await this.m_asyncWaitHandle.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            catch (OperationCanceledException)
-            {
-                this.m_status = WaitDataStatus.Canceled;
-            }
+            cancellationToken.Register(() => Cancel());
         }
-        else
-        {
-            await this.m_asyncWaitHandle.Task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        return this.m_status;
+
+        return new ValueTask<WaitDataStatus>(this, _core.Version);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 从核心获取结果（显式接口实现）。
+    /// 注意：此方法由 ValueTask 基础设施调用，不应直接在用户代码中调用。
+    /// </summary>
+    WaitDataStatus IValueTaskSource<WaitDataStatus>.GetResult(short token)
+    {
+        _core.GetResult(token);
+        return _status;
+    }
+
+    /// <summary>
+    /// 获取当前 ValueTask 源的状态（显式接口实现）。
+    /// </summary>
+    ValueTaskSourceStatus IValueTaskSource<WaitDataStatus>.GetStatus(short token)
+        => _core.GetStatus(token);
+
+    /// <summary>
+    /// 注册续体（显式接口实现）。
+    /// 注意：flags 可以控制是否捕获上下文等行为。
+    /// </summary>
+    void IValueTaskSource<WaitDataStatus>.OnCompleted(Action<object?> continuation, object? state,
+        short token, ValueTaskSourceOnCompletedFlags flags)
+        => _core.OnCompleted(continuation, state, token, flags);
+
+    /// <summary>
+    /// 释放托管资源时调用，会触发传入的移除回调，从所在的等待池中移除此等待项。
+    /// </summary>
+    /// <param name="disposing">是否为显式释放。</param>
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            this.m_remove.Invoke(this.Sign);
+            _remove(Sign);
         }
         base.Dispose(disposing);
     }
