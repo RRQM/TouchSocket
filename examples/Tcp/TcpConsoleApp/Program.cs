@@ -204,6 +204,17 @@ internal class Program
             service.RemoveListen(item);//在Service运行时，可以调用，直接移除现有监听
         }
         #endregion
+
+        #region Tcp服务器重置Id
+        await service.ResetIdAsync("oldId", "newId");
+        #endregion
+
+        #region Tcp服务器通过SessionClient重置Id
+        if (service.TryGetClient("oldId",out var sessionClient))
+        {
+           await sessionClient.ResetIdAsync("newId");
+        }
+        #endregion
     }
 
     private static void GetTouchSocketConfig()
@@ -354,7 +365,7 @@ internal class Program
               }));
         #endregion
         await client.ConnectAsync();//调用连接
-        
+
         #region Reconnection重连插件暂停重连
         client.SetPauseReconnection(true);//暂停重连
         await Task.Delay(5000);
@@ -678,6 +689,24 @@ internal class CloseException : Exception
     {
     }
 }
+
+#region Tcp服务器连接时以IPPort作为Id
+class InitIdPluginWithIpPort : PluginBase, ITcpConnectingPlugin
+{
+    public async Task OnTcpConnecting(ITcpSession client, ConnectingEventArgs e)
+    {
+        if (!client.IsClient)
+        {
+            //判断在服务器端
+
+            e.Id = $"{client.IP}:{client.Port}";
+        }
+
+        await e.InvokeNext();
+    }
+}
+#endregion
+
 
 #region 自定义Tcp服务器通讯会话
 public sealed class MySessionClient : TcpSessionClient
