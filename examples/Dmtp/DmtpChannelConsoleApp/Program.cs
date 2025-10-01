@@ -70,20 +70,20 @@ internal class Program
         var cts = new CancellationTokenSource(1000 * 10);
         var metadata = new Metadata();
 
-        using (var channel = await client.CreateChannelAsync(metadata, cts.Token,))
-        {
-            ConsoleLogger.Default.Info($"通道创建成功");
-            var bytes = new byte[1000];
-            for (var i = 0; i < count; i++)
-            {
-                //2.持续写入数据
-                await channel.WriteAsync(bytes);
-            }
+        //using (var channel = await client.CreateChannelAsync(metadata, cts.Token))
+        //{
+        //    ConsoleLogger.Default.Info($"通道创建成功");
+        //    var bytes = new byte[1000];
+        //    for (var i = 0; i < count; i++)
+        //    {
+        //        //2.持续写入数据
+        //        await channel.WriteAsync(bytes);
+        //    }
 
-            //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-            await channel.CompleteAsync("我完成了");
-            ConsoleLogger.Default.Info("通道写入结束");
-        }
+        //    //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+        //    await channel.CompleteAsync("我完成了");
+        //    ConsoleLogger.Default.Info("通道写入结束");
+        //}
         #endregion
 
     }
