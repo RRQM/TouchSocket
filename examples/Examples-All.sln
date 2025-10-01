@@ -253,6 +253,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".Solutions", ".Solutions", "{043D35EB-9819-4E9A-BDC7-2974A122195D}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpServiceReadAsyncConsoleApp", "Tcp\TcpServiceReadAsyncConsoleApp\TcpServiceReadAsyncConsoleApp.csproj", "{03EE9539-60C6-4BB5-97D7-3F9B1A077234}"
