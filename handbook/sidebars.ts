@@ -180,23 +180,13 @@ module.exports =
         },
         {
           "type": "doc",
-          "id": "resetid",
-          "label": "6.5 服务器重置Id"
-        },
-        {
-          "type": "doc",
           "id": "tcpcommandlineplugin",
-          "label": "6.6 命令行执行插件"
+          "label": "6.5 命令行执行插件"
         },
         {
           "type": "doc",
           "id": "tcpcommonplugins",
-          "label": "6.7 其他常用插件"
-        },
-        {
-          "type": "doc",
-          "id": "tcpaot",
-          "label": "6.8 AOT模式"
+          "label": "6.6 其他常用插件"
         }
       ]
     },
