@@ -126,12 +126,14 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseHttpJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseHttpJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetJsonRpcUrl("/jsonRpc");
+                      options.SetJsonRpcUrl("/jsonRpc");
+                      options.UseSystemTextJsonFormatter(jsonOption => 
+                      {
+                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                      });
+                  });
               }));
         await service.StartAsync();
 
