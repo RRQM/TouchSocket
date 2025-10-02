@@ -13,7 +13,6 @@ const config = {
   url: "https://touchsocket.net/",
   baseUrl: '/',
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   projectName: "TouchSocket",
   scripts: [],
@@ -213,6 +212,9 @@ const config = {
 
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: "throw",
+    },
   },
   themes: [
     ['@docusaurus/theme-mermaid',

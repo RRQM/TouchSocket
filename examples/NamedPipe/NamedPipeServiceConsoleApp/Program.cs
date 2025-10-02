@@ -54,7 +54,7 @@ internal class Program
         #endregion
 
         #region NamedPipe服务器设置Id生成策略
-
+        config.SetGetDefaultNewId((client) => Guid.NewGuid().ToString());
         #endregion
     }
 
@@ -68,11 +68,9 @@ internal class Program
         //在Service运行时，可以调用，直接添加监听
         service.AddListen(new NamedPipeListenOption ()
         {
-            
-            Name = "server3",//名称用于区分监听
-            
+            PipeName="touchsocketpipe2",//管道名称
+            Name="server2",//名称用于区分监听
             Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                            //还有其他可配置项，都是单独对当前地址有效。
         });
 
         //在Service运行时，可以调用，直接移除监听

@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<!-- Enable Central Package Management -->
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<TouchSocketVersion>4.0.0-beta.86</TouchSocketVersion>
+		<TouchSocketVersion>4.0.0-beta.87</TouchSocketVersion>
 	</PropertyGroup>
 
 	<!-- Centralized Package Version Management -->
