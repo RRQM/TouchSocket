@@ -1,346 +1,49 @@
-/* stylelint-disable docusaurus/copyright-header */
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
+/* 修复移动端导航栏菜单项高度不一致问题 - 温和修复 */
+@media (max-width: 996px) {
 
-/* You can override the default Infima variables here. */
-:root {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: rgb(33, 175, 144);
-  --ifm-color-primary-darker: rgb(31, 165, 136);
-  --ifm-color-primary-darkest: rgb(26, 136, 112);
-  --ifm-color-primary-light: rgb(70, 203, 174);
-  --ifm-color-primary-lighter: rgb(102, 212, 189);
-  --ifm-color-primary-lightest: rgb(146, 224, 208);
-  --ifm-code-font-size: 95%;
+    /* 只针对直接的菜单链接进行高度统一，不影响子菜单结构 */
+    .navbar-sidebar .menu__list-item>.menu__link,
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible>.menu__link {
+        min-height: 48px;
+        line-height: 48px;
+        padding-top: 0;
+        padding-bottom: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    /* 确保有子菜单的容器不破坏布局 */
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+    }
 }
 
-.docusaurus-highlight-code-line {
-  background-color: rgb(72, 77, 91);
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
+/* 小屏幕适配 */
+@media (max-width: 768px) {
+
+    .navbar-sidebar .menu__list-item>.menu__link,
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible>.menu__link {
+        min-height: 44px;
+        line-height: 44px;
+    }
+
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible {
+        min-height: 44px;
+    }
 }
 
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
 
-.like-button {
-  background-color: #f1f1f1;
-  border: none;
-  color: #333;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-  border-radius: 20px;
-  /* 设置左右两侧的半径为20px，这通常等于按钮的内边距 */
-  transition: background-color 0.3s ease;
-}
+    .navbar-sidebar .menu__list-item>.menu__link,
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible>.menu__link {
+        min-height: 42px;
+        line-height: 42px;
+    }
 
-.like-button:hover {
-  background-color: #ddd;
-}
-
-.like-button:active {
-  background-color: #bbb;
-}
-
-.like-button:disabled {
-  /* 当按钮被禁用时 */
-  background-color: #ccc;
-  /* 变为灰色背景 */
-  color: #999;
-  /* 文字颜色也变为较浅的灰色 */
-  cursor: not-allowed;
-  /* 改变鼠标样式为禁止样式 */
-}
-
-/* 修复文档页面导航栏在小屏模式下的换行问题 */
-@media (max-width: 1400px) and (min-width: 997px) {
-  .navbar__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: nowrap;
-    width: 100%;
-  }
-
-  .navbar__items {
-    display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  .navbar__item {
-    flex-shrink: 1;
-    min-width: 0;
-  }
-
-  .navbar__link {
-    padding: 0.5rem 0.7rem !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .navbar__items--right {
-    flex-shrink: 0;
-    margin-left: 0.5rem;
-  }
-}
-
-@media (max-width: 1200px) and (min-width: 997px) {
-  .navbar__link {
-    padding: 0.5rem 0.5rem !important;
-    font-size: 0.9rem;
-  }
-
-  .navbar__brand {
-    margin-right: 0.5rem;
-  }
-}
-
-@media (max-width: 1100px) and (min-width: 997px) {
-  .navbar__link {
-    padding: 0.5rem 0.4rem !important;
-    font-size: 0.85rem;
-  }
-}
-
-@media (max-width: 1050px) and (min-width: 997px) {
-  .navbar__link {
-    padding: 0.5rem 0.3rem !important;
-    font-size: 0.8rem;
-  }
-
-  .navbar__brand {
-    font-size: 1.1rem;
-  }
-}
-
-/* 特别针对版本下拉菜单的优化 */
-@media (max-width: 1200px) and (min-width: 997px) {
-  .dropdown>.navbar__link:after {
-    margin-left: 0.2rem;
-  }
-
-  .dropdown__menu {
-    font-size: 0.9rem;
-  }
-}
-
-/* 确保导航栏项目在所有桌面尺寸下都不换行 */
-@media (min-width: 997px) {
-  .navbar__items {
-    gap: 0.1rem;
-  }
-
-  .navbar__item .navbar__link {
-    transition: all 0.2s ease;
-  }
-
-  .navbar__item .navbar__link:hover {
-    transform: none;
-    /* 移除悬停时的位移效果，避免布局抖动 */
-  }
-}
-
-/* 针对文档页面导航栏的特殊处理 */
-.docs-wrapper .navbar__items,
-.docs-doc-page .navbar__items {
-  flex-wrap: nowrap !important;
-}
-
-/* 进一步压缩空间以适应更多导航项 */
-@media (max-width: 1300px) and (min-width: 997px) {
-  .navbar__brand img {
-    height: 1.8rem;
-    /* 稍微缩小logo */
-  }
-
-  .navbar__title {
-    font-size: 1.1rem;
-  }
-}
-
-/* 处理超长文本的导航项 */
-@media (max-width: 1150px) and (min-width: 997px) {
-  .navbar__link {
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-@media (max-width: 1000px) and (min-width: 997px) {
-  .navbar__link {
-    max-width: 100px;
-    padding: 0.5rem 0.25rem !important;
-    font-size: 0.75rem;
-  }
-
-  .navbar__brand {
-    margin-right: 0.25rem;
-  }
-}
-
-/* 最终保险措施：强制单行显示 */
-@media (min-width: 997px) {
-  .navbar {
-    height: auto;
-    min-height: var(--ifm-navbar-height);
-  }
-
-  .navbar__inner {
-    height: auto;
-    min-height: var(--ifm-navbar-height);
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow: hidden;
-  }
-
-  .navbar__items {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  .navbar__items--left {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .navbar__items--right {
-    flex: 0 0 auto;
-  }
-}
-
-/* 备用方案：如果仍然换行，允许导航栏增加高度 */
-@media (max-width: 1200px) and (min-width: 997px) {
-  .navbar {
-    min-height: var(--ifm-navbar-height);
-    height: auto;
-  }
-
-  .navbar__inner {
-    min-height: var(--ifm-navbar-height);
-    height: auto;
-    padding: 0.5rem var(--ifm-navbar-padding-horizontal);
-  }
-
-  /* 如果必须换行，至少让它看起来整齐 */
-  .navbar__items {
-    align-items: center;
-    justify-content: flex-start;
-  }
-
-  .navbar__items--right {
-    align-items: center;
-    justify-content: flex-end;
-  }
-}
-
-/* 修复侧边栏菜单项宽度不一致的问题 */
-.menu__list-item {
-  width: 100%;
-}
-
-.menu__link {
-  display: block !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* 统一处理所有菜单标签的样式 */
-.linkLabel_WmDU,
-.categoryLinkLabel_W154 {
-  display: inline-block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-/* 确保分类链接和普通链接的宽度一致 */
-.menu__link--sublist,
-.menu__link:not(.menu__link--sublist) {
-  width: 100% !important;
-  display: flex !important;
-  align-items: center;
-  box-sizing: border-box !important;
-}
-
-/* 修复分类链接的展开箭头对齐 */
-.menu__link--sublist-caret::after {
-  margin-left: auto !important;
-  flex-shrink: 0;
-}
-
-/* 确保菜单项的内容区域一致 */
-.menu__list-item-collapsible {
-  width: 100%;
-}
-
-.menu__list-item-collapsible .menu__link {
-  width: 100% !important;
-  display: flex !important;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* 强制统一所有侧边栏菜单项的布局 */
-.theme-doc-sidebar-menu .menu__list-item {
-  margin: 0 !important;
-  width: 100% !important;
-}
-
-.theme-doc-sidebar-menu .menu__link {
-  display: block !important;
-  width: 100% !important;
-  padding: 0.375rem 0.75rem !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-  border-radius: 0.25rem;
-  text-decoration: none;
-}
-
-/* 修复分类菜单和普通菜单的一致性 */
-.theme-doc-sidebar-item-category .menu__list-item-collapsible,
-.theme-doc-sidebar-item-link {
-  width: 100% !important;
-}
-
-.theme-doc-sidebar-item-category .menu__link,
-.theme-doc-sidebar-item-link .menu__link {
-  width: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-}
-
-/* 确保箭头图标在右侧 */
-.menu__link--sublist-caret {
-  position: relative;
-}
-
-.menu__link--sublist-caret::after {
-  content: '';
-  background: var(--ifm-menu-link-sublist-icon);
-  background-size: 1rem 1rem;
-  width: 1rem;
-  height: 1rem;
-  margin-left: auto !important;
-  flex-shrink: 0 !important;
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
+    .navbar-sidebar .menu__list-item>.menu__list-item-collapsible {
+        min-height: 42px;
+    }
 }
