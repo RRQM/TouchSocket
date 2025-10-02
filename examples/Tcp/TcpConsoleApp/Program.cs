@@ -205,11 +205,11 @@ internal class Program
         }
         #endregion
 
-        #region Tcp服务器重置Id
+        #region 服务器重置Id
         await service.ResetIdAsync("oldId", "newId");
         #endregion
 
-        #region Tcp服务器通过SessionClient重置Id
+        #region 服务器通过SessionClient重置Id
         if (service.TryGetClient("oldId",out var sessionClient))
         {
            await sessionClient.ResetIdAsync("newId");
@@ -242,7 +242,7 @@ internal class Program
         #endregion
 
         #region 服务器设置Id生成策略
-        config.SetGetDefaultNewId(() => Guid.NewGuid().ToString());
+        config.SetGetDefaultNewId((client) => Guid.NewGuid().ToString());
         #endregion
 
         #region 服务器设置半连接数量
@@ -628,7 +628,8 @@ internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
 
         if (client is ITcpSessionClient sessionClient)
         {
-            await sessionClient.SendAsync(mes);//将收到的信息直接返回给发送方
+            //将收到的信息直接返回给发送方
+            await sessionClient.SendAsync(mes);
         }
 
         await e.InvokeNext();
