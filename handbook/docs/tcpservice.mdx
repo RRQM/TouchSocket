@@ -435,7 +435,7 @@ Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运
 
 #### 12.3.1 通过Service直接修改
 
-<CustomCodeBlock region="Tcp服务器重置Id"/>
+<CustomCodeBlock region="服务器重置Id"/>
 
 #### 12.3.2 通过SessionClient修改
 
@@ -445,7 +445,7 @@ Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运
 
 然后需要判断该`SessionClient`是否实现了`IIdClient`接口。一般服务器端的终端，都会实现`IIdClient`接口。
 
-<CustomCodeBlock region="Tcp服务器通过SessionClient重置Id"/>
+<CustomCodeBlock region="服务器通过SessionClient重置Id"/>
 
 :::note 备注
 
