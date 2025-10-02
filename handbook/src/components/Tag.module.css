@@ -12,37 +12,9 @@
   margin-right: 8px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.label::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.15) 0%, 
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  border-radius: 16px;
-  pointer-events: none;
-}
-
-.label:hover {
-  transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  filter: brightness(1.1);
 }
 
 .icon {
   margin-right: 4px;
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }

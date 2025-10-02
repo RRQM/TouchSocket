@@ -3,46 +3,15 @@
   align-items: center;
   position: relative;
   /* 白百合蓝色渐变背景 */
-  background: linear-gradient(135deg, 
-    #f0f8ff 0%,     /* Alice Blue */
-    #e6f3ff 25%,    /* Light Alice Blue */
-    #b3d9ff 50%,    /* Soft Blue */
-    #7fc8ff 75%,    /* Light Blue */
-    #4fb3ff 100%    /* Vibrant Blue */
-  );
-  /* 毛玻璃效果 */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(79, 179, 255, 0.1);
+  background: #e6f3ff;
   border: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
 }
 
-.TouchSocket-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(79, 179, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(127, 200, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(240, 248, 255, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-}
+
 
 .TouchSocket-banner.dark {
-  background: linear-gradient(135deg, 
-    #1a2332 0%,     /* Dark Blue */
-    #2d3e5c 25%,    /* Medium Dark Blue */
-    #3e5a7a 50%,    /* Blue Grey */
-    #4f7698 75%,    /* Light Blue Grey */
-    #6092b6 100%    /* Soft Blue */
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(26, 35, 50, 0.3);
+  background: #2d3e5c;
   border: 1px solid rgba(96, 146, 182, 0.2);
 }
 
@@ -78,11 +47,7 @@
 .TouchSocket-banner-project {
   font-size: 1.5em;
   font-weight: 700;
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.2));
+  color: #2d5aa0;
   margin-bottom: 0.5em;
 }
 
@@ -91,18 +56,7 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
-  /* 中等饱和度的蓝紫渐变文字 */
-  background: linear-gradient(135deg, 
-    #4a69bd 0%,     /* 中等蓝色 */
-    #5f27cd 25%,    /* 紫蓝色 */
-    #74b9ff 50%,    /* 亮蓝色 */
-    #6c5ce7 75%,    /* 淡紫色 */
-    #a29bfe 100%    /* 浅紫色 */
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  color: #4a69bd;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,18 +68,7 @@
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.25;
-  /* 暗色模式中等饱和度渐变文字 */
-  background: linear-gradient(135deg, 
-    #74b9ff 0%,     /* 亮蓝色 */
-    #a29bfe 25%,    /* 浅紫色 */
-    #fd79a8 50%,    /* 粉红色 */
-    #fdcb6e 75%,    /* 金黄色 */
-    #6c5ce7 100%    /* 紫色 */
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.15));
+  color: #74b9ff;
 }
 
 .TouchSocket-banner-spec {
@@ -135,7 +78,8 @@
   font-size: 1em;
   font-weight: 500;
   line-height: 1.6;
-  color: #2d5aa0; /* Deep Alice Blue for better readability */
+  color: #2d5aa0;
+  /* Deep Alice Blue for better readability */
 }
 
 .TouchSocket-banner-spec li {
@@ -152,9 +96,8 @@
   left: 0;
   width: 6px;
   height: 6px;
-  background: linear-gradient(135deg, #4f7cb8, #7fa8d3);
+  background: #4f7cb8;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(79, 124, 184, 0.3);
 }
 
 .TouchSocket-support-platform {
@@ -176,13 +119,6 @@
 
 .TouchSocket-support-icons span {
   margin-right: 24px;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  filter: drop-shadow(0 2px 8px rgba(79, 124, 184, 0.2));
-}
-
-.TouchSocket-support-icons span:hover {
-  transform: translateY(-2px) scale(1.05);
-  filter: drop-shadow(0 4px 12px rgba(79, 124, 184, 0.4));
 }
 
 .TouchSocket-get-start,
@@ -191,7 +127,7 @@
   border-radius: 2em;
   min-width: 160px;
   color: #ffffff;
-  background: linear-gradient(135deg, #4f7cb8 0%, #7fa8d3 100%);
+  background: #4f7cb8;
   position: relative;
   line-height: 1.6;
   text-align: center;
@@ -201,46 +137,24 @@
   white-space: nowrap;
   font-weight: 600;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 16px rgba(79, 124, 184, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-  overflow: hidden;
 }
 
-.TouchSocket-get-start::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
 
-.TouchSocket-get-start:hover::before {
-  left: 100%;
-}
 
 .TouchSocket-try-demo {
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  background: #2d5aa0;
   margin-left: 24px;
 }
 
 .TouchSocket-get-start:hover {
-  background: linear-gradient(135deg, #4169a3 0%, #6b96c7 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(79, 124, 184, 0.4);
+  background: #4169a3;
   color: #ffffff;
   text-decoration: none;
 }
 
 .TouchSocket-try-demo:hover {
-  background: linear-gradient(135deg, #254a8a 0%, #4169a3 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(45, 90, 160, 0.4);
+  background: #254a8a;
   color: #ffffff;
   text-decoration: none;
 }
@@ -258,15 +172,9 @@
 }
 
 .system-top-bar {
-  background: linear-gradient(135deg, 
-    rgba(79, 179, 255, 0.2) 0%,
-    rgba(127, 200, 255, 0.15) 50%,
-    rgba(165, 198, 224, 0.1) 100%
-  );
+  background: rgba(79, 179, 255, 0.2);
   padding: 0.5em 1em;
   border-bottom: 1px solid rgba(79, 179, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .system-top-bar-circle {
@@ -275,8 +183,6 @@
   height: 0.6em;
   margin-left: 0.3em;
   border-radius: 50%;
-  filter: brightness(120%);
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
 }
 
 .system-window {
@@ -285,10 +191,7 @@
   padding: 0;
   border-radius: 16px;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #1a1a2e;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -320,7 +223,7 @@
     padding: 1rem !important;
     font-size: 13px !important;
   }
-  
+
   .system-window code {
     font-size: 13px !important;
   }
@@ -332,7 +235,7 @@
     font-size: 12px !important;
     line-height: 1.5 !important;
   }
-  
+
   .system-window code {
     font-size: 12px !important;
     line-height: 1.5 !important;
@@ -344,7 +247,7 @@
     padding: 0.5rem !important;
     font-size: 11px !important;
   }
-  
+
   .system-window code {
     font-size: 11px !important;
   }
@@ -356,7 +259,7 @@
     font-size: 15px !important;
     padding: 2rem !important;
   }
-  
+
   .system-window code {
     font-size: 15px !important;
   }
@@ -367,7 +270,7 @@
     font-size: 16px !important;
     padding: 2.5rem !important;
   }
-  
+
   .system-window code {
     font-size: 16px !important;
   }
@@ -380,7 +283,6 @@
 }
 
 .preview-border {
-  box-shadow: 0 8px 32px rgba(79, 124, 184, 0.15);
   border: solid 1px #4f7cb8;
 }
 
@@ -389,73 +291,42 @@
   margin-bottom: 4em;
   text-align: center;
   padding: 2rem;
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
+  background: rgba(240, 248, 255, 0.3);
   border-radius: 24px;
   margin-left: 2rem;
   margin-right: 2rem;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(79, 179, 255, 0.1);
 }
 
 .TouchSocket-small-title {
-  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  color: #2d5aa0;
+  /* 白百合蓝色系 - 深蓝 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1em;
   font-weight: 600;
   letter-spacing: 1px;
   opacity: 0.8;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(45, 90, 160, 0.1));
 }
 
 .TouchSocket-small-title.dark {
-  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
-  background: linear-gradient(135deg, #a5c6e0 0%, #7fa8d3 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 4px rgba(165, 198, 224, 0.2));
+  color: #a5c6e0;
+  /* 白百合蓝色系 - 浅蓝 */
 }
 
 .TouchSocket-big-title {
-  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  color: #2d5aa0;
+  /* 白百合蓝色系 - 深蓝 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 2.2em;
   font-weight: 700;
   line-height: 1.31;
   margin-bottom: 2em;
-  background: linear-gradient(135deg, 
-    #2d5aa0 0%,     /* Deep Alice Blue */
-    #4f7cb8 25%,    /* Medium Blue */
-    #7fa8d3 50%,    /* Light Blue */
-    #a5c6e0 100%    /* Soft Blue */
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(45, 90, 160, 0.1));
 }
 
 .TouchSocket-big-title.dark {
-  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
-  background: linear-gradient(135deg, 
-    #c7dded 0%,     /* Very Light Blue */
-    #a5c6e0 25%,    /* Soft Blue */
-    #7fa8d3 50%,    /* Light Blue */
-    #6092b6 100%    /* Medium Blue */
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(165, 198, 224, 0.2));
+  color: #a5c6e0;
+  /* 白百合蓝色系 - 浅蓝 */
 }
 
 .TouchSocket-gitee-log {
@@ -472,29 +343,14 @@
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.9) 0%,
-    rgba(230, 243, 255, 0.9) 100%
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(79, 179, 255, 0.15);
+  background: rgba(240, 248, 255, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.TouchSocket-log-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(79, 179, 255, 0.25);
 }
 
 .TouchSocket-log-jiao {
   width: 120px;
   height: 120px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.4) 100%
-  );
+  background: rgba(255, 255, 255, 0.8);
   position: absolute;
   top: -8px;
   right: -8px;
@@ -504,10 +360,7 @@
 }
 
 .TouchSocket-log-jiao.dark {
-  background: linear-gradient(135deg, 
-    rgba(26, 35, 50, 0.8) 0%,
-    rgba(46, 62, 92, 0.6) 100%
-  );
+  background: rgba(26, 35, 50, 0.8);
   border-top: 2px solid rgba(96, 146, 182, 0.4);
   border-right: 2px solid rgba(96, 146, 182, 0.4);
 }
@@ -525,14 +378,11 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .TouchSocket-log-number div {
   font-size: 3.2em;
   font-weight: 700;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 0.2em;
 }
 
@@ -542,7 +392,8 @@
   font-style: normal;
   letter-spacing: 1px;
   line-height: normal;
-  color: #2d5aa0; /* 白百合蓝色系 - 深蓝 */
+  color: #2d5aa0;
+  /* 白百合蓝色系 - 深蓝 */
   font-weight: 600;
   font-size: 1.1em;
   text-transform: uppercase;
@@ -550,7 +401,8 @@
 }
 
 .TouchSocket-log-number span.dark {
-  color: #a5c6e0; /* 白百合蓝色系 - 浅蓝 */
+  color: #a5c6e0;
+  /* 白百合蓝色系 - 浅蓝 */
 }
 
 .TouchSocket-remark {
@@ -696,7 +548,6 @@
   overflow: hidden;
   border-radius: 4px;
   height: 170px;
-  box-shadow: 4px 3px 16px -3px #0009;
   box-sizing: border-box;
   position: relative;
 }
@@ -755,52 +606,7 @@
   font-size: 16px;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.TouchSocket-banner-item {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-.TouchSocket-banner-item:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.TouchSocket-log-item {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.TouchSocket-log-item:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.TouchSocket-log-item:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.TouchSocket-banner-spec li {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.TouchSocket-banner-spec li:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.TouchSocket-banner-spec li:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.TouchSocket-banner-spec li:nth-child(4) {
-  animation-delay: 0.3s;
-}
 
 @media screen and (max-width: 1024px) {
   .TouchSocket-banner {
@@ -958,17 +764,17 @@
     width: 48rem;
     max-width: 55vw;
   }
-  
+
   .TouchSocket-banner-container {
     max-width: 1600px;
     gap: 3rem;
   }
-  
+
   .TouchSocket-banner-item:first-child {
     max-width: 620px;
     min-width: 580px;
   }
-  
+
   .TouchSocket-banner-description {
     font-size: 2.4em;
   }
@@ -979,17 +785,17 @@
     width: 56rem;
     max-width: 60vw;
   }
-  
+
   .TouchSocket-banner-container {
     max-width: 1800px;
     gap: 4rem;
   }
-  
+
   .TouchSocket-banner-item:first-child {
     max-width: 680px;
     min-width: 620px;
   }
-  
+
   .TouchSocket-banner-description {
     font-size: 2.6em;
   }
@@ -1001,12 +807,12 @@
     width: 40rem;
     max-width: 48vw;
   }
-  
+
   .TouchSocket-banner-item:first-child {
     max-width: 540px;
     min-width: 480px;
   }
-  
+
   .TouchSocket-banner-description {
     font-size: 2.0em;
   }
@@ -1041,36 +847,44 @@
 }
 
 .system-window .token.keyword {
-  color: #4f7cb8 !important; /* 白百合蓝色 - 关键字 */
+  color: #4f7cb8 !important;
+  /* 白百合蓝色 - 关键字 */
 }
 
 .system-window .token.string {
-  color: #7fa8d3 !important; /* 白百合蓝色 - 字符串 */
+  color: #7fa8d3 !important;
+  /* 白百合蓝色 - 字符串 */
 }
 
 .system-window .token.comment {
-  color: #6092b6 !important; /* 白百合蓝色 - 注释 */
+  color: #6092b6 !important;
+  /* 白百合蓝色 - 注释 */
   font-style: italic;
 }
 
 .system-window .token.class-name {
-  color: #2d5aa0 !important; /* 白百合蓝色 - 类名 */
+  color: #2d5aa0 !important;
+  /* 白百合蓝色 - 类名 */
 }
 
 .system-window .token.function {
-  color: #4f7cb8 !important; /* 白百合蓝色 - 函数 */
+  color: #4f7cb8 !important;
+  /* 白百合蓝色 - 函数 */
 }
 
 .system-window .token.operator {
-  color: #a5c6e0 !important; /* 白百合蓝色 - 操作符 */
+  color: #a5c6e0 !important;
+  /* 白百合蓝色 - 操作符 */
 }
 
 .system-window .token.punctuation {
-  color: #8bb4d9 !important; /* 白百合蓝色 - 标点 */
+  color: #8bb4d9 !important;
+  /* 白百合蓝色 - 标点 */
 }
 
 .system-window .token.number {
-  color: #c7dded !important; /* 白百合蓝色 - 数字 */
+  color: #c7dded !important;
+  /* 白百合蓝色 - 数字 */
 }
 
 /* 代码高亮行 */
@@ -1094,12 +908,12 @@
 }
 
 .system-window pre::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #4f7cb8 0%, #7fa8d3 100%);
+  background: #4f7cb8;
   border-radius: 4px;
 }
 
 .system-window pre::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
+  background: #2d5aa0;
 }
 
 /* 小屏幕优化 (手机屏幕) */
@@ -1128,7 +942,7 @@
   }
 
   .TouchSocket-support-icons span {
-    transform: scale(0.9);
+    margin: 0.25rem;
   }
 
   .TouchSocket-get-start {
@@ -1173,7 +987,6 @@
   }
 
   .TouchSocket-support-icons span {
-    transform: scale(0.8);
     margin: 0.25rem;
   }
 

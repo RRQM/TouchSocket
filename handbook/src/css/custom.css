@@ -38,7 +38,6 @@
     cursor: pointer;
     border-radius: 20px;
     /* 设置左右两侧的半径为20px，这通常等于按钮的内边距 */
-    transition: background-color 0.3s ease;
 }
 
 .like-button:hover {
