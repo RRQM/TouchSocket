@@ -31,6 +31,7 @@ internal class Program
 
     private static async Task<WebSocketJsonRpcClient> GetClient()
     {
+        #region JsonRpc客户端启用反向Rpc
         var jsonRpcClient = new WebSocketJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .ConfigureContainer(a =>
@@ -42,6 +43,8 @@ internal class Program
              })
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
+        #endregion
+
 
         return jsonRpcClient;
     }
@@ -84,6 +87,7 @@ internal class Program
     }
 }
 
+#region JsonRpc服务器主动调用插件
 internal class MyPluginClass : PluginBase, IWebSocketConnectedPlugin
 {
     public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
@@ -113,7 +117,10 @@ internal class MyPluginClass : PluginBase, IWebSocketConnectedPlugin
         await e.InvokeNext();
     }
 }
+#endregion
 
+
+#region JsonRpc反向Rpc服务
 public partial class ReverseJsonRpcServer : SingletonRpcServer
 {
     [JsonRpc(MethodInvoke = true)]
@@ -122,3 +129,4 @@ public partial class ReverseJsonRpcServer : SingletonRpcServer
         return a + b;
     }
 }
+#endregion

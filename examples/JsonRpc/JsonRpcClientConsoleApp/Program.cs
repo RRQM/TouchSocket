@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.JsonRpc;
+using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace JsonRpcClientConsoleApp;
@@ -28,18 +29,19 @@ internal class Program
 
     private static async Task<IJsonRpcClient> CreateHttpJsonRpcClient()
     {
-        using var jsonRpcClient = new HttpJsonRpcClient();
+        #region 创建HttpJsonRpc客户端
+        var jsonRpcClient = new HttpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
         await jsonRpcClient.ConnectAsync();
         return jsonRpcClient;
+        #endregion
+
     }
 
     private static async Task<IJsonRpcClient> CreateTcpJsonRpcClient()
     {
-        #region MyRegion
-
-        #endregion
+        #region 创建TcpJsonRpc客户端
         var jsonRpcClient = new TcpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7705")
@@ -47,16 +49,36 @@ internal class Program
         await jsonRpcClient.ConnectAsync();
 
         return jsonRpcClient;
+        #endregion
+
+    }
+
+    static async Task JsonRpcInvoke(IJsonRpcClient client)
+    {
+        #region Invoke直接调用
+        var str = await client.InvokeTAsync<string>("TestJsonRpc", InvokeOption.WaitInvoke, "123");
+        #endregion
+    }
+
+    static async Task RpcTestJsonRpc(IJsonRpcClient client)
+    {
+        #region JsonRpcProxy调用
+        var result = await client.TestJsonRpcAsync("RRQM");
+        #endregion
+
+        Console.WriteLine($"Tcp返回结果:{result}");
     }
 
     private static async Task<IJsonRpcClient> CreateWebSocketJsonRpcClient()
     {
+        #region 创建WebSocketJsonRpc客户端
         var jsonRpcClient = new WebSocketJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
 
         return jsonRpcClient;
+        #endregion
     }
 
     private static async Task JsonRpcClientInvokeByHttp()
