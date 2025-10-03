@@ -35,9 +35,14 @@ internal class Program
     {
         //{"jsonrpc": "2.0", "method": "testjsonrpc", "params":"TouchSocket", "id": 1}
 
+
+#if DEBUG
         //此处是生成代理文件，你可以将它复制到你的客户端项目中编译。
         File.WriteAllText("../../../JsonRpcProxy.cs", CodeGenerator.GetProxyCodes("JsonRpcProxy",
             new Type[] { typeof(JsonRpcServer) }, new Type[] { typeof(JsonRpcAttribute) }));
+
+#endif
+
 
         ConsoleLogger.Default.Info("代理文件已经写入到当前项目。");
 
