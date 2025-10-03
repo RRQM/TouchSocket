@@ -56,8 +56,12 @@ public class Touch_JsonWebSocket_2D : BaseTouchServer
                 });
 
                 //启用json rpc插件
-                a.UseWebSocketJsonRpc()
-                .SetAllowJsonRpc((websocket, context) => true);//让所有请求WebSocket都加载JsonRpc插件
+                a.UseWebSocketJsonRpc(options =>
+                {
+                    options.SetAllowJsonRpc((websocket, context) => true);//让所有请求WebSocket都加载JsonRpc插件
+                });
+
+
 
 
                 a.Add<Touch_JsonWebSocket_Log_Plguin>();

@@ -129,7 +129,7 @@ internal class Program
                   a.UseHttpJsonRpc(options =>
                   {
                       options.SetJsonRpcUrl("/jsonRpc");
-                      options.UseSystemTextJsonFormatter(jsonOption => 
+                      options.UseSystemTextJsonFormatter(jsonOption =>
                       {
                           jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
                       });
@@ -159,15 +159,18 @@ internal class Program
               {
                   a.UseWebSocket("/ws");
 
-                  a.UseWebSocketJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseWebSocketJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetAllowJsonRpc((socketClient, context) =>
-                  {
-                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                      return true;
+                      options.SetAllowJsonRpc((websocket, context) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          return true;
+                      });
+
+                      options.UseSystemTextJsonFormatter(jsonOption =>
+                        {
+                            jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                        });
                   });
               }));
         await service.StartAsync();
@@ -194,15 +197,19 @@ internal class Program
               {
                   //a.Add<MyTcpPlugin>();
 
-                  a.UseTcpJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseTcpJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetAllowJsonRpc((socketClient) =>
-                  {
-                      //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
-                      return true;
+                      options.SetAllowJsonRpc((socketClient) =>
+                          {
+                              //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
+                              return true;
+                          });
+
+                      options.UseSystemTextJsonFormatter(jsonOption =>
+                            {
+                                jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                            });
+
                   });
               }));
         await service.StartAsync();
