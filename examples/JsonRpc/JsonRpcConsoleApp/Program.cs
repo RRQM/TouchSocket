@@ -13,6 +13,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -49,6 +50,7 @@ internal class Program
 
     private static async Task CreateHttpJsonRpcService()
     {
+        #region 创建HttpJsonRpc服务端
         var service = new HttpService();
 
         await service.SetupAsync(new TouchSocketConfig()
@@ -68,12 +70,15 @@ internal class Program
                   });
               }));
         await service.StartAsync();
+        #endregion
+
 
         ConsoleLogger.Default.Info($"Http服务器已启动");
     }
 
     private static async Task CreateWebSocketJsonRpcService()
     {
+        #region 创建WebSocketJsonRpc服务端
         var service = new HttpService();
 
         await service.SetupAsync(new TouchSocketConfig()
@@ -104,38 +109,54 @@ internal class Program
                   });
               }));
         await service.StartAsync();
+        #endregion
+
 
         ConsoleLogger.Default.Info($"WebSocket服务器已启动");
     }
 
     private static async Task CreateTcpJsonRpcService()
     {
+        #region 创建TcpJsonRpc服务端
         var service = new TcpService();
-        await service.SetupAsync(new TouchSocketConfig()
-              .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-              .SetListenIPHosts(7705)
-              .ConfigureContainer(a =>
-              {
-                  a.AddRpcStore(store =>
-                  {
-                      store.RegisterServer<JsonRpcServer>();
-                  });
-              })
-              .ConfigurePlugins(a =>
-              {
-                  a.UseTcpJsonRpc(optiosn =>
-                  {
-                      optiosn.SetAllowJsonRpc((socketClient) =>
-                      {
-                          //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
-                          return true;
-                      });
-                  });
-              }));
+
+        var config = new TouchSocketConfig();
+        config.SetListenIPHosts(7705);
+
+        //设置json数据处理适配器。
+        config.SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8));
+
+        //配置容器
+        config.ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();
+
+            a.AddRpcStore(store =>
+            {
+                store.RegisterServer<JsonRpcServer>();
+            });
+        });
+
+        //配置插件
+        config.ConfigurePlugins(a =>
+        {
+            a.UseTcpJsonRpc(optiosn =>
+            {
+                optiosn.SetAllowJsonRpc((socketClient) =>
+                {
+                    //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
+                    return true;
+                });
+            });
+        });
+        await service.SetupAsync(config);
         await service.StartAsync();
+        #endregion
+
     }
 }
 
+#region 声明JsonRpc服务
 public partial class JsonRpcServer : SingletonRpcServer
 {
     /// <summary>
@@ -196,3 +217,5 @@ public partial class JsonRpcServer : SingletonRpcServer
     }
 }
 
+
+#endregion
