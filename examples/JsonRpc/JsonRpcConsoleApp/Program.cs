@@ -62,8 +62,10 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseHttpJsonRpc()
-                  .SetJsonRpcUrl("/jsonRpc");
+                  a.UseHttpJsonRpc(options =>
+                  {
+                      options.SetJsonRpcUrl("/jsonRpc");
+                  });
               }));
         await service.StartAsync();
 
@@ -92,11 +94,13 @@ internal class Program
                       options.SetAutoPong(true);//当收到ping报文时自动回应pong
                   });
 
-                  a.UseWebSocketJsonRpc()
-                  .SetAllowJsonRpc((socketClient, context) =>
+                  a.UseWebSocketJsonRpc(options =>
                   {
-                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                      return true;
+                      options.SetAllowJsonRpc((socketClient, httpContext) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          return true;
+                      });
                   });
               }));
         await service.StartAsync();
@@ -119,11 +123,13 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseTcpJsonRpc()
-                  .SetAllowJsonRpc((socketClient) =>
+                  a.UseTcpJsonRpc(optiosn =>
                   {
-                      //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
-                      return true;
+                      optiosn.SetAllowJsonRpc((socketClient) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
+                          return true;
+                      });
                   });
               }));
         await service.StartAsync();

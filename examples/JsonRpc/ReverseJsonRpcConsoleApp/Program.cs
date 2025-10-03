@@ -67,12 +67,14 @@ internal class Program
                       options.SetAutoPong(true);//当收到ping报文时自动回应pong
                   });
 
-                  a.UseWebSocketJsonRpc()
-                  .SetAllowJsonRpc((socketClient, context) =>
+                  a.UseWebSocketJsonRpc(options =>
                   {
-                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                      //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
-                      return true;
+                      options.SetAllowJsonRpc((socketClient, context) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+                          return true;
+                      });
                   });
 
                   a.Add<MyPluginClass>();
