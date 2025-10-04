@@ -49,12 +49,15 @@ internal class Program
     {
         using var jsonRpcClient = new HttpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+            .SetJsonRpcOption(options =>
+            {
+                options.UseSystemTextJsonFormatter(jsonOption =>
+                {
+                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                });
+            })
              .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-         {
-             option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-         });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -69,12 +72,16 @@ internal class Program
         using var jsonRpcClient = new TcpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7705")
+             .SetJsonRpcOption(options =>
+             {
+                 options.UseSystemTextJsonFormatter(jsonOption =>
+                 {
+                     jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                 });
+             })
              .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8)));
+
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-        {
-            option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-        });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -91,12 +98,15 @@ internal class Program
     {
         using var jsonRpcClient = new WebSocketJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+            .SetJsonRpcOption(options =>
+            {
+                options.UseSystemTextJsonFormatter(jsonOption =>
+                {
+                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                });
+            })
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-        {
-            option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-        });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -128,7 +138,8 @@ internal class Program
               {
                   a.UseHttpJsonRpc(options =>
                   {
-                      options.SetJsonRpcUrl("/jsonRpc");
+                      options.SetAllowJsonRpc("/jsonRpc");
+
                       options.UseSystemTextJsonFormatter(jsonOption =>
                       {
                           jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
@@ -205,10 +216,13 @@ internal class Program
                               return true;
                           });
 
+                      #region 配置JsonRpc序列化器
                       options.UseSystemTextJsonFormatter(jsonOption =>
-                            {
-                                jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                            });
+                      {
+                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                      });
+                      #endregion
+
 
                   });
               }));
@@ -243,7 +257,7 @@ internal class MyTcpPlugin : PluginBase, ITcpReceivedPlugin, ITcpSendingPlugin
     }
 }
 
-#region System.Text.Json序列化
+#region 配置JsonRpcAot类型支持
 [JsonSerializable(typeof(MyClass))]
 [JsonSerializable(typeof(string))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext

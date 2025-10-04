@@ -52,7 +52,7 @@ internal class Program
                  {
                      options.SlaveId = 1;//设置站点号
                      options.IgnoreSlaveId = false;//不忽略站号验证
-                     options.ModbusDataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                  });
 
                  //再添加一个从站站点
@@ -60,7 +60,7 @@ internal class Program
                  {
                      options.SlaveId = 2;//设置站点号
                      options.IgnoreSlaveId = false;//不忽略站号验证
-                     options.ModbusDataLocater = new ModbusDataLocater()//设置数据区
+                     options.DataLocater = new ModbusDataLocater()//设置数据区
                      {
                          //下列配置表示，起始地址从1000开始，10个长度
                          Coils = new BooleanDataPartition(1000, 10),
@@ -82,7 +82,7 @@ internal class Program
         #endregion
 
         #region ModbusSlave本地读写操作
-        var localMaster = modbusSlavePoint.ModbusDataLocater.CreateDataLocaterMaster();
+        var localMaster = modbusSlavePoint.DataLocater.CreateDataLocaterMaster();
         var coils = await localMaster.ReadCoilsAsync(0, 1);
         #endregion
 
@@ -104,7 +104,7 @@ internal class Program
                   {
                       options.SlaveId = 1;//设置站点号
                       options.IgnoreSlaveId = true;//忽略站号验证
-                      options.ModbusDataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                      options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                   });
               })
               );
@@ -130,7 +130,7 @@ internal class Program
                  {
                      options.SlaveId = 1;//设置站点号
                      options.IgnoreSlaveId = true;//忽略站号验证
-                     options.ModbusDataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                  });
              })
              );
@@ -156,7 +156,7 @@ internal class Program
                  {
                      options.SlaveId = 1;//设置站点号
                      options.IgnoreSlaveId = true;//忽略站号验证
-                     options.ModbusDataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                  });
              })
              );
@@ -189,7 +189,7 @@ internal class Program
                  {
                      options.SlaveId = 1;//设置站点号
                      options.IgnoreSlaveId = false;//不忽略站号验证
-                     options.ModbusDataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                  });
              })
              );

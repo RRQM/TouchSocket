@@ -69,20 +69,22 @@ internal class Program
 
                  a.Add<AuthenticationPlugin>();
 
-                 a.UseWebApi()
-                 .ConfigureConverter(converter =>
+                 a.UseWebApi(options =>
                  {
-                     //配置转换器
+                     options.ConfigureConverter(converter =>
+                     {
+                         //配置转换器
 
-                     //converter.Clear();//可以选择性的清空现有所有格式化器
+                         //converter.Clear();//可以选择性的清空现有所有格式化器
 
-                     //添加Json格式化器，可以自定义Json的一些设置
-                     converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.None });
+                         //添加Json格式化器，可以自定义Json的一些设置
+                         converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.None });
 
-                     //添加Xml格式化器
-                     //converter.AddXmlSerializerFormatter();
+                         //添加Xml格式化器
+                         //converter.AddXmlSerializerFormatter();
 
-                     //converter.Add(new MySerializerFormatter());
+                         //converter.Add(new MySerializerFormatter());
+                     });
                  });
 
                  a.UseSwagger()//使用Swagger页面

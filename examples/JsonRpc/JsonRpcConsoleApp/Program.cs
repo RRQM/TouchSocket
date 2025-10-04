@@ -71,7 +71,7 @@ internal class Program
               {
                   a.UseHttpJsonRpc(options =>
                   {
-                      options.SetJsonRpcUrl("/jsonRpc");
+                      options.SetAllowJsonRpc("/jsonRpc");
                   });
               }));
         await service.StartAsync();
@@ -152,6 +152,20 @@ internal class Program
                     //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
                     return true;
                 });
+
+                #region JsonRpcNewtonsoftJson配置
+                optiosn.UseNewtonsoftJsonFormatter(jsonOptions =>
+                {
+                    jsonOptions.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                });
+                #endregion
+
+                #region JsonRpcSystemTextJson配置
+                optiosn.UseSystemTextJsonFormatter(jsonOptions =>
+                {
+                    //配置项
+                });
+                #endregion
             });
         });
         await service.SetupAsync(config);

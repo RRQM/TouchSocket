@@ -36,7 +36,7 @@ internal class Program
         #endregion
 
         #region 示例个性化NamedPipe服务器监听
-        config.SetNamedPipeListenOptions(list =>
+        config.SetNamedPipeListenOption(list =>
         {
             //如果想实现多个命名管道的监听，即可这样设置，一直Add即可。
             list.Add(new NamedPipeListenOption()
