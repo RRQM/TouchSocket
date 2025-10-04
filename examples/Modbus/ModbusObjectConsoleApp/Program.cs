@@ -69,7 +69,7 @@ internal class Program
                 {
                     options.SlaveId = 1;//设置站点号
                     options.IgnoreSlaveId = true;//忽略站号验证
-                    options.ModbusDataLocater = new ModbusDataLocater()//设置数据区
+                    options.DataLocater = new ModbusDataLocater()//设置数据区
                     {
                         //下列配置表示，起始地址从1000开始，10个长度
                         Coils = new BooleanDataPartition(1000, 10),

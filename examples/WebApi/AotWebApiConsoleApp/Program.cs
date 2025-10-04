@@ -42,13 +42,15 @@ namespace WebApiConsoleApp
                 {
                     a.UseTcpSessionCheckClear();
 
-                    a.UseWebApi()
-                    .ConfigureConverter(converter =>
+                    a.UseWebApi(options =>
                     {
-                        converter.Clear();
-                        converter.AddSystemTextJsonSerializerFormatter(options =>
+                        options.ConfigureConverter(converter =>
                         {
-                            options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                            converter.Clear();
+                            converter.AddSystemTextJsonSerializerFormatter(options =>
+                            {
+                                options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                            });
                         });
                     });
 

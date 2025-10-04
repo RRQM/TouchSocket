@@ -182,6 +182,34 @@ JsonRpc支持Rpc平台的所有功能，如`过滤器`、`调度器`以及所有
 
 :::  
 
-## 八、本文示例Demo
+
+## 八、序列化配置及性能优化
+
+### 8.1 使用Newtonsoft.Json
+
+框架内部使用`Newtonsoft.Json`作为默认的序列化工具，如果需要配置序列化项，可以在配置中直接设置。
+
+<CustomCodeBlock region="JsonRpcNewtonsoftJson配置"/>
+
+### 8.2 使用System.Text.Json
+
+<CustomCodeBlock region="JsonRpcSystemTextJson配置"/>
+
+
+### 8.3 Aot支持
+
+如果需要在`Aot`环境下使用`JsonRpc`，需要注意以下两点：
+
+- 1. `JsonRpc`的参数类型和返回值类型，必须是`Aot`支持的类型。
+- 2. 如果是自定义类型，必须在`Aot`环境下生成`Json`序列化代码。
+
+例如：
+
+<CustomCodeBlock region="配置JsonRpcAot类型支持"/>
+
+<CustomCodeBlock region="配置JsonRpc序列化器"/>
+
+
+## 九、本文示例Demo
 
 <CardLink link="examples/JsonRpc"/>
