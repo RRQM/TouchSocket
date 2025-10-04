@@ -36,7 +36,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
+            'https://github.com/RRQM/TouchSocket/tree/master/handbook',
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
@@ -66,7 +66,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
+            'https://github.com/RRQM/TouchSocket/tree/master/handbook',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -137,7 +137,7 @@ const config = {
             position: "right",
             items: [
               {
-                label: "Gitee（主库）",
+                label: "Gitee",
                 href: "https://gitee.com/rrqm_home/touchsocket",
               },
               {
