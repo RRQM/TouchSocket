@@ -17,12 +17,32 @@ namespace TouchSocket.Http;
 /// </summary>
 public static partial class HttpExtensions
 {
+    static HttpExtensions()
+    {
+        s_dateString = DateTime.UtcNow.ToGMTString();
+        s_timer = new Timer((state) =>
+        {
+            s_dateString = DateTime.UtcNow.ToGMTString();
+        }, null, 0, 1000);
+    }
     #region HttpBase
 
     /// <summary>
     /// 表示 multipart/form-data 内容类型的常量字符串。
     /// </summary>
     public const string MultipartFormData = "multipart/form-data";
+
+    /// <summary>
+    /// 向请求头添加当前GMT时间的Date字段。
+    /// </summary>
+    /// <typeparam name="TRequest">请求类型，必须继承自<see cref="HttpBase"/>。</typeparam>
+    /// <param name="request">要添加Date头的请求对象。</param>
+    /// <returns>返回添加了Date头的请求对象。</returns>
+    public static TRequest AddCurrentDateHeader<TRequest>(this TRequest request) where TRequest : HttpBase
+    {
+        request.Headers.Add(HttpHeaders.Date, CurrentHttpDate);// 添加GMT时间到Header
+        return request;
+    }
 
     /// <summary>
     /// 添加Header参数
@@ -36,18 +56,6 @@ public static partial class HttpExtensions
         request.Headers.Add(key, value);
         return request;
     }
-
-    /// <summary>
-    /// 获取Body的字符串
-    /// </summary>
-    /// <param name="httpBase"></param>
-    /// <returns></returns>
-    [Obsolete("该方法已被弃用，请使用GetBodyAsync异步方法代替")]
-    public static string GetBody(this HttpBase httpBase)
-    {
-        return GetBodyAsync(httpBase).GetFalseAwaitResult();
-    }
-
     /// <summary>
     /// 异步获取 HTTP 请求的主体内容。
     /// </summary>
@@ -232,19 +240,6 @@ public static partial class HttpExtensions
     #region HttpRequest
 
     /// <summary>
-    /// 设置Url，可带参数
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="url">要设置的URL地址</param>
-    /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
-    public static TRequest SetUrl<TRequest>(this TRequest request, string url)
-        where TRequest : HttpRequest
-    {
-        request.URL = url;
-        return request;
-    }
-
-    /// <summary>
     /// 添加Query参数
     /// </summary>
     /// <param name="request">请求对象</param>
@@ -366,6 +361,18 @@ public static partial class HttpExtensions
         return request;
     }
 
+    /// <summary>
+    /// 设置Url，可带参数
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="url">要设置的URL地址</param>
+    /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
+    public static TRequest SetUrl<TRequest>(this TRequest request, string url)
+        where TRequest : HttpRequest
+    {
+        request.URL = url;
+        return request;
+    }
     /// <summary>
     /// 对比不包含参数的Url。其中有任意一方为<see langword="null"/>，则均返回False。
     /// </summary>
@@ -580,6 +587,18 @@ public static partial class HttpExtensions
 
     #region HttpResponse
 
+    #region DateString
+
+    private static readonly Timer s_timer;
+
+    private static volatile string s_dateString;
+
+    /// <summary>
+    /// 获取当前的GMT格式日期字符串，通常用于HTTP响应头中的Date字段。
+    /// </summary>
+    public static string CurrentHttpDate => s_dateString;
+    #endregion
+
     /// <summary>
     /// 表示 HTTP 头部的服务器信息。
     /// </summary>
@@ -682,21 +701,8 @@ public static partial class HttpExtensions
         response.StatusCode = status; // 设置HTTP状态码
         response.StatusMessage = msg; // 设置状态描述信息
         response.Headers.TryAdd(HttpHeaders.Server, HttpHeadersServer); // 添加服务器版本信息到Header
-        response.Headers.TryAdd(HttpHeaders.Date, DateTimeOffset.UtcNow.ToGMTString()); // 添加GMT时间到Header
-        return response; // 返回修改后的HttpResponse对象
-    }
-
-    /// <summary>
-    /// 设置默认Success状态，并且附带时间戳。
-    /// </summary>
-    /// <typeparam name="TResponse">泛型参数，表示HttpResponse的类型。</typeparam>
-    /// <param name="response">要设置状态的HttpResponse对象。</param>
-    /// <returns>返回设置后的HttpResponse对象。</returns>
-    [Obsolete("此方法由于方法名称不能清楚表达http状态，已被弃用，请使用SetStatusWithSuccess直接代替")]
-    public static TResponse SetStatus<TResponse>(this TResponse response) where TResponse : HttpResponse
-    {
-        // 调用重载的SetStatus方法，设置状态码为200，状态信息为"Success"。
-        return SetStatus(response, 200, "Success");
+        response.Headers.TryAdd(HttpHeaders.Date, CurrentHttpDate);
+        return response;
     }
 
     /// <summary>
@@ -707,7 +713,6 @@ public static partial class HttpExtensions
     /// <returns>返回设置后的HttpResponse对象。</returns>
     public static TResponse SetStatusWithSuccess<TResponse>(this TResponse response) where TResponse : HttpResponse
     {
-        // 调用重载的SetStatus方法，设置状态码为200，状态信息为"Success"。
         return SetStatus(response, 200, "Success");
     }
 

@@ -26,27 +26,29 @@ namespace TouchSocket.WebApi.Swagger;
 public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
 {
     private readonly ILog m_logger;
-    private readonly IResolver m_resolver;
+
     private readonly Dictionary<string, ReadOnlyMemory<byte>> m_swagger = new();
 
     /// <summary>
     /// SwaggerPlugin
     /// </summary>
-    public SwaggerPlugin(IResolver resolver, ILog logger)
+    public SwaggerPlugin(ILog logger, SwaggerOption options)
     {
-        this.m_resolver = resolver;
         this.m_logger = logger;
+
+        this.LaunchBrowser = options.LaunchBrowser;
+        this.Prefix = options.Prefix;
     }
 
     /// <summary>
     /// 是否在浏览器打开Swagger页面
     /// </summary>
-    public bool LaunchBrowser { get; set; }
+    public bool LaunchBrowser { get; }
 
     /// <summary>
     /// 访问Swagger的前缀，默认“swagger”
     /// </summary>
-    public string Prefix { get; set; } = "swagger";
+    public string Prefix { get; }
 
     /// <inheritdoc/>
     public async Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
@@ -110,27 +112,6 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             var index = prefix == "/" ? $"/index.html" : $"{prefix}/index.html";
             this.OpenWebLink($"{scheme}://{host}:{iphost.Port}{index}");
         }
-    }
-
-    /// <summary>
-    /// 设置访问Swagger的前缀，默认“swagger”
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public SwaggerPlugin SetPrefix(string value)
-    {
-        this.Prefix = value;
-        return this;
-    }
-
-    /// <summary>
-    /// 在浏览器打开Swagger页面
-    /// </summary>
-    /// <returns></returns>
-    public SwaggerPlugin UseLaunchBrowser()
-    {
-        this.LaunchBrowser = true;
-        return this;
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿<Project>
 
 	<PropertyGroup>
-		<BaseVersion>4.0.0-beta.70</BaseVersion>
+		<BaseVersion>4.0.0-beta.96</BaseVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">

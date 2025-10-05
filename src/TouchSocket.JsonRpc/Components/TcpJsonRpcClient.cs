@@ -27,7 +27,6 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     /// </summary>
     public TcpJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
             SendAction = this.SendAction,
@@ -50,7 +49,7 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; private set; }
 
     /// <inheritdoc/>
     public Task ConnectAsync(CancellationToken cancellationToken)
@@ -85,6 +84,10 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
         {
             this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
         }
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>

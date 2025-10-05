@@ -384,7 +384,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
             var args = new ConnectingEventArgs()
             {
-                Id = this.GetNextNewId()
+                Id = this.GetNextNewId(client)
             };
             await client.InternalConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
             if (args.IsPermitOperation)

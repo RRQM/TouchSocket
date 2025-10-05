@@ -24,8 +24,8 @@ public class TransportOption
     /// </summary>
     public TransportOption()
     {
-        this.ReceivePipeOptions = GetDefaultReceive();
-        this.SendPipeOptions = GetDefaultSend();
+        this.ReceivePipeOptions = CreateDefaultPipeOptions();
+        this.SendPipeOptions = CreateDefaultPipeOptions();
     }
 
     /// <summary>
@@ -48,7 +48,10 @@ public class TransportOption
     /// </summary>
     public PipeOptions SendPipeOptions { get; set; }
 
-    private static PipeOptions GetDefaultReceive()
+    /// <summary>
+    /// 创建默认的 <see cref="PipeOptions"/>。
+    /// </summary>
+    public static PipeOptions CreateDefaultPipeOptions()
     {
         return new PipeOptions(
                 pool: null,
@@ -60,15 +63,18 @@ public class TransportOption
                 useSynchronizationContext: true);
     }
 
-    private static PipeOptions GetDefaultSend()
+    /// <summary>
+    /// 创建注重调度的 <see cref="PipeOptions"/>，适合需要主线程调度的场景。
+    /// </summary>
+    public static PipeOptions CreateSchedulerOptimizedPipeOptions()
     {
         return new PipeOptions(
-                pool: null,
-                readerScheduler: null,
-                writerScheduler: null,
-                pauseWriterThreshold: -1,
-                resumeWriterThreshold: -1,
-                minimumSegmentSize: -1,
-                useSynchronizationContext: true);
+            pool: null,
+            readerScheduler: PipeScheduler.Inline,
+            writerScheduler: PipeScheduler.Inline,
+            pauseWriterThreshold: -1,
+            resumeWriterThreshold: -1,
+            minimumSegmentSize: -1,
+            useSynchronizationContext: false);
     }
 }

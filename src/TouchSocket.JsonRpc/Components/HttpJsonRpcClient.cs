@@ -29,7 +29,6 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// </summary>
     public HttpJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
             SendAction = this.SendAction,
@@ -40,7 +39,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// <summary>
     /// 获取序列化转换器。
     /// </summary>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; private set; }
 
     #region JsonRpcActor
 
@@ -101,6 +100,10 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
         base.LoadConfig(config);
         this.m_jsonRpcActor.Logger = this.Logger;
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>

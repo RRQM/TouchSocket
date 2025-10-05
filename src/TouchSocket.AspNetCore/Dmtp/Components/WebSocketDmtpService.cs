@@ -73,8 +73,11 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
         if (context.WebSockets.IsWebSocketRequest)
         {
             var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var id = this.GetNextNewId();
+           
             var client = new WebSocketDmtpSessionClient();
+
+            var id = this.GetNextNewId(client);
+
             client.InternalSetId(id);
             if (!this.m_clients.TryAdd(client))
             {

@@ -23,7 +23,7 @@ public static class SerialPortExtensions
     /// 尝试关闭<see cref="SerialPort"/>。不会抛出异常。
     /// </summary>
     /// <param name="serialPort"></param>
-    public static void TryClose(this SerialPort serialPort)
+    public static Result TryClose(this SerialPort serialPort)
     {
         try
         {
@@ -31,9 +31,18 @@ public static class SerialPortExtensions
             {
                 serialPort.Close();
             }
+
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return new Result(ex);
         }
+    }
+
+    public static int Read(this SerialPort serialPort, Memory<byte> memory)
+    {
+        var bytes = memory.GetArray();
+        return serialPort.Read(bytes.Array, bytes.Offset, bytes.Count);
     }
 }

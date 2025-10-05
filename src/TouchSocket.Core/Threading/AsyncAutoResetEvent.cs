@@ -174,7 +174,7 @@ public class AsyncAutoResetEvent
     /// </remarks>
     public void Set()
     {
-        WaiterCompletionSource? toRelease = null;
+        WaiterCompletionSource toRelease = null;
         lock (this.signalAwaiters)
         {
             if (this.signalAwaiters.Count > 0)
@@ -187,10 +187,10 @@ public class AsyncAutoResetEvent
             }
         }
 
-        if (toRelease is object)
+        if (toRelease is not null)
         {
             toRelease.Registration.Dispose();
-            toRelease.TrySetResult(default(EmptyStruct));
+            toRelease.TrySetResult(default);
         }
     }
 

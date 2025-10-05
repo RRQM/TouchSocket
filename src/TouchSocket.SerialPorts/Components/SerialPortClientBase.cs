@@ -247,13 +247,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             var serialPort = CreateSerial(serialPortOption);
             await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            serialPort.Open();
-
-            if (!serialPort.IsOpen)
-            {
-                ThrowHelper.ThrowException(TouchSocketCoreResource.UnknownError);
-            }
-
             this.m_transport = new SerialPortTransport(serialPort, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
             this.m_online = true;
             // 启动新任务，处理连接后的操作
@@ -293,7 +286,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         this.m_dataHandlingAdapter = adapter;
     }
 
-    private static SerialPort CreateSerial(SerialPortOption option)
+    private static SerialCore CreateSerial(SerialPortOption option)
     {
         var serialPort = new SerialPort(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits)
         {
@@ -301,7 +294,14 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             RtsEnable = option.RtsEnable,
             DtrEnable = option.DtrEnable
         };
-        return serialPort;
+
+        serialPort.Open();
+
+        if (!serialPort.IsOpen)
+        {
+            ThrowHelper.ThrowException(TouchSocketCoreResource.UnknownError);
+        }
+        return new SerialCore(serialPort, option.StreamAsync);
     }
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)

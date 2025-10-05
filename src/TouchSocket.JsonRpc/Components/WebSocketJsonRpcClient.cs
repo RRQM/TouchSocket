@@ -29,7 +29,6 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     /// </summary>
     public WebSocketJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
             SendAction = this.SendAction,
@@ -43,7 +42,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; private set; }
 
     #region JsonRpcActor
 
@@ -61,16 +60,6 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     }
 
     /// <inheritdoc/>
-    protected override void SafetyDispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_jsonRpcActor.SafeDispose();
-        }
-        base.SafetyDispose(disposing);
-    }
-
-    /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
         base.LoadConfig(config);
@@ -82,6 +71,10 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
         {
             this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
         }
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>
@@ -102,5 +95,15 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
                 await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_jsonRpcActor.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
     }
 }

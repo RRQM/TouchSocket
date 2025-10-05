@@ -21,7 +21,10 @@ public static class TouchSocketConfigExtension
 {
     #region 数据
 
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    /// <summary>
+    /// 传输选项配置属性，类型为<see cref="TransportOption"/>。
+    /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<TransportOption> TransportOptionProperty = new("TransportOption", new TransportOption());
 
 
@@ -141,7 +144,7 @@ public static class TouchSocketConfigExtension
     /// 设置默认Id的获取方式，所需类型<see cref="Func{T, TResult}"/>
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<Func<string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
+    public static readonly DependencyProperty<Func<IClient,string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
 
     /// <summary>
     /// 服务器负责监听的地址组。所需类型<see cref="IPHost"/>数组

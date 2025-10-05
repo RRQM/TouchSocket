@@ -21,58 +21,27 @@ namespace TouchSocket.JsonRpc;
 [PluginOption(Singleton = true)]
 public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
 {
+    private readonly TcpJsonRpcOption m_option;
+
     /// <summary>
     /// 基于Tcp协议的JsonRpc功能插件
     /// </summary>
     /// <param name="rpcServerProvider"></param>
-    public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
+    /// <param name="option">配置选项</param>
+    public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, TcpJsonRpcOption option) : base(rpcServerProvider, option)
     {
-        this.AllowJsonRpc = (client) =>
-        {
-            return Task.FromResult(true);
-        };
+        this.m_option = option;
     }
-
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    /// <param name="allowJsonRpc"></param>
-    /// <returns></returns>
-    public TcpJsonRpcParserPlugin SetAllowJsonRpc(Func<ITcpSession, Task<bool>> allowJsonRpc)
-    {
-        this.AllowJsonRpc = allowJsonRpc;
-        return this;
-    }
-
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    /// <param name="allowJsonRpc"></param>
-    /// <returns></returns>
-    public TcpJsonRpcParserPlugin SetAllowJsonRpc(Func<ITcpSession, bool> allowJsonRpc)
-    {
-        this.AllowJsonRpc = (client) =>
-        {
-            return Task.FromResult(allowJsonRpc(client));
-        };
-        return this;
-    }
-
-
-
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    public Func<ITcpSession, Task<bool>> AllowJsonRpc { get; set; }
 
     /// <inheritdoc/>
     public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
     {
         if (client is IClientSender clientSender)
         {
-            if (this.AllowJsonRpc != null)
+            if (this.m_option.AllowJsonRpc != null)
             {
-                if (await this.AllowJsonRpc.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                if (await this.m_option.AllowJsonRpc.Invoke(client)
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var jsonRpcActor = new JsonRpcActor()
                     {

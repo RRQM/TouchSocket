@@ -52,6 +52,12 @@ public class SerialPortOption
     /// 停止位
     /// </summary>
     public StopBits StopBits { get; set; } = StopBits.One;
+
+    /// <summary>
+    /// 是否异步流模式。
+    /// </summary>
+    public bool StreamAsync { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
