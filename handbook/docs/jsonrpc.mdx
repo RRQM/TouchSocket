@@ -1,6 +1,6 @@
 ---
 id: jsonrpc
-title: 产品及架构介绍
+title: JsonRpc 使用指南
 ---
 
 import Tag from "@site/src/components/Tag.js";
@@ -14,97 +14,115 @@ import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 <TouchSocketJsonRpcDefinition />
 
 
-## 一、说明
+## 一、概述
 
-JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关**。详细说明请参阅[JsonRpc 2.0 官方文档](https://www.jsonrpc.org/specification)，在TouchSocket中封装了**前后端**，使其使用更加方便、高效。
+JsonRpc 是一种**通用的 RPC 规范**，具有**跨编程语言、跨操作系统**的特性。详细规范请参阅 [JsonRpc 2.0 官方文档](https://www.jsonrpc.org/specification)。TouchSocket 对 JsonRpc 进行了完整封装，提供了**前后端一体化**的解决方案，使其使用更加方便、高效。
 
-目前支持`Tcp`、`Http`、`WebSocket`三种协议调用。
+### 1.1 支持的协议
 
+目前支持以下三种基础协议进行 JsonRpc 调用：
 
-## 二、特点：
-
-- **异常反馈** 。
-- 插件支持。
-- 支持自定义类型。
-- 支持类型嵌套。
-- 支持js、Android等调用。
-- 支持服务器主动调用客户端
+- **Tcp** 协议
+- **Http** 协议  
+- **WebSocket** 协议
 
 
-## 三、定义服务
+## 二、核心特点
 
-在**服务器**端中新建一个类，继承于`SingletonRpcServer`类（或实现`ISingletonRpcServer`），然后在该类中写**公共方法**，并用**JsonRpc**特性标签标记。
+- **异常反馈**：完善的异常处理和错误信息反馈机制
+- **插件支持**：灵活的插件扩展体系
+- **自定义类型**：支持自定义类型的序列化和反序列化
+- **类型嵌套**：支持复杂的类型嵌套结构
+- **跨平台调用**：支持 JavaScript、Android 等多平台调用
+- **反向调用**：支持服务器主动调用客户端
+
+
+## 三、定义 RPC 服务
+
+### 3.1 服务端实现
+
+在**服务器端**创建一个类，继承 `SingletonRpcServer` 类（或实现 `ISingletonRpcServer` 接口），然后在该类中定义**公共方法**，并使用 **JsonRpc** 特性标记。
 
 
 <CustomCodeBlock region="声明JsonRpc服务"/>
 
+### 3.2 调用键说明
+
 :::info 备注
 
-设置`MethodInvoke = true`，即以方法名作为调用键，这也是`JsonRpc`规范所规定。
+当设置 `MethodInvoke = true` 时，将使用方法名作为调用键，这是 `JsonRpc` 规范的标准方式。
 
-但同时框架内部还支持另一种方式，即默认情况下会使用方法的**全名称小写**作为调用键（即：命名空间+类名+方法名）
+框架同时支持另一种方式：默认情况下使用方法的**全名称小写**作为调用键（格式：命名空间+类名+方法名）。
 
 :::  
 
 
 ## 四、启动服务器
 
-JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
+JsonRpc 支持多种基础协议的服务器，下面将分别介绍不同协议的启动方式。
 
-更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
+:::tip 提示
 
-### 4.1 以Tcp为基础协议
+更多注册 RPC 服务的方法请参考：[注册 Rpc 服务](./rpcregister.mdx)
 
-当以Tcp为基础协议时，支持Tcp的任何操作。包括但不限于`设置适配器`等。
+:::
 
-下列代码创建的就是一个最普通Tcp协议下的JsonRpc服务器。该服务支持任何未处理的Tcp协议的JsonRpc数据包调用。
+### 4.1 Tcp 协议服务器
+
+当使用 Tcp 作为基础协议时，支持 Tcp 的所有操作特性，包括但不限于**设置适配器**、**配置连接参数**等。
+
+下列代码创建了一个基于 Tcp 协议的 JsonRpc 服务器，该服务器可以处理所有符合 Tcp 协议的 JsonRpc 数据包调用。
 
 <CustomCodeBlock region="创建TcpJsonRpc服务端"/>
 
 
-### 4.2 使用Http协议服务器
+### 4.2 Http 协议服务器
 
-创建后，如果想使用Http调用，只需要以Post方式，将调用Json字符串路由到设定路由地址即可（下文示例“/jsonRpc”）。
+创建 Http 协议服务器后，客户端可以通过 **POST 方式**将 JsonRpc 调用字符串路由到指定的路由地址（下文示例为 "/jsonRpc"）。
 
 <CustomCodeBlock region="创建HttpJsonRpc服务端"/>
 
-### 4.3 使用WebSocket协议服务器
+### 4.3 WebSocket 协议服务器
 
-如果想使用Websocket调用，只需要以**文本**形式，传递到服务器即可。
+使用 WebSocket 协议时，只需将 JsonRpc 调用内容以**文本格式**发送到服务器即可。
 
 <CustomCodeBlock region="创建WebSocketJsonRpc服务端"/>
 
 :::tip 提示
 
-`WebSocket`协议服务器和`Http`协议服务器其实可以合并为一个。
+`WebSocket` 协议服务器和 `Http` 协议服务器可以合并为同一个服务，同时支持两种协议。
 
 :::  
 
-## 五、通用调用
+## 五、通用调用方式
 
-因为`JsonRpc`是通用调用协议，所以只要**适配基础协议**，即可直接使用`Json`字符串调用。
+由于 `JsonRpc` 是通用调用协议，只要**适配基础协议**，即可直接使用 `Json` 字符串进行调用。
 
-以下字符串只是示例，具体的method参数，应当遵循当前路由。
+:::info 说明
 
-### 5.1 Tcp协议直接调用
+以下字符串仅作示例，实际的 `method` 参数应当遵循当前的路由配置。
 
-在`Tcp`协议时，按照适配器，选择性的是否以`\r\n`结尾。
+:::
 
-```csharp showLineNumbers
-{"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
-```
+### 5.1 Tcp 协议直接调用
 
-### 5.2 Http协议直接调用
-
-在`Http`协议时，以`Url+Post`方式即可
+在 `Tcp` 协议下，根据适配器的配置，可选择是否以 `\r\n` 结尾。
 
 ```csharp showLineNumbers
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
 ```
 
-### 5.3 Websocket协议直接调用
+### 5.2 Http 协议直接调用
 
-在`Websocket`协议时，以`文本类型`，直接发送到服务器即可。
+在 `Http` 协议下，使用 `URL + POST` 方式发送请求。
+
+```csharp showLineNumbers
+{"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
+```
+
+### 5.3 WebSocket 协议直接调用
+
+在 `WebSocket` 协议下，以**文本类型**直接发送到服务器。
 
 ```csharp showLineNumbers
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
@@ -113,103 +131,111 @@ JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
 
 ## 六、专用客户端调用
 
-框架内部提供了`JsonRpc`的专属客户端，可以直接调用，下列将详细介绍。
+框架内部提供了 `JsonRpc` 的专属客户端，可以直接进行调用，下面将详细介绍各协议客户端的创建和使用方式。
 
 ### 6.1 创建客户端
 
-#### 6.1.1 Tcp协议
+#### 6.1.1 Tcp 协议客户端
 
 <CustomCodeBlock region="创建TcpJsonRpc客户端"/>
 
-#### 6.1.2 Http协议
+#### 6.1.2 Http 协议客户端
 
 <CustomCodeBlock region="创建HttpJsonRpc客户端"/>
 
 
-#### 6.1.3 WebSocket协议
+#### 6.1.3 WebSocket 协议客户端
 
 <CustomCodeBlock region="创建WebSocketJsonRpc客户端"/>
 
 
 ### 6.2 直接调用
 
-所有的Rpc客户端，都实现了`IJsonRpcClient`接口，所以调用方式是一样的。
+所有的 RPC 客户端都实现了 `IJsonRpcClient` 接口，因此调用方式是统一的。
 
-在原生接口中，可以直接使用`Invoke`、`InvokeT`等方法调用。
+在原生接口中，可以直接使用 `Invoke`、`InvokeT` 等方法进行调用。
 
 <CustomCodeBlock region="Invoke直接调用"/>
 
 ### 6.3 代理调用
 
-在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
+在服务器端注册完服务后，就可以生成客户端调用代码。详细的操作请查看 [服务端代理生成](./rpcgenerateproxy.mdx)。
 
 
-然后客户端直接使用同名`扩展方法`即可调用。
+然后客户端直接使用同名**扩展方法**即可调用。
 
 <CustomCodeBlock region="JsonRpcProxy调用"/>
 
 :::tip 提示
 
-JsonRpc支持Rpc平台的所有功能，如`过滤器`、`调度器`以及所有代理调用方式。
+JsonRpc 支持 RPC 平台的所有功能，如**过滤器**、**调度器**以及所有代理调用方式。
 
 :::  
 
-## 七、反向Rpc（服务器主动调用客户端）
+## 七、反向 RPC（服务器主动调用客户端）
 
-框架提供了反向`Rpc`，即**服务器主动调用客户端**。该功可以用于`Web`等多端。
+框架提供了反向 `RPC` 功能，即**服务器主动调用客户端**。该功能可以用于 `Web` 等多端场景。
 
-反向Rpc必须在全双工协议下使用，如`WebSocket`、`Tcp`等。
+:::info 注意
+
+反向 RPC 必须在全双工协议下使用，如 `WebSocket`、`Tcp` 等。
+
+:::
+
+### 7.1 使用步骤
 
 具体使用如下：
 
-首先，需要在*客户端*像常规`Rpc`一样声明一个`Rpc`服务。然后需要使用`JsonRpc`特性表示。
+**第一步：** 在客户端像常规 `RPC` 一样声明一个 `RPC` 服务，并使用 `JsonRpc` 特性标记。
 
 <CustomCodeBlock region="JsonRpc反向Rpc服务"/>
 
-然后注册服务。
+**第二步：** 注册服务。
 
 <CustomCodeBlock region="JsonRpc客户端启用反向Rpc"/>
 
-在服务器端中，拿到`IHttpSessionClient`对象。然后调用`GetJsonRpcActionClient`扩展方法获取到`IJsonRpcClient`。然后调用`Invoke`等。
+**第三步：** 在服务器端获取 `IHttpSessionClient` 对象，然后调用 `GetJsonRpcActionClient` 扩展方法获取 `IJsonRpcClient`，最后调用 `Invoke` 等方法。
 
-下列示例演示的是，当`WebSocket`连接上时，服务器主动调用客户端。
+下列示例演示了当 `WebSocket` 连接建立时，服务器主动调用客户端的场景。
 
 <CustomCodeBlock region="JsonRpc服务器主动调用插件"/>
 
-:::tip
+:::tip 提示
 
-反向JsonRpc也能使用代理。
+反向 JsonRpc 也支持使用代理调用方式。
 
 :::  
 
 
 ## 八、序列化配置及性能优化
 
-### 8.1 使用Newtonsoft.Json
+### 8.1 使用 Newtonsoft.Json
 
-框架内部使用`Newtonsoft.Json`作为默认的序列化工具，如果需要配置序列化项，可以在配置中直接设置。
+框架内部默认使用 `Newtonsoft.Json` 作为序列化工具，如果需要配置序列化选项，可以在配置中直接设置。
 
 <CustomCodeBlock region="JsonRpcNewtonsoftJson配置"/>
 
-### 8.2 使用System.Text.Json
+### 8.2 使用 System.Text.Json
+
+如果您希望使用 `System.Text.Json` 作为序列化工具，可以进行如下配置：
 
 <CustomCodeBlock region="JsonRpcSystemTextJson配置"/>
 
 
-### 8.3 Aot支持
+### 8.3 AOT 支持
 
-如果需要在`Aot`环境下使用`JsonRpc`，需要注意以下两点：
+如果需要在 `AOT`（Ahead-Of-Time）环境下使用 `JsonRpc`，需要注意以下几点：
 
-- 1. `JsonRpc`的参数类型和返回值类型，必须是`Aot`支持的类型。
-- 2. 如果是自定义类型，必须在`Aot`环境下生成`Json`序列化代码。
+1. `JsonRpc` 的参数类型和返回值类型，必须是 `AOT` 支持的类型
+2. 如果是自定义类型，必须在 `AOT` 环境下生成 `Json` 序列化代码
 
-例如：
+#### 配置示例
 
 <CustomCodeBlock region="配置JsonRpcAot类型支持"/>
 
 <CustomCodeBlock region="配置JsonRpc序列化器"/>
 
 
-## 九、本文示例Demo
+## 九、本文示例 Demo
 
 <CardLink link="examples/JsonRpc"/>
