@@ -24,6 +24,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        #region 创建XmlRpc服务器
         var service = new HttpService();
 
         service.SetupAsync(new TouchSocketConfig()
@@ -42,11 +43,15 @@ internal class Program
             })
             .ConfigurePlugins(a =>
             {
-                a.UseXmlRpc()
-                .SetXmlRpcUrl("/xmlRpc");
+                a.UseXmlRpc(options =>
+                {
+                    options.SetAllowXmlRpc("/xmlRpc");
+                });
             })
             .SetListenIPHosts(7789));
         service.StartAsync();
+        #endregion
+
 
         service.Logger.Info("服务器已启动");
         Console.ReadKey();
@@ -57,6 +62,7 @@ internal class Program
     }
 }
 
+#region 声明XmlRpc服务
 public partial class XmlServer : SingletonRpcServer
 {
     [XmlRpc(MethodInvoke = true)]
@@ -77,3 +83,6 @@ public class MyClass
     public int A { get; set; }
     public int B { get; set; }
 }
+#endregion
+
+

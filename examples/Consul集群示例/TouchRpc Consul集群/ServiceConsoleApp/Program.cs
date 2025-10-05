@@ -48,7 +48,7 @@ internal class Program
             .ConfigurePlugins(a =>
             {
                 a.UseDmtpRpc();
-                a.UseXmlRpc().SetXmlRpcUrl("/xmlrpc");
+                a.UseXmlRpc("/xmlrpc");
                 a.UseWebApi();
 
                 //添加WebSocket功能
