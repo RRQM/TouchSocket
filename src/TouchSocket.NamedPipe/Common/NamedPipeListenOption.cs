@@ -21,11 +21,7 @@ public class NamedPipeListenOption
     /// 名称
     /// </summary>
     public string Name { get; set; }
-
-    /// <summary>
-    /// 发送超时时间
-    /// </summary>
-    public int SendTimeout { get; set; }
+    public string PipeName { get; set; }
 
     /// <summary>
     /// 配置适配器

@@ -10,17 +10,17 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TouchSocket.JsonRpc;
 
-public static class JsonRpcConfigExtension
+/// <summary>
+/// JsonRpc配置选项
+/// </summary>
+public class JsonRpcOption
 {
-    [GeneratorProperty(TargetType =typeof(TouchSocketConfig),ActionMode =true)]
-    public readonly static DependencyProperty<JsonRpcOption> JsonRpcOptionProperty =
-       new("JsonRpcOption", default);
+    private readonly TouchSocketSerializerConverter<string, JsonRpcActor> m_serializerConverter = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+
+    /// <summary>
+    /// 获取序列化转换器
+    /// </summary>
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_serializerConverter;
 }

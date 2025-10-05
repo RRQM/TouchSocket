@@ -11,23 +11,115 @@
 // ------------------------------------------------------------------------------
 
 using System.IO.Ports;
+using System.Net.Sockets;
+using TouchSocket.Resources;
 
 namespace TouchSocket.SerialPorts;
 
-internal sealed class SerialPortTransport : StreamTransport
+internal sealed class SerialPortTransport : BaseTransport
 {
-    private readonly SerialPort m_serialPort;
+    private readonly SerialCore m_serialCore;
 
-    public SerialPortTransport(SerialPort serialPort, TransportOption option) : base(serialPort.BaseStream, option)
+    public SerialPortTransport(SerialCore serialCore, TransportOption option) : base(option)
     {
-        this.m_serialPort = serialPort;
+        this.m_serialCore = serialCore;
+
+        this.Start();
     }
 
-    public bool IsOpen => this.m_serialPort.IsOpen;
+    public bool IsOpen => this.m_serialCore.SerialPort.IsOpen;
 
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_serialPort.Dispose();
+        this.m_serialCore.Dispose();
         base.SafetyDispose(disposing);
+    }
+
+    protected override async Task RunReceive(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var memory = this.m_pipeReceive.Writer.GetMemory(this.ReceiveBufferSize);
+                var result = await this.m_serialCore.ReceiveAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.BytesTransferred == 0)
+                {
+                    this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                    await this.m_pipeReceive.Writer.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return;
+                }
+
+                this.m_receiveCounter.Increment(result.BytesTransferred);
+
+                this.m_pipeReceive.Writer.Advance(result.BytesTransferred);
+                var flushResult = await this.m_pipeReceive.Writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (flushResult.IsCompleted)
+                {
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
+            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            // 取消内置接收和发送任务。
+            base.m_tokenSource.SafeCancel();
+        }
+    }
+
+    protected override async Task RunSend(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (readResult.IsCanceled)
+                {
+                    break;
+                }
+
+                if (readResult.IsCompleted && readResult.Buffer.IsEmpty)
+                {
+                    break;
+                }
+
+                try
+                {
+                    foreach (var item in readResult.Buffer)
+                    {
+                        await this.m_serialCore.SendAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    
+                    this.m_pipeSend.Reader.AdvanceTo(readResult.Buffer.End);
+
+                    this.m_sentCounter.Increment(readResult.Buffer.Length);
+                }
+                catch (Exception ex)
+                {
+                    // 处理发送失败的情况
+                    this.m_pipeSend.Reader.Complete(ex);
+                    break;
+                }
+
+                if (readResult.IsCompleted)
+                {
+                    break;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            this.m_pipeSend.Reader.Complete(ex);
+        }
+        finally
+        {
+            this.m_pipeSend.Reader.Complete();
+        }
     }
 }

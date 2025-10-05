@@ -16,11 +16,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouchSocket.JsonRpc;
+namespace TouchSocket.WebApi.Swagger;
 
-public static class JsonRpcConfigExtension
+public class SwaggerOption
 {
-    [GeneratorProperty(TargetType =typeof(TouchSocketConfig),ActionMode =true)]
-    public readonly static DependencyProperty<JsonRpcOption> JsonRpcOptionProperty =
-       new("JsonRpcOption", default);
+
+    /// <summary>
+    /// 是否在浏览器打开Swagger页面
+    /// </summary>
+    public bool LaunchBrowser { get; set; }
+
+    /// <summary>
+    /// 访问Swagger的前缀，默认“swagger”
+    /// </summary>
+    public string Prefix { get; set; } = "swagger";
+
+    /// <summary>
+    /// 设置访问Swagger的前缀，默认“swagger”
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public void SetPrefix(string value)
+    {
+        this.Prefix = value;
+    }
+
+    /// <summary>
+    /// 在浏览器打开Swagger页面
+    /// </summary>
+    /// <returns></returns>
+    public void UseLaunchBrowser()
+    {
+        this.LaunchBrowser = true;
+    }
+
+
 }

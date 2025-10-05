@@ -17,7 +17,7 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public abstract class ConnectableService : ServiceBase, IConnectableService
 {
-    private Func<string> m_getDefaultNewId;
+    private Func<IClient,string> m_getDefaultNewId;
 
     private int m_maxCount;
     private int m_nextId;
@@ -61,12 +61,12 @@ public abstract class ConnectableService : ServiceBase, IConnectableService
     /// 尝试获取下一个新的标识符。
     /// </summary>
     /// <returns>返回新的标识符，如果内部方法调用失败，则返回默认的新标识符。</returns>
-    protected virtual string GetNextNewId()
+    protected virtual string GetNextNewId(IClient client)
     {
         try
         {
             // 尝试调用内部方法获取新的标识符。
-            return this.m_getDefaultNewId.Invoke();
+            return this.m_getDefaultNewId.Invoke(client);
         }
         catch (Exception ex)
         {
@@ -74,22 +74,22 @@ public abstract class ConnectableService : ServiceBase, IConnectableService
             this.Logger?.Exception(this, ex);
         }
         // 如果调用内部方法失败，则使用此方法作为回退，返回一个默认的新标识符。
-        return this.GetDefaultNewId();
+        return this.GetDefaultNewId(client);
     }
 
     /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
-        if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
+        if (config.TryGetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty,out var func))
         {
-            this.m_getDefaultNewId = fun;
+            this.m_getDefaultNewId = func;
         }
         this.m_maxCount = config.GetValue(TouchSocketConfigExtension.MaxCountProperty);
 
         base.LoadConfig(config);
     }
 
-    private string GetDefaultNewId()
+    private string GetDefaultNewId(IClient client)
     {
         return BitConverter.ToString(BitConverter.GetBytes(Interlocked.Increment(ref this.m_nextId)));
     }

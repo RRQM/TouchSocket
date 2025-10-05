@@ -33,8 +33,12 @@ public class NamedPipeMonitor : DisposableObject
 
     private readonly CancellationTokenSource m_cancellationTokenSource = new CancellationTokenSource();
 
+    /// <summary>
+    /// 获取用于监听的<see cref="CancellationToken"/>。
+    /// </summary>
     public CancellationToken MonitorToken => this.m_cancellationTokenSource.Token;
 
+    /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (disposing)

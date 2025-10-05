@@ -69,12 +69,10 @@ public static class CollectionsExtension
     /// <returns>如果添加成功则返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
     public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
     {
-        // 如果字典中已经包含此键，则不添加，并返回<see langword="false"/>
         if (dictionary.ContainsKey(key))
         {
             return false;
         }
-        // 向字典中添加键值对
         dictionary.Add(key, value);
         return true;
     }

@@ -16,11 +16,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouchSocket.JsonRpc;
+namespace TouchSocket.WebApi;
 
-public static class JsonRpcConfigExtension
+public class WebApiOption
 {
-    [GeneratorProperty(TargetType =typeof(TouchSocketConfig),ActionMode =true)]
-    public readonly static DependencyProperty<JsonRpcOption> JsonRpcOptionProperty =
-       new("JsonRpcOption", default);
+    public WebApiOption()
+    {
+        this.Converter = new WebApiSerializerConverter();
+        this.Converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings());
+    }
+    public WebApiSerializerConverter Converter { get;}
+
+    public void ConfigureConverter(Action<WebApiSerializerConverter> action)
+    {
+        action.Invoke(this.Converter);
+    }
 }

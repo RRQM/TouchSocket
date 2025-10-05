@@ -48,8 +48,10 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     /// <inheritdoc/>
     public void AddListen(NamedPipeListenOption option)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
         this.ThrowIfDisposed();
+        ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(option.PipeName, nameof(option.PipeName));
+        
 
         var networkMonitor = new NamedPipeMonitor(option);
 
@@ -121,18 +123,14 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     {
         this.ThrowIfConfigIsNull();
 
-        var optionList = new List<NamedPipeListenOption>();
-        if (this.Config.GetValue(NamedPipeConfigExtension.NamedPipeListenOptionProperty) is Action<List<NamedPipeListenOption>> action)
-        {
-            action.Invoke(optionList);
-        }
+        var optionList = this.Config.NamedPipeListenOption ?? new List<NamedPipeListenOption>();
 
         var pipeName = this.Config.GetValue(NamedPipeConfigExtension.PipeNameProperty);
         if (pipeName != null)
         {
             var option = new NamedPipeListenOption
             {
-                Name = pipeName,
+                PipeName = pipeName,
                 Adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty),
             };
 
@@ -226,7 +224,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
             var args = new ConnectingEventArgs()
             {
-                Id = this.GetNextNewId()
+                Id = this.GetNextNewId(client)
             };
             await client.InternalNamedPipeConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
             if (!args.IsPermitOperation)
@@ -264,7 +262,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 {
                     return;
                 }
-                var namedPipe = new NamedPipeServerStream(option.Name, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
+                var namedPipe = new NamedPipeServerStream(option.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
 
                 await namedPipe.WaitForConnectionAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 

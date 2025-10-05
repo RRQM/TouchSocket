@@ -91,18 +91,4 @@ public static class HttpPluginManagerExtension
     {
         return pluginManager.UseCheckClear<IHttpSession>();
     }
-
-    #region HttpReconnection
-
-
-    /// <summary>
-    /// 为插件管理器添加HTTP重新连接插件。
-    /// </summary>
-    /// <param name="pluginManager">要添加插件的插件管理器。</param>
-    /// <returns>返回新创建的HTTP重新连接插件实例。</returns>
-    public static ReconnectionPlugin<IHttpClient> UseHttpReconnection(this IPluginManager pluginManager)
-    {
-        return pluginManager.UseReconnection<IHttpClient>();
-    }
-    #endregion HttpReconnection
 }

@@ -30,36 +30,23 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
     /// <summary>
     /// 构造函数
     /// </summary>
-    public WebApiParserPlugin(IRpcServerProvider rpcServerProvider)
+    public WebApiParserPlugin(IRpcServerProvider rpcServerProvider, WebApiOption option)
     {
         ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(IRpcServerProvider));
         this.RegisterServer(rpcServerProvider.GetMethods());
         this.m_rpcServerProvider = rpcServerProvider;
-        this.Converter = new WebApiSerializerConverter();
-        this.Converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings());
+        this.Converter = option.Converter;
     }
 
     /// <summary>
     /// 转化器
     /// </summary>
-    public WebApiSerializerConverter Converter { get; private set; }
-
+    public WebApiSerializerConverter Converter { get; }
 
     /// <summary>
     /// 获取WebApi映射
     /// </summary>
     public IWebApiMapping Mapping => this.m_mapping;
-
-    /// <summary>
-    /// 配置转换器。可以实现json序列化或者xml序列化。
-    /// </summary>
-    /// <param name="action"></param>
-    /// <returns></returns>
-    public WebApiParserPlugin ConfigureConverter(Action<WebApiSerializerConverter> action)
-    {
-        action.Invoke(this.Converter);
-        return this;
-    }
 
     /// <inheritdoc/>
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)

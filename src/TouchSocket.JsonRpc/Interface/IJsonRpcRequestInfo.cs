@@ -18,13 +18,6 @@ namespace TouchSocket.JsonRpc;
 public interface IJsonRpcRequestInfo
 {
     /// <summary>
-    /// 获取JsonRpc数据源。
-    /// </summary>
-    /// <returns></returns>
-    [Obsolete("该方法由于性能问题已被弃用，请使用GetJsonRpcMemory代替", true)]
-    string GetJsonRpcString();
-
-    /// <summary>
     /// 获取JsonRpc数据源的内存表示形式。
     /// </summary>
     /// <returns>JsonRpc数据源的只读内存。</returns>

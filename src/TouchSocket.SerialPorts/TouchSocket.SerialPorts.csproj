@@ -26,7 +26,6 @@
 	  <Compile Include="..\TouchSocket.Shared\Sockets\BaseTransport.cs" Link="Transports\BaseTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Common\InternalReceiver.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Common\InternalReceiverResult.cs" />
-	  <Compile Include="..\TouchSocket.Shared\Sockets\StreamTransport.cs" Link="Transports\StreamTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>
 	<ItemGroup>

@@ -75,6 +75,8 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             switch (channelPackage.DataType)
             {
                 case ChannelDataType.Data:
+                    this.Status = ChannelStatus.Default;
+                    this.LastOperationMes = string.Empty;
                     var data = channelPackage.Data;
                     return data;
 
