@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.1",
+    "@docusaurus/faster": "^3.9.1",
     "@docusaurus/preset-classic": "^3.9.1",
     "@docusaurus/theme-mermaid": "^3.9.1",
     "@easyops-cn/docusaurus-search-local": "^0.52.1",
@@ -49,10 +50,5 @@
   },
   "engines": {
     "node": ">=18.0"
-  },
-  "overrides": {
-    "@cmfcmf/docusaurus-search-local": {
-      "@docusaurus/core": "^3.2.1"
-    }
   }
 }
