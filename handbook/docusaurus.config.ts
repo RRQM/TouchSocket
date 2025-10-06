@@ -234,7 +234,11 @@ const config = {
         explicitSearchResultPath: true,
       },
     ],
-  ]
+  ],
+  // future: {
+  //   v4: true, // opt-in for Docusaurus v4 planned changes
+  //   experimental_faster: true, // turns Docusaurus Faster on globally
+  // },
 };
 
 export default config;
