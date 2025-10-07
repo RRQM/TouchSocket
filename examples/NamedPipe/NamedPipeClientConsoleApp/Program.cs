@@ -23,16 +23,60 @@ internal class Program
     {
         var client = await CreateClientAsync();
 
+
         while (true)
         {
+            #region NamedPipe客户端发送数据
             await client.SendAsync(Console.ReadLine());
+            #endregion
+
         }
+    }
+
+    static async Task RunAsyncReceived()
+    {
+        #region NamedPipe客户端异步阻塞接收
+        var client = new NamedPipeClient();
+
+        await client.ConnectAsync("touchsocketpipe");
+
+        using (var receiver = client.CreateReceiver())
+        {
+            while (true)
+            {
+                await client.SendAsync(Console.ReadLine());
+
+                var cts = new CancellationTokenSource(1000 * 10);
+                using (var receiverResult = await receiver.ReadAsync(cts.Token))
+                {
+                    var memory = receiverResult.Memory;
+
+                    var mes = memory.Span.ToString(Encoding.UTF8);
+                    client.Logger.Info($"客户端接收到信息：{mes}");
+
+                    if (receiverResult.IsCompleted)
+                    {
+                        //断开连接
+                        break;
+                    }
+                }
+            }
+        }
+        #endregion
+
+
+        #region NamedPipe重连插件暂停重连
+        client.SetPauseReconnection(true);//暂停重连
+        client.SetPauseReconnection(false);//恢复重连
+        #endregion
     }
 
     private static async Task<NamedPipeClient> CreateClientAsync()
     {
+        #region 创建NamedPipe客户端
         var client = new NamedPipeClient();
 
+        #region NamedPipe客户端使用Received异步委托接收数据
         client.Received = (client, e) =>
         {
             //从服务器收到信息
@@ -41,21 +85,82 @@ internal class Program
 
             return Task.CompletedTask;
         };
+        #endregion
+
+
+        var config = GetConfig();
 
         //载入配置
-        await client.SetupAsync(new TouchSocketConfig()
-             .SetPipeServerName(".")//一般本机管道时，可以不用此配置
-             .SetPipeName("touchsocketpipe")//管道名称
-             .ConfigurePlugins(a =>
-             {
-                 a.UseReconnection<NamedPipeClient>();
-             })
-             .ConfigureContainer(a =>
-             {
-                 a.AddConsoleLogger();//添加一个日志注入
-             }));
+        await client.SetupAsync(config);
+
+        //连接服务器
         await client.ConnectAsync();
+        #endregion
+
         client.Logger.Info("客户端成功连接");
         return client;
     }
+
+    private static TouchSocketConfig GetConfig()
+    {
+        TouchSocketConfig config = new TouchSocketConfig();
+
+        config.SetPipeServerName(".");
+
+        #region 客户端设置命名管道名称
+        config.SetPipeName("touchsocketpipe");
+        #endregion
+
+        config.SetPipeServerName(".");
+
+        #region NamedPipe客户端配置插件
+        config.ConfigurePlugins(a =>
+        {
+            a.Add<MyNamedPipeReceived>();
+        });
+        #endregion
+
+        #region NamedPipe客户端启用断线重连
+        config.ConfigurePlugins(a =>
+        {
+            a.UseReconnection<NamedPipeClient>();
+        });
+        #endregion
+
+        config.ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();
+        });
+
+
+        return config;
+    }
 }
+
+#region NamedPipe客户端使用插件接收
+class MyNamedPipeReceived : PluginBase, INamedPipeReceivedPlugin
+{
+    public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
+    {
+        //从服务器收到信息
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
+        Console.WriteLine($"客户端接收到信息：{mes}");
+
+        await e.InvokeNext();
+    }
+}
+#endregion
+
+
+#region 从继承创建NamedPipe客户端
+class MyNamedPipeClient : NamedPipeClient
+{
+    protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
+    {
+        //从服务器收到信息
+        var mes = e.Memory.Span.ToString(Encoding.UTF8);
+        this.Logger.Info($"客户端接收到信息：{mes}");
+        await base.OnNamedPipeReceived(e);
+    }
+}
+#endregion

@@ -43,34 +43,14 @@ import CardLink from "@site/src/components/CardLink.js";
 管道名称支持以下格式：
 
 1. 简单名称：直接传入管道名称，如`"TouchSocketPipe"`
-2. 完整路径：形如`"\\.\pipe\TouchSocketPipe"`的完整管道路径
-3. 远程管道：形如`"\\ComputerName\pipe\TouchSocketPipe"`的远程计算机管道
 
-<CustomCodeBlock region="设置命名管道名称"/>
+<CustomCodeBlock region="客户端设置命名管道名称"/>
 
 :::tip 提示
 
 建议在配置时，使用规范的管道名称体制，避免使用特殊字符和过长的名称。
 
 :::  
-
-### 4.2 数据包大小限制
-
-`NamedPipeClient`支持设置数据包最大值。默认为10MB（1024×1024×10字节）。
-
-<CustomCodeBlock region="设置数据包大小限制"/>
-
-### 4.3 缓冲区设置
-
-`NamedPipeClient`支持设置接收和发送缓冲区大小。
-
-<CustomCodeBlock region="设置缓冲区大小"/>
-
-### 4.4 连接超时设置
-
-`NamedPipeClient`支持设置连接超时时间。
-
-<CustomCodeBlock region="设置连接超时"/>
 
 ## 五、支持插件
 
@@ -116,15 +96,6 @@ import CardLink from "@site/src/components/CardLink.js";
 
 ### 7.3 插件处理 <Tag>推荐</Tag>
 
-<Tabs
-    defaultValue="tab1"
-    values=
-    {[
-        { label: "文档",value: "tab1"},
-        { label: "示例", value: "tab2" }
-    ]}
->
-<TabItem value="tab1">
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
@@ -138,16 +109,6 @@ import CardLink from "@site/src/components/CardLink.js";
 （2）创建使用插件处理的客户端
 
 <CustomCodeBlock region="NamedPipe客户端配置插件"/>
-
-</TabItem>
-<TabItem value="tab2">
-
-（1）多功能插件示例
-
-<CustomCodeBlock region="NamedPipe客户端多功能插件示例"/>
-
-</TabItem>
-</Tabs>
 
 ### 7.4 异步阻塞接收
 
@@ -192,15 +153,7 @@ import CardLink from "@site/src/components/CardLink.js";
 
 <CustomCodeBlock region="NamedPipe客户端启用断线重连"/>
 
-### 9.2 自定义重连策略
-
-<CustomCodeBlock region="NamedPipe客户端自定义重连策略"/>
-
-### 9.3 重连事件处理
-
-<CustomCodeBlock region="NamedPipe客户端重连事件处理"/>
-
-### 9.4 暂停和恢复重连
+### 9.2 暂停和恢复重连
 
 <CustomCodeBlock region="NamedPipe重连插件暂停重连"/>
 
@@ -222,13 +175,3 @@ import CardLink from "@site/src/components/CardLink.js";
 ## 十、示例Demo
 
 <CardLink link="examples/NamedPipe" isPro="true"/>
-
-## 十一、完整示例
-
-### 11.1 基础客户端示例
-
-<CustomCodeBlock region="NamedPipe客户端基础示例"/>
-
-### 11.2 高级客户端示例
-
-<CustomCodeBlock region="NamedPipe客户端高级示例"/>
