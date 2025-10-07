@@ -4,20 +4,24 @@ title: 创建NamedPipeClient
 ---
 
 import Tag from "@site/src/components/Tag.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { TouchSocketNamedPipeDefinition } from "@site/src/components/Definition.js";
-
-
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 <TouchSocketNamedPipeDefinition />
 
 
 ## 一、说明
 
-NamedPipeClient是命名管道系客户端基类，他直接参与管道的连接、发送、接收、处理、断开等，他的业务与服务器的**NamedPipeSessionClient**是一一对应的。
+`NamedPipeClient`是命名管道系客户端基类，他直接参与命名管道的连接、发送、接收、处理、断开等，他的业务与服务器的`NamedPipeSessionClient`是一一对应的。
 
 ## 二、特点
 
 - 简单易用。
+- 单线程处理。
 - 内存池支持
 - 高性能
 - 适配器预处理，一键式解决**分包**、**粘包**、对象解析(即适用于Tcp的一切适配器)等。
@@ -27,22 +31,46 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 ## 三、产品应用场景
 
 - 所有本机IPC(进程通讯)基础使用场景：可跨平台、跨语言使用。
+- 高性能本地应用程序间通信场景。
+- 需要可靠数据传输的本机服务通信。
 
 ## 四、可配置项
 
-<details>
-<summary>可配置项</summary>
-<div>
+### 4.1 管道名称设置
 
-#### SetMaxPackageSize
+`NamedPipeClient`必须指定管道名称，否则无法连接。
 
-数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
+管道名称支持以下格式：
 
-#### SetPipeName
-设置管道名称。 
+1. 简单名称：直接传入管道名称，如`"TouchSocketPipe"`
+2. 完整路径：形如`"\\.\pipe\TouchSocketPipe"`的完整管道路径
+3. 远程管道：形如`"\\ComputerName\pipe\TouchSocketPipe"`的远程计算机管道
 
-</div>
-</details>
+<CustomCodeBlock region="设置命名管道名称"/>
+
+:::tip 提示
+
+建议在配置时，使用规范的管道名称体制，避免使用特殊字符和过长的名称。
+
+:::  
+
+### 4.2 数据包大小限制
+
+`NamedPipeClient`支持设置数据包最大值。默认为10MB（1024×1024×10字节）。
+
+<CustomCodeBlock region="设置数据包大小限制"/>
+
+### 4.3 缓冲区设置
+
+`NamedPipeClient`支持设置接收和发送缓冲区大小。
+
+<CustomCodeBlock region="设置缓冲区大小"/>
+
+### 4.4 连接超时设置
+
+`NamedPipeClient`支持设置连接超时时间。
+
+<CustomCodeBlock region="设置连接超时"/>
 
 ## 五、支持插件
 
@@ -64,71 +92,13 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 
 代码如下：
 
-```csharp showLineNumbers
-var client = new NamedPipeClient();
-client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建管道，但是还未建立连接
-client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
-client.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
-client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
-client.Received = (client, e) =>
-{
-    //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    string mes = e.Memory.Span.ToString(Encoding.UTF8);
-    client.Logger.Info($"客户端接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
-
-//载入配置
-await client.SetupAsync(new TouchSocketConfig()
-     .SetPipeName("TouchSocketPipe")//设置命名管道名称
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();//添加一个日志注入
-     }));
-
-await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-
-//Result result =await client.TryConnectAsync();//或者可以调用TryConnect
-//if (result.IsSuccess())
-//{
-
-//}
-
-client.Logger.Info("客户端成功连接");
-```
+<CustomCodeBlock region="创建NamedPipe客户端"/>
 
 #### 6.2 继承实现
 
-一般继承实现的话，可以从NamedPipeClientBase继承。
+一般继承实现的话，可以从`NamedPipeClient`继承。如果有特殊需求，也可以从`NamedPipeClientBase`继承。
 
-```csharp showLineNumbers
-class MyNamedPipeClient : NamedPipeClient
-{
-    protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
-    {
-        //此处逻辑单线程处理。
-
-        //此处处理数据，功能相当于Received委托。
-        string mes = e.Memory.Span.ToString(Encoding.UTF8);
-        Console.WriteLine($"已接收到信息：{mes}");
-
-        await base.OnNamedPipeReceived(e);
-    }
-}
-```
-
-```csharp showLineNumbers
-var client = new MyNamedPipeClient();
-//载入配置
-await client.SetupAsync(new TouchSocketConfig()
-     .SetPipeName("TouchSocketPipe")//设置命名管道名称
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();//添加一个日志注入
-     }));
-
-await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
-```
+<CustomCodeBlock region="从继承创建NamedPipe客户端"/>
 
 ## 七、接收数据
 
@@ -136,22 +106,25 @@ await client.ConnectAsync();//调用连接，当连接不成功时，会抛出�
 
 ### 7.1 Received委托处理
 
-当使用`NamedPipeClient`创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+当使用`NamedPipeClient`创建客户端时，内部已经定义好了一个外置委托`Received`，可以通过该委托直接接收数据。
 
-```csharp showLineNumbers
-var client = new NamedPipeClient();
-client.Received = (client, e) =>
-{
-    //从服务器收到信息
-    string mes = e.Memory.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"接收到信息：{mes}");
-    return EasyTask.CompletedTask;
-};
-await client.ConnectAsync("TouchSocketPipe");
-```
+<CustomCodeBlock region="NamedPipe客户端使用Received异步委托接收数据"/>
 
-### 7.2 插件处理 <Tag>推荐</Tag>
+### 7.2 继承NamedPipeClient重写接收逻辑
 
+如6.2所示，如果需要更自定义的接收逻辑，可以从`NamedPipeClient`继承，然后重写`OnNamedPipeReceived`方法。
+
+### 7.3 插件处理 <Tag>推荐</Tag>
+
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "文档",value: "tab1"},
+        { label: "示例", value: "tab2" }
+    ]}
+>
+<TabItem value="tab1">
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
@@ -160,50 +133,39 @@ await client.ConnectAsync("TouchSocketPipe");
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp showLineNumbers
-public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
-{
-    public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
-    {
-        //这里处理数据接收
-        //根据适配器类型，e.Memory与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.Memory;
-        IRequestInfo requestInfo = e.RequestInfo;
-
-        ////表示该数据已经被本插件处理，无需再投递到其他插件。
-
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="NamedPipe客户端使用插件接收"/>
 
 （2）创建使用插件处理的客户端
 
-```csharp showLineNumbers
-var client = new NamedPipeClient();
-await client.SetupAsync(new TouchSocketConfig()
-      .SetPipeName("TouchSocketPipe")//设置命名管道名称
-      .ConfigureContainer(a =>
-      {
-          a.AddConsoleLogger();
-      })
-      .ConfigurePlugins(a =>
-      {
-          a.Add<MyPlugin>();
-      }));
+<CustomCodeBlock region="NamedPipe客户端配置插件"/>
 
-await client.ConnectAsync();
-```
+</TabItem>
+<TabItem value="tab2">
+
+（1）多功能插件示例
+
+<CustomCodeBlock region="NamedPipe客户端多功能插件示例"/>
+
+</TabItem>
+</Tabs>
+
+### 7.4 异步阻塞接收
+
+异步阻塞接收，即使用await的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。例如：
+
+<CustomCodeBlock region="NamedPipe客户端异步阻塞接收"/>
+
+:::tip 提示
+
+异步阻塞接收，在等待接收数据时，不会阻塞线程资源，所以即使大量使用，也不会影响性能。
+
+:::  
 
 ## 八、发送数据
 
 `NamedPipeClient`已经内置了发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 
-```csharp showLineNumbers
-//原生
-public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
-public Task SendAsync(string id, IRequestInfo requestInfo);
-```
+<CustomCodeBlock region="NamedPipe客户端发送数据"/>
 
 :::tip 提示
 
@@ -218,65 +180,55 @@ public Task SendAsync(string id, IRequestInfo requestInfo);
 :::  
 
 
-# 九、断线重连
+## 九、断线重连
 
-断线重连，即tcp客户端在断开服务器后，主动发起的再次连接请求。
+断线重连，即命名管道客户端在断开服务器后，主动发起的再次连接请求。
 
-### 9.1 触发型重连
+### 9.1 启用断线重连
 
-触发型重连，依靠的是NamedPipe断开事件（Closed）发生时，再次尝试连接。所以，这就要求客户端在初始时，至少完成一次连接。
+断线重连，依靠的是命名管道断开后，或者初始化后，Online属性为false时，会尝试连接。
 
-```csharp {8,11} showLineNumbers
-var client = new NamedPipeClient();
-await client.SetupAsync(new TouchSocketConfig()
-      .SetPipeName("TouchSocketPipe")//设置命名管道名称
-      .ConfigureContainer(a =>
-      {
-          a.AddConsoleLogger();
-      })
-      .ConfigurePlugins(a =>
-      {
-          a.UseNamedPipeReconnection();
-      }));
+所以，重连机制在Setup完成后，即会生效。
 
-await client.ConnectAsync();
-```
-:::caution 注意
+<CustomCodeBlock region="NamedPipe客户端启用断线重连"/>
 
-**触发重连，必须满足以下几个要求：**
+### 9.2 自定义重连策略
 
-1. 必须完成第一次连接。
-2. 必须是被动断开，如果是客户端主动调用Close、Disposed等方法主动断开的话，一般不会生效。
-3. 必须有显式的断开信息，也就是说，直接拔网线的话，不会立即生效，会等tcp保活到期后再生效。
+<CustomCodeBlock region="NamedPipe客户端自定义重连策略"/>
 
-:::  
+### 9.3 重连事件处理
 
+<CustomCodeBlock region="NamedPipe客户端重连事件处理"/>
 
-### 9.2 使用Polling轮询连接插件
+### 9.4 暂停和恢复重连
 
-使用Polling断线重连，是一种无人值守的连接方式，它不要求首次连接。
-
-```csharp showLineNumbers
-.ConfigurePlugins(a => 
-{
-    a.UseNamedPipeReconnection()
-    .UsePolling(TimeSpan.FromSeconds(1));
-})
-```
+<CustomCodeBlock region="NamedPipe重连插件暂停重连"/>
 
 :::caution 注意
 
-**Polling重连，必须满足以下几个要求：**
+**断线重连，必须满足以下几个要求：**
 
-1. 必须有显式的断开信息，不然不会生效。
+1. 必须有显式的断开信息，也就是说，如果管道服务器异常关闭，可能不会立即检测到。
+2. 重连机制依赖于轮询检查，检查间隔不宜过短，以免消耗过多系统资源。
 
 :::  
 
 :::tip 提示
 
-UseReconnection插件，可以通过设置SetActionForCheck，自己规定检查活性的方法。默认情况下，只会检验Online属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
+`UseNamedPipeReconnection`插件，可以通过设置`SetActionForCheck`，自己规定检查活性的方法。默认情况下，只会检验`Online`属性，如果需要更准确的连接状态检查，建议发送心跳包来验证连接活性。
 
 :::  
 
+## 十、示例Demo
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/NamedPipe)
+<CardLink link="examples/NamedPipe" isPro="true"/>
+
+## 十一、完整示例
+
+### 11.1 基础客户端示例
+
+<CustomCodeBlock region="NamedPipe客户端基础示例"/>
+
+### 11.2 高级客户端示例
+
+<CustomCodeBlock region="NamedPipe客户端高级示例"/>

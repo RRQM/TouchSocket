@@ -3,6 +3,31 @@ import CodeBlock from '@theme/CodeBlock';
 import { extractCodeRegion, getAvailableRegions } from './codesData';
 
 /**
+ * 检测是否为构建环境
+ * @returns {boolean} - 是否为构建环境
+ */
+const isBuildEnvironment = () =>
+{
+    // 安全地访问 process 对象
+    if (typeof process === 'undefined') 
+    {
+        return typeof window === 'undefined'; // SSR环境，视为构建环境
+    }
+
+    // 更激进的构建环境检测 - 在所有可能的构建场景下都返回 true
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDocusaurusBuild = !!(process.env.DOCUSAURUS_CURRENT_LOCALE ||
+        process.env.BUILD_PHASE === 'build' ||
+        process.env.npm_lifecycle_event === 'build');
+    const isSSR = typeof window === 'undefined';
+
+    // 强制在任何看起来像构建的环境中启用错误检测
+    const isBuildMode = isProduction || isDocusaurusBuild || isSSR;
+
+    return isBuildMode;
+};
+
+/**
  * 解析高亮规则，例如 "1,2-3" 或 "{1,2-3}" 转换为数组 [1, 2, 3]
  * @param {string} highlightText - 高亮规则字符串
  * @returns {number[]} - 行号数组
@@ -103,7 +128,7 @@ const formatHighlightString = (lines) =>
  * @param {string} props.language - 代码语言，默认为'csharp'
  * @param {string} props.title - 代码块标题，默认使用region名称
  * @param {boolean} props.showLineNumbers - 是否显示行号，默认为true
- * @param {boolean} props.showAvailableRegions - 是否在错误时显示可用的regions，默认为true
+ * @param {boolean} props.showAvailableRegions - 是否在错误时显示可用的regions，默认为false
  * @param {boolean} props.showSourceFile - 是否在标题中显示源文件，默认为false
  */
 const CustomCodeBlock = ({
@@ -112,11 +137,36 @@ const CustomCodeBlock = ({
     language = 'csharp',
     title,
     showLineNumbers = true,
-    showAvailableRegions = true,
+    showAvailableRegions = false,
     showSourceFile = false,
     ...props
 }) =>
 {
+    // 🚨 在组件渲染时立即进行验证 - 这会发生在服务端渲染阶段
+    if (isBuildEnvironment())
+    {
+        if (!region)
+        {
+            const error = new Error(`[BUILD VALIDATION FAILED] CustomCodeBlock 缺少 region 参数`);
+            throw error; // 直接抛出，不等待useEffect
+        }
+
+        // 检查region是否存在（支持旧格式）
+        let regionName = region;
+        const legacyMatch = region.match(/^(.+?)\{([^}]+)\}$/);
+        if (legacyMatch)
+        {
+            regionName = legacyMatch[1].trim();
+        }
+
+        const extractedInfo = extractCodeRegion(regionName);
+        if (extractedInfo === null)
+        {
+            const error = new Error(`[BUILD VALIDATION FAILED] 找不到名为 "${regionName}" 的代码区域`);
+            throw error; // 直接抛出，不等待useEffect
+        }
+    }
+
     const [codeInfo, setCodeInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -134,7 +184,15 @@ const CustomCodeBlock = ({
 
                 if (!region)
                 {
-                    setError('请提供region参数');
+                    const errorMessage = '请提供region参数';
+
+                    // 在构建环境中抛出异常，阻止网站发布
+                    if (isBuildEnvironment())
+                    {
+                        throw new Error(`[CodeBlock Build Error] ${errorMessage}`);
+                    }
+
+                    setError(errorMessage);
                     setCodeInfo(null);
                     return;
                 }
@@ -148,25 +206,18 @@ const CustomCodeBlock = ({
                 {
                     regionName = legacyMatch[1].trim();
                     legacyHighlightRules = legacyMatch[2];
-                    console.warn(`检测到旧格式的高亮规则: "${region}". 推荐使用独立的 highlight 参数: region="${regionName}" highlight="${legacyHighlightRules}"`);
                 }
 
                 const extractedInfo = extractCodeRegion(regionName);
 
                 if (extractedInfo === null)
                 {
-                    let errorMessage = `找不到名为 "${regionName}" 的代码区域`;
+                    const errorMessage = `找不到名为 "${regionName}" 的代码区域`;
 
-                    if (showAvailableRegions)
+                    // 在构建环境中抛出异常，阻止网站发布
+                    if (isBuildEnvironment())
                     {
-                        const availableRegions = getAvailableRegions();
-                        if (availableRegions.length > 0)
-                        {
-                            errorMessage += `\n\n可用的代码区域：\n${availableRegions.map(r => `• ${r.name} (${r.file})`).join('\n')}`;
-                        } else
-                        {
-                            errorMessage += '\n\n当前文件中没有找到任何代码区域';
-                        }
+                        throw new Error(`[CodeBlock Build Error] ${errorMessage} (region: "${regionName}")`);
                     }
 
                     setError(errorMessage);
@@ -182,23 +233,25 @@ const CustomCodeBlock = ({
                     if (!highlightRulesToUse && extractedInfo.highlightLines && extractedInfo.highlightLines.length > 0)
                     {
                         highlightRulesToUse = extractedInfo.highlightLines.join(',');
-                        console.log(`🎨 使用从region定义中解析的高亮规则: [${extractedInfo.highlightLines.join(',')}]`);
                     }
 
                     if (highlightRulesToUse)
                     {
                         const parsedHighlightLines = parseHighlightRules(highlightRulesToUse);
-                        console.log('🎨 解析的高亮规则:', {
-                            input: highlightRulesToUse,
-                            parsed: parsedHighlightLines,
-                            formatted: formatHighlightString(parsedHighlightLines)
-                        });
                         setHighlightLines(parsedHighlightLines);
                     }
                 }
             } catch (err)
             {
-                setError(`处理代码失败: ${err.message}`);
+                const errorMessage = `处理代码失败: ${err.message}`;
+
+                // 在构建环境中抛出异常，阻止网站发布
+                if (isBuildEnvironment())
+                {
+                    throw new Error(`[CodeBlock Build Error] ${errorMessage} (region: "${region}")`);
+                }
+
+                setError(errorMessage);
                 setCodeInfo(null);
             } finally
             {
@@ -279,48 +332,21 @@ const CustomCodeBlock = ({
         const highlightString = formatHighlightString(highlightLines);
         // 使用 metastring 格式
         finalMetastring = `{${highlightString}}`;
-        console.log('🎯 最终高亮字符串:', finalMetastring);
     }
 
+    // 安全地检查是否为开发环境
+    const isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+
     return (
-        <>
-            {process.env.NODE_ENV === 'development' && codeInfo && (
-                <div style={{
-                    padding: '8px',
-                    backgroundColor: '#fff3e0',
-                    border: '1px solid #ff9800',
-                    borderRadius: '4px',
-                    marginBottom: '8px',
-                    fontSize: '12px',
-                    fontFamily: 'monospace'
-                }}>
-                    📝 Region信息: region="{region}", highlight参数="{highlight || 'none'}",
-                    region中的高亮="{codeInfo.highlightLines ? codeInfo.highlightLines.join(',') : 'none'}"
-                </div>
-            )}
-            {process.env.NODE_ENV === 'development' && highlightLines.length > 0 && (
-                <div style={{
-                    padding: '8px',
-                    backgroundColor: '#e3f2fd',
-                    border: '1px solid #2196f3',
-                    borderRadius: '4px',
-                    marginBottom: '8px',
-                    fontSize: '12px',
-                    fontFamily: 'monospace'
-                }}>
-                    🔍 调试信息: 高亮行={JSON.stringify(highlightLines)}, 最终metastring="{finalMetastring}"
-                </div>
-            )}
-            <CodeBlock
-                language={language}
-                title={codeBlockTitle}
-                showLineNumbers={showLineNumbers}
-                metastring={finalMetastring}
-                {...props}
-            >
-                {finalCode}
-            </CodeBlock>
-        </>
+        <CodeBlock
+            language={language}
+            title={codeBlockTitle}
+            showLineNumbers={showLineNumbers}
+            metastring={finalMetastring}
+            {...props}
+        >
+            {finalCode}
+        </CodeBlock>
     );
 };
 
