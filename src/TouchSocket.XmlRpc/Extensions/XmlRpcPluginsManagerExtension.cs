@@ -10,22 +10,40 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Rpc;
 using TouchSocket.XmlRpc;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// XmlRpcPluginManagerExtension
+/// XmlRpc插件管理器扩展
 /// </summary>
 public static class XmlRpcPluginManagerExtension
 {
     /// <summary>
     /// 使用XmlRpc的插件。仅服务器可用。
     /// </summary>
-    /// <param name="pluginManager"></param>
-    /// <returns></returns>
-    public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager)
+    /// <param name="pluginManager">插件管理器</param>
+    /// <param name="options">XmlRpc配置选项</param>
+    /// <returns>XmlRpc解析插件</returns>
+    public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager, Action<XmlRpcOption> options)
     {
-        return pluginManager.Add<XmlRpcParserPlugin>();
+        var option = new XmlRpcOption();
+
+        options.Invoke(option);
+        var plugin = new XmlRpcParserPlugin(pluginManager.Resolver.Resolve<IRpcServerProvider>(), option);
+        pluginManager.Add(plugin);
+        return plugin;
+    }
+
+    /// <summary>
+    /// 使用XmlRpc的插件。仅服务器可用。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器</param>
+    /// <param name="url">XmlRpc的Url，默认为/xmlrpc</param>
+    /// <returns>XmlRpc解析插件</returns>
+    public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager, string url = "/xmlrpc")
+    {
+        return UseXmlRpc(pluginManager, (option) => option.SetAllowXmlRpc(url));
     }
 }

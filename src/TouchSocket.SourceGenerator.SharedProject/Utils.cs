@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -23,21 +24,92 @@ using System.Xml.Linq;
 
 namespace TouchSocket;
 
+public readonly struct CodeSpace : IDisposable
+{
+    private readonly StringBuilder m_stringBuilder;
+
+    public CodeSpace(StringBuilder stringBuilder)
+    {
+        this.m_stringBuilder = stringBuilder;
+        this.m_stringBuilder.AppendLine("{");
+    }
+    public void Dispose()
+    {
+        this.m_stringBuilder?.AppendLine("}");
+    }
+}
+
+internal static class SourceProductionContextExtension
+{
+    public static void AddSource(this SourceProductionContext sourceProductionContext, CodeBuilder builder)
+    {
+        if (builder.ToSourceText(out var sourceCode))
+        {
+            sourceProductionContext.AddSource(builder.GetFileName(), sourceCode);
+        }
+    }
+}
+
 internal static class Utils
 {
+    public const string DependencyPropertyBase = "TouchSocket.Core.DependencyPropertyBase";
     public const string GeneratorPackageAttributeTypeName = "TouchSocket.Core.GeneratorPackageAttribute";
     public const string IPackageTypeName = "TouchSocket.Core.IPackage";
     public const string Task = "System.Threading.Tasks.Task";
-    public const string DependencyPropertyBase = "TouchSocket.Core.DependencyPropertyBase";
+    #region 获取程序集资源
+
+    /// <summary>
+    /// 获取程序集中的嵌入资源内容
+    /// </summary>
+    /// <param name="resourceName">资源名称，如果为null则返回所有资源名称</param>
+    /// <returns>资源内容或资源名称列表</returns>
+    public static string GetEmbeddedResourceContent(string resourceName)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceNames = assembly.GetManifestResourceNames();
+
+        // 查找匹配的资源
+        var targetResource = resourceNames.FirstOrDefault(name =>
+            name.Equals(resourceName, StringComparison.OrdinalIgnoreCase) ||
+            name.EndsWith($".{resourceName}", StringComparison.OrdinalIgnoreCase));
+
+        if (string.IsNullOrEmpty(targetResource))
+        {
+            return null;
+        }
+
+        try
+        {
+            using (var stream = assembly.GetManifestResourceStream(targetResource))
+            {
+                if (stream == null)
+                {
+                    return null;
+                }
+
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static string[] GetManifestResourceNames()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceNames = assembly.GetManifestResourceNames();
+        return resourceNames;
+    }
+    #endregion
 
     public static bool EqualsWithFullName(this ISymbol symbol, string fullName)
     {
         return symbol.ToDisplayString().Equals(fullName);
-    }
-
-    public static bool IsDependencyProperty(ITypeSymbol typeSymbol)
-    {
-        return typeSymbol.IsInheritFrom(Utils.DependencyPropertyBase);
     }
 
     public static string GetAccessModifierString(this Accessibility accessibility)
@@ -52,6 +124,198 @@ internal static class Utils
             Accessibility.ProtectedAndInternal => "private protected",
             _ => string.Empty,
         };
+    }
+
+    /// <summary>
+    /// 获取方法的确定性名称，即使在重载时，也能区分。
+    /// <para>计算规则是：方法名_参数类型名称</para>
+    /// </summary>
+    /// <param name="methodInfo"></param>
+    /// <returns></returns>
+    public static string GetDeterminantName(this IMethodSymbol methodInfo)
+    {
+        return GenerateKey(methodInfo);
+    }
+
+    public static string GetGeneratedCodeString()
+    {
+        return $"[global::System.CodeDom.Compiler.GeneratedCode(\"{Assembly.GetExecutingAssembly().FullName}\", \"{Assembly.GetExecutingAssembly().GetName().Version}\")]";
+    }
+
+    public static ITypeSymbol GetNullableType(this ITypeSymbol typeSymbol)
+    {
+        // 如果是可空值类型（Nullable<T>），返回T
+        if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return namedTypeSymbol.TypeArguments.Length == 1 ? namedTypeSymbol.TypeArguments[0] : typeSymbol;
+        }
+
+        // 如果是可空引用类型（T?），去除可空标注，返回T
+        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            return typeSymbol.WithNullableAnnotation(NullableAnnotation.None);
+        }
+
+        // 其他情况直接返回原类型
+        return typeSymbol;
+    }
+
+    public static INamedTypeSymbol GetRealReturnType(this IMethodSymbol method)
+    {
+        if (!method.HasReturn())
+        {
+            return default;
+        }
+
+        if (method.ReturnType is not INamedTypeSymbol returnTypeSymbol)
+        {
+            return default;
+        }
+
+        if (returnTypeSymbol.IsGenericType && returnTypeSymbol.IsInheritFrom(Utils.Task))
+        {
+            returnTypeSymbol = returnTypeSymbol.TypeArguments[0] as INamedTypeSymbol;
+        }
+
+        if (returnTypeSymbol.IsValueType)
+        {
+            return returnTypeSymbol;
+        }
+        else
+        {
+            return returnTypeSymbol.GetNullableType() as INamedTypeSymbol;
+        }
+    }
+
+    //    return namedTypeSymbol;
+    //}
+    public static string GetTypeofString(this ITypeSymbol typeSymbol)
+    {
+        var type = typeSymbol.GetNullableType();
+        if (type is IDynamicTypeSymbol)
+        {
+            return typeof(object).ToString();
+        }
+        return type.ToDisplayString();
+    }
+
+    //    if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
+    //    {
+    //        if (namedTypeSymbol.TypeArguments.Any())
+    //        {
+    //            return namedTypeSymbol.TypeArguments.First();
+    //        }
+    //        else
+    //        {
+    //            return namedTypeSymbol.OriginalDefinition;
+    //        }
+    //    }
+    public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
+    {
+        foreach (var attr in symbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (attrClass != null && attrClass.ToDisplayString() == attribute.ToDisplayString())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //    if (namedTypeSymbol.SpecialType == SpecialType.System_Nullable_T)
+    //    {
+    //        return namedTypeSymbol.TypeArguments.First();
+    //    }
+    public static bool HasAttribute(this ISymbol symbol, string attribute)
+    {
+        return symbol.HasAttribute(attribute, out _);
+    }
+
+    //    //Debugger.Launch();
+    //    var namedTypeSymbol = (INamedTypeSymbol)typeSymbol;
+    public static bool HasAttribute(this ISymbol symbol, string attribute, out AttributeData attributeData)
+    {
+        foreach (var attr in symbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (attrClass != null && attrClass.ToDisplayString() == attribute)
+            {
+                attributeData = attr;
+                return true;
+            }
+        }
+        attributeData = default;
+        return false;
+    }
+
+    //public static ITypeSymbol GetNullableType(this ITypeSymbol typeSymbol)
+    //{
+    public static bool HasAttributes(this ISymbol symbol, string attribute, out IEnumerable<AttributeData> attributeDatas)
+    {
+        var list = new List<AttributeData>();
+        foreach (var attr in symbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (attrClass != null && attrClass.ToDisplayString() == attribute)
+            {
+                list.Add(attr);
+            }
+        }
+
+        if (list.Count > 0)
+        {
+            attributeDatas = list;
+            return true;
+        }
+        attributeDatas = default;
+        return false;
+    }
+
+    public static bool HasFlags(int value, int flag)
+    {
+        return (value & flag) == flag;
+    }
+
+    public static bool HasReturn(this IMethodSymbol method)
+    {
+        if (method.ReturnsVoid || method.ReturnType.ToDisplayString() == typeof(Task).FullName || method.ReturnType.ToDisplayString() == typeof(ValueTask).FullName)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public static bool IsDependencyProperty(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol.IsInheritFrom(Utils.DependencyPropertyBase);
+    }
+    public static bool IsInheritFrom(this ITypeSymbol typeSymbol, string baseType)
+    {
+        if (typeSymbol.ToDisplayString() == baseType)
+        {
+            return true;
+        }
+
+        if (typeSymbol.BaseType != null)
+        {
+            var b = IsInheritFrom(typeSymbol.BaseType, baseType);
+            if (b)
+            {
+                return true;
+            }
+        }
+
+        foreach (var item in typeSymbol.AllInterfaces)
+        {
+            var b = IsInheritFrom(item, baseType);
+            if (b)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static bool IsReadOnlyMemory(this ITypeSymbol typeSymbol, out ITypeSymbol elementType)
@@ -79,131 +343,6 @@ internal static class Utils
 
         return false;
     }
-
-    /// <summary>
-    /// 获取方法的确定性名称，即使在重载时，也能区分。
-    /// <para>计算规则是：方法名_参数类型名称</para>
-    /// </summary>
-    /// <param name="methodInfo"></param>
-    /// <returns></returns>
-    public static string GetDeterminantName(this IMethodSymbol methodInfo)
-    {
-        return GenerateKey(methodInfo);
-    }
-
-    public static string GetGeneratedCodeString()
-    {
-        return $"[global::System.CodeDom.Compiler.GeneratedCode(\"{Assembly.GetExecutingAssembly().FullName}\", \"{Assembly.GetExecutingAssembly().GetName().Version}\")]";
-    }
-
-    //public static ITypeSymbol GetNullableType(this ITypeSymbol typeSymbol)
-    //{
-
-    //    //Debugger.Launch();
-    //    var namedTypeSymbol = (INamedTypeSymbol)typeSymbol;
-
-    //    if (namedTypeSymbol.SpecialType == SpecialType.System_Nullable_T)
-    //    {
-    //        return namedTypeSymbol.TypeArguments.First();
-    //    }
-
-    //    if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-    //    {
-    //        if (namedTypeSymbol.TypeArguments.Any())
-    //        {
-    //            return namedTypeSymbol.TypeArguments.First();
-    //        }
-    //        else
-    //        {
-    //            return namedTypeSymbol.OriginalDefinition;
-    //        }
-    //    }
-
-    //    return namedTypeSymbol;
-    //}
-
-    public static ITypeSymbol GetNullableType(this ITypeSymbol typeSymbol)
-    {
-        // 如果是可空值类型（Nullable<T>），返回T
-        if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
-        {
-            return namedTypeSymbol.TypeArguments.Length == 1 ? namedTypeSymbol.TypeArguments[0] : typeSymbol;
-        }
-
-        // 如果是可空引用类型（T?），去除可空标注，返回T
-        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            return typeSymbol.WithNullableAnnotation(NullableAnnotation.None);
-        }
-
-        // 其他情况直接返回原类型
-        return typeSymbol;
-    }
-
-    public static string GetTypeofString(this ITypeSymbol typeSymbol)
-    {
-        var type = typeSymbol.GetNullableType();
-        if (type is IDynamicTypeSymbol)
-        {
-            return typeof(object).ToString();
-        }
-        return type.ToDisplayString();
-    }
-
-    public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
-    {
-        foreach (var attr in symbol.GetAttributes())
-        {
-            var attrClass = attr.AttributeClass;
-            if (attrClass != null && attrClass.ToDisplayString() == attribute.ToDisplayString())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static bool HasAttribute(this ISymbol symbol, string attribute)
-    {
-        return symbol.HasAttribute(attribute, out _);
-    }
-
-    public static bool HasAttribute(this ISymbol symbol, string attribute, out AttributeData attributeData)
-    {
-        foreach (var attr in symbol.GetAttributes())
-        {
-            var attrClass = attr.AttributeClass;
-            if (attrClass != null && attrClass.ToDisplayString() == attribute)
-            {
-                attributeData = attr;
-                return true;
-            }
-        }
-        attributeData = default;
-        return false;
-    }
-
-    public static bool HasAttributes(this ISymbol symbol, string attribute, out IEnumerable<AttributeData> attributeDatas)
-    {
-        var list = new List<AttributeData>();
-        foreach (var attr in symbol.GetAttributes())
-        {
-            var attrClass = attr.AttributeClass;
-            if (attrClass != null && attrClass.ToDisplayString() == attribute)
-            {
-                list.Add(attr);
-            }
-        }
-
-        if (list.Count > 0)
-        {
-            attributeDatas = list;
-            return true;
-        }
-        attributeDatas = default;
-        return false;
-    }
-
     #region 注释
     public static IEnumerable<string> GetXmlSummary(this ISymbol symbol)
     {
@@ -239,74 +378,11 @@ internal static class Utils
     }
 
     #endregion
-
-    public static bool HasFlags(int value, int flag)
+    public static bool IsUnmanagedType(this ITypeSymbol type)
     {
-        return (value & flag) == flag;
-    }
-
-    public static bool HasReturn(this IMethodSymbol method)
-    {
-        if (method.ReturnsVoid || method.ReturnType.ToDisplayString() == typeof(Task).FullName || method.ReturnType.ToDisplayString() == typeof(ValueTask).FullName)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    public static INamedTypeSymbol GetRealReturnType(this IMethodSymbol method)
-    {
-        if (!method.HasReturn())
-        {
-            return default;
-        }
-
-        if (method.ReturnType is not INamedTypeSymbol returnTypeSymbol)
-        {
-            return default;
-        }
-
-        if (returnTypeSymbol.IsGenericType && returnTypeSymbol.IsInheritFrom(Utils.Task))
-        {
-            returnTypeSymbol = returnTypeSymbol.TypeArguments[0] as INamedTypeSymbol;
-        }
-
-        if (returnTypeSymbol.IsValueType)
-        {
-            return returnTypeSymbol;
-        }
-        else
-        {
-            return returnTypeSymbol.GetNullableType() as INamedTypeSymbol;
-        }
-    }
-
-    public static bool IsInheritFrom(this ITypeSymbol typeSymbol, string baseType)
-    {
-        if (typeSymbol.ToDisplayString() == baseType)
-        {
-            return true;
-        }
-
-        if (typeSymbol.BaseType != null)
-        {
-            var b = IsInheritFrom(typeSymbol.BaseType, baseType);
-            if (b)
-            {
-                return true;
-            }
-        }
-
-        foreach (var item in typeSymbol.AllInterfaces)
-        {
-            var b = IsInheritFrom(item, baseType);
-            if (b)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        // 使用HashSet防止递归循环引用
+        var visited = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        return IsUnmanagedTypeCore(type, visited);
     }
 
     public static string MakeIdentifier(string input)
@@ -355,12 +431,28 @@ internal static class Utils
         var parameterTypeNames = string.Join("_", parameterTypes.Select(t => MakeIdentifier(t.Name)));
         return $"{MakeIdentifier(methodName)}_{parameterTypeNames}";
     }
-
-    public static bool IsUnmanagedType(this ITypeSymbol type)
+    private static bool IsPrimitiveType(this ITypeSymbol type)
     {
-        // 使用HashSet防止递归循环引用
-        var visited = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-        return IsUnmanagedTypeCore(type, visited);
+        var specialType = type.SpecialType;
+        return specialType switch
+        {
+            SpecialType.System_SByte => true,
+            SpecialType.System_Byte => true,
+            SpecialType.System_Int16 => true,
+            SpecialType.System_UInt16 => true,
+            SpecialType.System_Int32 => true,
+            SpecialType.System_UInt32 => true,
+            SpecialType.System_Int64 => true,
+            SpecialType.System_UInt64 => true,
+            SpecialType.System_Char => true,
+            SpecialType.System_Single => true,
+            SpecialType.System_Double => true,
+            SpecialType.System_Decimal => true,
+            SpecialType.System_Boolean => true,
+            SpecialType.System_IntPtr => true,
+            SpecialType.System_UIntPtr => true,
+            _ => false
+        };
     }
 
     private static bool IsUnmanagedTypeCore(ITypeSymbol type, HashSet<ITypeSymbol> visited)
@@ -418,32 +510,12 @@ internal static class Utils
 
         return false;
     }
-
-    private static bool IsPrimitiveType(this ITypeSymbol type)
-    {
-        var specialType = type.SpecialType;
-        return specialType switch
-        {
-            SpecialType.System_SByte => true,
-            SpecialType.System_Byte => true,
-            SpecialType.System_Int16 => true,
-            SpecialType.System_UInt16 => true,
-            SpecialType.System_Int32 => true,
-            SpecialType.System_UInt32 => true,
-            SpecialType.System_Int64 => true,
-            SpecialType.System_UInt64 => true,
-            SpecialType.System_Char => true,
-            SpecialType.System_Single => true,
-            SpecialType.System_Double => true,
-            SpecialType.System_Decimal => true,
-            SpecialType.System_Boolean => true,
-            SpecialType.System_IntPtr => true,
-            SpecialType.System_UIntPtr => true,
-            _ => false
-        };
-    }
-
     #region 类型判断
+
+    public static bool IsArray(this ITypeSymbol namedTypeSymbol)
+    {
+        return namedTypeSymbol.TypeKind == TypeKind.Array;
+    }
 
     public static bool IsDictionary(this INamedTypeSymbol namedTypeSymbol)
     {
@@ -458,10 +530,9 @@ internal static class Utils
         }
         return false;
     }
-
-    public static bool IsArray(this ITypeSymbol namedTypeSymbol)
+    public static bool IsGuid(this ITypeSymbol typeSymbol)
     {
-        return namedTypeSymbol.TypeKind == TypeKind.Array;
+        return typeSymbol.IsInheritFrom(typeof(Guid).ToString());
     }
 
     public static bool IsList(this INamedTypeSymbol namedTypeSymbol)
@@ -523,23 +594,104 @@ internal static class Utils
         return typeSymbol.SpecialType == SpecialType.System_String;
     }
 
-    public static bool IsVoid(this ITypeSymbol typeSymbol)
-    {
-        return typeSymbol.SpecialType == SpecialType.System_Void;
-    }
-
     public static bool IsTimeSpan(this ITypeSymbol typeSymbol)
     {
         return typeSymbol.IsInheritFrom(typeof(TimeSpan).ToString());
     }
 
-    public static bool IsGuid(this ITypeSymbol typeSymbol)
+    public static bool IsVoid(this ITypeSymbol typeSymbol)
     {
-        return typeSymbol.IsInheritFrom(typeof(Guid).ToString());
+        return typeSymbol.SpecialType == SpecialType.System_Void;
     }
-
     #endregion 类型判断
 }
+internal abstract class CodeBuilder
+{
+    public abstract string Id { get; }
+
+    public virtual IEnumerable<string> Usings
+    {
+        get
+        {
+            yield return "using System;";
+            yield return "using System.Diagnostics;";
+            yield return "using TouchSocket.Core;";
+            yield return "using System.Threading;";
+            yield return "using System.Collections.Generic;";
+            yield return "using System.Threading.Tasks;";
+        }
+    }
+    public static string ReplaceGeneratedCode(string code)
+    {
+        return code.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+    }
+
+    public static StringBuilder ReplaceGeneratedCode(StringBuilder codeBuilder)
+    {
+        return codeBuilder.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+    }
+
+    public abstract string GetFileName();
+
+    public bool ToSourceText(out string sourceCode)
+    {
+        var codeBuilder = this.CreateCodeStringBuilder();
+
+        if (this.GeneratorCode(codeBuilder))
+        {
+            codeBuilder = ReplaceGeneratedCode(codeBuilder);
+
+            var tree = CSharpSyntaxTree.ParseText(codeBuilder.ToString());
+            var root = tree.GetRoot().NormalizeWhitespace();
+            var ret = root.ToFullString();
+
+            sourceCode = ret;
+            return true;
+        }
+
+        sourceCode = null;
+        return false;
+    }
+
+    protected CodeSpace CreateCodeSpace(StringBuilder codeBuilder)
+    {
+        return new CodeSpace(codeBuilder);
+    }
+
+    protected StringBuilder CreateCodeStringBuilder()
+    {
+        var codeBuilder = new StringBuilder();
+        codeBuilder.AppendLine("/*");
+        codeBuilder.AppendLine("此代码由工具直接生成，非必要请不要修改此处代码");
+        codeBuilder.AppendLine("*/");
+        codeBuilder.AppendLine("#pragma warning disable");
+
+        foreach (var item in this.Usings)
+        {
+            codeBuilder.AppendLine(item);
+        }
+
+        return codeBuilder;
+    }
+
+    protected abstract bool GeneratorCode(StringBuilder codeBuilder);
+}
+
+internal class CodeBuilderEqualityComparer<T> : IEqualityComparer<T> where T : CodeBuilder
+{
+    public static CodeBuilderEqualityComparer<T> Default { get; } = new CodeBuilderEqualityComparer<T>();
+
+    public bool Equals(T x, T y)
+    {
+        return x.Id.Equals(y.Id);
+    }
+
+    public int GetHashCode(T obj)
+    {
+        return obj.Id.GetHashCode();
+    }
+}
+
 internal abstract class TypeCodeBuilder<T> : CodeBuilder where T : class, ITypeSymbol
 {
     public TypeCodeBuilder(T typeSymbol)
@@ -582,140 +734,4 @@ internal abstract class TypeCodeBuilder<T> : CodeBuilder where T : class, ITypeS
         codeBuilder.AppendLine($"namespace {namespaceString}");
         return new CodeSpace(codeBuilder);
     }
-}
-internal abstract class CodeBuilder
-{
-    public virtual IEnumerable<string> Usings
-    {
-        get
-        {
-            yield return "using System;";
-            yield return "using System.Diagnostics;";
-            yield return "using TouchSocket.Core;";
-            yield return "using System.Threading;";
-            yield return "using System.Collections.Generic;";
-            yield return "using System.Threading.Tasks;";
-        }
-    }
-
-    public abstract string Id { get; }
-
-    public abstract string GetFileName();
-
-    protected abstract bool GeneratorCode(StringBuilder codeBuilder);
-
-    public bool ToSourceText(out string sourceCode)
-    {
-        var codeBuilder = this.CreateCodeStringBuilder();
-
-        if (this.GeneratorCode(codeBuilder))
-        {
-            codeBuilder = ReplaceGeneratedCode(codeBuilder);
-
-            var tree = CSharpSyntaxTree.ParseText(codeBuilder.ToString());
-            var root = tree.GetRoot().NormalizeWhitespace();
-            var ret = root.ToFullString();
-
-            sourceCode = ret;
-            return true;
-        }
-
-        sourceCode = null;
-        return false;
-    }
-
-    public static string ReplaceGeneratedCode(string code)
-    {
-        return code.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
-    }
-
-    public static StringBuilder ReplaceGeneratedCode(StringBuilder codeBuilder)
-    {
-        return codeBuilder.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
-    }
-
-    protected StringBuilder CreateCodeStringBuilder()
-    {
-        var codeBuilder = new StringBuilder();
-        codeBuilder.AppendLine("/*");
-        codeBuilder.AppendLine("此代码由工具直接生成，非必要请不要修改此处代码");
-        codeBuilder.AppendLine("*/");
-        codeBuilder.AppendLine("#pragma warning disable");
-
-        foreach (var item in this.Usings)
-        {
-            codeBuilder.AppendLine(item);
-        }
-
-        return codeBuilder;
-    }
-
-    protected CodeSpace CreateCodeSpace(StringBuilder codeBuilder)
-    {
-        return new CodeSpace(codeBuilder);
-    }
-}
-
-public readonly struct CodeSpace : IDisposable
-{
-    private readonly StringBuilder m_stringBuilder;
-
-    public CodeSpace(StringBuilder stringBuilder)
-    {
-        this.m_stringBuilder = stringBuilder;
-        this.m_stringBuilder.AppendLine("{");
-    }
-    public void Dispose()
-    {
-        this.m_stringBuilder?.AppendLine("}");
-    }
-}
-
-internal class CodeBuilderEqualityComparer<T> : IEqualityComparer<T> where T : CodeBuilder
-{
-    public static CodeBuilderEqualityComparer<T> Default { get; } = new CodeBuilderEqualityComparer<T>();
-
-    public bool Equals(T x, T y)
-    {
-        return x.Id.Equals(y.Id);
-    }
-
-    public int GetHashCode(T obj)
-    {
-        return obj.Id.GetHashCode();
-    }
-}
-
-internal static class SourceProductionContextExtension
-{
-    public static void AddSource(this SourceProductionContext sourceProductionContext, CodeBuilder builder)
-    {
-        if (builder.ToSourceText(out var sourceCode))
-        {
-            sourceProductionContext.AddSource(builder.GetFileName(), sourceCode);
-        }
-    }
-}
-
-public enum EndianType
-{
-    /// <summary>
-    /// 小端模式，即DCBA
-    /// </summary>
-    Little,
-
-    /// <summary>
-    /// 大端模式。即ABCD
-    /// </summary>
-    Big,
-
-    /// <summary>
-    /// 以交换小端格式。即CDAB
-    /// </summary>
-    LittleSwap,
-
-    /// <summary>
-    /// 以交换大端，即：BADC
-    /// </summary>
-    BigSwap
 }

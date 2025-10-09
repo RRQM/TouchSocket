@@ -20,13 +20,23 @@ namespace TouchSocket.Dmtp.Rpc;
 public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, IDmtpReceivedPlugin
 {
     private readonly IRpcServerProvider m_rpcServerProvider;
+    private readonly DmtpRpcOption m_option;
 
     /// <summary>
     /// 能够基于Dmtp协议，提供Rpc的功能
     /// </summary>
-    /// <param name="resolver"></param>
-    public DmtpRpcFeature(IServiceProvider resolver)
+    /// <param name="resolver">服务解析器</param>
+    /// <param name="option">配置选项</param>
+    public DmtpRpcFeature(IServiceProvider resolver, DmtpRpcOption option)
     {
+        this.m_option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+
+        // 设置默认的创建DmtpRpcActor委托
+        this.m_option.CreateDmtpRpcActor ??= PrivateCreateDmtpRpcActor;
+
+        // 设置默认的调度器为并发调度器
+        this.m_option.CreateDispatcher ??= (actor) => new ConcurrencyRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
+
         var rpcServerProvider = resolver.Resolve<IRpcServerProvider>();
 
         if (rpcServerProvider != null)
@@ -34,11 +44,6 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, I
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
         }
-
-        this.CreateDmtpRpcActor = PrivateCreateDmtpRpcActor;
-        this.SetProtocolFlags(20);
-
-        this.UseConcurrencyDispatcher();
     }
 
     /// <summary>
@@ -46,151 +51,24 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, I
     /// </summary>
     public ActionMap ActionMap { get; } = new ActionMap(false);
 
-    /// <summary>
-    /// 获取或设置一个函数，该函数创建一个RPC调度器，用于处理IDmtpActor的RPC调用。
-    /// </summary>
-    /// <value>
-    /// 一个函数，接受一个IDmtpActor实例作为参数，并返回一个IRpcDispatcher接口，该接口泛型化于IDmtpActor和IDmtpRpcCallContext。
-    /// </value>
-    public Func<IDmtpActor, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>> CreateDispatcher { get; set; }
-
-    /// <summary>
-    /// 创建DmtpRpc实例
-    /// </summary>
-    public Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
-
     /// <inheritdoc/>
     public ushort ReserveProtocolSize => 5;
 
-    /// <summary>
-    /// 序列化选择器
-    /// </summary>
-    public ISerializationSelector SerializationSelector { get; set; } = new DefaultSerializationSelector();
-
     /// <inheritdoc/>
-    public ushort StartProtocol { get; set; }
+    public ushort StartProtocol => this.m_option.StartProtocol;
 
     /// <summary>
-    /// 配置默认的序列化选择器。
+    /// 获取配置选项
     /// </summary>
-    /// <param name="selector">用于配置默认序列化选择器的操作。</param>
-    /// <returns>返回当前的 <see cref="DmtpRpcFeature"/> 实例，以支持链式调用。</returns>
-    public DmtpRpcFeature ConfigureDefaultSerializationSelector(Action<DefaultSerializationSelector> selector)
-    {
-        var serializationSelector = new DefaultSerializationSelector();
-        selector.Invoke(serializationSelector);
-        this.SerializationSelector = serializationSelector;
-        return this;
-    }
-
-    /// <summary>
-    /// 设置创建DmtpRpc实例
-    /// </summary>
-    /// <param name="createDmtpRpcActor"></param>
-    /// <returns></returns>
-    public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>, DmtpRpcActor> createDmtpRpcActor)
-    {
-        this.CreateDmtpRpcActor = createDmtpRpcActor;
-        return this;
-    }
-
-    #region Dispatcher
-
-    private readonly GlobalQueueRpcDispatcher m_globalQueueRpcDispatcher = new();
-
-    /// <summary>
-    /// 使用并发调度器处理请求
-    /// </summary>
-    /// <returns>返回当前实例，以支持链式调用</returns>
-    public DmtpRpcFeature UseConcurrencyDispatcher()
-    {
-        // 设置创建调度器的委托，使用支持并发的 Rpc 调度器
-        this.CreateDispatcher = (actor) => new ConcurrencyRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
-        // 支持链式调用，返回当前实例
-        return this;
-    }
-
-    /// <summary>
-    /// 使用全局队列RPC调度器配置RPC特性。
-    /// </summary>
-    /// <returns>返回配置了全局队列RPC调度器的DmtpRpcFeature实例。</returns>
-    public DmtpRpcFeature UseGlobalQueueRpcDispatcher()
-    {
-        // 设置创建调度器的委托，使用GlobalQueueRpcDispatcher实现
-        this.CreateDispatcher = (actor) => this.m_globalQueueRpcDispatcher;
-        return this;
-    }
-
-    /// <summary>
-    /// 使用即时RPC调度器配置RPC特性
-    /// </summary>
-    /// <returns>返回配置了即时RPC调度器的DmtpRpcFeature实例</returns>
-    public DmtpRpcFeature UseImmediateRpcDispatcher()
-    {
-        // 设置创建调度器的委托，使用ImmediateRpcDispatcher实现
-        this.CreateDispatcher = (actor) => new ImmediateRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
-        return this;
-    }
-
-    /// <summary>
-    /// 使用队列RPC调度器配置RPC特性
-    /// </summary>
-    /// <returns>返回配置了队列RPC调度器的DmtpRpcFeature实例</returns>
-    public DmtpRpcFeature UseQueueRpcDispatcher()
-    {
-        // 设置创建调度器的委托，使用QueueRpcDispatcher实现
-        this.CreateDispatcher = (actor) => new QueueRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
-        return this;
-    }
-
-    private class GlobalQueueRpcDispatcher : QueueRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>
-    {
-        public bool Pin { get; set; } = true;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (this.Pin)
-            {
-                return;
-            }
-            base.Dispose(disposing);
-        }
-    }
-
-    #endregion Dispatcher
-
-    /// <summary>
-    /// 设置<see cref="DmtpRpcFeature"/>的起始协议。
-    /// <para>
-    /// 默认起始为：20，保留5个协议长度。
-    /// </para>
-    /// </summary>
-    /// <param name="start"></param>
-    /// <returns></returns>
-    public DmtpRpcFeature SetProtocolFlags(ushort start)
-    {
-        this.StartProtocol = start;
-        return this;
-    }
-
-    /// <summary>
-    /// 设置序列化选择器。默认使用<see cref="DefaultSerializationSelector"/>
-    /// </summary>
-    /// <param name="selector"></param>
-    /// <returns></returns>
-    public DmtpRpcFeature SetSerializationSelector(ISerializationSelector selector)
-    {
-        this.SerializationSelector = selector;
-        return this;
-    }
+    public DmtpRpcOption Option => this.m_option;
 
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            this.m_globalQueueRpcDispatcher.Pin = false;
-            this.m_globalQueueRpcDispatcher.Dispose();
+            this.m_option.m_globalQueueRpcDispatcher.Pin = false;
+            this.m_option.m_globalQueueRpcDispatcher.Dispose();
         }
         base.Dispose(disposing);
     }
@@ -221,12 +99,12 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, I
     /// <inheritdoc/>
     public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
-        var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.CreateDispatcher.Invoke(client.DmtpActor));
+        var dmtpRpcActor = this.m_option.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.m_option.CreateDispatcher.Invoke(client.DmtpActor));
 
-        dmtpRpcActor.SerializationSelector = this.SerializationSelector;
+        dmtpRpcActor.SerializationSelector = this.m_option.SerializationSelector;
         dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 
-        dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
+        dmtpRpcActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpRpcActor>(dmtpRpcActor);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);

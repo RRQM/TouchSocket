@@ -80,39 +80,4 @@ public static class DmtpRpcActorExtension
         ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
         return (TDmtpRpcActor)actor;
     }
-
-
-    #region 插件扩展
-
-    /// <summary>
-    /// 使用DmtpRpc插件
-    /// </summary>
-    /// <param name="pluginManager">插件管理器实例</param>
-    /// <returns>返回DmtpRpcFeature实例</returns>
-#if NET6_0_OR_GREATER
-    public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
-#else
-    public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
-#endif
-    {
-        // 添加DmtpRpcFeature到插件管理器中，并返回其实例
-        return pluginManager.Add<DmtpRpcFeature>();
-    }
-
-    /// <summary>
-    /// 使用自定义的DmtpRpc插件。
-    /// </summary>
-    /// <param name="pluginManager">插件管理器，用于管理插件。</param>
-    /// <returns>返回配置的DmtpRpcFeature实例。</returns>
-#if NET6_0_OR_GREATER
-    public static DmtpRpcFeature UseDmtpRpc<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TDmtpRpcFeature>(this IPluginManager pluginManager) where TDmtpRpcFeature : DmtpRpcFeature
-#else
-    public static DmtpRpcFeature UseDmtpRpc<TDmtpRpcFeature>(this IPluginManager pluginManager) where TDmtpRpcFeature : DmtpRpcFeature
-#endif
-
-    {
-        // 添加并返回自定义的DmtpRpc插件
-        return pluginManager.Add<TDmtpRpcFeature>();
-    }
-    #endregion 插件扩展
 }
