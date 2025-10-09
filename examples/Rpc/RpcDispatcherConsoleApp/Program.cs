@@ -36,10 +36,12 @@ internal class Program
                })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRpc()
-                   .UseConcurrencyDispatcher();
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.UseConcurrencyDispatcher();
+                   });
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Rpc";//连接验证口令。
                });
@@ -57,7 +59,7 @@ internal class Program
             {
                 a.UseDmtpRpc();
             })
-            .SetDmtpOption(options=>
+            .SetDmtpOption(options =>
             {
                 options.VerifyToken = "Rpc";//连接验证口令。
             }));

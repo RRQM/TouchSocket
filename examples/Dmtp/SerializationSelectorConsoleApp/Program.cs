@@ -47,8 +47,10 @@ internal class Program
               .SetRemoteIPHost("127.0.0.1:7789")
               .ConfigurePlugins(a =>
               {
-                  a.UseDmtpRpc()
-                      .SetSerializationSelector(new MemoryPackSerializationSelector());
+                  a.UseDmtpRpc(options =>
+                  {
+                      options.SerializationSelector = new MemoryPackSerializationSelector();
+                  });
 
                   //a.UseDmtpRpc()
                   //    .SetSerializationSelector(new DefaultSerializationSelector()
@@ -59,7 +61,7 @@ internal class Program
                   //        SerializationBinder = default,
                   //    });
               })
-              .SetDmtpOption(options=>
+              .SetDmtpOption(options =>
               {
                   options.VerifyToken = "Dmtp";
               }));
@@ -74,8 +76,10 @@ internal class Program
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRpc()
-                   .SetSerializationSelector(new MemoryPackSerializationSelector());
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.SerializationSelector = new MemoryPackSerializationSelector();
+                   });
                })
                .ConfigureContainer(a =>
                {
@@ -85,7 +89,7 @@ internal class Program
                        store.RegisterServer<MyRpcServer>();
                    });
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Dmtp";
                });

@@ -28,7 +28,7 @@ internal class Program
         var redis = client.GetDmtpRedisActor();
 
         //执行Set
-        var result = await redis.SetAsync("1", "1",60*1000,CancellationToken.None);
+        var result = await redis.SetAsync("1", "1", 60 * 1000, CancellationToken.None);
         client.Logger.Info($"Set result={result}");
         client.Logger.Info($"ContainsCache result={await redis.ContainsCacheAsync("1")}");
 
@@ -49,7 +49,7 @@ internal class Program
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
             .SetRemoteIPHost("127.0.0.1:7789")
-            .SetDmtpOption(options=>
+            .SetDmtpOption(options =>
             {
                 options.VerifyToken = "Dmtp";
             })
@@ -75,10 +75,12 @@ internal class Program
                })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRedis()//必须添加Redis访问插件
-                   .SetCache(new MemoryCache<string, ReadOnlyMemory<byte>>());//这里可以设置缓存持久化，此处仍然是使用内存缓存。
+                   a.UseDmtpRedis(options =>
+                   {
+                       options.Cache = new MemoryCache<string, ReadOnlyMemory<byte>>();//这里可以设置缓存持久化，此处仍然是使用内存缓存。
+                   });
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Dmtp";//连接验证口令。
                })
