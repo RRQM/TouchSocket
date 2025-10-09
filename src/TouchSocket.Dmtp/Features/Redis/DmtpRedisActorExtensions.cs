@@ -19,12 +19,6 @@ namespace TouchSocket.Dmtp.Redis;
 /// </summary>
 public static class DmtpRedisActorExtensions
 {
-    ///// <summary>
-    ///// 获取或设置RedisActor的注入键。
-    ///// </summary>
-    //public static readonly DependencyProperty<IDmtpRedisActor> DmtpRedisActorProperty =
-    //    new("DmtpRedisActor", null);
-
     /// <summary>
     /// 获取<see cref="IDmtpRedisActor"/>
     /// </summary>
@@ -46,16 +40,5 @@ public static class DmtpRedisActorExtensions
     public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor dmtpActor)
     {
         return dmtpActor.GetActor<DmtpRedisActor>();
-    }
-
-    /// <summary>
-    /// 使用Redis插件。仅：Dmtp端会生效。
-    /// </summary>
-    /// <param name="pluginManager">插件管理器，用于管理插件。</param>
-    /// <returns>返回Redis功能插件。</returns>
-    public static RedisFeature UseDmtpRedis(this IPluginManager pluginManager)
-    {
-        // 添加RedisFeature到插件管理器，使Dmtp端能够使用Redis插件。
-        return pluginManager.Add<RedisFeature>();
     }
 }

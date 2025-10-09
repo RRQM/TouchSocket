@@ -10,20 +10,34 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp;
+namespace TouchSocket.Dmtp.Redis;
 
 /// <summary>
-/// Dmtp功能性组件接口
+/// Redis配置选项
 /// </summary>
-public interface IDmtpFeature
+public class DmtpRedisOption : DmtpFeatureOption
 {
+    public DmtpRedisOption()
+    {
+        this.StartProtocol = 25;
+    }
     /// <summary>
-    /// 起始协议
+    /// 元素序列化和反序列化转换器
     /// </summary>
-    ushort StartProtocol { get; }
+    public BytesSerializerConverter Converter { get; set; } = new BytesSerializerConverter();
 
     /// <summary>
-    /// 保留协议长度
+    /// 实际储存缓存
     /// </summary>
-    ushort ReserveProtocolSize { get; }
+    public ICache<string, ReadOnlyMemory<byte>> Cache { get; set; } = new MemoryCache<string, ReadOnlyMemory<byte>>();
+
+
+    /// <summary>
+    /// 配置元素的序列化和反序列化转换器
+    /// </summary>
+    /// <param name="action">配置操作</param>
+    public void ConfigureConverter(Action<BytesSerializerConverter> action)
+    {
+        action.Invoke(this.Converter);
+    }
 }

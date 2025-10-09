@@ -20,21 +20,6 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// </summary>
 public static class DmtpFileTransferActorExtension
 {
-    #region 插件扩展
-
-    /// <summary>
-    /// 使用DmtpFileTransfer插件
-    /// </summary>
-    /// <param name="pluginManager">插件管理器实例，用于管理插件的加载和执行</param>
-    /// <returns>返回DmtpFileTransferFeature实例，以便进一步操作或配置</returns>
-    public static DmtpFileTransferFeature UseDmtpFileTransfer(this IPluginManager pluginManager)
-    {
-        // 通过插件管理器添加DmtpFileTransfer插件，并返回插件实例
-        return pluginManager.Add<DmtpFileTransferFeature>();
-    }
-
-    #endregion 插件扩展
-
     #region DependencyProperty
 
     ///// <summary>

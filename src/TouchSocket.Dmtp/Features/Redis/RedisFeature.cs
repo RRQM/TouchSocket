@@ -17,44 +17,44 @@ namespace TouchSocket.Dmtp.Redis;
 /// </summary>
 public class RedisFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlugin, IDmtpFeature
 {
+    private readonly DmtpRedisOption m_option;
+
     /// <summary>
     /// RedisFeature
     /// </summary>
-    public RedisFeature()
+    /// <param name="option">配置选项</param>
+    public RedisFeature(DmtpRedisOption option)
     {
-        this.SetProtocolFlags(25);
-
-        this.Converter = new BytesSerializerConverter();
-        this.Converter.Add(new JsonBytesToClassSerializerFormatter<object>());
+        this.m_option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+        
+        // 设置默认的JSON转换器
+        if (this.m_option.Converter != null)
+        {
+            this.m_option.Converter.Add(new JsonBytesToClassSerializerFormatter<object>());
+        }
     }
-
-    /// <summary>
-    /// 定义元素的序列化和反序列化。
-    /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
-    /// </summary>
-    public BytesSerializerConverter Converter { get; private set; }
-
-    /// <summary>
-    /// 实际储存缓存。
-    /// </summary>
-    public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; } = new MemoryCache<string, ReadOnlyMemory<byte>>();
 
     /// <inheritdoc/>
     public ushort ReserveProtocolSize => 5;
 
     /// <inheritdoc/>
-    public ushort StartProtocol { get; set; }
+    public ushort StartProtocol => this.m_option.StartProtocol;
+
+    /// <summary>
+    /// 获取配置选项
+    /// </summary>
+    public DmtpRedisOption Option => this.m_option;
 
     /// <inheritdoc/>
     public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var dmtpRedisActor = new DmtpRedisActor(client.DmtpActor)
         {
-            ICache = this.ICache,
-            Converter = this.Converter
+            ICache = this.m_option.Cache,
+            Converter = this.m_option.Converter
         };
 
-        dmtpRedisActor.SetProtocolFlags(this.StartProtocol);
+        dmtpRedisActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpRedisActor>(dmtpRedisActor);
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -72,40 +72,5 @@ public class RedisFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlug
             }
         }
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 设置实际储存缓存。默认使用<see cref="MemoryCache{TKey, TValue}"/>
-    /// </summary>
-    /// <param name="cache"></param>
-    public RedisFeature SetCache(ICache<string, ReadOnlyMemory<byte>> cache)
-    {
-        this.ICache = cache;
-        return this;
-    }
-
-    /// <summary>
-    /// 定义元素的序列化和反序列化。
-    /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
-    /// </summary>
-    /// <param name="action"></param>
-    public RedisFeature ConfigureConverter(Action<BytesSerializerConverter> action)
-    {
-        action.Invoke(this.Converter);
-        return this;
-    }
-
-    /// <summary>
-    /// 设置<see cref="RedisFeature"/>的起始协议。
-    /// <para>
-    /// 默认起始为：25，保留5个协议长度。
-    /// </para>
-    /// </summary>
-    /// <param name="start"></param>
-    /// <returns></returns>
-    public RedisFeature SetProtocolFlags(ushort start)
-    {
-        this.StartProtocol = start;
-        return this;
     }
 }

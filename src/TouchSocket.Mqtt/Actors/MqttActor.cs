@@ -110,8 +110,10 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     {
         using (var waitData_1_Async = this.m_waitHandlePool.GetWaitDataAsync(message))
         {
-            await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var waitDataStatus = await waitData_1_Async.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(message, cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData_1_Async.WaitAsync(cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
         }
 
@@ -123,8 +125,10 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
         using (var waitData_2_Async = this.m_waitHandlePool.GetWaitDataAsync(mqttPubRelMessage, false))
         {
-            await this.ProtectedOutputSendAsync(mqttPubRelMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            var waitDataStatus = await waitData_2_Async.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(mqttPubRelMessage, cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData_2_Async.WaitAsync(cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
         }
     }

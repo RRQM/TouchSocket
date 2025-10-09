@@ -10,20 +10,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Dmtp;
+namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
-/// Dmtp功能性组件接口
+/// Dmtp文件传输配置选项
 /// </summary>
-public interface IDmtpFeature
+public class DmtpFileTransferOption : DmtpFeatureOption
 {
+    public DmtpFileTransferOption()
+    {
+        this.StartProtocol = 30;
+    }
     /// <summary>
-    /// 起始协议
+    /// 文件资源控制器
     /// </summary>
-    ushort StartProtocol { get; }
+    public IFileResourceController FileResourceController { get; set; } = TouchSocket.Dmtp.FileTransfer.FileResourceController.Default;
 
     /// <summary>
-    /// 保留协议长度
+    /// 小文件最大长度
     /// </summary>
-    ushort ReserveProtocolSize { get; }
+    public int MaxSmallFileLength { get; set; } = 1024 * 1024;
+
+    /// <summary>
+    /// 根路径
+    /// </summary>
+    public string RootPath { get; set; }
 }
