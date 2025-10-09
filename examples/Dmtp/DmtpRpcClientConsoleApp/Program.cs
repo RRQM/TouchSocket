@@ -183,9 +183,10 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseDmtpRpc()
-                 //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                 .SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
+                 a.UseDmtpRpc(options =>
+                 {
+                     options.SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
+                 });
 
                  a.UseDmtpHeartbeat()
                  .SetTick(TimeSpan.FromSeconds(3))

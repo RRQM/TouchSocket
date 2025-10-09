@@ -68,23 +68,24 @@ namespace DmtpRpcConsoleApp
                  .SetRemoteIPHost("127.0.0.1:7789")
                  .ConfigurePlugins(a =>
                  {
-                     a.UseDmtpRpc()
-                     .ConfigureDefaultSerializationSelector(selector =>
+                     a.UseDmtpRpc(options =>
                      {
-                         //配置Fast序列化器
-                         selector.FastSerializerContext = new AppFastSerializerContext();
-
-                         //配置System.Text.Json序列化器
-                         selector.UseSystemTextJson(options =>
-                         {
-                             options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                         });
+                         options.ConfigureDefaultSerializationSelector(selector =>
+                             {
+                                 //配置Fast序列化器
+                                 selector.FastSerializerContext = new AppFastSerializerContext();
+                                 //配置System.Text.Json序列化器
+                                 selector.UseSystemTextJson(options =>
+                                 {
+                                     options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                                 });
+                             });
                      });
                  })
-                 .SetDmtpOption(options=>
-                 {
-                     options.VerifyToken = "Rpc";
-                 }));
+             .SetDmtpOption(options =>
+             {
+                 options.VerifyToken = "Rpc";
+             }));
             await client.ConnectAsync();
             client.Logger.Info($"客户端已连接");
             return client;
@@ -104,20 +105,22 @@ namespace DmtpRpcConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc()
-                       .ConfigureDefaultSerializationSelector(selector =>
+                       a.UseDmtpRpc(options =>
                        {
-                           //配置Fast序列化器
-                           selector.FastSerializerContext = new AppFastSerializerContext();
-
-                           //配置System.Text.Json序列化器
-                           selector.UseSystemTextJson(options =>
+                           options.ConfigureDefaultSerializationSelector(selector =>
                            {
-                               options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                               //配置Fast序列化器
+                               selector.FastSerializerContext = new AppFastSerializerContext();
+
+                               //配置System.Text.Json序列化器
+                               selector.UseSystemTextJson(options =>
+                               {
+                                   options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                               });
                            });
                        });
                    })
-                   .SetDmtpOption(options=>
+                   .SetDmtpOption(options =>
                    {
                        options.VerifyToken = "Rpc";
                    });
