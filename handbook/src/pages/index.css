@@ -191,8 +191,12 @@
   padding: 0;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, 
+    rgba(108, 61, 228, 0.85) 0%, 
+    rgba(241, 54, 223, 0.8) 100%);
+  border: 1px solid rgba(79, 124, 184, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .system-window iframe {
@@ -842,58 +846,26 @@
 
 /* 代码区域的语法高亮优化 */
 .system-window .language-cs {
-  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%) !important;
-  color: #e6edf3 !important;
+  background: linear-gradient(135deg, 
+    #362a36) !important;
+  color: #3b5c8a !important;
 }
 
-.system-window .token.keyword {
-  color: #4f7cb8 !important;
-  /* 白百合蓝色 - 关键字 */
+/* 暗色模式下的代码区域样式 */
+[data-theme='dark'] .system-window .language-cs {
+  background: linear-gradient(135deg, 
+    rgba(42, 54, 72, 0.95) 0%, 
+    rgba(52, 68, 88, 0.95) 50%,
+    rgba(62, 82, 108, 0.95) 100%) !important;
+  color: #2d7bb2 !important;
 }
 
-.system-window .token.string {
-  color: #7fa8d3 !important;
-  /* 白百合蓝色 - 字符串 */
-}
-
-.system-window .token.comment {
-  color: #6092b6 !important;
-  /* 白百合蓝色 - 注释 */
-  font-style: italic;
-}
-
-.system-window .token.class-name {
-  color: #2d5aa0 !important;
-  /* 白百合蓝色 - 类名 */
-}
-
-.system-window .token.function {
-  color: #4f7cb8 !important;
-  /* 白百合蓝色 - 函数 */
-}
-
-.system-window .token.operator {
-  color: #a5c6e0 !important;
-  /* 白百合蓝色 - 操作符 */
-}
-
-.system-window .token.punctuation {
-  color: #8bb4d9 !important;
-  /* 白百合蓝色 - 标点 */
-}
-
-.system-window .token.number {
-  color: #c7dded !important;
-  /* 白百合蓝色 - 数字 */
-}
-
-/* 代码高亮行 */
-.system-window .docusaurus-highlight-code-line {
-  background-color: rgba(79, 124, 184, 0.1) !important;
-  display: block;
-  margin: 0 -1em;
-  padding: 0 1em;
-  border-left: 3px solid #4f7cb8;
+/* 暗色模式下的系统窗口容器 */
+[data-theme='dark'] .system-window {
+  background: linear-gradient(135deg, 
+    rgba(42, 54, 72, 0.9) 0%, 
+    rgba(52, 68, 88, 0.9) 100%);
+  border: 1px solid rgba(165, 198, 224, 0.2);
 }
 
 /* 代码块滚动条样式 */
