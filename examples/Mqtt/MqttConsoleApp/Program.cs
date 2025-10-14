@@ -61,7 +61,7 @@ internal class Program
 
             long i = 0;
 
-            MqttPublishMessage message = new(topic1, false, QosLevel.AtLeastOnce, Encoding.UTF8.GetBytes(
+            var message = new MqttPublishMessage(topic1, false, QosLevel.AtLeastOnce, Encoding.UTF8.GetBytes(
                    $"Hello World{i}"));
 
             while (true)
@@ -96,105 +96,53 @@ internal class Program
         {
             Console.ReadKey();
         }
+
+        #region Mqtt服务器停止服务器
+        await service.StopAsync();
+        #endregion
+
+        #region Mqtt服务器释放资源
+        service.Dispose();
+        #endregion
     }
 
     private static async Task<MqttTcpService> CreateService()
     {
+        #region 创建Tcp协议的Mqtt服务器
         var service = new MqttTcpService();
-        await service.SetupAsync(new TouchSocketConfig()//载入配置
-                                                        //.SetNoDelay(true)
-             .SetListenIPHosts("tcp://127.0.0.1:7789")//可以同时监听两个地址
-             .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-             {
-                 a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-             })
-             .ConfigurePlugins(a =>
-             {
-                 a.AddIdChangedPlugin(async (client, e) =>
-                 {
-                     Console.WriteLine($"IdChanged:{e.OldId}->{e.NewId}");
-                     await e.InvokeNext();
-                 });
 
-                 a.AddMqttReceivingPlugin(async (client, e) =>
-                 {
-                     switch (e.MqttMessage)
-                     {
-                         case MqttSubscribeMessage message:
-                             {
-                                 //订阅消息
-                                 Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+        //配置
+        var config = new TouchSocketConfig();
 
-                                 foreach (var subscribeRequest in message.SubscribeRequests)
-                                 {
-                                     var topic = subscribeRequest.Topic;
-                                     var qosLevel = subscribeRequest.QosLevel;
-                                     //或者其他属性
-                                     Console.WriteLine($"Subscribe Topic:{topic},QosLevel:{qosLevel}");
-                                 }
-                                 break;
-                             }
-                         case MqttUnsubscribeMessage message:
-                             {
+        config.SetListenIPHosts("tcp://127.0.0.1:7789");
+        config.ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        });
 
-                                 //取消订阅消息
-                                 Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-                                 foreach (var topic in message.TopicFilters)
-                                 {
-                                     //取消订阅的主题
-                                     Console.WriteLine($"Unsubscribe Topic:{topic}");
-                                 }
-                                 break;
-                             }
-                         default:
-                             break;
-                     }
-                     Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-                     await e.InvokeNext();
-                 });
-
-                 a.AddMqttReceivedPlugin(async (client, e) =>
-                 {
-                     var mqttMessage = e.MqttMessage;
-                     Console.WriteLine("Reved:" + mqttMessage);
-
-                     //订阅消息的主题
-                     var topicName = mqttMessage.TopicName;
-
-                     //订阅消息的Qos级别
-                     var qosLevel = mqttMessage.QosLevel;
-
-                     //订阅消息的Payload
-                     var payload = mqttMessage.Payload;
-                     await e.InvokeNext();
-                 });
-
-                 a.AddMqttConnectingPlugin(async (client, e) =>
-                 {
-                     Console.WriteLine($"Server Connecting:{e.ConnectMessage.ClientId}");
-                     await e.InvokeNext();
-                 });
-
-                 a.AddMqttConnectedPlugin(async (client, e) =>
-                 {
-                     Console.WriteLine($"Server Connected:{e.ConnectMessage.ClientId}");
-                     await e.InvokeNext();
-                 });
-
-                 a.AddMqttClosingPlugin(async (client, e) =>
-                 {
-                     Console.WriteLine($"Server Closing:{e.MqttMessage.MessageType}");
-                     await e.InvokeNext();
-                 });
-
-                 a.AddMqttClosedPlugin(async (client, e) =>
-                 {
-                     Console.WriteLine($"Server Closed:{e.Message}");
-                     await e.InvokeNext();
-                 });
-             }));
+        //载入配置
+        await service.SetupAsync(config);
 
         await service.StartAsync();//启动
+        #endregion
+
+        #region Mqtt服务器获取所有连接的客户端
+        var clients = service.Clients;
+        foreach (var client in clients)
+        {
+
+        }
+        #endregion
+
+        #region Mqtt服务器断开指定客户端
+        foreach (var client in service.Clients)
+        {
+            if (client.Id == "123")
+            {
+                await client.CloseAsync("normal close");
+            }
+        }
+        #endregion
 
         return service;
     }
@@ -279,12 +227,56 @@ internal class Program
     }
 }
 
+#region Mqtt服务器通过插件接收所有消息
+internal class MyMqttReceivingPlugin : PluginBase, IMqttReceivingPlugin
+{
+    public async Task OnMqttReceiving(IMqttSession client, MqttReceivingEventArgs e)
+    {
+        switch (e.MqttMessage)
+        {
+            case MqttSubscribeMessage message:
+                {
+                    //订阅消息
+                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
 
+                    foreach (var subscribeRequest in message.SubscribeRequests)
+                    {
+                        var topic = subscribeRequest.Topic;
+                        var qosLevel = subscribeRequest.QosLevel;
+                        //或者其他属性
+                        Console.WriteLine($"Subscribe Topic:{topic},QosLevel:{qosLevel}");
+                    }
+                    break;
+                }
+            case MqttUnsubscribeMessage message:
+                {
+
+                    //取消订阅消息
+                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+                    foreach (var topic in message.TopicFilters)
+                    {
+                        //取消订阅的主题
+                        Console.WriteLine($"Unsubscribe Topic:{topic}");
+                    }
+                    break;
+                }
+            default:
+                break;
+        }
+        Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
+        await e.InvokeNext();
+    }
+}
+#endregion
+
+
+#region Mqtt服务器接收发布消息
 internal class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
 {
     public async Task OnMqttReceived(IMqttSession client, MqttReceivedEventArgs e)
     {
         var mqttMessage = e.MqttMessage;
+        Console.WriteLine("Reved:" + mqttMessage);
 
         //订阅消息的主题
         var topicName = mqttMessage.TopicName;
@@ -297,3 +289,4 @@ internal class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
         await e.InvokeNext();
     }
 }
+#endregion
