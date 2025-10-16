@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -124,7 +123,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
             var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
 
             codeBuilder.AppendLine("var _request=new WebApiRequest();");
-            codeBuilder.AppendLine($"_request.Method = (HttpMethodType){webApiMethod};");
+            codeBuilder.AppendLine($"_request.Method = \"{webApiMethod}\";");
             codeBuilder.AppendLine($"_request.Headers = {this.GetFromHeaderString(method, webApiParameterInfos)};");
             codeBuilder.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
             codeBuilder.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
@@ -204,7 +203,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
             var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
 
             codeBuilder.AppendLine("var _request=new WebApiRequest();");
-            codeBuilder.AppendLine($"_request.Method = (HttpMethodType){webApiMethod};");
+            codeBuilder.AppendLine($"_request.Method = \"{webApiMethod}\";");
             codeBuilder.AppendLine($"_request.Headers = {this.GetFromHeaderString(method, webApiParameterInfos)};");
             codeBuilder.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
             codeBuilder.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
@@ -254,9 +253,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
     {
         if (key == "Method")
         {
-            var value = Convert.ToInt32(typedConstant.Value);
-
-            return ((HttpMethodType)value).ToString();
+            return typedConstant.Value.ToString();
         }
         return base.ReplacePattern(key, typedConstant);
     }

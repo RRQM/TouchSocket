@@ -65,7 +65,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                         reader.Advance(contentLength);
 
                         this.m_currentRequest.InternalSetContent(content);
-                        this.m_currentRequest.CompleteInput();
+                        //this.m_currentRequest.CompleteInput();
                         this.m_task = this.GoReceivedAsync(null, this.m_currentRequest);
 
                         this.m_currentRequest = null;

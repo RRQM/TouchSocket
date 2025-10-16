@@ -15,24 +15,24 @@ using System.Collections;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 线程安全的List，其基本操作和List一致。
+/// 线程安全的<see cref="List{T}"/>，其基本操作和<see cref="List{T}"/>一致。
 /// </summary>
-/// <typeparam name="T"></typeparam>
+/// <typeparam name="T">元素类型</typeparam>
 public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
 {
     private readonly List<T> m_list;
 
     /// <summary>
-    /// 构造函数
+    /// 初始化<see cref="ConcurrentList{T}"/>类的新实例。
     /// </summary>
-    /// <param name="collection"></param>
+    /// <param name="collection">用于填充列表的集合。</param>
     public ConcurrentList(IEnumerable<T> collection)
     {
         this.m_list = new List<T>(collection);
     }
 
     /// <summary>
-    /// 构造函数
+    /// 初始化<see cref="ConcurrentList{T}"/>类的新实例。
     /// </summary>
     public ConcurrentList()
     {
@@ -40,17 +40,15 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// 构造函数
+    /// 初始化<see cref="ConcurrentList{T}"/>类的新实例。
     /// </summary>
-    /// <param name="capacity"></param>
+    /// <param name="capacity">初始容量。</param>
     public ConcurrentList(int capacity)
     {
         this.m_list = new List<T>(capacity);
     }
 
-    /// <summary>
-    /// 元素数量
-    /// </summary>
+    /// <inheritdoc/>
     public int Count
     {
         get
@@ -62,16 +60,10 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 是否为只读
-    /// </summary>
+    /// <inheritdoc/>
     public bool IsReadOnly => false;
 
-    /// <summary>
-    /// 获取索引元素
-    /// </summary>
-    /// <param name="index"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public T this[int index]
     {
         get
@@ -90,10 +82,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 添加元素
-    /// </summary>
-    /// <param name="item"></param>
+    /// <inheritdoc/>
     public void Add(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -102,9 +91,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 清空所有元素
-    /// </summary>
+    /// <inheritdoc/>
     public void Clear()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -113,11 +100,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 是否包含某个元素
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public bool Contains(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -126,11 +109,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 复制到
-    /// </summary>
-    /// <param name="array"></param>
-    /// <param name="arrayIndex"></param>
+    /// <inheritdoc/>
     public void CopyTo(T[] array, int arrayIndex)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -139,10 +118,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 返回迭代器
-    /// </summary>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public IEnumerator<T> GetEnumerator()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -151,10 +127,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 返回迭代器组合
-    /// </summary>
-    /// <returns></returns>
+    /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -163,11 +136,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 索引
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int IndexOf(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -176,11 +145,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 插入
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="item"></param>
+    /// <inheritdoc/>
     public void Insert(int index, T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -189,11 +154,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 移除元素
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public bool Remove(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -202,10 +163,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// 按索引移除
-    /// </summary>
-    /// <param name="index"></param>
+    /// <inheritdoc/>
     public void RemoveAt(int index)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -218,7 +176,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// 获取或设置容量
+    /// 获取或设置容量。
     /// </summary>
     public int Capacity
     {
@@ -238,10 +196,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
-    /// </summary>
-    /// <param name="collection"></param>
+    /// <inheritdoc/>
     public void AddRange(IEnumerable<T> collection)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -250,11 +205,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.BinarySearch(T)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int BinarySearch(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -263,12 +214,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.BinarySearch(T, IComparer{T})"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="comparer"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int BinarySearch(T item, IComparer<T> comparer)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -277,14 +223,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.BinarySearch(int, int, T, IComparer{T})"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
-    /// <param name="item"></param>
-    /// <param name="comparer"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int BinarySearch(int index, int count, T item, IComparer<T> comparer)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -293,12 +232,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.ConvertAll{TOutput}(Converter{T, TOutput})"/>
-    /// </summary>
-    /// <typeparam name="TOutput"></typeparam>
-    /// <param name="converter"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public List<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -307,11 +241,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Find(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public T Find(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -320,11 +250,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindAll(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public List<T> FindAll(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -333,13 +259,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindIndex(int, int, Predicate{T})"/>
-    /// </summary>
-    /// <param name="startIndex"></param>
-    /// <param name="count"></param>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindIndex(int startIndex, int count, Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -348,12 +268,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindIndex(int, Predicate{T})"/>
-    /// </summary>
-    /// <param name="startIndex"></param>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindIndex(int startIndex, Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -362,11 +277,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindIndex(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindIndex(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -375,11 +286,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindLast(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public T FindLast(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -388,13 +295,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindLastIndex(int, int, Predicate{T})"/>
-    /// </summary>
-    /// <param name="startIndex"></param>
-    /// <param name="count"></param>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindLastIndex(int startIndex, int count, Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -403,12 +304,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindLastIndex(int, Predicate{T})"/>
-    /// </summary>
-    /// <param name="startIndex"></param>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindLastIndex(int startIndex, Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -417,11 +313,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.FindLastIndex(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int FindLastIndex(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -430,10 +322,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.ForEach(Action{T})"/>
-    /// </summary>
-    /// <param name="action"></param>
+    /// <inheritdoc/>
     public void ForEach(Action<T> action)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -442,12 +331,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.GetRange(int, int)"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public List<T> GetRange(int index, int count)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -456,12 +340,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.IndexOf(T, int)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="index"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int IndexOf(T item, int index)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -470,13 +349,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.IndexOf(T, int, int)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int IndexOf(T item, int index, int count)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -485,11 +358,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.InsertRange(int, IEnumerable{T})"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="collection"></param>
+    /// <inheritdoc/>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -498,11 +367,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.LastIndexOf(T)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int LastIndexOf(T item)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -511,12 +376,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.LastIndexOf(T, int)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="index"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int LastIndexOf(T item, int index)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -525,13 +385,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.LastIndexOf(T, int, int)"/>
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public int LastIndexOf(T item, int index, int count)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -540,10 +394,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
+    /// <inheritdoc/>
     public void RemoveAll(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -552,11 +403,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.RemoveRange(int, int)"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
+    /// <inheritdoc/>
     public void RemoveRange(int index, int count)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -565,9 +412,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Reverse()"/>
-    /// </summary>
+    /// <inheritdoc/>
     public void Reverse()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -576,11 +421,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Reverse(int, int)"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
+    /// <inheritdoc/>
     public void Reverse(int index, int count)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -589,9 +430,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Sort()"/>
-    /// </summary>
+    /// <inheritdoc/>
     public void Sort()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -600,10 +439,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Sort(Comparison{T})"/>
-    /// </summary>
-    /// <param name="comparison"></param>
+    /// <inheritdoc/>
     public void Sort(Comparison<T> comparison)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -612,10 +448,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Sort(IComparer{T})"/>
-    /// </summary>
-    /// <param name="comparer"></param>
+    /// <inheritdoc/>
     public void Sort(IComparer<T> comparer)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -624,12 +457,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.Sort(int, int, IComparer{T})"/>
-    /// </summary>
-    /// <param name="index"></param>
-    /// <param name="count"></param>
-    /// <param name="comparer"></param>
+    /// <inheritdoc/>
     public void Sort(int index, int count, IComparer<T> comparer)
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -638,10 +466,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.ToArray"/>
-    /// </summary>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public T[] ToArray()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -650,9 +475,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.TrimExcess"/>
-    /// </summary>
+    /// <inheritdoc/>
     public void TrimExcess()
     {
         lock (((ICollection)this.m_list).SyncRoot)
@@ -661,11 +484,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
-    /// <summary>
-    /// <inheritdoc cref="List{T}.TrueForAll(Predicate{T})"/>
-    /// </summary>
-    /// <param name="match"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public bool TrueForAll(Predicate<T> match)
     {
         lock (((ICollection)this.m_list).SyncRoot)

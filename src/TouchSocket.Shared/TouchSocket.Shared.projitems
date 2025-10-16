@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Core\ThrowHelperCore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Dmtp\Actor\SealedDmtpActor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)InternalVisible.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rpc\ThrowHelperRpc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SocketIo\EngineIo3.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SocketIo\EngineIo4.cs" />

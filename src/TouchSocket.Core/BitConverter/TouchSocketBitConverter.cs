@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -921,7 +920,7 @@ public sealed class TouchSocketBitConverter
             {
                 var sourceByte = bytes[j];
                 var accessor = new BitAccessor<byte>(ref sourceByte);
-                
+
                 for (var bit = 0; bit < 8; bit++)
                 {
                     var b = accessor.Get(bit);

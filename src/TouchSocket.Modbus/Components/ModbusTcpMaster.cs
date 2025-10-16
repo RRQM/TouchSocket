@@ -33,17 +33,9 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     }
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken cancellationToken)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            await this.TcpConnectAsync(cancellationToken);
-        }
-        finally
-        {
-            this.m_semaphoreForConnect.Release();
-        }
+        return this.TcpConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>

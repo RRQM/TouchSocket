@@ -404,6 +404,11 @@ internal static class Utils
         return result;
     }
 
+    /// <summary>
+    /// 将字符串首字母转换为小写（驼峰命名）。
+    /// </summary>
+    /// <param name="str">要转换的字符串。</param>
+    /// <returns>首字母小写的字符串。</returns>
     public static string RenameCamelCase(this string str)
     {
         var firstChar = str[0];
@@ -415,6 +420,32 @@ internal static class Utils
 
         var name = str.ToCharArray();
         name[0] = char.ToLowerInvariant(firstChar);
+
+        return new string(name);
+    }
+
+    /// <summary>
+    /// 将字符串首字母转换为大写（帕斯卡命名）。
+    /// </summary>
+    /// <param name="str">要转换的字符串。</param>
+    /// <returns>首字母大写的字符串。</returns>
+    public static string RenamePascalCase(this string str)
+    {
+        str = str.ToLower();
+        if (string.IsNullOrEmpty(str))
+        {
+            return string.Empty;
+        }
+
+        var firstChar = str[0];
+
+        if (firstChar == char.ToUpperInvariant(firstChar))
+        {
+            return str;
+        }
+
+        var name = str.ToCharArray();
+        name[0] = char.ToUpperInvariant(firstChar);
 
         return new string(name);
     }

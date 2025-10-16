@@ -151,7 +151,11 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
 
     private static bool IsTargetFrameworkValid(string targetFramework)
     {
-        if (string.IsNullOrEmpty(targetFramework)) return false;
+        return true;//在任何框架下都提示同步不推荐使用
+        if (string.IsNullOrEmpty(targetFramework))
+        {
+            return false;
+        }
 
         // 处理不同目标框架格式：
         // - net6.0

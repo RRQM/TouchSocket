@@ -71,19 +71,19 @@ public struct PipeBytesWriter : IBytesWriter
     /// 此方法提供了对底层PipeWriter.FlushAsync方法的直接访问，
     /// 允许调用方控制何时将缓冲数据刷新到目标流。
     /// </remarks>
-    public ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken = default)
+    public readonly ValueTask<FlushResult> FlushAsync(CancellationToken cancellationToken = default)
     {
         return this.m_writer.FlushAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Memory<byte> GetMemory(int sizeHint = 0)
+    public readonly Memory<byte> GetMemory(int sizeHint = 0)
     {
         return this.m_writer.GetMemory(sizeHint);
     }
 
     /// <inheritdoc/>
-    public Span<byte> GetSpan(int sizeHint = 0)
+    public readonly Span<byte> GetSpan(int sizeHint = 0)
     {
         return this.m_writer.GetSpan(sizeHint);
     }

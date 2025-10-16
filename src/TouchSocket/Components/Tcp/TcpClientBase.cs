@@ -34,6 +34,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     #region 变量
 
     private readonly TcpCore m_tcpCore = new TcpCore();
+    private readonly SemaphoreSlim m_semaphoreForConnectAndClose = new SemaphoreSlim(1, 1);
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_iP;
     private volatile bool m_online;
@@ -185,6 +186,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (!this.m_online)
@@ -205,6 +207,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         {
             return Result.FromException(ex);
         }
+        finally
+        {
+            this.m_semaphoreForConnectAndClose.Release();
+        }
     }
 
     /// <inheritdoc/>
@@ -214,6 +220,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         {
             _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
             this.m_tcpCore.SafeDispose();
+            this.m_semaphoreForConnectAndClose.SafeDispose();
         }
 
         base.SafetyDispose(disposing);

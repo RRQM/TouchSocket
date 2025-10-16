@@ -104,19 +104,10 @@ public class TcpClient : TcpClientBase, ITcpClient
 
     #region Connect
 
-    private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     /// <inheritdoc/>
-    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
+    public virtual Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            await this.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            this.m_semaphoreForConnect.Release();
-        }
+        return this.TcpConnectAsync(cancellationToken);
     }
 
     #endregion Connect

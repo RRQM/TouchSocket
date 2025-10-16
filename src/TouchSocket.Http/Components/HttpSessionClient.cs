@@ -22,6 +22,8 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 {
     private HttpContext m_httpContext;
 
+    private ServerHttpResponse m_serverHttpResponse;
+
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -38,22 +40,6 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     }
 
     #endregion Send
-
-    /// <inheritdoc/>
-    protected override void SafetyDispose(bool disposing)
-    {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-
-        if (disposing && this.m_webSocket != null)
-        {
-            this.m_webSocket.Dispose();
-        }
-
-        base.SafetyDispose(disposing);
-    }
 
     /// <summary>
     /// 当收到到Http请求时。覆盖父类方法将不会触发插件。
@@ -87,9 +73,14 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     {
         if (e.RequestInfo is HttpRequest request)
         {
-            this.m_httpContext ??= new HttpContext(request, new ServerHttpResponse(request, this));
+            if (this.m_httpContext == null)
+            {
+                this.m_serverHttpResponse = new ServerHttpResponse(request, this);
+                this.m_httpContext = new HttpContext(request, this.m_serverHttpResponse);
+            }
+
             await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_httpContext.Response.Reset();
+            this.m_serverHttpResponse.Reset();
         }
         else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
         {
@@ -97,5 +88,21 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
             await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (this.DisposedValue)
+        {
+            return;
+        }
+
+        if (disposing && this.m_webSocket != null)
+        {
+            this.m_webSocket.Dispose();
+        }
+
+        base.SafetyDispose(disposing);
     }
 }
