@@ -507,7 +507,7 @@ public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
     {
         lock (((ICollection)this.m_list).SyncRoot)
         {
-            return this.m_list.IndexOf(item);
+            return this.m_list.LastIndexOf(item);
         }
     }
 
