@@ -109,11 +109,13 @@ public class HttpRequest : HttpBase
         }
     }
 
+    /// <inheritdoc/>
     public override ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
+    /// <inheritdoc/>
     public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();

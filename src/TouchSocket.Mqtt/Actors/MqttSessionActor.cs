@@ -65,6 +65,14 @@ public class MqttSessionActor : MqttActor
     }
 
     /// <summary>
+    /// 设置会话存在标志为 true。
+    /// </summary>
+    public void MakeSessionPresent()
+    {
+        this.m_sessionPresent = true;
+    }
+
+    /// <summary>
     /// 异步分发消息。
     /// </summary>
     /// <param name="message">要分发的消息。</param>
@@ -85,15 +93,6 @@ public class MqttSessionActor : MqttActor
             Console.WriteLine("DistributeMessagesAsync:" + ex.Message);
         }
     }
-
-    /// <summary>
-    /// 设置会话存在标志为 true。
-    /// </summary>
-    public void MakeSessionPresent()
-    {
-        this.m_sessionPresent = true;
-    }
-
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {

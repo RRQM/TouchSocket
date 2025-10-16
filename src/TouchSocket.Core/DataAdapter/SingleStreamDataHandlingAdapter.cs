@@ -125,7 +125,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     }
 
     /// <summary>
-    /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(IByteBlockReader, IRequestInfo)"/>处理数据
+    /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(ReadOnlyMemory{byte}, IRequestInfo)"/>处理数据
     /// </summary>
     /// <param name="reader"></param>
     protected abstract Task PreviewReceivedAsync<TReader>(TReader reader)

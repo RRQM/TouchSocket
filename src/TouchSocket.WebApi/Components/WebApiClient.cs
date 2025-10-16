@@ -62,24 +62,8 @@ public class WebApiClient : HttpClientBase, IWebApiClient
         }
 
         var request = new HttpRequest();
-        request.URL = (invokeKey);
-        switch (webApiRequest.Method)
-        {
-            case HttpMethodType.Get:
-                request.Method = HttpMethod.Get;
-                break;
-            case HttpMethodType.Post:
-                request.Method = HttpMethod.Post;
-                break;
-            case HttpMethodType.Put:
-                request.Method = HttpMethod.Put;
-                break;
-            case HttpMethodType.Delete:
-                request.Method = HttpMethod.Delete;
-                break;
-            default:
-                break;
-        }
+        request.URL = invokeKey;
+        request.Method = webApiRequest.Method;
         request.InitHeaders();
         if (webApiRequest.Headers != null)
         {

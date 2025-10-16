@@ -59,24 +59,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
 
         var request = new HttpRequestMessage();
 
-        switch (webApiRequest.Method)
-        {
-            case HttpMethodType.Get:
-                request.Method = HttpMethod.Get;
-                break;
-            case HttpMethodType.Post:
-                request.Method = HttpMethod.Post;
-                break;
-            case HttpMethodType.Put:
-                request.Method = HttpMethod.Put;
-                break;
-            case HttpMethodType.Delete:
-                request.Method = HttpMethod.Delete;
-                break;
-            default:
-                break;
-        }
-
+        request.Method = new HttpMethod(webApiRequest.Method);
         if (webApiRequest.Headers != null)
         {
             foreach (var item in webApiRequest.Headers)

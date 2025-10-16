@@ -16,8 +16,6 @@ namespace TouchSocket.Sockets;
 
 public class PipeTcpClient : TcpClientBase, IPipeTcpClient
 {
-    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-
     /// <inheritdoc/>
     public PipeReader Input => base.Transport.Reader;
 
@@ -25,17 +23,9 @@ public class PipeTcpClient : TcpClientBase, IPipeTcpClient
     public PipeWriter Output => base.Transport.Writer;
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(CancellationToken cancellationToken)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
-        {
-            await this.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            this.m_semaphoreSlim.Release();
-        }
+        return this.TcpConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>

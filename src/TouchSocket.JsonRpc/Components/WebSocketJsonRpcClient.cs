@@ -31,8 +31,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     {
         this.m_jsonRpcActor = new JsonRpcActor()
         {
-            SendAction = this.SendAction,
-            SerializerConverter = this.SerializerConverter
+            SendAction = this.SendAction
         };
     }
 
@@ -42,7 +41,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; private set; }
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
 
     #region JsonRpcActor
 
@@ -74,7 +73,7 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
 
         var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
 
-        this.SerializerConverter = jsonRpcOption.SerializerConverter;
+        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>

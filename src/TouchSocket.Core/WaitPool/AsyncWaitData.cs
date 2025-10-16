@@ -30,6 +30,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     private ManualResetValueTaskSourceCore<T> m_core;
     private CancellationTokenRegistration m_registration;
     private WaitDataStatus m_status;
+    private volatile int m_isCompleted; // 0 = 未完成, 1 = 已完成
 
     /// <summary>
     /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
@@ -66,7 +67,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     public WaitDataStatus Status => this.m_status;
 
     /// <summary>
-    /// 取消当前等待，标记为已取消并触发等待任务的异常（OperationCanceledException）。
+    /// 取消当前等待，标记为已取消并触发等待任务的异常（<see cref="OperationCanceledException"/>）。
     /// </summary>
     public void Cancel()
     {
@@ -102,6 +103,12 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     /// <param name="result">要设置的完成数据。</param>
     public void Set(WaitDataStatus status, T result)
     {
+        // 使用 Interlocked 确保只设置一次
+        if (Interlocked.CompareExchange(ref this.m_isCompleted, 1, 0) != 0)
+        {
+            return; // 已经完成,直接返回
+        }
+
         this.m_status = status;
         this.m_completedData = result;
 
@@ -135,6 +142,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     {
         if (disposing)
         {
+            // 确保取消令牌已释放
             this.m_registration.Dispose();
             this.m_remove(this.Sign);
         }

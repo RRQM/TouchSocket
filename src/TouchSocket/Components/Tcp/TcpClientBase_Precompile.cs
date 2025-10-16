@@ -30,50 +30,55 @@ public partial class TcpClientBase
     /// <exception cref="TimeoutException">如果连接超时，则抛出此异常</exception>
     protected virtual async Task TcpConnectAsync(CancellationToken cancellationToken)
     {
-
         this.ThrowIfDisposed();
 
         this.ThrowIfConfigIsNull();
 
-        if (this.m_online)
-        {
-            return;
-        }
-
-        var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
-
-        var socket = this.CreateSocket(iPHost);
-
-        var args = new ConnectingEventArgs();
-        await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
+            if (this.m_online)
+            {
+                return;
+            }
+
+            var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
+
+            var socket = this.CreateSocket(iPHost);
+
+            var args = new ConnectingEventArgs();
+            await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            try
+            {
 #if NET6_0_OR_GREATER
-            await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #else
-            var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
+                var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
 
-            await task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #endif
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+
+            this.m_online = true;
+
+            this.SetSocket(socket);
+
+            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+            await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
         }
-        catch
+        finally
         {
-            socket.Dispose();
-            throw;
+            this.m_semaphoreForConnectAndClose.Release();
         }
-
-
-
-        this.m_online = true;
-
-        this.SetSocket(socket);
-
-        await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-        await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
     }
 
     #endregion Connect

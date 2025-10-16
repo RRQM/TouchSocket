@@ -14,23 +14,50 @@ using System.Net;
 
 namespace TouchSocket.Sockets;
 
+/// <summary>
+/// <see cref="TouchSocketConfig"/>的Http扩展配置。
+/// </summary>
 public static class HttpConfigExtensions
 {
+    /// <summary>
+    /// 代理属性。
+    /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<IWebProxy> ProxyProperty = new DependencyProperty<IWebProxy>("Proxy", default);
 
+    /// <summary>
+    /// 设置代理。
+    /// </summary>
+    /// <param name="config">配置对象</param>
+    /// <param name="proxyUri">代理Uri</param>
+    /// <returns>配置对象</returns>
     public static TouchSocketConfig SetProxy(this TouchSocketConfig config, Uri proxyUri)
     {
         config.SetProxy(new WebProxy(proxyUri));
         return config;
     }
 
+    /// <summary>
+    /// 设置代理。
+    /// </summary>
+    /// <param name="config">配置对象</param>
+    /// <param name="host">主机</param>
+    /// <param name="port">端口</param>
+    /// <returns>配置对象</returns>
     public static TouchSocketConfig SetProxy(this TouchSocketConfig config, string host, int port)
     {
         config.SetProxy(new WebProxy(host, port));
         return config;
     }
 
+    /// <summary>
+    /// 设置带凭证的代理。
+    /// </summary>
+    /// <param name="config">配置对象</param>
+    /// <param name="proxyUri">代理Uri</param>
+    /// <param name="username">用户名</param>
+    /// <param name="password">密码</param>
+    /// <returns>配置对象</returns>
     public static TouchSocketConfig SetProxy(this TouchSocketConfig config, Uri proxyUri, string username, string password)
     {
         config.SetProxy(new WebProxy(proxyUri)
@@ -40,6 +67,15 @@ public static class HttpConfigExtensions
         return config;
     }
 
+    /// <summary>
+    /// 设置带凭证的代理。
+    /// </summary>
+    /// <param name="config">配置对象</param>
+    /// <param name="host">主机</param>
+    /// <param name="port">端口</param>
+    /// <param name="username">用户名</param>
+    /// <param name="password">密码</param>
+    /// <returns>配置对象</returns>
     public static TouchSocketConfig SetProxy(this TouchSocketConfig config, string host, int port, string username, string password)
     {
         config.SetProxy(new WebProxy(host, port)
@@ -49,6 +85,11 @@ public static class HttpConfigExtensions
         return config;
     }
 
+    /// <summary>
+    /// 设置系统代理。
+    /// </summary>
+    /// <param name="config">配置对象</param>
+    /// <returns>配置对象</returns>
     public static TouchSocketConfig SetSystemProxy(this TouchSocketConfig config)
     {
         config.SetProxy(WebRequest.GetSystemWebProxy());

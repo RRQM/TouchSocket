@@ -25,7 +25,7 @@ public static class TouchSocketHttpUtility
     /// <value>
     /// 一个包含回车和换行字节的只读字节序列。
     /// </value>
-    public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
+    public static ReadOnlySpan<byte> CRLF => "\r\n"u8;
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "&amp;" 符号。

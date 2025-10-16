@@ -10,7 +10,7 @@ TouchSocket is Net (including C #, VB An integrated socket network communication
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
-	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="InternalVisible.cs" />
+	  
 	  <Compile Include="..\TouchSocket.Shared\Sockets\BaseTransport.cs" Link="Transports\BaseTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Common\InternalClientCollection.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Receiver\InternalReceiver.cs" />

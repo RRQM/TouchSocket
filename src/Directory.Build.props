@@ -179,5 +179,9 @@
 		<Using Include="TouchSocket.Core" />
 	</ItemGroup>
 
-
+	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsSourceGenerator)'!='True'">
+		<InternalsVisibleTo Include="XUnitTestProject" />
+		<InternalsVisibleTo Include="SimpleTest" />
+		<InternalsVisibleTo Include="SimpleTest2" />
+	</ItemGroup>
 </Project>

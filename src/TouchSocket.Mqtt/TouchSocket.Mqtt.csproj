@@ -10,7 +10,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
-	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="InternalVisible.cs" />
+	  
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>
 
