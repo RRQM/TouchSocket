@@ -46,17 +46,24 @@ public static class SocketPluginManagerExtension
     #region Reconnection
 
     /// <summary>
-    /// 使用断线重连。
+    /// 使用断线重连
     /// </summary>
-    /// <typeparam name="TClient">指定的客户端类型，必须继承自<see cref="ITcpClient"/>。</typeparam>
-    /// <param name="pluginManager">插件管理器实例，用于添加断线重连插件。</param>
-    /// <returns>返回创建的重连实例。</returns>
-    public static ReconnectionPlugin<TClient> UseReconnection<TClient>(this IPluginManager pluginManager)
+    /// <typeparam name="TClient">客户端类型,必须实现<see cref="IConnectableClient"/>,<see cref="IOnlineClient"/>和<see cref="IDependencyClient"/>接口</typeparam>
+    /// <param name="pluginManager">插件管理器实例</param>
+    /// <param name="configureOptions">配置选项的委托</param>
+    /// <returns>返回创建的重连插件实例</returns>
+    public static ReconnectionPlugin<TClient> UseReconnection<TClient>(
+        this IPluginManager pluginManager,
+        Action<ReconnectionOptions<TClient>>? configureOptions = null)
         where TClient : IConnectableClient, IOnlineClient, IDependencyClient
     {
-        var reconnectionPlugin = new ReconnectionPlugin<TClient>();
+        var options = new ReconnectionOptions<TClient>();
+        configureOptions?.Invoke(options);
+        
+        var reconnectionPlugin = new ReconnectionPlugin<TClient>(options);
         pluginManager.Add(reconnectionPlugin);
         return reconnectionPlugin;
     }
+
     #endregion Reconnection
 }

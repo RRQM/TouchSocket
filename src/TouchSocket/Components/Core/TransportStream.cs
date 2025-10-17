@@ -22,8 +22,6 @@ public class TransportStream : Stream
 {
 
     private bool m_disposed;
-    private readonly SemaphoreSlim m_writeLocker;
-    private readonly SemaphoreSlim m_readLocker;
     private readonly PipeWriter m_writer;
     private readonly PipeReader m_reader;
 
@@ -34,9 +32,6 @@ public class TransportStream : Stream
     public TransportStream(ITransport transport)
     {
         transport = ThrowHelper.ThrowArgumentNullExceptionIf(transport, nameof(transport));
-
-        this.m_writeLocker = transport.WriteLocker;
-        this.m_readLocker = transport.ReadLocker;
         this.m_writer = transport.Writer;
         this.m_reader = transport.Reader;
 
@@ -73,18 +68,10 @@ public class TransportStream : Stream
     {
         this.ThrowIfDisposed();
 
-        await this.m_writeLocker.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        var result = await this.m_writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+        if (result.IsCanceled)
         {
-            var result = await this.m_writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-            if (result.IsCanceled)
-            {
-                throw new OperationCanceledException();
-            }
-        }
-        finally
-        {
-            this.m_writeLocker.Release();
+            throw new OperationCanceledException();
         }
     }
 
@@ -109,36 +96,28 @@ public class TransportStream : Stream
         if (count == 0)
             return 0;
 
-        await this.m_readLocker.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        var result = await this.m_reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+        if (result.IsCanceled)
         {
-            var result = await this.m_reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-
-            if (result.IsCanceled)
-            {
-                throw new OperationCanceledException();
-            }
-
-            var sequence = result.Buffer;
-            var bytesToRead = (int)Math.Min(count, sequence.Length);
-
-            if (bytesToRead == 0)
-            {
-                this.m_reader.AdvanceTo(sequence.Start);
-                return result.IsCompleted ? 0 : await this.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-            }
-
-            var sliced = sequence.Slice(0, bytesToRead);
-            sliced.CopyTo(new Span<byte>(buffer, offset, bytesToRead));
-
-            this.m_reader.AdvanceTo(sliced.End);
-
-            return bytesToRead;
+            throw new OperationCanceledException();
         }
-        finally
+
+        var sequence = result.Buffer;
+        var bytesToRead = (int)Math.Min(count, sequence.Length);
+
+        if (bytesToRead == 0)
         {
-            this.m_readLocker.Release();
+            this.m_reader.AdvanceTo(sequence.Start);
+            return result.IsCompleted ? 0 : await this.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
+
+        var sliced = sequence.Slice(0, bytesToRead);
+        sliced.CopyTo(new Span<byte>(buffer, offset, bytesToRead));
+
+        this.m_reader.AdvanceTo(sliced.End);
+
+        return bytesToRead;
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
@@ -150,36 +129,28 @@ public class TransportStream : Stream
         if (buffer.Length == 0)
             return 0;
 
-        await this.m_readLocker.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        var result = await this.m_reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+        if (result.IsCanceled)
         {
-            var result = await this.m_reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-
-            if (result.IsCanceled)
-            {
-                throw new OperationCanceledException();
-            }
-
-            var sequence = result.Buffer;
-            var bytesToRead = (int)Math.Min(buffer.Length, sequence.Length);
-
-            if (bytesToRead == 0)
-            {
-                this.m_reader.AdvanceTo(sequence.Start);
-                return result.IsCompleted ? 0 : await this.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-            }
-
-            var sliced = sequence.Slice(0, bytesToRead);
-            sliced.CopyTo(buffer.Span);
-
-            this.m_reader.AdvanceTo(sliced.End);
-
-            return bytesToRead;
+            throw new OperationCanceledException();
         }
-        finally
+
+        var sequence = result.Buffer;
+        var bytesToRead = (int)Math.Min(buffer.Length, sequence.Length);
+
+        if (bytesToRead == 0)
         {
-            this.m_readLocker.Release();
+            this.m_reader.AdvanceTo(sequence.Start);
+            return result.IsCompleted ? 0 : await this.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
+
+        var sliced = sequence.Slice(0, bytesToRead);
+        sliced.CopyTo(buffer.Span);
+
+        this.m_reader.AdvanceTo(sliced.End);
+
+        return bytesToRead;
     }
 #endif
 
@@ -224,23 +195,15 @@ public class TransportStream : Stream
         if (count == 0)
             return;
 
-        await this.m_writeLocker.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            var memory = this.m_writer.GetMemory(count);
-            var source = new ReadOnlySpan<byte>(buffer, offset, count);
-            source.CopyTo(memory.Span);
-            this.m_writer.Advance(count);
+        var memory = this.m_writer.GetMemory(count);
+        var source = new ReadOnlySpan<byte>(buffer, offset, count);
+        source.CopyTo(memory.Span);
+        this.m_writer.Advance(count);
 
-            var result = await this.m_writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-            if (result.IsCanceled)
-            {
-                throw new OperationCanceledException();
-            }
-        }
-        finally
+        var result = await this.m_writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+        if (result.IsCanceled)
         {
-            this.m_writeLocker.Release();
+            throw new OperationCanceledException();
         }
     }
 
@@ -253,18 +216,10 @@ public class TransportStream : Stream
         if (buffer.Length == 0)
             return;
 
-        await this.m_writeLocker.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        var result = await this.m_writer.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (result.IsCanceled)
         {
-            var result = await this.m_writer.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-            if (result.IsCanceled)
-            {
-                throw new OperationCanceledException();
-            }
-        }
-        finally
-        {
-            this.m_writeLocker.Release();
+            throw new OperationCanceledException();
         }
     }
 #endif

@@ -84,7 +84,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static ReadOnlyMemory<bool> ReadCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity)
     {
-        return master.ReadCoils(slaveId, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadCoilsAsync(slaveId, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static ReadOnlyMemory<bool> ReadDiscreteInputs(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity)
     {
-        return master.ReadDiscreteInputs(slaveId, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadDiscreteInputsAsync(slaveId, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse ReadHoldingRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity)
     {
-        return master.ReadHoldingRegisters(slaveId, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadHoldingRegistersAsync(slaveId, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse ReadInputRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity)
     {
-        return master.ReadInputRegisters(slaveId, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadInputRegistersAsync(slaveId, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Read 默认超时
@@ -199,7 +199,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteMultipleCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, ReadOnlyMemory<bool> values)
     {
-        return master.WriteMultipleCoils(slaveId, startingAddress, values, 1000, CancellationToken.None);
+        return master.WriteMultipleCoilsAsync(slaveId, startingAddress, values, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -212,7 +212,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
-        return master.WriteMultipleRegisters(slaveId, startingAddress, bytes, 1000, CancellationToken.None);
+        return master.WriteMultipleRegistersAsync(slaveId, startingAddress, bytes, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -225,7 +225,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleCoil(this IModbusMaster master, byte slaveId, ushort startingAddress, bool value)
     {
-        return master.WriteSingleCoil(slaveId, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleCoilAsync(slaveId, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -238,7 +238,7 @@ public static class ModbusMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleRegister(this IModbusMaster master, byte slaveId, ushort startingAddress, short value)
     {
-        return master.WriteSingleRegister(slaveId, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleRegisterAsync(slaveId, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Write 默认超时
@@ -312,7 +312,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadCoils, startingAddress, quantity);
 
-        var response = master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        var response = master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
         return TouchSocketBitConverter.Default.ToValues<bool>(response.Data.Span).Slice(0, quantity);
     }
 
@@ -331,7 +331,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadDiscreteInputs, startingAddress, quantity);
 
-        var response = master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        var response = master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
         return TouchSocketBitConverter.Default.ToValues<bool>(response.Data.Span).Slice(0, quantity);
     }
 
@@ -350,7 +350,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadHoldingRegisters, startingAddress, quantity);
 
-        var response = master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        var response = master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
         return response;
     }
 
@@ -369,7 +369,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadInputRegisters, startingAddress, quantity);
 
-        var response = master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        var response = master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
         return response;
     }
 
@@ -471,7 +471,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(values.Span);
 
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -490,7 +490,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(bytes);
 
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -509,7 +509,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -528,7 +528,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -547,7 +547,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     #endregion Write
@@ -667,7 +667,7 @@ public static class ModbusMasterExtension
         request.ReadStartAddress = startingAddressForRead;
         request.ReadQuantity = quantityForRead;
         request.SetValue(bytes);
-        return master.SendModbusRequest(request, millisecondsTimeout, cancellationToken);
+        return master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <summary>

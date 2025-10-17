@@ -130,16 +130,18 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
         }
         var methodSymbol = invocationOperation.TargetMethod;
 
-        // 1. 检测目标框架
-        if (!context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
-        {
-            return;
-        }
+        //取消任何框架的限制
 
-        if (!IsTargetFrameworkValid(targetFramework))
-        {
-            return;
-        }
+        //// 1. 检测目标框架
+        //if (!context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
+        //{
+        //    return;
+        //}
+
+        //if (!IsTargetFrameworkValid(targetFramework))
+        //{
+        //    return;
+        //}
 
         if (methodSymbol.HasAttribute(AsyncToSyncWarningAttribute))
         {
