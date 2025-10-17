@@ -236,8 +236,10 @@ internal class Program
         config.SetRemoteIPHost("127.0.0.1:502");
         config.ConfigurePlugins(a =>
         {
-            a.UseReconnection<ModbusTcpMaster>()
-                .SetPollingTick(TimeSpan.FromSeconds(1));
+            a.UseReconnection<ModbusTcpMaster>(options =>
+            {
+                options.PollingInterval = TimeSpan.FromSeconds(1);
+            });
         });
 
         await client.SetupAsync(config);

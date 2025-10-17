@@ -51,8 +51,10 @@ internal class Program
         #region Http客户端启用断线重连
         config.ConfigurePlugins(a =>
         {
-            a.UseReconnection<HttpClient>()
-            .SetPollingTick(TimeSpan.FromSeconds(1));
+            a.UseReconnection<HttpClient>(options =>
+            {
+                options.PollingInterval = TimeSpan.FromSeconds(1);
+            });
         });
         #endregion
 
