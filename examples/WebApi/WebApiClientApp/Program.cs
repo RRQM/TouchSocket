@@ -53,7 +53,7 @@ internal class Program
             var sum2 = await client.InvokeTAsync<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
-            var sum3 =await client.TestPostAsync(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
+            var sum3 = await client.TestPostAsync(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
             Console.WriteLine($"代理调用成功，结果：{sum3}");
         }
 
@@ -66,7 +66,7 @@ internal class Program
             var sum2 = await client.InvokeTAsync<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
-            var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
+            var sum3 = client.TestPostAsync(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
             Console.WriteLine($"代理调用成功，结果：{sum3}");
         }
 

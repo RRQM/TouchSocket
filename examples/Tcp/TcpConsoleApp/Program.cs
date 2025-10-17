@@ -210,9 +210,9 @@ internal class Program
         #endregion
 
         #region 服务器通过SessionClient重置Id
-        if (service.TryGetClient("oldId",out var sessionClient))
+        if (service.TryGetClient("oldId", out var sessionClient))
         {
-           await sessionClient.ResetIdAsync("newId");
+            await sessionClient.ResetIdAsync("newId");
         }
         #endregion
     }
@@ -299,8 +299,10 @@ internal class Program
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseReconnection<TcpClient>()
-                    .SetPollingTick(TimeSpan.FromSeconds(1));
+                    a.UseReconnection<TcpClient>(options =>
+                    {
+                        options.PollingInterval = TimeSpan.FromSeconds(1);
+                    });
                 })
                 .ConfigureContainer(a =>
                 {
@@ -333,8 +335,10 @@ internal class Program
                 .SetRemoteIPHost(new IPHost("[::1]:7791"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseReconnection<TcpClient>()
-                    .SetPollingTick(TimeSpan.FromSeconds(1));
+                    a.UseReconnection<TcpClient>(options =>
+                    {
+                        options.PollingInterval = TimeSpan.FromSeconds(1);
+                    });
                 })
                 .ConfigureContainer(a =>
                 {
@@ -360,8 +364,10 @@ internal class Program
         #region Tcp客户端启用断线重连
               .ConfigurePlugins(a =>
               {
-                  a.UseReconnection<TcpClient>()
-                  .SetPollingTick(TimeSpan.FromSeconds(1));//轮询间隔
+                  a.UseReconnection<TcpClient>(options =>
+                  {
+                      options.PollingInterval = TimeSpan.FromSeconds(1);
+                  });
               }));
         #endregion
         await client.ConnectAsync();//调用连接
@@ -383,8 +389,10 @@ internal class Program
               .SetRemoteIPHost("127.0.0.1:7789")
               .ConfigurePlugins(a =>
               {
-                  a.UseReconnection<TcpClient>()
-                  .SetPollingTick(TimeSpan.FromSeconds(1));
+                  a.UseReconnection<TcpClient>(options =>
+                  {
+                      options.PollingInterval = TimeSpan.FromSeconds(1);
+                  });
               }));
 
         await tcpClient.ConnectAsync();//调用连接
@@ -692,7 +700,7 @@ internal class CloseException : Exception
 }
 
 #region Tcp服务器连接时以IPPort作为Id
-class InitIdPluginWithIpPort : PluginBase, ITcpConnectingPlugin
+internal class InitIdPluginWithIpPort : PluginBase, ITcpConnectingPlugin
 {
     public async Task OnTcpConnecting(ITcpSession client, ConnectingEventArgs e)
     {
