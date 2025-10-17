@@ -31,6 +31,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     private CancellationTokenRegistration m_registration;
     private WaitDataStatus m_status;
     private volatile int m_isCompleted; // 0 = 未完成, 1 = 已完成
+    private readonly Action m_cancel;
 
     /// <summary>
     /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
@@ -44,6 +45,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
         this.m_remove = remove;
         this.m_pendingData = pendingData;
         this.m_core.RunContinuationsAsynchronously = true; // 确保续体异步执行，避免潜在的栈内联执行问题
+        this.m_cancel = this.Cancel;
     }
 
     /// <summary>
@@ -121,7 +123,6 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
             this.m_core.SetResult(result);
         }
     }
-
     /// <summary>
     /// 异步等待此项完成，返回一个 <see cref="ValueTask{WaitDataStatus}"/>，可传入取消令牌以取消等待。
     /// </summary>
@@ -131,7 +132,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     {
         if (cancellationToken.CanBeCanceled)
         {
-            this.m_registration = cancellationToken.Register(this.Cancel);
+            this.m_registration = cancellationToken.Register(m_cancel);
         }
 
         return new ValueTask<WaitDataStatus>(this, this.m_core.Version);
