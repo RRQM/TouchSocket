@@ -62,7 +62,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static ReadOnlyMemory<bool> ReadCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadCoils(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static ReadOnlyMemory<bool> ReadDiscreteInputs(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadDiscreteInputs(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse ReadHoldingRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadHoldingRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadHoldingRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse ReadInputRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadInputRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadInputRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Read 默认超时
@@ -169,7 +169,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<bool> values)
     {
-        return master.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
+        return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
-        return master.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
+        return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
     {
-        return master.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
     {
-        return master.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Write 默认超时

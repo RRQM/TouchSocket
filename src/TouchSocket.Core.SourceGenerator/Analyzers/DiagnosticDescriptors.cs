@@ -81,8 +81,8 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor m_rule_CodeAnalysis0001 = new DiagnosticDescriptor(
 "CodeAnalysis0001",
 "判断该方法是不是由异步转为的同步",
-"方法{0}是由异步转为的同步，这在net6.0及以上平台使用时并不推荐，请使用{0}Async代替。",
-"CodeAnalysis", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+"方法{0}是由异步转为的同步，这可能会导致死锁。请使用{0}Async代替。该方法将在正式发布时删除。",
+"CodeAnalysis", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor m_rule_CodeAnalysis0002 = new DiagnosticDescriptor(
 "CodeAnalysis0002",
