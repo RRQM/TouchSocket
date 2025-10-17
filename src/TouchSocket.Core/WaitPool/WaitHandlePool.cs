@@ -86,7 +86,7 @@ public sealed class WaitHandlePool<T>
         {
             result.Sign = GetSign();
         }
-        var waitData =AsyncWaitData<T>.GetOrCreate(m_remove, result.Sign, result);
+        var waitData = AsyncWaitData<T>.GetOrCreate(m_remove, result.Sign, result);
         if (!m_waitDic.TryAdd(result.Sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{result.Sign}' is already in use.");
@@ -108,7 +108,7 @@ public sealed class WaitHandlePool<T>
     public AsyncWaitData<T> GetWaitDataAsync(out int sign)
     {
         sign = GetSign();
-        var waitData =AsyncWaitData<T>.GetOrCreate(m_remove, sign, default);
+        var waitData = AsyncWaitData<T>.GetOrCreate(m_remove, sign, default);
         if (!m_waitDic.TryAdd(sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{sign}' is already in use.");

@@ -53,11 +53,11 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     /// <param name="sign">此等待项对应的签名（用于在池中查找）。</param>
     /// <param name="remove">完成或释放时调用的回调，用于将此实例从等待池中移除。</param>
     /// <param name="pendingData">可选的挂起数据，当创建时可以携带一个初始占位数据。</param>
-    private AsyncWaitData(int sign, Action<int> remove,  T pendingData)
+    private AsyncWaitData(int sign, Action<int> remove, T pendingData)
     {
         this.Sign = sign;
         this.m_remove = remove;
-     
+
         this.m_pendingData = pendingData;
         this.m_core.RunContinuationsAsynchronously = true;
         this.m_cancel = this.Cancel;
