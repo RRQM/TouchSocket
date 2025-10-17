@@ -77,32 +77,33 @@ public partial class Form1 : Form
                 .SetMaxFailCount(3);
 
                 //使用重连
-                a.UseReconnection<TcpDmtpClient>()
-                .SetPollingTick(TimeSpan.FromSeconds(3))
-                .SetActionForCheck(async (c, i) =>//重新定义检活策略
+                a.UseReconnection<TcpDmtpClient>(options =>
                 {
-                    //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用
-                    //await Task.CompletedTask;//消除Task
-                    //return c.IsConnected;//判断是否在握手状态
-
-                    //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
-                    if ((await c.PingAsync()).IsSuccess)
+                    options.PollingInterval = TimeSpan.FromSeconds(3);
+                    options.CheckAction = async (c, i) =>//重新定义检活策略
                     {
-                        return  ConnectionCheckResult.Alive;
-                    }
-                    //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
-                    else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
-                    {
-                        return  ConnectionCheckResult.Skip;
-                    }
-                    //否则，直接重连。
-                    else
-                    {
-                        return  ConnectionCheckResult.Dead;
-                    }
+                        //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用
+                        //await Task.CompletedTask;//消除Task
+                        //return c.IsConnected;//判断是否在握手状态
+                        //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
+                        if ((await c.PingAsync()).IsSuccess)
+                        {
+                            return ConnectionCheckResult.Alive;
+                        }
+                        //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
+                        else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
+                        {
+                            return ConnectionCheckResult.Skip;
+                        }
+                        //否则，直接重连。
+                        else
+                        {
+                            return ConnectionCheckResult.Dead;
+                        }
+                    };
                 });
             })
-            .SetDmtpOption(options=>
+            .SetDmtpOption(options =>
             {
                 options.VerifyToken = "Rpc";
                 options.Id = "asdasd";
