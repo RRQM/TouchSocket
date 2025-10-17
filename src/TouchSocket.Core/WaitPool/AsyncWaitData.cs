@@ -132,7 +132,7 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     {
         if (cancellationToken.CanBeCanceled)
         {
-            this.m_registration = cancellationToken.Register(m_cancel);
+            this.m_registration = cancellationToken.Register(this.m_cancel);
         }
 
         return new ValueTask<WaitDataStatus>(this, this.m_core.Version);
