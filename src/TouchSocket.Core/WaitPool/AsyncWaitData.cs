@@ -10,6 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Core;
@@ -22,17 +23,20 @@ namespace TouchSocket.Core;
 /// 此类用于在等待池中挂起并等待特定签名的数据到达。它使用 <see cref="ManualResetValueTaskSourceCore{TResult}"/>
 /// 来实现高性能的 ValueTask 等待，并通过构造时传入的 <see cref="Action{Int32}"/> 回调在释放时将自身从池中移除。
 /// </remarks>
-public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataStatus>
+public sealed class AsyncWaitData<T> : IValueTaskSource<WaitDataStatus>, IDisposable
 {
-    private T m_pendingData;
-    private readonly Action<AsyncWaitData<T>> m_remove;
+    private readonly Action m_cancel;
+    private readonly Action<int> m_remove;
     private T m_completedData;
     private ManualResetValueTaskSourceCore<T> m_core;
+    private volatile int m_isCompleted;
+    private T m_pendingData;
     private CancellationTokenRegistration m_registration;
-    private WaitDataStatus m_status;
-    private volatile int m_isCompleted; // 0 = 未完成, 1 = 已完成
-    private readonly Action m_cancel;
 
+    // 0 = 未完成, 1 = 已完成
+    private int m_sign;
+
+    private WaitDataStatus m_status;
 
     /// <summary>
     /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
@@ -40,9 +44,9 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
     /// <param name="sign">此等待项对应的签名（用于在池中查找）。</param>
     /// <param name="remove">完成或释放时调用的回调，用于将此实例从等待池中移除。</param>
     /// <param name="pendingData">可选的挂起数据，当创建时可以携带一个初始占位数据。</param>
-    internal AsyncWaitData(int sign, Action<AsyncWaitData<T>> remove, T pendingData)
+    internal AsyncWaitData(int sign, Action<int> remove, T pendingData)
     {
-        this.Sign = sign;
+        this.m_sign = sign;
         this.m_remove = remove;
 
         this.m_pendingData = pendingData;
@@ -63,7 +67,7 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
     /// <summary>
     /// 获取此等待项的签名标识。
     /// </summary>
-    public int Sign { get; private set; }
+    public int Sign => this.m_sign;
 
     /// <summary>
     /// 获取当前等待状态（例如：Success、Canceled 等）。
@@ -76,6 +80,18 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
     public void Cancel()
     {
         this.Set(WaitDataStatus.Canceled, default!);
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        // 确保取消令牌已释放
+        this.m_registration.Dispose();
+        this.m_registration = default;
+
+        var sign = this.m_sign;
+        this.Clear();
+        this.m_remove(sign);
     }
 
     WaitDataStatus IValueTaskSource<WaitDataStatus>.GetResult(short token)
@@ -125,6 +141,7 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
             this.m_core.SetResult(result);
         }
     }
+
     /// <summary>
     /// 异步等待此项完成，返回一个 <see cref="ValueTask{WaitDataStatus}"/>，可传入取消令牌以取消等待。
     /// </summary>
@@ -132,11 +149,6 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
     /// <returns>表示等待状态的 ValueTask。</returns>
     public ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken = default)
     {
-        if (this.m_registration != default)
-        {
-            this.m_registration.Dispose();
-            this.m_registration = default;
-        }
         if (cancellationToken.CanBeCanceled)
         {
             this.m_registration = cancellationToken.Register(this.m_cancel);
@@ -145,37 +157,19 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
         return new ValueTask<WaitDataStatus>(this, this.m_core.Version);
     }
 
-    /// <summary>
-    /// 重置以便复用
-    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Clear()
+    {
+        this.m_pendingData = default;
+        this.m_completedData = default;
+        this.m_status = WaitDataStatus.Default;
+        this.m_isCompleted = 0;
+    }
+
     internal void Reset(int sign, T pendingData)
     {
-        this.m_isCompleted = 0;
-        this.m_status = default;
-        this.m_completedData = default!;
         this.m_pendingData = pendingData;
-        this.Sign = sign;
+        this.m_sign = sign;
         this.m_core.Reset();
     }
-
-    /// <summary>
-    /// 析构释放
-    /// </summary>
-    ~AsyncWaitData()
-    {
-        Dispose();
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        // 确保取消令牌已释放
-        this.m_registration.Dispose();
-        this.m_registration = default;
-        this.m_remove(this);
-        GC.SuppressFinalize(this);
-    }
-
-
-
 }

@@ -29,10 +29,10 @@ public sealed class WaitHandlePool<T>
 {
     private readonly int m_maxSign;
     private readonly int m_minSign;
-    private readonly Action<AsyncWaitData<T>> m_remove;
+    private readonly Action<int> m_remove;
     private readonly ConcurrentDictionary<int, AsyncWaitData<T>> m_waitDic = new();
+    private readonly ConcurrentStack<AsyncWaitData<T>> s_pool = new();
     private int m_currentSign;
-    private readonly ConcurrentStack<AsyncWaitData<T>> m_pool = new();
 
     /// <summary>
     /// 初始化<see cref="WaitHandlePool{T}"/>类的新实例。
@@ -51,16 +51,17 @@ public sealed class WaitHandlePool<T>
         this.m_remove = this.Remove;
     }
 
-
-    internal AsyncWaitData<T> GetOrCreate(Action<AsyncWaitData<T>> remove, int sign, T pending)
+    private AsyncWaitData<T> GetOrCreate(int sign, T pending)
     {
-        if (m_pool.TryPop(out var item))
+        if (this.s_pool.TryPop(out var item))
         {
             item.Reset(sign, pending);
             return item;
         }
-        return new AsyncWaitData<T>(sign, remove, pending);
+        return new AsyncWaitData<T>(sign, this.m_remove, pending);
     }
+
+
     /// <summary>
     /// 取消池中所有等待操作。
     /// </summary>
@@ -78,11 +79,6 @@ public sealed class WaitHandlePool<T>
                 item.Cancel();
             }
         }
-
-        while (m_pool.TryPop(out var item))
-        {
-            item.Cancel();
-        }
     }
 
     /// <summary>
@@ -98,12 +94,14 @@ public sealed class WaitHandlePool<T>
     /// </remarks>
     public AsyncWaitData<T> GetWaitDataAsync(T result, bool autoSign = true)
     {
+        var sign = result.Sign;
         if (autoSign)
         {
-            result.Sign = GetSign();
+            sign = this.GetSign();
+            result.Sign = sign;
         }
-        var waitData = GetOrCreate(m_remove, result.Sign, result);
-        if (!m_waitDic.TryAdd(result.Sign, waitData))
+        var waitData = this.GetOrCreate(sign, result);
+        if (!this.m_waitDic.TryAdd(sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{result.Sign}' is already in use.");
         }
@@ -123,9 +121,9 @@ public sealed class WaitHandlePool<T>
     /// </remarks>
     public AsyncWaitData<T> GetWaitDataAsync(out int sign)
     {
-        sign = GetSign();
-        var waitData = GetOrCreate(m_remove, sign, default);
-        if (!m_waitDic.TryAdd(sign, waitData))
+        sign = this.GetSign();
+        var waitData = this.GetOrCreate(sign, default);
+        if (!this.m_waitDic.TryAdd(sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{sign}' is already in use.");
         }
@@ -144,7 +142,7 @@ public sealed class WaitHandlePool<T>
     /// </remarks>
     public bool Set(T result)
     {
-        if (this.m_waitDic.TryRemove(result.Sign, out var waitDataAsync))
+        if (this.m_waitDic.TryGetValue(result.Sign, out var waitDataAsync))
         {
             waitDataAsync.Set(result);
             return true;
@@ -194,15 +192,16 @@ public sealed class WaitHandlePool<T>
     /// <summary>
     /// 从池中移除指定签名的等待数据。
     /// </summary>
-    /// <param name="waitData">要移除的等待类。</param>
+    /// <param name="sign">要移除的签名。</param>
     /// <remarks>
     /// 此方法由等待数据在释放时自动调用，确保池中不会保留已完成或已取消的等待对象。
     /// </remarks>
-    private void Remove(AsyncWaitData<T> waitData)
+    private void Remove(int sign)
     {
-        this.m_waitDic.TryRemove(waitData.Sign, out _);
-        this.m_pool.Push(waitData);
+        if (this.m_waitDic.TryRemove(sign, out var asyncWaitData))
+        {
+            this.s_pool.Push(asyncWaitData);
+        }
     }
-
 
 }
