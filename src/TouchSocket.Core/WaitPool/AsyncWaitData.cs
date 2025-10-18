@@ -10,7 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.Collections.Concurrent;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Core;
@@ -23,10 +22,10 @@ namespace TouchSocket.Core;
 /// 此类用于在等待池中挂起并等待特定签名的数据到达。它使用 <see cref="ManualResetValueTaskSourceCore{TResult}"/>
 /// 来实现高性能的 ValueTask 等待，并通过构造时传入的 <see cref="Action{Int32}"/> 回调在释放时将自身从池中移除。
 /// </remarks>
-public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDataStatus>
+public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataStatus>
 {
     private T m_pendingData;
-    private readonly Action<int> m_remove;
+    private readonly Action<AsyncWaitData<T>> m_remove;
     private T m_completedData;
     private ManualResetValueTaskSourceCore<T> m_core;
     private CancellationTokenRegistration m_registration;
@@ -35,25 +34,13 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     private readonly Action m_cancel;
 
 
-    private static readonly ConcurrentQueue<AsyncWaitData<T>> m_pool = new();
-
-    internal static AsyncWaitData<T> GetOrCreate(Action<int> remove, int sign, T pending)
-    {
-        if (m_pool.TryDequeue(out var item))
-        {
-            item.Reset(sign, pending);
-            return item;
-        }
-        return new AsyncWaitData<T>(sign, remove, pending);
-    }
-
     /// <summary>
     /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
     /// </summary>
     /// <param name="sign">此等待项对应的签名（用于在池中查找）。</param>
     /// <param name="remove">完成或释放时调用的回调，用于将此实例从等待池中移除。</param>
     /// <param name="pendingData">可选的挂起数据，当创建时可以携带一个初始占位数据。</param>
-    private AsyncWaitData(int sign, Action<int> remove, T pendingData)
+    internal AsyncWaitData(int sign, Action<AsyncWaitData<T>> remove, T pendingData)
     {
         this.Sign = sign;
         this.m_remove = remove;
@@ -145,6 +132,11 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     /// <returns>表示等待状态的 ValueTask。</returns>
     public ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken = default)
     {
+        if (this.m_registration != default)
+        {
+            this.m_registration.Dispose();
+            this.m_registration = default;
+        }
         if (cancellationToken.CanBeCanceled)
         {
             this.m_registration = cancellationToken.Register(this.m_cancel);
@@ -166,17 +158,22 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
         this.m_core.Reset();
     }
 
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    /// <summary>
+    /// 析构释放
+    /// </summary>
+    ~AsyncWaitData()
     {
-        if (disposing)
-        {
-            // 确保取消令牌已释放
-            this.m_registration.Dispose();
-            this.m_remove(this.Sign);
-            m_pool.Enqueue(this);
-        }
-        base.Dispose(disposing);
+        Dispose();
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        // 确保取消令牌已释放
+        this.m_registration.Dispose();
+        this.m_registration = default;
+        this.m_remove(this);
+        GC.SuppressFinalize(this);
     }
 
 
