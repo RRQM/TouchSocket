@@ -84,15 +84,15 @@ public sealed class WaitHandlePool<T>
     {
         if (autoSign)
         {
-            result.Sign = this.GetSign();
+            result.Sign = GetSign();
         }
-        var waitDataAsyncSlim = new AsyncWaitData<T>(result.Sign, this.m_remove, result);
-
-        if (!this.m_waitDic.TryAdd(result.Sign, waitDataAsyncSlim))
+        var waitData = AsyncWaitData<T>.GetOrCreate(m_remove, result.Sign, result);
+        if (!m_waitDic.TryAdd(result.Sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{result.Sign}' is already in use.");
         }
-        return waitDataAsyncSlim;
+        return waitData;
+
     }
 
     /// <summary>
@@ -107,13 +107,13 @@ public sealed class WaitHandlePool<T>
     /// </remarks>
     public AsyncWaitData<T> GetWaitDataAsync(out int sign)
     {
-        sign = this.GetSign();
-        var waitDataAsyncSlim = new AsyncWaitData<T>(sign, this.m_remove, default);
-        if (!this.m_waitDic.TryAdd(sign, waitDataAsyncSlim))
+        sign = GetSign();
+        var waitData = AsyncWaitData<T>.GetOrCreate(m_remove, sign, default);
+        if (!m_waitDic.TryAdd(sign, waitData))
         {
             ThrowHelper.ThrowInvalidOperationException($"The sign '{sign}' is already in use.");
         }
-        return waitDataAsyncSlim;
+        return waitData;
     }
 
     /// <summary>
@@ -186,4 +186,8 @@ public sealed class WaitHandlePool<T>
     {
         this.m_waitDic.TryRemove(sign, out _);
     }
+
+
+
+
 }
