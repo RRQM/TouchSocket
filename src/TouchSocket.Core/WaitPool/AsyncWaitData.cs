@@ -23,7 +23,7 @@ namespace TouchSocket.Core;
 /// 此类用于在等待池中挂起并等待特定签名的数据到达。它使用 <see cref="ManualResetValueTaskSourceCore{TResult}"/>
 /// 来实现高性能的 ValueTask 等待，并通过构造时传入的 <see cref="Action{Int32}"/> 回调在释放时将自身从池中移除。
 /// </remarks>
-public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDataStatus>
+public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataStatus>
 {
     private T m_pendingData;
     private readonly Action<int> m_remove;
@@ -145,6 +145,11 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     /// <returns>表示等待状态的 ValueTask。</returns>
     public ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken = default)
     {
+        if (this.m_registration != default)
+        {
+            this.m_registration.Dispose();
+            this.m_registration = default;
+        }
         if (cancellationToken.CanBeCanceled)
         {
             this.m_registration = cancellationToken.Register(this.m_cancel);
@@ -167,16 +172,13 @@ public sealed class AsyncWaitData<T> : DisposableObject, IValueTaskSource<WaitDa
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
-        {
-            // 确保取消令牌已释放
-            this.m_registration.Dispose();
-            this.m_remove(this.Sign);
-            m_pool.Enqueue(this);
-        }
-        base.Dispose(disposing);
+        // 确保取消令牌已释放
+        this.m_registration.Dispose();
+        this.m_registration = default;
+        this.m_remove(this.Sign);
+        m_pool.Enqueue(this);
     }
 
 
