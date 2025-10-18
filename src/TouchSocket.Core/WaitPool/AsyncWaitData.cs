@@ -158,6 +158,14 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
         this.m_core.Reset();
     }
 
+    /// <summary>
+    /// 析构释放
+    /// </summary>
+    ~AsyncWaitData()
+    {
+        Dispose();
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {
@@ -165,6 +173,7 @@ public sealed class AsyncWaitData<T> : IDisposable, IValueTaskSource<WaitDataSta
         this.m_registration.Dispose();
         this.m_registration = default;
         this.m_remove(this);
+        GC.SuppressFinalize(this);
     }
 
 

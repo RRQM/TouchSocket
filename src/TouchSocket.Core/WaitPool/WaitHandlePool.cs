@@ -78,6 +78,11 @@ public sealed class WaitHandlePool<T>
                 item.Cancel();
             }
         }
+
+        while (m_pool.TryPop(out var item))
+        {
+            item.Cancel();
+        }
     }
 
     /// <summary>
@@ -198,8 +203,6 @@ public sealed class WaitHandlePool<T>
         this.m_waitDic.TryRemove(waitData.Sign, out _);
         this.m_pool.Push(waitData);
     }
-
-
 
 
 }
