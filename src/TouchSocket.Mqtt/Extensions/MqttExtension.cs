@@ -68,6 +68,22 @@ public static class MqttExtension
         return str;
     }
 
+    public static ReadOnlyMemory<byte> ReadMqttInt16Memory<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+
+    {
+        var length = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        if (length == 0)
+        {
+            return ReadOnlyMemory<byte>.Empty;
+        }
+        var span = reader.GetSpan(length).Slice(0, length);
+        var memory = new byte[length];
+        span.CopyTo(memory);
+        reader.Advance(length);
+        return new ReadOnlyMemory<byte>(memory);
+    }
+
     /// <summary>
     /// 从字节读取器中读取MQTT可变字节整数。
     /// </summary>
@@ -134,7 +150,26 @@ public static class MqttExtension
         writer.Advance(2);
 
         WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
-        var lastPos = writer.WrittenCount;
+        var len = writer.WrittenCount - pos - 2;
+        span.WriteValue<ushort>((ushort)len, EndianType.Big);
+        return (ushort)len;
+    }
+
+    /// <summary>
+    /// 以MQTT Int16格式将二进制数据写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">字节写入器类型，需实现<see cref="IBytesWriter"/>接口。</typeparam>
+    /// <param name="writer">要写入的字节写入器。</param>
+    /// <param name="value">要写入的二进制数据。</param>
+    /// <returns>写入的字节长度。</returns>
+    public static ushort WriteMqttInt16Memory<TWriter>(ref TWriter writer, ReadOnlyMemory<byte> value)
+        where TWriter : IBytesWriter
+
+    {
+        var pos = writer.WrittenCount;
+        var span = writer.GetSpan(2);
+        writer.Advance(2);
+        writer.Write(value.Span);
         var len = writer.WrittenCount - pos - 2;
         span.WriteValue<ushort>((ushort)len, EndianType.Big);
         return (ushort)len;

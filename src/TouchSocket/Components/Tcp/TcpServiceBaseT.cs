@@ -146,9 +146,9 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         try
         {
             var optionList = new List<TcpListenOption>();
-            if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is Action<List<TcpListenOption>> action)
+            if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is List<TcpListenOption> list)
             {
-                action.Invoke(optionList);
+                optionList.AddRange(list);
             }
 
             var iPHosts = this.Config.GetValue(TouchSocketConfigExtension.ListenIPHostsProperty);
@@ -361,11 +361,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         try
         {
             client = this.NewClient();
-            if (monitor.Option.NoDelay.HasValue)
-            {
-                socket.NoDelay = monitor.Option.NoDelay.Value;
-            }
-
+            socket.NoDelay = monitor.Option.NoDelay;
             tcpCore.Reset(socket);
 
             this.ClientInitialized(client);

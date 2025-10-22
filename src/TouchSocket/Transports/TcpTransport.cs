@@ -115,11 +115,24 @@ internal sealed class TcpTransport : BaseTransport
         try
         {
             var socket = this.m_socket;
-            if (!socket.Connected)
+            if (socket == null)
             {
                 return Result.Success;
             }
-            socket.Shutdown(SocketShutdown.Both);
+
+            try
+            {
+                socket.Shutdown(SocketShutdown.Both);
+            }
+            catch (SocketException)
+            {
+                // Socket已经断开或未连接,忽略此异常
+            }
+            catch (ObjectDisposedException)
+            {
+                // Socket已经被释放,忽略此异常
+            }
+
             socket.Close();
             return Result.Success;
         }

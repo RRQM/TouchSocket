@@ -18,6 +18,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 {
     private readonly MqttBroker m_mqttBroker;
     private MqttSessionActor m_mqttActor;
+    private bool m_cleanSession;
 
     public MqttTcpSessionClient(MqttBroker mqttBroker)
     {
@@ -69,7 +70,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 
     #endregion MqttActor
 
-    public bool CleanSession { get; private set; }
+    public bool CleanSession => this.m_cleanSession;
     public MqttSessionActor MqttActor => this.m_mqttActor;
 
     /// <inheritdoc/>
@@ -83,15 +84,11 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
             mqttActor.Connected = null;
             mqttActor.MessageArrived = null;
             mqttActor.Closing = null;
+            await mqttActor.Deactivate().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (this.CleanSession)
             {
                 this.m_mqttBroker.RemoveMqttSessionActor(mqttActor);
             }
-            else
-            {
-                mqttActor.Deactivate();
-            }
-
             await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Manual, e.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -117,7 +114,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
                     return;
                 }
 
-                this.CleanSession = mqttConnectMessage.CleanSession;
+                this.m_cleanSession = mqttConnectMessage.CleanSession;
                 var actor = this.m_mqttBroker.GetOrCreateMqttSessionActor(mqttConnectMessage.ClientId);
 
                 actor.OutputSendAsync = this.PrivateMqttOnSend;
@@ -125,11 +122,11 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
                 actor.Connected = this.PrivateMqttOnConnected;
                 actor.MessageArrived = this.PrivateMqttOnMessageArrived;
                 actor.Closing = this.PrivateMqttOnClosing;
-                actor.Activate();
+                actor.Activate(mqttConnectMessage);
                 this.m_mqttActor = actor;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IMqttReceivingPlugin), this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseIMqttReceivingPluginAsync(this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }

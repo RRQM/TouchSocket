@@ -59,7 +59,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
         this.WillMessageExpiryInterval = options.WillMessageExpiryInterval;
         this.WillPayloadFormatIndicator = options.WillPayloadFormatIndicator;
 
-        this.WillMessage = options.WillMessage;
+        this.WillPayload = options.WillPayload;
         this.WillTopic = options.WillTopic;
 
         foreach (var item in options.UserProperties.GetSafeEnumerator())
@@ -163,7 +163,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
         if (this.WillFlag)
         {
             MqttExtension.WriteMqttInt16String(ref writer, this.WillTopic);
-            MqttExtension.WriteMqttInt16String(ref writer, this.WillMessage);
+            MqttExtension.WriteMqttInt16Memory(ref writer, this.WillPayload);
         }
 
         if (this.UserNameFlag)
@@ -215,7 +215,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     /// <summary>
     /// 获取或设置遗嘱消息。
     /// </summary>
-    public string WillMessage { get; set; }
+    public ReadOnlyMemory<byte> WillPayload { get; set; }
 
     /// <summary>
     /// 获取遗嘱服务质量级别。
@@ -241,7 +241,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
         if (this.WillFlag)
         {
             this.WillTopic = MqttExtension.ReadMqttInt16String(ref reader);
-            this.WillMessage = MqttExtension.ReadMqttInt16String(ref reader);
+            this.WillPayload = MqttExtension.ReadMqttInt16Memory(ref reader);
         }
 
         if (this.UserNameFlag)

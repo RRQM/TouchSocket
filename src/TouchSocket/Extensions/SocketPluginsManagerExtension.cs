@@ -19,28 +19,35 @@ public static class SocketPluginManagerExtension
 {
     /// <summary>
     ///  使用<see cref="ITcpSession"/>检查连接客户端活性插件。
-    ///  <para>当在设置的周期内，没有接收/发送任何数据，则判定该客户端掉线。执行清理。默认配置：60秒为一个周期，同时检测发送和接收。</para>
+    ///  <para>当在设置的周期内,没有接收/发送任何数据,则判定该客户端掉线。执行清理。默认配置:60秒为一个周期,同时检测发送和接收。</para>
     ///  服务器、客户端均适用。
     /// </summary>
-    /// <param name="pluginManager">插件管理器对象，用于管理插件。</param>
-    /// <returns>返回一个<see cref="CheckClearPlugin{TClient}"/>类型的插件实例，用于执行客户端活性检查及清理操作。</returns>
-    public static CheckClearPlugin<ITcpSession> UseTcpSessionCheckClear(this IPluginManager pluginManager)
+    /// <param name="pluginManager">插件管理器对象,用于管理插件。</param>
+    /// <param name="options">配置选项的委托</param>
+    /// <returns>返回一个<see cref="CheckClearPlugin{TClient}"/>类型的插件实例,用于执行客户端活性检查及清理操作。</returns>
+    public static CheckClearPlugin<ITcpSession> UseTcpSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<ITcpSession>> options = null)
     {
-        return pluginManager.UseCheckClear<ITcpSession>();
+        return pluginManager.UseCheckClear(options);
     }
 
     /// <summary>
     ///  检查连接客户端活性插件。
-    ///  <para>当在设置的周期内，没有接收/发送任何数据，则判定该客户端掉线。执行清理。默认配置：60秒为一个周期，同时检测发送和接收。</para>
+    ///  <para>当在设置的周期内,没有接收/发送任何数据,则判定该客户端掉线。执行清理。默认配置:60秒为一个周期,同时检测发送和接收。</para>
     ///  服务器、客户端均适用。
     /// </summary>
     /// <param name="pluginManager">插件管理器</param>
+    /// <param name="options">配置选项的委托</param>
     /// <returns>返回一个用于检查和清理不活跃客户端的插件实例</returns>
-    public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager)
+    public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager, Action<CheckClearOption<TClient>> options = null)
         where TClient : class, IDependencyClient, IClosableClient
     {
-        // 添加并返回一个新的检查和清理插件实例
-        return pluginManager.Add<CheckClearPlugin<TClient>>();
+        var option = new CheckClearOption<TClient>();
+        options?.Invoke(option);
+
+        var logger = pluginManager.Resolver.Resolve<ILog>();
+        var checkClearPlugin = new CheckClearPlugin<TClient>(logger, option);
+        pluginManager.Add(checkClearPlugin);
+        return checkClearPlugin;
     }
 
     #region Reconnection
@@ -59,7 +66,7 @@ public static class SocketPluginManagerExtension
     {
         var options = new ReconnectionOptions<TClient>();
         configureOptions?.Invoke(options);
-        
+
         var reconnectionPlugin = new ReconnectionPlugin<TClient>(options);
         pluginManager.Add(reconnectionPlugin);
         return reconnectionPlugin;

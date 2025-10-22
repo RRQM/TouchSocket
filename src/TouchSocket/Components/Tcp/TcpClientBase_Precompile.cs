@@ -12,7 +12,6 @@
 
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -121,11 +120,7 @@ public partial class TcpClientBase
 #endif
         }
 
-        var noDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty);
-        if (noDelay.HasValue)
-        {
-            socket.NoDelay = noDelay.Value;
-        }
+        socket.NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty);
 
         if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) != null)
         {

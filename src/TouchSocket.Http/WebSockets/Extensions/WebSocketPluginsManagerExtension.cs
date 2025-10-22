@@ -46,15 +46,4 @@ public static class WebSocketPluginManagerExtension
             options.SetUrl(url);
         });
     }
-
-    /// <summary>
-    /// 使用WebSocket心跳插件，客户端、服务器均有效。但是一般建议客户端使用即可。
-    /// </summary>
-    /// <returns>插件类型实例</returns>
-    public static WebSocketHeartbeatPlugin UseWebSocketHeartbeat(this IPluginManager pluginManager)
-    {
-        var heartbeatPlugin = new WebSocketHeartbeatPlugin();
-        pluginManager.Add(heartbeatPlugin);
-        return heartbeatPlugin;
-    }
 }

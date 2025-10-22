@@ -75,7 +75,7 @@ public static class TouchSocketConfigExtension
     /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
     /// 所需类型<see cref="bool"/>
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = new("KeepAliveValue", default);
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class TouchSocketConfigExtension
     /// 所需类型<see cref="bool"/>
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<bool?> NoDelayProperty = new("NoDelay", true);
+    public static readonly DependencyProperty<bool> NoDelayProperty = new("NoDelay", true);
 
     /// <summary>
     /// 远程目标地址，所需类型<see cref="IPHost"/>
@@ -95,40 +95,15 @@ public static class TouchSocketConfigExtension
     /// ClientSslOption配置，为Null时则不启用
     /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<ClientSslOption> ClientSslOptionProperty = new("ClientSslOption", null);
 
     /// <summary>
     /// ServiceSslOption配置，为Null时则不启用
     /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<ServiceSslOption> ServiceSslOptionProperty = new("ServiceSslOption", null);
-
-
-
-    ///// <summary>
-    ///// 设置远程目标地址。在<see cref="UdpSessionBase"/>中，表示默认发送时的目标地址。
-    ///// </summary>
-    ///// <param name="config"></param>
-    ///// <param name="value"></param>
-    ///// <returns></returns>
-    //public static TouchSocketConfig SetRemoteIPHost(this TouchSocketConfig config, IPHost value)
-    //{
-    //    config.SetValue(RemoteIPHostProperty, value);
-    //    if (value.Scheme.Equals("https", StringComparison.CurrentCultureIgnoreCase)
-    //             || value.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase)
-    //             || value.Scheme.Equals("ssl", StringComparison.CurrentCultureIgnoreCase)
-    //             || value.Scheme.Equals("tls", StringComparison.CurrentCultureIgnoreCase))
-    //    {
-    //        config.SetClientSslOption(new ClientSslOption()
-    //        {
-    //            TargetHost = value.Host,
-    //            SslProtocols = SslProtocols.None
-    //        });
-    //    }
-    //    return config;
-    //}
 
     #endregion TcpClient
 
@@ -144,7 +119,7 @@ public static class TouchSocketConfigExtension
     /// 设置默认Id的获取方式，所需类型<see cref="Func{T, TResult}"/>
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<Func<IClient,string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
+    public static readonly DependencyProperty<Func<IClient, string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
 
     /// <summary>
     /// 服务器负责监听的地址组。所需类型<see cref="IPHost"/>数组
@@ -155,8 +130,8 @@ public static class TouchSocketConfigExtension
     /// <summary>
     /// 直接单个配置服务器监听的地址组。所需类型<see cref="Action"/>
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<Action<List<TcpListenOption>>> ListenOptionsProperty = new("ListenOptions", null);
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
+    public static readonly DependencyProperty<List<TcpListenOption>> ListenOptionsProperty = new("ListenOptions", null);
 
     /// <summary>
     /// 最大可连接数，默认为10000，所需类型<see cref="int"/>

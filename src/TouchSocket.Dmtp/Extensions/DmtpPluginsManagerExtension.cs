@@ -17,18 +17,5 @@ namespace TouchSocket.Dmtp;
 /// </summary>
 public static class DmtpPluginManagerExtension
 {
-    /// <summary>
-    /// 启用DmtpRpc心跳功能。该功能既可用于客户端，也可用于服务器端，但通常建议仅在客户端使用。
-    /// <para>
-    /// 心跳默认每3秒发送一次。当心跳失败次数达到最大值（默认为3次）时，将判定为连接断开。
-    /// </para>
-    /// </summary>
-    /// <param name="pluginManager">插件管理器，用于管理包括心跳插件在内的各种插件。</param>
-    /// <returns>返回新创建并已添加到插件管理器的DmtpHeartbeatPlugin实例。</returns>
-    public static DmtpHeartbeatPlugin UseDmtpHeartbeat(this IPluginManager pluginManager)
-    {
-        var heartbeat = new DmtpHeartbeatPlugin();
-        pluginManager.Add(heartbeat);
-        return heartbeat;
-    }
+
 }

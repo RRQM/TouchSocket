@@ -214,8 +214,8 @@ public class MqttConnectOptions
     /// Mqtt 5.0.0以上
     /// </remarks>
     public IReadOnlyList<MqttUserProperty> WillUserProperties { get; set; }
-    public string WillMessage { get; internal set; }
-    public string WillTopic { get; internal set; }
+    public ReadOnlyMemory<byte> WillPayload { get; set; }
+    public string WillTopic { get; set; }
 
     #endregion Will Properties
 

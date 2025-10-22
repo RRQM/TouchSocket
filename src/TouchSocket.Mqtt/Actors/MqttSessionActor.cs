@@ -31,6 +31,7 @@ public class MqttSessionActor : MqttActor
     });
 
     private readonly MqttBroker m_mqttBroker;
+    private MqttPublishMessage m_mqttWillMessage;
     private bool m_sessionPresent;
 
     /// <summary>
@@ -51,17 +52,32 @@ public class MqttSessionActor : MqttActor
     /// <summary>
     /// 激活会话。
     /// </summary>
-    public void Activate()
+    public void Activate(MqttConnectMessage mqttConnectMessage)
     {
+        if (mqttConnectMessage.WillFlag)
+        {
+            var mqttPublishMessage = new MqttPublishMessage(mqttConnectMessage.WillTopic, mqttConnectMessage.WillPayload);
+            this.m_mqttWillMessage = mqttPublishMessage;
+        }
+        else
+        {
+            this.m_mqttWillMessage = null;
+        }
         this.m_asyncResetEvent.Set();
     }
 
     /// <summary>
     /// 取消激活会话。
     /// </summary>
-    public void Deactivate()
+    public async Task Deactivate()
     {
         this.m_asyncResetEvent.Reset();
+        var willMessage = this.m_mqttWillMessage;
+        this.m_mqttWillMessage = null;
+        if (willMessage != null)
+        {
+            await this.m_mqttBroker.ForwardMessageAsync(new MqttArrivedMessage(willMessage));
+        }
     }
 
     /// <summary>
@@ -93,6 +109,7 @@ public class MqttSessionActor : MqttActor
             Console.WriteLine("DistributeMessagesAsync:" + ex.Message);
         }
     }
+
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
@@ -256,6 +273,10 @@ public class MqttSessionActor : MqttActor
             catch (OperationCanceledException)
             {
                 return;
+            }
+            catch
+            {
+                //
             }
         }
     }

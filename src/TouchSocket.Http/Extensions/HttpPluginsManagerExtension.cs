@@ -87,8 +87,8 @@ public static class HttpPluginManagerExtension
     /// </summary>
     /// <param name="pluginManager">插件管理器实例，用于添加和管理插件。</param>
     /// <returns>返回创建并添加到插件管理器的实例。</returns>
-    public static CheckClearPlugin<IHttpSession> UseHttpSessionCheckClear(this IPluginManager pluginManager)
+    public static CheckClearPlugin<IHttpSession> UseHttpSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<IHttpSession>> options = null)
     {
-        return pluginManager.UseCheckClear<IHttpSession>();
+        return pluginManager.UseCheckClear<IHttpSession>(options);
     }
 }

@@ -184,7 +184,7 @@ public partial class MqttConnectMessage
             MqttExtension.WriteContentType(ref writer, this.WillContentType);
             MqttExtension.WriteWillDelayInterval(ref writer, this.WillDelayInterval);
             MqttExtension.WriteMqttInt16String(ref writer, this.WillTopic);
-            MqttExtension.WriteMqttInt16String(ref writer, this.WillMessage);
+            MqttExtension.WriteMqttInt16Memory(ref writer, this.WillPayload);
             MqttExtension.WriteUserProperties(ref writer, this.WillUserProperties);
         }
 
@@ -323,7 +323,7 @@ public partial class MqttConnectMessage
             }
 
             this.WillTopic = MqttExtension.ReadMqttInt16String(ref reader);
-            this.WillMessage = MqttExtension.ReadMqttInt16String(ref reader);
+            this.WillPayload = MqttExtension.ReadMqttInt16Memory(ref reader);
         }
 
         if (this.UserNameFlag)
