@@ -522,12 +522,17 @@ module.exports =
       "items": [
         {
           "type": "doc",
-          "label": "19.1 Modbus主站",
+          "label": "19.1 Modbus协议介绍",
+          "id": "modbusdescription"
+        },
+        {
+          "type": "doc",
+          "label": "19.2 Modbus主站",
           "id": "modbusmaster"
         },
         {
           "type": "doc",
-          "label": "19.2 Modbus从站",
+          "label": "19.3 Modbus从站",
           "id": "modbusslave"
         }
       ]

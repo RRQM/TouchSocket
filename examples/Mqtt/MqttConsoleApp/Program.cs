@@ -170,7 +170,7 @@ internal class Program
         //配置
         var config = new TouchSocketConfig();
 
-        config.SetListenIPHosts("tcp://127.0.0.1:7789");
+        config.SetListenIPHosts(7789);
         config.ConfigureContainer(a =>
         {
             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
