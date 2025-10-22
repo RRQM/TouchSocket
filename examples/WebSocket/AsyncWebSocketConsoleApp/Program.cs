@@ -71,8 +71,10 @@ internal class Program
                  a.UseReconnection<WebSocketClient>();
 
                  //使用健康插件进行绝对存活检测，默认10秒检测一次。
-                 a.UseCheckClear<WebSocketClient>()
-                 .SetTick(TimeSpan.FromSeconds(10));
+                 a.UseCheckClear<WebSocketClient>(options =>
+                 {
+                     options.Tick = TimeSpan.FromSeconds(10);
+                 });
              })
         #endregion
 
@@ -131,7 +133,7 @@ internal class MyReadWebSocketPlugin : PluginBase, IWebSocketConnectedPlugin
         while (true)
         {
             //设置1分钟的接收超时
-            using CancellationTokenSource cts = new CancellationTokenSource(1000*60);
+            using var cts = new CancellationTokenSource(1000 * 60);
             using (var receiveResult = await client.ReadAsync(cts.Token))
             {
                 if (receiveResult.IsCompleted)

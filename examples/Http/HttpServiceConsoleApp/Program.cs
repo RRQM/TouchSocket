@@ -141,10 +141,10 @@ internal class Program
         var service = new HttpService();
         await service.SetupAsync(new TouchSocketConfig()//加载配置
               .SetListenIPHosts(7789)
-              .SetServiceSslOption(new ServiceSslOption()
+              .SetServiceSslOption(options =>
               {
-                  Certificate = new X509Certificate2("TouchSocketTestCert.pfx", "123456"),
-                  SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                  options.Certificate = new X509Certificate2("TouchSocketTestCert.pfx", "123456");
+                  options.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
               })
               .ConfigureContainer(a =>
               {

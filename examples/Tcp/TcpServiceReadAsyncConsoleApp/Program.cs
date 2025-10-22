@@ -28,12 +28,14 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseTcpSessionCheckClear()
-                 .SetCheckClearType(CheckClearType.All)
-                 .SetTick(TimeSpan.FromSeconds(60))
-                 .SetOnClose(async (c, t) =>
+                 a.UseTcpSessionCheckClear(options =>
                  {
-                     await c.CloseAsync("超时无数据");
+                     options.CheckClearType = CheckClearType.All;
+                     options.Tick = TimeSpan.FromSeconds(60);
+                     options.OnClose = async (client, e) =>
+                     {
+                         await client.CloseAsync("超时无数据");
+                     };
                  });
 
                  a.Add<TcpServiceReceiveAsyncPlugin>();

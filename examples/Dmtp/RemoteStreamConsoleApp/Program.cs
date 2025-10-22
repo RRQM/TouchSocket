@@ -38,7 +38,7 @@ internal class Program
         var metadata = new Metadata();
         metadata.Add("tag", "tag1");
 
-        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata,CancellationToken.None);
+        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata, CancellationToken.None);
 
         client.Logger.Info("已经成功载入流，请输入任意字符");
 
@@ -71,7 +71,7 @@ internal class Program
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(options=>
+             .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";
              })
@@ -82,10 +82,6 @@ internal class Program
              .ConfigurePlugins(a =>
              {
                  a.UseDmtpRemoteStream();
-
-                 a.UseDmtpHeartbeat()//使用Dmtp心跳
-                 .SetTick(TimeSpan.FromSeconds(3))
-                 .SetMaxFailCount(3);
              }));
         await client.ConnectAsync();
         return client;
@@ -104,7 +100,7 @@ internal class Program
                    a.UseDmtpRemoteStream();//必须添加远程流访问插件
                    a.Add<MyRemoteStreamPlugin>();
                })
-               .SetDmtpOption(options=>
+               .SetDmtpOption(options =>
                {
                    options.VerifyToken = "Dmtp";//连接验证口令。
                })

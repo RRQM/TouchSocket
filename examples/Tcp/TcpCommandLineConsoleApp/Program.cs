@@ -33,9 +33,11 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseTcpSessionCheckClear()
-                  .SetCheckClearType(CheckClearType.All)
-                  .SetTick(TimeSpan.FromSeconds(60));
+                  a.UseTcpSessionCheckClear(options =>
+                  {
+                      options.CheckClearType = CheckClearType.All;
+                      options.Tick = TimeSpan.FromSeconds(60);
+                  });
 
                   a.Add<MyCommandLinePlugin>();
               });

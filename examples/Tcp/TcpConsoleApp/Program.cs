@@ -46,14 +46,15 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseTcpSessionCheckClear()
-                 .SetCheckClearType(CheckClearType.All)
-                 .SetTick(TimeSpan.FromSeconds(60))
-                 .SetOnClose(async (c, t) =>
+                 a.UseTcpSessionCheckClear(options =>
                  {
-                     await c.CloseAsync("超时无数据");
+                     options.CheckClearType = CheckClearType.All;
+                     options.Tick = TimeSpan.FromSeconds(60);
+                     options.OnClose = async (c, t) =>
+                     {
+                         await c.CloseAsync("超时无数据");
+                     };
                  });
-
                  a.Add<ClosePlugin>();
                  a.Add<TcpServiceReceivedPlugin>();
                  a.Add<MyServicePluginClass>();
@@ -272,9 +273,9 @@ internal class Program
         #endregion
 
         #region SSL加密设置
-        config.SetServiceSslOption(new ServiceSslOption()
+        config.SetServiceSslOption(options =>
         {
-            Certificate = new X509Certificate2("key.pfx", "pwd")
+            options.Certificate = new X509Certificate2("key.pfx", "pwd");
         });
         #endregion
     }
@@ -452,23 +453,23 @@ internal class Program
         #endregion
 
         #region 设置Tcp客户端Ssl加密
-        config.SetClientSslOption(new ClientSslOption()
+        config.SetClientSslOption(options =>
         {
-            CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
-            CheckCertificateRevocation = false,
-            ClientCertificates = new X509Certificate2Collection() { new X509Certificate2("client.pfx", "pwd") },
-            SslProtocols = System.Security.Authentication.SslProtocols.None,
-            TargetHost = "127.0.0.1"
+            options.CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            options.CheckCertificateRevocation = false;
+            options.ClientCertificates = new X509Certificate2Collection() { new X509Certificate2("client.pfx", "pwd") };
+            options.SslProtocols = System.Security.Authentication.SslProtocols.None;
+            options.TargetHost = "127.0.0.1";
         });
         #endregion
 
         #region 设置Tcp底层心跳
         //此配置项仅在windows下有效。
         //非必要请勿开启。
-        config.SetKeepAliveValue(new KeepAliveValue()
+        config.SetKeepAliveValue(options =>
         {
-            AckInterval = 2000,
-            Interval = 20 * 1000
+            options.AckInterval = 2000;
+            options.Interval = 20 * 1000;
         });
         #endregion
 

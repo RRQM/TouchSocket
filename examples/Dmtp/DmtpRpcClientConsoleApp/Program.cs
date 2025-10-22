@@ -109,17 +109,46 @@ internal class Program
     {
         var client = await GetTcpDmtpClient();
 
+        #region DmtpRpc直接调用
         //设置调用配置
-        var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
-        var invokeOption = new DmtpInvokeOption(5000)//调用配置
+        using var cts = new CancellationTokenSource(5000);//可取消令箭源，可用于取消Rpc的调用
+        var invokeOption = new DmtpInvokeOption()//调用配置
         {
             FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
             SerializationType = SerializationType.FastBinary,//序列化类型
-            Token = tokenSource.Token//配置可取消令箭
+            Token = cts.Token//配置可取消令箭
         };
+        //获取RpcActor，用于后续的rpc调用
+        var rpcActor = client.GetDmtpRpcActor();
 
-        var sum = await client.GetDmtpRpcActor().InvokeTAsync<int>("Add", invokeOption, 10, 20);
+        //调用Add方法
+        var sum = await rpcActor.InvokeTAsync<int>("Add", invokeOption, 10, 20);
         client.Logger.Info($"调用Add方法成功，结果：{sum}");
+        #endregion
+
+    }
+
+    private static async Task RunInvokeWithProxy()
+    {
+        using var client = await GetTcpDmtpClient();
+
+        #region DmtpRpc代理调用
+        //设置调用配置
+        using var cts = new CancellationTokenSource(5000);//可取消令箭源，可用于取消Rpc的调用
+        var invokeOption = new DmtpInvokeOption()//调用配置
+        {
+            FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+            SerializationType = SerializationType.FastBinary,//序列化类型
+            Token = cts.Token//配置可取消令箭
+        };
+        //获取RpcActor，用于后续的rpc调用
+        var rpcActor = client.GetDmtpRpcActor();
+
+        //调用Add方法
+        var sum = await rpcActor.AddAsync(10, 20, invokeOption);
+        client.Logger.Info($"调用Add方法成功，结果：{sum}");
+        #endregion
+
     }
 
     private static async Task RunRpcPullChannel()
@@ -169,28 +198,50 @@ internal class Program
         Console.WriteLine($"状态：{status}，result={result}");
     }
 
+    private static async Task CreateDmtpRpcClient()
+    {
+        #region 创建DmtpRpc客户端
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .ConfigurePlugins(a =>
+              {
+                  //启用dmtp rpc插件
+                  a.UseDmtpRpc();
+              })
+              .SetRemoteIPHost("127.0.0.1:7789")
+              .SetDmtpOption(options =>
+              {
+                  options.VerifyToken = "Dmtp";
+              }));
+        await client.ConnectAsync();
+        #endregion
+    }
+
     private static async Task<TcpDmtpClient> GetTcpDmtpClient()
     {
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
-             .ConfigureContainer(a =>
-             {
-                 a.AddConsoleLogger();
-                 a.AddRpcStore(store =>
-                 {
-                     store.RegisterServer<MyClientRpcServer>();
-                 });
-             })
+
+        #region 客户端注册反向DmtpRpc服务
+            .ConfigureContainer(a =>
+            {
+                a.AddConsoleLogger();
+                a.AddRpcStore(store =>
+                {
+                    store.RegisterServer<MyClientRpcServer>();
+                });
+            })
+        #endregion
              .ConfigurePlugins(a =>
              {
                  a.UseDmtpRpc(options =>
                  {
                      options.SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
                  });
-
-                 a.UseDmtpHeartbeat()
-                 .SetTick(TimeSpan.FromSeconds(3))
-                 .SetMaxFailCount(3);
              })
              .SetRemoteIPHost("127.0.0.1:7789")
              .SetDmtpOption(options =>
@@ -222,6 +273,7 @@ internal class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     }
 }
 
+#region 声明反向DmtpRpc服务
 internal partial class MyClientRpcServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
@@ -238,6 +290,8 @@ internal partial class MyClientRpcServer : SingletonRpcServer
         return true;
     }
 }
+
+#endregion
 
 /// <summary>
 /// 序列化选择器

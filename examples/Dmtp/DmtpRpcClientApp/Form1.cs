@@ -71,11 +71,6 @@ public partial class Form1 : Form
             {
                 a.UseDmtpRpc();
 
-                //使用心跳保活，或者避免异常连接。达到最大失败次数会断开，不会重连。
-                a.UseDmtpHeartbeat()
-                .SetTick(TimeSpan.FromSeconds(3))
-                .SetMaxFailCount(3);
-
                 //使用重连
                 a.UseReconnection<TcpDmtpClient>(options =>
                 {

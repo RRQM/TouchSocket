@@ -49,8 +49,10 @@ namespace TcpConnectStressTestingConsoleApp
             await service.SetupAsync(new TouchSocketConfig()
                  .ConfigurePlugins(a =>
                  {
-                     a.UseTcpSessionCheckClear()
-                     .SetTick(TimeSpan.FromSeconds(60));
+                     a.UseTcpSessionCheckClear(options =>
+                     {
+                         options.Tick = TimeSpan.FromSeconds(60);
+                     });
                  })
                  .SetListenIPHosts(7789));
             await service.StartAsync();
