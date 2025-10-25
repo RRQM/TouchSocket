@@ -8,22 +8,26 @@ import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
 
 
-## v4.0.0
+## v4.0
 
-**更新日期：** 2025年10月25日
+**更新日期：** 
+
+暂未发布正式版，Nuget请勾选预发布版本可以尝鲜更新。
+
+目前4.0版本已进入RC（发布候选）阶段，一般API基本不会再变动。正式版计划在2025年12月左右，随`.NET10`发布正式版。
 
 **更新描述：**
 
 - &nbsp;<Tag>更新</Tag> 此次更新可能会引入**破坏性变更**，升级前请务必做好代码备份。代码升级详情请看[4.0升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/ICTCDJ)
 - &nbsp;<Tag>调整</Tag> **Fast序列化**、**Dmtp组件**在运行时无法向下兼容v3.x版本，请保证客户端和服务器同时升级
+- &nbsp;<Tag>调整</Tag> 全系不再支持`.NET Framework45`，最低支持`.NET Framework462`及以上版本，直至`.NET 10.0`。
+- &nbsp;<Tag>调整</Tag> 全系不再异步方法同步化，即：不再提供异步方法的同步版本，所有异步方法均需使用`await`调用。
 - &nbsp;<Tag>重构</Tag> 核心字节流处理系统重构和性能优化
 - &nbsp;<Tag>重构</Tag> 全面重构数据适配器架构，提升数据处理能力
 - &nbsp;<Tag>新增</Tag> 传输层新增多种传输模式支持
-- &nbsp;<Tag>新增</Tag> 引入中央包管理（Central Package Management），简化依赖版本控制
-- &nbsp;<Tag>新增</Tag> WebSocket新增异步读取、分包传输、自定义帧等高级功能
-- &nbsp;<Tag>新增</Tag> DMTP协议支持多种传输协议的服务器和客户端工厂模式
-- &nbsp;<Tag>优化</Tag> 新增大量示例项目和开发工具，提升开发体验
-- &nbsp;<Tag>升级</Tag> 全面升级至.NET 9.0框架，享受最新性能改进
+- &nbsp;<Tag>新增</Tag> `WebSocket`新增异步读取、分包传输、自定义帧等高级功能
+- &nbsp;<Tag>新增</Tag> `DMTP`协议支持多种传输协议的服务器和客户端工厂模式
+- &nbsp;<Tag>升级</Tag> 最高至`.NET 10.0`框架，享受最新性能改进
 
 **更新详情：**
 
@@ -55,7 +59,6 @@ import Highlight from '@site/src/components/Highlight.js';
 
 #### TouchSocket.Http & WebSocket
 
-- &nbsp;<Tag>新增</Tag> `HttpClientBase2` HTTP客户端基类重构版本
 - &nbsp;<Tag>新增</Tag> `ContentCompletionStatus` 枚举，精确跟踪内容读取状态
 - &nbsp;<Tag>新增</Tag> `HttpReadOnlyMemoryBlockResult` 结构，支持零拷贝内存块读取
 - &nbsp;<Tag>新增</Tag> `ProxyAuthenticationException` 代理认证异常
@@ -217,29 +220,6 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>升级</Tag> 新增配置验证和默认值机制
 - &nbsp;<Tag>升级</Tag> 支持运行时配置动态修改
 
-#### 项目管理优化
-
-- &nbsp;<Tag>新增</Tag> `Directory.Packages.props` 统一版本管理
-- &nbsp;<Tag>新增</Tag> PowerShell自动化脚本 `UpdateProjectReferences.ps1`
-- &nbsp;<Tag>新增</Tag> 中央包管理（Central Package Management）
-- &nbsp;<Tag>新增</Tag> 所有示例项目统一版本控制
-- &nbsp;<Tag>新增</Tag> 批量更新项目引用版本
-- &nbsp;<Tag>新增</Tag> 自动化构建和发布流程
-- &nbsp;<Tag>新增</Tag> 原生AOT编译优化
-- &nbsp;<Tag>调整</Tag> PackageReference配置，避免版本冲突
-- &nbsp;<Tag>升级</Tag> 目标框架升级至 .NET 9.0
-- &nbsp;<Tag>升级</Tag> 最新.NET性能改进和新特性
-- &nbsp;<Tag>优化</Tag> 内存管理和垃圾回收性能
-
-#### 示例项目
-
-- &nbsp;<Tag>新增</Tag> TouchSocketBitConverter使用示例
-- &nbsp;<Tag>新增</Tag> 多数据包适配器示例
-- &nbsp;<Tag>新增</Tag> 原始数据适配器示例
-- &nbsp;<Tag>新增</Tag> DMTP协议创建示例
-- &nbsp;<Tag>新增</Tag> WaitingClient WinForms示例
-- &nbsp;<Tag>新增</Tag> 异步WebSocket示例
-
 #### 重要变更说明
 
 - &nbsp;<Tag>调整</Tag> WebSocket插件接口重命名：`IWebSocketHandshakingPlugin` → `IWebSocketConnectingPlugin`
@@ -249,15 +229,6 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>调整</Tag> WebSocket配置方式调整：从链式调用改为选项配置模式
 - &nbsp;<Tag>调整</Tag> XmlRpc配置方式调整：使用 `SetAllowXmlRpc` 替代 `SetXmlRpcUrl`
 - &nbsp;<Tag>调整</Tag> 重连插件调整：使用泛型版本 `UseReconnection<WebSocketClient>()` 替代特定方法
-
-#### 迁移指南
-
-- &nbsp;<Tag>文档</Tag> 更新项目文件，移除 PackageReference 中的具体版本号
-- &nbsp;<Tag>文档</Tag> 更新WebSocket插件接口名称和方法名
-- &nbsp;<Tag>文档</Tag> 使用新的选项配置方式替代链式调用
-- &nbsp;<Tag>文档</Tag> 备份代码，参考[4.0升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/ICTCDJ)
-- &nbsp;<Tag>文档</Tag> 确保客户端和服务器同时升级（Fast序列化、Dmtp组件不向下兼容）
-- &nbsp;<Tag>推荐</Tag> 在生产环境部署前进行充分测试
 
 ***
 
