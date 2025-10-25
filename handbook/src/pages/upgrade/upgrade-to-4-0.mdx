@@ -1,0 +1,274 @@
+---
+id: upgrade-to-40
+title: TouchSocket 4.0 升级指南
+---
+
+
+本文档将帮助您从TouchSocket 3.x版本升级到4.0版本。以下是主要的语法差异和升级方法。
+
+## 1. WebSocket插件接口重命名
+
+**旧语法 (3.x):**
+```csharp
+// 握手插件接口
+IWebSocketHandshakingPlugin
+IWebSocketHandshakedPlugin
+
+// 插件方法
+OnWebSocketHandshaking()
+OnWebSocketHandshaked()
+```
+
+**新语法 (4.0):**
+```csharp
+// 连接插件接口
+IWebSocketConnectingPlugin
+IWebSocketConnectedPlugin
+
+// 插件方法
+OnWebSocketConnecting()
+OnWebSocketConnected()
+```
+
+**如何更新:**
+- 将所有 `IWebSocketHandshakingPlugin` 替换为 `IWebSocketConnectingPlugin`
+- 将所有 `IWebSocketHandshakedPlugin` 替换为 `IWebSocketConnectedPlugin`
+- 将所有 `OnWebSocketHandshaking` 替换为 `OnWebSocketConnecting`
+- 将所有 `OnWebSocketHandshaked` 替换为 `OnWebSocketConnected`
+
+## 2. WebSocket配置方式更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocket()
+     .SetWSUrl("/ws")
+     .UseAutoPong();
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocket(options =>
+    {
+        options.SetUrl("/ws");
+        options.SetAutoPong(true);
+    });
+})
+```
+
+**如何更新:**
+- 使用 `UseWebSocket(options => {})` 替代链式调用
+- `SetWSUrl()` 改为 `options.SetUrl()`
+- `UseAutoPong()` 改为 `options.SetAutoPong(true)`
+
+## 3. WebSocket断线重连插件更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocketReconnection();
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseReconnection<WebSocketClient>();
+})
+```
+
+**如何更新:**
+- 将 `UseWebSocketReconnection()` 替换为 `UseReconnection<WebSocketClient>()`
+
+## 4. WebSocket简化连接方式
+
+**旧语法 (3.x):**
+```csharp
+var client = new WebSocketClient();
+await client.SetupAsync(new TouchSocketConfig()
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+await client.ConnectAsync();
+```
+
+**新语法 (4.0):**
+```csharp
+var client = new WebSocketClient();
+await client.ConnectAsync("ws://127.0.0.1:7789/ws");
+```
+
+**如何更新:**
+- 对于简单连接，可以直接使用 `ConnectAsync(url)` 方法
+- 复杂配置仍需要使用 `SetupAsync()` 方法
+
+## 5. WebSocket数据接收委托
+
+**新增功能 (4.0):**
+```csharp
+client.Received = (c, e) =>
+{
+    Console.WriteLine(e.DataFrame.ToText());
+    return EasyTask.CompletedTask;
+};
+```
+
+**如何更新:**
+- 可以使用 `Received` 委托来简化数据接收处理
+- 替代复杂的插件配置方式
+
+## 6. WebSocket ReadAsync 接收超时
+
+**新增功能 (4.0):**
+```csharp
+// 设置接收超时
+using var cts = new CancellationTokenSource(1000 * 60);
+using (var receiveResult = await client.ReadAsync(cts.Token))
+{
+    if (receiveResult.IsCompleted)
+    {
+        // 连接已关闭
+        break;
+    }
+}
+```
+
+**如何更新:**
+- 使用 `CancellationTokenSource` 设置接收超时
+- 通过 `receiveResult.IsCompleted` 判断连接状态
+
+## 7. XmlRpc配置方式更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseXmlRpc()
+     .SetXmlRpcUrl("/xmlRpc");
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseXmlRpc(options =>
+    {
+        options.SetAllowXmlRpc("/xmlRpc");
+    });
+})
+```
+
+**如何更新:**
+- 使用 `UseXmlRpc(options => {})` 替代链式调用
+- `SetXmlRpcUrl()` 改为 `options.SetAllowXmlRpc()`
+
+## 8. RPC代理调用方法名称更改
+
+**旧语法 (3.x):**
+```csharp
+var result = client.Sum(10, 20); // 同步调用
+```
+
+**新语法 (4.0):**
+```csharp
+var result = await client.SumAsync(10, 20); // 异步调用
+```
+
+**如何更新:**
+- 所有RPC代理方法都需要使用异步版本
+- 在方法名后添加 `Async` 后缀并使用 `await`
+
+## 9. 包版本管理统一化
+
+**旧方式:**
+```xml
+<PackageReference Include="TouchSocket.Http" Version="3.1.15" />
+```
+
+**新方式:**
+```xml
+<!-- 使用中央包管理 -->
+<PackageReference Include="TouchSocket.Http" />
+```
+
+**如何更新:**
+- 移除所有PackageReference中的Version属性
+- 在项目根目录创建 `Directory.Packages.props` 文件统一管理版本
+- 设置 `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>`
+
+## 10. 插件接口参数类型更改
+
+**旧语法 (3.x):**
+```csharp
+public async Task OnWebSocketHandshaking(IWebSocket client, HttpContextEventArgs e)
+```
+
+**新语法 (4.0):**
+```csharp
+public async Task OnWebSocketConnecting(IWebSocket client, HttpContextEventArgs e)
+```
+
+**如何更新:**
+- 检查所有插件接口的方法签名
+- 更新方法名称和参数类型以匹配新接口
+
+## 11. WebSocket连接验证配置
+
+**新增功能 (4.0):**
+```csharp
+a.UseWebSocket(options =>
+{
+    options.SetVerifyConnection(async (client, context) =>
+    {
+        // 自定义验证逻辑
+        return context.Request.UrlEquals("/ws");
+    });
+});
+```
+
+**如何更新:**
+- 使用 `SetVerifyConnection` 方法自定义连接验证逻辑
+- 替代之前的URL匹配方式
+
+## 12. 适配器扩展方法更新
+
+**旧语法 (3.x):**
+```csharp
+writer.WriteByte(value);
+reader.ReadByte();
+```
+
+**新语法 (4.0):**
+```csharp
+WriterExtension.WriteValue(ref writer, (byte)value);
+ReaderExtension.ReadValue<TReader, byte>(ref reader);
+```
+
+**如何更新:**
+- 使用新的扩展方法替代旧的直接调用方式
+- 注意参数类型的显式转换
+
+## 升级注意事项
+
+1. **测试覆盖**: 升级后务必进行全面测试，特别是WebSocket和RPC相关功能
+2. **依赖检查**: 确保所有依赖的第三方库与TouchSocket 4.0兼容
+3. **性能验证**: 新版本可能有性能优化，建议进行性能对比测试
+4. **日志检查**: 关注升级后的日志输出，确保没有新的警告或错误
+
+## 常见问题
+
+**Q: 升级后编译出现接口找不到的错误?**
+A: 检查是否正确更新了插件接口名称，特别是WebSocket相关接口。
+
+**Q: WebSocket连接失败?**
+A: 检查配置方式是否使用了新的options配置模式。
+
+**Q: RPC调用出现异常?**
+A: 确保使用了异步版本的代理方法，并正确使用await。
+
+通过以上步骤，您应该能够成功将TouchSocket从3.x版本升级到4.0版本。如果遇到其他问题，请参考官方文档或社区支持。
