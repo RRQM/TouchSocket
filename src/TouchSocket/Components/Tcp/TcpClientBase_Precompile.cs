@@ -43,6 +43,8 @@ public partial class TcpClientBase
         this.ThrowIfConfigIsNull();
         // 等待信号量，以控制并发连接
         await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        Socket socket = null;
         try
         {
             // 如果已经在线，则无需再次连接
@@ -56,10 +58,11 @@ public partial class TcpClientBase
             // 释放之前的Socket资源
             this.MainSocket.SafeDispose();
             // 创建新的Socket连接
-            var socket = this.CreateSocket(iPHost);
+            socket = this.CreateSocket(iPHost);
             // 触发连接前的事件
             var args = new ConnectingEventArgs();
             await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
             // 根据取消令牌决定是否支持异步取消
             if (token.CanBeCanceled)
             {
@@ -82,6 +85,7 @@ public partial class TcpClientBase
                     }
                 }
             }
+
             // 更新在线状态
             this.m_online = true;
             // 设置当前Socket
@@ -100,6 +104,14 @@ public partial class TcpClientBase
 
             // 触发连接成功的事件
             _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
+        }
+        catch
+        {
+            // 连接失败时确保Socket被释放
+            socket?.SafeDispose();
+            // 重置在线状态
+            this.m_online = false;
+            throw;
         }
         finally
         {
@@ -124,6 +136,7 @@ public partial class TcpClientBase
         // 等待信号量，以确保同时只有一个连接操作
         await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
+        Socket socket = null;
         try
         {
             // 如果已经在线，则无需进行连接操作
@@ -136,7 +149,7 @@ public partial class TcpClientBase
             // 释放之前的Socket资源
             this.MainSocket.SafeDispose();
             // 创建新的Socket连接
-            var socket = this.CreateSocket(iPHost);
+            socket = this.CreateSocket(iPHost);
             // 触发连接前的事件
             await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 异步开始连接
@@ -161,6 +174,14 @@ public partial class TcpClientBase
 
             // 启动新任务，处理连接后的操作
             _ = EasyTask.SafeRun(this.PrivateOnTcpConnected, new ConnectedEventArgs(), this.m_tokenSourceForReceive.Token);
+        }
+        catch
+        {
+            // 连接失败时确保Socket被释放
+            socket?.SafeDispose();
+            // 重置在线状态
+            this.m_online = false;
+            throw;
         }
         finally
         {
