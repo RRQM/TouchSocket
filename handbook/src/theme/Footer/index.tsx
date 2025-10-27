@@ -23,7 +23,7 @@ function Footer(): JSX.Element | null
         logo={logo && <FooterLogo logo={logo} />}
         copyright={copyright && <FooterCopyright copyright={copyright} />}
       />
-      <script defer src="https://touchsocket.net:10086/script.js" data-website-id="3a8dae61-f110-4f53-87f3-99eeda1aca9d"></script>
+      <script defer src="https://touchsocket.net:10086/script.js" data-website-id="9a4065f2-8c32-4727-9b5f-bc6a92843fa5"></script>
       
     </span>
   );

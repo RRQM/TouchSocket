@@ -195,7 +195,7 @@ const config = {
               },
               {
                 label: "统计",
-                href: "https://touchsocket.net:10086/share/fKDMZBOLLpI0BOIO/touchsocket.net",
+                href: "https://touchsocket.net:10086/share/52srUBHSadfSOngf/touchsocket.net",
               },
             ],
           },
