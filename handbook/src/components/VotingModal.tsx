@@ -5,8 +5,8 @@ const VotingModal: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // 检查是否已经显示过弹窗（使用 localStorage 记录）
-    const hasShownModal = localStorage.getItem('gitee-voting-modal-shown-2025');
+    // 检查当前会话是否已经显示过弹窗（使用 sessionStorage 记录）
+    const hasShownModal = sessionStorage.getItem('gitee-voting-modal-shown-2025');
     
     if (!hasShownModal) {
       // 延迟显示弹窗，让页面先加载完成
@@ -20,9 +20,8 @@ const VotingModal: React.FC = () => {
 
   const handleClose = () => {
     setIsVisible(false);
-    // 记录已显示过弹窗，24小时内不再显示
-    const expirationTime = Date.now() + 24 * 60 * 60 * 1000; // 24小时后过期
-    localStorage.setItem('gitee-voting-modal-shown-2025', expirationTime.toString());
+    // 记录当前会话已显示过弹窗，刷新页面后会重新显示
+    sessionStorage.setItem('gitee-voting-modal-shown-2025', 'true');
   };
 
   const handleVote = () => {
