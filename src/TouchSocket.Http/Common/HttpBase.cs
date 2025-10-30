@@ -65,6 +65,29 @@ public abstract class HttpBase : IRequestInfo
     public ContentCompletionStatus ContentStatus { get; protected set; } = ContentCompletionStatus.Unknown;
 
     /// <summary>
+    /// 是否分块
+    /// </summary>
+    public bool IsChunk
+    {
+        get
+        {
+            var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
+            return "chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            if (value)
+            {
+                this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+            }
+            else
+            {
+                this.Headers.Remove(HttpHeaders.TransferEncoding);
+            }
+        }
+    }
+
+    /// <summary>
     /// 内容长度
     /// </summary>
     public long ContentLength
@@ -112,11 +135,22 @@ public abstract class HttpBase : IRequestInfo
 
         if (index >= 0)
         {
-            var headerLength = (int)(index - reader.BytesRead + 2);
-            var headerSpan = reader.GetSpan(headerLength).Slice(0, headerLength);
+            // 计算从当前读取位置到头部结束标记的长度
+            var headerLength = (int)index;
+
+            // 确保不会读取超过可用数据的内容
+            if (reader.BytesRemaining < headerLength + 4) // +4 为 \r\n\r\n 的长度
+            {
+                return false;
+            }
+
+            // 获取头部数据，不包含结尾的 \r\n\r\n
+            var headerSpan = reader.GetSpan(headerLength);
 
             this.ReadHeaders(headerSpan);
-            reader.Advance(headerLength + 2);
+
+            // 跳过头部数据和 \r\n\r\n 分隔符
+            reader.Advance(headerLength + 4);
             return true;
         }
         else
@@ -184,6 +218,11 @@ public abstract class HttpBase : IRequestInfo
             var headerEnd = remaining.IndexOf("\r\n"u8);
             if (headerEnd == -1)
             {
+                // 如果没有找到\r\n，但还有剩余数据，则将剩余数据作为最后一个header处理
+                if (!remaining.IsEmpty)
+                {
+                    this.ParseHeaderLine(remaining);
+                }
                 break;
             }
 

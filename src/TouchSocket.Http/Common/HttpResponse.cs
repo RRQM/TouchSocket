@@ -54,29 +54,6 @@ public abstract class HttpResponse : HttpBase
     #region 属性
 
     /// <summary>
-    /// 是否分块
-    /// </summary>
-    public bool IsChunk
-    {
-        get
-        {
-            var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
-            return "chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase);
-        }
-        set
-        {
-            if (value)
-            {
-                this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
-            }
-            else
-            {
-                this.Headers.Remove(HttpHeaders.TransferEncoding);
-            }
-        }
-    }
-
-    /// <summary>
     /// 是否代理权限验证。
     /// </summary>
     public bool IsProxyAuthenticationRequired => this.StatusCode == 407;
@@ -157,7 +134,12 @@ public abstract class HttpResponse : HttpBase
             }
         }
 
-        this.Responsed = true;
+        // 100状态码不表示响应结束。后续可以继续发送响应内容。
+        if (this.StatusCode != 100)
+        {
+            this.Responsed = true;
+        }
+
     }
 
     /// <summary>

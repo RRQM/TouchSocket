@@ -14,15 +14,20 @@ namespace TouchSocket.Modbus;
 
 internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRequestInfo
 {
-    public ModbusRtuRequest(ModbusRequest request)
+    public ModbusRtuRequest(IModbusRequest request)
     {
         this.SlaveId = request.SlaveId;
         this.FunctionCode = request.FunctionCode;
         this.Quantity = request.Quantity;
         this.StartingAddress = request.StartingAddress;
         this.Data = request.Data;
-        this.ReadStartAddress = request.ReadStartAddress;
-        this.ReadQuantity = request.ReadQuantity;
+
+        // 如果是读写操作，获取读取相关的属性
+        if (request is IModbusReadWriteRequest readWriteRequest)
+        {
+            this.ReadStartAddress = readWriteRequest.ReadStartAddress;
+            this.ReadQuantity = readWriteRequest.ReadQuantity;
+        }
     }
 
     /// <inheritdoc/>

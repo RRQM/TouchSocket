@@ -111,14 +111,32 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private static object PrimitiveParse(string source, Type targetType)
+    private static bool IsSimpleType(Type type)
     {
-        if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.StringType)
+        if (type.IsPrimitive || type == TouchSocketCoreUtility.StringType)
         {
-            StringExtension.TryParseToType(source, targetType, out var target);
+            return true;
+        }
 
+        if (type.IsNullableType(out var actualType))
+        {
+            return IsSimpleType(actualType);
+        }
+        return false;
+    }
+
+    private static object ParseSimpleType(string source, Type targetType)
+    {
+        if (targetType.IsNullableType(out var actualType))
+        {
+            targetType = actualType;
+        }
+
+        if (StringExtension.TryParseToType(source, targetType, out var target))
+        {
             return target;
         }
+
         return default;
     }
 
@@ -151,7 +169,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
         {
             return callContext.Resolver.Resolve(parameter.Type);
         }
-        else if (parameter.Type.IsPrimitive || parameter.Type == typeof(string))
+        else if (IsSimpleType(parameter.Type))
         {
             var parameterInfo = this.GetParameterInfo(parameter);
             if (parameterInfo.IsFromBody)
@@ -159,7 +177,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 var body = await request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (body.HasValue())
                 {
-                    return WebApiParserPlugin.PrimitiveParse(body, parameter.Type);
+                    return WebApiParserPlugin.ParseSimpleType(body, parameter.Type);
                 }
                 else if (parameter.ParameterInfo.HasDefaultValue)
                 {
@@ -175,7 +193,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 var value = request.Headers.Get(parameterInfo.FromHeaderName);
                 if (value.HasValue())
                 {
-                    return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    return WebApiParserPlugin.ParseSimpleType(value, parameter.Type);
                 }
                 else if (parameter.ParameterInfo.HasDefaultValue)
                 {
@@ -191,7 +209,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 var value = (await request.GetFormCollectionAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext)).Get(parameterInfo.FromFormName);
                 if (value.HasValue())
                 {
-                    return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    return WebApiParserPlugin.ParseSimpleType(value, parameter.Type);
                 }
                 else if (parameter.ParameterInfo.HasDefaultValue)
                 {
@@ -207,7 +225,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 var value = request.Query.Get(parameterInfo.FromQueryName ?? parameter.Name);
                 if (value.HasValue())
                 {
-                    return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    return WebApiParserPlugin.ParseSimpleType(value, parameter.Type);
                 }
                 else if (parameter.ParameterInfo.HasDefaultValue)
                 {

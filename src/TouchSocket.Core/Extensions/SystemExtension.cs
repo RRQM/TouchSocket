@@ -532,8 +532,28 @@ public static class SystemExtension
     public static bool IsNullableType(this Type type)
     {
         return type != null
+     && type.IsGenericType
+        && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+    }
+
+    /// <summary>
+    /// 判断该类型是否为可空类型，并返回实际类型
+    /// </summary>
+    /// <param name="type">要检查的类型</param>
+    /// <param name="actualType">当类型是可空类型时，返回其实际类型；否则返回原类型</param>
+    /// <returns>如果是可空类型返回<see langword="true"/>，否则返回<see langword="false"/></returns>
+    public static bool IsNullableType(this Type type, out Type actualType)
+    {
+        if (type != null
             && type.IsGenericType
-            && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+            && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            actualType = type.GetGenericArguments()[0];
+            return true;
+        }
+
+        actualType = type;
+        return false;
     }
 
     /// <summary>

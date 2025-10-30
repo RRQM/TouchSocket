@@ -39,19 +39,14 @@ internal sealed class ServerHttpRequest : HttpRequest
     {
         if (this.ContentStatus == ContentCompletionStatus.Unknown)
         {
-            if (!this.IsServer)
-            {
-                //非Server模式下不允许获取
-                return default;
-            }
-            if (this.ContentLength == 0)
+            if (!this.IsChunk && this.ContentLength == 0)
             {
                 this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
                 this.ContentStatus = ContentCompletionStatus.ContentCompleted;
                 return this.m_contentMemory;
             }
 
-            if (this.ContentLength > MaxCacheSize)
+            if (!this.IsChunk && this.ContentLength > MaxCacheSize)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
             }
@@ -95,19 +90,20 @@ internal sealed class ServerHttpRequest : HttpRequest
     /// <inheritdoc/>
     public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
-        if (this.ContentLength == 0)
-        {
-            return HttpReadOnlyMemoryBlockResult.Completed;
-        }
         if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
         {
+            // 已经完成读取
             return new HttpReadOnlyMemoryBlockResult(default, this.m_contentMemory, true);
         }
-
         if (this.ContentStatus == ContentCompletionStatus.ReadCompleted)
         {
             ThrowHelper.ThrowInvalidOperationException("内容已读取完毕。");
         }
+        if (this.ContentLength == 0 && !this.IsChunk)
+        {
+            return HttpReadOnlyMemoryBlockResult.Completed;
+        }
+
 
         var readLeaseTask = this.m_asyncExchange.ReadAsync(cancellationToken);
 

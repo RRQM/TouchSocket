@@ -31,7 +31,7 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try

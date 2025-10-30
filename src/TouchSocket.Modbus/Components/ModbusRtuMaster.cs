@@ -20,7 +20,7 @@ namespace TouchSocket.Modbus;
 /// </summary>
 public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
 {
-    private ModbusRequest m_modbusRequest;
+    private IModbusRequest m_modbusRequest;
 
     /// <summary>
     /// 基于串口的Modbus主站接口
@@ -37,7 +37,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 

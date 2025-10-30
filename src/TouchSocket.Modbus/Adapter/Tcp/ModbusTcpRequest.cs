@@ -22,7 +22,7 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
     /// </summary>
     /// <param name="transactionId"></param>
     /// <param name="request"></param>
-    public ModbusTcpRequest(ushort transactionId, ModbusRequest request)
+    public ModbusTcpRequest(ushort transactionId, IModbusRequest request)
     {
         this.TransactionId = transactionId;
         this.ProtocolId = 0;
@@ -31,8 +31,13 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
         this.StartingAddress = request.StartingAddress;
         this.Quantity = request.Quantity;
         this.Data = request.Data;
-        this.ReadStartAddress = request.ReadStartAddress;
-        this.ReadQuantity = request.ReadQuantity;
+        
+        // 如果是读写操作，获取读取相关的属性
+        if (request is IModbusReadWriteRequest readWriteRequest)
+        {
+            this.ReadStartAddress = readWriteRequest.ReadStartAddress;
+            this.ReadQuantity = readWriteRequest.ReadQuantity;
+        }
     }
 
     /// <inheritdoc/>

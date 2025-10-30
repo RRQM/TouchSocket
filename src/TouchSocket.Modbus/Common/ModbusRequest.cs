@@ -15,7 +15,7 @@ namespace TouchSocket.Modbus;
 /// <summary>
 /// Modbus请求类
 /// </summary>
-public class ModbusRequest : IModbusRequest
+public class ModbusRequest : IModbusReadWriteRequest
 {
     /// <summary>
     /// Modbus请求类

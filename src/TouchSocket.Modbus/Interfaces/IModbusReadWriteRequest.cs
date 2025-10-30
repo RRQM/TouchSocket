@@ -13,32 +13,17 @@
 namespace TouchSocket.Modbus;
 
 /// <summary>
-/// Modbus请求接口
+/// 读写多个寄存器请求接口，专门用于<see cref="FunctionCode.ReadWriteMultipleRegisters"/>操作
 /// </summary>
-public interface IModbusRequest
+public interface IModbusReadWriteRequest : IModbusRequest
 {
     /// <summary>
-    /// 读取或者写入的数量
+/// 读取起始位置
     /// </summary>
-    ushort Quantity { get; }
+    ushort ReadStartAddress { get; }
 
-    /// <summary>
-    /// 读取或者写入的起始位置
+ /// <summary>
+    /// 读取数量
     /// </summary>
-    ushort StartingAddress { get; }
-
-    /// <summary>
-    /// 数据
-    /// </summary>
-    ReadOnlyMemory<byte> Data { get; }
-
-    /// <summary>
-    /// 站点号（单元标识符）
-    /// </summary>
-    byte SlaveId { get; }
-
-    /// <summary>
-    /// 功能码
-    /// </summary>
-    FunctionCode FunctionCode { get; }
+  ushort ReadQuantity { get; }
 }

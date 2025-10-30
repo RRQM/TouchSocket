@@ -39,7 +39,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);

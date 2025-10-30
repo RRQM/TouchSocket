@@ -23,5 +23,5 @@ public interface IModbusMaster : IDependencyObject
     /// <param name="request">要发送的Modbus请求对象</param>
     /// <param name="cancellationToken">用于取消操作的CancellationToken</param>
     /// <returns>返回一个任务，该任务完成后将包含相应的Modbus响应</returns>
-    Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken);
+    Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken);
 }

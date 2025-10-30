@@ -42,7 +42,7 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken cancellationToken)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 

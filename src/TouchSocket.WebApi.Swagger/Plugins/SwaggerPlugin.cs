@@ -23,7 +23,7 @@ namespace TouchSocket.WebApi.Swagger;
 /// <summary>
 /// SwaggerPlugin
 /// </summary>
-public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
+internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
 {
     private readonly ILog m_logger;
 
@@ -187,7 +187,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             type = type.GetGenericArguments()[0];
         }
 
-        if (type.IsPrimitive || type == typeof(string))
+        if (IsSimpleType(type))
         {
             return;
         }
@@ -206,6 +206,20 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             this.AddSchemaType(item.PropertyType, types);
         }
+    }
+
+    private static bool IsSimpleType(Type type)
+    {
+        if (type.IsPrimitive || type == TouchSocketCoreUtility.StringType)
+        {
+            return true;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            return IsSimpleType(actualType);
+        }
+        return false;
     }
 
     private ReadOnlyMemory<byte> BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
@@ -540,7 +554,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
     private string GetIn(ParameterInfo parameter)
     {
         var type = parameter.ParameterType;
-        if (!type.IsPrimitive())
+        if (!IsSimpleType(type))
         {
             return default;
         }
@@ -663,6 +677,11 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         if (type is null)
         {
             return OpenApiDataTypes.Any;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            return this.ParseDataTypes(actualType);
         }
 
         return type switch
