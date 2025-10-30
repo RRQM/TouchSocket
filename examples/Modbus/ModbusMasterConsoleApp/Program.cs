@@ -124,9 +124,9 @@ internal class Program
         #region ModbusMaster通过原生接口操作
         //通过原生接口调用
         var modbusRequest = new ModbusRequest(FunctionCode.ReadCoils);
-        modbusRequest.SlaveId = (1);//设置站号。如果是Tcp可以不设置
-        modbusRequest.StartingAddress = (0);//设置起始
-        modbusRequest.Quantity = (1);//设置数量
+        modbusRequest.SlaveId = 1;//设置站号。如果是Tcp可以不设置
+        modbusRequest.StartingAddress = 0;//设置起始
+        modbusRequest.Quantity = 1;//设置数量
         modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
 
         //设置超时
@@ -324,8 +324,9 @@ internal class Program
 internal class MyModbusMaster : DependencyObject, IModbusMaster
 {
     #region ModbusMaster原生接口实现
-    public Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, CancellationToken token)
+    public Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
+        //仅作示例接口，未实现
         throw new NotImplementedException();
     }
     #endregion

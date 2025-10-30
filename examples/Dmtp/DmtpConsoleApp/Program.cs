@@ -76,8 +76,12 @@ internal class Program
         //DmtpRpc会用[20,25)的协议。
         //文件传输会用[25,35)的协议。
 
+
+        #region Dmtp发送消息
         //此处使用1000，基本就不会冲突。
         await client.SendAsync(1000, Encoding.UTF8.GetBytes("hello"));
+        #endregion
+
     }
 
     /// <summary>
