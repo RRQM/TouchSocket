@@ -67,23 +67,29 @@ internal class Program
 
         //1.创建通道，同时支持通道路由和元数据传递
 
-        var cts = new CancellationTokenSource(1000 * 10);
+        using var cts = new CancellationTokenSource(1000 * 10);
         var metadata = new Metadata();
 
-        //using (var channel = await client.CreateChannelAsync(metadata, cts.Token))
-        //{
-        //    ConsoleLogger.Default.Info($"通道创建成功");
-        //    var bytes = new byte[1000];
-        //    for (var i = 0; i < count; i++)
-        //    {
-        //        //2.持续写入数据
-        //        await channel.WriteAsync(bytes);
-        //    }
+        using (var channel = await client.CreateChannelAsync(metadata, cts.Token))
+        {
+            ConsoleLogger.Default.Info($"通道创建成功");
+            var bytes = new byte[1000];
+            for (var i = 0; i < count; i++)
+            {
+                if (!channel.CanWrite)
+                {
+                    //通道不可写，即客户端可能已经断开连接
+                    break;
+                }
+                using var writeCts = new CancellationTokenSource(1000 * 5);
+                //2.持续写入数据
+                await channel.WriteAsync(bytes, writeCts.Token);
+            }
 
-        //    //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-        //    await channel.CompleteAsync("我完成了");
-        //    ConsoleLogger.Default.Info("通道写入结束");
-        //}
+            //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+            await channel.CompleteAsync("我完成了");
+            ConsoleLogger.Default.Info("通道写入结束");
+        }
         #endregion
 
     }
@@ -100,38 +106,40 @@ internal class Program
                {
                    a.AddConsoleLogger();
                })
-               .ConfigurePlugins(a =>
-               {
-                   a.Add<MyPlugin>();
+        #region Dmtp心跳重连插件
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyPlugin>();
 
-                   //使用重连
-                   a.UseReconnection<TcpDmtpClient>(options =>
-                   {
-                       options.PollingInterval = TimeSpan.FromSeconds(3);
-                       options.CheckAction = async (c, i) =>//重新定义检活策略
-                       {
-                           //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用。因为如果直接断网，则检测不出来
-                           //await Task.CompletedTask;//消除Task
-                           //return c.Online;//判断是否在握手状态
+                    //使用重连
+                    a.UseReconnection<TcpDmtpClient>(options =>
+                    {
+                        //重连间隔3秒
+                        options.PollingInterval = TimeSpan.FromSeconds(3);
+                        options.CheckAction = async (c, i) =>//重新定义检活策略
+                        {
+                            //第1步，先判断在线状态，如果不在线，则直接Dead
+                            if (!c.Online)
+                            {
+                                return ConnectionCheckResult.Dead;
+                            }
 
-                           //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
-                           if ((await c.PingAsync()).IsSuccess)
-                           {
-                               return ConnectionCheckResult.Alive;
-                           }
-                           //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
-                           else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
-                           {
-                               return ConnectionCheckResult.Skip;
-                           }
-                           //否则，直接重连。
-                           else
-                           {
-                               return ConnectionCheckResult.Dead;
-                           }
-                       };
-                   });
-               })
+                            //第2步，进行活动时间判断，如果最近活动时间不超过3秒，则跳过本次重连检查
+                            if (DateTime.UtcNow - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
+                            {
+                                return ConnectionCheckResult.Skip;
+                            }
+
+                            using var cts = new CancellationTokenSource(5000);
+                            var result = await c.PingAsync(cts.Token);
+
+                            //第3步，根据Ping结果返回最终结果
+                            return result.IsSuccess ? ConnectionCheckResult.Alive : ConnectionCheckResult.Dead;
+                        };
+                    });
+                })
+        #endregion
+
                .BuildClientAsync<TcpDmtpClient>();
 
         client.Logger.Info("连接成功");
@@ -164,6 +172,7 @@ internal class Program
     }
 }
 
+#region TcpDmtpService使用插件订阅Channel
 internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
 {
     private readonly ILog m_logger;
@@ -175,21 +184,26 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
 
     public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
     {
+        //1.订阅通道
         if (client.TrySubscribeChannel(e.ChannelId, out var channel))
         {
-            //设定读取超时时间
-            //channel.Timeout = TimeSpan.FromSeconds(30);
+            //2.准备处理通道数据
             using (channel)
             {
                 this.m_logger.Info("通道开始接收");
 
                 long count = 0;
 
+                //3.持续读取数据
                 while (channel.CanRead)
                 {
+                    //4.设置读取超时
                     using var cts = new CancellationTokenSource(10 * 1000);
+
+                    //5.读取到的数据
                     var memory = await channel.ReadAsync(cts.Token);
 
+                    //6.可以判断通道状态
                     if (channel.Status == ChannelStatus.HoldOn)
                     {
                         Console.WriteLine($"HoldOn:{channel.LastOperationMes}");
@@ -207,3 +221,4 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
         await e.InvokeNext();
     }
 }
+#endregion
