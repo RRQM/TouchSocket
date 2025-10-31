@@ -162,8 +162,9 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
     /// <param name="printLog">是否输出日志。</param>
     /// <param name="sleepTime">失败时，停留时间</param>
     /// <param name="successCallback">成功回调函数</param>
+    /// <param name="errorCallback">失败回调函数</param>
     /// <returns></returns>
-    public ReconnectionPlugin<TClient> SetConnectAction(int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<TClient> successCallback = null)
+    public ReconnectionPlugin<TClient> SetConnectAction(int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<TClient> successCallback = null, Action<TClient> errorCallback = null)
     {
         this.SetConnectAction(async client =>
         {
@@ -190,6 +191,7 @@ public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlu
                     {
                         client.Logger?.Exception(this, ex);
                     }
+                    errorCallback?.Invoke(client);
                     await Task.Delay(sleepTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
