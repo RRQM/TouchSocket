@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using TouchSocket.Resources;
 
@@ -51,6 +52,12 @@ public sealed class Container : IContainer
     }
 
     /// <inheritdoc/>
+    [RequiresDynamicCode("使用泛型类型实例化需要动态代码支持")]
+    [RequiresUnreferencedCode("DI容器可能需要访问未引用的类型成员")]
+    [UnconditionalSuppressMessage("AOT", "IL2026:RequiresUnreferencedCode", Justification = "IServiceProvider接口实现必须支持动态类型解析")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode", Justification = "IServiceProvider接口实现必须支持泛型类型实例化")]
+    [UnconditionalSuppressMessage("Trim", "IL2046:RequiresUnreferencedCode", Justification = "接口实现需要与基接口保持一致")]
+    [UnconditionalSuppressMessage("AOT", "IL3051:RequiresDynamicCode", Justification = "接口实现需要与基接口保持一致")]
     public object GetService(Type serviceType)
     {
         return this.Resolve(serviceType);
@@ -83,6 +90,12 @@ public sealed class Container : IContainer
     }
 
     /// <inheritdoc/>
+    [RequiresDynamicCode("使用泛型类型实例化需要动态代码支持")]
+    [RequiresUnreferencedCode("DI容器可能需要访问未引用的类型成员")]
+    [UnconditionalSuppressMessage("AOT", "IL2055:MakeGenericType", Justification = "容器中的泛型类型在运行时是已知的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:MakeGenericType", Justification = "容器中的泛型类型在运行时是已知的")]
+    [UnconditionalSuppressMessage("Trim", "IL2046:RequiresUnreferencedCode", Justification = "接口实现需要与基接口保持一致")]
+    [UnconditionalSuppressMessage("AOT", "IL3051:RequiresDynamicCode", Justification = "接口实现需要与基接口保持一致")]
     public object Resolve(Type fromType, string key)
     {
         string k;
@@ -113,15 +126,15 @@ public sealed class Container : IContainer
                         else
                         {
                             return descriptor.ToType.IsGenericType
-                                ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
-                                : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
+                            ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                             : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
                 }
 
                 return descriptor.ToType.IsGenericType
                     ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
-                    : this.Create(descriptor, descriptor.ToType);
+                  : this.Create(descriptor, descriptor.ToType);
             }
         }
         k = $"{fromType.FullName}{key}";
@@ -148,6 +161,12 @@ public sealed class Container : IContainer
     }
 
     /// <inheritdoc/>
+    [RequiresDynamicCode("使用泛型类型实例化需要动态代码支持")]
+    [RequiresUnreferencedCode("DI容器可能需要访问未引用的类型成员")]
+    [UnconditionalSuppressMessage("AOT", "IL2055:MakeGenericType", Justification = "容器中的泛型类型在运行时是已知的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:MakeGenericType", Justification = "容器中的泛型类型在运行时是已知的")]
+    [UnconditionalSuppressMessage("Trim", "IL2046:RequiresUnreferencedCode", Justification = "接口实现需要与基接口保持一致")]
+    [UnconditionalSuppressMessage("AOT", "IL3051:RequiresDynamicCode", Justification = "接口实现需要与基接口保持一致")]
     public object Resolve(Type fromType)
     {
         string k;
@@ -178,15 +197,15 @@ public sealed class Container : IContainer
                         else
                         {
                             return descriptor.ToType.IsGenericType
-                                ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
-                                : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
+                                  ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                                   : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
                 }
 
                 return descriptor.ToType.IsGenericType
-                    ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
-                    : this.Create(descriptor, descriptor.ToType);
+                ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
+                       : this.Create(descriptor, descriptor.ToType);
             }
         }
         k = fromType.FullName;
@@ -226,7 +245,12 @@ public sealed class Container : IContainer
         this.m_registrations.TryRemove(k, out _);
     }
 
-    private object Create(DependencyDescriptor descriptor, Type toType)
+    [RequiresUnreferencedCode("DI容器需要访问类型的构造函数、属性和方法")]
+    [UnconditionalSuppressMessage("AOT", "IL2070:GetConstructors", Justification = "DI容器需要访问构造函数进行对象创建")]
+    [UnconditionalSuppressMessage("AOT", "IL2067:CreateInstance", Justification = "DI容器需要通过Activator创建实例")]
+    [UnconditionalSuppressMessage("AOT", "IL2026:RequiresUnreferencedCode", Justification = "DI容器明确需要访问未引用的成员")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode", Justification = "Create方法内部调用Resolve方法需要动态代码支持")]
+    private object Create(DependencyDescriptor descriptor, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type toType)
     {
         var ctor = toType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
         if (ctor is null)

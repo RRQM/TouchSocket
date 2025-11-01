@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.IO.Pipelines;
+
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -46,15 +48,10 @@ public abstract class HttpContent
         return this.TryComputeLength(out length);
     }
 
-    /// <summary>
-    /// 内部方法，用于写入HTTP响应内容
-    /// </summary>
-    /// <param name="func">一个函数，用于处理字节块的写入操作</param>
-    /// <param name="cancellationToken">用于取消操作的令牌</param>
-    /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    internal Task InternalWriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> func, CancellationToken cancellationToken)
+
+    internal Task InternalWriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
-        return this.WriteContent(func, cancellationToken);
+        return this.WriteContent(writer, cancellationToken);
     }
 
     /// <summary>
@@ -78,13 +75,8 @@ public abstract class HttpContent
     /// <returns>如果成功计算长度，则返回 true；否则返回 false。</returns>
     protected abstract bool TryComputeLength(out long length);
 
-    /// <summary>
-    /// 抽象方法，由子类实现，用于写入HTTP响应内容
-    /// </summary>
-    /// <param name="writeFunc">一个函数，用于处理字节块的写入操作</param>
-    /// <param name="cancellationToken">用于取消操作的令牌</param>
-    /// <returns>返回一个任务对象，代表异步写入操作</returns>
-    protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken);
+
+    protected abstract Task WriteContent(PipeWriter writer, CancellationToken cancellationToken);
 
     #region implicit
 

@@ -1064,13 +1064,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <inheritdoc/>
     public virtual Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivateCreateChannelAsync(default, true, 0, metadata);
+        return this.PrivateCreateChannelAsync(default, true, 0, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
     public virtual Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivateCreateChannelAsync(default, false, id, metadata);
+        return this.PrivateCreateChannelAsync(default, false, id, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -1086,7 +1086,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -1104,7 +1104,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -1149,7 +1149,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata, CancellationToken cancellationToken = default)
+    private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata, CancellationToken cancellationToken)
     {
         this.CheckChannelShouldBeReliable();
 

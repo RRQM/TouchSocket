@@ -33,11 +33,6 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// </summary>
     internal ITransport InternalTransport => this.Transport;
 
-    internal Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
-    {
-        return this.ProtectedSendAsync(memory, cancellationToken);
-    }
-
     /// <summary>
     /// 异步连接HTTP服务器，支持代理连接
     /// </summary>
@@ -225,7 +220,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
         if (!result)
         {
-            await content.InternalWriteContent(this.UnsafeSendAsync, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await content.InternalWriteContent(this.Transport.Writer, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -239,15 +234,6 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         this.m_httpClientResponse.Reset();
         await this.m_httpClientResponse.ReadHeader(cancellationToken);
         return this.m_httpClientResponse;
-    }
-
-    private async Task UnsafeSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
-    {
-        this.ThrowIfDisposed();
-        this.ThrowIfClientNotConnected();
-        var transport = this.Transport;
-
-        await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion Request

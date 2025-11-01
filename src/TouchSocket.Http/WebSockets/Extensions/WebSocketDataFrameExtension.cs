@@ -85,7 +85,7 @@ public static class WebSocketDataFrameExtension
     /// 并将构建结果存储在字节块中，而不是创建一个新的对象。
     /// 这样可以提高性能，减少内存分配。
     /// </remarks>
-    public static void BuildResponse<TByteBlock>(this WSDataFrame dataFrame, ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public static void BuildResponse<TByteBlock>(this WSDataFrame dataFrame, ref TByteBlock byteBlock) where TByteBlock : IBytesWriter
     {
         dataFrame.Build(ref byteBlock);
     }

@@ -91,46 +91,30 @@ public abstract class HttpResponse : HttpBase
     {
         this.ThrowIfResponsed();
 
+        var transport = this.GetITransport();
         var content = this.Content;
         if (content == null)
         {
-            var byteBlock = new ValueByteBlock(1024);
-            try
-            {
-                //没有内容时，需要设置内容长度为0
-                this.ContentLength = 0;
-                this.BuildHeader(ref byteBlock);
-
-                // 异步发送请求
-                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            var writer = new PipeBytesWriter(transport.Writer);
+            //没有内容时，需要设置内容长度为0
+            this.ContentLength = 0;
+            this.BuildHeader(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
             content.InternalTryComputeLength(out var contentLength);
-            var byteBlock = new ValueByteBlock((int)Math.Min(contentLength + 1024, 1024 * 64));
-            try
+            var writer = new PipeBytesWriter(transport.Writer);
+            content.InternalBuildingHeader(this.Headers);
+            this.BuildHeader(ref writer);
+
+            var result = content.InternalBuildingContent(ref writer);
+
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            if (!result)
             {
-                content.InternalBuildingHeader(this.Headers);
-                this.BuildHeader(ref byteBlock);
-
-                var result = content.InternalBuildingContent(ref byteBlock);
-
-                // 异步发送请求
-                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-                if (!result)
-                {
-                    await content.InternalWriteContent(this.InternalSendAsync, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-            finally
-            {
-                byteBlock.Dispose();
+                await content.InternalWriteContent(transport.Writer, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -156,20 +140,13 @@ public abstract class HttpResponse : HttpBase
         this.m_canWrite = false;
         if (this.IsChunk)
         {
-            var byteBlock = new ValueByteBlock(1024);
-            try
-            {
-                TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
-
-                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.Responsed = true;
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            var transport = this.GetITransport();
+            var writer = new PipeBytesWriter(transport.Writer);
+            TouchSocketHttpUtility.AppendHex(ref writer, 0);
+            TouchSocketHttpUtility.AppendRn(ref writer);
+            TouchSocketHttpUtility.AppendRn(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.Responsed = true;
         }
     }
 
@@ -185,18 +162,13 @@ public abstract class HttpResponse : HttpBase
     {
         this.ThrowIfResponsed();
 
+        var transport = this.GetITransport();
+        var writer = new PipeBytesWriter(transport.Writer);
+
         if (!this.m_sentHeader)
         {
-            var byteBlock = new ValueByteBlock(1024);
-            try
-            {
-                this.BuildHeader(ref byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            this.BuildHeader(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_sentHeader = true;
         }
 
@@ -204,34 +176,19 @@ public abstract class HttpResponse : HttpBase
 
         if (this.IsChunk)
         {
-            var byteBlock = new ValueByteBlock(count + 1024);
-            try
-            {
-                TouchSocketHttpUtility.AppendHex(ref byteBlock, count);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                byteBlock.Write(memory.Span);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_sentLength += count;
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-            //using ()
-            //{
-            //    byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
-            //    byteBlock.Write(memory.Span);
-            //    byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-            //    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            //    this.m_sentLength += count;
-            //}
+            TouchSocketHttpUtility.AppendHex(ref writer, count);
+            TouchSocketHttpUtility.AppendRn(ref writer);
+            writer.Write(memory.Span);
+            TouchSocketHttpUtility.AppendRn(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_sentLength += count;
         }
         else
         {
             if (this.m_sentLength + count <= this.ContentLength)
             {
-                await this.InternalSendAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                writer.Write(memory.Span);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.m_sentLength += count;
                 if (this.m_sentLength == this.ContentLength)
                 {
@@ -382,9 +339,9 @@ public abstract class HttpResponse : HttpBase
         //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     }
 
-    private Task InternalSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
+    private ITransport GetITransport()
     {
-        return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory, cancellationToken) : this.m_httpClientBase.InternalSendAsync(memory, cancellationToken);
+        return this.m_isServer ? this.m_httpSessionClient.InternalTransport : this.m_httpClientBase.InternalTransport;
     }
 
     private void ParseProtocol(ReadOnlySpan<byte> protocolSpan)

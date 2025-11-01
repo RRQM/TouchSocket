@@ -173,24 +173,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
         dataFrame.Opcode = dataType;
 
-        var byteBlock = new ByteBlock(dataFrame.MaxLength);
-        try
-        {
-            if (this.m_isServer)
-            {
-                dataFrame.BuildResponse(ref byteBlock);
-                await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                dataFrame.BuildRequest(ref byteBlock);
-                await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
+        var transport = this.m_isServer ? this.m_httpSocketClient.InternalTransport : this.m_httpClientBase.InternalTransport;
+        var writer = new PipeBytesWriter(transport.Writer);
+
+        dataFrame.BuildResponse(ref writer);
+        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 发送

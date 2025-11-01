@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -24,6 +26,8 @@ public interface IResolver : IServiceProvider
     /// <param name="fromType">要解析的目标类型。</param>
     /// <param name="key">可选的实例标识符。</param>
     /// <returns>解析出的实例。</returns>
+    [RequiresDynamicCode("使用泛型类型实例化需要动态代码支持")]
+    [RequiresUnreferencedCode("DI容器可能需要访问未引用的类型成员")]
     object Resolve(Type fromType, string key);
 
     /// <summary>
@@ -31,6 +35,8 @@ public interface IResolver : IServiceProvider
     /// </summary>
     /// <param name="fromType">要解析的目标类型。</param>
     /// <returns>解析出的实例。</returns>
+    [RequiresDynamicCode("使用泛型类型实例化需要动态代码支持")]
+    [RequiresUnreferencedCode("DI容器可能需要访问未引用的类型成员")]
     object Resolve(Type fromType);
 
     /// <summary>

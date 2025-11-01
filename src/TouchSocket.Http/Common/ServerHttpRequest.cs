@@ -138,10 +138,12 @@ internal sealed class ServerHttpRequest : HttpRequest
     }
 
     /// <inheritdoc/>
-    internal void InternalSetContent(in ReadOnlyMemory<byte> content)
+    internal void InternalSetContent(ReadOnlySpan<byte> content)
     {
-        this.m_contentMemory = content;
-        this.ContentLength = content.Length;
+        if (!content.IsEmpty)
+        {
+            this.m_contentMemory = content.ToArray();
+        }
         this.ContentStatus = ContentCompletionStatus.ContentCompleted;
     }
 }

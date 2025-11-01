@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.IO.Pipelines;
+
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -70,9 +72,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken)
+    protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
-        await writeFunc(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writer.WriteAsync(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

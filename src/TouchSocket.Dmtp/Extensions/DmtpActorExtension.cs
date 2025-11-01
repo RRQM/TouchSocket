@@ -43,54 +43,54 @@ public static class DmtpActorExtension
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
-    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default)
+    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(metadata).GetFalseAwaitResult();
+        return client.DmtpActor.CreateChannelAsync(metadata, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
-    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
+    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(id, metadata).GetFalseAwaitResult();
+        return client.DmtpActor.CreateChannelAsync(id, metadata, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
-    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
+    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(targetId, id, metadata).GetFalseAwaitResult();
+        return client.DmtpActor.CreateChannelAsync(targetId, id, metadata, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata,CancellationToken)"/>
     [AsyncToSyncWarning]
-    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
+    public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(targetId, metadata).GetFalseAwaitResult();
+        return client.DmtpActor.CreateChannelAsync(targetId, metadata, cancellationToken).GetFalseAwaitResult();
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata,CancellationToken)"/>
-    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, Metadata metadata = default)
+    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(metadata);
+        return client.DmtpActor.CreateChannelAsync(metadata, cancellationToken);
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata,CancellationToken)"/>
-    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, int id, Metadata metadata = default)
+    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(id, metadata);
+        return client.DmtpActor.CreateChannelAsync(id, metadata, cancellationToken);
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata,CancellationToken)"/>
-    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
+    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(targetId, id, metadata);
+        return client.DmtpActor.CreateChannelAsync(targetId, id, metadata, cancellationToken);
     }
 
     /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata,CancellationToken)"/>
-    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, Metadata metadata = default)
+    public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return client.DmtpActor.CreateChannelAsync(targetId, metadata);
+        return client.DmtpActor.CreateChannelAsync(targetId, metadata, cancellationToken);
     }
 
     /// <inheritdoc cref="IDmtpActor.TrySubscribeChannel(int, out IDmtpChannel)"/>

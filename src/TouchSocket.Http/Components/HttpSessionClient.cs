@@ -34,10 +34,10 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     #region Send
 
-    internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
-    {
-        return this.ProtectedSendAsync(memory, cancellationToken);
-    }
+    /// <summary>
+    /// 获取内部传输层对象，用于HTTP响应内容读取
+    /// </summary>
+    internal ITransport InternalTransport => this.Transport;
 
     #endregion Send
 
@@ -71,7 +71,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     /// <inheritdoc/>
     protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
-        if (e.RequestInfo is HttpRequest request)
+        if (e.RequestInfo is ServerHttpRequest request)
         {
             if (this.m_httpContext == null)
             {

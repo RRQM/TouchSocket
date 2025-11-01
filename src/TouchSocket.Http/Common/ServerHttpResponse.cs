@@ -14,7 +14,7 @@ namespace TouchSocket.Http;
 
 internal sealed class ServerHttpResponse : HttpResponse
 {
-    public ServerHttpResponse(HttpRequest request, HttpSessionClient httpSessionClient) : base(request, httpSessionClient)
+    public ServerHttpResponse(ServerHttpRequest request, HttpSessionClient httpSessionClient) : base(request, httpSessionClient)
     {
     }
 

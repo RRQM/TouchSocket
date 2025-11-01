@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
+using System.IO.Pipelines;
 
 namespace TouchSocket.Http;
 
@@ -92,7 +93,7 @@ public class StreamHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, CancellationToken, Task> writeFunc, CancellationToken cancellationToken)
+    protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
         // 创建一个缓冲区，用于存储读取的数据
 
@@ -129,7 +130,7 @@ public class StreamHttpContent : HttpContent
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
                         byteBlock.Write(target.Span);
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                        await writeFunc.Invoke(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
 
@@ -138,7 +139,7 @@ public class StreamHttpContent : HttpContent
                     TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                    await writeFunc.Invoke(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 finally
                 {
@@ -154,7 +155,7 @@ public class StreamHttpContent : HttpContent
                     {
                         break;
                     }
-                    await writeFunc.Invoke(memory.Slice(0, r), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writer.WriteAsync(memory.Slice(0, r), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }

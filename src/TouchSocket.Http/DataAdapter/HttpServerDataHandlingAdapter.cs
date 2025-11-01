@@ -101,10 +101,16 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                     else
                     {
                         var contentLength = (int)this.m_currentRequest.ContentLength;
-                        var content = reader.GetMemory(contentLength);
-                        reader.Advance(contentLength);
-
-                        this.m_currentRequest.InternalSetContent(content);
+                        if (contentLength > 0)
+                        {
+                            var content = reader.GetSpan(contentLength);
+                            reader.Advance(contentLength);
+                            this.m_currentRequest.InternalSetContent(content);
+                        }
+                        else
+                        {
+                            this.m_currentRequest.InternalSetContent(ReadOnlySpan<byte>.Empty);
+                        }
                         this.m_task = this.GoReceivedAsync(null, this.m_currentRequest);
 
                         this.m_currentRequest = null;
