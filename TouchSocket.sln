@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32825.248
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core", "Src\TouchSocket.Core\TouchSocket.Core.csproj", "{12471445-B5C5-49E2-A7AC-15782299C5A9}"
 EndProject
@@ -201,7 +201,6 @@ Global
 		{201772F1-8C5E-4815-85F2-0CD8507006E7} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		RESX_NeutralResourcesLanguage = en-001
 		SolutionGuid = {AD1F133D-9B7E-4CD1-97E0-31D529E5CD90}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
