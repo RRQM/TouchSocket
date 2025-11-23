@@ -41,10 +41,10 @@ const config = {
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
           sidebarCollapsed: true,
-          lastVersion: '3.1',
+          lastVersion: 'current',
           versions: {
             current: {
-              label: '4.0-rc',
+              label: '4.0',
               path: '/current',
             },
             // next: {
