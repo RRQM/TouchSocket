@@ -4,8 +4,9 @@ title: 依赖属性
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
@@ -17,12 +18,9 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 ## 二、什么是依赖属性？
 
 我们知道常规属性，就是拥有get，set访问器的字段，叫做属性。
-```csharp showLineNumbers
-class MyClass
-{
-    public int MyProperty { get; set; }
-}
-```
+
+<CustomCodeBlock region="依赖属性常规属性示例"/>
+
 而依赖属性，则是具有注入特征的属性。它具有如下特性：
 
 1. 可以像普通属性一样，声明在类内部（示例1），对外界的公布和常规数据一模一样。
@@ -33,26 +31,8 @@ class MyClass
 
 1. 继承**DependencyObject**
 2. 按如下格式生成属性项（propdp代码块可快速实现）
-```csharp showLineNumbers
-class MyDependencyObject: DependencyObject
-{
-    /// <summary>
-    /// 属性项
-    /// </summary>
-    public int MyProperty1
-    {
-        get { return GetValue(MyPropertyProperty1); }
-        set { SetValue(MyPropertyProperty1, value); }
-    }
 
-    /// <summary>
-    /// 依赖项
-	/// </summary>
-	public static readonly DependencyProperty<int> MyPropertyProperty1 =
-    	DependencyProperty<int>.Register("MyProperty1", typeof(MyDependencyObject), 10);
-
-}
-```
+<CustomCodeBlock region="依赖属性内部声明类定义"/>
 
 ### 2.2 扩展声明
 
@@ -60,58 +40,15 @@ class MyDependencyObject: DependencyObject
 
 下列示例声明一个MyProperty的属性扩展。
 
-```csharp showLineNumbers
-public static class DependencyExtensions
-{
-   /// <summary>
-    /// 依赖项
-	/// </summary>
-	public static readonly DependencyProperty<int> MyPropertyProperty2 =
-    	DependencyProperty<int>.Register("MyProperty2", typeof(DependencyExtensions), 10);
-
-    /// <summary>
-    /// 设置MyProperty2
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TClient SetMyProperty2<TClient>(this TClient client, int value) where TClient : IDependencyObject
-    {
-        client.SetValue(MyPropertyProperty2, value);
-        return client;
-    }
-
-    /// <summary>
-    /// 获取MyProperty2
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <returns></returns>
-    public static int GetMyProperty2<TClient>(this TClient client) where TClient : IDependencyObject
-    {
-        return client.GetValue(MyPropertyProperty2);
-    }
-}
-```
+<CustomCodeBlock region="依赖属性扩展声明类定义"/>
 
 那么这时候，**MyDependencyObject**对象即可赋值和获取**MyProperty2**的属性。
 
-```csharp {2-3}
-MyDependencyObject obj=new MyDependencyObject();
-obj.SetMyProperty2(2);//扩展属性必须通过扩展方法
-int value=obj.GetMyProperty2();
-```
+<CustomCodeBlock region="依赖属性扩展声明示例"/>
 
 :::tip 提示
 
 扩展的**SetMyProperty2**和**GetMyProperty2**不是必须的。如果没有这两个方法，我们依然可以使用**GetValue**和**SetValue**方法访问。
-
-```csharp {2-3}
-MyDependencyObject obj=new MyDependencyObject();
-obj.SetValue(DependencyExtensions.MyPropertyProperty2,2);
-int value=obj.GetValue(DependencyExtensions.MyPropertyProperty2);
-```
 
 :::  
 
@@ -128,29 +65,11 @@ int value=obj.GetValue(DependencyExtensions.MyPropertyProperty2);
 
 而重新编译，带来的问题就更大了，总不能把属性都声明在父类吧。何况还有dll版本依赖问题，同事推脱问题，巴拉巴拉。
 
-```csharp showLineNumbers
-public class Person
-{
-    /// <summary>
-    /// 年龄
-    /// </summary>
-    public int Age { get; set; }//常规属性
-}
-```
+<CustomCodeBlock region="依赖属性应用场景Person类定义"/>
 
 那我们如何解决呢？
 
 我们可以在一开始，就将Person类按如下声明。继承DependencyObject。
-
-```csharp showLineNumbers
-public class Person : DependencyObject
-{
-    /// <summary>
-    /// 年龄
-    /// </summary>
-    public int Age { get; set; }//常规属性
-}
-```
 
 :::tip 提示
 
@@ -162,40 +81,11 @@ public class Person : DependencyObject
 
 这样，你就可以随意的往**Person**类中添加属性了。
 
-```csharp showLineNumbers
-public static class DependencyExtensions
-{
-   /// <summary>
-    /// 依赖项
-	/// </summary>
-	public static readonly DependencyProperty<int> MyPropertyProperty2 =
-    	DependencyProperty<int>.Register("MyProperty2", typeof(DependencyExtensions), 10);
+<CustomCodeBlock region="依赖属性应用场景扩展定义"/>
 
-    /// <summary>
-    /// 设置MyProperty2
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public static TClient SetMyProperty2<TClient>(this TClient client, int value) where TClient : IDependencyObject
-    {
-        client.SetValue(MyPropertyProperty2, value);
-        return client;
-    }
+使用示例：
 
-    /// <summary>
-    /// 获取MyProperty2
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <returns></returns>
-    public static int GetMyProperty2<TClient>(this TClient client) where TClient : IDependencyObject
-    {
-        return client.GetValue(MyPropertyProperty2);
-    }
-}
-```
+<CustomCodeBlock region="依赖属性应用场景示例"/>
 
 :::tip 提示
 

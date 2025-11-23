@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -21,40 +17,27 @@ namespace TouchSocket.Core;
 /// </summary>
 public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
 {
+    private long m_cacheSize;
+
+    private volatile bool m_needReset = false;
+
     /// <summary>
     /// 缓存超时时间。默认1秒。
     /// </summary>
     public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// 是否启用缓存超时。默认false。
+    /// 是否启用缓存超时。默认<see langword="false"/>。
     /// </summary>
     public bool CacheTimeoutEnable { get; set; } = false;
 
     /// <inheritdoc/>
     public override bool CanSendRequestInfo => false;
 
-    /// <inheritdoc/>
-    public override bool CanSplicingSend => false;
-
     /// <summary>
     /// 当接收数据处理完成后，回调该函数执行接收
     /// </summary>
-    public Func<ByteBlock, IRequestInfo, Task> ReceivedAsyncCallBack { get; set; }
-
-    /// <summary>
-    /// 当发送数据处理完成后，回调该函数执行异步发送
-    /// </summary>
-    public Func<ReadOnlyMemory<byte>, Task> SendAsyncCallBack { get; set; }
-
-    /// <summary>
-    /// 是否在收到数据时，即刷新缓存时间。默认true。
-    /// <list type="number">
-    /// <item>当设为true时，将弱化<see cref="CacheTimeout"/>的作用，只要一直有数据，则缓存不会过期。</item>
-    /// <item>当设为false时，则在<see cref="CacheTimeout"/>的时效内。必须完成单个缓存的数据。</item>
-    /// </list>
-    /// </summary>
-    public bool UpdateCacheTimeWhenRev { get; set; } = true;
+    public Func<ReadOnlyMemory<byte>, IRequestInfo, Task> ReceivedAsyncCallBack { get; set; }
 
     /// <summary>
     /// 最后缓存的时间
@@ -64,128 +47,99 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 收到数据的切入点，该方法由框架自动调用。
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public async Task ReceivedInputAsync(ByteBlock byteBlock)
+    /// <param name="reader"></param>
+    public async Task ReceivedInputAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader
     {
-        try
+        this.CacheVerify(ref reader);
+        await this.PreviewReceivedAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_cacheSize = reader.BytesRemaining;
+        this.LastCacheTime = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// 校验并处理缓存数据的有效性。
+    /// </summary>
+    /// <typeparam name="TReader">实现了 <see cref="IBytesReader"/> 接口的类型。</typeparam>
+    /// <param name="reader">字节读取器的引用。</param>
+    protected void CacheVerify<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+    {
+        if (this.m_cacheSize > 0)
         {
-            await this.PreviewReceivedAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        catch (Exception ex)
-        {
-            this.OnError(ex, ex.Message, true, true);
+            if (this.CacheTimeoutEnable && this.LastCacheTime + this.CacheTimeout <= DateTimeOffset.UtcNow)
+            {
+                // 缓存已超时，跳过旧的缓存数据
+                reader.Advance((int)this.m_cacheSize);
+            }
+            else if (this.m_needReset)
+            {
+                this.m_needReset = false;
+                reader.Advance((int)this.m_cacheSize);
+            }
         }
     }
 
     #region SendInput
 
     /// <summary>
-    /// 发送数据的切入点，该方法由框架自动调用。
+    /// 发送输入数据到指定的写入器。
     /// </summary>
-    /// <param name="requestInfo"></param>
-    /// <returns></returns>
-    public Task SendInputAsync(IRequestInfo requestInfo)
+    /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
+    /// <param name="writer">写入器的引用。</param>
+    /// <param name="memory">要写入的数据内存块。</param>
+    public virtual void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+        where TWriter : IBytesWriter
     {
-        return this.PreviewSendAsync(requestInfo);
+        writer.Write(memory.Span);
     }
 
     /// <summary>
-    /// 发送数据的切入点，该方法由框架自动调用。
+    /// 发送输入数据到指定的写入器。
+    /// 如果 <paramref name="requestInfo"/> 实现了 <see cref="IRequestInfoBuilder"/>，则调用其 Build 方法写入数据。
+    /// 否则抛出异常。
     /// </summary>
-    public Task SendInputAsync(ReadOnlyMemory<byte> memory)
+    /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
+    /// <param name="writer">写入器的引用。</param>
+    /// <param name="requestInfo">要写入的请求信息。</param>
+    public virtual void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
+        where TWriter : IBytesWriter
     {
-        return this.PreviewSendAsync(memory);
-    }
-
-    /// <summary>
-    /// 发送数据的切入点，该方法由框架自动调用。
-    /// </summary>
-    /// <param name="transferBytes"></param>
-    public Task SendInputAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.PreviewSendAsync(transferBytes);
-    }
-
-    /// <summary>
-    /// 当发送数据前预先处理数据
-    /// </summary>
-    /// <param name="requestInfo"></param>
-    protected virtual async Task PreviewSendAsync(IRequestInfo requestInfo)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
-
-        var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-
-        var byteBlock = new ValueByteBlock(requestInfoBuilder.MaxLength);
-        try
+        if (requestInfo is not IRequestInfoBuilder requestInfoBuilder)
         {
-            requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            throw new Exception();
         }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// 当发送数据前预先处理数据
-    /// </summary>
-    protected virtual Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
-    {
-        return this.GoSendAsync(memory);
-    }
-
-    /// <summary>
-    /// 组合发送预处理数据，
-    /// 当属性SplicingSend实现为<see langword="true"/>时，系统才会调用该方法。
-    /// </summary>
-    /// <param name="transferBytes">代发送数据组合</param>
-    protected virtual Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        throw new NotImplementedException();
+        requestInfoBuilder.Build(ref writer);
     }
 
     #endregion SendInput
 
-    /// <inheritdoc/>
-    /// <param name="disposing"></param>
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
-
     /// <summary>
     /// 处理已经经过预先处理后的数据
     /// </summary>
-    /// <param name="byteBlock">以二进制形式传递</param>
+    /// <param name="memory">以二进制形式传递</param>
     /// <param name="requestInfo">以解析实例传递</param>
-    protected virtual Task GoReceivedAsync(ByteBlock byteBlock, IRequestInfo requestInfo)
+    protected virtual Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(byteBlock, requestInfo);
+        return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(memory, requestInfo);
     }
 
     /// <summary>
-    /// 异步发送已经经过预先处理后的数据
+    /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(ReadOnlyMemory{byte}, IRequestInfo)"/>处理数据
     /// </summary>
-    /// <param name="memory"></param>
-    /// <returns></returns>
-    protected virtual Task GoSendAsync(ReadOnlyMemory<byte> memory)
-    {
-        return this.SendAsyncCallBack == null ? EasyTask.CompletedTask : this.SendAsyncCallBack.Invoke(memory);
-    }
+    /// <param name="reader"></param>
+    protected abstract Task PreviewReceivedAsync<TReader>(TReader reader)
+        where TReader : class, IBytesReader;
 
-    /// <summary>
-    /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(ByteBlock, IRequestInfo)"/>处理数据
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    protected abstract Task PreviewReceivedAsync(ByteBlock byteBlock);
 
-    /// <summary>
-    /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
-    /// </summary>
+    /// <inheritdoc/>
     protected override void Reset()
     {
-        this.LastCacheTime = DateTimeOffset.UtcNow;
+        this.m_needReset = true;
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
     }
 }

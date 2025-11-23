@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -21,7 +20,7 @@ namespace TouchSocket.Core;
 /// </summary>
 /// <typeparam name="T">结果值的类型。</typeparam>
 [DebuggerDisplay("ResultCode = {ResultCode}, Message = {Message}, Value={Value}")]
-public readonly struct Result<T> : IResult<T>
+public readonly struct Result<T>
 {
     /// <summary>
     /// 结果消息，提供操作的描述信息。
@@ -98,11 +97,7 @@ public readonly struct Result<T> : IResult<T>
     /// <returns>一个新的<see cref="Result{T}"/>实例，值为提供的值，结果代码和消息为成功。</returns>
     public static implicit operator Result<T>(T value)
     {
-        if (value is null)
-        {
-            return new Result<T>(ResultCode.Failure, "value is null.");
-        }
-        return new Result<T>(value);
+        return value is null ? new Result<T>(ResultCode.Failure, "value is null.") : new Result<T>(value);
     }
 
     /// <summary>

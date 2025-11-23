@@ -10,26 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER || NET481_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi;
 
+
 /// <summary>
-/// WebApiDispatchProxy
+/// WebApi动态代理。
+/// <inheritdoc/>
 /// </summary>
-/// <typeparam name="TClient"></typeparam>
+[RequiresUnreferencedCode("动态代理不支持AOT环境")]
 public abstract class WebApiDispatchProxy<TClient> : RpcDispatchProxy<TClient, WebApiAttribute> where TClient : IWebApiClientBase
 {
 
 }
 
 /// <summary>
-/// WebApiDispatchProxy
+/// WebApi动态代理。
+/// <inheritdoc/>
 /// </summary>
+[RequiresUnreferencedCode("动态代理不支持AOT环境")]
 public abstract class WebApiDispatchProxy : WebApiDispatchProxy<IWebApiClientBase>
 {
 
 }
-
-#endif

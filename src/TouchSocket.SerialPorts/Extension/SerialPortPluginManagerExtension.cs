@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.SerialPorts;
 /// <summary>
 /// 提供扩展方法以支持串口插件管理功能。
@@ -26,8 +23,8 @@ public static class SerialPortPluginManagerExtension
     /// </summary>
     /// <param name="pluginManager">插件管理器对象，用于管理插件。</param>
     /// <returns>返回一个<see cref="CheckClearPlugin{TClient}"/>类型的插件实例，用于执行客户端活性检查及清理操作。</returns>
-    public static CheckClearPlugin<ISerialPortSession> UseSerialPortSessionCheckClear(this IPluginManager pluginManager)
+    public static CheckClearPlugin<ISerialPortSession> UseSerialPortSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<ISerialPortSession>> options = null)
     {
-        return pluginManager.UseCheckClear<ISerialPortSession>();
+        return pluginManager.UseCheckClear<ISerialPortSession>(options);
     }
 }

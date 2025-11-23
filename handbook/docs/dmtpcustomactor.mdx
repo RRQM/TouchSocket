@@ -5,7 +5,7 @@ title: 自定义DmtpActor
 
 import { TouchSocketDmtpDefinition } from "@site/src/components/Definition.js";
 
-### 定义
+
 
 <TouchSocketDmtpDefinition />
 
@@ -387,10 +387,10 @@ static class SimpleDmtpRpcExtension
 功能插件是为Actor提供创建时机，和必要的配置信息。如果有需要，还可以抛出插件信息（例如[文件传输](./dmtptransferfile.mdx) ）。
 
 ```csharp showLineNumbers
-class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
+class SimpleDmtpRpcFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlugin
 {
     readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         var actor = new SimpleDmtpRpcActor(client.DmtpActor)
         {

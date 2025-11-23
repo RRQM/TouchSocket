@@ -10,13 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if SystemNetHttp
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -50,4 +43,3 @@ public class HttpClientSlim : SetupConfigObject
         base.LoadConfig(config);
     }
 }
-#endif

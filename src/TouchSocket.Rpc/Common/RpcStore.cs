@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -40,7 +36,10 @@ public sealed class RpcStore
     /// </summary>
     public Type[] ServerTypes => this.m_serverTypes.Keys.ToArray();
 
-    public IReadOnlyList<Type> Filters => this.m_filters;
+    /// <summary>
+    /// 全局筛选器
+    /// </summary>
+    public List<Type> Filters => this.m_filters;
 
     /// <summary>
     /// 获取所有已注册的函数。
@@ -59,9 +58,10 @@ public sealed class RpcStore
     /// <summary>
     /// 本地获取代理
     /// </summary>
-    /// <param name="namespace"></param>
-    /// <param name="attributeTypes"></param>
-    /// <returns></returns>
+    /// <param name="namespace">生成代理代码的目标命名空间</param>
+    /// <param name="attributeTypes">Rpc特性类型数组，用于指定要生成代理的Rpc方法特性</param>
+    /// <returns>生成的代理代码字符串</returns>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public string GetProxyCodes(string @namespace, params Type[] attributeTypes)
     {
         var cellCodes = this.GetProxyInfo(attributeTypes);
@@ -71,9 +71,10 @@ public sealed class RpcStore
     /// <summary>
     /// 获取生成的代理
     /// </summary>
-    /// <typeparam name="TAttribute"></typeparam>
-    /// <param name="namespace"></param>
-    /// <returns></returns>
+    /// <typeparam name="TAttribute">Rpc特性类型，必须继承自<see cref="RpcAttribute"/></typeparam>
+    /// <param name="namespace">生成代理代码的目标命名空间</param>
+    /// <returns>生成的代理代码字符串</returns>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public string GetProxyCodes<TAttribute>(string @namespace) where TAttribute : RpcAttribute
     {
         var cellCodes = this.GetProxyInfo(new Type[] { typeof(TAttribute) });
@@ -83,8 +84,9 @@ public sealed class RpcStore
     /// <summary>
     /// 从本地获取代理
     /// </summary>
-    /// <param name="attributeType"></param>
-    /// <returns></returns>
+    /// <param name="attributeType">Rpc特性类型数组，用于指定要生成代理的Rpc方法特性</param>
+    /// <returns>服务单元代码数组，包含所有匹配特性的服务代码</returns>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public ServerCellCode[] GetProxyInfo(Type[] attributeType)
     {
         var codes = new List<ServerCellCode>();
@@ -103,8 +105,8 @@ public sealed class RpcStore
     /// <summary>
     /// 获取服务类型对应的服务方法。
     /// </summary>
-    /// <param name="serverType"></param>
-    /// <returns></returns>
+    /// <param name="serverType">要查询的服务类型</param>
+    /// <returns>该服务类型对应的所有Rpc方法数组</returns>
     public RpcMethod[] GetServerRpcMethods(Type serverType)
     {
         return this.m_serverTypes[serverType].ToArray();
@@ -117,8 +119,8 @@ public sealed class RpcStore
     /// <summary>
     /// 添加全局筛选器
     /// </summary>
-    /// <typeparam name="TFilter"></typeparam>
-    public void AddFilter<TFilter>() where TFilter : class, IRpcActionFilter
+    /// <typeparam name="TFilter">要添加的筛选器类型，必须实现<see cref="IRpcActionFilter"/>接口</typeparam>
+    public void AddFilter<[DynamicallyAccessedMembers(AOT.Container)] TFilter>() where TFilter : class, IRpcActionFilter
     {
         var filterType = typeof(TFilter);
         this.AddFilter(filterType);
@@ -127,7 +129,8 @@ public sealed class RpcStore
     /// <summary>
     /// 添加全局过滤器
     /// </summary>
-    public void AddFilter(Type filterType)
+    /// <param name="filterType">要添加的筛选器类型，必须实现<see cref="IRpcActionFilter"/>接口</param>
+    public void AddFilter([DynamicallyAccessedMembers(AOT.Container)] Type filterType)
     {
         if (!typeof(IRpcActionFilter).IsAssignableFrom(filterType))
         {
@@ -144,17 +147,15 @@ public sealed class RpcStore
 
     #endregion
 
-
     #region 注册
-
 
     /// <summary>
     /// 注册为单例服务
     /// </summary>
-    /// <param name="serverFromType"></param>
-    /// <param name="rpcServer"></param>
-    /// <returns></returns>
-    public void RegisterServer(Type serverFromType, IRpcServer rpcServer)
+    /// <param name="serverFromType">要注册的服务接口或基类类型，必须实现<see cref="IRpcServer"/>接口</param>
+    /// <param name="rpcServer">服务的具体实例，类型必须与<paramref name="serverFromType"/>相匹配或可赋值</param>
+    public void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] TRpcServer>([DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverFromType, TRpcServer rpcServer)
+        where TRpcServer : IRpcServer
     {
         if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
         {
@@ -168,25 +169,24 @@ public sealed class RpcStore
 
         foreach (var item in this.m_serverTypes.Keys)
         {
-            if (item.FullName == serverFromType.FullName)
+            if (item == serverFromType)
             {
                 return;
             }
         }
 
-        var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, rpcServer.GetType());
+        var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, typeof(TRpcServer));
 
         this.m_serverTypes.AddOrUpdate(serverFromType, new List<RpcMethod>(rpcMethods));
-        this.m_registrator.RegisterSingleton(serverFromType, rpcServer);
+        this.m_registrator.Register(new DependencyDescriptor(serverFromType, typeof(TRpcServer), rpcServer));
     }
 
     /// <summary>
     /// 注册服务
     /// </summary>
-    /// <param name="serverFromType"></param>
-    /// <param name="serverToType"></param>
-    /// <returns></returns>
-    public void RegisterServer(Type serverFromType, [DynamicallyAccessedMembers(RpcStoreExtension.DynamicallyAccessed)] Type serverToType)
+    /// <param name="serverFromType">要注册的服务接口或基类类型，必须实现<see cref="IRpcServer"/>接口</param>
+    /// <param name="serverToType">服务的实现类型，必须与<paramref name="serverFromType"/>相匹配或可赋值。根据类型实现的接口确定生命周期（瞬态、作用域或单例）</param>
+    public void RegisterServer([DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverFromType, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverToType)
     {
         if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
         {

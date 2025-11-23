@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<TClient, TResult>
@@ -35,9 +30,9 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
 
     #region 发送
 
-    public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
+    public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -49,15 +44,11 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
 
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            var byteBlock = receiverResult.ByteBlock;
-                            ByteBlock newByteBlock = default;
-                            if (byteBlock != null)
-                            {
-                                newByteBlock = new ByteBlock(byteBlock.ToArray());
-                            }
-                            var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
+                            var byteBlock = receiverResult.Memory;
+
+                            var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)
@@ -82,20 +73,16 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                     await this.Client.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             if (receiverResult.IsCompleted)
                             {
                                 ThrowHelper.ThrowClientNotConnectedException();
                             }
 
-                            var byteBlock = receiverResult.ByteBlock;
-                            ByteBlock newByteBlock = default;
-                            if (byteBlock != null)
-                            {
-                                newByteBlock = new ByteBlock(byteBlock.ToArray());
-                            }
-                            var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
+                            var byteBlock = receiverResult.Memory;
+
+                            var response = new ResponsedData(byteBlock, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)
@@ -120,9 +107,9 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
         }
     }
 
-    public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken token)
+    public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -134,9 +121,9 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
 
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+                            var response = new ResponsedData(receiverResult.Memory, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)
@@ -161,13 +148,13 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                     await this.Client.SendAsync(requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             if (receiverResult.IsCompleted)
                             {
                                 ThrowHelper.ThrowClientNotConnectedException();
                             }
-                            var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+                            var response = new ResponsedData(receiverResult.Memory, receiverResult.RequestInfo);
 
                             var filterFunc = this.WaitingOptions.FilterFuncAsync;
                             if (filterFunc == null)

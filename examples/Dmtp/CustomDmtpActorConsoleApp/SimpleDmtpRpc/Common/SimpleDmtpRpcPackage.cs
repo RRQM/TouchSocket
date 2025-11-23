@@ -24,13 +24,13 @@ internal class SimpleDmtpRpcPackage : WaitRouterPackage
     public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
         base.PackageBody(ref byteBlock);
-        byteBlock.WriteString(this.MethodName);
+        WriterExtension.WriteString(ref byteBlock, this.MethodName);
     }
 
     public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
     {
         base.UnpackageBody(ref byteBlock);
-        this.MethodName = byteBlock.ReadString();
+        this.MethodName = ReaderExtension.ReadString<TByteBlock>(ref byteBlock);
     }
 
     public void CheckStatus()

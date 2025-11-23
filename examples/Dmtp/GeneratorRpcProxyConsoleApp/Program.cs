@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -41,9 +40,9 @@ internal class Program
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);
@@ -59,9 +58,9 @@ internal class Program
              {
                  a.UseDmtpRpc();
              })
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              }));
         await client.ConnectAsync();
 

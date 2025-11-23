@@ -5,8 +5,9 @@ title: Mqtt服务器
 
 import Tag from "@site/src/components/Tag.js";
 import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
-### 定义
 
 <TouchSocketMqttDefinition />
 
@@ -58,31 +59,11 @@ import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
 
 ## 六、创建Mqtt服务端
 
-```csharp showLineNumbers
-var service = new MqttTcpService();
-await service.SetupAsync(new TouchSocketConfig()
-    .SetListenIPHosts(7789) // 监听所有网卡
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.AddMqttClientConnectedPlugin(async (service, e) =>
-        {
-            Console.WriteLine($"Client Connected:{e.ClientId}");
-            await e.InvokeNext();
-        });
+### 6.1 简单创建
 
-        a.AddMqttClientDisconnectedPlugin(async (service, e) =>
-        {
-            Console.WriteLine($"Client Disconnected:{e.ClientId}");
-            await e.InvokeNext();
-        });
-    }));
-await service.StartAsync();
-```
+直接创建MqttTcpService，然后配置基本的监听地址和插件：
 
+<CustomCodeBlock region="创建Tcp协议的Mqtt服务器" />
 
 ## 七、接收消息
 
@@ -96,91 +77,57 @@ await service.StartAsync();
 
 下列将简单演示。
 
-### 7.1 订阅消息
+### 7.1 通过插件接收所有消息
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.AddMqttReceivingPlugin(async (client, e) =>
-    {
-        switch (e.MqttMessage)
-        {
-            case MqttSubscribeMessage message:
-                {
-                    //订阅消息
-                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-                    foreach (var subscribeRequest in message.SubscribeRequests)
-                    {
-                        var topic = subscribeRequest.Topic;
-                        var qosLevel = subscribeRequest.QosLevel;
-                        //或者其他属性
-                        Console.WriteLine($"Subscribe Topic:{topic},QosLevel:{qosLevel}");
-                    }
-                    break;
-                }
-            default:
-                break;
-        }
-        Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-        await e.InvokeNext();
-    });
-})
-```
+<CustomCodeBlock region="Mqtt服务器通过插件接收所有消息" />
 
-### 7.2 取消订阅消息
+### 7.2 接收发布消息
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.AddMqttReceivingPlugin(async (client, e) =>
-    {
-        switch (e.MqttMessage)
-        {
-            case MqttUnsubscribeMessage message:
-                {
+如果你只关心发布成功的消息，那么可以只订阅`IMqttReceivedPlugin`插件即可：
 
-                    //取消订阅消息
-                    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-                    foreach (var topic in message.TopicFilters)
-                    {
-                        //取消订阅的主题
-                        Console.WriteLine($"Unsubscribe Topic:{topic}");
-                    }
-                    break;
-                }
-            default:
-                break;
-        }
-        Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-        await e.InvokeNext();
-    });
-})
-```
+<CustomCodeBlock region="Mqtt服务器接收发布消息" />
 
-### 7.3 发布消息
+## 八、发布消息
 
-所以如果你只关心发布成功的消息，那么可以只订阅`IMqttReceivedPlugin`插件即可。
+暂未实现
+{/* Mqtt服务器可以主动向连接的客户端发布消息。
 
-你可以直接使用委托实现订阅：
+### 8.1 向所有客户端发布消息
 
-```csharp {3-17} showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.AddMqttReceivedPlugin(async (client, e) =>
-    {
-        var mqttMessage = e.MqttMessage;
-        Console.WriteLine("Reved:" + mqttMessage);
+<CustomCodeBlock region="Mqtt服务器向所有客户端发布消息" />
 
-        //订阅消息的主题
-        var topicName = mqttMessage.TopicName;
+### 8.2 向指定客户端发布消息
 
-        //订阅消息的Qos级别
-        var qosLevel = mqttMessage.QosLevel;
+<CustomCodeBlock region="Mqtt服务器向指定客户端发布消息" /> */}
 
-        //订阅消息的Payload
-        var payload = mqttMessage.Payload;
-        await e.InvokeNext();
-    });
-})
-```
+## 九、客户端管理
 
+### 9.1 获取所有连接的客户端
+
+<CustomCodeBlock region="Mqtt服务器获取所有连接的客户端" />
+
+### 9.2 断开指定客户端
+
+<CustomCodeBlock region="Mqtt服务器断开指定客户端" />
+
+## 十、订阅管理
+
+暂未实现
+
+{/* ### 10.1 获取客户端订阅信息
+
+<CustomCodeBlock region="Mqtt服务器获取客户端订阅信息" /> */}
+
+## 十一、服务器管理
+
+### 11.1 停止服务器
+
+<CustomCodeBlock region="Mqtt服务器停止服务器" />
+
+### 11.2 释放资源
+
+<CustomCodeBlock region="Mqtt服务器释放资源" />
+
+## 十二、示例Demo
+
+<CardLink link="examples/Mqtt"/>

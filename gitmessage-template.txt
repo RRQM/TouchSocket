@@ -1,0 +1,49 @@
+# TouchSocket Git 提交模板
+#
+# 提交格式：<类型>(<范围>): <简短描述>
+#
+# <详细描述>
+#
+# <相关Issue>
+#
+# 类型说明：
+# 新增:      新功能 (feat)
+# 修复:      Bug修复 (fix) 
+# 文档:      文档更新 (docs)
+# 样式:      代码格式调整，不影响功能 (style)
+# 重构:      代码重构 (refactor)
+# 优化:      性能优化 (perf)
+# 测试:      测试相关 (test)
+# 构建:      构建系统或外部依赖 (build)
+# 集成:      CI配置文件和脚本 (ci)
+# 杂务:      其他杂务，如更新依赖 (chore)
+# 回滚:      回滚提交 (revert)
+#
+# 范围说明（可选）：
+# Core:     TouchSocket.Core
+# Sockets:  TouchSocket.Sockets
+# Http:     TouchSocket.Http
+# Mqtt:     TouchSocket.Mqtt
+# Rpc:      TouchSocket.Rpc
+# Dmtp:     TouchSocket.Dmtp
+# WebApi:   TouchSocket.WebApi
+# Modbus:   TouchSocket.Modbus
+# SerialPorts: TouchSocket.SerialPorts
+# docs:     文档相关
+# examples: 示例代码
+# tests:    测试代码
+#
+# 示例：
+# 新增(Core): 新增BytePool内存池管理功能
+#
+# - 实现高效的内存池分配机制
+# - 支持自动扩容和回收
+# - 提升大量数据传输场景的性能
+#
+# Closes #123
+#
+# 注意事项：
+# - 使用现在时态描述（"添加"而不是"添加了"）
+# - 首行不超过50字符
+# - 详细描述每行不超过72字符
+# - 如果修复了Issue，请用"Closes #issue_number"

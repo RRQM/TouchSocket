@@ -10,13 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-#if AsyncLocal
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Rpc;
 /// <summary>
@@ -31,7 +25,7 @@ public static partial class RpcContainerExtension
     /// <typeparam name="TRpcCallContextAccessor">实现 <see cref="IRpcCallContextAccessor"/> 的类型。</typeparam>
     /// <param name="registrator">用于注册依赖项的 <see cref="IRegistrator"/> 实例。</param>
     /// <returns>返回 <see cref="IRegistrator"/> 实例以支持链式调用。</returns>
-    public static IRegistrator AddRpcCallContextAccessor<TRpcCallContextAccessor>(this IRegistrator registrator)
+    public static IRegistrator AddRpcCallContextAccessor<[DynamicallyAccessedMembers(AOT.Container)] TRpcCallContextAccessor>(this IRegistrator registrator)
        where TRpcCallContextAccessor : class, IRpcCallContextAccessor
     {
         registrator.RegisterSingleton<IRpcCallContextAccessor, TRpcCallContextAccessor>();
@@ -49,5 +43,3 @@ public static partial class RpcContainerExtension
     }
     #endregion
 }
-
-#endif

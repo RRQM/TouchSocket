@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 

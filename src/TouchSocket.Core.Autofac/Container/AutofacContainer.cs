@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Autofac;
-using System;
-using System.Collections.Generic;
 
 namespace TouchSocket.Core;
 
@@ -59,7 +57,7 @@ public class AutofacContainer : IRegistrator, IResolver
     }
 
     /// <inheritdoc/>
-    public bool IsRegistered(Type fromType, string key)
+    public bool IsRegistered(Type fromType, object key)
     {
         throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
     }
@@ -79,7 +77,7 @@ public class AutofacContainer : IRegistrator, IResolver
     }
 
     /// <inheritdoc/>
-    public void Register(DependencyDescriptor descriptor, string key)
+    public void Register(DependencyDescriptor descriptor, object key)
     {
         throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
     }
@@ -108,7 +106,7 @@ public class AutofacContainer : IRegistrator, IResolver
     }
 
     /// <inheritdoc/>
-    public void Unregister(DependencyDescriptor descriptor, string key)
+    public void Unregister(DependencyDescriptor descriptor, object key)
     {
         throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
     }
@@ -132,7 +130,7 @@ public class AutofacContainer : IRegistrator, IResolver
     }
 
     /// <inheritdoc/>
-    public object Resolve(Type fromType, string key)
+    public object Resolve(Type fromType, object key)
     {
         throw new NotImplementedException();
     }

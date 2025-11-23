@@ -4,8 +4,9 @@ title: 调用上下文
 ---
 
 import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketRpcDefinition />
 
@@ -33,75 +34,33 @@ import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
 
 定义的服务方法的`第一个参数`使用`ICallContext`或其派生类（例如：`DmtpRpc`可以使用`IDmtpRpcCallContext`）。
 
-```csharp showLineNumbers
-public class MyRpcServer : SingletonRpcServer
-{
-    [Description("登录")]
-    [DmtpRpc]
-    public bool Login(ICallContext callContext,string account,string password)
-    {
-        if (callContext.Caller is TcpDmtpSessionClient)
-        {
-            Console.WriteLine("TcpDmtpRpc请求");
-        }
-        if (account=="123"&&password=="abc")
-        {
-            return true;
-        }
+<CustomCodeBlock region="Rpc调用上下文单例服务参数获取"/>
 
-        return false;
-    }
-}
-```
+:::tip 提示
+
+在单例服务中，通过参数传递调用上下文可以确保在并发调用时，每个调用都能获取到正确的上下文信息。
+
+:::
 
 ### 2.2 通过瞬时生命周期获取
 
 当服务是瞬态注册时，每次调用服务会创建新的实例，所以当前方法只会被当前调用者拥有，所以，调用上下文会从属性直接注入。
 
-步骤：
+**步骤：**
 
-1. 继承TransientRpcServer或者实现ITransientRpcServer接口。
+1. 继承`TransientRpcServer`或者实现`ITransientRpcServer`接口。
 
-```csharp showLineNumbers
-public class MyRpcServer : TransientRpcServer
-{
-    [Description("登录")]
-    [DmtpRpc]
-    public bool Login(string account,string password)
-    {
-        if ( this.CallContext.Caller is TcpDmtpSessionClient)
-        {
-            Console.WriteLine("TcpDmtpRpc请求");
-        }
-        if (account=="123"&&password=="abc")
-        {
-            return true;
-        }
+<CustomCodeBlock region="Rpc调用上下文瞬态服务属性获取"/>
 
-        return false;
-    }
-}
+**或使用泛型上下文：**
 
-//或使用泛型上下文
-public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
-{
-    [Description("登录")]
-    [DmtpRpc]
-    public bool Login(string account, string password)
-    {
-        if (this.CallContext.Caller is TcpDmtpSessionClient)
-        {
-            Console.WriteLine("TcpDmtpRpc请求");
-        }
-        if (account == "123" && password == "abc")
-        {
-            return true;
-        }
+<CustomCodeBlock region="Rpc调用上下文泛型瞬态服务"/>
 
-        return false;
-    }
-}
-```
+:::tip 提示
+
+瞬态服务每次调用都会创建新的实例，因此可以直接通过`this.CallContext`属性访问调用上下文，无需通过参数传递。
+
+:::
 
 ### 2.3 通过IRpcCallContextAccessor服务获取
 
@@ -118,27 +77,7 @@ public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 
 然后，在Rpc服务中，通过`IRpcCallContextAccessor`服务获取到当前调用的上下文。
 
-```csharp {5,7,16} showLineNumbers
-public partial class MyRpcServer : SingletonRpcServer
-{
-    private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
-
-    public MyRpcServer(IRpcCallContextAccessor rpcCallContextAccessor)
-    {
-        this.m_rpcCallContextAccessor = rpcCallContextAccessor;
-    }
-
-    [Description("测试从CallContextAccessor中获取当前关联的CallContext")]
-    [DmtpRpc]
-    public async Task TestGetCallContextFromCallContextAccessor()
-    {
-        //通过CallContextAccessor获取当前关联的CallContext
-        //此处即使m_rpcCallContextAccessor与当前RpcServer均为单例，也能获取到正确的CallContext
-        var callContext = this.m_rpcCallContextAccessor.CallContext;
-        await Task.CompletedTask;
-    }
-}
-```
+<CustomCodeBlock region="Rpc调用上下文Accessor服务"/>
 
 :::tip 提示
 
@@ -152,32 +91,7 @@ public partial class MyRpcServer : SingletonRpcServer
 
 下列将以`DmtpRpc`为例，介绍如何取消任务。
 
-```csharp showLineNumbers
-/// <summary>
-/// 测试取消调用
-/// </summary>
-/// <param name="callContext"></param>
-/// <returns></returns>
-[Description("测试取消调用")]
-[DmtpRpc]
-public async Task<int> TestCancellationToken(ICallContext callContext)
-{
-    //模拟一个耗时操作
-    for (var i = 0; i < 10; i++)
-    {
-        //判断任务是否已被取消
-        if (callContext.Token.IsCancellationRequested)
-        {
-            Console.WriteLine("执行已取消");
-            return i;
-        }
-        Console.WriteLine($"执行{i}次");
-        await Task.Delay(1000);
-    }
-
-    return -1;
-}
-```
+<CustomCodeBlock region="Rpc调用上下文取消任务"/>
 
 :::tip 提示
 
@@ -199,3 +113,6 @@ public async Task<int> TestCancellationToken(ICallContext callContext)
 - `RpcMethod`属性就是调用的触发方法。
 - 其他参数可以参阅注释帮助理解。
 
+## 五、示例代码
+
+<CardLink link="examples/Rpc/RpcCallContextConsoleApp"/>

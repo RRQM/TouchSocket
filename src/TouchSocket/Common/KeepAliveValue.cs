@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
 namespace TouchSocket.Sockets;
@@ -45,4 +45,19 @@ public class KeepAliveValue
     /// 确认间隔，默认2*1000ms
     /// </summary>
     public uint AckInterval { get; set; } = 2 * 1000;
+
+    internal void Config(Socket socket)
+    {
+#if NET462_OR_GREATER
+
+        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+        socket.IOControl(IOControlCode.KeepAliveValues, this.KeepAliveTime, null);
+#else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                socket.IOControl(IOControlCode.KeepAliveValues, this.KeepAliveTime, null);
+            }
+#endif
+    }
 }

@@ -12,7 +12,6 @@
 
 using System;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -33,14 +32,14 @@ public partial class Form1 : Form
     {
         this.m_udpSession.Received = async (remote, e) =>
         {
-            if (e.ByteBlock.Length > 1024)
+            if (e.Memory.Length > 1024)
             {
-                this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Length}长度的数据。");
+                this.m_udpSession.Logger.Info($"收到：{e.Memory.Length}长度的数据。");
                 await this.m_udpSession.SendAsync("收到");
             }
             else
             {
-                this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+                this.m_udpSession.Logger.Info($"收到：{e.Memory.Span.ToString(Encoding.UTF8)}");
             }
             var endPoint = e.EndPoint;
         };
@@ -48,7 +47,7 @@ public partial class Form1 : Form
         await this.m_udpSession.SetupAsync(new TouchSocketConfig()
                .SetBindIPHost(new IPHost(this.textBox2.Text))
                .SetRemoteIPHost(new IPHost(this.textBox3.Text))
-               .UseBroadcast()
+               .SetEnableBroadcast(true)
                .SetUdpDataHandlingAdapter(() =>
                {
                    if (this.checkBox1.Checked)
@@ -57,7 +56,7 @@ public partial class Form1 : Form
                    }
                    else
                    {
-                       return new NormalUdpDataHandlingAdapter();
+                       return default;
                    }
                })
                .ConfigureContainer(a =>
@@ -105,8 +104,8 @@ public partial class Form1 : Form
         });
 
         //然后使用SendThenReturn。
-        var returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
-        this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+        using var returnData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+        this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData.Memory.Span)}");
 
         ////同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
         //ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));

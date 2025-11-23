@@ -10,112 +10,69 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Sockets;
 
-internal abstract class SocketAwaitableEventArgs : SocketAsyncEventArgs, IValueTaskSource<SocketOperationResult>
+internal abstract class SocketAwaitableEventArgs<TResult> : SocketAsyncEventArgs, IValueTaskSource<TResult>
+    where TResult : struct
 {
-    private static readonly Action<object> s_continuationCompleted = _ => { };
-
-    private volatile Action<object> m_continuation;
-    private readonly SocketOperationResult m_socketOperationResult = new SocketOperationResult();
-
-    protected override void OnCompleted(SocketAsyncEventArgs _)
-    {
-        var c = this.m_continuation;
-
-        if (c != null || (c = Interlocked.CompareExchange(ref this.m_continuation, s_continuationCompleted, null)) != null)
-        {
-            var continuationState = this.UserToken;
-            this.UserToken = null;
-            this.m_continuation = s_continuationCompleted; // in case someone's polling IsCompleted
 
 #if NET6_0_OR_GREATER
-            ThreadPool.UnsafeQueueUserWorkItem(c, continuationState, true);
+    public SocketAwaitableEventArgs()
+       : base(true)
+    {
+       
+    }
 #else
-            void Run(object o)
-            {
-                c.Invoke(o);
-            }
+    public SocketAwaitableEventArgs()
+    {
 
-            ThreadPool.UnsafeQueueUserWorkItem(Run, continuationState);
+    }
 #endif
-        }
+
+
+
+    protected ManualResetValueTaskSourceCore<TResult> m_core = new ManualResetValueTaskSourceCore<TResult>();
+
+    public bool RunContinuationsAsynchronously { get => this.m_core.RunContinuationsAsynchronously; set => this.m_core.RunContinuationsAsynchronously = value; }
+
+    TResult IValueTaskSource<TResult>.GetResult(short cancellationToken)
+    {
+        return this.m_core.GetResult(cancellationToken);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected SocketOperationResult GetSocketOperationResult()
+    ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short cancellationToken)
     {
-        if (this.SocketError != SocketError.Success)
-        {
-            this.m_socketOperationResult.SocketError = CreateException(this.SocketError);
-            this.m_socketOperationResult.BytesTransferred = default;
-            this.m_socketOperationResult.RemoteEndPoint = default;
-            this.m_socketOperationResult.ReceiveMessageFromPacketInfo = default;
-        }
-        else
-        {
-            this.m_socketOperationResult.SocketError = null;
-            this.m_socketOperationResult.BytesTransferred = this.BytesTransferred;
-            this.m_socketOperationResult.RemoteEndPoint = this.RemoteEndPoint;
-            this.m_socketOperationResult.ReceiveMessageFromPacketInfo = this.ReceiveMessageFromPacketInfo;
-        }
-
-        return this.m_socketOperationResult;
+        return this.m_core.GetStatus(cancellationToken);
     }
 
-    #region IValueTaskSource
-
-    public SocketOperationResult GetResult(short token)
+    void IValueTaskSource<TResult>.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
     {
-        this.m_continuation = null;
-
-        return this.GetSocketOperationResult();
-    }
-
-    public ValueTaskSourceStatus GetStatus(short token)
-    {
-        if (!ReferenceEquals(this.m_continuation, s_continuationCompleted))
+        try
         {
-            return ValueTaskSourceStatus.Pending;
+            this.m_core.OnCompleted(continuation, state, cancellationToken, flags);
         }
-        else
+        catch (Exception ex)
         {
-            return this.SocketError == SocketError.Success ? ValueTaskSourceStatus.Succeeded :
-                ValueTaskSourceStatus.Faulted;
-        }
-    }
-
-    public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-    {
-        this.UserToken = state;
-        var prevContinuation = Interlocked.CompareExchange(ref this.m_continuation, continuation, null);
-        if (ReferenceEquals(prevContinuation, s_continuationCompleted))
-        {
-            this.UserToken = null;
-
-#if NET6_0_OR_GREATER
-            ThreadPool.UnsafeQueueUserWorkItem(continuation, state, true);
-#else
-            void Run(object o)
+            // 如果可能，尝试通知异常
+            try
             {
-                continuation.Invoke(o);
+                this.m_core.SetException(ex);
             }
-
-            ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-#endif
+            catch
+            {
+                // 忽略SetException的异常，避免递归异常
+            }
         }
     }
 
-    #endregion IValueTaskSource
-
-    protected static SocketException CreateException(SocketError e)
+    protected override void OnCompleted(SocketAsyncEventArgs e)
     {
-        return new SocketException((int)e);
+        this.m_core.SetResult(this.GetResult());
+        base.OnCompleted(e);
     }
+
+    protected abstract TResult GetResult();
 }

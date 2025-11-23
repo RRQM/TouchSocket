@@ -1,6 +1,17 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -11,13 +22,13 @@ namespace RpcDelayPerConsoleApp
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var service = await GetService();
 
             var client = await GetClient();
 
-            List<Task> tasks = new List<Task>();
+            var tasks = new List<Task>();
 
             Console.WriteLine("按任意键开始");
             Console.ReadKey();
@@ -41,7 +52,7 @@ namespace RpcDelayPerConsoleApp
 
         }
 
-        static async Task<TcpDmtpService> GetService()
+        private static async Task<TcpDmtpService> GetService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -57,9 +68,9 @@ namespace RpcDelayPerConsoleApp
                    {
                        a.UseDmtpRpc();
                    })
-                   .SetDmtpOption(new DmtpOption()
+                   .SetDmtpOption(options=>
                    {
-                       VerifyToken = "Rpc"
+                       options.VerifyToken = "Rpc";
                    });
 
             await service.SetupAsync(config);
@@ -69,7 +80,7 @@ namespace RpcDelayPerConsoleApp
             return service;
         }
 
-        static async Task<TcpDmtpClient> GetClient()
+        private static async Task<TcpDmtpClient> GetClient()
         {
             var client = new TcpDmtpClient();
             await client.SetupAsync(new TouchSocketConfig()
@@ -78,9 +89,9 @@ namespace RpcDelayPerConsoleApp
                   {
                       a.UseDmtpRpc();
                   })
-                  .SetDmtpOption(new DmtpOption()
+                  .SetDmtpOption(options=>
                   {
-                      VerifyToken = "Rpc"
+                      options.VerifyToken = "Rpc";
                   }));
             await client.ConnectAsync();
 
@@ -91,23 +102,23 @@ namespace RpcDelayPerConsoleApp
 
     public partial class MyRpcServer : SingletonRpcServer
     {
-        Timer m_timer;
+        private readonly Timer m_timer;
         public MyRpcServer()
         {
-            m_timer = new Timer((s) =>
+            this.m_timer = new Timer((s) =>
             {
-                Console.WriteLine(m_count);
+                Console.WriteLine(this.m_count);
             }, default, 1000, 1000);
         }
 
-        int m_count = 0;
+        private int m_count = 0;
 
         [Description("登录")]//服务描述，在生成代理时，会变成注释。
         [DmtpRpc(InvokeKey = "Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
         public async Task<bool> Login(string account, string password)
         {
             await Task.Delay(1000 * 3);
-            Interlocked.Increment(ref m_count);
+            Interlocked.Increment(ref this.m_count);
             if (account == "123" && password == "abc")
             {
                 return true;

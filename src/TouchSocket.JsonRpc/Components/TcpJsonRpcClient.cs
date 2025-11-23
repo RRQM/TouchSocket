@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
@@ -31,19 +27,17 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     /// </summary>
     public TcpJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
-            SendAction = this.SendAction,
-            SerializerConverter = this.SerializerConverter
+            SendAction = this.SendAction
         };
     }
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(memory);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     #endregion JsonRpcActor
@@ -54,28 +48,28 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        return this.TcpConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_jsonRpcActor.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -89,6 +83,10 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
         {
             this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
         }
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>
@@ -103,9 +101,9 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
         {
             jsonRpcMemory = jsonPackage.Data;
         }
-        else if (e.ByteBlock != null)
+        else if (!e.Memory.IsEmpty)
         {
-            jsonRpcMemory = e.ByteBlock.Memory;
+            jsonRpcMemory = e.Memory;
         }
 
         if (jsonRpcMemory.IsEmpty)

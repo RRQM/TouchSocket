@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Net.WebSockets;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
@@ -31,29 +29,29 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
     #region 事件
 
-    private Task PrivateWebSocketHandshaking(IWebSocket webSocket, HttpContextEventArgs e)
+    private Task PrivateWebSocketConnecting(IWebSocket webSocket, HttpContextEventArgs e)
     {
-        return this.OnWebSocketHandshaking(webSocket, e);
+        return this.OnWebSocketConnecting(webSocket, e);
     }
 
-    private Task PrivateWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    private Task PrivateWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
-        return this.OnWebSocketHandshaked(webSocket, e);
+        return this.OnWebSocketConnected(webSocket, e);
     }
 
     private async Task PrivateWebSocketReceived(WSDataFrame dataFrame)
     {
         if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
         {
-            var bytes = dataFrame.PayloadData;
-            bytes.SeekToStart();
-            if (bytes.Length >= 2)
+            var payloadMemory = dataFrame.PayloadData;
+            var payloadSpan = payloadMemory.Span;
+            if (payloadSpan.Length >= 2)
             {
-                var closeStatus = (WebSocketCloseStatus)bytes.ReadUInt16(EndianType.Big);
+                var closeStatus = (WebSocketCloseStatus)payloadSpan.ReadValue<ushort>(EndianType.Big);
                 this.m_webSocket.CloseStatus = closeStatus;
             }
 
-            var msg = bytes.ReadToSpan(bytes.CanReadLength).ToString(System.Text.Encoding.UTF8);
+            var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
 
             await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -67,7 +65,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
@@ -84,7 +82,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
         this.m_webSocket.Online = false;
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_webSocket.Complete(e.Message);
         }
         await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -95,10 +93,10 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// <param name="webSocket">WebSocket对象，用于进行WebSocket通信</param>
     /// <param name="e">HTTP上下文参数，提供关于HTTP请求和响应的信息</param>
     /// <returns>返回一个任务，该任务在插件处理完成后结束</returns>
-    protected virtual async Task OnWebSocketHandshaking(IWebSocket webSocket, HttpContextEventArgs e)
+    protected virtual async Task OnWebSocketConnecting(IWebSocket webSocket, HttpContextEventArgs e)
     {
         // 提前WebSocket握手过程中的插件执行
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketConnectingPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -107,10 +105,10 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// <param name="webSocket">WebSocket对象，表示握手成功的WebSocket连接。</param>
     /// <param name="e">HttpContextEventArgs对象，包含HTTP上下文信息。</param>
     /// <returns>一个表示事件处理完成的Task对象。</returns>
-    protected virtual Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    protected virtual async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
-        // 在一个任务中异步调用插件管理器的RaiseAsync方法，传递WebSocket和HTTP上下文参数
-        return Task.Run(() => this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this.Resolver, webSocket, e));
+        await this.PluginManager.RaiseIWebSocketConnectedPluginAsync(this.Resolver, webSocket, e)
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -124,7 +122,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// </remarks>
     protected virtual async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketReceivedPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -136,7 +134,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
     {
         // 提前通知所有IWebSocketClosingPlugin插件，WebSocket即将关闭
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -149,7 +147,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// </remarks>
     protected virtual async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 事件
@@ -178,7 +176,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
                 var webSocket = new InternalWebSocket(this);
 
-                await this.PrivateWebSocketHandshaking(webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateWebSocketConnecting(webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (response.Responsed)
                 {
@@ -191,7 +189,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
                     await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                    _ = EasyTask.SafeRun(this.PrivateWebSocketHandshaked, webSocket, new HttpContextEventArgs(httpContext));
+                    _ = EasyTask.SafeRun(this.PrivateWebSocketConnected, webSocket, new HttpContextEventArgs(httpContext));
 
                     return Result.Success;
                 }
@@ -220,7 +218,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
     private void InitWebSocket(InternalWebSocket webSocket)
     {
-        this.SetAdapter(new WebSocketDataHandlingAdapter());
+        this.SetAdapter(this.m_webSocketAdapter);
         this.Protocol = Protocol.WebSocket;
         this.m_webSocket = webSocket;
         webSocket.Online = true;

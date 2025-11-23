@@ -6,9 +6,9 @@
       "label": "01、说明（使用前必要阅读）"
     },
     {
-      "type": "doc",
-      "id": "upgrade",
-      "label": "02、历史更新"
+      "type": "link",
+      "label": "02、历史更新",
+      "href": "/upgrade"
     },
     {
       "type": "category",

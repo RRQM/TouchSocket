@@ -1,0 +1,659 @@
+---
+id: upgrade-v3-0
+title: v3.0 系列更新
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+
+## v3.0.26
+
+**更新日期：** 2025.4.20
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>修复</Tag> `RpcActionFilterAttribute`在`RpcImplementation`程序集中使用时无效bug。 [#IC0IB0](https://gitee.com/RRQM_Home/TouchSocket/issues/IC0IB0)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `WebSocket`服务端`WebSocket`使用`AsyncClose()`主动关闭连接时引发`NullReferenceException`异常。 [#IC1FZ8](https://gitee.com/RRQM_Home/TouchSocket/issues/IC1FZ8)
+
+***
+
+
+## v3.0.25
+
+**更新日期：** 2025.4.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.SerialPort
+
+- &nbsp;<Tag>修复</Tag> 接收数据时，如果业务出现延迟，则会导致接收失败的异常bug。 [#IBZHN2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBZHN2)
+
+***
+
+## v3.0.21(3)(4)
+
+**更新日期：** 2025.4.6
+
+**更新描述：**
+
+兼容性修复升级。http组件性能优化。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `ReadOnlySpan<byte>`的`Trim`方法。
+- &nbsp;<Tag>新增</Tag> `Method`新增支持类型的直接构造函数方法。
+- &nbsp;<Tag>新增</Tag> `AsyncResetEvent`新增已释放判断。
+- &nbsp;<Tag>修复</Tag> `DynamicMethod`在ref、out等参数时，无法使用源生成调用的bug。
+- &nbsp;<Tag>调整</Tag> `FlowOperator`的在构造函数使用最大值初始化`MaxSpeed`。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TcpCore`在特点情况下不释放资源的bug。[PR](https://gitee.com/RRQM_Home/TouchSocket/pulls/65)
+- &nbsp;<Tag>调整</Tag> `ShutdownAsync`调整返回值，由`Task`改为`Task<Result>`。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpContent`新增`TryComputeLength`的抽象方法。
+- &nbsp;<Tag>新增</Tag> `HttpResponse`的`FromFileAsync`扩展新增传输限速、进度功能。[#IBYGC7](https://gitee.com/RRQM_Home/TouchSocket/issues/IBYGC7)
+- &nbsp;<Tag>优化</Tag> 整个`Http`组件性能优化。
+- &nbsp;<Tag>调整</Tag> `HttpHeaders`由枚举改为静态类。（此操作不影响现有代码）
+
+
+***
+
+
+## v3.0.20
+
+**更新日期：** 2025.3.30
+
+**更新描述：**
+
+兼容性修复升级。部分方法名大小写调整。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>调整</Tag> `TouchSocketCoreUtility`类中的所有静态字段大小写调整。
+- &nbsp;<Tag>调整</Tag> `StringExtension`类中的多个方法名大小写调整（此处调用时可能是扩展方法调用的，所以需要注意）。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `HttpClient`在请求`application/x-www-form-urlencoded`时，内部未进行编码的bug。[#IBVPAD](https://gitee.com/RRQM_Home/TouchSocket/issues/IBVPAD)
+- &nbsp;<Tag>新增</Tag> `HttpResponse`新增`FromHtml`扩展方法，用于直接返回`Html`页面。
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>新增</Tag> `IRpcCallContextAccessor`服务，可以在异步调用流中，通过服务直接获取到执行`Rpc`的`CallContext`。
+
+#### TouchSocket.WebApi.Swagger
+
+- &nbsp;<Tag>更新</Tag> `Swagger`页面版本为`v5.20.2`，以支持一键复制url等功能。 [#IBX933](https://gitee.com/RRQM_Home/TouchSocket/issues/IBX933)
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>优化</Tag> `Modbus rtu`在响应数据时的严谨性，基本排除了站号，功能码不一致时仍然返回的错误情况。 [#github-issue 54](https://github.com/RRQM/TouchSocket/issues/54)
+
+***
+
+
+## v3.0.19
+
+**更新日期：** 2025.3.23
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> Http静态内容插件在客户端不支持gzip时仍然会使用gzip的bug。
+- &nbsp;<Tag>修复</Tag> Http静态内容插件在以文件响应时，限速为0的bug。[#IBVCPJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IBVCPJ)
+
+***
+
+## v3.0.18
+
+**更新日期：** 2025.3.16
+
+**更新描述：**
+
+兼容性修复升级。少量代码调整，详见&nbsp;<Tag>调整</Tag>
+
+
+**更新详情：**
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TryShutdown`的关闭机制没有考虑异步发送队列的情况。[#IBTKMP](https://gitee.com/RRQM_Home/TouchSocket/issues/IBTKMP)
+- &nbsp;<Tag>调整</Tag> `TryShutdown`方法改为`ShutdownAsync`。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `HttpExtensions`中`GetBoundary`实现存在问题。[#IBT3RO](https://gitee.com/RRQM_Home/TouchSocket/issues/IBT3RO)
+- &nbsp;<Tag>修复</Tag> 静态页面插件在重新载入时prefix参数丢失问题。[#IBTP38](https://gitee.com/RRQM_Home/TouchSocket/issues/IBTP38)
+
+***
+
+
+## v3.0.17
+
+**更新日期：** 2025.3.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> UdpSessionBase的OnUdpReceiving方法添加EndPoint参数。[#IBSQVN](https://gitee.com/RRQM_Home/TouchSocket/issues/IBSQVN)
+
+#### TouchSocket.SerialPorts
+
+- &nbsp;<Tag>修复</Tag> SerialPortClient在接收数据时LastReceivedTime一直不会更新。[#IBSXDK](https://gitee.com/RRQM_Home/TouchSocket/issues/IBSXDK)
+
+***
+
+
+## v3.0.16
+
+**更新日期：** 2025.3.9
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>修复</Tag> 自定义适配器在接收数据时，不验证`MaxPackageSize`的`bug`。
+- &nbsp;<Tag>修复</Tag> `MakeIdentifier`在获取方法名称时，不显示中文等其他字符的`bug`[#IBQQHY](https://gitee.com/RRQM_Home/TouchSocket/issues/IBQQHY)。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> 当配置`NoDelay`时，`TcpCore`发送时仍然会把数据放入发送队列，可能会产生细微延迟 [#IBR1I2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBR1I2)。
+- &nbsp;<Tag>调整</Tag> `IWaitingClient`实现了无效的`Dispose`方法，目前已取消。
+
+***
+
+
+## v3.0.15
+
+**更新日期：** 2025.3.2
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>优化</Tag> 代码规范和相关注释。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `SystemExtension`新增`ReadAllToByteArray`方法。
+
+***
+
+
+## v3.0.14
+
+**更新日期：** 2025.2.15
+
+**更新描述：**
+
+修复升级。区间字符适配器会有不兼容部分，请参阅[区间字符]。
+
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>新增</Tag> 所有的`Plugin`接口。均新增快捷扩展方法，简化使用。
+- &nbsp;<Tag>调整</Tag> 使用自定义的`lock`锁对象。以简化使用场景。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `ILog`接口新增`DateTimeFormat`属性。 [#IBLQBX](https://gitee.com/RRQM_Home/TouchSocket/issues/IBLQBX)
+- &nbsp;<Tag>修复</Tag> 自定义区间适配器在未找到开始字符的情况下，也会缓存数据的bug。 [#IBKPXU](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKPXU)
+- &nbsp;<Tag>调整</Tag> 自定义区间适配器的运行逻辑，简化使用方式。 [#IBKPXU](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKPXU)
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>修复</Tag> `IRpcActionFilter.ExecutedAsync`在执行异常时，`Exception`参数一直为空的bug。[#IBK579](https://gitee.com/RRQM_Home/TouchSocket/issues/IBK579)
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>新增</Tag> `TokenVerifyException`异常信息中新增Metadata属性。
+- &nbsp;<Tag>修复</Tag> `TcpDmtpService`中使用`e.IsPermitOperation = false;`拒绝客户端无效的bug。[#IBKO6A](https://gitee.com/RRQM_Home/TouchSocket/issues/IBKO6A)
+
+***
+
+## v3.0.13
+
+**更新日期：** 2025.1.27
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>修复</Tag> 在`net framework`下，如果`Span<byte>`为空时，`ToString`会异常的`bug`。 [#IBIYRQ](https://gitee.com/RRQM_Home/TouchSocket/issues/IBIYRQ)
+
+***
+
+## v3.0.12
+
+**更新日期：** 2025.1.19
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `FileLogger`的路径合并方式。
+
+***
+
+
+## v3.0.11
+
+**更新日期：** 2025.1.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### All
+
+- &nbsp;<Tag>新增</Tag> 全系新增`EasyTask.ContinueOnCapturedContext`的设定，以解决`Unity3d`在`webgl`平台下，会卡住的问题。
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `IWaitHandlePool<T>`的接口抽象。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpResponse`新增`SetRedirect`重定向功能。[#IBG1QT](https://gitee.com/RRQM_Home/TouchSocket/issues/IBG1QT)
+- &nbsp;<Tag>优化</Tag> `HttpRequest`在请求时的编码效率。
+- &nbsp;<Tag>修复</Tag> `HttpRequest`不会对中文等非`Ascii`编码的字符进行`url encode`的`bug`。[#IBGATN](https://gitee.com/RRQM_Home/TouchSocket/issues/IBGATN)
+- &nbsp;<Tag>修复</Tag> 在客户端，执行`IWebApiRequestPlugin`插件时，`HttpRequest`无法通过`GetContent`或者`GetBody`获取数据。[#IBGARB](https://gitee.com/RRQM_Home/TouchSocket/issues/IBGARB)
+
+***
+
+## v3.0.10
+
+**更新日期：** 2025.1.5
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `AsyncBoundedQueue`新增`Capacity`、`Count`等属性。
+- &nbsp;<Tag>新增</Tag> `CustomJsonDataHandlingAdapter`自定义适配器，方便自定义继承实现。
+- &nbsp;<Tag>新增</Tag> `CustomCountSpliterDataHandlingAdapter`固定数量分隔符适配器。[#IBF0Z7](https://gitee.com/RRQM_Home/TouchSocket/issues/IBF0Z7)
+- &nbsp;<Tag>新增</Tag> `IByteBlock`新增`ReadT`和`WriteT`方法。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `CheckClearPlugin`在客户端断开后，仍然会触发断开的bug。[#IBECPA](https://gitee.com/RRQM_Home/TouchSocket/issues/IBECPA)
+
+***
+
+## v3.0.9
+
+**更新日期：** 2024.12.22
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `SystemTextJsonStringToClassSerializerFormatter`转换器。
+- &nbsp;<Tag>新增</Tag> `IPackage`源生成时，默认支持`Guid`。[#IBC1FH](https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1FH)
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TcpService`在`ResetId`后，偶发性客户端集合丢失客户端的问题。[#IBCUHW](https://gitee.com/RRQM_Home/TouchSocket/issues/IBCUHW)
+- &nbsp;<Tag>修复</Tag> `WaitingClient`使用`ResponsedData`时第二次接受报错。[#IBC8D2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBC8D2)
+
+#### TouchSocket.SerialPort
+
+- &nbsp;<Tag>修复</Tag> `SerialPortClient`串口组件`ProtectedMainSerialPort`属性`null`错误。[#IBBQ4A](https://gitee.com/RRQM_Home/TouchSocket/issues/IBBQ4A)
+
+
+#### TouchSocket.AspNetCore
+
+- &nbsp;<Tag>修复</Tag> `IWebSocketDmtpService`接口中缺少`Clients`属性。[#IBBQS5](https://gitee.com/RRQM_Home/TouchSocket/issues/IBBQS5)
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>优化</Tag> `ModbusRtu`在`crc`校验失败时，会抛出`ResponseMemoryVerificationError = 99`的错误码。[#IBC1J2](https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2)
+
+#### TouchSocket.WebApi
+
+- &nbsp;<Tag>新增</Tag>` WebApi`支持`Put`、`Delete`、`Options`请求方式。
+- &nbsp;<Tag>修复</Tag> `WebApi`当参数解析异常时，`RpcActionFilterAttribute`无法捕获。[#IBCI94](https://gitee.com/RRQM_Home/TouchSocket/issues/IBCI94)
+- &nbsp;<Tag>调整</Tag> `WebApiParserPlugin`使用`Mapping`代替`GetRouteMap`和`PostRouteMap`。
+
+#### TouchSocket.JsonRpc
+
+- &nbsp;<Tag>优化</Tag> `JsonRpc`支持`Aot`。
+
+***
+
+## v3.0.8
+
+**更新日期：** 2024.12.15
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `IPHost`类，在`Mono`运行时会异常的bug。 [#IBAG51](https://gitee.com/RRQM_Home/TouchSocket/issues/IBAG51)
+- &nbsp;<Tag>调整</Tag> `UdpSessionBase`类调整`ReceivingData`为`OnUdpReceiving`。 
+- &nbsp;<Tag>新增</Tag> `Udp`组件，新增`IUdpReceivingPlugin`插件。[#IBB1F6](https://gitee.com/RRQM_Home/TouchSocket/issues/IBB1F6)
+
+#### TouchSocket.AspNetCore
+
+- &nbsp;<Tag>修复</Tag> 当使用基于`WebSocket`协议，搭建`DmtpServer`服务时 使用`app.UseOutputCache()`缓存中间件导致连接失败后，重连无响应。[#IBAPTQ](https://gitee.com/RRQM_Home/TouchSocket/issues/IBAPTQ)
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>修复</Tag> `DmtpActor`类，在连接成功时，`Handshaking`事件参数`e.Message`无法传回到请求端。
+
+#### TouchSocket.SerialPorts
+
+- &nbsp;<Tag>修复</Tag> `SerialPortClient`类，在关闭或者释放时，资源无法释放的bug。 [#IBB8FD](https://gitee.com/RRQM_Home/TouchSocket/issues/IBB8FD)
+
+***
+
+## v3.0.7
+
+**更新日期：** 2024.12.8
+
+**更新描述：**
+
+兼容性修复升级。在.Net9.0中，启用Lock锁代替object锁，提高锁效率。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>修复</Tag> `ValueByteBlock`类，在`WritePackage`时数据无效的bug。 
+- &nbsp;<Tag>优化</Tag> 开放`PackageFastBinaryConverter`类，以支持二进制数据序列化源生成。 
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>新增</Tag> `DmtpRpc`新增`RpcDispatcher`调度器，支持多线程并发，或者单线程调度。
+- &nbsp;<Tag>优化</Tag> `DefaultSerializationSelector`优化支持`System.Text.Json`源生成模式的序列化。
+- &nbsp;<Tag>调整</Tag> 触发`OnFileTransferred`事件的时机调到`SendAsync`前面，目的是保证调用方在收到回复时，响应方已经完成事件处理。此操作理论上不会对现有运行逻辑造成影响。
+- &nbsp;<Tag>修复</Tag> `DmtpRpc`在发送`Rpc`请求时，如果请求模式使用`OnlySend`、或者`WaitSend`，则会抛出异常的bug。[#IB9F8P](https://gitee.com/RRQM_Home/TouchSocket/issues/IB9F8P)
+
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>新增</Tag> 在`IModbusResponse`返回响应时，会同时携带返回响应的当前请求`IModbusRequest`。
+
+#### TouchSocket.WebApi
+
+- &nbsp;<Tag>优化</Tag> `WebApiSerializerConverter`类，以支持更好的`System.Text.Json`源生成模式的序列化。
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>新增</Tag> 在`ReenterableAttribute`特性，可以强制设置`Rpc`函数是否为重入模式。
+- &nbsp;<Tag>新增</Tag> `ConcurrencyRpcDispatcher`并发调度器，支持多线程并发。
+- &nbsp;<Tag>新增</Tag> `ImmediateRpcDispatcher`当前调度器，直接在当前线程执行。
+- &nbsp;<Tag>新增</Tag> `QueueRpcDispatcher`队列调度器，把所有请求，放在一个队列中，等待处理。
+
+***
+
+
+## v3.0.5(6)
+
+**更新日期：** 2024.12.1
+
+**更新描述：**
+
+兼容性修复升级。全面支持`PluginManager`容器化模块和`Scoped`区域划分。
+
+>此修改不影响现有运行逻辑。但是如果是Asp.Net Core项目，则可能会影响`Scoped`服务运行结果。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `FlowOperator`类。以实现流量速度限制。 
+- &nbsp;<Tag>新增</Tag> `PluginManager`类。新增`FromIoc`的设定，支持插件容器化。 
+- &nbsp;<Tag>优化</Tag> `Result`类。使用`record`修饰，简化使用逻辑。 
+- &nbsp;<Tag>调整</Tag> `IResolver`的`Resolve`行为。当服务未注册时，会返回`null`。不会再触发异常。
+- &nbsp;<Tag>调整</Tag> `SetupConfigObject`在Build时，会创建一个新的Scoped生命周期的容器。这个在现有架构下，不会影响运行结果。
+- &nbsp;<Tag>修复</Tag> `Metadata`在添加相同键值时，会异常的bug，正确操作应该是覆盖旧值。 
+- &nbsp;<Tag>移除</Tag> `IResolver`移除对`IRegistered`接口的实现，所以无法再使用`IResolver`判断某个服务是否已注册。
+- &nbsp;<Tag>移除</Tag> `IResolver`移除对`TryResolve`扩展方法实现，请使用`Resolve`直接代替。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `IPHost`在`.NET Framework`下，设定任意端口无效的bug。 [#IB7PM1](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7PM1)，[#IA8NQ2](https://gitee.com/RRQM_Home/TouchSocket/issues/IA8NQ2)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `HttpBase`新增`ReadCopyToAsync(Stream stream, HttpFlowOperator flowOperator)`方法。支持传输进度、速度显示。[#IB7GIC](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7GIC)
+- &nbsp;<Tag>新增</Tag> `HttpFlowOperator`类，支持Http上传、下载文件（流）时，可以方便的实现限速、传输进度、速度显示等。
+- &nbsp;<Tag>新增</Tag> `StreamHttpContent`在传输流数据时，支持`HttpFlowOperator`相关操作。
+
+
+#### TouchSocket.Rpc
+- &nbsp;<Tag>修复</Tag> `Rpc`代码生成器在生成通用泛型类型时，会失败的bug。[#IB7IB2](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7IB2)
+
+
+***
+
+
+## v3.0.4
+
+**更新日期：** 2024.11.24
+
+**更新描述：**
+
+修复升级。**WebSocket有少量代码差异**，下面会详细介绍。
+
+**更新详情：**
+
+#### TouchSocket.Core
+- &nbsp;<Tag>新增</Tag> `JsonPackageAdapter`适配器，专门解决纯Json数据格式的粘分包。详情参见：[JsonPackageAdapter](/docs/packageadapter)。
+- &nbsp;<Tag>新增</Tag> `IByteBlock`新增`WriteNormalString`方法，用于写入普通字符串。
+- &nbsp;<Tag>新增</Tag> `Container`容器新增Scoped生命周期，但是本身容器并未实现功能，如果需使用，请使用[TouchSocket.Core.DependencyInjection](https://www.nuget.org/packages/TouchSocket.Core.DependencyInjection)。 
+- &nbsp;<Tag>新增</Tag> `Tcp、NamedPipe、SerialPort、DmtpRpc、JsonRpc、WebApi`等所有组件，支持Scoped容器。（需配合[TouchSocket.Core.DependencyInjection](https://www.nuget.org/packages/TouchSocket.Core.DependencyInjection)容器）。 
+
+#### TouchSocket.Http
+- &nbsp;<Tag>新增</Tag> `HttpStaticPagePlugin`新增`SetContentTypeProvider(Action<IContentTypeProvider> provider)`方法。
+- &nbsp;<Tag>新增</Tag> `WebSocket`新增`CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)`方法。
+- &nbsp;<Tag>修复</Tag> `WebSocket`在`Close`时，不符合规范的bug。[#IAAF3U](https://gitee.com/RRQM_Home/TouchSocket/issues/IAAF3U)，[#IB5IH0](https://gitee.com/RRQM_Home/TouchSocket/issues/IB5IH0)
+- &nbsp;<Tag>调整</Tag> `IWebSocketClosingPlugin`的事件参数，由`ClosedEventArgs`调整为`ClosingEventArgs`。 <Highlight color="#FFA500">重新实现接口解决</Highlight>
+
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `TcpClient`在重连之后，适配器失效的bug。 [#IB6KZJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IB6KZJ)
+
+#### TouchSocket.Rpc
+- &nbsp;<Tag>新增</Tag> `Rpc`服务新增`IScopedRpcServer`。
+
+
+#### TouchSocket.SerialPort
+- &nbsp;<Tag>修复</Tag> `SerialPortClient`在重连之后，适配器失效的bug。 
+
+#### TouchSocket.NamedPipe
+
+- &nbsp;<Tag>新增</Tag> `INamedPipeSession`新增`DataHandlingAdapter`属性。 
+- &nbsp;<Tag>修复</Tag> `NamedPipeClient`在重连之后，适配器失效的bug。 
+
+#### TouchSocket.Modbus
+
+- &nbsp;<Tag>优化</Tag> `Modbus`在写入时，会携带`IModbusResponse`的返回值。 [#IATPWB](https://gitee.com/RRQM_Home/TouchSocket/issues/IATPWB)
+
+
+***
+
+## v3.0.3
+
+**更新日期：** 2024.11.17
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>优化</Tag> `WaitingClient`在收到`ResponsedData`数据时，优先建议使用`ByteBlock`，在高效场景中代替原`Data`属性。
+
+***
+
+
+## v3.0.2
+
+**更新日期：** 2024.11.15
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> 串口的发送与接收无法通过插件获取到原始数据。[#IB4NF4](https://gitee.com/RRQM_Home/TouchSocket/issues/IB4NF4)
+
+***
+
+## v3.0.0(1)
+
+**更新日期：** 2024.11.13
+
+**更新描述：**
+
+大版本升级，有部分不兼容性升级。所以请在升级前做好备份，同时在升级之后，请务必阅读[v3.0升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/IB45VJ)。
+
+**本次改动在运行时完全兼容`v2.1`，所以客户端和服务器可以差异版本更新。**
+
+**更新详情：**
+
+#### SDK
+
+- &nbsp;<Tag>新增</Tag> 新增`net9.0`支持。
+- &nbsp;<Tag>移除</Tag> 移除`net7.0`支持，但是不影响`net7.0`使用，因为最低到`net6.0`的支持。
+
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `Plugin`组件默认支持`AOT`，不再借助委托实现。 
+- &nbsp;<Tag>优化</Tag> `AppMessenger`组件默认支持`AOT`。 
+- &nbsp;<Tag>优化</Tag> `DependencyObject`类使用“懒汉式”加载内部成员，减少内存使用。 
+- &nbsp;<Tag>新增</Tag> `PluginManager`支持在运行时移除插件。 
+- &nbsp;<Tag>新增</Tag> `Method`类，在方法、或类添加`[DynamicMethod]`特性时，默认支持`AOT`，为动态调用提供极大方便。
+
+#### TouchSocket.Core.DependencyInjection
+
+- &nbsp;<Tag>修复</Tag> `AspNetCoreContainer`不支持`KeysService`的bug。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `IReceiver`在启用缓存模式时，如果已经完成接收，则会抛出异常的bug。 [#IB44LL](https://gitee.com/RRQM_Home/TouchSocket/issues/IB44LL)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>调整</Tag> `HttpRequest`在请求时，不用传参，直接使用默认构造函数即可。
+- &nbsp;<Tag>移除</Tag> `GetMultifileCollection`相关扩展方法，使用`GetFormCollectionAsync`代替。
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>新增</Tag> `ICallContext`继承`IDependencyObject`，支持**扩展属性**读写，可以更方便的开发。
+- &nbsp;<Tag>调整</Tag> `Rpc`特性取消构造函数入参，使用属性设置。受影响的有：`DmtpRpc`、`JsonRpc`、`XmlRpc`、`WebApi`。
+
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>修复</Tag> `DmtpRpc`在`Avalonia-Web`工作时，连接时间超长的bug。
+- &nbsp;<Tag>修复</Tag> `IWebSocketDmtpClient`不实现`IDmtpClient`的bug。
+- &nbsp;<Tag>修复</Tag> `DmtpHeartbeatPlugin`在长时间运行时，可能会失效的bug。
+- &nbsp;<Tag>调整</Tag> `[DmtpRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+#### TouchSocket.JsonRpc
+
+- &nbsp;<Tag>调整</Tag> `[JsonRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+#### TouchSocket.WebApi
+
+- &nbsp;<Tag>新增</Tag> `[FromBody]`特性，支持指定参数来源自Http的请求Body。
+- &nbsp;<Tag>新增</Tag> `[FromForm]`特性，支持指定参数来源自Http的请求Form表单。
+- &nbsp;<Tag>新增</Tag> `[FromHeader]`特性，支持指定参数来源自Http的请求Header。
+- &nbsp;<Tag>新增</Tag> `[FromQuery]`特性，支持指定参数来源自Http的请求Query。
+- &nbsp;<Tag>调整</Tag> `[WebApi]`特性不再允许继承，所有设置也是通过属性设置。
+- &nbsp;<Tag>调整</Tag> WebApi的请求方式，目前全部使用`WebApiRequest`类来表示全部入参，一般如果使用代理，或者源生成的话，只需要重新生成即可。
+- &nbsp;<Tag>移除</Tag> `HttpMethodType.GET`枚举，使用`HttpMethodType.Get`代替。
+- &nbsp;<Tag>移除</Tag> `HttpMethodType.POST`枚举，使用`HttpMethodType.Post`代替。
+
+#### TouchSocket.XmlRpc
+
+- &nbsp;<Tag>调整</Tag> `[XmlRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+***

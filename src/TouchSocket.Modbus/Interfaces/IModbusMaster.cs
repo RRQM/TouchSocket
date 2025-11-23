@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -25,8 +21,7 @@ public interface IModbusMaster : IDependencyObject
     /// 异步发送Modbus请求
     /// </summary>
     /// <param name="request">要发送的Modbus请求对象</param>
-    /// <param name="millisecondsTimeout">请求的超时时间（以毫秒为单位）</param>
-    /// <param name="token">用于取消操作的CancellationToken</param>
+    /// <param name="cancellationToken">用于取消操作的CancellationToken</param>
     /// <returns>返回一个任务，该任务完成后将包含相应的Modbus响应</returns>
-    Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
+    Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken);
 }

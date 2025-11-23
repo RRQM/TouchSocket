@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -20,22 +17,26 @@ namespace TouchSocket.Http;
 /// </summary>
 public class HttpClient : HttpClientBase, IHttpClient
 {
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        try
+        {
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
-
     /// <inheritdoc/>
-    public Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
+    public ValueTask<HttpResponseResult> RequestAsync(HttpRequest request, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedRequestAsync(request, millisecondsTimeout, token);
-    }
-
-    /// <inheritdoc/>
-    public Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-    {
-        return this.ProtectedRequestContentAsync(request, millisecondsTimeout, token);
+        return this.ProtectedRequestAsync(request, cancellationToken);
     }
 }

@@ -15,7 +15,7 @@ DMTP（Duplex Message Transport Protocol 双工消息传输协议）是一个简
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 使用方法

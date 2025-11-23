@@ -7,26 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!--<ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Dmtp">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Dmtp.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Rpc">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Rpc.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
-
   <ItemGroup>
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.1.15" />
+    <PackageReference Include="TouchSocketPro.Dmtp" />
   </ItemGroup>
 
 </Project>

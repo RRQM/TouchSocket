@@ -4,8 +4,10 @@ title: Rpc访问速率限制
 ---
 
 import { TouchSocketRpcRateLimitingDefinition } from "@site/src/components/Definition.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketRpcRateLimitingDefinition />
 
@@ -23,197 +25,89 @@ import { TouchSocketRpcRateLimitingDefinition } from "@site/src/components/Defin
 
 ## 二、使用
 
+:::tip 提示
+
+本文所有示例代码均可在示例工程中找到。
+
+:::
+
+<CardLink link="examples/Rpc/RpcRateLimitingConsoleApp"/>
+
 ### 2.1 安装
 
-nuget安装TouchSocket.Rpc.RateLimiting。
+使用 NuGet 安装 TouchSocket.Rpc.RateLimiting 包。
 
-```csharp showLineNumbers
+```bash showLineNumbers
 Install-Package TouchSocket.Rpc.RateLimiting
 ```
 
 ### 2.2 固定窗口限制器
 
-AddFixedWindowLimiter 方法使用固定的时间窗口来限制请求。 当时间窗口过期时，会启动一个新的时间窗口，并重置请求限制。
+`AddFixedWindowLimiter` 方法使用固定的时间窗口来限制请求。当时间窗口过期时，会启动一个新的时间窗口，并重置请求限制。
 
-```csharp {3} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRateLimiter(p =>
-    {
-        p.AddFixedWindowLimiter("FixedWindow", options =>
-        {
-            options.PermitLimit = 10;
-            options.Window = TimeSpan.FromSeconds(10);
-        });
-    });
-})
-```
+<CustomCodeBlock region="Rpc限流添加固定窗口限制器"/>
 
 ### 2.3 滑动窗口限制器
 
-AddSlidingWindowLimiter 方法使用滑动的时间窗口来限制请求。 当时间窗口过期时，会启动一个新的时间窗口，与固定窗口限制器类似，但为每个窗口添加了段。 窗口在每个段间隔滑动一段。 段间隔的计算方式是：(窗口时间)/(每个窗口的段数)。
+`AddSlidingWindowLimiter` 方法使用滑动的时间窗口来限制请求。当时间窗口过期时，会启动一个新的时间窗口，与固定窗口限制器类似，但为每个窗口添加了段。窗口在每个段间隔滑动一段。段间隔的计算方式是：(窗口时间)/(每个窗口的段数)。
 
-```csharp {1,4-6,11} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRateLimiter(p =>
-    {
-        //添加一个名称为SlidingWindow的滑动窗口的限流策略
-        p.AddSlidingWindowLimiter("SlidingWindow", options => 
-        {
-            options.PermitLimit = 10;
-            options.Window = TimeSpan.FromSeconds(10);
-            options.SegmentsPerWindow = 5;
-        });
-    });
-})
-```
+<CustomCodeBlock region="Rpc限流添加滑动窗口限制器"/>
 
 ### 2.4 令牌桶限制器
 
-AddTokenBucketLimiter 方法使用令牌桶来限制请求。 令牌桶限制器将根据指定的令牌生成速率向桶中添加令牌。 如果桶中有足够的令牌，则允许请求，否则拒绝请求。
+`AddTokenBucketLimiter` 方法使用令牌桶来限制请求。令牌桶限制器将根据指定的令牌生成速率向桶中添加令牌。如果桶中有足够的令牌，则允许请求，否则拒绝请求。
 
-```csharp showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRateLimiter(p =>
-    {
-        //添加一个名称为TokenBucket的令牌桶的限流策略
-        p.AddTokenBucketLimiter("TokenBucket", options =>
-        {
-            options.TokenLimit = 100;
-            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            options.QueueLimit = 10;
-            options.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-            options.TokensPerPeriod = 10;
-            options.AutoReplenishment = true;
-        });
-    });
-})
-```
+<CustomCodeBlock region="Rpc限流添加令牌桶限制器"/>
 
 ### 2.5 并发限制器
 
-并发限制器会限制并发请求数。 每添加一个请求，在并发限制中减去 1。 一个请求完成时，在限制中增加 1。 其他请求限制器限制的是指定时间段的请求总数，而与它们不同，并发限制器仅限制并发请求数，不对一段时间内的请求数设置上限。
+并发限制器会限制并发请求数。每添加一个请求，在并发限制中减去 1。一个请求完成时，在限制中增加 1。其他请求限制器限制的是指定时间段的请求总数，而与它们不同，并发限制器仅限制并发请求数，不对一段时间内的请求数设置上限。
 
-```csharp showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRateLimiter(p =>
-    {
-        //添加一个名称为Concurrency的并发的限流策略
-        p.AddConcurrencyLimiter("Concurrency", options =>
-        {
-            options.PermitLimit = 10;
-            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            options.QueueLimit = 10;
-        });
-    });
-})
-```
+<CustomCodeBlock region="Rpc限流添加并发限制器"/>
 
-### 2.6 使用
+### 2.6 使用限流器
 
-限流器使用很简单，只需要在需要限流的函数、服务或接口上添加特性即可。
+限流器使用很简单，只需要在需要限流的函数、服务或接口上添加 `[EnableRateLimiting]` 特性即可。
 
-```csharp {3} showLineNumbers
-public partial class MyRpcServer : SingletonRpcServer
-{
-    [EnableRateLimiting("FixedWindow")]
-    [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [DmtpRpc(InvokeKey ="Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
-    public bool Login(string account, string password)
-    {
-        if (account == "123" && password == "abc")
-        {
-            return true;
-        }
+<CustomCodeBlock region="Rpc限流使用特性"/>
 
-        return false;
-    }
-}
-```
+## 三、限流算法说明
 
-## 三、算法
+TouchSocket 的限流算法完全引用 `System.Threading.RateLimiting.dll`，算法实现比较通用且经过充分验证。
 
-TouchSocket的限流算法，是完全引用`System.Threading.RateLimiting.dll`。所以算是比较通用的限流算法。
+同时，算法的使用方法也完全借鉴 ASP.NET Core 的限流算法使用方法，保持了一致的开发体验。
 
-同时，算法的使用方法，也是完全借鉴Aspnetcore的限流算法使用方法。
-
-所以，具体算法可以参考[ASP.NET Core 中的速率限制](https://learn.microsoft.com/zh-cn/aspnet/core/performance/rate-limit)
+如需深入了解具体算法原理和更多配置选项，请参考微软官方文档：[ASP.NET Core 中的速率限制](https://learn.microsoft.com/zh-cn/aspnet/core/performance/rate-limit)。
 
 
 ## 四、自定义限流分区键
 
-上述限流器的默认工作分区键都是基于函数的。例如，对于`MyRpcServer`的`Login`函数，分区键为`Login`函数本身，这也就意味着，限流是对`Login`函数限制的。即使调用方来自不同用户，不同地区，只要他们都需要调用`Login`函数，都会被限流器影响。
+上述限流器的默认工作分区键都是基于函数的。例如，对于 `MyRpcServer` 的 `Login` 函数，分区键为 `Login` 函数本身，这意味着限流是对 `Login` 函数整体进行限制的。即使调用方来自不同用户、不同地区，只要他们都需要调用 `Login` 函数，都会被同一个限流器影响。
 
-但是有时候，我们希望能自定义实现分区键。
+但是有时候，我们希望能自定义实现分区键。例如：实现基于 IP 的限流，那么分区键就是 IP 地址，不同 IP 地址会有独立的限流计数。
 
-例如：实现IP限流，那么分区键就是`IP`地址。那么我们可以按下列防止做。
+### 4.1 自定义限流策略类
 
-首先新建一个类`RpcFixedWindowLimiter`，继承`RateLimiterPolicy`，并指定泛型为`string`，因为我们是基于`IP`限流。
+首先新建一个类 `RpcFixedWindowLimiter`，继承 `RateLimiterPolicy<string>`，并指定泛型为 `string`，因为我们是基于 IP（字符串类型）限流。
 
-```csharp showLineNumbers
-// 内部类 RpcFixedWindowLimiter 继承自 RateLimiterPolicy<string>，
-// 用于实现基于固定窗口的限流策略，特别适用于远程过程调用 (RPC) 场景。
-internal class RpcFixedWindowLimiter : RateLimiterPolicy<string>
-{
-    // 私有成员变量，存储了创建限流器时使用的配置选项。
-    private readonly FixedWindowRateLimiterOptions m_options;
+<CustomCodeBlock region="Rpc限流自定义分区键限流器类"/>
 
-    // 构造函数接受一个 FixedWindowRateLimiterOptions 类型的参数，并将其赋值给 m_options 成员变量。
-    public RpcFixedWindowLimiter(FixedWindowRateLimiterOptions options)
-    {
-        this.m_options = options;
-    }
+### 4.2 注册自定义策略
 
-    // 重写基类的方法以返回一个字符串类型的分区键。
-    // 根据传入的 ICallContext 对象，尝试从其中获取调用者的 TCP 会话信息。
-    // 如果 callContext.Caller 是 ITcpSession 类型，则返回该会话的 IP 地址作为分区键。
-    // 如果不是基于 TCP 协议的调用，则返回字符串 "any" 作为分区键。
-    protected override string GetPartitionKey(ICallContext callContext)
-    {
-        if (callContext.Caller is ITcpSession tcpSession)
-        {
-            return tcpSession.IP;
-        }
+然后使用 `AddPolicy` 方法，直接添加自定义限流器。
 
-        // 如果是基于 tcp 协议的调用，理论上不会执行到这里。
-        return "any";
-    }
+<CustomCodeBlock region="Rpc限流自定义分区键添加策略"/>
 
-    // 重写基类的方法以返回一个新的 RateLimiter 实例。
-    // 使用 m_options 创建一个 FixedWindowRateLimiter 实例，并返回它。
-    protected override RateLimiter NewRateLimiter(string partitionKey)
-    {
-        return new FixedWindowRateLimiter(this.m_options);
-    }
-}
-```
+### 4.3 使用自定义策略
 
-然后使用`AddPolicy`，直接添加自定义限流器。
+最后依然使用 `[EnableRateLimiting]` 特性，指定策略名称即可。
 
-```csharp showLineNumbers
-a.AddRateLimiter(p =>
-{
-    p.AddPolicy("FixedWindow", new RpcFixedWindowLimiter(new System.Threading.RateLimiting.FixedWindowRateLimiterOptions()
-    {
-        PermitLimit = 10,
-        Window = TimeSpan.FromSeconds(10)
-    }));
+<CustomCodeBlock region="Rpc限流使用特性"/>
 
-});
-```
-
-最后依然使用`EnableRateLimiting`特性即可。
-
-```csharp {3} showLineNumbers
-public partial class MyRpcServer : SingletonRpcServer
-{
-    [EnableRateLimiting("FixedWindow")]
-    ...
-}
-```
-
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Rpc/RpcRateLimitingConsoleApp)
+通过这种方式，你可以实现各种自定义的限流分区策略，例如：
+- 基于 IP 地址限流
+- 基于用户 ID 限流
+- 基于租户 ID 限流
+- 基于设备 ID 限流
+- 等等...
 

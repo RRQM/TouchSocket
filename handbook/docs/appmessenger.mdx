@@ -4,8 +4,9 @@ title: 应用信使
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
@@ -23,66 +24,101 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 
 然后一般情况下，建议在构造函数中，注册消息。
 
-```csharp {5} showLineNumbers
-public class MessageObject : IMessageObject
-{
-    public MessageObject()
-    {
-        AppMessenger.Default.Register(this);
-    }
-
-    [AppMessage]
-    public Task<int> Add(int a, int b)
-    {
-        return Task.FromResult(a + b);
-    }
-
-    [AppMessage]
-    public Task<int> Sub(int a, int b)
-    {
-        return Task.FromResult(a - b);
-    }
-}
-```
+<CustomCodeBlock region="AppMessenger实例类定义"/>
 
 :::info 信息
 
 对于实例类，如果构造函数中，没有注册消息，那么在构造函数之后，也可以使用其**实例**注册消息。
 
-```csharp {2} showLineNumbers
-var messageObject = new MessageObject();
-AppMessenger.Default.Register(messageObject);
-```
+<CustomCodeBlock region="AppMessenger注册实例示例"/>
 
 :::  
 
-### 2.1 注册静态方法
+### 2.2 注册静态方法
 
-注册静态方法，只需在类中直接声明**异步公共实例**方法，并使用`AppMessage`特性标记即可。
+注册静态方法，只需在类中直接声明**异步公共静态**方法，并使用`AppMessage`特性标记即可。
 
-```csharp showLineNumbers
-public static class MessageObject : IMessageObject
-{
-    [AppMessage]
-    public static Task<int> StaticAdd(int a, int b)
-    {
-        return Task.FromResult(a + b);
-    }
-}
-```
+<CustomCodeBlock region="AppMessenger静态方法定义"/>
 
 使用`RegisterStatic`进行注册
 
-```csharp  showLineNumbers
-AppMessenger.Default.RegisterStatic<MessageObject>();
-```
+<CustomCodeBlock region="AppMessenger注册静态方法示例"/>
 
 ## 三、触发
 
 触发时，泛型类型，即时返回值类型。
 
-```csharp showLineNumbers
-int add = await appMessenger.SendAsync<int>("Add", 20, 10);
+<CustomCodeBlock region="AppMessenger触发示例"/>
 
-int sub =await appMessenger.SendAsync<int>("Sub", 20, 10);
+## 四、注销
+
+当不再需要某个消息订阅时，可以通过`Unregister`方法进行注销。支持按对象注销和按Token注销两种方式。
+
+### 4.1 按对象注销
+
+注销指定对象的所有消息订阅。
+
+<CustomCodeBlock region="AppMessenger注销示例"/>
+
+### 4.2 按Token注销
+
+也可以直接通过Token来注销特定的消息订阅。
+
+```csharp showLineNumbers
+AppMessenger.Default.Unregister("Add");
 ```
+
+## 五、高级功能
+
+### 5.1 允许多个订阅
+
+默认情况下，同一个Token只能注册一次。如果需要让多个对象订阅同一个消息，需要设置`AllowMultiple`属性为`true`。
+
+<CustomCodeBlock region="AppMessenger允许多个订阅示例"/>
+
+### 5.2 检查消息是否可发送
+
+可以使用`CanSendMessage`方法检查某个Token是否已经被注册。
+
+```csharp showLineNumbers
+if (AppMessenger.Default.CanSendMessage("Add"))
+{
+    var result = await AppMessenger.Default.SendAsync<int>("Add", 10, 20);
+}
+```
+
+### 5.3 获取所有已注册的消息
+
+可以通过`GetAllMessage`方法获取所有已注册的消息Token。
+
+```csharp showLineNumbers
+var allMessages = AppMessenger.Default.GetAllMessage();
+foreach (var token in allMessages)
+{
+    Console.WriteLine($"已注册的消息: {token}");
+}
+```
+
+### 5.4 清除所有订阅
+
+使用`Clear`方法可以清除所有已注册的消息订阅。
+
+```csharp showLineNumbers
+AppMessenger.Default.Clear();
+```
+
+## 六、注意事项
+
+1. **弱引用机制**: `AppMessenger`内部使用弱引用保存订阅者，避免强引用导致的内存泄漏。如果订阅对象被回收，相关的订阅也会自动失效。
+
+2. **异步方法**: 所有标记为`AppMessage`的方法都应该是异步方法，返回`Task`或`Task<T>`。
+
+3. **Token命名**: 如果不显式指定Token，将使用方法名作为Token。也可以通过`AppMessage`特性的参数自定义Token:
+   ```csharp
+   [AppMessage("CustomToken")]
+   public Task<int> MyMethod(int a, int b) { ... }
+   ```
+
+4. **实例生命周期**: 建议在对象构造函数中注册消息，并确保对象在需要接收消息期间保持存活。
+
+5. **线程安全**: `AppMessenger`是线程安全的，可以在多线程环境中安全使用。

@@ -10,15 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 定义了一个简化版本的ValueTask工具类。
 /// 该类提供了一些静态方法来创建ValueTask对象，旨在优化性能并简化异步编程。
 /// </summary>
-public class EasyValueTask
+public static class EasyValueTask
 {
     /// <summary>
     /// 类的静态构造函数，用于初始化静态字段。
@@ -49,5 +47,51 @@ public class EasyValueTask
     public static ValueTask<TResult> FromResult<TResult>(TResult result)
     {
         return new ValueTask<TResult>(result);
+    }
+
+    /// <summary>
+    /// 安全地等待一个任务完成。
+    /// </summary>
+    /// <param name="task">要等待的任务。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示任务结果的 <see cref="Result"/> 对象。</returns>
+    public static async Task<Result> SafeWaitAsync(this ValueTask task, CancellationToken ct = default)
+    {
+        if (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+        try
+        {
+            await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <summary>
+    /// 安全地等待一个任务完成并返回结果。
+    /// </summary>
+    /// <typeparam name="T">任务结果的类型。</typeparam>
+    /// <param name="task">要等待的任务。</param>
+    /// <param name="ct">取消令牌。</param>
+    /// <returns>表示任务结果的 <see cref="Result{T}"/> 对象。</returns>
+    public static async Task<Result<T>> SafeWaitAsync<T>(this ValueTask<T> task, CancellationToken ct = default)
+    {
+        if (ct.IsCancellationRequested)
+        {
+            return Result.Canceled;
+        }
+        try
+        {
+            return new Result<T>(await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
     }
 }

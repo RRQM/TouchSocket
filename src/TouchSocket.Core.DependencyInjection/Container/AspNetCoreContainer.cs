@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace TouchSocket.Core.AspNetCore;
 
@@ -74,7 +71,7 @@ public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvide
     }
 
     /// <inheritdoc/>
-    public bool IsRegistered(Type fromType, string key)
+    public bool IsRegistered(Type fromType, object key)
     {
         return this.m_scopedResolver.IsRegistered(fromType, key);
     }
@@ -86,7 +83,7 @@ public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvide
     }
 
     /// <inheritdoc/>
-    public void Register(DependencyDescriptor descriptor, string key)
+    public void Register(DependencyDescriptor descriptor, object key)
     {
         switch (descriptor.Lifetime)
         {
@@ -145,7 +142,7 @@ public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvide
     }
 
     /// <inheritdoc/>
-    public void Unregister(DependencyDescriptor descriptor, string key)
+    public void Unregister(DependencyDescriptor descriptor, object key)
     {
         var array = this.m_services.ToArray();
         foreach (var item in array)
@@ -154,7 +151,7 @@ public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvide
             {
                 continue;
             }
-            if (item.ServiceType == descriptor.FromType && item.ServiceKey?.ToString() == key)
+            if (item.ServiceType == descriptor.FromType && item.ServiceKey == key)
             {
                 this.m_services.Remove(item);
                 return;
@@ -204,7 +201,7 @@ public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvide
     }
 
     /// <inheritdoc/>
-    public object Resolve(Type fromType, string key)
+    public object Resolve(Type fromType, object key)
     {
         return this.m_scopedResolver.GetKeyedService(fromType, key);
     }

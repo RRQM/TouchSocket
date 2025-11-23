@@ -10,13 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using System.Xml;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.XmlRpc;
 
@@ -27,16 +24,16 @@ namespace TouchSocket.XmlRpc;
 public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 {
     private readonly IRpcServerProvider m_rpcServerProvider;
-    private string m_xmlRpcUrl = "/xmlrpc";
 
     /// <summary>
     /// 构造函数
     /// </summary>
-    public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider)
+    public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider, XmlRpcOption option)
     {
         this.ActionMap = new ActionMap(true);
         this.RegisterServer(rpcServerProvider.GetMethods());
         this.m_rpcServerProvider = rpcServerProvider;
+        this.m_allowXmlRpc = option.AllowXmlRpc;
     }
 
     /// <summary>
@@ -49,21 +46,15 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     /// </summary>
     public RpcStore RpcStore { get; private set; }
 
-    /// <summary>
-    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为<see langword="null"/>或空时，会全部响应。
-    /// </summary>
-    public string XmlRpcUrl
-    {
-        get => this.m_xmlRpcUrl;
-        set => this.m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
-    }
+    private readonly Func<IHttpSessionClient, HttpContext, Task<bool>> m_allowXmlRpc;
 
     /// <inheritdoc/>
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.Method == HttpMethod.Post)
         {
-            if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
+            var allowXmlRpc = await this.m_allowXmlRpc.Invoke(client, e.Context);
+            if (allowXmlRpc)
             {
                 e.Handled = true;
                 XmlRpcCallContext callContext = null;
@@ -152,7 +143,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     if (!e.Context.Request.KeepAlive)
                     {
-                        await client.ShutdownAsync(SocketShutdown.Both).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 finally
@@ -164,17 +155,6 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
         }
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <summary>
-    /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为<see langword="null"/>或空时，会全部响应。
-    /// </summary>
-    /// <param name="xmlRpcUrl"></param>
-    /// <returns></returns>
-    public XmlRpcParserPlugin SetXmlRpcUrl(string xmlRpcUrl)
-    {
-        this.XmlRpcUrl = xmlRpcUrl;
-        return this;
     }
 
     private void RegisterServer(RpcMethod[] rpcMethods)

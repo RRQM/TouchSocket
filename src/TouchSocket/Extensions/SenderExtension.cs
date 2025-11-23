@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -60,31 +55,20 @@ public static class SenderExtension
     /// <returns>返回一个Task对象，表示异步操作。</returns>
     public static async Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
     {
-        using (var byteBlock = new ByteBlock(1024))
+        var byteBlock = new ByteBlock(1024);
+
+        try
         {
-            byteBlock.WriteNormalString(value, Encoding.UTF8);
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
             await client.SendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
 
     #endregion ISend
-
-    #region IClientSender
-
-    /// <summary>
-    /// 同步发送数据。
-    /// </summary>
-    /// <param name="client">发送数据的客户端对象。</param>
-    /// <param name="bytesList">待发送的字节数据列表。</param>
-    /// <typeparam name="TClient">客户端对象类型，必须实现<see cref="IClientSender"/>接口。</typeparam>
-    [AsyncToSyncWarning]
-    public static void Send<TClient>(this TClient client, IList<ArraySegment<byte>> bytesList) where TClient : IClientSender
-    {
-        // 调用客户端对象的SendAsync方法发送数据，并忽略返回结果。
-        client.SendAsync(bytesList).GetFalseAwaitResult();
-    }
-
-    #endregion IClientSender
 
     #region IRequestInfoSender
 
@@ -204,10 +188,16 @@ public static class SenderExtension
     /// <returns>返回一个Task对象，代表异步操作的完成状态。</returns>
     public static async Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
     {
-        using (var byteBlock = new ByteBlock(1024))
+        var byteBlock = new ByteBlock(1024);
+
+        try
         {
-            byteBlock.WriteNormalString(value, Encoding.UTF8);
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
             await client.SendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
 

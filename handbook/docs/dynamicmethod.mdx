@@ -5,481 +5,176 @@ title: 动态方法调用(DynamicMethod)
 
 import CardLink from "@site/src/components/CardLink.js";
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 
-### 定义
+
 
 <TouchSocketCoreDefinition />
 
 
-## 一、核心概念
+## 一、说明
 
-动态方法调用模块提供高效、灵活的方法反射调用方案，支持多种底层实现方式，显著提升反射调用性能。特别针对AOT（Ahead-of-Time）编译环境优化，同时保持传统反射场景的高性能表现。
+动态方法调用模块提供了一种高效、灵活的方法调用方案，可以在运行时动态调用被`[DynamicMethod]`标记的方法。该模块会优先使用源生成器生成高性能调用代码，在源生成不可用时自动降级为表达式树或反射方式。
 
-## 二、核心特性
+## 二、特性
 
-- **多引擎支持**：
-  - IL代码生成（DynamicBuilderType.IL）
-  - 表达式树（DynamicBuilderType.Expression）
-  - 传统反射（DynamicBuilderType.Reflect）
-  - 源生成（DynamicBuilderType.SourceGenerator）
-- **性能卓越**：相比原生反射调用，性能提升10倍性能
-- **AOT友好**：源生成模式实现零反射，完美支持iOS/Android等AOT环境
-- **智能异步支持**：自动识别Task/ValueTask返回值类型
-- **全参数支持**：支持ref/out参数、泛型参数、参数默认值
-- **灵活扩展**：支持自定义动态方法特性标记
+- **源生成优先**：编译时自动生成方法调用代码，零反射开销
+- **AOT友好**：完美支持AOT环境（如iOS/Android），无运行时代码生成
+- **自动降级**：源生成不可用时自动使用表达式树，最后降级为反射
+- **异步支持**：自动识别Task/Task\<T\>返回值，支持异步调用
+- **完整参数支持**：支持out参数、ref参数
+- **扩展性强**：支持自定义特性继承`DynamicMethodAttribute`
 
 ## 三、快速开始
 
-### 3.1 基本声明
+### 3.1 标记方法
+
+使用`[DynamicMethod]`特性标记需要动态调用的方法：
+
+<CustomCodeBlock region="标记方法示例"/>
+
+### 3.2 调用方法
+
+创建`Method`实例并调用：
+
+<CustomCodeBlock region="简单调用示例"/>
+
+## 四、核心API
+
+### 4.1 Method类
+
+`Method`类是动态方法调用的核心类，提供以下构造函数：
 
 ```csharp showLineNumbers
-public class MyClass
-{
-    [DynamicMethod]
-    public void SimpleMethod()
-    {
-        Console.WriteLine("Method executed");
-    }
-}
+// 从MethodInfo创建
+public Method(MethodInfo method)
+
+// 从类型和方法名创建
+public Method(Type targetType, string methodName)
+
+// 使用自定义IDynamicMethodInfo创建
+public Method(MethodInfo method, IDynamicMethodInfo dynamicMethodInfo)
 ```
 
-### 3.2 基础调用
-
-```csharp showLineNumbers
-// 创建方法包装器
-var method = new Method(typeof(MyClass), nameof(MyClass.SimpleMethod));
-
-// 实例化对象
-var instance = new MyClass();
-
-// 执行方法调用
-method.Invoke(instance);
-```
-
-## 四、核心功能详解
-
-### 4.1 构建器类型选择
-
-```csharp showLineNumbers
-// 使用IL生成
-var ilMethod = new Method(
-    typeof(MyClass), 
-    nameof(MyClass.SimpleMethod),
-    DynamicBuilderType.IL
-);
-
-// 使用表达式树
-var exprMethod = new Method(
-    typeof(MyClass),
-    nameof(MyClass.SimpleMethod),
-    DynamicBuilderType.Expression
-);
-
-// 使用源生成（性能最强，AOT环境推荐）
-var sourceGenMethod = new Method(
-    typeof(MyClass),
-    nameof(MyClass.SimpleMethod),
-    DynamicBuilderType.SourceGenerator
-);
-```
-
-:::tip 构建器选择建议
-
-- **任何时候**：使用SourceGenerator，无论性能还是AOT环境，都是首选。
-
+:::info 自动选择策略
+使用第一、二种构造函数时，`Method`会按以下优先级自动选择实现方式：
+1. 源生成器（SourceGenerator） - 优先使用
+2. 表达式树（Expression） - 源生成不可用时
+3. 反射（Reflect） - 表达式树失败时的保底方案
 :::
 
-### 4.2 异步方法支持
+### 4.2 Method属性
 
 ```csharp showLineNumbers
-public class MyClass
-{
-    [DynamicMethod]
-    public async Task<int> GetDataAsync()
-    {
-        await Task.Delay(100);
-        return 42;
-    }
-}
+// 方法元数据
+public MethodInfo Info { get; }
 
-// 异步调用
-var method = new Method(typeof(MyClass), nameof(MyClass.GetDataAsync));
-var result = await method.InvokeAsync(instance);
-Console.WriteLine($"Result: {result}"); // 输出 42
+// 方法名称
+public string Name { get; }
+
+// 返回值类型枚举
+public MethodReturnKind ReturnKind { get; }
+
+// 是否有返回值（void和Task视为无返回值）
+public bool HasReturn { get; }
+
+// 真实返回类型（Task<T>时为T，void/Task时为null）
+public Type RealReturnType { get; }
+
+// 是否为可等待方法（返回Task或Task<T>）
+public bool IsAwaitable { get; }
 ```
 
-### 4.3 复杂参数处理
+### 4.3 MethodReturnKind枚举
 
 ```csharp showLineNumbers
-public class MyClass
+public enum MethodReturnKind
 {
-    [DynamicMethod]
-    public void ProcessData(
-        string input, 
-        ref int counter,
-        out string result)
-    {
-        counter++;
-        result = $"{input}_{counter}";
-    }
-}
-
-// 调用示例
-var parameters = new object[] { "data", 0, null };
-method.Invoke(instance, parameters);
-
-Console.WriteLine($"Result: {parameters[2]}"); // 输出 "data_1"
-```
-
-## 五、性能优化
-
-### 5.1 性能对比测试
-
-:::tip 10000次调用性能分析
-
-**核心结论**  
-
-1. **同步方法（Add）性能**  
-   - **直接调用** 最快（~2.1µs），无内存分配。  
-   - **源生成器（SourceGeneratorRun）** 在 .NET 8+ 接近直接调用性能（~3.1µs），较 IL/表达式树快 6-7 倍，较反射快 28-30 倍。  
-   - **反射（MethodInfo）** 性能最差（.NET 6: 400µs → .NET 8: 88µs），.NET 8+ 反射性能显著优化。  
-
-2. **异步方法（AddAsync）性能**  
-   - **直接调用** 仍最优（.NET 8: 38µs，.NET 9: 39µs）。  
-   - **源生成器** 表现接近 IL/表达式树（.NET 8: 91µs vs 103µs），较反射快 2-3 倍（.NET 8: 91µs vs 184µs）。  
-   - **.NET Framework 4.8.1** 异步性能最差（反射达 1,305µs），内存分配显著高于其他版本。  
-
-3. **内存分配**  
-   - 同步方法：源生成器与 IL/表达式树分配 80B，反射额外多 1B（.NET 6）。  
-   - 异步方法：所有动态方法分配 ~720KB（.NET Core）或 ~802KB（Framework），反射在 Framework 分配超 1MB。  
-
-**附：关键数据对比（.NET 8）**  
-
-| 方法                  | 同步耗时 | 异步耗时 | 内存分配  |  
-|----------------------|---------|---------|----------|  
-| DirectRun            | 2.1µs   | 38µs    | 56B      |  
-| SourceGeneratorRun   | 3.1µs   | 91µs    | 80B      |  
-| MethodInfoRun        | 88µs    | 184µs   | 80B      |  
-
-:::  
-
-```csharp {7,12,18,23,29,34,40,45} showLineNumbers
-| Method                       | Job                  | Runtime              | Mean         | Error     | StdDev    | Gen0     | Gen1   | Allocated |
-|----------------------------- |--------------------- |--------------------- |-------------:|----------:|----------:|---------:|-------:|----------:|
-| DirectRun_Add                | .NET 6.0             | .NET 6.0             |     2.132 us | 0.0031 us | 0.0027 us |        - |      - |      56 B |
-| MethodILRun_Add              | .NET 6.0             | .NET 6.0             |    23.887 us | 0.0795 us | 0.0744 us |        - |      - |      80 B |
-| MethodExpressionRun_Add      | .NET 6.0             | .NET 6.0             |    20.108 us | 0.1542 us | 0.1443 us |        - |      - |      80 B |
-| MethodInfoRun_Add            | .NET 6.0             | .NET 6.0             |   399.999 us | 0.3781 us | 0.3537 us |        - |      - |      81 B |
-| SourceGeneratorRun_Add       | .NET 6.0             | .NET 6.0             |    17.648 us | 0.0945 us | 0.0884 us |        - |      - |      80 B |
-| DirectRun_AddAsync           | .NET 6.0             | .NET 6.0             |    46.567 us | 0.4623 us | 0.4098 us |  45.8984 |      - |  720080 B |
-| MethodILRun_AddAsync         | .NET 6.0             | .NET 6.0             |   141.010 us | 0.8145 us | 0.7619 us |  45.8984 |      - |  720080 B |
-| MethodExpressionRun_AddAsync | .NET 6.0             | .NET 6.0             |   142.758 us | 0.8197 us | 0.7266 us |  45.8984 |      - |  720080 B |
-| MethodInfoRun_AddAsync       | .NET 6.0             | .NET 6.0             |   563.645 us | 1.8681 us | 1.6560 us |  45.8984 |      - |  720081 B |
-| SourceGeneratorRun_AddAsync  | .NET 6.0             | .NET 6.0             |   141.399 us | 0.8781 us | 0.8214 us |  45.8984 |      - |  720080 B |
-| StaticMethodRun              | .NET 6.0             | .NET 6.0             |     2.130 us | 0.0018 us | 0.0017 us |        - |      - |      56 B |
-| DirectRun_Add                | .NET 8.0             | .NET 8.0             |     2.140 us | 0.0116 us | 0.0109 us |        - |      - |      56 B |
-| MethodILRun_Add              | .NET 8.0             | .NET 8.0             |    19.332 us | 0.0491 us | 0.0459 us |        - |      - |      80 B |
-| MethodExpressionRun_Add      | .NET 8.0             | .NET 8.0             |    12.889 us | 0.1189 us | 0.1054 us |        - |      - |      80 B |
-| MethodInfoRun_Add            | .NET 8.0             | .NET 8.0             |    88.879 us | 0.1784 us | 0.1581 us |        - |      - |      80 B |
-| SourceGeneratorRun_Add       | .NET 8.0             | .NET 8.0             |     3.160 us | 0.0073 us | 0.0068 us |   0.0038 |      - |      80 B |
-| DirectRun_AddAsync           | .NET 8.0             | .NET 8.0             |    38.401 us | 0.1199 us | 0.1063 us |  45.8984 |      - |  720080 B |
-| MethodILRun_AddAsync         | .NET 8.0             | .NET 8.0             |   103.627 us | 1.2387 us | 1.1587 us |  45.8984 |      - |  720080 B |
-| MethodExpressionRun_AddAsync | .NET 8.0             | .NET 8.0             |   101.368 us | 0.7190 us | 0.6725 us |  45.8984 |      - |  720080 B |
-| MethodInfoRun_AddAsync       | .NET 8.0             | .NET 8.0             |   183.882 us | 0.7238 us | 0.6044 us |  45.8984 |      - |  720080 B |
-| SourceGeneratorRun_AddAsync  | .NET 8.0             | .NET 8.0             |    91.024 us | 0.6482 us | 0.6063 us |  45.8984 |      - |  720080 B |
-| StaticMethodRun              | .NET 8.0             | .NET 8.0             |     2.150 us | 0.0073 us | 0.0068 us |        - |      - |      56 B |
-| DirectRun_Add                | .NET 9.0             | .NET 9.0             |     2.119 us | 0.0024 us | 0.0022 us |        - |      - |      56 B |
-| MethodILRun_Add              | .NET 9.0             | .NET 9.0             |    19.348 us | 0.0133 us | 0.0124 us |        - |      - |      80 B |
-| MethodExpressionRun_Add      | .NET 9.0             | .NET 9.0             |    11.753 us | 0.0625 us | 0.0585 us |        - |      - |      80 B |
-| MethodInfoRun_Add            | .NET 9.0             | .NET 9.0             |    91.756 us | 0.2344 us | 0.2193 us |        - |      - |      80 B |
-| SourceGeneratorRun_Add       | .NET 9.0             | .NET 9.0             |     3.145 us | 0.0056 us | 0.0046 us |   0.0038 |      - |      80 B |
-| DirectRun_AddAsync           | .NET 9.0             | .NET 9.0             |    39.219 us | 0.1669 us | 0.1561 us |  45.8984 |      - |  720080 B |
-| MethodILRun_AddAsync         | .NET 9.0             | .NET 9.0             |   107.920 us | 0.4728 us | 0.4191 us |  45.8984 |      - |  720080 B |
-| MethodExpressionRun_AddAsync | .NET 9.0             | .NET 9.0             |   106.539 us | 0.3894 us | 0.3642 us |  45.8984 |      - |  720080 B |
-| MethodInfoRun_AddAsync       | .NET 9.0             | .NET 9.0             |   189.294 us | 0.7231 us | 0.6764 us |  45.8984 |      - |  720080 B |
-| SourceGeneratorRun_AddAsync  | .NET 9.0             | .NET 9.0             |    99.195 us | 0.3677 us | 0.3440 us |  45.8984 |      - |  720080 B |
-| StaticMethodRun              | .NET 9.0             | .NET 9.0             |     2.125 us | 0.0036 us | 0.0034 us |        - |      - |      56 B |
-| DirectRun_Add                | .NET Framework 4.8.1 | .NET Framework 4.8.1 |     2.134 us | 0.0047 us | 0.0042 us |   0.0076 |      - |      56 B |
-| MethodILRun_Add              | .NET Framework 4.8.1 | .NET Framework 4.8.1 |    30.162 us | 0.0629 us | 0.0588 us |        - |      - |      80 B |
-| MethodExpressionRun_Add      | .NET Framework 4.8.1 | .NET Framework 4.8.1 |    56.063 us | 0.0559 us | 0.0467 us |        - |      - |      80 B |
-| MethodInfoRun_Add            | .NET Framework 4.8.1 | .NET Framework 4.8.1 |   770.931 us | 5.9446 us | 5.5606 us |  50.7813 |      - |  321027 B |
-| SourceGeneratorRun_Add       | .NET Framework 4.8.1 | .NET Framework 4.8.1 |    17.521 us | 0.0350 us | 0.0310 us |        - |      - |      80 B |
-| DirectRun_AddAsync           | .NET Framework 4.8.1 | .NET Framework 4.8.1 |    41.866 us | 0.1300 us | 0.1216 us | 127.5024 | 0.0610 |  802442 B |
-| MethodILRun_AddAsync         | .NET Framework 4.8.1 | .NET Framework 4.8.1 |   523.507 us | 2.1568 us | 1.9120 us | 126.9531 |      - |  802445 B |
-| MethodExpressionRun_AddAsync | .NET Framework 4.8.1 | .NET Framework 4.8.1 |   554.333 us | 2.3657 us | 2.2129 us | 126.9531 |      - |  802445 B |
-| MethodInfoRun_AddAsync       | .NET Framework 4.8.1 | .NET Framework 4.8.1 | 1,304.826 us | 1.4392 us | 1.2758 us | 177.7344 |      - | 1123389 B |
-| SourceGeneratorRun_AddAsync  | .NET Framework 4.8.1 | .NET Framework 4.8.1 |   508.533 us | 0.8991 us | 0.8410 us | 126.9531 |      - |  802445 B |
-| StaticMethodRun              | .NET Framework 4.8.1 | .NET Framework 4.8.1 |     3.267 us | 0.0070 us | 0.0062 us |   0.0114 |      - |      80 B |
-```
-
-<details>
-<summary>基准测试代码</summary>
-<div>
-
-```csharp showLineNumbers
-[SimpleJob(RuntimeMoniker.Net481)]
-[SimpleJob(RuntimeMoniker.Net60)]
-[SimpleJob(RuntimeMoniker.Net80)]
-[SimpleJob(RuntimeMoniker.Net90)]
-[MemoryDiagnoser]
-public class BenchmarkInvokeMethodClass
-{
-    public BenchmarkInvokeMethodClass()
-    {
-        var methodInfo_Add = typeof(MyMethodClass1).GetMethod(nameof(MyMethodClass1.Add));
-        var methodInfo_AddAsync = typeof(MyMethodClass1).GetMethod(nameof(MyMethodClass1.AddAsync));
-
-        this.m_method_Add_IL = new Method(methodInfo_Add, DynamicBuilderType.IL);
-        this.m_method_Add_Expression = new Method(methodInfo_Add, DynamicBuilderType.Expression);
-        this.m_method_Add_SourceGenerator = new Method(methodInfo_Add, DynamicBuilderType.SourceGenerator);
-        this.m_method_Add_Reflect = new Method(methodInfo_Add, DynamicBuilderType.Reflect);
-
-        this.m_method_AddAsync_IL = new Method(methodInfo_AddAsync, DynamicBuilderType.IL);
-        this.m_method_AddAsync_Expression = new Method(methodInfo_AddAsync, DynamicBuilderType.Expression);
-        this.m_method_AddAsync_SourceGenerator = new Method(methodInfo_AddAsync, DynamicBuilderType.SourceGenerator);
-        this.m_method_AddAsync_Reflect = new Method(methodInfo_AddAsync, DynamicBuilderType.Reflect);
-
-        var AddStatic = typeof(MyMethodClass1).GetProperty("AddStaticAction");
-    }
-
-    private readonly Method m_method_Add_IL;
-    private readonly Method m_method_Add_Expression;
-    private readonly Method m_method_Add_SourceGenerator;
-    private readonly Method m_method_Add_Reflect;
-
-    private readonly Method m_method_AddAsync_IL;
-    private readonly Method m_method_AddAsync_Expression;
-    private readonly Method m_method_AddAsync_SourceGenerator;
-    private readonly Method m_method_AddAsync_Reflect;
-
-    public int Count=10000;
-
-    [Benchmark]
-    public void DirectRun_Add()
-    {
-        var myClass1 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-
-        for (var i = 0; i < this.Count; i++)
-        {
-            myClass1.Add(a);
-        }
-    }
-
-    [Benchmark]
-    public void MethodILRun_Add()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            this.m_method_Add_IL.Invoke(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public void MethodExpressionRun_Add()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            this.m_method_Add_Expression.Invoke(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public void MethodInfoRun_Add()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            this.m_method_Add_Reflect.Invoke(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public void SourceGeneratorRun_Add()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            this.m_method_Add_SourceGenerator.Invoke(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public async Task DirectRun_AddAsync()
-    {
-        var myClass1 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-
-        for (var i = 0; i < this.Count; i++)
-        {
-            await myClass1.AddAsync(a);
-        }
-    }
-
-    [Benchmark]
-    public async Task MethodILRun_AddAsync()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            await this.m_method_Add_IL.InvokeAsync(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public async Task MethodExpressionRun_AddAsync()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            await this.m_method_Add_Expression.InvokeAsync(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public async Task MethodInfoRun_AddAsync()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            await this.m_method_Add_Reflect.InvokeAsync(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public async Task SourceGeneratorRun_AddAsync()
-    {
-        var myClass2 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-        for (var i = 0; i < this.Count; i++)
-        {
-            await this.m_method_Add_SourceGenerator.InvokeAsync(myClass2, objects);
-        }
-    }
-
-    [Benchmark]
-    public void StaticMethodRun()
-    {
-        var myClass1 = new MyMethodClass1();
-
-        var a = new object();
-
-        var objects = new object[] { a };
-
-        for (var i = 0; i < this.Count; i++)
-        {
-            MyMethodClass1.AddStatic(myClass1, objects);
-        }
-    }
-}
-
-
-public class MyMethodClass1
-{
-    public static object AddStatic(object myClass, object[] ps)
-    {
-        var a = ps[0];
-        var result = ((MyMethodClass1)myClass).Add(a);
-        return result;
-    }
-
-    //这个是被调用函数。
-    [DynamicMethod]
-    public object Add(object obj)
-    {
-        return obj;
-    }
-    [DynamicMethod]
-    public Task<object> AddAsync(object obj)
-    {
-        return Task.FromResult(obj);
-    }
+    Void,              // void方法
+    Object,            // 返回对象
+    Awaitable,         // 返回Task
+    AwaitableObject    // 返回Task<T>
 }
 ```
 
-</div>
-</details>
+## 五、使用示例
 
+### 5.1 同步方法调用
 
-### 5.2 缓存策略
+<CustomCodeBlock region="标记方法示例"/>
 
-```csharp showLineNumbers
-// 推荐在应用初始化时预加载方法
-public static class MethodCache
-{
-    public static readonly Method ProcessMethod = new Method(
-        typeof(MyClass),
-        nameof(MyClass.ProcessData),
-        DynamicBuilderType.IL
-    );
-}
+<CustomCodeBlock region="简单调用示例"/>
 
-// 后续重复使用缓存实例
-MethodCache.ProcessMethod.Invoke(instance);
-```
+### 5.2 异步Task调用
 
-## 六、高级用法
+<CustomCodeBlock region="异步Task调用声明"/>
 
-### 6.1 自定义特性标记
+<CustomCodeBlock region="异步Task调用"/>
 
-```csharp showLineNumbers
-// 定义自定义特性
-[AttributeUsage(AttributeTargets.Method)]
-public class MyDynamicAttribute : DynamicMethodAttribute {}
+### 5.3 异步Task\<T\>调用
 
-// 标记方法
-public class CustomService
-{
-    [MyDynamic]
-    public void CustomOperation() { }
-}
+<CustomCodeBlock region="异步Task泛型调用声明"/>
 
-// 获取自定义标记方法
-var methods = typeof(CustomService)
-    .GetMethods()
-    .Where(m => m.IsDefined(typeof(MyDynamicAttribute)));
-```
+<CustomCodeBlock region="异步Task泛型调用"/>
 
-## 七、示例项目
+### 5.4 out和ref参数
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/AotDynamicMethodConsoleApp"/>
+<CustomCodeBlock region="out和ref参数声明"/>
+
+<CustomCodeBlock region="out和ref参数调用"/>
+
+### 5.5 自定义动态方法特性
+
+可以创建继承自`DynamicMethodAttribute`的自定义特性，源生成器会自动识别：
+
+<CustomCodeBlock region="自定义特性声明"/>
+
+<CustomCodeBlock region="自定义特性调用"/>
+
+## 六、性能测试
+
+### 6.1 性能对比
+
+以下是10000次调用的性能测试结果（基于示例项目AotDynamicMethodConsoleApp）：
+
+<CustomCodeBlock region="性能测试声明"/>
+
+<CustomCodeBlock region="性能测试代码"/>
+
+:::tip 性能建议
+- **推荐使用源生成器**：源生成器方式性能最佳，接近直接调用性能
+- **缓存Method实例**：避免重复创建`Method`对象，应在初始化时创建并缓存
+- **AOT环境必用源生成**：在AOT环境下，源生成器是唯一高性能选择
+:::
+
+### 6.2 实现方式对比
+
+| 实现方式 | 性能 | AOT支持 | 说明 |
+|---------|------|---------|------|
+| 源生成器 | ⭐⭐⭐⭐⭐ | ✅ | 编译时生成，零反射，性能最佳 |
+| 表达式树 | ⭐⭐⭐⭐ | ⚠️ | 运行时编译，性能优秀，部分AOT不支持 |
+| 反射 | ⭐⭐ | ✅ | 保底方案，性能较低 |
+
+## 七、注意事项
+
+### 7.1 标记要求
+
+- 方法必须使用`[DynamicMethod]`特性或其派生特性标记
+- 源生成器在编译时扫描特性，运行时添加特性无效
+
+### 7.2 源生成器限制
+
+- 源生成器只处理当前程序集中标记的方法
+- 跨程序集的方法需要在定义程序集中标记
+- 私有方法也可以标记，但需要注意访问权限
+
+### 7.3 使用建议
+
+**✅ 推荐：缓存Method实例**
+
+<CustomCodeBlock region="缓存Method实例推荐"/>
+
+## 八、示例项目
+
+<CardLink link="examples/Core/AotDynamicMethodConsoleApp"/>

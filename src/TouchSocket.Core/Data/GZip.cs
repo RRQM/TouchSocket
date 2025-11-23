@@ -11,139 +11,142 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
-using System.IO;
 using System.IO.Compression;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// Gzip操作类
+/// 提供GZip压缩和解压缩功能的静态工具类。
 /// </summary>
+/// <remarks>
+/// 此类封装了基于<see cref="GZipStream"/>的压缩和解压缩操作，
+/// 支持对字节数据、流、字节块和字节写入器进行GZip格式的压缩和解压缩处理。
+/// </remarks>
 public static partial class GZip
 {
     /// <summary>
-    /// 压缩数据
+    /// 将字节跨度压缩并写入到指定流中。
     /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static void Compress(Stream stream, byte[] buffer, int offset, int length)
+    /// <param name="stream">要写入压缩数据的流。</param>
+    /// <param name="span">要压缩的只读字节跨度。</param>
+    /// <remarks>
+    /// 此方法使用GZip压缩算法将数据压缩后写入流，压缩完成后会关闭GZip流但不关闭底层流。
+    /// </remarks>
+    public static void Compress(Stream stream, ReadOnlySpan<byte> span)
     {
         using (var gZipStream = new GZipStream(stream, CompressionMode.Compress, true))
         {
-            gZipStream.Write(buffer, offset, length);
+            gZipStream.Write(span);
             gZipStream.Close();
         }
     }
 
     /// <summary>
-    /// 压缩数据
+    /// 将字节跨度压缩并写入到字节写入器中。
     /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="buffer"></param>
-    /// <returns></returns>
-    public static void Compress(Stream stream, byte[] buffer)
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="span">要压缩的只读字节跨度。</param>
+    /// <remarks>
+    /// 此方法内部使用临时<see cref="ByteBlock"/>进行压缩操作，压缩完成后将结果写入指定的写入器。
+    /// </remarks>
+    public static void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> span)
+        where TWriter : IBytesWriter
     {
-        Compress(stream, buffer, 0, buffer.Length);
+        using (var byteBlock = new ByteBlock(span.Length))
+        {
+            Compress(byteBlock.AsStream(), span);
+            writer.Write(byteBlock.Span);
+        }
     }
 
     /// <summary>
-    /// 压缩数据
+    /// 将字节跨度压缩并写入到字节块中。
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static byte[] Compress(byte[] buffer, int offset, int length)
+    /// <param name="byteBlock">要写入压缩数据的<see cref="ByteBlock"/>。</param>
+    /// <param name="span">要压缩的只读字节跨度。</param>
+    /// <remarks>
+    /// 此方法将压缩数据直接写入指定的字节块中。
+    /// </remarks>
+    public static void Compress(ByteBlock byteBlock, ReadOnlySpan<byte> span)
     {
-        using (var byteBlock = new ByteBlock(length))
+        Compress(byteBlock.AsStream(), span);
+    }
+
+    /// <summary>
+    /// 压缩字节跨度并返回压缩后的数据。
+    /// </summary>
+    /// <param name="span">要压缩的只读字节跨度。</param>
+    /// <returns>包含压缩数据的<see cref="ReadOnlyMemory{T}"/>。</returns>
+    /// <remarks>
+    /// 此方法返回压缩后数据的副本，调用者负责管理返回的内存。
+    /// </remarks>
+    public static ReadOnlyMemory<byte> Compress(ReadOnlySpan<byte> span)
+    {
+        using (var byteBlock = new ByteBlock(span.Length))
         {
-            Compress(byteBlock.AsStream(), buffer, offset, length);
+            Compress(byteBlock.AsStream(), span);
             return byteBlock.ToArray();
         }
     }
 
     /// <summary>
-    /// 压缩数据
+    /// 解压缩字节跨度并将结果写入到字节写入器中。
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <returns></returns>
-    public static byte[] Compress(byte[] buffer)
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="span">要解压缩的只读字节跨度。</param>
+    /// <remarks>
+    /// 此方法使用64KB的缓冲区进行解压缩操作，通过流式读取方式处理大数据。
+    /// 内部使用<see cref="ArrayPool{T}.Shared"/>来管理缓冲区内存。
+    /// </remarks>
+    public static void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> span)
+        where TWriter : IBytesWriter
     {
-        return Compress(buffer, 0, buffer.Length);
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <param name="data"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data, int offset, int length)
-        where TByteBlock : IByteBlock
-    {
-        using (var gZipStream = new GZipStream(new MemoryStream(data, offset, length), CompressionMode.Decompress))
+        using (var streamByteBlock = new ByteBlock(span.Length))
         {
-            var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
-            try
+            streamByteBlock.Write(span);
+            streamByteBlock.SeekToStart();
+
+            using (var gZipStream = new GZipStream(streamByteBlock.AsStream(), CompressionMode.Decompress))
             {
-                int r;
-                while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
+                var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
+                try
                 {
-                    byteBlock.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
+                    int r;
+                    while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
+                    {
+                        writer.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
+                    }
+                    gZipStream.Close();
                 }
-                gZipStream.Close();
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(bytes);
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(bytes);
+                }
             }
         }
     }
 
     /// <summary>
-    /// 解压数据
+    /// 解压缩字节跨度并返回解压缩后的数据。
     /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <param name="data"></param>
-    public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data)
-        where TByteBlock : IByteBlock
+    /// <param name="span">要解压缩的只读字节跨度。</param>
+    /// <returns>包含解压缩数据的<see cref="ReadOnlyMemory{T}"/>。</returns>
+    /// <remarks>
+    /// 此方法返回解压缩后数据的副本，调用者负责管理返回的内存。
+    /// </remarks>
+    public static ReadOnlyMemory<byte> Decompress(ReadOnlySpan<byte> span)
     {
-        Decompress(ref byteBlock, data, 0, data.Length);
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
-    public static byte[] Decompress(byte[] data, int offset, int length)
-    {
-        var byteBlock = new ByteBlock(length);
+        var byteBlock = new ByteBlock(span.Length);
         try
         {
-            Decompress(ref byteBlock, data, offset, length);
+            Decompress(ref byteBlock, span);
             return byteBlock.ToArray();
         }
         finally
         {
             byteBlock.Dispose();
         }
-    }
-
-    /// <summary>
-    /// 解压数据
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    public static byte[] Decompress(byte[] data)
-    {
-        return Decompress(data, 0, data.Length);
     }
 }

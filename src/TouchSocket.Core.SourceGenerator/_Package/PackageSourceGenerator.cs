@@ -1,26 +1,28 @@
-//------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 
 namespace TouchSocket;
 
 [Generator]
-public class PackageSourceGenerator : ISourceGenerator
+public class PackageSourceGenerator : IIncrementalGenerator
 {
-    private readonly string m_generatorPackageAttribute = @"
+    private const string GeneratorPackageAttribute = @"
 
 
 /*
@@ -69,39 +71,54 @@ namespace TouchSocket.Core
 
 ";
 
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForPostInitialization(a =>
+        // 注册预生成的属性代码
+        context.RegisterPostInitializationOutput(ctx =>
         {
-            var sourceCode = this.m_generatorPackageAttribute.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
-            a.AddSource(nameof(this.m_generatorPackageAttribute), sourceCode);
+            var sourceCode = GeneratorPackageAttribute.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+
+            ctx.AddSource("GeneratorPackageAttributes.g.cs", sourceCode);
         });
-        context.RegisterForSyntaxNotifications(() => new PackageSyntaxReceiver());
+
+        // 筛选包含GeneratorPackageAttribute的类
+        var classDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => IsClassWithAttribute(s),
+                transform: static (ctx, _) => GetClassSymbol(ctx))
+            .Where(static m => m is not null)
+            .Collect();
+
+        // 生成代码
+        context.RegisterSourceOutput(classDeclarations,
+            (spc, source) => this.Execute(source, spc));
     }
 
-    public void Execute(GeneratorExecutionContext context)
+    private static bool IsClassWithAttribute(SyntaxNode node)
     {
-        var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
+        return (node is ClassDeclarationSyntax classDeclaration &&
+               classDeclaration.AttributeLists.Count > 0) || (node is StructDeclarationSyntax structDeclaration &&
+               structDeclaration.AttributeLists.Count > 0);
+    }
 
-        if (context.SyntaxReceiver is PackageSyntaxReceiver receiver)
+    private static INamedTypeSymbol? GetClassSymbol(GeneratorSyntaxContext context)
+    {
+        var model = context.SemanticModel;
+        var classSymbol = model.GetDeclaredSymbol(context.Node) as INamedTypeSymbol;
+
+        // 检查是否包含GeneratorPackageAttribute
+        var hasAttribute = classSymbol?.GetAttributes()
+            .Any(ad => ad.AttributeClass?.ToDisplayString() == "TouchSocket.Core.GeneratorPackageAttribute");
+
+        return hasAttribute == true ? classSymbol : null;
+    }
+
+    private void Execute(ImmutableArray<INamedTypeSymbol> classes, SourceProductionContext context)
+    {
+        foreach (var classSymbol in classes.Distinct(SymbolEqualityComparer.Default).Cast<INamedTypeSymbol>())
         {
-            var builders = receiver
-                .GetPackageClassTypes(context.Compilation)
-                .Select(i => new PackageCodeBuilder(i, context))
-                .Distinct(CodeBuilderEqualityComparer<PackageCodeBuilder>.Default);
-            //Debugger.Launch();
-            foreach (var builder in builders)
-            {
-                if (builder.TryToSourceText(out var sourceText))
-                {
-                    var tree = CSharpSyntaxTree.ParseText(sourceText);
-                    var root = tree.GetRoot().NormalizeWhitespace();
-                    var ret = root.ToFullString();
-                    context.AddSource($"{builder.GetFileName()}.g.cs", ret);
-
-
-                }
-            }
+            var builder = new PackageCodeBuilder(classSymbol, context);
+            context.AddSource(builder);
         }
     }
 }

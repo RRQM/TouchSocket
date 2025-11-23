@@ -28,11 +28,12 @@ public partial class Form1 : Form
 
     private void Form1_Load(object? sender, EventArgs e)
     {
+        #region 远程文件系统配置客户端
         this.m_client.SetupAsync(new TouchSocketConfig()
             .SetRemoteIPHost("127.0.0.1:7789")
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options=>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             })
             .ConfigureContainer(a =>
             {
@@ -45,9 +46,10 @@ public partial class Form1 : Form
             {
                 a.UseDmtpRemoteAccess();
             }));
+        #endregion
         this.m_client.ConnectAsync();
 
-        this.m_client.Logger.Info("�ɹ�����");
+        this.m_client.Logger.Info("成功连接");
     }
 
     private readonly TcpDmtpClient m_client = new TcpDmtpClient();
@@ -58,7 +60,7 @@ public partial class Form1 : Form
         {
             if (this.textBox1.Text.IsNullOrEmpty())
             {
-                this.m_client.Logger.Warning("·������Ϊ�ա�");
+                this.m_client.Logger.Warning("路径不能为空。");
                 return;
             }
             var result = await this.m_client.GetRemoteAccessActor().CreateDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -76,7 +78,7 @@ public partial class Form1 : Form
         {
             if (this.textBox1.Text.IsNullOrEmpty())
             {
-                this.m_client.Logger.Warning("·������Ϊ�ա�");
+                this.m_client.Logger.Warning("路径不能为空。");
                 return;
             }
             var result = await this.m_client.GetRemoteAccessActor().DeleteDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -94,11 +96,13 @@ public partial class Form1 : Form
         {
             if (this.textBox1.Text.IsNullOrEmpty())
             {
-                this.m_client.Logger.Warning("·������Ϊ�ա�");
+                this.m_client.Logger.Warning("路径不能为空。");
                 return;
             }
+            #region 远程文件系统获取目录信息
             var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
-            this.m_client.Logger.Info($"�����{result.ResultCode}����Ϣ��{result.Message}��������Ϣ����Ի�á�");
+            #endregion
+            this.m_client.Logger.Info($"结果：{result.ResultCode}，信息：{result.Message}，详细信息请在对话框获取。");
         }
         catch (Exception ex)
         {
@@ -112,7 +116,7 @@ public partial class Form1 : Form
         {
             if (this.textBox1.Text.IsNullOrEmpty())
             {
-                this.m_client.Logger.Warning("·������Ϊ�ա�");
+                this.m_client.Logger.Warning("路径不能为空。");
                 return;
             }
             var result = await this.m_client.GetRemoteAccessActor().DeleteFileAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -130,11 +134,11 @@ public partial class Form1 : Form
         {
             if (this.textBox1.Text.IsNullOrEmpty())
             {
-                this.m_client.Logger.Warning("·������Ϊ�ա�");
+                this.m_client.Logger.Warning("路径不能为空。");
                 return;
             }
             var result = await this.m_client.GetRemoteAccessActor().GetFileInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
-            this.m_client.Logger.Info($"�����{result.ResultCode}����Ϣ��{result.Message}������Ϣ����Ի�á�");
+            this.m_client.Logger.Info($"结果：{result.ResultCode}，信息：{result.Message}，详细信息请在对话框获取。");
         }
         catch (Exception ex)
         {

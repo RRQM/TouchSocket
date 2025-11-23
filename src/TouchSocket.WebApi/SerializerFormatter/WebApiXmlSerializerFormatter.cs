@@ -10,14 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Http;
 
 namespace TouchSocket.WebApi;
 
+[RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
 internal sealed class WebApiXmlSerializerFormatter : XmlStringToClassSerializerFormatter<HttpContext>
 {
-    public override bool TrySerialize(HttpContext state, in object target, out string source)
+    public override bool TrySerialize<TTarget>(HttpContext state, in TTarget target, out string source)
     {
         switch (state.Request.Accept)
         {

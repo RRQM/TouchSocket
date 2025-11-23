@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using FastEndpoints;
 using HttpPerformanceConsoleApp.Controllers;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +25,7 @@ namespace HttpPerformanceConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             StartAspnetHttp();
             StartTouchSokcetHttp();
@@ -21,9 +33,9 @@ namespace HttpPerformanceConsoleApp
             Console.ReadKey();
         }
 
-        static void StartTouchSokcetHttp()
+        private static void StartTouchSokcetHttp()
         {
-            IHost host = Host.CreateDefaultBuilder()
+            var host = Host.CreateDefaultBuilder()
         .ConfigureServices(services =>
         {
             services.AddServiceHostedService<IHttpService, HttpService>(config =>
@@ -56,7 +68,7 @@ namespace HttpPerformanceConsoleApp
             ConsoleLogger.Default.Info($"TouchSokcetHttp已启动，请求连接：http://127.0.0.1:7790/ApiServer/Add?a=10&b=20");
         }
 
-        static void StartAspnetHttp()
+        private static void StartAspnetHttp()
         {
             var builder = WebApplication.CreateBuilder();
 
@@ -73,7 +85,7 @@ namespace HttpPerformanceConsoleApp
 
         }
 
-        static void StartFastEndpoints()
+        private static void StartFastEndpoints()
         {
             var builder = WebApplication.CreateBuilder();
             builder.Logging.ClearProviders();

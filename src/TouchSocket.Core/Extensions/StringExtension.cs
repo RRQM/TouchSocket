@@ -10,13 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using TouchSocket.Resources;
 
@@ -300,8 +296,9 @@ public static class StringExtension
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static byte[] ToUtf8Bytes(this string value)
+    public static ReadOnlyMemory<byte> ToUtf8Bytes(this string value)
     {
+        ThrowHelper.ThrowIfNull(value, nameof(value));
         return Encoding.UTF8.GetBytes(value);
     }
 

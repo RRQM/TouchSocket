@@ -10,23 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.Redis;
 
 internal class RedisResponseWaitPackage : WaitPackage
 {
-    public byte[] value;
+    public ReadOnlyMemory<byte> value;
 
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        base.Package(ref byteBlock);
-        byteBlock.WriteBytesPackage(this.value);
+        base.Package(ref writer);
+        WriterExtension.WriteByteSpan(ref writer, this.value.Span);
     }
 
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        base.Unpackage(ref byteBlock);
-        this.value = byteBlock.ReadBytesPackage();
+        base.Unpackage(ref reader);
+        this.value = ReaderExtension.ReadByteSpan(ref reader).ToArray();
     }
 }

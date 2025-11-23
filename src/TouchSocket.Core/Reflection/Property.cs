@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Concurrent;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace TouchSocket.Core;
@@ -20,13 +18,8 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 表示属性
 /// </summary>
-public class Property : Member
+public sealed class Property
 {
-    /// <summary>
-    /// 类型属性的Setter缓存
-    /// </summary>
-    private static readonly ConcurrentDictionary<Type, Property[]> m_cached = new ConcurrentDictionary<Type, Property[]>();
-
     /// <summary>
     /// 获取器
     /// </summary>
@@ -43,49 +36,31 @@ public class Property : Member
     /// <param name="property">属性信息</param>
     public Property(PropertyInfo property)
     {
-        this.Name = property.Name;
         this.Info = property;
 
         if (property.CanRead == true)
         {
-            this.CanRead = true;
             this.m_geter = new MemberGetter(property);
         }
         if (property.CanWrite == true)
         {
-            this.CanWrite = true;
             this.m_seter = new MemberSetter(property);
         }
     }
 
     /// <summary>
-    /// 是否可以读取
-    /// </summary>
-    public bool CanRead { get; private set; }
-
-    /// <summary>
-    /// 是否可以写入
-    /// </summary>
-    public bool CanWrite { get; private set; }
-
-    /// <summary>
     /// 获取属性信息
     /// </summary>
-    public PropertyInfo Info { get; private set; }
-
-    /// <summary>
-    /// 获取属性名称
-    /// </summary>
-    public string Name { get; protected set; }
+    public PropertyInfo Info { get; }
 
     /// <summary>
     /// 从类型的属性获取属性
     /// </summary>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public static Property[] GetProperties(Type type)
+    public static Property[] GetProperties([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type type)
     {
-        return m_cached.GetOrAdd(type, t => t.GetProperties().Select(p => new Property(p)).ToArray());
+        return type.GetProperties().Select(p => new Property(p)).ToArray();
     }
 
     /// <summary>
@@ -109,7 +84,7 @@ public class Property : Member
     {
         if (this.m_seter == null)
         {
-            throw new NotSupportedException($"{this.Name}不允许赋值");
+            throw new NotSupportedException($"{this.Info.Name}不允许赋值");
         }
         this.m_seter.Invoke(instance, value);
     }

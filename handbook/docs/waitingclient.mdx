@@ -4,11 +4,11 @@ title: 同步请求
 ---
 
 import CardLink from "@site/src/components/CardLink.js";
-
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
+
 
 <TouchSocketDefinition />
 
@@ -28,63 +28,22 @@ import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 
 例如：`TcpClient`、`TcpService`、`NamedPipeClient`、`NamedPipeService`、`SerialPortClient`等。
 
+:::
+
 <BilibiliCard title="等待响应组件的基本使用" link="https://www.bilibili.com/cheese/play/ep1800816" isPro="true"/>
 
 ## 二、在客户端使用
 
 在客户端工作时，支持很多组件，例如：`TcpClient`、`NamedPipeClient`、`SerialPortClient`，下面仅以`TcpClient`为例。
 
-```csharp showLineNumbers
-var client = new TcpClient();
-await client.ConnectAsync("tcp://127.0.0.1:7789");
 
-//调用CreateWaitingClient获取到IWaitingClient的对象。
-var waitClient = client.CreateWaitingClient(new WaitingOptions()
-{
-    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-    {
-        return true;
-    }
-});
-
-//然后使用SendThenReturn。
-byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
-Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
-
-//同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
-IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
-```
+<CustomCodeBlock region="Tcp客户端WaitingClient示例"/>
 
 ## 三、在服务器使用
 
 同理，在客户端工作时，支持很多组件，例如：`TcpService`、`NamedPipeService`，下面仅以`TcpService`为例。
 
-```csharp showLineNumbers
-var service = new TcpService();
-await service.StartAsync(7789);//启动服务器
-
-//在服务器中，找到指定Id的会话客户端
-if (service.TryGetClient("targetId", out var tcpSessionClient))
-{
-    //调用CreateWaitingClient获取到IWaitingClient的对象。
-    var waitClient = tcpSessionClient.CreateWaitingClient(new WaitingOptions()
-    {
-        FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-        {
-            return true;
-        }
-    });
-
-    //然后使用SendThenReturn。
-    byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
-    Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
-
-    //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-    ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
-    IRequestInfo responseRequestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
-}
-```
+<CustomCodeBlock region="Tcp服务器WaitingClient示例"/>
 
 :::tip 提示
 
@@ -98,30 +57,11 @@ if (service.TryGetClient("targetId", out var tcpSessionClient))
 
 在默认情况下，超时时间是5秒。
 
-```csharp showLineNumbers
-await waitingClient.SendThenResponseAsync("hello");//默认5秒超时
-```
-
-所以可以直接传参，设置超时时间。
-
-```csharp showLineNumbers
-await waitingClient.SendThenResponseAsync("hello", 1000*10);//设置10秒超时
-```
+<CustomCodeBlock region="WaitingClient默认超时示例"/>
 
 但是有时候，我们希望**不设置超时时间**，而是由用户自己控制超时时间，也就是能有**取消**的等待。
 
-
-```csharp showLineNumbers
-var cts = new CancellationTokenSource();
-
-_=Task.Run(async () =>
-{
-    await Task.Delay(5000);
-    cts.Cancel();//5秒后取消等待，不再等待服务端的消息。这里模拟的是客户端主动取消等待
-});
-
-await waitingClient.SendThenResponseAsync("hello", cts.Token);
-```
+<CustomCodeBlock region="WaitingClient指定超时取消示例"/>
 
 ### 4.2 筛选配置
 
@@ -129,42 +69,19 @@ await waitingClient.SendThenResponseAsync("hello", cts.Token);
 
 在默认情况下，**筛选函数**为空，即**不筛选**。
 
-```csharp {3} showLineNumbers
-var waitingClient = client.CreateWaitingClient(new WaitingOptions() 
-{
-    FilterFunc=default
-});
-```
-
 所以可以设置筛选函数。
 
-```csharp {3-10} showLineNumbers
-var waitingClient = client.CreateWaitingClient(new WaitingOptions() 
-{
-    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-    {
-        var requestInfo=response.RequestInfo;
-        var byteBlock=response.ByteBlock;
-
-        //这里可以根据服务端返回的信息，判断是否响应
-        return true;
-    }
-});
-```
+<CustomCodeBlock region="WaitingClient设置筛选函数"/>
 
 :::tip 异步筛选函数
 
-可以设置异步筛选函数，可以返回一个`Task`，用于异步筛选。
-
-```csharp
-FilterFuncAsync=async response=>await Task.FromResult(true)
-```
+如果需要异步判断，则可以设置异步筛选函数，可以返回一个`FilterFuncAsync`，用于异步筛选。
 
 :::
 
 :::info 备注
 
-筛选函数的参数是`Response`，它包含两个属性，分别为`RequestInfo`和`ByteBlock`，具体使用哪个属性，看[适配器类型](./adapterdescription.mdx)
+筛选函数的参数是`Response`，它包含两个属性，分别为`RequestInfo`和`Memory`，具体使用哪个属性，看[适配器类型](./singlethreadstreamadapter.mdx)
 
 :::  
 
@@ -188,33 +105,7 @@ FilterFuncAsync=async response=>await Task.FromResult(true)
 
 如果想要实现，当筛选函数返回`false`时，将数据从插件再次传递，那么就需要在筛选函数中，自行触发插件。
 
-例如：
-
-```csharp {18} showLineNumbers
-var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
-{
-    FilterFuncAsync = async (response) =>
-    {
-        var byteBlock = response.ByteBlock;
-        var requestInfo = response.RequestInfo;
-
-        if (true)//如果满足某个条件，则响应WaitingClient
-        {
-            return true;
-        }
-        else
-        {
-            //否则
-            //数据不符合要求，waitingClient继续等待
-            //如果需要在插件中继续处理，在此处触发插件
-
-            await this.m_tcpClient.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.m_tcpClient, new ReceivedDataEventArgs(byteBlock, requestInfo));
-
-            return false;
-        }   
-    }
-});
-```
+<CustomCodeBlock region="WaitingClient筛选函数重新触发插件"/>
 
 ### 5.4 关于SendThenReturn与SendThenReturnAsync
 
@@ -230,40 +121,11 @@ var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
 
 `WaitingClient`的机制是发送一个数据，然后等待响应，所以，使用时机，绝对不可以在`Received`事件（或者插件）中调用。这将导致死锁。
 
-例如：
-
-```csharp {8} showLineNumbers
-var tcpClient = new TcpClient();
-
-var tcpClient.Received =async (client,e) =>
-{
-    var waitingClient = client.CreateWaitingClient(new WaitingOptions());
-
-    //这里将导致死锁
-    var bytes = await waitingClient.SendThenReturnAsync("hello");
-};
-
-...
-```
+<CustomCodeBlock region="WaitingClient错误使用时机示例"/>
 
 如果确实需要使用，请使用`Task.Run`来异步处理。
 
-例如：
-
-```csharp {4-9} showLineNumbers
-this.m_tcpClient.Received =async (client,e) =>
-{
-    //此处不能await，否则也会导致死锁
-    _ = Task.Run(async () => 
-    {
-        var waitingClient = client.CreateWaitingClient(new WaitingOptions());
-
-        var bytes = await waitingClient.SendThenReturnAsync("hello");
-    });
-};
-
-...
-```
+<CustomCodeBlock region="WaitingClient正确使用时机示例"/>
 
 
 ### 5.6 其他
@@ -310,4 +172,4 @@ this.m_tcpClient.Received =async (client,e) =>
 
 ## 七、示例代码
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp/TcpWaitingClientWinFormsApp"/>
+<CardLink link="examples/WaitingClient"/>

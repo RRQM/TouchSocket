@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
@@ -25,12 +24,13 @@ internal sealed class DefaultFastSerializerContext : FastSerializerContext
     /// </summary>
     /// <param name="type"></param>
     /// <param name="converter"></param>
-    public void AddFastBinaryConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
+    public void AddFastBinaryConverter([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type, IFastBinaryConverter converter)
     {
         base.AddConverter(type, converter);
     }
 
-    public override SerializObject GetSerializeObject(Type type)
+    [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
+    public override SerializObject GetSerializeObject([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         var serializObject = base.GetSerializeObject(type);
         if (serializObject != null)
@@ -38,9 +38,9 @@ internal sealed class DefaultFastSerializerContext : FastSerializerContext
             return serializObject;
         }
 
-        if (type.IsNullableType())
+        if (type.IsNullableType(out var actualType))
         {
-            type = type.GetGenericArguments()[0];
+            type = actualType;
         }
 
         if (this.m_instanceCache.TryGetValue(type, out var instance))

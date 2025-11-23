@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -26,6 +23,7 @@ public interface IIdRequestInfoSender
     /// </summary>
     /// <param name="id">要发送的标识符</param>
     /// <param name="requestInfo">请求信息对象，包含发送的具体内容</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的完成</returns>
-    Task SendAsync(string id, IRequestInfo requestInfo);
+    Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken cancellationToken = default);
 }

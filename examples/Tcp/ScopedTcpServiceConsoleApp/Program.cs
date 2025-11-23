@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using TouchSocket.Core;
@@ -9,7 +21,8 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var service = await CreateService();
+        var service1 = await CreateService_AspNetCoreContainer(8848);
+        var service2 = await CreateService_Container(8849);
 
         while (true)
         {
@@ -17,7 +30,7 @@ internal class Program
         }
     }
 
-    private static async Task<TcpService> CreateService()
+    private static async Task<TcpService> CreateService_AspNetCoreContainer(int port)
     {
         //创建IOC容器
         var iocServices = new ServiceCollection();
@@ -36,8 +49,30 @@ internal class Program
 
         var service = new TcpService();
         await service.SetupAsync(new TouchSocketConfig()//载入配置
-             .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+             .SetListenIPHosts(port)//同时监听两个地址
              .UseAspNetCoreContainer(iocServices)
+             .ConfigurePlugins(a =>
+             {
+                 a.Add<MyScopedPlugin>();
+             }));
+        await service.StartAsync();//启动
+        return service;
+    }
+
+    private static async Task<TcpService> CreateService_Container(int port)
+    {
+        var service = new TcpService();
+        await service.SetupAsync(new TouchSocketConfig()//载入配置
+             .SetListenIPHosts(port)//同时监听两个地址
+             .ConfigureContainer(a =>
+             {
+                 a.RegisterScoped<MyScopedPlugin>();
+                 a.AddLogger(logger =>
+                 {
+                     logger.AddConsoleLogger();
+                     logger.AddFileLogger();
+                 });
+             })
              .ConfigurePlugins(a =>
              {
                  a.Add<MyScopedPlugin>();
@@ -63,7 +98,7 @@ internal class Program
 
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
-            Console.WriteLine($"消息{e.ByteBlock.Span.ToString(Encoding.UTF8)}，插件HashCode={this.GetHashCode()}");
+            Console.WriteLine($"消息{e.Memory.Span.ToString(Encoding.UTF8)}，插件HashCode={this.GetHashCode()}");
             await e.InvokeNext();
         }
     }

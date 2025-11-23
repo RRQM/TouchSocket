@@ -7,8 +7,8 @@ import Pro from "@site/src/components/Pro.js";
 
 import CardLink from "@site/src/components/CardLink.js";
 import Definition from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <Definition namespace="TouchSocketPro.Modbus <Pro/>  <br/>" assemblies={["TouchSocketPro.PlcBridges.dll","TouchSocketPro.Modbus.dll"]} />
 
@@ -39,178 +39,51 @@ TouchSocket PLC Bridge 提供了强大的工业自动化设备集成能力，尤
 
 ### 4.1 初始化 PLC Bridge 服务
 
-```csharp
-var plcBridge = new PlcBridgeService();
-await plcBridge.SetupAsync(new TouchSocketConfig());
-```
+<CustomCodeBlock region="PlcBridge初始化服务"/>
 
 ### 4.2 配置 Modbus TCP 设备桥接
 
-```csharp
-// 连接 TCP Modbus 设备
-var modbusTcpMaster = new ModbusTcpMaster();
-await modbusTcpMaster.ConnectAsync("127.0.0.1:502");
+首先需要连接 TCP Modbus 设备：
 
-// 映射第一个寄存器区段 (0-20)
-var plcDrive1 = new MyModbusHoldingRegistersDrive(modbusTcpMaster, new ModbusDriveOption()
-{
-    Start = 0,       // 虚拟起始地址
-    Count = 20,      // 寄存器数量
-    //Group = "Group", // 执行组（同组设备串行操作）
-    Name = "TcpDevice1",
-    SlaveId = 1,     // Modbus 从站ID
-    ModbusStart = 0  // 物理设备起始地址
-});
-await plcBridge.AddDriveAsync(plcDrive1);
+<CustomCodeBlock region="PlcBridge配置ModbusTCP设备连接"/>
 
-// 映射第二个寄存器区段 (50-70)
-var plcDrive2 = new MyModbusHoldingRegistersDrive(modbusTcpMaster, new ModbusDriveOption()
-{
-    Start = 20,      // 下一个虚拟起始地址
-    Count = 20,
-    //Group = "Group",
-    Name = "TcpDevice2",
-    SlaveId = 1,
-    ModbusStart = 50 // 物理设备偏移地址
-});
-await plcBridge.AddDriveAsync(plcDrive2);
-```
+然后添加设备驱动器，映射第一个寄存器区段（虚拟地址 0-20，对应物理设备地址 0-20）：
+
+<CustomCodeBlock region="PlcBridge添加ModbusTCP设备驱动1"/>
+
+映射第二个寄存器区段（虚拟地址 20-40，对应物理设备地址 50-70）：
+
+<CustomCodeBlock region="PlcBridge添加ModbusTCP设备驱动2"/>
 
 ### 4.3 配置 Modbus UDP 设备桥接
 
-```csharp
-var modbusUdpMaster = new ModbusUdpMaster();
-await modbusUdpMaster.SetupAsync(new TouchSocketConfig()
-     .UseUdpReceive()
-     .SetRemoteIPHost("127.0.0.1:503"));
-await modbusUdpMaster.StartAsync();
-
-var plcDrive3 = new MyModbusHoldingRegistersDrive(modbusUdpMaster, new ModbusDriveOption()
-{
-    Start = 40,      // 虚拟地址偏移
-    Count = 20,
-    //Group = "Group",
-    Name = "UdpDevice1",
-    SlaveId = 1,
-    ModbusStart = 10 // 物理设备起始地址
-});
-await plcBridge.AddDriveAsync(plcDrive3);
-```
+<CustomCodeBlock region="PlcBridge配置ModbusUDP设备"/>
 
 ### 4.4 配置 Modbus 串口设备桥接
 
-```csharp
-var modbusRtuMaster = new ModbusRtuMaster();
-await modbusRtuMaster.SetupAsync(new TouchSocketConfig()
-     .SetSerialPortOption(new SerialPortOption()
-     {
-         BaudRate = 9600,
-         DataBits = 8,
-         Parity = System.IO.Ports.Parity.Even,
-         PortName = "COM2",
-         StopBits = System.IO.Ports.StopBits.One
-     }));
-await modbusRtuMaster.ConnectAsync();
-
-var plcDrive4 = new MyModbusHoldingRegistersDrive(modbusRtuMaster, new ModbusDriveOption()
-{
-    Start = 60,      // 虚拟地址偏移
-    Count = 20,
-    //Group = "Group",
-    Name = "SerialDevice1",
-    SlaveId = 1,
-    ModbusStart = 20 // 物理设备起始地址
-});
-await plcBridge.AddDriveAsync(plcDrive4);
-```
+<CustomCodeBlock region="PlcBridge配置Modbus串口设备"/>
 
 ### 4.5 启动桥接服务
 
-```csharp
-await plcBridge.StartAsync();
-```
+<CustomCodeBlock region="PlcBridge启动服务"/>
 
 ## 五、创建统一访问接口
 
 ### 5.1 定义 PLC 数据对象
 
-```csharp
-partial class MyPlcObject : PlcObject
-{
-    public MyPlcObject(IPlcBridgeService bridgeService) : base(bridgeService)
-    {
-    }
+使用 `PlcObject` 类和 `PlcField` 特性定义数据映射：
 
-    // 以 short 类型访问所有寄存器 (0-79)
-    [PlcField<short>(Start = 0, Quantity = 80)]
-    private ReadOnlyMemory<short> m_allInt16Data;
-
-    // 以 long 类型访问寄存器 (每4个寄存器合并为1个long)
-    [PlcField<short>(Start = 0, Quantity = 20)]
-    private ReadOnlyMemory<long> m_allInt64Data;
-
-    // 访问特定 long 数据 (地址59-62)
-    [PlcField<short>(Start = 59)]
-    private long m_int64Data;
-}
-```
+<CustomCodeBlock region="PlcBridge定义PlcObject数据对象"/>
 
 ### 5.2 使用 PLC 数据对象
 
-```csharp
-// 创建PLC数据访问对象
-MyPlcObject myPlcObject = new MyPlcObject(plcBridge);
-
-// 写入long数据
-var setInt64Result = await myPlcObject.SetInt64DataAsync(1000);
-Console.WriteLine($"写入Int64结果: {setInt64Result}");
-
-// 读取long数据
-var readInt64Result = await myPlcObject.GetInt64DataAsync();
-Console.WriteLine($"读取Int64结果: {readInt64Result}");
-
-// 批量写入short数据
-var data = Enumerable.Range(1, 80).Select(i => (short)i).ToArray();
-var setAllInt16Result = await myPlcObject.SetAllInt16DataAsync(data);
-
-// 批量读取short数据
-var readAllInt16Result = await myPlcObject.GetAllInt16DataAsync();
-
-// 批量读取long数据
-var readAllInt64Result = await myPlcObject.GetAllInt64DataAsync();
-```
+<CustomCodeBlock region="PlcBridge使用PlcObject读写数据"/>
 
 ## 六、自定义驱动器实现
 
-```csharp
-class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
-{
-    public MyModbusHoldingRegistersDrive(IModbusMaster master, ModbusDriveOption option) 
-        : base(master, option)
-    {
-    }
+通过继承 `ModbusHoldingRegistersDrive` 可以实现自定义的读写逻辑，例如添加日志记录、数据校验等功能：
 
-    // 自定义读取操作（添加日志等）
-    protected override async Task<Result> ExecuteReadAsync(
-        ExecuteReadableValue<short> readableValue, 
-        CancellationToken token)
-    {
-        var result = await base.ExecuteReadAsync(readableValue, token);
-        Console.WriteLine($"设备类型={this.Master.GetType().Name}，读取地址={readableValue.Start + this.ModbusStart}，长度={readableValue.Count}，结果：{result.ToJsonString()}");
-        return result;
-    }
-
-    // 自定义写入操作
-    protected override async Task<Result> ExecuteWriteAsync(
-        WritableValue<short> writableValue, 
-        CancellationToken token)
-    {
-        var result = await base.ExecuteWriteAsync(writableValue, token);
-        Console.WriteLine($"设备类型={this.Master.GetType().Name}，写入地址={writableValue.Start + this.ModbusStart}，长度={writableValue.Count}，结果：{result.ToJsonString()}");
-        return result;
-    }
-}
-```
+<CustomCodeBlock region="PlcBridge自定义驱动器实现"/>
 
 ## 七、执行流程
 
@@ -231,13 +104,7 @@ class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
 
 ### 7.3 资源释放
 
-```csharp
-await plcBridge.StopAsync();
-await modbusTcpMaster.CloseAsync();
-await modbusUdpMaster.StopAsync();
-await modbusRtuMaster.CloseAsync();
-// ...释放其他资源
-```
+<CustomCodeBlock region="PlcBridge释放资源"/>
 
 ## 八、典型应用场景
 
@@ -268,4 +135,4 @@ TouchSocket PLC Bridge 通过：
 
 ## 十一、本文示例
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/PlcBridges/ModbusPlcBridgeConsoleApp"/>
+<CardLink link="examples/PlcBridges/ModbusPlcBridgeConsoleApp"/>

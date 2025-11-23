@@ -1,7 +1,16 @@
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.JsonRpc;
@@ -13,7 +22,7 @@ namespace JsonRpcAotConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         await CreateTcpJsonRpcService();
         await CreateHttpJsonRpcService();
@@ -40,12 +49,15 @@ internal class Program
     {
         using var jsonRpcClient = new HttpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+            .SetJsonRpcOption(options =>
+            {
+                options.UseSystemTextJsonFormatter(jsonOption =>
+                {
+                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                });
+            })
              .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-         {
-             option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-         });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -60,12 +72,16 @@ internal class Program
         using var jsonRpcClient = new TcpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7705")
+             .SetJsonRpcOption(options =>
+             {
+                 options.UseSystemTextJsonFormatter(jsonOption =>
+                 {
+                     jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                 });
+             })
              .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8)));
+
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-        {
-            option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-        });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -82,12 +98,15 @@ internal class Program
     {
         using var jsonRpcClient = new WebSocketJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+            .SetJsonRpcOption(options =>
+            {
+                options.UseSystemTextJsonFormatter(jsonOption =>
+                {
+                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                });
+            })
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
-        jsonRpcClient.UseSystemTextJson(option =>
-        {
-            option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-        });
 
         Console.WriteLine("连接成功");
         var result = await jsonRpcClient.TestJsonRpcAsync(new MyClass() { P1 = 10, P2 = "ABC" });
@@ -117,12 +136,15 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseHttpJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseHttpJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetJsonRpcUrl("/jsonRpc");
+                      options.SetAllowJsonRpc("/jsonRpc");
+
+                      options.UseSystemTextJsonFormatter(jsonOption =>
+                      {
+                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                      });
+                  });
               }));
         await service.StartAsync();
 
@@ -146,18 +168,20 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseWebSocket()
-                  .SetWSUrl("/ws");
+                  a.UseWebSocket("/ws");
 
-                  a.UseWebSocketJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseWebSocketJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetAllowJsonRpc((socketClient, context) =>
-                  {
-                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                      return true;
+                      options.SetAllowJsonRpc((websocket, context) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          return true;
+                      });
+
+                      options.UseSystemTextJsonFormatter(jsonOption =>
+                        {
+                            jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                        });
                   });
               }));
         await service.StartAsync();
@@ -184,15 +208,22 @@ internal class Program
               {
                   //a.Add<MyTcpPlugin>();
 
-                  a.UseTcpJsonRpc()
-                  .UseSystemTextJson(option =>
+                  a.UseTcpJsonRpc(options =>
                   {
-                      option.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                  })
-                  .SetAllowJsonRpc((socketClient) =>
-                  {
-                      //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
-                      return true;
+                      options.SetAllowJsonRpc((socketClient) =>
+                          {
+                              //此处的作用是，通过连接的一些信息判断该连接是否执行JsonRpc。
+                              return true;
+                          });
+
+                      #region 配置JsonRpc序列化器
+                      options.UseSystemTextJsonFormatter(jsonOption =>
+                      {
+                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                      });
+                      #endregion
+
+
                   });
               }));
         await service.StartAsync();
@@ -202,7 +233,7 @@ internal class Program
 
 }
 
-class MyTcpPlugin : PluginBase, ITcpReceivedPlugin, ITcpSendingPlugin
+internal class MyTcpPlugin : PluginBase, ITcpReceivedPlugin, ITcpSendingPlugin
 {
     private readonly ILog logger;
 
@@ -214,19 +245,19 @@ class MyTcpPlugin : PluginBase, ITcpReceivedPlugin, ITcpSendingPlugin
     {
         if (e.RequestInfo is JsonPackage package)
         {
-            logger.Info($"MyTcpPlugin=>{package.DataString}");
+            this.logger.Info($"MyTcpPlugin=>{package.DataString}");
         }
         await e.InvokeNext();
     }
 
     public async Task OnTcpSending(ITcpSession client, SendingEventArgs e)
     {
-        logger.Info($"MyTcpPlugin=>{e.Memory.Span.ToString(System.Text.Encoding.UTF8)}");
+        this.logger.Info($"MyTcpPlugin=>{e.Memory.Span.ToString(System.Text.Encoding.UTF8)}");
         await e.InvokeNext();
     }
 }
 
-#region System.Text.Json序列化
+#region 配置JsonRpcAot类型支持
 [JsonSerializable(typeof(MyClass))]
 [JsonSerializable(typeof(string))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext

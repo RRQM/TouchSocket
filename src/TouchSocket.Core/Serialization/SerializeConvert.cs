@@ -10,11 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace TouchSocket.Core;
@@ -35,6 +33,7 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static byte[] BinarySerialize(in object obj)
     {
         using (var serializeStream = new MemoryStream())
@@ -50,6 +49,7 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <param name="path">路径</param>
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static void BinarySerializeToFile(in object obj, string path)
     {
         using (var serializeStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -65,6 +65,7 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="obj"></param>
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static void BinarySerialize(Stream stream, in object obj)
     {
         var bf = new BinaryFormatter();
@@ -84,7 +85,8 @@ public static partial class SerializeConvert
     /// <param name="length"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
-
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static T BinaryDeserialize<T>(byte[] data, int offset, int length, SerializationBinder binder = null)
     {
         using (var DeserializeStream = new MemoryStream(data, offset, length))
@@ -107,6 +109,8 @@ public static partial class SerializeConvert
     /// <param name="length"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static object BinaryDeserialize(byte[] data, int offset, int length, SerializationBinder binder = null)
     {
         using (var DeserializeStream = new MemoryStream(data, offset, length))
@@ -128,6 +132,8 @@ public static partial class SerializeConvert
     /// <param name="stream"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static T BinaryDeserialize<T>(Stream stream, SerializationBinder binder = null)
     {
         return (T)BinaryDeserialize(stream);
@@ -139,6 +145,8 @@ public static partial class SerializeConvert
     /// <param name="stream">包含序列化对象数据的流。</param>
     /// <param name="binder">可选的绑定器，用于控制反序列化过程中的类型绑定。</param>
     /// <returns>反序列化后的对象。</returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static object BinaryDeserialize(Stream stream, SerializationBinder binder = null)
     {
         // 创建BinaryFormatter实例以进行反序列化操作
@@ -158,6 +166,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T"></typeparam>
     /// <param name="path"></param>
     /// <returns></returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static T BinaryDeserializeFromFile<T>(string path)
     {
         using (var serializeStream = new FileStream(path, FileMode.Open, FileAccess.Read))
@@ -173,6 +183,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T"></typeparam>
     /// <param name="data"></param>
     /// <returns></returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static T BinaryDeserialize<T>(byte[] data)
     {
         return BinaryDeserialize<T>(data, 0, data.Length);
@@ -185,6 +197,8 @@ public static partial class SerializeConvert
     /// <param name="data"></param>
     /// <param name="binder"></param>
     /// <returns></returns>
+    [RequiresDynamicCode("BinaryFormatter serialization uses dynamic code generation, the type of objects being processed cannot be statically discovered.")]
+    [RequiresUnreferencedCode("BinaryFormatter serialization is not trim compatible because the type of objects being processed cannot be statically discovered.")]
     public static T BinaryDeserialize<T>(byte[] data, SerializationBinder binder = null)
     {
         return BinaryDeserialize<T>(data, 0, data.Length, binder);
@@ -194,68 +208,6 @@ public static partial class SerializeConvert
 
 #pragma warning restore SYSLIB0011 // 微软觉得不安全，不推荐使用
 
-    //#region Fast二进制序列化
-
-    ///// <summary>
-    ///// Fast二进制序列化对象
-    ///// </summary>
-    ///// <param name="byteBlock"></param>
-    ///// <param name="obj"></param>
-    ///// <returns></returns>
-    //public static void FastBinarySerialize<TByteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock,  in T obj)
-    //    where TByteBlock:IByteBlock
-    //{
-    //    FastBinaryFormatter.Serialize(ref byteBlock, obj);
-    //    byteBlock.SetLength(byteBlock.Length);
-    //}
-
-    ///// <summary>
-    ///// Fast二进制序列化对象
-    ///// </summary>
-    ///// <param name="obj"></param>
-    ///// <returns></returns>
-    //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
-    //{
-    //    var byteBlock = new ByteBlock(1024*64);
-    //    try
-    //    {
-    //        FastBinarySerialize(ref byteBlock, obj);
-    //        return byteBlock.ToArray();
-    //    }
-    //    finally
-    //    {
-    //        byteBlock.Dispose();
-    //    }
-    //}
-
-    //#endregion Fast二进制序列化
-
-    //#region Fast二进制反序列化
-
-    ///// <summary>
-    ///// Fast反序列化
-    ///// </summary>
-    ///// <typeparam name="T"></typeparam>
-    ///// <param name="data"></param>
-    ///// <param name="offset"></param>
-    ///// <returns></returns>
-    //public static T FastBinaryDeserialize<TByteBlock,[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
-    //{
-    //    return (T)FastBinaryFormatter.Deserialize(ref byteBlock, typeof(T));
-    //}
-
-    ///// <summary>
-    ///// Fast反序列化
-    ///// </summary>
-    ///// <param name="data"></param>
-    ///// <param name="offset"></param>
-    ///// <param name="type"></param>
-    ///// <returns></returns>
-    //public static object FastBinaryDeserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)where TByteBlock:IByteBlock
-    //{
-    //    return FastBinaryFormatter.Deserialize(ref byteBlock, type);
-    //}
-    //#endregion Fast二进制反序列化
 
     #region Xml序列化和反序列化
 
@@ -265,6 +217,8 @@ public static partial class SerializeConvert
     /// <param name="obj">数据对象</param>
     /// <param name="encoding">编码格式</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from serialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static string XmlSerializeToString(object obj, Encoding encoding)
     {
         return encoding.GetString(XmlSerializeToBytes(obj));
@@ -275,6 +229,8 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from serialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static string XmlSerializeToString(object obj)
     {
         return XmlSerializeToString(obj, Encoding.UTF8);
@@ -285,6 +241,8 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from serialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static byte[] XmlSerializeToBytes(object obj)
     {
         using (var fileStream = new MemoryStream())
@@ -300,6 +258,8 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="path"></param>
+    [RequiresUnreferencedCode("Members from serialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static void XmlSerializeToFile(object obj, string path)
     {
         using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -316,6 +276,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T">反序列化类型</typeparam>
     /// <param name="dataBytes">数据</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from serialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static T XmlDeserializeFromBytes<T>(byte[] dataBytes)
     {
         var xmlSerializer = new XmlSerializer(typeof(T));
@@ -331,6 +293,8 @@ public static partial class SerializeConvert
     /// <param name="dataBytes"></param>
     /// <param name="type"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static object XmlDeserializeFromBytes(byte[] dataBytes, Type type)
     {
         var xmlSerializer = new XmlSerializer(type);
@@ -346,6 +310,8 @@ public static partial class SerializeConvert
     /// <param name="xmlStream"></param>
     /// <param name="targetType"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static object XmlDeserializeFromStream(Stream xmlStream, Type targetType)
     {
         var xmlSerializer = new XmlSerializer(targetType);
@@ -358,6 +324,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T"></typeparam>
     /// <param name="xmlStream"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static T XmlDeserializeFromStream<T>(Stream xmlStream)
     {
         var xmlSerializer = new XmlSerializer(typeof(T));
@@ -370,6 +338,8 @@ public static partial class SerializeConvert
     /// <param name="xmlString">xml字符串</param>
     /// <param name="targetType"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static object XmlDeserializeFromString(string xmlString, Type targetType)
     {
         return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)), targetType);
@@ -381,6 +351,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T"></typeparam>
     /// <param name="xmlString"></param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static T XmlDeserializeFromString<T>(string xmlString)
     {
         return (T)XmlDeserializeFromString(xmlString, typeof(T));
@@ -392,6 +364,8 @@ public static partial class SerializeConvert
     /// <typeparam name="T">反序列化类型</typeparam>
     /// <param name="path">文件路径</param>
     /// <returns></returns>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
     public static T XmlDeserializeFromFile<T>(string path)
     {
         using (Stream xmlStream = new FileStream(path, FileMode.Open, FileAccess.Read))
@@ -442,7 +416,7 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="obj">数据对象</param>
     /// <returns></returns>
-    public static byte[] JsonSerializeToBytes(object obj)
+    public static ReadOnlyMemory<byte> JsonSerializeToBytes(object obj)
     {
         return ToJsonString(obj).ToUtf8Bytes();
     }
@@ -457,7 +431,7 @@ public static partial class SerializeConvert
         using (var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
         {
             var date = JsonSerializeToBytes(obj);
-            fileStream.Write(date, 0, date.Length);
+            fileStream.Write(date.Span);
             fileStream.Close();
         }
     }
@@ -466,22 +440,22 @@ public static partial class SerializeConvert
     /// Json反序列化
     /// </summary>
     /// <typeparam name="T">反序列化类型</typeparam>
-    /// <param name="dataBytes">数据</param>
+    /// <param name="memory">数据</param>
     /// <returns></returns>
-    public static T JsonDeserializeFromBytes<T>(byte[] dataBytes)
+    public static T JsonDeserializeFromBytes<T>(ReadOnlyMemory<byte> memory)
     {
-        return (T)JsonDeserializeFromBytes(dataBytes, typeof(T));
+        return (T)JsonDeserializeFromBytes(memory, typeof(T));
     }
 
     /// <summary>
     /// Xml反序列化
     /// </summary>
-    /// <param name="dataBytes"></param>
+    /// <param name="memory"></param>
     /// <param name="type"></param>
     /// <returns></returns>
-    public static object JsonDeserializeFromBytes(byte[] dataBytes, Type type)
+    public static object JsonDeserializeFromBytes(ReadOnlyMemory<byte> memory, Type type)
     {
-        return FromJsonString(Encoding.UTF8.GetString(dataBytes), type);
+        return FromJsonString(memory.Span.ToUtf8String(), type);
     }
 
     /// <summary>

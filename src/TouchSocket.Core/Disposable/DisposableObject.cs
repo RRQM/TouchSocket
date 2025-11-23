@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -29,6 +28,29 @@ public abstract partial class DisposableObject : IDisposableObject
     public bool DisposedValue => this.m_disposedValue;
 
     /// <summary>
+    /// 释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
+    /// </summary>
+    public void Dispose()
+    {
+        if (this.m_disposedValue)
+        {
+            return;
+        }
+        this.Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// 处置资源
+    /// </summary>
+    /// <param name="disposing">一个值，表示是否释放托管资源</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        // 标记当前对象为已处置状态
+        this.m_disposedValue = true;
+    }
+
+    /// <summary>
     /// 判断当前对象是否已经被释放。
     /// 如果已经被释放，则抛出<see cref="ObjectDisposedException"/>异常。
     /// </summary>
@@ -42,25 +64,5 @@ public abstract partial class DisposableObject : IDisposableObject
             // 如果对象已被释放，抛出ObjectDisposedException异常
             ThrowHelper.ThrowObjectDisposedException(this);
         }
-    }
-
-
-    /// <summary>
-    /// 处置资源
-    /// </summary>
-    /// <param name="disposing">一个值，表示是否释放托管资源</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        // 标记当前对象为已处置状态
-        this.m_disposedValue = true;
-    }
-
-    /// <summary>
-    /// 释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
-    /// </summary>
-    public void Dispose()
-    {
-        this.Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

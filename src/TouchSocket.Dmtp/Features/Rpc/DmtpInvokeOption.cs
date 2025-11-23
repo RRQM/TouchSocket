@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
@@ -34,16 +33,16 @@ public class DmtpInvokeOption : InvokeOption
     /// <param name="millisecondsTimeout">执行操作的超时时间，以毫秒为单位。</param>
     public DmtpInvokeOption(int millisecondsTimeout) : base(millisecondsTimeout)
     {
-        this.Timeout = millisecondsTimeout;
+
     }
 
     /// <summary>
     /// DmtpRpc序列化类型
     /// </summary>
-    public SerializationType SerializationType { get; set; } = SerializationType.FastBinary;
+    public SerializationType SerializationType { get; init; } = SerializationType.FastBinary;
 
     /// <summary>
     /// 元数据
     /// </summary>
-    public Metadata Metadata { get; set; }
+    public Metadata Metadata { get; init; }
 }

@@ -18,7 +18,7 @@ TouchSocket.Mqtt 是一个提供 Mqtt 服务器和客户端的组件库。借助
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 贡献与反馈

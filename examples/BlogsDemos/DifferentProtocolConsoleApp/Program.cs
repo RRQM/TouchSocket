@@ -88,7 +88,7 @@ internal class DifferentProtocolPlugin : PluginBase, ITcpConnectingPlugin, ITcpR
 
         if (client is ITcpSessionClient sessionClient)
         {
-            sessionClient.Logger.Info($"{sessionClient.GetIPPort()}收到数据，服务器端口：{sessionClient.ServicePort},数据：{e.ByteBlock}");
+            sessionClient.Logger.Info($"{sessionClient.GetIPPort()}收到数据，服务器端口：{sessionClient.ServicePort},数据：{e.Memory}");
         }
 
         await e.InvokeNext();

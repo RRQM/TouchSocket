@@ -10,14 +10,13 @@ TouchSocket 是 .Net（包括 C#、VB.Net、F#）的一个整合性的 socket �
 
 ## 支持的目标框架
 
-- net45
 - net462
 - net472
 - net481
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 使用方法

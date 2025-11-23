@@ -1,0 +1,250 @@
+---
+id: webapi-auth
+title: WebAPI 鉴权与授权
+---
+
+## 一、鉴权与授权
+
+TouchSocket.WebApi 支持多种鉴权和授权方式。
+
+### 1.1 基于插件的鉴权
+
+使用插件进行全局鉴权：
+
+```csharp showLineNumbers
+public class AuthPlugin : PluginBase, IWebApiPlugin
+{
+    public async Task OnWebApiRequest(IWebApiClientBase client, WebApiEventArgs e)
+    {
+        var request = e.Request;
+        var token = request.Headers["Authorization"];
+
+        if (string.IsNullOrEmpty(token) || !IsValidToken(token))
+        {
+            // 未授权
+            e.Response.SetStatus(401, "Unauthorized");
+            await e.Response.AnswerAsync();
+            e.Handled = true; // 阻止继续处理
+            return;
+        }
+
+        await e.InvokeNext();
+    }
+
+    private bool IsValidToken(string token)
+    {
+        // 验证 token 逻辑
+        return token == "Bearer valid-token";
+    }
+}
+```
+
+注册插件：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.Add<AuthPlugin>(); // 鉴权插件
+    a.UseWebApi();
+    a.UseDefaultHttpServicePlugin();
+})
+```
+
+### 1.2 基于 RPC AOP 的鉴权
+
+使用 RPC 过滤器实现方法级鉴权：
+
+```csharp showLineNumbers
+public class AuthorizeAttribute : RpcActionFilterAttribute
+{
+    public override async Task<InvokeResult> ExecutingAsync(
+        ICallContext callContext, 
+        object[] parameters, 
+        InvokeResult invokeResult)
+    {
+        if (callContext is IWebApiCallContext webApiContext)
+        {
+            var request = webApiContext.HttpContext.Request;
+            var token = request.Headers["Authorization"];
+
+            if (string.IsNullOrEmpty(token) || !IsValidToken(token))
+            {
+                return new InvokeResult 
+                { 
+                    Status = InvokeStatus.UnEnable,
+                    Message = "Unauthorized"
+                };
+            }
+        }
+
+        return invokeResult;
+    }
+
+    private bool IsValidToken(string token)
+    {
+        return token == "Bearer valid-token";
+    }
+}
+```
+
+使用：
+
+```csharp showLineNumbers
+public partial class ApiServer : SingletonRpcServer
+{
+    // 公开接口，无需鉴权
+    [WebApi(Method = HttpMethodType.Get)]
+    public string PublicApi()
+    {
+        return "Public data";
+    }
+
+    // 需要鉴权的接口
+    [Authorize]
+    [WebApi(Method = HttpMethodType.Get)]
+    public string SecureApi()
+    {
+        return "Secure data";
+    }
+}
+```
+
+### 1.3 基于角色的授权
+
+实现基于角色的授权：
+
+```csharp showLineNumbers
+public class RoleAuthorizeAttribute : RpcActionFilterAttribute
+{
+    private readonly string[] _roles;
+
+    public RoleAuthorizeAttribute(params string[] roles)
+    {
+        _roles = roles;
+    }
+
+    public override async Task<InvokeResult> ExecutingAsync(
+        ICallContext callContext, 
+        object[] parameters, 
+        InvokeResult invokeResult)
+    {
+        if (callContext is IWebApiCallContext webApiContext)
+        {
+            var request = webApiContext.HttpContext.Request;
+            var token = request.Headers["Authorization"];
+
+            if (!TryGetUserRole(token, out var userRole))
+            {
+                return new InvokeResult 
+                { 
+                    Status = InvokeStatus.UnEnable,
+                    Message = "Unauthorized"
+                };
+            }
+
+            if (!_roles.Contains(userRole))
+            {
+                return new InvokeResult 
+                { 
+                    Status = InvokeStatus.UnEnable,
+                    Message = "Forbidden: Insufficient permissions"
+                };
+            }
+        }
+
+        return invokeResult;
+    }
+
+    private bool TryGetUserRole(string token, out string role)
+    {
+        role = null;
+        if (string.IsNullOrEmpty(token)) return false;
+
+        // 从 token 中解析角色
+        if (token == "Bearer admin-token")
+        {
+            role = "Admin";
+            return true;
+        }
+        else if (token == "Bearer user-token")
+        {
+            role = "User";
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+使用：
+
+```csharp showLineNumbers
+public partial class ApiServer : SingletonRpcServer
+{
+    // 仅管理员可访问
+    [RoleAuthorize("Admin")]
+    [WebApi(Method = HttpMethodType.Delete)]
+    public string DeleteUser(int id)
+    {
+        return $"Deleted user {id}";
+    }
+
+    // 管理员和普通用户都可访问
+    [RoleAuthorize("Admin", "User")]
+    [WebApi(Method = HttpMethodType.Get)]
+    public string GetUser(int id)
+    {
+        return $"User {id} info";
+    }
+}
+```
+
+## 二、完整示例
+
+```csharp showLineNumbers
+// 服务器端
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+    .SetListenIPHosts(7789)
+    .ConfigurePlugins(a =>
+    {
+        a.Add<AuthPlugin>(); // 全局鉴权
+        a.UseWebApi();
+        a.UseDefaultHttpServicePlugin();
+    }));
+
+await service.StartAsync();
+
+// API 服务
+public partial class SecureApiServer : SingletonRpcServer
+{
+    [WebApi(Method = HttpMethodType.Get)]
+    public string PublicInfo()
+    {
+        return "This is public information";
+    }
+
+    [Authorize]
+    [WebApi(Method = HttpMethodType.Get)]
+    public string UserInfo(IWebApiCallContext context)
+    {
+        var token = context.HttpContext.Request.Headers["Authorization"];
+        return $"User info (token: {token})";
+    }
+
+    [RoleAuthorize("Admin")]
+    [WebApi(Method = HttpMethodType.Post)]
+    public string AdminAction()
+    {
+        return "Admin action executed";
+    }
+}
+
+// 客户端调用
+var client = new HttpClient();
+client.DefaultRequestHeaders.Add("Authorization", "Bearer valid-token");
+
+var result = await client.GetStringAsync("http://localhost:7789/secureapiserver/userinfo");
+Console.WriteLine(result);
+```

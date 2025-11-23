@@ -22,13 +22,36 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var service = await CreateHttpService();
+
+        #region WebSocket客户端使用ReadAsync读取数据
         using (var client = await GetClient())
         {
+            //当WebSocket想要使用ReadAsync时，需要设置此值为true
+            client.AllowAsyncRead = true;
             while (true)
             {
+                //发送数据
                 await client.SendAsync(Console.ReadLine());
+
+                //设置1分钟的接收超时
+                using var cts = new CancellationTokenSource(1000 * 60);
+                using (var receiveResult = await client.ReadAsync(cts.Token))
+                {
+                    if (receiveResult.IsCompleted)
+                    {
+                        //但对于客户端来说，可以直接使用client.Online来判断连接状态。
+                        Console.WriteLine($"WebSocket连接已关闭，关闭代码：{client.CloseStatus}，信息：{receiveResult.Message}");
+                        break;
+                    }
+
+                    var dataFrame = receiveResult.DataFrame;
+
+                    client.Logger.Info($"客户端收到数据：{dataFrame.ToText()}");
+                }
             }
         }
+        #endregion
+
     }
 
     /// <summary>
@@ -42,6 +65,19 @@ internal class Program
              {
                  a.AddConsoleLogger();
              })
+        #region WebSocket断线重连
+             .ConfigurePlugins(a =>
+             {
+                 a.UseReconnection<WebSocketClient>();
+
+                 //使用健康插件进行绝对存活检测，默认10秒检测一次。
+                 a.UseCheckClear<WebSocketClient>(options =>
+                 {
+                     options.Tick = TimeSpan.FromSeconds(10);
+                 });
+             })
+        #endregion
+
              .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
         await client.ConnectAsync();
 
@@ -60,9 +96,12 @@ internal class Program
              })
              .ConfigurePlugins(a =>
              {
-                 a.UseWebSocket()//添加WebSocket功能
-                   .SetWSUrl("/ws")//设置url直接可以连接。
-                   .UseAutoPong();//当收到ping报文时自动回应pong
+                 //添加WebSocket功能
+                 a.UseWebSocket(options =>
+                 {
+                     options.SetUrl("/ws");//设置url直接可以连接。
+                     options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                 });
 
                  a.Add<MyReadWebSocketPlugin>();
              }));
@@ -74,7 +113,8 @@ internal class Program
     }
 }
 
-internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
+#region WebSocket服务器使用ReadAsync读取数据
+internal class MyReadWebSocketPlugin : PluginBase, IWebSocketConnectedPlugin
 {
     private readonly ILog m_logger;
 
@@ -83,7 +123,7 @@ internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
         this.m_logger = logger;
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         //当WebSocket想要使用ReadAsync时，需要设置此值为true
         client.AllowAsyncRead = true;
@@ -92,22 +132,22 @@ internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 
         while (true)
         {
-            using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+            //设置1分钟的接收超时
+            using var cts = new CancellationTokenSource(1000 * 60);
+            using (var receiveResult = await client.ReadAsync(cts.Token))
             {
-                if (receiveResult.DataFrame == null)
+                if (receiveResult.IsCompleted)
                 {
+                    Console.WriteLine($"WebSocket连接已关闭，关闭代码：{client.CloseStatus}，信息：{receiveResult.Message}");
                     break;
                 }
 
-                //判断是否为最后数据
-                //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
-                if (receiveResult.DataFrame.FIN)
-                {
-                    if (receiveResult.DataFrame.IsText)
-                    {
-                        this.m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
-                    }
-                }
+                var dataFrame = receiveResult.DataFrame;
+
+                this.m_logger.Info($"服务器收到数据：{dataFrame.ToText()}");
+
+                //回应客户端
+                await client.SendAsync(dataFrame.ToText());
             }
         }
 
@@ -116,3 +156,4 @@ internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
         await e.InvokeNext();
     }
 }
+#endregion

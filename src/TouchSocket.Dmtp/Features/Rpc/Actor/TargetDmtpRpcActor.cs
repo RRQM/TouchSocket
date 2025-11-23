@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
@@ -51,12 +49,12 @@ internal class TargetDmtpRpcActor : IDmtpRpcActor
         return this.m_rpcActor.InputReceivedData(message);
     }
 
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, returnType, invokeOption, parameters);
     }
 
-    public Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_rpcActor.InvokeAsync(targetId, invokeKey, returnType, invokeOption, parameters);
     }

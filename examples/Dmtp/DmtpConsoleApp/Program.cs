@@ -53,17 +53,17 @@ internal class Program
                  //此处使用委托注册插件。和类插件功能一样
                  a.AddDmtpReceivedPlugin(async (c, e) =>
                  {
-                     var msg = e.DmtpMessage.BodyByteBlock.ToString();
+                     var msg = e.DmtpMessage.Memory.Span.ToString(Encoding.UTF8);
                      await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
                      await e.InvokeNext();
                  });
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options =>
              {
-                 VerifyToken = "Dmtp",//设置Token验证连接
-                 Id = "defaultId",//设置默认Id
-                 Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 options.VerifyToken = "Dmtp";//设置Token验证连接
+                 options.Id = "defaultId";//设置默认Id
+                 options.Metadata = new Metadata().Add("a", "a");//设置Metadata，可以传递更多的验证信息
              }));
         await client.ConnectAsync();
 
@@ -76,8 +76,12 @@ internal class Program
         //DmtpRpc会用[20,25)的协议。
         //文件传输会用[25,35)的协议。
 
+
+        #region Dmtp发送消息
         //此处使用1000，基本就不会冲突。
         await client.SendAsync(1000, Encoding.UTF8.GetBytes("hello"));
+        #endregion
+
     }
 
     /// <summary>
@@ -86,25 +90,7 @@ internal class Program
     /// <returns></returns>
     private static async Task Connect_2()
     {
-        using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
-        tcpClient.Received = (client, e) =>
-        {
-            //此处接收服务器返回的消息
-
-            var head = e.ByteBlock.ToArray(0, 2);
-            e.ByteBlock.Seek(2, SeekOrigin.Begin);
-            var flags = e.ByteBlock.ReadUInt16(EndianType.Big);
-            var length = e.ByteBlock.ReadInt32(EndianType.Big);
-
-            var json = e.ByteBlock.Span.ToString(Encoding.UTF8);
-
-            ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
-
-
-            return Task.CompletedTask;
-        };
-
-        #region 基础Flag协议
+        #region Dmtp基础Flag协议
 
         Console.WriteLine($"{nameof(DmtpActor.P0_Close)}-flag-->{DmtpActor.P0_Close}");
         Console.WriteLine($"{nameof(DmtpActor.P1_Handshake_Request)}-flag-->{DmtpActor.P1_Handshake_Request}");
@@ -119,7 +105,26 @@ internal class Program
 
         #endregion 基础Flag协议
 
-        #region 连接
+        #region Dmtp以普通Tcp模拟连接
+        using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
+        tcpClient.Received = (client, e) =>
+        {
+            //此处接收服务器返回的消息
+
+            var span = e.Memory.Span;
+            var head = span[..2];
+
+            span = span[2..];
+            var flags = span.ReadValue<ushort>(EndianType.Big);
+            var length = span.ReadValue<ushort>(EndianType.Big);
+
+            var json = e.Memory.Span.ToString(Encoding.UTF8);
+
+            ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
+
+
+            return Task.CompletedTask;
+        };
 
         //开始链接服务器
         await tcpClient.ConnectAsync("127.0.0.1:7789");
@@ -133,36 +138,38 @@ internal class Program
         //将json转为utf-8编码。
         var jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)1));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(jsonBytes.Length));
+            byteBlock.WriteValue((ushort)1, EndianType.Big);
+            byteBlock.WriteValue(jsonBytes.Length, EndianType.Big);
             byteBlock.Write(jsonBytes);
 
             await tcpClient.SendAsync(byteBlock.Memory);
         }
 
-        #endregion 连接
+        #endregion
 
-        #region Ping
+        #region Dmtp以普通Tcp模拟Ping
 
         json = "{\"Sign\":2,\"Route\":false,\"SourceId\":null,\"TargetId\":null}";
         jsonBytes = Encoding.UTF8.GetBytes(json);
 
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             //按照Head+Flags+Length+Data的格式。
             byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)5));
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(jsonBytes.Length));
+            byteBlock.WriteValue((ushort)5, EndianType.Big);
+            byteBlock.WriteValue(jsonBytes.Length, EndianType.Big);
             byteBlock.Write(jsonBytes);
 
             await tcpClient.SendAsync(byteBlock.Memory);
         }
 
-        #endregion Ping
+        #endregion
+
+
 
         await Task.Delay(2000);
     }
@@ -182,11 +189,11 @@ internal class Program
                  a.AddConsoleLogger();
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options =>
              {
-                 VerifyToken = "Dmtp",//设置Token验证连接
-                 Id = "defaultId",//设置默认Id
-                 Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 options.VerifyToken = "Dmtp";//设置Token验证连接
+                 options.Id = "defaultId";//设置默认Id
+                 options.Metadata = new Metadata().Add("a", "a");//设置Metadata，可以传递更多的验证信息
              }));
         await client.ConnectAsync();
 
@@ -209,9 +216,9 @@ internal class Program
                    a.Add<MyVerifyPlugin>();
                    a.Add<MyFlagsPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);
@@ -220,11 +227,28 @@ internal class Program
         service.Logger.Info($"{service.GetType().Name}已启动");
         return service;
     }
+
+    private static async Task CreateConfig()
+    {
+        var config = new TouchSocketConfig();
+
+        #region Dmtp配置
+        config.SetDmtpOption(options =>
+        {
+            options.Id = Guid.NewGuid().ToString();//仅当在客户端，连接时，如果指定Id，则该链接将使用设定的id。
+            options.VerifyToken = "Dmtp";//连接口令，作用类似账号密码
+            options.VerifyTimeout = TimeSpan.FromSeconds(3);//仅当在服务器，验证连接的超时时间
+            options.Metadata = new Metadata().Add("a", "a");//仅当在客户端，连接时，可以传递更多的验证信息
+        });
+        #endregion
+
+    }
 }
 
-internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
+#region Dmtp动态验证连接
+internal class MyVerifyPlugin : PluginBase, IDmtpConnectingPlugin
 {
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         if (e.Metadata["a"] != "a")
         {
@@ -235,23 +259,26 @@ internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
         }
         if (e.Token == "Dmtp")
         {
-            e.IsPermitOperation = true;
-            e.Handled = true;
+            e.IsPermitOperation = true;//允许连接
+            e.Handled = true;//表示该消息已在此处处理。
             return;
         }
 
         await e.InvokeNext();
     }
 }
+#endregion
 
+
+#region Dmtp接收数据
 internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 {
     public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
     {
         if (e.DmtpMessage.ProtocolFlags == 1000)
         {
-            //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
-            var msg = e.DmtpMessage.BodyByteBlock.ToString();
+            //判断完协议以后，从 e.DmtpMessage.Memory可以拿到实际的数据
+            var msg = e.DmtpMessage.Memory.Span.ToUtf8String();
             await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
             //向客户端回发消息
@@ -263,3 +290,4 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
         await e.InvokeNext();
     }
 }
+#endregion

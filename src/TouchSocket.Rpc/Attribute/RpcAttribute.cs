@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -416,7 +412,7 @@ public abstract class RpcAttribute : Attribute
     /// <returns></returns>
     public virtual string GetInvokeOption()
     {
-        return "IInvokeOption invokeOption = default";
+        return "InvokeOption invokeOption = default";
     }
 
     /// <summary>
@@ -537,6 +533,7 @@ public abstract class RpcAttribute : Attribute
         }
     }
 
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)
     {
         this.ClassCodeGenerator = classCodeGenerator;
@@ -567,7 +564,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -615,7 +612,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -687,7 +684,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -735,7 +732,7 @@ public abstract class RpcAttribute : Attribute
                 foreach (var parameter in parameters)
                 {
                     codeString.Append(parameter.Name);
-                    if (parameter != parameters[parameters.Length - 1])
+                    if (parameter != parameters[^1])
                     {
                         codeString.Append(',');
                     }
@@ -779,6 +776,7 @@ public abstract class RpcAttribute : Attribute
         return codeString.ToString();
     }
 
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     private Dictionary<string, object> GetPublicPropertiesAsDictionary()
     {
         var propertiesDict = new Dictionary<string, object>();

@@ -12,101 +12,67 @@
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TouchSocket;
 
-internal class MethodInvokeCodeBuilder : CodeBuilder
+internal class MethodInvokeCodeBuilder : MethodCodeBuilder
 {
-    private readonly INamedTypeSymbol m_namedTypeSymbol;
+    private readonly Compilation m_compilation;
 
-    public MethodInvokeCodeBuilder(INamedTypeSymbol type, List<IMethodSymbol> methodSymbols)
+    public MethodInvokeCodeBuilder(INamedTypeSymbol type, Compilation compilation, List<IMethodSymbol> methodSymbols) : base(type)
     {
-        this.m_namedTypeSymbol = type;
+        this.m_compilation = compilation;
         this.MethodSymbols = methodSymbols;
     }
-
-    public INamedTypeSymbol NamedTypeSymbol => this.m_namedTypeSymbol;
-
-    public virtual IEnumerable<string> Usings
-    {
-        get
-        {
-            yield return "using System;";
-            yield return "using System.Diagnostics;";
-            yield return "using TouchSocket.Core;";
-            yield return "using System.Threading.Tasks;";
-        }
-    }
-
-    protected virtual string GeneratorTypeNamespace => "TouchSocket.Core.__Internals";
-
-    public override string Id => this.m_namedTypeSymbol.ToDisplayString();
 
     public List<IMethodSymbol> MethodSymbols { get; }
 
     public override string GetFileName()
     {
-        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Generator";
+        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Generator.g.cs";
     }
 
-    private string GetGeneratorTypeName()
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
     {
-        var typeName = $"__{Utils.MakeIdentifier(this.m_namedTypeSymbol.ToDisplayString())}MethodExtension";
+        using (this.CreateNamespaceIfNotGlobalNamespace(codeBuilder, this.GeneratorTypeNamespace))
+        {
+            codeBuilder.AppendLine($"partial class {this.GetGeneratorTypeName()}");
+            using (this.CreateCodeSpace(codeBuilder))
+            {
+                var methods = this.MethodSymbols;
 
-        return typeName;
+                foreach (var item in methods)
+                {
+                    this.BuildMethodFunc(codeBuilder, item);
+                    this.BuildMethod(codeBuilder, item);
+                    this.BuildAwaitableReturnTypeMethod(codeBuilder, item);
+                }
+            }
+        }
+        return true;
     }
 
-    public override string ToString()
-    {
-        var codeString = new StringBuilder();
-        codeString.AppendLine("/*");
-        codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
-        codeString.AppendLine("*/");
-        codeString.AppendLine("#pragma warning disable");
-
-        foreach (var item in this.Usings)
-        {
-            codeString.AppendLine(item);
-        }
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine($"namespace {this.GeneratorTypeNamespace}");
-            codeString.AppendLine("{");
-        }
-
-        codeString.AppendLine($"partial class {this.GetGeneratorTypeName()}");
-        codeString.AppendLine("{");
-        var methods = this.MethodSymbols;
-
-        foreach (var item in methods)
-        {
-            this.BuildMethodFunc(codeString, item);
-            this.BuildMethod(codeString, item);
-        }
-        codeString.AppendLine("}");
-
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine("}");
-        }
-
-        // System.Diagnostics.Debugger.Launch();
-        return codeString.ToString();
-    }
-
-    private void BuildMethod(StringBuilder codeString, IMethodSymbol method)
+    private void BuildMethod(StringBuilder codeBuilder, IMethodSymbol method)
     {
         var objectName = this.GetObjectName(method);
 
-        codeString.AppendLine($"private static object {this.GetMethodName(method)}(object {objectName}, object[] ps)");
-        codeString.AppendLine("{");
+        codeBuilder.AppendLine($"private static object {this.GetMethodName(method)}(object {objectName}, object[] ps)");
+        codeBuilder.AppendLine("{");
 
         var ps = new List<string>();
         for (var i = 0; i < method.Parameters.Length; i++)
         {
             var parameter = method.Parameters[i];
-            codeString.AppendLine($"var {parameter.Name}=({parameter.Type.ToDisplayString()})ps[{i}];");
+            if (parameter.Type.IsValueType && !this.IsNullableValueType(parameter.Type))
+            {
+                codeBuilder.AppendLine($"var {parameter.Name}=System.Runtime.CompilerServices.Unsafe.Unbox<{parameter.Type.ToDisplayString()}>(ps[{i}]);");
+            }
+            else
+            {
+                codeBuilder.AppendLine($"var {parameter.Name}=({parameter.Type.ToDisplayString()})ps[{i}];");
+            }
 
             if (parameter.RefKind == RefKind.Ref)
             {
@@ -127,24 +93,37 @@ internal class MethodInvokeCodeBuilder : CodeBuilder
             {
                 if (method.IsStatic)
                 {
-                    codeString.AppendLine($"{method.ContainingType.ToDisplayString()}.{method.Name}({string.Join(",", ps)});");
+                    codeBuilder.AppendLine($"{method.ContainingType.ToDisplayString()}.{method.Name}({string.Join(",", ps)});");
                 }
                 else
                 {
-                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
+                    if (method.ContainingType.IsValueType)
+                    {
+                        codeBuilder.AppendLine($"System.Runtime.CompilerServices.Unsafe.Unbox<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}({string.Join(",", ps)});");
+                    }
+                    else
+                    {
+                        codeBuilder.AppendLine($"System.Runtime.CompilerServices.Unsafe.As<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}({string.Join(",", ps)});");
+                    }
                 }
             }
             else
             {
                 if (method.IsStatic)
                 {
-                    codeString.AppendLine($"var result = {method.ContainingType.ToDisplayString()}.{method.Name}({string.Join(",", ps)});");
+                    codeBuilder.AppendLine($"var result = {method.ContainingType.ToDisplayString()}.{method.Name}({string.Join(",", ps)});");
                 }
                 else
                 {
-                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
+                    if (method.ContainingType.IsValueType)
+                    {
+                        codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.Unbox<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}({string.Join(",", ps)});");
+                    }
+                    else
+                    {
+                        codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.As<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}({string.Join(",", ps)});");
+                    }
                 }
-
             }
         }
         else
@@ -153,58 +132,169 @@ internal class MethodInvokeCodeBuilder : CodeBuilder
             {
                 if (method.IsStatic)
                 {
-                    codeString.AppendLine($"{method.ContainingType.ToDisplayString()}.{method.Name}();");
+                    codeBuilder.AppendLine($"{method.ContainingType.ToDisplayString()}.{method.Name}();");
                 }
                 else
                 {
-                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
+                    if (method.ContainingType.IsValueType)
+                    {
+                        codeBuilder.AppendLine($"System.Runtime.CompilerServices.Unsafe.Unbox<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}();");
+                    }
+                    else
+                    {
+                        codeBuilder.AppendLine($"System.Runtime.CompilerServices.Unsafe.As<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}();");
+                    }
                 }
-
             }
             else
             {
                 if (method.IsStatic)
                 {
-                    codeString.AppendLine($"var result = {method.ContainingType.ToDisplayString()}.{method.Name}();");
+                    codeBuilder.AppendLine($"var result = {method.ContainingType.ToDisplayString()}.{method.Name}();");
                 }
                 else
                 {
-                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
+                    if (method.ContainingType.IsValueType)
+                    {
+                        codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.Unbox<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}();");
+                    }
+                    else
+                    {
+                        codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.As<{method.ContainingType.ToDisplayString()}>({objectName}).{method.Name}();");
+                    }
                 }
             }
         }
+        
+        // 处理 ref 和 out 参数的回写
         for (var i = 0; i < method.Parameters.Length; i++)
         {
             var parameter = method.Parameters[i];
 
             if (parameter.RefKind == RefKind.Ref || parameter.RefKind == RefKind.Out)
             {
-                codeString.AppendLine($"ps[{i}]={parameter.Name};");
+                codeBuilder.AppendLine($"ps[{i}]={parameter.Name};");
             }
         }
 
         if (method.ReturnsVoid)
         {
-            codeString.AppendLine("return default;");
+            codeBuilder.AppendLine("return default;");
         }
         else
         {
-            codeString.AppendLine("return result;");
+            codeBuilder.AppendLine("return result;");
         }
-        codeString.AppendLine("}");
+        codeBuilder.AppendLine("}");
     }
 
-    private void BuildMethodFunc(StringBuilder codeString, IMethodSymbol method)
+    private void BuildMethodFunc(StringBuilder codeBuilder, IMethodSymbol method)
     {
-        codeString.AppendLine($"public static Func<object, object[], object> {this.GetMethodName(method)}Func => {this.GetMethodName(method)};");
+        codeBuilder.AppendLine($"public static Func<object, object[], object> {this.GetMethodName(method)}Func => {this.GetMethodName(method)};");
     }
 
+    private void BuildAwaitableReturnTypeMethod(StringBuilder codeBuilder, IMethodSymbol method)
+    {
+        var returnType = method.ReturnType;
+        if (returnType.IsVoid())
+        {
+            return;
+        }
+        if (this.IsTypeAwaitable(returnType, out var hasResult))
+        {
+            var methodId = this.GetMethodName(method) + "ReturnTypeMethod";
+            codeBuilder.AppendLine($"private static async Task<object> {methodId}(object o)");
+            using (this.CreateCodeSpace(codeBuilder))
+            {
+                if (returnType.IsValueType && !this.IsNullableValueType(returnType))
+                {
+                    codeBuilder.AppendLine($"var result = System.Runtime.CompilerServices.Unsafe.Unbox<{returnType.ToDisplayString()}>(o);");
+                }
+                else
+                {
+                    codeBuilder.AppendLine($"var result = ({returnType.ToDisplayString()})o;");
+                }
+
+                if (hasResult)
+                {
+                    codeBuilder.AppendLine("return await result;");
+                }
+                else
+                {
+                    codeBuilder.AppendLine("await result;");
+                    codeBuilder.AppendLine("return default;");
+                }
+            }
+
+            codeBuilder.AppendLine($"public static Func<object, Task<object>> {methodId}Func=>{methodId};");
+        }
+    }
+
+    private bool IsTypeAwaitable(ITypeSymbol typeSymbol, out bool hasResult)
+    {
+        // 查找无参数的GetAwaiter实例方法
+        var getAwaiterMethod = typeSymbol.GetMembers("GetAwaiter")
+            .OfType<IMethodSymbol>()
+            .FirstOrDefault(m => m.Parameters.IsEmpty && m.MethodKind == MethodKind.Ordinary);
+
+        if (getAwaiterMethod == null)
+        {
+            hasResult = false;
+            return false; // 无符合条件的实例方法
+        }
+
+        var awaiterType = getAwaiterMethod.ReturnType as INamedTypeSymbol;
+        if (awaiterType == null)
+        {
+            hasResult = false;
+            return false;
+        }
+
+        // 获取INotifyCompletion和ICriticalNotifyCompletion接口符号
+        var inotifyCompletion = this.m_compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.INotifyCompletion");
+        var icriticalNotifyCompletion = this.m_compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ICriticalNotifyCompletion");
+
+        if (inotifyCompletion == null || icriticalNotifyCompletion == null)
+        {
+            hasResult = false;
+            return false; // 编译环境中缺少必要接口
+        }
+
+        // 检查是否实现任一接口
+        var implementsInterface = awaiterType.AllInterfaces.Any(i =>
+            SymbolEqualityComparer.Default.Equals(i, inotifyCompletion) ||
+            SymbolEqualityComparer.Default.Equals(i, icriticalNotifyCompletion));
+
+        if (!implementsInterface)
+        {
+            hasResult = false;
+            return false;
+        }
+
+        // 检查IsCompleted属性是否存在且类型为bool
+        var isCompleted = awaiterType.GetMembers("IsCompleted")
+            .OfType<IPropertySymbol>()
+            .FirstOrDefault(p => p.Type.SpecialType == SpecialType.System_Boolean && p.GetMethod != null);
+
+        if (isCompleted == null)
+        {
+            hasResult = false;
+            return false;
+        }
+
+        // 检查GetResult方法是否存在并无参数
+        var getResult = awaiterType.GetMembers("GetResult")
+            .OfType<IMethodSymbol>()
+            .FirstOrDefault(m => m.Parameters.IsEmpty);
+
+        hasResult = !getResult.ReturnsVoid;
+        return getResult != null;
+    }
 
     private string GetMethodName(IMethodSymbol method)
     {
         return method.GetDeterminantName();
     }
-
 
     private string GetObjectName(IMethodSymbol method)
     {
@@ -227,5 +317,12 @@ internal class MethodInvokeCodeBuilder : CodeBuilder
         }
 
         return "@obj";
+    }
+
+    private bool IsNullableValueType(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol.IsValueType 
+            && typeSymbol is INamedTypeSymbol namedType 
+            && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
     }
 }

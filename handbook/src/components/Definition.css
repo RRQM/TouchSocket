@@ -9,28 +9,14 @@
   font-size: 1.3em;
   font-weight: 600;
   color: #2d5aa0;
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 2px rgba(45, 90, 160, 0.1));
+  color: #2d5aa0;
 }
 
 .definition-content {
-  background: linear-gradient(135deg, 
-    rgba(248, 253, 255, 0.8) 0%,
-    rgba(240, 248, 255, 0.8) 50%,
-    rgba(232, 243, 255, 0.8) 100%
-  );
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(240, 248, 255, 0.8);
   border: 1px solid rgba(79, 179, 255, 0.15);
   border-radius: 16px;
   padding: 20px 24px;
-  box-shadow: 
-    0 4px 16px rgba(79, 179, 255, 0.06),
-    0 2px 4px rgba(79, 179, 255, 0.04);
-  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -42,21 +28,13 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #4fb3ff 0%, #7fa8d3 100%);
+  background: #4fb3ff;
   border-radius: 2px 0 0 2px;
 }
 
 .definition-content:hover {
-  background: linear-gradient(135deg, 
-    rgba(240, 248, 255, 0.9) 0%,
-    rgba(232, 243, 255, 0.9) 50%,
-    rgba(217, 235, 255, 0.9) 100%
-  );
+  background: rgba(232, 243, 255, 0.9);
   border-color: rgba(79, 179, 255, 0.25);
-  box-shadow: 
-    0 6px 20px rgba(79, 179, 255, 0.08),
-    0 3px 8px rgba(79, 179, 255, 0.06);
-  transform: translateY(-1px);
 }
 
 .definition-item {
@@ -107,21 +85,14 @@
   align-items: center;
   gap: 8px;
   flex: 1;
-  background: linear-gradient(135deg, 
-    rgba(45, 90, 160, 0.05) 0%,
-    rgba(79, 124, 184, 0.05) 100%
-  );
+  background: rgba(45, 90, 160, 0.05);
   border: 1px solid rgba(45, 90, 160, 0.15);
   border-radius: 8px;
   padding: 6px 8px;
-  transition: all 0.3s ease;
 }
 
 .install-command-container:hover {
-  background: linear-gradient(135deg, 
-    rgba(45, 90, 160, 0.08) 0%,
-    rgba(79, 124, 184, 0.08) 100%
-  );
+  background: rgba(45, 90, 160, 0.08);
   border-color: rgba(45, 90, 160, 0.25);
 }
 
@@ -145,30 +116,23 @@
   height: 28px;
   border: none;
   border-radius: 6px;
-  background: linear-gradient(135deg, #4f7cb8 0%, #7fa8d3 100%);
+  background: #4f7cb8;
   color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
   padding: 0;
   flex-shrink: 0;
 }
 
 .copy-button:hover {
-  background: linear-gradient(135deg, #2d5aa0 0%, #4f7cb8 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(79, 124, 184, 0.3);
-}
-
-.copy-button:active {
-  transform: translateY(0);
+  background: #2d5aa0;
 }
 
 .copy-button.copied {
-  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  background: #28a745;
 }
 
 .copy-button.copied:hover {
-  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  background: #28a745;
 }
 
 .definition-value {
@@ -177,96 +141,45 @@
   font-weight: 500;
   border-radius: 8px;
   padding: 4px 8px;
-  transition: all 0.3s ease;
 }
 
 .namespace {
-  background: linear-gradient(135deg, 
-    rgba(79, 179, 255, 0.1) 0%,
-    rgba(79, 179, 255, 0.05) 100%
-  );
+  background: rgba(79, 179, 255, 0.1);
   color: #2d5aa0;
   border: 1px solid rgba(79, 179, 255, 0.2);
 }
 
 .assembly-link {
-  background: linear-gradient(135deg, 
-    rgba(45, 90, 160, 0.08) 0%,
-    rgba(79, 124, 184, 0.08) 100%
-  );
+  background: rgba(45, 90, 160, 0.08);
   color: #2d5aa0;
   text-decoration: none;
   border: 1px solid rgba(45, 90, 160, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.assembly-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%,
-    rgba(79, 179, 255, 0.1) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-}
-
-.assembly-link:hover::before {
-  left: 100%;
 }
 
 .assembly-link:hover {
-  background: linear-gradient(135deg, 
-    rgba(45, 90, 160, 0.12) 0%,
-    rgba(79, 124, 184, 0.12) 100%
-  );
+  background: rgba(45, 90, 160, 0.12);
   border-color: rgba(45, 90, 160, 0.25);
   color: #1e4080;
   text-decoration: none;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(45, 90, 160, 0.15);
 }
 
 /* 暗色主题适配 */
 [data-theme='dark'] .definition-title {
-  background: linear-gradient(135deg, #a5c6e0 0%, #c7dded 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 2px rgba(165, 198, 224, 0.2));
+  color: #a5c6e0;
 }
 
 [data-theme='dark'] .definition-content {
-  background: linear-gradient(135deg, 
-    rgba(28, 36, 52, 0.8) 0%,
-    rgba(35, 45, 62, 0.8) 50%,
-    rgba(42, 54, 72, 0.8) 100%
-  );
+  background: rgba(35, 45, 62, 0.8);
   border: 1px solid rgba(96, 146, 182, 0.2);
-  box-shadow: 
-    0 4px 16px rgba(15, 23, 35, 0.2),
-    0 2px 4px rgba(15, 23, 35, 0.15);
 }
 
 [data-theme='dark'] .definition-content::before {
-  background: linear-gradient(180deg, #8bb4d9 0%, #a5c6e0 100%);
+  background: #8bb4d9;
 }
 
 [data-theme='dark'] .definition-content:hover {
-  background: linear-gradient(135deg, 
-    rgba(42, 54, 72, 0.9) 0%,
-    rgba(52, 68, 88, 0.9) 50%,
-    rgba(62, 82, 108, 0.9) 100%
-  );
+  background: rgba(52, 68, 88, 0.9);
   border-color: rgba(96, 146, 182, 0.3);
-  box-shadow: 
-    0 6px 20px rgba(15, 23, 35, 0.3),
-    0 3px 8px rgba(15, 23, 35, 0.2);
 }
 
 [data-theme='dark'] .definition-label {
@@ -274,18 +187,12 @@
 }
 
 [data-theme='dark'] .install-command-container {
-  background: linear-gradient(135deg, 
-    rgba(139, 180, 217, 0.08) 0%,
-    rgba(165, 198, 224, 0.08) 100%
-  );
+  background: rgba(139, 180, 217, 0.08);
   border: 1px solid rgba(139, 180, 217, 0.2);
 }
 
 [data-theme='dark'] .install-command-container:hover {
-  background: linear-gradient(135deg, 
-    rgba(139, 180, 217, 0.12) 0%,
-    rgba(165, 198, 224, 0.12) 100%
-  );
+  background: rgba(139, 180, 217, 0.12);
   border-color: rgba(139, 180, 217, 0.3);
 }
 
@@ -294,56 +201,37 @@
 }
 
 [data-theme='dark'] .copy-button {
-  background: linear-gradient(135deg, #6092b6 0%, #8bb4d9 100%);
+  background: #6092b6;
 }
 
 [data-theme='dark'] .copy-button:hover {
-  background: linear-gradient(135deg, #4f7698 0%, #6092b6 100%);
-  box-shadow: 0 4px 8px rgba(15, 23, 35, 0.4);
+  background: #4f7698;
 }
 
 [data-theme='dark'] .copy-button.copied {
-  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  background: #28a745;
 }
 
 [data-theme='dark'] .copy-button.copied:hover {
-  background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+  background: #28a745;
 }
 
 [data-theme='dark'] .namespace {
-  background: linear-gradient(135deg, 
-    rgba(139, 180, 217, 0.15) 0%,
-    rgba(139, 180, 217, 0.08) 100%
-  );
+  background: rgba(139, 180, 217, 0.15);
   color: #a5c6e0;
   border: 1px solid rgba(139, 180, 217, 0.25);
 }
 
 [data-theme='dark'] .assembly-link {
-  background: linear-gradient(135deg, 
-    rgba(165, 198, 224, 0.12) 0%,
-    rgba(199, 221, 237, 0.12) 100%
-  );
+  background: rgba(165, 198, 224, 0.12);
   color: #a5c6e0;
   border: 1px solid rgba(165, 198, 224, 0.2);
 }
 
-[data-theme='dark'] .assembly-link::before {
-  background: linear-gradient(90deg, 
-    transparent 0%,
-    rgba(139, 180, 217, 0.15) 50%,
-    transparent 100%
-  );
-}
-
 [data-theme='dark'] .assembly-link:hover {
-  background: linear-gradient(135deg, 
-    rgba(165, 198, 224, 0.18) 0%,
-    rgba(199, 221, 237, 0.18) 100%
-  );
+  background: rgba(165, 198, 224, 0.18);
   border-color: rgba(165, 198, 224, 0.35);
   color: #c7dded;
-  box-shadow: 0 2px 8px rgba(15, 23, 35, 0.3);
 }
 
 /* 响应式设计 */
@@ -351,47 +239,47 @@
   .definition-content {
     padding: 16px 20px;
   }
-  
+
   .definition-item {
     flex-direction: column;
     align-items: flex-start;
     margin-bottom: 16px;
   }
-  
+
   .definition-item.description-item {
     margin-bottom: 16px;
   }
-  
+
   .definition-item.install-item {
     margin-bottom: 0;
   }
-  
+
   .definition-label {
     margin-bottom: 6px;
     margin-right: 0;
     min-width: auto;
   }
-  
+
   .definition-value {
     width: 100%;
     word-break: break-all;
   }
-  
+
   .definition-values {
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
   }
-  
+
   .definition-description {
     width: 100%;
   }
-  
+
   .install-command-container {
     width: 100%;
   }
-  
+
   .install-command {
     font-size: 0.8em;
     word-break: break-all;
@@ -402,37 +290,37 @@
   .definition-container {
     margin: 16px 0 24px 0;
   }
-  
+
   .definition-title {
     font-size: 1.2em;
     margin-bottom: 12px;
   }
-  
+
   .definition-content {
     padding: 14px 16px;
   }
-  
+
   .definition-label {
     font-size: 0.9em;
   }
-  
+
   .definition-value {
     font-size: 0.85em;
   }
-  
+
   .definition-description {
     font-size: 0.85em;
   }
-  
+
   .install-command {
     font-size: 0.75em;
   }
-  
+
   .copy-button {
     width: 24px;
     height: 24px;
   }
-  
+
   .copy-button svg {
     width: 14px;
     height: 14px;

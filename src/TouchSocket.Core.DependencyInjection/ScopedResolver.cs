@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace TouchSocket.Core.AspNetCore;
 
@@ -46,7 +45,7 @@ internal class ScopedResolver : IResolver, IKeyedServiceProvider
     public IServiceProvider ServiceProvider { get => this.m_serviceProvider; set => this.m_serviceProvider = value; }
 
     /// <inheritdoc/>
-    public bool IsRegistered(Type fromType, string key)
+    public bool IsRegistered(Type fromType, object key)
     {
         if (typeof(IResolver) == fromType)
         {
@@ -58,7 +57,7 @@ internal class ScopedResolver : IResolver, IKeyedServiceProvider
             {
                 continue;
             }
-            if (item.ServiceType == fromType && item.ServiceKey?.ToString() == key)
+            if (item.ServiceType == fromType && item.ServiceKey == key)
             {
                 return true;
             }
@@ -115,7 +114,7 @@ internal class ScopedResolver : IResolver, IKeyedServiceProvider
     }
 
     /// <inheritdoc/>
-    public object Resolve(Type fromType, string key)
+    public object Resolve(Type fromType, object key)
     {
         return this.m_serviceProvider.GetRequiredKeyedService(fromType, key);
     }

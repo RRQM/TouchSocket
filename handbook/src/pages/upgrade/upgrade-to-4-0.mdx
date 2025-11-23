@@ -1,0 +1,905 @@
+---
+id: upgrade-to-40
+title: TouchSocket 4.0 升级指南
+---
+
+本文档将帮助您从TouchSocket 3.x版本升级到4.0版本。以下是主要的语法差异和升级方法。
+
+## 1. WebSocket插件接口重命名
+
+**旧语法 (3.x):**
+```csharp
+// 握手插件接口
+IWebSocketHandshakingPlugin
+IWebSocketHandshakedPlugin
+
+// 插件方法
+OnWebSocketHandshaking()
+OnWebSocketHandshaked()
+```
+
+**新语法 (4.0):**
+```csharp
+// 连接插件接口
+IWebSocketConnectingPlugin
+IWebSocketConnectedPlugin
+
+// 插件方法
+OnWebSocketConnecting()
+OnWebSocketConnected()
+```
+
+**如何更新:**
+- 将所有 `IWebSocketHandshakingPlugin` 替换为 `IWebSocketConnectingPlugin`
+- 将所有 `IWebSocketHandshakedPlugin` 替换为 `IWebSocketConnectedPlugin`
+- 将所有 `OnWebSocketHandshaking` 替换为 `OnWebSocketConnecting`
+- 将所有 `OnWebSocketHandshaked` 替换为 `OnWebSocketConnected`
+
+## 2. WebSocket配置方式更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocket()
+     .SetWSUrl("/ws")
+     .UseAutoPong();
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocket(options =>
+    {
+        options.SetUrl("/ws");
+        options.SetAutoPong(true);
+    });
+})
+```
+
+**如何更新:**
+- 使用 `UseWebSocket(options => {})` 替代链式调用
+- `SetWSUrl()` 改为 `options.SetUrl()`
+- `UseAutoPong()` 改为 `options.SetAutoPong(true)`
+
+## 3. WebSocket断线重连插件更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseWebSocketReconnection();
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseReconnection<WebSocketClient>();
+})
+```
+
+**如何更新:**
+- 将 `UseWebSocketReconnection()` 替换为 `UseReconnection<WebSocketClient>()`
+
+## 4. WebSocket简化连接方式
+
+**旧语法 (3.x):**
+```csharp
+var client = new WebSocketClient();
+await client.SetupAsync(new TouchSocketConfig()
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+await client.ConnectAsync();
+```
+
+**新语法 (4.0):**
+```csharp
+var client = new WebSocketClient();
+await client.ConnectAsync("ws://127.0.0.1:7789/ws");
+```
+
+**如何更新:**
+- 对于简单连接，可以直接使用 `ConnectAsync(url)` 方法
+- 复杂配置仍需要使用 `SetupAsync()` 方法
+
+## 5. WebSocket数据接收委托
+
+**新增功能 (4.0):**
+```csharp
+client.Received = (c, e) =>
+{
+    Console.WriteLine(e.DataFrame.ToText());
+    return EasyTask.CompletedTask;
+};
+```
+
+**如何更新:**
+- 可以使用 `Received` 委托来简化数据接收处理
+- 替代复杂的插件配置方式
+
+## 6. WebSocket ReadAsync 接收超时
+
+**新增功能 (4.0):**
+```csharp
+// 设置接收超时
+using var cts = new CancellationTokenSource(1000 * 60);
+using (var receiveResult = await client.ReadAsync(cts.Token))
+{
+    if (receiveResult.IsCompleted)
+    {
+        // 连接已关闭
+        break;
+    }
+}
+```
+
+**如何更新:**
+- 使用 `CancellationTokenSource` 设置接收超时
+- 通过 `receiveResult.IsCompleted` 判断连接状态
+
+## 7. XmlRpc配置方式更改
+
+**旧语法 (3.x):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseXmlRpc()
+     .SetXmlRpcUrl("/xmlRpc");
+})
+```
+
+**新语法 (4.0):**
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseXmlRpc(options =>
+    {
+        options.SetAllowXmlRpc("/xmlRpc");
+    });
+})
+```
+
+**如何更新:**
+- 使用 `UseXmlRpc(options => {})` 替代链式调用
+- `SetXmlRpcUrl()` 改为 `options.SetAllowXmlRpc()`
+
+## 8. RPC代理调用方法名称更改
+
+**旧语法 (3.x):**
+```csharp
+var result = client.Sum(10, 20); // 同步调用
+```
+
+**新语法 (4.0):**
+```csharp
+var result = await client.SumAsync(10, 20); // 异步调用
+```
+
+**如何更新:**
+- 所有RPC代理方法都需要使用异步版本
+- 在方法名后添加 `Async` 后缀并使用 `await`
+
+## 9. 包版本管理统一化
+
+**旧方式:**
+```xml
+<PackageReference Include="TouchSocket.Http" Version="3.1.15" />
+```
+
+**新方式:**
+```xml
+<!-- 使用中央包管理 -->
+<PackageReference Include="TouchSocket.Http" />
+```
+
+**如何更新:**
+- 移除所有PackageReference中的Version属性
+- 在项目根目录创建 `Directory.Packages.props` 文件统一管理版本
+- 设置 `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>`
+
+## 10. 插件接口参数类型更改
+
+**旧语法 (3.x):**
+```csharp
+public async Task OnWebSocketHandshaking(IWebSocket client, HttpContextEventArgs e)
+```
+
+**新语法 (4.0):**
+```csharp
+public async Task OnWebSocketConnecting(IWebSocket client, HttpContextEventArgs e)
+```
+
+**如何更新:**
+- 检查所有插件接口的方法签名
+- 更新方法名称和参数类型以匹配新接口
+
+## 11. WebSocket连接验证配置
+
+**新增功能 (4.0):**
+```csharp
+a.UseWebSocket(options =>
+{
+    options.SetVerifyConnection(async (client, context) =>
+    {
+        // 自定义验证逻辑
+        return context.Request.UrlEquals("/ws");
+    });
+});
+```
+
+**如何更新:**
+- 使用 `SetVerifyConnection` 方法自定义连接验证逻辑
+- 替代之前的URL匹配方式
+
+## 12. 适配器扩展方法更新
+
+**旧语法 (3.x):**
+```csharp
+writer.WriteByte(value);
+reader.ReadByte();
+```
+
+**新语法 (4.0):**
+```csharp
+WriterExtension.WriteValue(ref writer, (byte)value);
+ReaderExtension.ReadValue<TReader, byte>(ref reader);
+```
+
+**如何更新:**
+- 使用新的扩展方法替代旧的直接调用方式
+- 注意参数类型的显式转换
+
+## 13. TCP数据接收事件参数变化
+
+**旧语法 (3.x):**
+```csharp
+service.Received = (client, e) =>
+{
+    // 使用ByteBlock获取数据
+    var data = e.ByteBlock.ToArray();
+    var text = Encoding.UTF8.GetString(data);
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+service.Received = (client, e) =>
+{
+    // 使用Memory<byte>获取数据
+    var memory = e.Memory;
+    var text = memory.Span.ToString(Encoding.UTF8);
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 将 `e.ByteBlock` 替换为 `e.Memory`
+- 使用 `e.Memory.Span` 获取数据的Span表示
+- 使用 `memory.Span.ToString(Encoding.UTF8)` 进行字符串转换
+- 如需要数组，使用 `e.Memory.ToArray()`
+
+## 14. TCP插件中数据接收参数变化
+
+**旧语法 (3.x):**
+```csharp
+public class MyPlugin : PluginBase, ITcpReceivedPlugin
+{
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        // 通过ByteBlock获取数据
+        var byteBlock = e.ByteBlock;
+        var length = byteBlock.Len;
+        var data = byteBlock.ToArray();
+        
+        await e.InvokeNext();
+    }
+}
+```
+
+**新语法 (4.0):**
+```csharp
+public class MyPlugin : PluginBase, ITcpReceivedPlugin
+{
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        // 通过Memory获取数据
+        var memory = e.Memory;
+        var length = memory.Length;
+        var span = memory.Span;
+        
+        await e.InvokeNext();
+    }
+}
+```
+
+**如何更新:**
+- 将 `e.ByteBlock` 替换为 `e.Memory`
+- 将 `byteBlock.Len` 替换为 `memory.Length`
+- 使用 `memory.Span` 获取ReadOnlySpan&lt;byte&gt;
+- 使用 `memory.ToArray()` 获取byte数组（如确实需要）
+
+## 15. 适配器中数据处理方式变化
+
+**旧语法 (3.x):**
+```csharp
+protected override FilterResult Filter(ref ByteBlock byteBlock, bool beCached, ref MyRequestInfo request)
+{
+    if (byteBlock.Len < 4)
+    {
+        return FilterResult.Cache;
+    }
+    
+    var header = byteBlock.ReadInt32();
+    var data = byteBlock.ToArray();
+    
+    return FilterResult.Success;
+}
+```
+
+**新语法 (4.0):**
+```csharp
+protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MyRequestInfo request)
+{
+    if (reader.BytesRemaining < 4)
+    {
+        return FilterResult.Cache;
+    }
+    
+    var headerSpan = reader.GetSpan(4);
+    var header = headerSpan.ReadValue<int>();
+    reader.Advance(4);
+    
+    return FilterResult.Success;
+}
+```
+
+**如何更新:**
+- 将 `ByteBlock byteBlock` 参数替换为泛型 `TReader reader`
+- 将 `byteBlock.Len` 替换为 `reader.BytesRemaining`
+- 使用 `reader.GetSpan(length)` 获取指定长度的数据
+- 使用 `reader.Advance(length)` 推进读取位置
+- 使用 `span.ReadValue<T>()` 读取基础类型数据
+
+## 16. UDP数据接收参数变化
+
+**旧语法 (3.x):**
+```csharp
+udpSession.Received = (client, e) =>
+{
+    var byteBlock = e.ByteBlock;
+    var endPoint = e.EndPoint;
+    var data = byteBlock.ToArray();
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+udpSession.Received = (client, e) =>
+{
+    var memory = e.Memory;
+    var endPoint = e.EndPoint;
+    var span = memory.Span;
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 将 `e.ByteBlock` 替换为 `e.Memory`
+- 使用 `memory.Span` 获取数据视图
+- EndPoint属性保持不变
+
+## 17. 串口数据接收参数变化
+
+**旧语法 (3.x):**
+```csharp
+serialPort.Received = (client, e) =>
+{
+    var byteBlock = e.ByteBlock;
+    var receivedData = byteBlock.ToArray();
+    Console.WriteLine($"接收到数据：{Convert.ToHexString(receivedData)}");
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+serialPort.Received = (client, e) =>
+{
+    var memory = e.Memory;
+    var span = memory.Span;
+    Console.WriteLine($"接收到数据：{Convert.ToHexString(span)}");
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 将 `e.ByteBlock` 替换为 `e.Memory`
+- 直接使用 `memory.Span` 进行十六进制转换
+- 避免不必要的 `ToArray()` 调用以提高性能
+
+## 18. 命名管道数据接收参数变化
+
+**旧语法 (3.x):**
+```csharp
+namedPipe.Received = (client, e) =>
+{
+    var byteBlock = e.ByteBlock;
+    var message = Encoding.UTF8.GetString(byteBlock.ToArray());
+    Console.WriteLine($"收到消息：{message}");
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+namedPipe.Received = (client, e) =>
+{
+    var memory = e.Memory;
+    var message = memory.Span.ToString(Encoding.UTF8);
+    Console.WriteLine($"收到消息：{message}");
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 将 `e.ByteBlock` 替换为 `e.Memory`
+- 使用 `memory.Span.ToString(Encoding.UTF8)` 直接转换字符串
+- 避免创建临时数组，提高内存效率
+
+## 19. 自定义数据处理适配器泛型化
+
+**旧语法 (3.x):**
+```csharp
+public class MyAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+{
+    protected override FilterResult Filter(ref ByteBlock byteBlock, bool beCached, ref MyRequestInfo request)
+    {
+        // 处理ByteBlock数据
+        var data = byteBlock.ToArray();
+        return FilterResult.Success;
+    }
+}
+```
+
+**新语法 (4.0):**
+```csharp
+public class MyAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+{
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MyRequestInfo request)
+    {
+        // 使用泛型Reader处理数据
+        var span = reader.GetSpan(reader.BytesRemaining);
+        reader.Advance(reader.BytesRemaining);
+        return FilterResult.Success;
+    }
+}
+```
+
+**如何更新:**
+- 方法签名改为泛型 `Filter<TReader>(ref TReader reader, ...)`
+- 使用 `reader.GetSpan()` 获取数据视图
+- 使用 `reader.Advance()` 推进读取位置
+- 使用 `reader.BytesRemaining` 获取剩余字节数
+
+## 20. WaitingClient响应数据获取方式变化
+
+**旧语法 (3.x):**
+```csharp
+var waitingClient = client.CreateWaitingClient(new WaitingOptions());
+using var responsedData = await waitingClient.SendThenResponseAsync("Hello");
+var data = responsedData.Data; // byte[]
+var text = Encoding.UTF8.GetString(data);
+```
+
+**新语法 (4.0):**
+```csharp
+var waitingClient = client.CreateWaitingClient(new WaitingOptions());
+using var responsedData = await waitingClient.SendThenResponseAsync("Hello");
+var memory = responsedData.Memory; // ReadOnlyMemory<byte>
+var text = memory.Span.ToString(Encoding.UTF8);
+```
+
+**如何更新:**
+- 将 `responsedData.Data` 替换为 `responsedData.Memory`
+- 使用 `memory.Span.ToString()` 进行字符串转换
+- 如需要数组，使用 `memory.ToArray()`
+
+## 21. 二进制数据读写方式优化
+
+**旧语法 (3.x):**
+```csharp
+// 写入数据
+byteBlock.WriteByte(1);
+byteBlock.WriteInt32(1000);
+byteBlock.WriteString("Hello");
+
+// 读取数据
+var b = byteBlock.ReadByte();
+var i = byteBlock.ReadInt32();
+var s = byteBlock.ReadString();
+```
+
+**新语法 (4.0):**
+```csharp
+// 写入数据（使用Writer）
+WriterExtension.WriteValue(ref writer, (byte)1);
+WriterExtension.WriteValue(ref writer, (int)1000);
+WriterExtension.WriteString(ref writer, "Hello", Encoding.UTF8);
+
+// 读取数据（使用Reader）
+var b = ReaderExtension.ReadValue<TReader, byte>(ref reader);
+var i = ReaderExtension.ReadValue<TReader, int>(ref reader);
+var s = ReaderExtension.ReadString<TReader>(ref reader, Encoding.UTF8);
+```
+
+**如何更新:**
+- 使用 `WriterExtension.WriteValue()` 替代直接写入方法
+- 使用 `ReaderExtension.ReadValue<TReader, T>()` 替代直接读取方法
+- 需要显式指定数据类型和编码格式
+- 使用ref参数传递reader和writer
+
+## 22. HTTP请求体数据获取方式变化
+
+**旧语法 (3.x):**
+```csharp
+public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+{
+    var request = e.Context.Request;
+    if (request.ContentLength > 0)
+    {
+        var byteBlock = request.GetBody();
+        var content = Encoding.UTF8.GetString(byteBlock.ToArray());
+    }
+}
+```
+
+**新语法 (4.0):**
+```csharp
+public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+{
+    var request = e.Context.Request;
+    if (request.ContentLength > 0)
+    {
+        var memory = await request.GetContentAsync();
+        var content = memory.Span.ToString(Encoding.UTF8);
+    }
+}
+```
+
+**如何更新:**
+- 将 `request.GetBody()` 替换为 `await request.GetContentAsync()`
+- 使用 `memory.Span.ToString()` 获取字符串内容
+- 注意新方法是异步的，需要使用await
+
+## 23. 数据发送方式的内存优化
+
+**旧语法 (3.x):**
+```csharp
+// 发送字节数组
+var data = Encoding.UTF8.GetBytes("Hello World");
+await client.SendAsync(data);
+
+// 发送ByteBlock
+using var byteBlock = new ByteBlock();
+byteBlock.WriteString("Hello World");
+await client.SendAsync(byteBlock);
+```
+
+**新语法 (4.0):**
+```csharp
+// 直接发送字符串（内部优化）
+await client.SendAsync("Hello World");
+
+// 发送ReadOnlyMemory<byte>
+var memory = Encoding.UTF8.GetBytes("Hello World").AsMemory();
+await client.SendAsync(memory);
+
+// 使用Span发送（避免分配）
+var span = stackalloc byte[256];
+var length = Encoding.UTF8.GetBytes("Hello World", span);
+await client.SendAsync(span.Slice(0, length));
+```
+
+**如何更新:**
+- 优先使用字符串直接发送，框架内部已优化
+- 使用 `ReadOnlyMemory<byte>` 替代byte数组
+- 考虑使用stackalloc和Span来避免堆分配
+- 利用Slice方法处理部分数据
+
+## 24. 数据适配器中的内存池使用
+
+**旧语法 (3.x):**
+```csharp
+public class MyAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+{
+    protected override FilterResult Filter(ref ByteBlock byteBlock, bool beCached, ref MyRequestInfo request)
+    {
+        var tempBuffer = new byte[1024]; // 创建临时缓冲区
+        byteBlock.Read(tempBuffer, 0, Math.Min(1024, byteBlock.Len));
+        return FilterResult.Success;
+    }
+}
+```
+
+**新语法 (4.0):**
+```csharp
+public class MyAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+{
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MyRequestInfo request)
+    {
+        var span = reader.GetSpan(Math.Min(1024, reader.BytesRemaining));
+        // 直接使用span，无需额外分配
+        ProcessData(span);
+        reader.Advance(span.Length);
+        return FilterResult.Success;
+    }
+    
+    private void ProcessData(ReadOnlySpan<byte> data)
+    {
+        // 处理数据，无内存分配
+    }
+}
+```
+
+**如何更新:**
+- 使用 `reader.GetSpan()` 直接获取内存视图
+- 避免创建临时byte数组，直接操作Span
+- 使用 `reader.Advance()` 正确推进读取位置
+- 利用Span的零拷贝特性提高性能
+
+## 25. 数据传输事件中的内存管理
+
+**旧语法 (3.x):**
+```csharp
+client.Sending = (c, e) =>
+{
+    // 修改发送的数据
+    var oldData = e.Data;  // byte[]
+    var newData = ProcessData(oldData);
+    e.Data = newData;
+    return Task.CompletedTask;
+};
+
+client.Sent = (c, e) =>
+{
+    var sentData = e.Data; // byte[]
+    Console.WriteLine($"已发送 {sentData.Length} 字节");
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+client.Sending = (c, e) =>
+{
+    // 修改发送的数据
+    var oldMemory = e.Memory;  // ReadOnlyMemory<byte>
+    var newData = ProcessData(oldMemory.Span);
+    e.Memory = newData.AsMemory();
+    return Task.CompletedTask;
+};
+
+client.Sent = (c, e) =>
+{
+    var sentMemory = e.Memory; // ReadOnlyMemory<byte>
+    Console.WriteLine($"已发送 {sentMemory.Length} 字节");
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 将事件参数中的 `e.Data` 替换为 `e.Memory`
+- 使用 `memory.Span` 进行数据处理
+- 使用 `AsMemory()` 将处理结果转换回Memory类型
+- 利用Memory的引用语义减少数据复制
+
+## 26. 文件传输中的内存优化
+
+**旧语法 (3.x):**
+```csharp
+// 读取文件内容
+var fileData = File.ReadAllBytes(filePath);
+await client.SendAsync(fileData);
+
+// 处理接收的文件数据
+client.Received = (c, e) =>
+{
+    var receivedData = e.ByteBlock.ToArray();
+    File.WriteAllBytes(targetPath, receivedData);
+    return Task.CompletedTask;
+};
+```
+
+**新语法 (4.0):**
+```csharp
+// 使用流式读取和发送
+using var fileStream = File.OpenRead(filePath);
+var buffer = new byte[8192];
+int bytesRead;
+while ((bytesRead = await fileStream.ReadAsync(buffer)) > 0)
+{
+    await client.SendAsync(buffer.AsMemory(0, bytesRead));
+}
+
+// 处理接收的文件数据
+client.Received = (c, e) =>
+{
+    var receivedMemory = e.Memory;
+    using var targetStream = File.OpenWrite(targetPath);
+    targetStream.Write(receivedMemory.Span);
+    return Task.CompletedTask;
+};
+```
+
+**如何更新:**
+- 使用流式处理替代一次性读取整个文件
+- 使用 `memory.Span` 直接写入流
+- 使用 `AsMemory(start, length)` 创建部分内存视图
+- 避免大文件的完整内存加载
+
+## 27. 插件链中的数据传递优化
+
+**旧语法 (3.x):**
+```csharp
+public class DataProcessPlugin : PluginBase, ITcpReceivedPlugin
+{
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        // 处理数据并传递给下一个插件
+        var originalData = e.ByteBlock.ToArray();
+        var processedData = ProcessData(originalData);
+        
+        // 需要重新包装数据
+        using var newByteBlock = new ByteBlock();
+        newByteBlock.Write(processedData);
+        e.ByteBlock = newByteBlock;
+        
+        await e.InvokeNext();
+    }
+}
+```
+
+**新语法 (4.0):**
+```csharp
+public class DataProcessPlugin : PluginBase, ITcpReceivedPlugin
+{
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        // 处理数据并传递给下一个插件
+        var originalMemory = e.Memory;
+        var processedData = ProcessData(originalMemory.Span);
+        
+        // 直接设置新的内存引用
+        e.Memory = processedData.AsMemory();
+        
+        await e.InvokeNext();
+    }
+    
+    private byte[] ProcessData(ReadOnlySpan<byte> input)
+    {
+        // 使用Span进行高效的数据处理
+        Span<byte> output = stackalloc byte[input.Length];
+        // 处理逻辑...
+        return output.ToArray();
+    }
+}
+```
+
+**如何更新:**
+- 直接设置 `e.Memory` 而不需要重新包装
+- 使用Span进行数据处理，减少分配
+- 利用stackalloc在栈上分配临时缓冲区
+- 避免不必要的ByteBlock创建和释放
+
+## 28. 数据编码和解码的性能优化
+
+**旧语法 (3.x):**
+```csharp
+// 编码字符串
+var text = "Hello, 世界!";
+var bytes = Encoding.UTF8.GetBytes(text);
+var byteBlock = new ByteBlock();
+byteBlock.Write(bytes);
+
+// 解码字符串
+var receivedBytes = e.ByteBlock.ToArray();
+var decodedText = Encoding.UTF8.GetString(receivedBytes);
+```
+
+**新语法 (4.0):**
+```csharp
+// 高效编码字符串
+var text = "Hello, 世界!";
+var maxByteCount = Encoding.UTF8.GetMaxByteCount(text.Length);
+Span<byte> buffer = stackalloc byte[maxByteCount];
+var actualByteCount = Encoding.UTF8.GetBytes(text, buffer);
+var encodedData = buffer.Slice(0, actualByteCount);
+
+// 高效解码字符串
+var receivedMemory = e.Memory;
+var decodedText = receivedMemory.Span.ToString(Encoding.UTF8);
+```
+
+**如何更新:**
+- 使用 `Encoding.UTF8.GetBytes(string, Span<byte>)` 避免数组分配
+- 使用 `span.ToString(Encoding)` 直接解码
+- 利用stackalloc创建栈上缓冲区
+- 使用 `Span.Slice()` 创建精确大小的视图
+
+## 升级注意事项
+
+### 内存管理优化
+1. **Memory vs ByteBlock**: 4.0版本大量使用了Memory&lt;byte&gt;和Span&lt;byte&gt;替代ByteBlock，这带来了显著的性能提升
+2. **零拷贝操作**: 尽量使用Span操作避免不必要的内存分配和拷贝
+3. **栈分配**: 对于小数据量，考虑使用stackalloc在栈上分配内存
+
+### 性能优化建议
+1. **字符串处理**: 使用 `span.ToString(Encoding)` 替代 `Encoding.GetString(array)`
+2. **数据发送**: 优先使用字符串直接发送，框架内部已优化
+3. **流式处理**: 对于大文件或大数据量，使用流式处理替代一次性加载
+
+### 兼容性考虑
+1. **测试覆盖**: 升级后务必进行全面测试，特别是数据收发和适配器相关功能
+2. **依赖检查**: 确保所有依赖的第三方库与TouchSocket 4.0兼容
+3. **渐进升级**: 建议在测试环境先完成升级和验证
+4. **日志检查**: 关注升级后的日志输出，确保没有新的警告或错误
+
+### 代码审查重点
+1. **数据接收**: 检查所有使用 `e.ByteBlock` 的地方，替换为 `e.Memory`
+2. **适配器**: 重点检查自定义适配器的Filter方法实现
+3. **插件**: 验证所有插件接口的方法签名和参数使用
+4. **RPC调用**: 确保所有RPC调用使用异步版本
+
+## 常见问题
+
+**Q: 升级后编译出现接口找不到的错误?**
+A: 检查是否正确更新了插件接口名称，特别是WebSocket相关接口。
+
+**Q: WebSocket连接失败?**
+A: 检查配置方式是否使用了新的options配置模式。
+
+**Q: RPC调用出现异常?**
+A: 确保使用了异步版本的代理方法，并正确使用await。
+
+**Q: 数据接收时出现 'ByteBlock' 不存在的编译错误?**
+A: 将所有 `e.ByteBlock` 替换为 `e.Memory`，这是4.0版本的重大变化。
+
+**Q: 适配器中的Filter方法签名错误?**
+A: 更新为泛型版本：`Filter<TReader>(ref TReader reader, ...)`，并使用reader的相关方法。
+
+**Q: 性能比3.x版本慢?**
+A: 检查是否还在使用 `ToArray()` 等方法创建不必要的数组拷贝，应该直接使用Memory和Span操作。
+
+**Q: 字符串编码解码出现异常?**
+A: 使用 `memory.Span.ToString(Encoding.UTF8)` 替代 `Encoding.UTF8.GetString(array)`。
+
+**Q: 数据发送后接收方无法正确解析?**
+A: 检查发送时是否正确使用了新的Memory-based API，确保数据完整性。
+
+**Q: 升级后内存使用量增加?**
+A: 4.0版本实际上应该减少内存分配，检查是否还在使用旧的ByteBlock模式或不必要的ToArray()调用。
+
+**Q: 插件中的数据处理逻辑失效?**
+A: 确保插件中正确使用了Memory参数，并且在处理后正确设置了 `e.Memory`。
+
+## 升级检查清单
+
+在完成升级后，请按以下清单进行检查：
+
+- [ ] 所有WebSocket相关接口已更新（Handshaking → Connecting, Handshaked → Connected）
+- [ ] 所有配置方式已改为options模式（UseWebSocket, UseXmlRpc等）
+- [ ] 所有数据接收处理已从ByteBlock改为Memory
+- [ ] 所有适配器已更新为泛型Reader版本
+- [ ] 所有RPC调用已改为异步版本
+- [ ] 包引用已移除Version属性，使用中央包管理
+- [ ] 所有插件接口方法名称已更新
+- [ ] 数据发送接收测试通过
+- [ ] 性能测试显示预期提升
+- [ ] 内存使用量检查正常
+
+通过以上步骤和检查清单，您应该能够成功将TouchSocket从3.x版本升级到4.0版本。如果遇到其他问题，请参考官方文档或社区支持。

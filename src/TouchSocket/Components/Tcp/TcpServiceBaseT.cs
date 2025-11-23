@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -54,10 +49,10 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     /// <inheritdoc/>
     public void AddListen(TcpListenOption option)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+        ThrowHelper.ThrowIfNull(option, nameof(option));
         this.ThrowIfDisposed();
 
-        ThrowHelper.ThrowArgumentNullExceptionIf(option.IpHost, nameof(option.IpHost));
+        ThrowHelper.ThrowIfNull(option.IpHost, nameof(option.IpHost));
 
         var socket = new Socket(option.IpHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -111,7 +106,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     /// <inheritdoc/>
     public bool RemoveListen(TcpNetworkMonitor monitor)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(monitor, nameof(monitor));
+        ThrowHelper.ThrowIfNull(monitor, nameof(monitor));
 
         if (this.m_monitors.Remove(monitor))
         {
@@ -123,7 +118,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task ResetIdAsync(string sourceId, string targetId)
+    public override async Task ResetIdAsync(string sourceId, string targetId, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
@@ -135,7 +130,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         if (this.m_clients.TryGetClient(sourceId, out var client))
         {
-            await client.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
@@ -151,9 +146,9 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         try
         {
             var optionList = new List<TcpListenOption>();
-            if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is Action<List<TcpListenOption>> action)
+            if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is List<TcpListenOption> list)
             {
-                action.Invoke(optionList);
+                optionList.AddRange(list);
             }
 
             var iPHosts = this.Config.GetValue(TouchSocketConfigExtension.ListenIPHostsProperty);
@@ -170,8 +165,6 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
                     };
                     option.Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty) ?? option.Backlog;
-                    option.SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty);
-
                     optionList.Add(option);
                 }
             }
@@ -208,7 +201,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token = default)
+    public override async Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
 
@@ -236,7 +229,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -248,7 +241,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             this.StopAsync().GetFalseAwaitResult();
             this.m_tcpCorePool.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>
@@ -320,7 +313,6 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             var socket = e.AcceptSocket;
             if (this.Count < this.MaxCount)
             {
-                //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
                 _ = EasyTask.SafeRun(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
             }
             else
@@ -362,36 +354,39 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         var socket = tuple.Item1;
         var monitor = tuple.Item2;
 
+        var tcpCore = this.RentTcpCore();
+
+        TClient client = default;
+
         try
         {
-            if (monitor.Option.NoDelay.HasValue)
+            client = this.NewClient();
+            socket.NoDelay = monitor.Option.NoDelay;
+
+            if (this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty) is KeepAliveValue keepAliveValue)
             {
-                socket.NoDelay = monitor.Option.NoDelay.Value;
+                keepAliveValue.Config(socket);
             }
-
-            socket.SendTimeout = monitor.Option.SendTimeout;
-
-            var tcpCore = this.RentTcpCore();
 
             tcpCore.Reset(socket);
 
-            var client = this.NewClient();
-
-            client.InternalSetService(this);
-            client.InternalSetResolver(this.Resolver);
-            client.InternalSetListenOption(monitor.Option);
-            client.InternalSetTcpCore(tcpCore);
-            client.InternalSetPluginManager(this.PluginManager);
-            client.InternalSetReturnTcpCore(this.ReturnTcpCore);
-            client.InternalSetAction(this.TryAdd, this.TryRemove, this.TryGet);
-
             this.ClientInitialized(client);
 
-            await client.InternalInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.InternalInitialized(
+                this,
+                this.Resolver,
+                monitor.Option,
+                tcpCore,
+                this.PluginManager,
+                this.TryAdd,
+                this.TryRemove,
+                this.TryGet
+                )
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             var args = new ConnectingEventArgs()
             {
-                Id = this.GetNextNewId()
+                Id = this.GetNextNewId(client)
             };
             await client.InternalConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
             if (args.IsPermitOperation)
@@ -403,11 +398,14 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                     return;
                 }
 
+                var transport = new TcpTransport(tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+
                 if (monitor.Option.UseSsl)
                 {
                     try
                     {
-                        await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await transport.AuthenticateAsync(monitor.Option.ServiceSslOption)
+                            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -415,25 +413,26 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         throw;
                     }
                 }
-
                 if (this.m_clients.TryAdd(client))
                 {
-                    await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await client.InternalConnected(transport).SafeWaitAsync()
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
                     ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(args.Id));
                 }
             }
-            else
-            {
-                socket.SafeDispose();
-            }
         }
         catch (Exception ex)
         {
-            socket.SafeDispose();
             this.Logger?.Exception(this, ex);
+        }
+        finally
+        {
+            socket.SafeDispose();
+            client.SafeDispose();
+            this.ReturnTcpCore(tcpCore);
         }
     }
 

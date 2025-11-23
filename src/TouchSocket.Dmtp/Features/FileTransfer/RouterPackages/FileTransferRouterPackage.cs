@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
@@ -53,26 +51,61 @@ public class FileTransferRouterPackage : WaitRouterPackage
     protected override bool IncludedRouter => true;
 
     /// <inheritdoc/>
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
-        byteBlock.WriteInt32(this.ContinuationIndex);
-        byteBlock.WriteString(this.Path);
-        byteBlock.WriteInt32(this.ResourceHandle);
-        byteBlock.WriteInt32(this.FileSectionSize);
-        byteBlock.WritePackage(this.FileInfo);
-        byteBlock.WritePackage(this.Metadata);
+        base.PackageBody(ref writer);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ContinuationIndex);
+        WriterExtension.WriteString(ref writer, this.Path);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.FileSectionSize);
+        if (this.FileInfo is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+            WriterExtension.WriteNotNull(ref writer);
+            this.FileInfo.Package(ref writer);
+        }
+
+        if (this.Metadata is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+            WriterExtension.WriteNotNull(ref writer);
+            this.Metadata.Package(ref writer);
+        }
     }
 
     /// <inheritdoc/>
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
-        this.ContinuationIndex = byteBlock.ReadInt32();
-        this.Path = byteBlock.ReadString();
-        this.ResourceHandle = byteBlock.ReadInt32();
-        this.FileSectionSize = byteBlock.ReadInt32();
-        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-        this.Metadata = byteBlock.ReadPackage<Metadata>();
+        base.UnpackageBody(ref reader);
+        this.ContinuationIndex = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Path = ReaderExtension.ReadString(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.FileSectionSize = ReaderExtension.ReadValue<TReader, int>(ref reader);
+
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.FileInfo = null;
+        }
+        else
+        {
+            this.FileInfo = new RemoteFileInfo();
+            this.FileInfo.Unpackage(ref reader);
+        }
+
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.Metadata = null;
+        }
+        else
+        {
+            this.Metadata = new Metadata();
+            this.Metadata.Unpackage(ref reader);
+        }
     }
 }

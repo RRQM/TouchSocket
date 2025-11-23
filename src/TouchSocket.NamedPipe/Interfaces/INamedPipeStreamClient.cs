@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.IO.Pipes;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -19,8 +17,4 @@ namespace TouchSocket.NamedPipe;
 /// </summary>
 public interface INamedPipeStreamClient
 {
-    /// <summary>
-    /// 用于通讯的管道流。
-    /// </summary>
-    PipeStream PipeStream { get; }
 }

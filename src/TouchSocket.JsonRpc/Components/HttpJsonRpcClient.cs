@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -26,55 +22,60 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 {
     private readonly JsonRpcActor m_jsonRpcActor;
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <summary>
     /// 初始化 <see cref="HttpJsonRpcClient"/> 类的新实例。
     /// </summary>
     public HttpJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
-            SendAction = this.SendAction,
-            SerializerConverter = this.SerializerConverter
+            SendAction = this.SendAction
         };
     }
 
     /// <summary>
     /// 获取序列化转换器。
     /// </summary>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
 
     #region JsonRpcActor
 
-    private async Task SendAction(ReadOnlyMemory<byte> memory)
+    private async Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        var request = new HttpRequest();
-        request.Method = HttpMethod.Post;
-        request.URL = (this.RemoteIPHost.PathAndQuery);
+        var request = new HttpRequest
+        {
+            Method = HttpMethod.Post,
+            URL = this.RemoteIPHost.PathAndQuery
+        };
         request.SetContent(memory);
 
-        using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await base.ProtectedRequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             var response = responseResult.Response;
 
             if (response.IsSuccess())
             {
-                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
+                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
             }
         }
     }
 
     #endregion JsonRpcActor
 
-    /// <summary>
-    /// 异步连接到服务器。
-    /// </summary>
-    /// <param name="millisecondsTimeout">超时时间（毫秒）。</param>
-    /// <param name="token">取消令牌。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    /// <inheritdoc/>
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     /// <summary>
@@ -85,19 +86,9 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// <param name="invokeOption">调用选项。</param>
     /// <param name="parameters">参数。</param>
     /// <returns>表示异步操作的任务，包含调用结果。</returns>
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_jsonRpcActor.SafeDispose();
-        }
-        base.Dispose(disposing);
     }
 
     /// <summary>
@@ -108,5 +99,19 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
         base.LoadConfig(config);
         this.m_jsonRpcActor.Logger = this.Logger;
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_jsonRpcActor.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
     }
 }

@@ -10,15 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 消息通知类。内部全为弱引用。
+/// 消息通知类。内部使用弱引用保存订阅者，避免强引用导致的内存泄漏。
 /// </summary>
 public class AppMessenger
 {
@@ -32,7 +29,7 @@ public class AppMessenger
     }
 
     /// <summary>
-    /// 默认单例实例
+    /// 默认单例实例。
     /// </summary>
     public static AppMessenger Default
     {
@@ -43,16 +40,16 @@ public class AppMessenger
     }
 
     /// <summary>
-    /// 允许多广播注册
+    /// 是否允许对同一 token 注册多个广播处理器，<see langword="true"/> 表示允许。
     /// </summary>
     public bool AllowMultiple { get; set; }
 
+   
     /// <summary>
-    /// 添加
+    /// 向指定的 <paramref name="token"/> 注册消息处理实例。
     /// </summary>
-    /// <param name="token"></param>
-    /// <param name="messageInstance"></param>
-    /// <exception cref="MessageRegisteredException"></exception>
+    /// <param name="token">消息标识符。</param>
+    /// <param name="messageInstance">要注册的消息实例。</param>
     public void Add(string token, MessageInstance messageInstance)
     {
         if (this.m_tokenAndInstance.TryGetValue(token, out var value))
@@ -73,18 +70,19 @@ public class AppMessenger
         }
     }
 
+   
     /// <summary>
-    /// 判断能否触发该消息，意味着该消息是否已经注册。
+    /// 判断指定的 <paramref name="token"/> 是否可以发送消息（即是否已注册）。
     /// </summary>
-    /// <param name="token"></param>
-    /// <returns></returns>
+    /// <param name="token">消息标识符。</param>
+    /// <returns>若已注册返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
     public bool CanSendMessage(string token)
     {
         return this.m_tokenAndInstance.ContainsKey(token);
     }
 
     /// <summary>
-    /// 清除所有消息
+    /// 清除所有已注册的消息订阅。
     /// </summary>
     public void Clear()
     {
@@ -92,27 +90,27 @@ public class AppMessenger
     }
 
     /// <summary>
-    /// 获取所有消息
+    /// 获取所有已注册的消息标识符集合。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回一个包含所有消息标识符的枚举。</returns>
     public IEnumerable<string> GetAllMessage()
     {
         return this.m_tokenAndInstance.Keys;
     }
 
     /// <summary>
-    /// 移除
+    /// 移除指定 <paramref name="token"/> 的所有订阅。
     /// </summary>
-    /// <param name="token"></param>
+    /// <param name="token">消息标识符。</param>
     public void Remove(string token)
     {
         this.m_tokenAndInstance.TryRemove(token, out _);
     }
 
     /// <summary>
-    /// 按对象移除
+    /// 按订阅对象移除其在所有 token 下的消息订阅。
     /// </summary>
-    /// <param name="messageObject"></param>
+    /// <param name="messageObject">要移除的订阅对象。</param>
     public void Remove(IMessageObject messageObject)
     {
         var key = new List<string>();
@@ -138,12 +136,13 @@ public class AppMessenger
         }
     }
 
+   
     /// <summary>
-    /// 发送消息
+    /// 异步向指定的 <paramref name="token"/> 广播消息，返回任务以便等待完成。
     /// </summary>
-    /// <param name="token"></param>
-    /// <param name="parameters"></param>
-    /// <exception cref="MessageNotFoundException"></exception>
+    /// <param name="token">消息标识符。</param>
+    /// <param name="parameters">要传递的参数数组。</param>
+    /// <returns>表示异步操作的任务。</returns>
     public async Task SendAsync(string token, params object[] parameters)
     {
         if (this.m_tokenAndInstance.TryGetValue(token, out var list))
@@ -172,13 +171,12 @@ public class AppMessenger
     }
 
     /// <summary>
-    /// 发送消息，当多播时，只返回最后一个返回值
+    /// 异步向指定的 <paramref name="token"/> 发送消息并获取最后一个处理器的返回值。
     /// </summary>
-    /// <typeparam name="T">返回值类型</typeparam>
-    /// <param name="token"></param>
-    /// <param name="parameters"></param>
-    /// <returns></returns>
-    /// <exception cref="MessageNotFoundException"></exception>
+    /// <typeparam name="T">期望的返回值类型。</typeparam>
+    /// <param name="token">消息标识符。</param>
+    /// <param name="parameters">要传递的参数数组。</param>
+    /// <returns>包含最后一个处理器返回值的异步任务；若未找到则返回默认值。</returns>
     public async Task<T> SendAsync<T>(string token, params object[] parameters)
     {
         if (this.m_tokenAndInstance.TryGetValue(token, out var list))

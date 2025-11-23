@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -34,11 +30,6 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// 包含当前功能件的宿主通讯端。
     /// </summary>
     IDmtpActorObject Client { get; }
-
-    /// <summary>
-    /// 关闭标记
-    /// </summary>
-    CancellationToken ClosedToken { get; }
 
     /// <summary>
     /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
@@ -75,16 +66,18 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// 在当前对点创建一个随机Id的通道
     /// </summary>
     /// <param name="metadata">可选的元数据参数，用于传递额外的信息</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将提供创建的IDmtpChannel对象</returns>
-    Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default);
+    Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在当前对点创建一个指定Id的通道
     /// </summary>
     /// <param name="id">要创建的通道的唯一标识符</param>
     /// <param name="metadata">可选参数，提供有关通道的元数据信息</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回创建的通道对象，类型为IDmtpChannel</returns>
-    Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default);
+    Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在指定路由点创建一个指定Id的通道
@@ -92,16 +85,18 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <param name="targetId">目标路由点的标识符</param>
     /// <param name="id">要创建的通道的唯一标识符</param>
     /// <param name="metadata">有关通道的元数据，可选，默认为default(Metadata)</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将包含新创建的IDmtpChannel接口实例</returns>
-    Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default);
+    Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 在指定路由点创建一个随机Id的通道
     /// </summary>
     /// <param name="targetId">目标路由点的标识符</param>
     /// <param name="metadata">可选参数，用于传递附加信息</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个异步任务，该任务完成后将提供创建的IDmtpChannel对象</returns>
-    Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default);
+    Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 尝试订阅已存在的通道。
@@ -122,16 +117,6 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <param name="actor">要添加的 Actor 实例。</param>
     void AddActor<TActor>(TActor actor) where TActor : class, IActor;
 
-
-
-    /// <summary>
-    /// 尝试添加一个实现了 <see cref="IActor"/> 接口的 Actor 实例。
-    /// </summary>
-    /// <typeparam name="TActor">Actor 的具体类型，必须实现 <see cref="IActor"/> 接口。</typeparam>
-    /// <param name="actor">要添加的 Actor 实例。</param>
-    /// <returns>如果添加成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-    bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor;
-
     /// <summary>
     /// 获取指定类型的 Actor 实例。
     /// </summary>
@@ -142,43 +127,40 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// <summary>
     /// 向当前对点发送一个Ping报文，并且等待回应。
     /// </summary>
-    /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为5000毫秒。用于控制等待回应的最大时长。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/>。该方法主要用于检测对端点的可达性。</returns>
-    Task<bool> PingAsync(int millisecondsTimeout = 5000);
+    Task<Result> PingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 向指定路由点发送一个Ping报文，并且等待回应。
     /// </summary>
     /// <param name="targetId">目标路由点的标识符。</param>
-    /// <param name="millisecondsTimeout">等待回应的超时时间，单位为毫秒。默认为5000毫秒。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-    Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000);
+    Task<Result> PingAsync(string targetId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步发送数据。
     /// </summary>
     /// <param name="protocol">指定通信协议的标识符。</param>
     /// <param name="memory">待发送的数据，以只读内存形式提供。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <remarks>
     /// 此方法用于异步发送数据，通过指定协议标识符和数据内容，实现数据的异步传输。
     /// </remarks>
-    Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory);
+    Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
+
+    Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default) where TPackage : IPackage;
+
+    Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 异步发送小（64K）对象的包。接收方可以通过ReadPackage来接收。
+    /// 尝试添加一个实现了 <see cref="IActor"/> 接口的 Actor 实例。
     /// </summary>
-    /// <param name="protocol">发送包时使用的协议标识。</param>
-    /// <param name="package">要发送的包实例。</param>
-    /// <returns>返回一个Task对象，表示异步操作的完成。</returns>
-    Task SendPackageAsync(ushort protocol, IPackage package);
-
-    /// <summary>
-    /// 异步发送以utf-8编码的字符串。
-    /// </summary>
-    /// <param name="protocol">指定的协议编号。</param>
-    /// <param name="value">要发送的字符串内容。</param>
-    /// <exception cref="ArgumentNullException">当<paramref name="value"/>为<see langword="null"/>时抛出异常。</exception>
-    Task SendStringAsync(ushort protocol, string value);
+    /// <typeparam name="TActor">Actor 的具体类型，必须实现 <see cref="IActor"/> 接口。</typeparam>
+    /// <param name="actor">要添加的 Actor 实例。</param>
+    /// <returns>如果添加成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+    bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor;
 
     /// <summary>
     /// 尝试获取指定Id的DmtpActor。一般此方法仅在Service下有效。

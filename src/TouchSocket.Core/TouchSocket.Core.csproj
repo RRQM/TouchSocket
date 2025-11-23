@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net10.0;net8.0</TargetFrameworks>
 		<PackageTags>Message;ArrayPool;Logger;Plugin;3DES;Xml;FilePool;Serialize;TouchSocket</PackageTags>
 		<Description>这是一个基础服务功能的库，其中包含：内存池、对象池、文件池、流式数据解包器、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能二进制序列化器、规范日志接口等。
 
@@ -14,52 +14,45 @@
 		<None Include="..\TouchSocket.Core.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Core.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
 	</ItemGroup>
 
-	<!--<ItemGroup Condition="'$(TargetFramework)'=='net45'">
-		<Analyzer Include="..\TouchSocket.Core.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Core.SourceGenerator.dll" />
-	</ItemGroup>-->
-
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" PrivateAssets="All" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
-		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
-		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
-		<PackageReference Include="System.ValueTuple" Version="4.6.1" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net9.0'">
+	<ItemGroup Condition="'$(TargetFramework)'=='net10.0'">
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
+		<PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="System.Memory" Version="4.5.5" />
 	</ItemGroup>
 
 	<ItemGroup>

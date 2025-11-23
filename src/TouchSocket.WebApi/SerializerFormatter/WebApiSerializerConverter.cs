@@ -11,8 +11,7 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
-using TouchSocket.Core;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Http;
 
 namespace TouchSocket.WebApi;
@@ -26,7 +25,7 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
     public override string Serialize(HttpContext state, in object target)
     {
         var accept = state.Request.Accept;
-        if (accept != null && accept.Equals("text/plain"))
+        if (accept.Equals("text/plain"))
         {
             if (target == null)
             {
@@ -52,12 +51,12 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
     /// <summary>
     /// 添加Xml序列化器
     /// </summary>
+    [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
     public void AddXmlSerializerFormatter()
     {
         this.Add(new WebApiXmlSerializerFormatter());
     }
 
-#if SystemTextJson
     /// <summary>
     /// 添加System.Text.Json序列化器
     /// </summary>
@@ -70,5 +69,4 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
 
         this.Add(new WebApiSystemTextJsonSerializerFormatter(jsonSerializerOptions));
     }
-#endif
 }

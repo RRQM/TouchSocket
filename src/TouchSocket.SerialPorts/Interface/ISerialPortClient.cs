@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.IO.Ports;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.SerialPorts;
 
 /// <summary>
@@ -41,11 +38,6 @@ public interface ISerialPortClient : ISerialPortSession, IConnectableClient, ICl
     /// </para>
     /// </summary>
     ClosingEventHandler<ISerialPortClient> Closing { get; set; }
-
-    /// <summary>
-    /// 主通信器
-    /// </summary>
-    SerialPort MainSerialPort { get; }
 
     /// <summary>
     /// 接收到数据

@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
@@ -20,8 +19,10 @@ namespace TouchSocket.Core;
 /// </summary>
 /// <typeparam name="TSource">源数据类型。</typeparam>
 /// <typeparam name="TState">状态类型。</typeparam>
-public class TouchSocketSerializerConverter<TSource, TState>
+public class TouchSocketSerializerConverter<[DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] TSource, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] TState>
 {
+    private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
+
     /// <summary>
     /// 初始化 TouchSocketSerializerConverter 类的新实例。
     /// </summary>
@@ -37,9 +38,8 @@ public class TouchSocketSerializerConverter<TSource, TState>
     /// <summary>
     /// 初始化 TouchSocketSerializerConverter 类的新实例。
     /// </summary>
-    public TouchSocketSerializerConverter() { }
-
-    private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
+    public TouchSocketSerializerConverter()
+    { }
 
     /// <summary>
     /// 添加插件
@@ -78,7 +78,7 @@ public class TouchSocketSerializerConverter<TSource, TState>
     /// <param name="targetType">目标类型</param>
     /// <returns>转换后的目标类型对象</returns>
     /// <exception cref="Exception">当无法转换时抛出异常</exception>
-    public virtual object Deserialize(TState state, TSource source, Type targetType)
+    public virtual object Deserialize(TState state, TSource source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType)
     {
         foreach (var item in this.m_converters)
         {
@@ -89,25 +89,6 @@ public class TouchSocketSerializerConverter<TSource, TState>
         }
 
         throw new Exception($"{source}无法转换为{targetType}类型。");
-    }
-
-    /// <summary>
-    /// 将目标类型对象转换源数据
-    /// </summary>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    public virtual TSource Serialize(TState state, in object target)
-    {
-        foreach (var item in this.m_converters)
-        {
-            if (item.TrySerialize(state, target, out var source))
-            {
-                return source;
-            }
-        }
-
-        throw new Exception($"{target}无法转换为{typeof(TSource)}类型。");
     }
 
     /// <summary>
@@ -137,5 +118,24 @@ public class TouchSocketSerializerConverter<TSource, TState>
                 this.m_converters.RemoveAt(i);
             }
         }
+    }
+
+    /// <summary>
+    /// 将目标类型对象转换源数据
+    /// </summary>
+    /// <param name="state"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual TSource Serialize(TState state, in object target)
+    {
+        foreach (var item in this.m_converters)
+        {
+            if (item.TrySerialize(state, target, out var source))
+            {
+                return source;
+            }
+        }
+
+        throw new Exception($"{target}无法转换为{typeof(TSource)}类型。");
     }
 }

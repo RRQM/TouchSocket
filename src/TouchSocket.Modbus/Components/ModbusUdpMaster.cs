@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
@@ -30,33 +27,30 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     public ModbusUdpMaster()
     {
         this.Protocol = TouchSocketModbusUtility.ModbusUdp;
-        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
-        {
-            MaxSign = ushort.MaxValue
-        };
+        this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0, ushort.MaxValue);
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
             var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            waitData.SetCancellationToken(token);
-            var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             waitDataStatus.ThrowIfNotRunning();
 
-            var response = waitData.WaitResult;
+            var response = waitData.CompletedData;
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
         finally
         {
-            this.m_waitHandlePool.Destroy(sign);
+            waitData.Dispose();
         }
     }
 
@@ -72,7 +66,7 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     {
         if (e.RequestInfo is ModbusTcpResponse response)
         {
-            this.m_waitHandlePool.SetRun(response);
+            this.m_waitHandlePool.Set(response);
         }
         await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

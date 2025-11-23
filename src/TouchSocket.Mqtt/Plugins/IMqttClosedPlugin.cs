@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 /// <summary>
 /// 定义一个插件接口，当Mqtt客户端关闭时调用。

@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -29,12 +30,12 @@ internal class Program
         await TestHttpClient();
 
         //此处预设一个30秒超时的请求设定。
-        var invokeOption_30s = new InvokeOption()
+        var invokeOption_30s = new InvokeOption(30 * 1000)
         {
-            FeedbackType = FeedbackType.WaitInvoke,
-            Timeout = 30 * 1000
+            FeedbackType = FeedbackType.WaitInvoke
         };
 
+        #region WebApi客户端GET调用
         {
             var client = await CreateWebApiClient();
 
@@ -42,50 +43,166 @@ internal class Program
             request.Method = HttpMethodType.Get;
             request.Querys = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("a", "10"), new KeyValuePair<string, string>("b", "20") };
 
-            var sum1 =await client.InvokeTAsync<int>("/ApiServer/Sum", invokeOption_30s, request);
+            var sum1 = await client.InvokeTAsync<int>("/ApiServer/Sum", invokeOption_30s, request);
             Console.WriteLine($"Get调用成功，结果：{sum1}");
+        }
+        #endregion
 
+        #region WebApi客户端POST调用
+        {
+            var client = await CreateWebApiClient();
 
             var requestForPost = new WebApiRequest();
             requestForPost.Method = HttpMethodType.Post;
             requestForPost.Body = new MyClass() { A = 10, B = 20 };
 
-            var sum2 =await client.InvokeTAsync<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
+            var sum2 = await client.InvokeTAsync<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
             Console.WriteLine($"Post调用成功，结果：{sum2}");
+        }
+        #endregion
 
-            var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
+        #region WebApi客户端使用代理调用
+        {
+            var client = await CreateWebApiClient();
+
+            var sum3 = await client.TestPostAsync(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
             Console.WriteLine($"代理调用成功，结果：{sum3}");
         }
+        #endregion
 
+        #region WebApi客户端字符串模板调用
         {
             var client = await CreateWebApiClientSlim();
 
-            var sum1 =await client.InvokeTAsync<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
+            var sum1 = await client.InvokeTAsync<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
             Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-            var sum2 =await client.InvokeTAsync<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
+            var sum2 = await client.InvokeTAsync<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
-            var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
+            var sum3 = client.TestPostAsync(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
             Console.WriteLine($"代理调用成功，结果：{sum3}");
         }
+        #endregion
 
         Console.ReadKey();
     }
 
+    #region WebApi客户端使用原生HttpClient
+    private static async Task UseNativeHttpClient()
+    {
+        using var httpClient = new HttpClient();
+        var result = await httpClient.GetStringAsync("http://localhost:7789/apiserver/sum?a=10&b=20");
+        Console.WriteLine(result); // 输出: 30
+    }
+    #endregion
+
+    #region WebApi客户端代码生成使用代理
+    private static async Task UseGeneratedProxy()
+    {
+        var client = new WebApiClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:7789"));
+        await client.ConnectAsync();
+
+        // 直接使用生成的扩展方法
+        var sum = await client.SumAsync(10, 20);
+        Console.WriteLine($"结果: {sum}");
+    }
+    #endregion
+
+    #region WebApi客户端使用插件
+    private static async Task UsePluginExample()
+    {
+        var client = new WebApiClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:7789")
+            .ConfigurePlugins(a =>
+            {
+                a.Add<MyWebApiPlugin>();
+            }));
+    }
+    #endregion
+
+    #region WebApi客户端异常处理
+    private static async Task ExceptionHandlingExample()
+    {
+        try
+        {
+            var client = new WebApiClient();
+            await client.SetupAsync(new TouchSocketConfig()
+                .SetRemoteIPHost("127.0.0.1:7789"));
+            await client.ConnectAsync();
+
+            var request = new WebApiRequest();
+            request.Method = HttpMethodType.Get;
+
+            var result = await client.InvokeTAsync<int>("/apiserver/sum?a=10&b=20", null, request);
+            Console.WriteLine($"结果: {result}");
+        }
+        catch (TimeoutException)
+        {
+            Console.WriteLine("请求超时");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"请求失败: {ex.Message}");
+        }
+    }
+    #endregion
+
+    #region WebApi客户端设置超时
+    private static async Task SetTimeoutExample()
+    {
+        var client = new WebApiClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:7789"));
+        await client.ConnectAsync();
+
+        // 为单次调用设置超时
+        var invokeOption = new InvokeOption(30 * 1000)
+        {
+            FeedbackType = FeedbackType.WaitInvoke
+        };
+
+        var request = new WebApiRequest();
+        request.Method = HttpMethodType.Get;
+        var result = await client.InvokeTAsync<int>("/apiserver/sum", invokeOption, request);
+    }
+    #endregion
+
+    #region WebApi客户端使用CancellationToken
+    private static async Task UseCancellationTokenExample()
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        try
+        {
+            var httpClient = new HttpClient();
+            var result = await httpClient.GetStringAsync("/apiserver/sum?a=10&b=20", cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("操作已取消");
+        }
+    }
+    #endregion
+
     private static async Task<HttpClient> TestHttpClient()
     {
-        var client = new HttpClient();
+        using var client = new HttpClient();
         await client.ConnectAsync("127.0.0.1:7789");
         Console.WriteLine("连接成功");
 
-        var responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20");
+        using var cts = new CancellationTokenSource(1000 * 10);
+        var responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20", cts.Token);
         return client;
     }
 
+    #region WebApi客户端创建WebApiClient
     private static async Task<WebApiClient> CreateWebApiClient()
     {
-        var client = new WebApiClient();
+        using var client = new WebApiClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
              .ConfigurePlugins(a =>
@@ -96,10 +213,12 @@ internal class Program
         Console.WriteLine("连接成功");
         return client;
     }
+    #endregion
 
+    #region WebApi客户端创建WebApiClientSlim
     private static async Task<WebApiClientSlim> CreateWebApiClientSlim()
     {
-        var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
+        using var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("http://127.0.0.1:7789")
              .ConfigurePlugins(a =>
@@ -109,7 +228,9 @@ internal class Program
 
         return client;
     }
+    #endregion
 
+    #region WebApi客户端插件拦截
     /// <summary>
     /// 此处可以做WebApi的请求之前和之后的拦截。
     /// </summary>
@@ -137,4 +258,5 @@ internal class Program
             await e.InvokeNext();
         }
     }
+    #endregion
 }

@@ -10,11 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
 
@@ -71,8 +69,7 @@ public static class ReflectionExtension
     /// <returns></returns>
     public static IEnumerable<string> GetTupleElementNames(this ParameterInfo parameter)
     {
-        return (IEnumerable<string>)DynamicMethodMemberAccessor.Default.GetValue(parameter.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")), "TransformNames");
-        //return ((dynamic)parameter.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+        return parameter.GetCustomAttribute<TupleElementNamesAttribute>().TransformNames;
     }
 
     /// <summary>
@@ -109,9 +106,7 @@ public static class ReflectionExtension
     /// <returns></returns>
     public static IEnumerable<string> GetTupleElementNames(this MemberInfo memberInfo)
     {
-        return (IEnumerable<string>)DynamicMethodMemberAccessor.Default.GetValue(memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")), "TransformNames");
-
-        //return ((dynamic)memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+        return memberInfo.GetCustomAttribute<TupleElementNamesAttribute>().TransformNames;
     }
 
     /// <summary>
@@ -189,12 +184,7 @@ public static class ReflectionExtension
         }
 
         // 判断属性的获取方法是否为公共的且无参数
-        if (propertyInfo.GetMethod.IsPublic && propertyInfo.GetMethod.GetParameters().Length == 0)
-        {
-            return true;
-        }
-
-        return false;
+        return propertyInfo.GetMethod.IsPublic && propertyInfo.GetMethod.GetParameters().Length == 0;
     }
 
     #endregion FieldInfo

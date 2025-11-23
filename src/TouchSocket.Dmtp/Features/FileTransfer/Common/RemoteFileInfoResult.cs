@@ -10,14 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
 /// 远程访问结果
 /// </summary>
-public struct RemoteFileInfoResult : IResult
+public struct RemoteFileInfoResult
 {
     /// <summary>
     /// 构造函数：初始化远程访问结果对象

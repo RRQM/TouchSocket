@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -35,21 +30,31 @@ public class WebApiClient : HttpClientBase, IWebApiClient
             new JsonStringToClassSerializerFormatter<HttpRequest>());
     }
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
     /// <summary>
     /// 字符串转化器
     /// </summary>
     public StringSerializerConverter<HttpRequest> Converter { get; }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.TcpConnectAsync(millisecondsTimeout, token);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_semaphoreSlim.Release();
+        }
     }
 
     #region Rpc调用
 
     /// <inheritdoc/>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
         {
@@ -57,24 +62,8 @@ public class WebApiClient : HttpClientBase, IWebApiClient
         }
 
         var request = new HttpRequest();
-        request.URL = (invokeKey);
-        switch (webApiRequest.Method)
-        {
-            case HttpMethodType.Get:
-                request.Method = HttpMethod.Get;
-                break;
-            case HttpMethodType.Post:
-                request.Method = HttpMethod.Post;
-                break;
-            case HttpMethodType.Put:
-                request.Method = HttpMethod.Put;
-                break;
-            case HttpMethodType.Delete:
-                request.Method = HttpMethod.Delete;
-                break;
-            default:
-                break;
-        }
+        request.URL = invokeKey;
+        request.Method = webApiRequest.Method;
         request.InitHeaders();
         if (webApiRequest.Headers != null)
         {
@@ -105,7 +94,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
 
         await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
 
-        using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             var response = responseResult.Response;
             await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));

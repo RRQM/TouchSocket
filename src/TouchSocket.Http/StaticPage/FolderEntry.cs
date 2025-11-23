@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 namespace TouchSocket.Http;
 
 internal class FolderEntry : HashSet<string>

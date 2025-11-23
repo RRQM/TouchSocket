@@ -28,5 +28,38 @@
         "winform"
     ],
     "editor.wordWrap": "on",
-    // "editor.wordWrapColumn": 80
+    // "editor.wordWrapColumn": 80,
+    // 文件编码设置
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
+    // Git 提交配置
+    "git.inputValidationLength": 50,
+    "git.inputValidationSubjectLength": 50,
+    "git.verboseCommit": true,
+    "scm.inputFontFamily": "Consolas, 'Courier New', monospace",
+    "scm.inputFontSize": 14,
+    // TouchSocket 项目提交规范提示
+    "git.commitTemplate": "../../gitmessage-template.txt",
+    // Copilot 配置
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": true
+    },
+    // Git 提交相关的 Copilot 提示
+    "github.copilot.editor.enableAutoCompletions": true,
+    // Paste Image 插件配置
+    "pasteImage.path": "${projectRoot}/static/img/docs/",
+    "pasteImage.basePath": "${projectRoot}",
+    "pasteImage.forceUnixStyleSeparator": true,
+    "pasteImage.prefix": "",
+    "pasteImage.suffix": "",
+    "pasteImage.insertPattern": "<img src={require('@site/${imageFilePath}').default} width=\"500\" />",
+    "pasteImage.namePrefix": "",
+    "pasteImage.nameSuffix": "",
+    "pasteImage.encodePath": "urlEncodeSpace",
+    "pasteImage.showFilePathConfirmInputBox": false,
+    "pasteImage.filePathConfirmInputBoxMode": "onlyName",
+    "pasteImage.defaultName": "${currentFileNameWithoutExt}-YYYYMMDDHHmmss"
 }

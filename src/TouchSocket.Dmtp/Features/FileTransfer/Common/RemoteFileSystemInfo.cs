@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
@@ -52,24 +48,24 @@ public abstract class RemoteFileSystemInfo : PackageBase
     public string Name { get; set; }
 
     /// <inheritdoc/>
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteDateTime(this.LastWriteTime);
-        byteBlock.WriteDateTime(this.LastAccessTime);
-        byteBlock.WriteDateTime(this.CreationTime);
-        byteBlock.WriteInt32((int)this.Attributes);
-        byteBlock.WriteString(this.FullName);
-        byteBlock.WriteString(this.Name);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.LastWriteTime);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.LastAccessTime);
+        WriterExtension.WriteValue<TWriter, DateTime>(ref writer, this.CreationTime);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, (int)this.Attributes);
+        WriterExtension.WriteString(ref writer, this.FullName);
+        WriterExtension.WriteString(ref writer, this.Name);
     }
 
     /// <inheritdoc/>
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.LastWriteTime = byteBlock.ReadDateTime();
-        this.LastAccessTime = byteBlock.ReadDateTime();
-        this.CreationTime = byteBlock.ReadDateTime();
-        this.Attributes = (FileAttributes)byteBlock.ReadInt32();
-        this.FullName = byteBlock.ReadString();
-        this.Name = byteBlock.ReadString();
+        this.LastWriteTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.LastAccessTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.CreationTime = ReaderExtension.ReadValue<TReader, DateTime>(ref reader);
+        this.Attributes = (FileAttributes)ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.FullName = ReaderExtension.ReadString(ref reader);
+        this.Name = ReaderExtension.ReadString(ref reader);
     }
 }

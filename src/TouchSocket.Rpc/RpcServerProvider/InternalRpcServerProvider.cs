@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Reflection;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -87,10 +84,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
                     .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
-            if (rpcCallContextAccessor is not null)
-            {
-                rpcCallContextAccessor.CallContext = default;
-            }
+            rpcCallContextAccessor?.CallContext = default;
         }
 
         return invokeResult;

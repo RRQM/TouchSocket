@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.JsonRpc;
 
 /// <summary>
@@ -19,13 +17,6 @@ namespace TouchSocket.JsonRpc;
 /// </summary>
 public interface IJsonRpcRequestInfo
 {
-    /// <summary>
-    /// 获取JsonRpc数据源。
-    /// </summary>
-    /// <returns></returns>
-    [Obsolete("该方法由于性能问题已被弃用，请使用GetJsonRpcMemory代替", true)]
-    string GetJsonRpcString();
-
     /// <summary>
     /// 获取JsonRpc数据源的内存表示形式。
     /// </summary>

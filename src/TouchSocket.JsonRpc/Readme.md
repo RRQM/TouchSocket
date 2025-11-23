@@ -13,13 +13,12 @@ TouchSocket.JsonRpc 是一个提供 JsonRpc 服务器和客户端的组件库。
 
 ## 支持的目标框架
 - net481
-- net45
 - net462
 - net472
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 贡献与反馈

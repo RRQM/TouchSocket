@@ -10,23 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO.Ports;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.SerialPorts;
 
 /// <inheritdoc cref="SerialPortClientBase"/>
 public class SerialPortClient : SerialPortClientBase, ISerialPortClient
 {
     #region 属性
-
-    /// <inheritdoc/>
-    public SerialPort MainSerialPort => this.ProtectedMainSerialPort;
 
     #endregion 属性
 
@@ -182,28 +171,21 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     #region 异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(memory);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
-
-    /// <inheritdoc/>
-    public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(transferBytes);
-    }
-
     #endregion 异步发送
 
     /// <inheritdoc/>
-    public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public virtual Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return base.SerialPortConnectAsync(millisecondsTimeout, token);
+        return base.SerialPortConnectAsync(cancellationToken);
     }
 }

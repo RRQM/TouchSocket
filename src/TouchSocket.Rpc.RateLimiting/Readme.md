@@ -16,7 +16,7 @@ TouchSocket.Rpc.RateLimiting 是一个扩展于 Rpc 管理平台的限流包。�
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 贡献与反馈

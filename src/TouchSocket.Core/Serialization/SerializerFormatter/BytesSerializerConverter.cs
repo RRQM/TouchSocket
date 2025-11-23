@@ -10,20 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 字节类转换器
 /// </summary>
-public class BytesSerializerConverter<TState> : TouchSocketSerializerConverter<byte[], TState>
+public class BytesSerializerConverter<[DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] TState> : TouchSocketSerializerConverter<ReadOnlyMemory<byte>, TState>
 {
-    ///// <summary>
-    ///// 字节类转换器
-    ///// </summary>
-    //public BytesConverter()
-    //{
-    //    this.Add(new JsonBytesToClassConverter());
-    //}
 }
 
 /// <summary>

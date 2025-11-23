@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
@@ -23,33 +20,32 @@ namespace TouchSocket.JsonRpc;
 /// WebSocketJsonRpcParserPlugin
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketConnectedPlugin, IWebSocketReceivedPlugin
 {
+    private readonly WebSocketJsonRpcOption m_option;
+
     /// <summary>
     /// WebSocketJsonRpcParserPlugin
     /// </summary>
     /// <param name="rpcServerProvider"></param>
-    public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
+    /// <param name="option">WebSocket JsonRpc配置选项</param>
+    public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, WebSocketJsonRpcOption option) : base(rpcServerProvider, option)
     {
+        this.m_option = option;
     }
 
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    public Func<IWebSocket, HttpContext, Task<bool>> AllowJsonRpc { get; set; }
-
     /// <inheritdoc/>
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
-        if (this.AllowJsonRpc != null)
+        if (this.m_option.AllowJsonRpc != null)
         {
-            if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.m_option.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var jsonRpcActor = new JsonRpcActor()
                 {
                     SerializerConverter = this.SerializerConverter,
                     Resolver = client.Client.Resolver,
-                    SendAction = (data) => client.SendAsync(data, WSDataType.Text)
+                    SendAction = (data, cancellationToken) => client.SendAsync(data, WSDataType.Text, true, cancellationToken)
                 };
 
                 jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
@@ -68,38 +64,11 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
         {
             e.Handled = true;
 
-            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData.Memory, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
             await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
-
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    /// <param name="allowJsonRpc"></param>
-    /// <returns></returns>
-    public WebSocketJsonRpcParserPlugin SetAllowJsonRpc(Func<IWebSocket, HttpContext, Task<bool>> allowJsonRpc)
-    {
-        this.AllowJsonRpc = allowJsonRpc;
-        return this;
-    }
-
-    /// <summary>
-    /// 经过判断是否标识当前的客户端为JsonRpc
-    /// </summary>
-    /// <param name="allowJsonRpc"></param>
-    /// <returns></returns>
-    public WebSocketJsonRpcParserPlugin SetAllowJsonRpc(Func<IWebSocket, HttpContext, bool> allowJsonRpc)
-    {
-        this.AllowJsonRpc = (client, context) =>
-        {
-            return Task.FromResult(allowJsonRpc(client, context));
-        };
-        return this;
-    }
-
-
 }

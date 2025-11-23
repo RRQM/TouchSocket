@@ -10,47 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Http.WebSockets;
 
-internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceiveResult>, IWebSocket
+internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSocket
 {
-    WebSocketReceiveBlockResult m_blockResult;
+    private readonly AsyncExchange<WSDataFrame> m_asyncExchange = new();
 
-    public async Task Complete(string msg)
+    private string msg;
+
+    public void Complete(string msg)
     {
         try
         {
-            this.m_blockResult.IsCompleted = true;
-            this.m_blockResult.Message = msg;
-            await this.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_asyncExchange.Complete();
+            this.msg = msg;
         }
         catch
         {
         }
     }
 
-    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+    public async ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfNotAllowAsyncRead();
-        return base.ProtectedReadAsync(token);
-    }
-    internal async Task InputReceiveAsync(WSDataFrame dataFrame)
-    {
-        this.m_blockResult.DataFrame = dataFrame;
-        await base.TriggerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken);
+        var frame = readLease.Value;
+        return new WebSocketReceiveBlockResult(readLease.Dispose)
+        {
+            IsCompleted = readLease.IsCompleted,
+            DataFrame = frame,
+            Message = this.msg
+        };
     }
 
-    protected override IWebSocketReceiveResult CreateResult(Action actionForDispose)
+    internal ValueTask InputReceiveAsync(WSDataFrame dataFrame, CancellationToken cancellationToken)
     {
-        this.m_blockResult = new WebSocketReceiveBlockResult(actionForDispose);
-        return this.m_blockResult;
+        return this.m_asyncExchange.WriteAsync(dataFrame, cancellationToken);
     }
+
     private void ThrowIfNotAllowAsyncRead()
     {
         if (!this.m_allowAsyncRead)
@@ -58,8 +57,10 @@ internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceive
             ThrowHelper.ThrowNotSupportedException(TouchSocketHttpResource.NotAllowAsyncRead);
         }
     }
+
     #region Class
-    sealed class WebSocketReceiveBlockResult : IWebSocketReceiveResult
+
+    private sealed class WebSocketReceiveBlockResult : IWebSocketReceiveResult
     {
         private readonly Action m_actionForDispose;
 
@@ -67,6 +68,7 @@ internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceive
         {
             this.m_actionForDispose = actionForDispose;
         }
+
         public WSDataFrame DataFrame { get; set; }
 
         /// <summary>
@@ -84,6 +86,6 @@ internal sealed partial class InternalWebSocket : BlockSegment<IWebSocketReceive
             this.m_actionForDispose.Invoke();
         }
     }
-    #endregion
-}
 
+    #endregion Class
+}

@@ -12,7 +12,6 @@
     border-radius: 5px;
     text-decoration: none;
     color: #333;
-    transition: background-color 0.3s ease;
 }
 
 .card-link:hover {
@@ -45,11 +44,59 @@
     /* 让描述占据剩余空间 */
 }
 
+/* 新增：双链接按钮样式 */
+.card-links {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.link-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #333;
+    background-color: #fff;
+    font-size: 14px;
+}
+
+.link-button:hover {
+    background-color: #f5f5f5;
+    border-color: #bbb;
+}
+
+.link-button.gitee {
+    border-color: #c71d23;
+}
+
+.link-button.gitee:hover {
+    background-color: #c71d23;
+    color: white;
+}
+
+.link-button.github {
+    border-color: #333;
+}
+
+.link-button.github:hover {
+    background-color: #333;
+    color: white;
+}
+
+.link-icon {
+    width: 16px;
+    height: 16px;
+}
+
 .pro-badge {
     position: absolute;
     top: 5px;
     right: 5px;
-    z-index: 1;
+    z-index: 2;
 }
 
 .pro-badge a {
@@ -59,6 +106,7 @@
     background-color: #007bff;
     color: white;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .pro-badge a:hover {

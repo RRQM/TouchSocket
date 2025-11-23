@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER || NET481_OR_GREATER
 using TouchSocket.Rpc;
 
 namespace TouchSocket.XmlRpc;
@@ -31,6 +30,3 @@ public abstract class XmlRpcDispatchProxy : XmlRpcDispatchProxy<IXmlRpcClient>
 {
 
 }
-
-
-#endif

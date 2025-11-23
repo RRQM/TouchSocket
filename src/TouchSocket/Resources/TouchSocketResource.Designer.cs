@@ -124,6 +124,15 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Pause reconnection. 的本地化字符串。
+        /// </summary>
+        public static string PauseReconnection {
+            get {
+                return ResourceManager.GetString("PauseReconnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Start polling based reconnection, with an interval of {0}. 的本地化字符串。
         /// </summary>
         public static string PollingBegin {
@@ -192,6 +201,15 @@ namespace TouchSocket.Resources {
         public static string TimedoutWithoutSending {
             get {
                 return ResourceManager.GetString("TimedoutWithoutSending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Transport is null. 的本地化字符串。
+        /// </summary>
+        public static string TransportIsNull {
+            get {
+                return ResourceManager.GetString("TransportIsNull", resourceCulture);
             }
         }
         

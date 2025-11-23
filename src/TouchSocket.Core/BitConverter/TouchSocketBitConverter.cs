@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
-using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -19,7 +18,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 提供了与TouchSocket库相关的字节序列和对象之间的转换功能。
 /// </summary>
-public sealed partial class TouchSocketBitConverter
+public sealed class TouchSocketBitConverter
 {
     /// <summary>
     /// 以大端
@@ -111,6 +110,7 @@ public sealed partial class TouchSocketBitConverter
     /// <param name="endianType">字节序类型</param>
     /// <returns>对应的字节交换器</returns>
     /// <exception cref="InvalidOperationException">当字节序类型不支持时抛出</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TouchSocketBitConverter GetBitConverter(EndianType endianType)
     {
         switch (endianType)
@@ -127,6 +127,20 @@ public sealed partial class TouchSocketBitConverter
                 ThrowHelper.ThrowInvalidEnumArgumentException(endianType);
                 return default;
         }
+    }
+
+    /// <summary>
+    /// 获取指定值的字节表示形式，返回只读内存。转换时会考虑当前实例的字节序设置。
+    /// </summary>
+    /// <typeparam name="T">要转换的值的类型，必须是非托管类型。</typeparam>
+    /// <param name="value">要转换为字节数组的值。</param>
+    /// <returns>表示该值的字节只读内存。</returns>
+    public ReadOnlyMemory<byte> GetBytes<T>(T value) where T : unmanaged
+    {
+        var size = Unsafe.SizeOf<T>();
+        var bytes = new byte[size];
+        this.WriteBytes(bytes, value);
+        return bytes;
     }
 
     /// <summary>
@@ -156,7 +170,7 @@ public sealed partial class TouchSocketBitConverter
         }
         fixed (byte* p = &span[0])
         {
-            if (this.IsSameOfSet())
+            if (this.IsSameOfSet() || size == 1)
             {
                 return Unsafe.Read<T>(p);
             }
@@ -197,113 +211,6 @@ public sealed partial class TouchSocketBitConverter
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// 不安全地将字节引用转换为指定类型
-    /// </summary>
-    /// <typeparam name="T">要转换成的类型</typeparam>
-    /// <param name="source">要转换的字节引用</param>
-    /// <returns>转换后的值</returns>
-    /// <exception cref="NotSupportedException">当类型T不支持时抛出</exception>
-    public unsafe T UnsafeTo<T>(ref byte source) where T : unmanaged
-    {
-        var size = sizeof(T);
-
-        fixed (byte* p = &source)
-        {
-            if (this.IsSameOfSet())
-            {
-                return Unsafe.Read<T>(p);
-            }
-            else
-            {
-                if (size == 2)
-                {
-                    this.ByteTransDataFormat2_Net6(p);
-                    var v = Unsafe.Read<T>(p);
-                    this.ByteTransDataFormat2_Net6(p);
-                    return v;
-                }
-                else if (size == 4)
-                {
-                    this.ByteTransDataFormat4_Net6(p);
-                    var v = Unsafe.Read<T>(p);
-                    this.ByteTransDataFormat4_Net6(p);
-                    return v;
-                }
-                else if (size == 8)
-                {
-                    this.ByteTransDataFormat8_Net6(p);
-                    var v = Unsafe.Read<T>(p);
-                    this.ByteTransDataFormat8_Net6(p);
-                    return v;
-                }
-                else if (size == 16)
-                {
-                    this.ByteTransDataFormat16_Net6(p);
-                    var v = Unsafe.Read<T>(p);
-                    this.ByteTransDataFormat16_Net6(p);
-                    return v;
-                }
-                else
-                {
-                    ThrowHelper.ThrowNotSupportedException(size.ToString());
-                    return default;
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// 不安全地将值直接写入字节数组中。
-    /// </summary>
-    /// <typeparam name="T">要写入的值的类型，必须是值类型。</typeparam>
-    /// <param name="source">指向字节数组的引用，从这里开始写入。</param>
-    /// <param name="value">要写入的值。</param>
-    /// <returns>写入的字节数。</returns>
-    /// <remarks>
-    /// 此方法用于在字节数组中直接插入结构，主要用于性能考虑。
-    /// 它绕过了C#的类型安全性，因此使用时必须确保T是固定大小的值类型。
-    /// 如果数据格式不匹配或大小不支持，将抛出异常。
-    /// </remarks>
-    public unsafe int UnsafeWriteBytes<T>(ref byte source, T value) where T : unmanaged
-    {
-        // 获取要写入的值的类型大小。
-        var size = sizeof(T);
-
-        // 直接将值写入字节数组中。
-        Unsafe.As<byte, T>(ref source) = value;
-
-        // 如果当前数据格式不需要转换，则直接返回。
-        if (!this.IsSameOfSet())
-        {
-            // 根据值的大小选择不同的字节转换方法。
-            if (size == 2)
-            {
-                this.ByteTransDataFormat2_Net6(ref source);
-            }
-            else if (size == 4)
-            {
-                this.ByteTransDataFormat4_Net6(ref source);
-            }
-            else if (size == 8)
-            {
-                this.ByteTransDataFormat8_Net6(ref source);
-            }
-            else if (size == 16)
-            {
-                this.ByteTransDataFormat16_Net6(ref source);
-            }
-            else
-            {
-                // 如果类型大小不支持，则抛出异常。
-                ThrowHelper.ThrowNotSupportedException(size.ToString());
-            }
-        }
-
-        // 返回写入的字节数。
-        return size;
     }
 
     /// <summary>
@@ -321,6 +228,13 @@ public sealed partial class TouchSocketBitConverter
             ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(span.Length), span.Length, size);
         }
         Unsafe.As<byte, T>(ref span[0]) = value;
+
+        if (size == 1)
+        {
+            // 对于单字节类型，不需要转换
+            return size;
+        }
+
         if (!this.IsSameOfSet())
         {
             if (size == 2)
@@ -347,890 +261,6 @@ public sealed partial class TouchSocketBitConverter
 
         return size;
     }
-
-    #region ushort
-
-    /// <summary>
-    /// 将ushort类型值转换为字节数组。
-    /// </summary>
-    /// <param name="value">要转换的ushort类型值。</param>
-    /// <returns>转换后的字节数组。</returns>
-    public byte[] GetBytes(ushort value)
-    {
-        // 使用BitConverter将ushort值转换为字节数组。
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前环境的字节序与目标字节序不同，则需要进行反转。
-        if (!this.IsSameOfSet())
-        {
-            // 反转字节数组，以匹配目标字节序。
-            Array.Reverse(bytes);
-        }
-
-        // 返回最终的字节数组。
-        return bytes;
-    }
-
-    /// <summary>
-    /// 转换为指定端模式的2字节转换为UInt16数据。
-    /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ushort ToUInt16(byte[] buffer, int offset)
-    {
-        var len = buffer.Length - offset;
-        if (len < 2)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(len), len, 2);
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<ushort>(p);
-                }
-                else
-                {
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<ushort>(p);
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion ushort
-
-    #region ulong
-
-    /// <summary>
-    /// 将指定的ulong类型值转换为8字节的字节数组。
-    /// 此方法主要用于处理数据转换，确保数据格式符合特定需求。
-    /// </summary>
-    /// <param name="value">需要转换的ulong类型值。</param>
-    /// <returns>转换后的8字节字节数组。</returns>
-    public byte[] GetBytes(ulong value)
-    {
-        // 使用系统方法将ulong值转换为字节数组。
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前实例的数据格式与预设的不一致，则需要进行数据格式转换。
-        if (!this.IsSameOfSet())
-        {
-            // 调用私有方法对字节数组进行格式转换。
-            bytes = this.ByteTransDataFormat8(bytes, 0);
-        }
-
-        // 返回最终的字节数组。
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将ulong类型值转换为指定端的8字节
-    /// </summary>
-    /// <param name="buffer">指向存放转换后字节的缓冲区的引用</param>
-    /// <param name="value">需要转换的ulong类型值</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, ulong value)
-    {
-        // 直接将字节缓冲区的首地址转换为ulong类型引用，并赋值，实现字节顺序的转换
-        Unsafe.As<byte, ulong>(ref buffer) = value;
-
-        // 如果当前实例的字节序与目标字节序不同，则需要进行字节顺序转换
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat8_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 转换为指定端模式的Ulong数据。
-    /// </summary>
-    /// <param name="buffer">包含要转换数据的字节数组。</param>
-    /// <param name="offset">要转换数据的起始位置。</param>
-    /// <returns>转换后的ulong数据。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">如果offset参数导致转换的字节数不足8字节，则抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ulong ToUInt64(byte[] buffer, int offset)
-    {
-        // 检查字节数组的长度是否足够转换8字节的ulong数据
-        if (buffer.Length - offset < 8)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            // 固定数组的起始地址，以便能够进行不安全的直接读取
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果是相同集合，则直接读取ulong数据
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<ulong>(p);
-                }
-                else
-                {
-                    // 否则，先转换字节顺序，然后读取ulong数据，最后恢复字节顺序
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<ulong>(p);
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion ulong
-
-    #region bool
-
-    /// <summary>
-    /// 将布尔值转换为指定端1字节
-    /// </summary>
-    /// <param name="value">要转换的布尔值</param>
-    /// <returns>转换后的字节数组</returns>
-    public byte[] GetBytes(bool value)
-    {
-        // 使用BitConverter类的GetBytes方法将布尔值转换为字节数组
-        return BitConverter.GetBytes(value);
-    }
-
-    /// <summary>
-    /// 将布尔数组转为字节数组。不足位补0。
-    /// </summary>
-    /// <param name="values">待转换的布尔数组。</param>
-    /// <returns>转换后的字节数组。</returns>
-    public byte[] GetBytes(ReadOnlySpan<bool> values)
-    {
-        // 检查传入的布尔数组是否为空
-        if (values.IsEmpty)
-        {
-            return [];
-        }
-
-        // 计算所需的字节数组的长度，如果布尔数组的长度不是8的倍数，则向上取整
-        var numArray = new byte[values.Length % 8 == 0 ? values.Length / 8 : (values.Length / 8) + 1];
-
-        // 遍历布尔数组，将布尔值转换为字节数组
-        for (var index = 0; index < values.Length; ++index)
-        {
-            // 如果当前布尔值为true，则设置对应的字节位为1
-            if (values[index])
-            {
-                numArray[index / 8] = numArray[index / 8].SetBit(index % 8, true);
-            }
-        }
-        // 返回转换后的字节数组
-        return numArray;
-    }
-
-    /// <summary>
-    /// 将布尔值转换为指定端1字节
-    /// </summary>
-    /// <param name="buffer">指向用于存储转换结果的字节的引用</param>
-    /// <param name="value">要转换的布尔值</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, bool value)
-    {
-        // 使用不安全代码直接将byte引用转换为bool引用，并赋值
-        Unsafe.As<byte, bool>(ref buffer) = value;
-    }
-
-    /// <summary>
-    /// 将布尔值数组转换为字节序列。
-    /// </summary>
-    /// <param name="buffer">指向目标字节缓冲区的引用。</param>
-    /// <param name="values">待转换的布尔值数组。</param>
-    /// <exception cref="ArgumentNullException">如果values参数为<see langword="null"/>，则抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void GetBytes(ref byte buffer, ReadOnlySpan<bool> values)
-    {
-        // 检查输入的布尔值数组是否为空
-        if (values.IsEmpty)
-        {
-            return;
-        }
-        // 使用fixed语句固定缓冲区的起始地址，以便直接操作内存
-        fixed (byte* p = &buffer)
-        {
-            // 遍历布尔值数组
-            for (var index = 0; index < values.Length; ++index)
-            {
-                // 如果当前布尔值为true，则设置对应位的值为1
-                if (values[index])
-                {
-                    p[index / 8] = p[index / 8].SetBit(index % 8, true);
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    ///  转换为指定端模式的bool数据。
-    /// </summary>
-    /// <param name="buffer">包含转换为bool所需的字节的字节数组。</param>
-    /// <param name="offset">从buffer中的哪个位置开始读取字节的偏移量。</param>
-    /// <returns>从指定的字节数组和偏移量位置转换得到的bool值。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ToBoolean(byte[] buffer, int offset)
-    {
-        return BitConverter.ToBoolean(buffer, offset);
-    }
-
-    /// <summary>
-    /// 将指定的字节，按位解析为bool数组。
-    /// </summary>
-    /// <param name="buffer">包含待解析位的字节数组。</param>
-    /// <param name="offset">在字节数组中开始解析的起始位置。</param>
-    /// <param name="length">要解析的字节数。</param>
-    /// <returns>返回一个bool数组，其中每个元素对应字节中的一个位。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool[] ToBooleansByBit(byte[] buffer, int offset, int length)
-    {
-        return this.ToBooleansByBit(new ReadOnlySpan<byte>(buffer, offset, length));
-    }
-
-    /// <summary>
-    /// 将指定的字节，按位解析为bool数组。
-    /// </summary>
-    /// <param name="span"></param>
-    /// <returns>返回一个bool数组，其中每个元素对应字节中的一个位。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool[] ToBooleansByBit(ReadOnlySpan<byte> span)
-    {
-        var bools = new bool[8 * span.Length];
-        this.ToBooleansByBit(span, bools);
-        return bools;
-    }
-
-    /// <summary>
-    /// 将字节跨度按位解析为布尔值，并存储在布尔值跨度中。
-    /// </summary>
-    /// <param name="byteSpan">包含待解析字节的只读跨度。</param>
-    /// <param name="boolSpan">存储解析结果的布尔值跨度。</param>
-    /// <returns>解析的布尔值数量。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">当布尔值跨度长度不足以存储解析结果时抛出。</exception>
-    public int ToBooleansByBit(ReadOnlySpan<byte> byteSpan,Span<bool> boolSpan)
-    {
-        if (byteSpan.IsEmpty)
-        {
-            return 0;
-        }
-        var length = byteSpan.Length * 8;
-       
-        if (boolSpan.Length < length)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(boolSpan.Length), boolSpan.Length, length);
-        }
-
-        for (var i = 0; i < boolSpan.Length; i++)
-        {
-            var byteIndex = i / 8;
-            var bitIndex = i % 8;
-            boolSpan[i] = byteSpan[byteIndex].GetBit(bitIndex);
-        }
-        return length;
-    }
-
-    /// <summary>
-    /// 将指定的字节，按位解析为bool数组。
-    /// </summary>
-    /// <param name="buffer">指向待解析的字节缓冲区的引用。</param>
-    /// <param name="length">要解析的字节数。</param>
-    /// <returns>包含每个字节按位解析后的bool值的数组。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe bool[] ToBooleansByBit(ref byte buffer, int length)
-    {
-        fixed (byte* p=&buffer)
-        {
-            return this.ToBooleansByBit(new ReadOnlySpan<byte>(p, length));
-        }
-        
-    }
-    #endregion bool
-
-    #region char
-
-    /// <summary>
-    /// 将指定字符转换为字节数组
-    /// </summary>
-    /// <param name="value">要转换的字符</param>
-    /// <returns>字节数组</returns>
-    public byte[] GetBytes(char value)
-    {
-        // 使用BitConverter将字符转换为字节数组
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前环境的字节顺序与目标端序不一致，则翻转字节数组
-        if (!this.IsSameOfSet())
-        {
-            Array.Reverse(bytes);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将指定值转换为2字节，并存储到缓冲区中
-    /// </summary>
-    /// <param name="buffer">指向存储转换后字节的缓冲区的引用</param>
-    /// <param name="value">要转换的字符值</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, char value)
-    {
-        // 直接将字符值写入缓冲区，利用类型转换提高性能
-        Unsafe.As<byte, char>(ref buffer) = value;
-
-        // 如果当前格式与目标格式不同，则进行额外的格式转换处理
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat2_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    ///  转换为指定端模式的Char数据。
-    /// </summary>
-    /// <param name="buffer">包含要转换数据的字节数组。</param>
-    /// <param name="offset">要转换数据的起始位置。</param>
-    /// <returns>转换后的Char数据。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">如果offset参数导致无法转换出Char数据，则抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public char ToChar(byte[] buffer, int offset)
-    {
-        // 检查数组长度是否足够从offset位置读取2个字节，因为Char数据占2个字节。
-        if (buffer.Length - offset < 2)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            // 使用固定指针直接访问数组中的字节，提高性能。
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果是统一的字节序模式，则直接读取数据。
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<char>(p);
-                }
-                else
-                {
-                    // 否则，先转换数组中的数据格式，读取后再次转换回来。
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<char>(p);
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion char
-
-    #region short
-
-    /// <summary>
-    /// 将16位整数转换为指定字节序的字节数组。
-    /// </summary>
-    /// <param name="value">要转换的16位整数。</param>
-    /// <returns>包含转换后字节的字节数组。</returns>
-    public byte[] GetBytes(short value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前实例的字节序与设定的字节序不同，则需要反转字节数组。
-        if (!this.IsSameOfSet())
-        {
-            Array.Reverse(bytes);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将16位整数转换为指定字节序，并存储在指定的字节缓冲区中。
-    /// </summary>
-    /// <param name="buffer">目标字节缓冲区。</param>
-    /// <param name="value">要转换的16位整数。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, short value)
-    {
-        // 使用不安全代码直接转换字节到16位整数。
-        Unsafe.As<byte, short>(ref buffer) = value;
-        // 如果当前实例的字节序与设定的字节序不同，则需要转换字节顺序。
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat2_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从指定字节数组和偏移量处读取两个字节，并根据设定的字节序模式转换为16位整数。
-    /// </summary>
-    /// <param name="buffer">包含数据的字节数组。</param>
-    /// <param name="offset">从字节数组中的哪个位置开始读取。</param>
-    /// <returns>转换得到的16位整数。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public short ToInt16(byte[] buffer, int offset)
-    {
-        // 检查字节数组的长度是否足够从offset开始读取两个字节。
-        if (buffer.Length - offset < 2)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果当前实例的字节序与设定的字节序相同，则直接读取。
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<short>(p);
-                }
-                else
-                {
-                    // 否则，需要先转换字节序，再读取，然后恢复原来的字节序。
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<short>(p);
-                    this.ByteTransDataFormat2_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion short
-
-    #region int
-
-    /// <summary>
-    /// 将整数转换为指定字节序的4字节数组。
-    /// </summary>
-    /// <param name="value">要转换的整数。</param>
-    /// <returns>转换后的字节数组。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte[] GetBytes(int value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        if (!this.IsSameOfSet())
-        {
-            bytes = this.ByteTransDataFormat4(bytes, 0);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将整数转换为指定字节序，并存储在给定的字节数组中。
-    /// </summary>
-    /// <param name="buffer">存储转换结果的字节数组。</param>
-    /// <param name="value">要转换的整数。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, int value)
-    {
-        Unsafe.As<byte, int>(ref buffer) = value;
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat4_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从字节数组中根据指定字节序转换为int。
-    /// </summary>
-    /// <param name="buffer">包含要转换数据的字节数组。</param>
-    /// <param name="offset">数据在字节数组中的起始位置。</param>
-    /// <returns>转换得到的整数。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">如果从offset开始不足4个字节，抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ToInt32(byte[] buffer, int offset)
-    {
-        if (buffer.Length - offset < 4)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<int>(p);
-                }
-                else
-                {
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<int>(p);
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion int
-
-    #region long
-
-    /// <summary>
-    /// 将长整型值转换为按指定端序排列的8字节数组。
-    /// </summary>
-    /// <param name="value">要转换的长整型值。</param>
-    /// <returns>一个包含转换后的8字节的数组。</returns>
-    public byte[] GetBytes(long value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前实例的端序与系统默认不同，则进行端序转换
-        if (!this.IsSameOfSet())
-        {
-            bytes = this.ByteTransDataFormat8(bytes, 0);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将长整型值转换为按指定端序排列的字节，并存储在缓冲区中。
-    /// </summary>
-    /// <param name="buffer">存储转换后数据的缓冲区。</param>
-    /// <param name="value">要转换的长整型值。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, long value)
-    {
-        Unsafe.As<byte, long>(ref buffer) = value;
-        // 如果当前实例的端序与系统默认不同，则进行端序转换
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat8_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从字节数组中读取按指定端序排列的long值。
-    /// </summary>
-    /// <param name="buffer">包含数据的字节数组。</param>
-    /// <param name="offset">从数组的哪个位置开始读取数据。</param>
-    /// <returns>读取到的长整型值。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public long ToInt64(byte[] buffer, int offset)
-    {
-        // 确保从offset开始的buffer长度至少为8字节
-        if (buffer.Length - offset < 8)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果当前实例的端序与系统默认相同，则直接读取数据
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<long>(p);
-                }
-                else
-                {
-                    // 否则，先进行端序转换，然后读取数据，并且再次转换以恢复原状
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<long>(p);
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion long
-
-    #region uint
-
-    /// <summary>
-    /// 将无符号整数转换为指定字节序的4字节数组。
-    /// </summary>
-    /// <param name="value">要转换的无符号整数。</param>
-    /// <returns>表示该无符号整数的4字节数组，按指定字节序排列。</returns>
-    public byte[] GetBytes(uint value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前实例的字节序与系统默认不同，则进行字节序转换。
-        if (!this.IsSameOfSet())
-        {
-            bytes = this.ByteTransDataFormat4(bytes, 0);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将无符号整数转换为指定字节序，并存储在给定的字节数组中。
-    /// </summary>
-    /// <param name="buffer">存储转换结果的字节数组。</param>
-    /// <param name="value">要转换的无符号整数。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, uint value)
-    {
-        // 直接将无符号整数转换为字节，并考虑字节序转换。
-        Unsafe.As<byte, uint>(ref buffer) = value;
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat4_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从指定字节序的字节数组中转换出无符号整数。
-    /// </summary>
-    /// <param name="buffer">包含要转换数据的字节数组。</param>
-    /// <param name="offset">数据在字节数组中的起始位置。</param>
-    /// <returns>转换得到的无符号整数。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">如果从offset开始不足4个字节，则抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint ToUInt32(byte[] buffer, int offset)
-    {
-        // 确保从offset开始至少有4个字节。
-        if (buffer.Length - offset < 4)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果当前实例的字节序与系统默认相同，则直接读取。
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<uint>(p);
-                }
-                else
-                {
-                    // 否则，进行字节序转换，读取数据，再转换回来。
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<uint>(p);
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion uint
-
-    #region float
-
-    /// <summary>
-    /// 将浮点数转换为指定字节序的4字节数组。
-    /// </summary>
-    /// <param name="value">要转换的浮点数。</param>
-    /// <returns>转换后的字节数组。</returns>
-    public byte[] GetBytes(float value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前字节序与目标字节序不同，则进行字节序转换。
-        if (!this.IsSameOfSet())
-        {
-            bytes = this.ByteTransDataFormat4(bytes, 0);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将浮点数转换为指定字节序的字节数组，并存储在指定缓冲区中。
-    /// </summary>
-    /// <param name="buffer">存储转换结果的缓冲区。</param>
-    /// <param name="value">要转换的浮点数。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, float value)
-    {
-        // 直接将浮点数转换为字节，并应用字节序转换（如果需要）。
-        Unsafe.As<byte, float>(ref buffer) = value;
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat4_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从字节数组中按指定字节序读取浮点数。
-    /// </summary>
-    /// <param name="buffer">包含浮点数数据的字节数组。</param>
-    /// <param name="offset">数据在数组中的起始位置。</param>
-    /// <returns>读取到的浮点数。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float ToSingle(byte[] buffer, int offset)
-    {
-        // 检查数组长度是否足够。
-        if (buffer.Length - offset < 4)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                // 根据当前和目标字节序是否相同，决定是否需要进行字节序转换。
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<float>(p);
-                }
-                else
-                {
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<float>(p);
-                    this.ByteTransDataFormat4_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion float
-
-    #region long
-
-    /// <summary>
-    /// 将指定的双精度浮点数转换为对应字节端序的8字节数组。
-    /// </summary>
-    /// <param name="value">要转换的双精度浮点数。</param>
-    /// <returns>对应的字节数组。</returns>
-    public byte[] GetBytes(double value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        // 如果当前实例的字节序与系统默认不同，则进行字节序转换。
-        if (!this.IsSameOfSet())
-        {
-            bytes = this.ByteTransDataFormat8(bytes, 0);
-        }
-
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将指定的双精度浮点数转换为对应字节端序的8字节，并存储在指定的字节数组中。
-    /// </summary>
-    /// <param name="buffer">用于存储转换结果的字节数组。</param>
-    /// <param name="value">要转换的双精度浮点数。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, double value)
-    {
-        Unsafe.As<byte, double>(ref buffer) = value;
-        // 如果当前实例的字节序与系统默认不同，则进行字节序转换。
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat8_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 将指定偏移量的字节数组转换为对应字节端序的双精度浮点数。
-    /// </summary>
-    /// <param name="buffer">包含数据的字节数组。</param>
-    /// <param name="offset">从数组的哪个位置开始读取数据。</param>
-    /// <returns>转换得到的双精度浮点数。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public double ToDouble(byte[] buffer, int offset)
-    {
-        if (buffer.Length - offset < 8)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                // 如果当前实例的字节序与系统默认相同，则直接读取数据。
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<double>(p);
-                }
-                else
-                {
-                    // 否则，先进行字节序转换，然后读取数据，并再次转换回来。
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<double>(p);
-                    this.ByteTransDataFormat8_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion long
-
-    #region decimal
-
-    /// <summary>
-    /// 将指定的 decimal 值转换为一个包含该值的字节数组。
-    /// </summary>
-    /// <param name="value">要转换的 decimal 值。</param>
-    /// <returns>一个包含转换后的字节的字节数组。</returns>
-    public byte[] GetBytes(decimal value)
-    {
-        var bytes = new byte[16];
-        this.GetBytes(ref bytes[0], value);
-        return bytes;
-    }
-
-    /// <summary>
-    /// 将指定的 decimal 值转换为一个包含该值的字节数组，并将结果存储在指定的缓冲区中。
-    /// </summary>
-    /// <param name="buffer">存储转换后的字节的缓冲区。</param>
-    /// <param name="value">要转换的 decimal 值。</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetBytes(ref byte buffer, decimal value)
-    {
-        Unsafe.As<byte, decimal>(ref buffer) = value;
-        if (!this.IsSameOfSet())
-        {
-            this.ByteTransDataFormat16_Net6(ref buffer);
-        }
-    }
-
-    /// <summary>
-    /// 从指定偏移量处的字节数组中读取一个 decimal 值。
-    /// </summary>
-    /// <param name="buffer">包含要读取的 decimal 值的字节数组。</param>
-    /// <param name="offset">从 buffer 的哪个位置开始读取。</param>
-    /// <returns>从字节数组中读取到的 decimal 值。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">如果从 offset 开始的 buffer 的长度小于 16，则抛出此异常。</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public decimal ToDecimal(byte[] buffer, int offset)
-    {
-        if (buffer.Length - offset < 16)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        unsafe
-        {
-            fixed (byte* p = &buffer[offset])
-            {
-                if (this.IsSameOfSet())
-                {
-                    return Unsafe.Read<decimal>(p);
-                }
-                else
-                {
-                    this.ByteTransDataFormat16_Net6(ref buffer[offset]);
-                    var v = Unsafe.Read<decimal>(p);
-                    this.ByteTransDataFormat16_Net6(ref buffer[offset]);
-                    return v;
-                }
-            }
-        }
-    }
-
-    #endregion decimal
 
     #region Tool
 
@@ -1584,10 +614,188 @@ public sealed partial class TouchSocketBitConverter
 
     #endregion Tool
 
-    #region 其他
+    #region Convert
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的只读内存，转换时会考虑默认字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <returns>转换后的目标类型只读内存。</returns>
+    public static ReadOnlyMemory<TTarget> ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan)
+          where TSource : unmanaged
+          where TTarget : unmanaged
+    {
+        return ConvertValues<TSource, TTarget>(sourceSpan, s_defaultEndianType);
+    }
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的只读内存，转换时会考虑指定字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>转换后的目标类型只读内存。</returns>
+    public static ReadOnlyMemory<TTarget> ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, EndianType endianType)
+           where TSource : unmanaged
+           where TTarget : unmanaged
+    {
+        return ConvertValues<TSource, TTarget>(sourceSpan, endianType, endianType);
+    }
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的只读内存，转换时会考虑源字节序和目标字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <param name="sourceEndianType">源数据的字节序类型。</param>
+    /// <param name="targetEndianType">目标数据的字节序类型。</param>
+    /// <returns>转换后的目标类型只读内存。</returns>
+    public static ReadOnlyMemory<TTarget> ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, EndianType sourceEndianType, EndianType targetEndianType)
+           where TSource : unmanaged
+           where TTarget : unmanaged
+    {
+        var length = GetConvertedLength<TSource, TTarget>(sourceSpan.Length);
+        Memory<TTarget> target = new TTarget[length];
+        ConvertValues(sourceSpan, target.Span, sourceEndianType, targetEndianType);
+        return target;
+    }
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的可写跨度，转换时会考虑默认字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <param name="targetSpan">转换后的目标类型可写跨度。</param>
+    /// <returns>实际转换的目标类型元素数量。</returns>
+    public static int ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, Span<TTarget> targetSpan)
+           where TSource : unmanaged
+           where TTarget : unmanaged
+    {
+        return ConvertValues(sourceSpan, targetSpan, s_defaultEndianType);
+    }
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的可写跨度，转换时会考虑指定字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <param name="targetSpan">转换后的目标类型可写跨度。</param>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>实际转换的目标类型元素数量。</returns>
+    public static int ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, Span<TTarget> targetSpan, EndianType endianType)
+           where TSource : unmanaged
+           where TTarget : unmanaged
+    {
+        return ConvertValues(sourceSpan, targetSpan, endianType, endianType);
+    }
+
+    /// <summary>
+    /// 将指定类型的只读源数据批量转换为目标类型的可写跨度，转换时会考虑源字节序和目标字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
+    /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="sourceSpan">要转换的源数据只读跨度。</param>
+    /// <param name="targetSpan">转换后的目标类型可写跨度。</param>
+    /// <param name="sourceEndianType">源数据的字节序类型。</param>
+    /// <param name="targetEndianType">目标数据的字节序类型。</param>
+    /// <returns>实际转换的目标类型元素数量。</returns>
+    public static int ConvertValues<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, Span<TTarget> targetSpan, EndianType sourceEndianType, EndianType targetEndianType)
+           where TSource : unmanaged
+           where TTarget : unmanaged
+    {
+        var sourceConverter = GetBitConverter(sourceEndianType);
+        var targetConverter = GetBitConverter(targetEndianType);
+
+        int length;
+        // 如果源类型和目标类型相同，直接转换
+        if (typeof(TSource) == typeof(TTarget))
+        {
+            length = Math.Min(sourceSpan.Length, targetSpan.Length);
+            Span<byte> span = stackalloc byte[Unsafe.SizeOf<TSource>()];
+            for (var i = 0; i < length; i++)
+            {
+                sourceConverter.WriteBytes(span, sourceSpan[i]);
+                targetSpan[i] = targetConverter.To<TTarget>(span);
+            }
+
+            return length;
+        }
+
+        // 处理bool作为源类型的情况（按比特处理）
+        if (typeof(TSource) == typeof(bool))
+        {
+            return ConvertFromBool(sourceSpan, targetSpan, targetConverter);
+        }
+
+        // 处理bool作为目标类型的情况（按比特处理）
+        if (typeof(TTarget) == typeof(bool))
+        {
+            return ConvertToBool(sourceSpan, targetSpan, sourceConverter);
+        }
+
+        // 处理其他非bool类型的情况
+        var sourceSize = Unsafe.SizeOf<TSource>();
+        var targetSize = Unsafe.SizeOf<TTarget>();
+        var sourceBytes = sourceSpan.Length * sourceSize;
+        var targetBytes = targetSpan.Length * targetSize;
+        var bytesToConvert = Math.Min(sourceBytes, targetBytes);
+
+        length = bytesToConvert / targetSize;
+
+        var buffer = ArrayPool<byte>.Shared.Rent(bytesToConvert);
+        try
+        {
+            var writerSpan = new Span<byte>(buffer);
+
+            for (var i = 0; i < bytesToConvert / sourceSize; i++)
+            {
+                var size = sourceConverter.WriteBytes(writerSpan, sourceSpan[i]);
+                writerSpan = writerSpan.Slice(size);
+            }
+            var span = new ReadOnlySpan<byte>(buffer);
+            for (var i = 0; i < length; i++)
+            {
+                targetSpan[i] = targetConverter.To<TTarget>(span);
+                span = span.Slice(targetSize);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+
+        return length;
+    }
 
     /// <summary>
     /// 计算从源类型到目标类型的转换长度。
+    /// <para>
+    /// 注意：<see langword="bool"/>会被视为1位，即1/8字节，而其他非托管类型会按字节计算。
+    /// </para>
     /// </summary>
     /// <typeparam name="TSource">源类型，必须是非托管类型。</typeparam>
     /// <typeparam name="TTarget">目标类型，必须是非托管类型。</typeparam>
@@ -1610,7 +818,7 @@ public sealed partial class TouchSocketBitConverter
         else
         {
             // 其他类型按字节计算
-            int sizeT1 = Unsafe.SizeOf<TSource>();
+            var sizeT1 = Unsafe.SizeOf<TSource>();
             sourceBits = (long)length * sizeT1 * 8;
         }
 
@@ -1638,22 +846,167 @@ public sealed partial class TouchSocketBitConverter
             throw new InvalidOperationException("Target type cannot have zero size");
         }
 
-        // 检查是否可整除
-        if (sourceBits % targetBitSize != 0)
-        {
-            throw new ArgumentException(
-                $"Source bits ({sourceBits}) must be divisible by target type bit size ({targetBitSize})");
-        }
-
         // 计算目标长度并检查溢出
-        var resultLength = sourceBits / targetBitSize;
-        if (resultLength > int.MaxValue)
-        {
-            throw new OverflowException($"Converted length ({resultLength}) exceeds maximum Span size");
-        }
 
-        return (int)resultLength;
+        var resultLength = (sourceBits + (targetBitSize - 1)) / targetBitSize;
+        return resultLength > int.MaxValue
+            ? throw new OverflowException($"Converted length ({resultLength}) exceeds maximum Span size")
+            : (int)resultLength;
     }
 
-    #endregion
+    /// <summary>
+    /// 从bool源类型转换
+    /// </summary>
+    private static int ConvertFromBool<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, Span<TTarget> targetSpan, TouchSocketBitConverter converter)
+        where TSource : unmanaged
+        where TTarget : unmanaged
+    {
+        var targetSize = Unsafe.SizeOf<TTarget>();
+
+        var byteCount = (sourceSpan.Length + 7) / 8;
+
+        Span<byte> bytes = stackalloc byte[targetSize];
+        var sourceIndex = 0;
+        var length = Math.Min(byteCount / targetSize, targetSpan.Length);
+        for (var i = 0; i < length; i++)
+        {
+            for (var j = 0; j < targetSize; j++)
+            {
+                byte value = 0;
+                TSource source;
+
+                for (var k = 0; k < 8; k++)
+                {
+                    if (sourceIndex < sourceSpan.Length)
+                    {
+                        source = sourceSpan[sourceIndex++];
+                        value = value.SetBit(k, Unsafe.As<TSource, bool>(ref source));
+                    }
+                    else
+                    {
+                        value = value.SetBit(k, false);
+                    }
+                }
+
+                bytes[j] = value;
+            }
+            var target = converter.To<TTarget>(bytes);
+            targetSpan[i] = target;
+        }
+
+        return length;
+    }
+
+    /// <summary>
+    /// 转换为bool目标类型
+    /// </summary>
+    private static int ConvertToBool<TSource, TTarget>(ReadOnlySpan<TSource> sourceSpan, Span<TTarget> targetSpan, TouchSocketBitConverter converter)
+        where TSource : unmanaged
+        where TTarget : unmanaged
+    {
+        var sourceSize = Unsafe.SizeOf<TSource>();
+        var length = Math.Min(sourceSize * sourceSpan.Length, targetSpan.Length / 8);
+
+        Span<byte> bytes = stackalloc byte[sourceSize];
+
+        var targetIndex = 0;
+
+        for (var i = 0; i < length; i++)
+        {
+            var source = sourceSpan[i];
+            converter.WriteBytes(bytes, source);
+
+            for (var j = 0; j < bytes.Length; j++)
+            {
+                var sourceByte = bytes[j];
+                var accessor = new BitAccessor<byte>(ref sourceByte);
+
+                for (var bit = 0; bit < 8; bit++)
+                {
+                    var b = accessor.Get(bit);
+                    targetSpan[targetIndex] = Unsafe.As<bool, TTarget>(ref b);
+                    targetIndex++;
+                }
+            }
+        }
+        return targetIndex;
+    }
+
+    #endregion Convert
+
+    #region ToValues
+
+    /// <summary>
+    /// 将指定的字节跨度批量转换为目标类型的只读内存，转换时会考虑指定字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="span">要转换的字节跨度。</param>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>转换后的目标类型只读内存。</returns>
+    public static ReadOnlyMemory<T> ToValues<T>(ReadOnlySpan<byte> span, EndianType endianType)
+       where T : unmanaged
+    {
+        var length = GetConvertedLength<byte, T>(span.Length);
+        if (length == 0)
+        {
+            return ReadOnlyMemory<T>.Empty;
+        }
+
+        Memory<T> target = new T[length];
+        ToValues(span, target.Span, endianType);
+        return target;
+    }
+
+    /// <summary>
+    /// 将指定的字节跨度批量转换为目标类型的可写跨度，转换时会考虑指定字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="span">要转换的字节跨度。</param>
+    /// <param name="targetSpan">转换后的目标类型可写跨度。</param>
+    /// <param name="endianType">指定的字节序类型。</param>
+    /// <returns>实际转换的目标类型元素数量。</returns>
+    public static int ToValues<T>(ReadOnlySpan<byte> span, Span<T> targetSpan, EndianType endianType)
+        where T : unmanaged
+    {
+        return ConvertValues<byte, T>(span, targetSpan, endianType, endianType);
+    }
+
+    /// <summary>
+    /// 将指定的字节跨度批量转换为目标类型的可写跨度，转换时会考虑默认字节序。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="span">要转换的字节跨度。</param>
+    /// <param name="targetSpan">转换后的目标类型可写跨度。</param>
+    /// <returns>实际转换的目标类型元素数量。</returns>
+    public static int ToValues<T>(ReadOnlySpan<byte> span, Span<T> targetSpan)
+        where T : unmanaged
+    {
+        return ToValues<T>(span, targetSpan, s_defaultEndianType);
+    }
+
+    /// <summary>
+    /// 将指定的字节跨度批量转换为目标类型的只读内存，转换时会考虑当前实例的字节序设置。
+    /// <para>
+    /// 支持所有非托管类型，包括 <see langword="bool"/>，其中 <see langword="bool"/> 会按位处理。
+    /// </para>
+    /// </summary>
+    /// <typeparam name="T">目标类型，必须是非托管类型。</typeparam>
+    /// <param name="span">要转换的字节跨度。</param>
+    /// <returns>转换后的目标类型只读内存。</returns>
+    public ReadOnlyMemory<T> ToValues<T>(ReadOnlySpan<byte> span)
+                where T : unmanaged
+    {
+        return ToValues<T>(span, this.m_endianType);
+    }
+
+    #endregion ToValues
 }

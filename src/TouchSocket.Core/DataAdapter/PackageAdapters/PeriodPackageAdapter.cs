@@ -10,10 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.ExceptionServices;
 
 namespace TouchSocket.Core;
 
@@ -23,15 +21,26 @@ namespace TouchSocket.Core;
 public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 {
     private readonly ConcurrentQueue<ValueByteBlock> m_bytes = new ConcurrentQueue<ValueByteBlock>();
-    private long m_fireCount;
+    private readonly CancellationTokenSource m_cts = new CancellationTokenSource();
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
     private int m_dataCount;
+    private ExceptionDispatchInfo m_exceptionDispatchInfo;
+    private long m_fireCount;
 
     /// <inheritdoc/>
-    protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
+    protected override Task PreviewReceivedAsync<TReader>(TReader reader)
     {
-        var dataLength = byteBlock.Length;
+        this.m_exceptionDispatchInfo?.Throw();
+
+        var dataLength = (int)reader.Sequence.Length;
         var valueByteBlock = new ValueByteBlock(dataLength);
-        valueByteBlock.Write(byteBlock.Span);
+
+        foreach (var item in reader.Sequence)
+        {
+            valueByteBlock.Write(item.Span);
+            reader.Advance(item.Length);
+        }
+
         this.m_bytes.Enqueue(valueByteBlock);
         Interlocked.Increment(ref this.m_fireCount);
         Interlocked.Add(ref this.m_dataCount, dataLength);
@@ -42,12 +51,23 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
         return EasyTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_cts.SafeCancel();
+            this.m_cts.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
+    }
+
     private async Task DelayGo()
     {
         await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         if (Interlocked.Decrement(ref this.m_fireCount) == 0)
         {
-            using (var byteBlock = new ByteBlock(this.m_dataCount))
+            using (var byteBlock = new ValueByteBlock(this.m_dataCount))
             {
                 while (this.m_bytes.TryDequeue(out var valueByteBlock))
                 {
@@ -60,13 +80,18 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
                 byteBlock.SeekToStart();
 
+                await this.m_semaphoreSlim.WaitAsync(this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 try
                 {
-                    await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.GoReceivedAsync(byteBlock.Memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
-                    this.OnError(ex, ex.Message, true, true);
+                    this.m_exceptionDispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                }
+                finally
+                {
+                    this.m_semaphoreSlim.Release();
                 }
             }
         }

@@ -40,9 +40,9 @@ internal class Program
             {
                 a.UseDmtpRpc();
             })
-            .SetDmtpOption(new DmtpOption()
+            .SetDmtpOption(options =>
             {
-                VerifyToken = "Dmtp"
+                options.VerifyToken = "Dmtp";
             }));
         client.ConnectAsync();
         return client;
@@ -65,9 +65,9 @@ internal class Program
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Rpc"
+                   options.VerifyToken = "Rpc";
                });
 
         service.SetupAsync(config);
@@ -84,20 +84,23 @@ internal class Program
         var client = CreateClient();
         //测试客户端持续请求数据
         var size = 0;
-        var channel =await client.CreateChannelAsync();//创建通道
-        var task = Task.Run(() =>//这里必须用异步
+        var channel = await client.CreateChannelAsync();//创建通道
+        var task = Task.Run(async () =>//这里必须用异步
         {
             using (channel)
             {
-                foreach (var byteBlock in channel)
+                while (channel.CanRead)
                 {
-                    size += byteBlock.Length;
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    //这里处理数据
+                    size += memory.Length;
                 }
             }
         });
 
         //此处是直接调用，真正使用时，可以生成代理调用。
-        var result =await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPullChannel", InvokeOption.WaitInvoke, channel.Id);
+        var result = await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPullChannel", InvokeOption.WaitInvoke, channel.Id);
         await task;//等待异步接收完成
         Console.WriteLine($"客户端接收结束，状态：{channel.Status}，size={size}");
         //测试客户端持续请求数据
@@ -111,7 +114,7 @@ internal class Program
         var client = CreateClient();
         var size = 0;
         var package = 1024 * 1024;
-        var channel =await client.CreateChannelAsync();//创建通道
+        var channel = await client.CreateChannelAsync();//创建通道
         var task = Task.Run(async () =>//这里必须用异步
         {
             for (var i = 0; i < Program.Count; i++)
@@ -123,7 +126,7 @@ internal class Program
         });
 
         //此处是直接调用，真正使用时，可以生成代理调用。
-        var result =await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPushChannel", InvokeOption.WaitInvoke, channel.Id);
+        var result = await client.GetDmtpRpcActor().InvokeTAsync<int>("RpcPushChannel", InvokeOption.WaitInvoke, channel.Id);
         await task;//等待异步接收完成
 
         channel.Dispose();
@@ -165,7 +168,7 @@ internal class Program
         /// <param name="channelID"></param>
         [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
         [DmtpRpc(MethodInvoke = true)]//此处设置直接使用方法名调用
-        public int RpcPushChannel(ICallContext callContext, int channelID)
+        public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
         {
             var size = 0;
 
@@ -173,9 +176,12 @@ internal class Program
             {
                 if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                    foreach (var byteBlock in channel)
+                    while (channel.CanRead)
                     {
-                        size += byteBlock.Length;
+                        using var cts = new CancellationTokenSource(10 * 1000);
+                        var memory = await channel.ReadAsync(cts.Token);
+                        //这里处理数据
+                        size += memory.Length;
                     }
                     Console.WriteLine($"服务器接收结束，状态：{channel.Status}，长度：{size}");
                 }

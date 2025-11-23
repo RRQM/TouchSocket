@@ -10,13 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER || NET481_OR_GREATER
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
@@ -25,6 +19,7 @@ namespace TouchSocket.Dmtp.Rpc;
 /// DmtpRpcDispatchProxy
 /// </summary>
 /// <typeparam name="TClient"></typeparam>
+[RequiresUnreferencedCode("动态代理不支持AOT环境")]
 public abstract class DmtpRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
 {
 
@@ -33,10 +28,8 @@ public abstract class DmtpRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, 
 /// <summary>
 /// DmtpRpcDispatchProxy
 /// </summary>
+[RequiresUnreferencedCode("动态代理不支持AOT环境")]
 public abstract class DmtpRpcDispatchProxy : DmtpRpcDispatchProxy<IDmtpRpcActor>
 {
 
 }
-
-
-#endif

@@ -1,0 +1,313 @@
+---
+id: waitingclient
+title: 同步请求
+---
+
+import CardLink from "@site/src/components/CardLink.js";
+
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketDefinition />
+
+
+## 一、说明
+
+有很多小伙伴一直有一些需求：
+
+1. 客户端发送一个数据，然后等待服务器回应。
+2. 服务器向客户端发送一个数据，然后等待客户端回应。
+
+那针对这些需求，可以使用`WaitingClient`其内部实现了`IWaitSender`接口，能够在发送完成后，直接等待返回。
+
+:::tip 提示
+
+`WaitingClient`是一种发送-响应机制，其原理是`IReceiverClient`，只要实现该接口的组件均可以使用。
+
+例如：`TcpClient`、`TcpService`、`NamedPipeClient`、`NamedPipeService`、`SerialPortClient`等。
+
+<BilibiliCard title="等待响应组件的基本使用" link="https://www.bilibili.com/cheese/play/ep1800816" isPro="true"/>
+
+## 二、在客户端使用
+
+在客户端工作时，支持很多组件，例如：`TcpClient`、`NamedPipeClient`、`SerialPortClient`，下面仅以`TcpClient`为例。
+
+```csharp showLineNumbers
+var client = new TcpClient();
+await client.ConnectAsync("tcp://127.0.0.1:7789");
+
+//调用CreateWaitingClient获取到IWaitingClient的对象。
+var waitClient = client.CreateWaitingClient(new WaitingOptions()
+{
+    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+    {
+        return true;
+    }
+});
+
+//然后使用SendThenReturn。
+byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+//同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+```
+
+## 三、在服务器使用
+
+同理，在客户端工作时，支持很多组件，例如：`TcpService`、`NamedPipeService`，下面仅以`TcpService`为例。
+
+```csharp showLineNumbers
+var service = new TcpService();
+await service.StartAsync(7789);//启动服务器
+
+//在服务器中，找到指定Id的会话客户端
+if (service.TryGetClient("targetId", out var tcpSessionClient))
+{
+    //调用CreateWaitingClient获取到IWaitingClient的对象。
+    var waitClient = tcpSessionClient.CreateWaitingClient(new WaitingOptions()
+    {
+        FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+        {
+            return true;
+        }
+    });
+
+    //然后使用SendThenReturn。
+    byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+    Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+    //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+    ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+    IRequestInfo responseRequestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+}
+```
+
+:::tip 提示
+
+`WaitingClient`在创建以后，可以长久使用，直到原始的组件被`Dispose`释放。所以即使是断线重连后，也会是有效的。所以没必要在使用时每次都创建。
+
+:::  
+
+## 四、配置
+
+### 4.1 超时配置
+
+在默认情况下，超时时间是5秒。
+
+```csharp showLineNumbers
+await waitingClient.SendThenResponseAsync("hello");//默认5秒超时
+```
+
+所以可以直接传参，设置超时时间。
+
+```csharp showLineNumbers
+await waitingClient.SendThenResponseAsync("hello", 1000*10);//设置10秒超时
+```
+
+但是有时候，我们希望**不设置超时时间**，而是由用户自己控制超时时间，也就是能有**取消**的等待。
+
+
+```csharp showLineNumbers
+var cts = new CancellationTokenSource();
+
+_=Task.Run(async () =>
+{
+    await Task.Delay(5000);
+    cts.Cancel();//5秒后取消等待，不再等待服务端的消息。这里模拟的是客户端主动取消等待
+});
+
+await waitingClient.SendThenResponseAsync("hello", cts.Token);
+```
+
+### 4.2 筛选配置
+
+筛选函数，用于筛选符合要求的数据。因为`WaitingClient`的响应机制是建立在**一问一答**的基础之上实现的，所以，在发送完数据后，可能收到之前的过期响应数据，那么这时候，会根据用户设置的筛选函数，判断是否响应。
+
+在默认情况下，**筛选函数**为空，即**不筛选**。
+
+```csharp {3} showLineNumbers
+var waitingClient = client.CreateWaitingClient(new WaitingOptions() 
+{
+    FilterFunc=default
+});
+```
+
+所以可以设置筛选函数。
+
+```csharp {3-10} showLineNumbers
+var waitingClient = client.CreateWaitingClient(new WaitingOptions() 
+{
+    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+    {
+        var requestInfo=response.RequestInfo;
+        var byteBlock=response.ByteBlock;
+
+        //这里可以根据服务端返回的信息，判断是否响应
+        return true;
+    }
+});
+```
+
+:::tip 异步筛选函数
+
+可以设置异步筛选函数，可以返回一个`Task`，用于异步筛选。
+
+```csharp
+FilterFuncAsync=async response=>await Task.FromResult(true)
+```
+
+:::
+
+:::info 备注
+
+筛选函数的参数是`Response`，它包含两个属性，分别为`RequestInfo`和`ByteBlock`，具体使用哪个属性，看[适配器类型](./adapterdescription.mdx)
+
+:::  
+
+## 五、使用注意事项
+
+<BilibiliCard title="等待响应组件的使用注意事项" link="https://www.bilibili.com/cheese/play/ep1800837" isPro="true"/>
+
+### 5.1 线程安全
+
+`WaitingClient`是线程安全的，可以多线程使用。但是实际上内部有`SemaphoreSlim`锁，所以，如果使用在多线程中，可能会造成大量锁竞争，从而降低效率。
+
+### 5.2 关于ReadAsync
+
+`WaitingClient`的原理实际上是使用了`IReceiverClient`接口，这也就意味着它不能和`ReadAsync`同时使用。
+
+### 5.3 关于筛选函数
+
+在筛选函数`FilterFunc(Async)`中，不管返回`true`还是`false`，数据都不再向下传递。这也就意味着一旦使用`WaitingClient`，在其**等待返回的时段**中，即使收到了无效数据，也不会再触发`Receive`事件（或者相关插件）。
+
+如果不在等待时段，则不受影响。
+
+如果想要实现，当筛选函数返回`false`时，将数据从插件再次传递，那么就需要在筛选函数中，自行触发插件。
+
+例如：
+
+```csharp {18} showLineNumbers
+var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
+{
+    FilterFuncAsync = async (response) =>
+    {
+        var byteBlock = response.ByteBlock;
+        var requestInfo = response.RequestInfo;
+
+        if (true)//如果满足某个条件，则响应WaitingClient
+        {
+            return true;
+        }
+        else
+        {
+            //否则
+            //数据不符合要求，waitingClient继续等待
+            //如果需要在插件中继续处理，在此处触发插件
+
+            await this.m_tcpClient.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.m_tcpClient, new ReceivedDataEventArgs(byteBlock, requestInfo));
+
+            return false;
+        }   
+    }
+});
+```
+
+### 5.4 关于SendThenReturn与SendThenReturnAsync
+
+在`WaitingClient`中，所有的同步方法，其实都是异步转换来的，所以，功能一致。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
+
+:::caution 注意
+
+在主线程是`GUI线程`（例如：`winform`、`wpf`等），如果在主线程中调用同步代码，也可能会导致死锁。所以请务必使用异步代码。
+
+:::  
+
+### 5.5 关于使用时机
+
+`WaitingClient`的机制是发送一个数据，然后等待响应，所以，使用时机，绝对不可以在`Received`事件（或者插件）中调用。这将导致死锁。
+
+例如：
+
+```csharp {8} showLineNumbers
+var tcpClient = new TcpClient();
+
+var tcpClient.Received =async (client,e) =>
+{
+    var waitingClient = client.CreateWaitingClient(new WaitingOptions());
+
+    //这里将导致死锁
+    var bytes = await waitingClient.SendThenReturnAsync("hello");
+};
+
+...
+```
+
+如果确实需要使用，请使用`Task.Run`来异步处理。
+
+例如：
+
+```csharp {4-9} showLineNumbers
+this.m_tcpClient.Received =async (client,e) =>
+{
+    //此处不能await，否则也会导致死锁
+    _ = Task.Run(async () => 
+    {
+        var waitingClient = client.CreateWaitingClient(new WaitingOptions());
+
+        var bytes = await waitingClient.SendThenReturnAsync("hello");
+    });
+};
+
+...
+```
+
+
+### 5.6 其他
+
+:::danger 注意事项
+
+1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
+2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
+3. waitClient的使用**不可以**直接在`Received`相关触发中使用，因为必然会导致死锁，详见：[#I9GCGT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GCGT) 。
+4. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步（这可能是.net bug）。
+
+:::
+
+## 六、高级实现方式
+
+使用`WaitingClient`的方式虽然简单通用，但是其实质并不建议在要求较高的环境中使用，尤其是对“请求-响应”要求较高的时候。
+
+一般来说，使用`WaitingClient`的不可靠性来源于2个方面：
+1. 响应机制是依赖`Reveiver`来实现的，会在请求时创建`Reveiver`，在响应时，会销毁`Reveiver`。这其中可能导致数据丢失。
+2. 响应数据没办法和请求进行关联，导致数据可能被其他数据打断。
+
+<BilibiliCard title="等待响应组件有哪些缺陷" link="https://www.bilibili.com/cheese/play/ep1800841" isPro="true"/>
+
+那么基于此，如果您有更高要求的需求，我们建议使用以下方法实现：
+
+### 6.1 设计通信协议，以支持响应数据关联
+
+1. 在请求时，请求数据中添加一个`requestId`，用于标识请求。
+2. 在响应时，响应数据中添加一个`requestId`，用于标识响应。
+3. 在响应时，将响应数据发送给对应的请求方。
+4. 在请求方收到响应数据时，将响应数据与对应的请求进行关联。
+5. 在响应方收到请求数据时，将请求数据发送给对应的响应方。
+6. 在响应方收到响应数据时，将响应数据发送给对应的请求方。
+
+<BilibiliCard title="如何设计一个支持响应数据关联的通信协议" link="https://www.bilibili.com/cheese/play/ep1800842" isPro="true"/>
+
+### 6.2 长期持有Reveiver，以建立相较稳固的接收
+
+<BilibiliCard title="长期持有Reveiver，以建立相较稳固的接收" link="https://www.bilibili.com/cheese/play/ep1800843" isPro="true"/>
+
+### 6.3 使用继承的方式实现
+
+<BilibiliCard title="使用继承的方式实现等待响应" link="https://www.bilibili.com/cheese/play/ep1800846" isPro="true"/>
+
+## 七、示例代码
+
+<CardLink link="examples/Tcp/TcpWaitingClientWinFormsApp"/>

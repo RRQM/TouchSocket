@@ -10,14 +10,8 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-#if AsyncLocal
-using System;
-using System.Collections.Generic;
+
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc;
 
@@ -53,5 +47,3 @@ internal class RpcCallContextAccessor : IRpcCallContextAccessor
         public ICallContext Context;
     }
 }
-
-#endif

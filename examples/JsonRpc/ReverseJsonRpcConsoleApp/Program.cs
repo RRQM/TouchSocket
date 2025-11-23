@@ -31,6 +31,7 @@ internal class Program
 
     private static async Task<WebSocketJsonRpcClient> GetClient()
     {
+        #region JsonRpc客户端启用反向Rpc
         var jsonRpcClient = new WebSocketJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .ConfigureContainer(a =>
@@ -42,6 +43,8 @@ internal class Program
              })
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
+        #endregion
+
 
         return jsonRpcClient;
     }
@@ -60,15 +63,21 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseWebSocket()
-                  .SetWSUrl("/ws");
-
-                  a.UseWebSocketJsonRpc()
-                  .SetAllowJsonRpc((socketClient, context) =>
+                  //添加WebSocket功能
+                  a.UseWebSocket(options =>
                   {
-                      //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                      //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
-                      return true;
+                      options.SetUrl("/ws");//设置url直接可以连接。
+                      options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                  });
+
+                  a.UseWebSocketJsonRpc(options =>
+                  {
+                      options.SetAllowJsonRpc((socketClient, context) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+                          return true;
+                      });
                   });
 
                   a.Add<MyPluginClass>();
@@ -78,9 +87,10 @@ internal class Program
     }
 }
 
-internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+#region JsonRpc服务器主动调用插件
+internal class MyPluginClass : PluginBase, IWebSocketConnectedPlugin
 {
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         try
         {
@@ -107,7 +117,10 @@ internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
         await e.InvokeNext();
     }
 }
+#endregion
 
+
+#region JsonRpc反向Rpc服务
 public partial class ReverseJsonRpcServer : SingletonRpcServer
 {
     [JsonRpc(MethodInvoke = true)]
@@ -116,3 +129,4 @@ public partial class ReverseJsonRpcServer : SingletonRpcServer
         return a + b;
     }
 }
+#endregion

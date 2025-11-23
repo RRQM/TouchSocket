@@ -1,0 +1,201 @@
+---
+id: webapi-aot
+title: WebAPI AOT支持
+---
+
+## 一、AOT 支持
+
+TouchSocket.WebApi 完整支持 Native AOT 编译。
+
+### 1.1 基础配置
+
+在项目文件中启用 AOT：
+
+```xml showLineNumbers
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TouchSocket" Version="*" />
+    <PackageReference Include="TouchSocket.WebApi" Version="*" />
+    <PackageReference Include="TouchSocket.Hosting" Version="*" />
+    <PackageReference Include="TouchSocket.Hosting.SourceGenerator" Version="*" />
+  </ItemGroup>
+</Project>
+```
+
+### 1.2 JSON 序列化上下文
+
+AOT 需要定义 JSON 序列化上下文：
+
+```csharp showLineNumbers
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(UserDto))]
+[JsonSerializable(typeof(List<UserDto>))]
+public partial class AppJsonSerializerContext : JsonSerializerContext
+{
+}
+
+public class UserDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+
+### 1.3 配置序列化器
+
+使用 System.Text.Json 并指定序列化上下文：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        converter.Clear();
+        
+        // 使用 AOT 友好的序列化器
+        converter.AddSystemTextJsonSerializerFormatter(options =>
+        {
+            options.TypeInfoResolver = AppJsonSerializerContext.Default;
+            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        });
+    });
+})
+```
+
+### 1.4 服务注册
+
+使用源生成器注册服务：
+
+```csharp showLineNumbers
+[GenerateRegister]
+public partial class ApiServer : SingletonRpcServer
+{
+    [WebApi(Method = HttpMethodType.Get)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+
+    [WebApi(Method = HttpMethodType.Get)]
+    public List<UserDto> GetUsers()
+    {
+        return new List<UserDto>
+        {
+            new UserDto { Id = 1, Name = "Alice", Age = 25 },
+            new UserDto { Id = 2, Name = "Bob", Age = 30 }
+        };
+    }
+
+    [WebApi(Method = HttpMethodType.Post)]
+    public string CreateUser([FromBody] UserDto user)
+    {
+        return $"Created: {user.Name}";
+    }
+}
+```
+
+## 二、完整示例
+
+### 2.1 Program.cs
+
+```csharp showLineNumbers
+using TouchSocket.Core;
+using TouchSocket.Http;
+using TouchSocket.Sockets;
+using TouchSocket.WebApi;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 配置 TouchSocket 服务
+builder.Services.AddServiceHostedService<IHttpService, HttpService>(config =>
+{
+    config.SetListenIPHosts(7789);
+    config.ConfigurePlugins(a =>
+    {
+        a.UseWebApi()
+        .ConfigureConverter(converter =>
+        {
+            converter.Clear();
+            converter.AddSystemTextJsonSerializerFormatter(options =>
+            {
+                options.TypeInfoResolver = AppJsonSerializerContext.Default;
+                options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            });
+        });
+
+        a.UseDefaultHttpServicePlugin();
+    });
+});
+
+var app = builder.Build();
+await app.RunAsync();
+
+// JSON 序列化上下文
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(UserDto))]
+[JsonSerializable(typeof(List<UserDto>))]
+public partial class AppJsonSerializerContext : JsonSerializerContext
+{
+}
+
+// API 服务
+[GenerateRegister]
+public partial class ApiServer : SingletonRpcServer
+{
+    [WebApi(Method = HttpMethodType.Get)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+
+    [WebApi(Method = HttpMethodType.Get)]
+    public List<UserDto> GetUsers()
+    {
+        return new List<UserDto>
+        {
+            new UserDto { Id = 1, Name = "Alice", Age = 25 },
+            new UserDto { Id = 2, Name = "Bob", Age = 30 }
+        };
+    }
+
+    [WebApi(Method = HttpMethodType.Post)]
+    public string CreateUser([FromBody] UserDto user)
+    {
+        return $"Created: {user.Name}";
+    }
+}
+
+public class UserDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+
+### 2.2 发布
+
+```bash
+dotnet publish -c Release
+```
+
+生成的可执行文件体积小、启动快、无需运行时。
+
+## 三、注意事项
+
+1. **避免反射**：使用源生成器而不是反射
+2. **序列化类型**：所有序列化类型必须添加到 `JsonSerializable`
+3. **第三方库**：确保所有依赖库支持 AOT
+4. **测试**：AOT 发布前充分测试

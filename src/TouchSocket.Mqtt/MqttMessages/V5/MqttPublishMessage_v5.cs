@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 public partial class MqttPublishMessage
@@ -21,7 +18,7 @@ public partial class MqttPublishMessage
 
     public string ContentType { get; set; }
 
-    public byte[] CorrelationData { get; set; }
+    public ReadOnlyMemory<byte> CorrelationData { get; set; }
 
     public uint MessageExpiryInterval { get; set; }
 
@@ -34,78 +31,80 @@ public partial class MqttPublishMessage
     public ushort TopicAlias { get; set; }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.TopicName);
+        MqttExtension.WriteMqttInt16String(ref writer, this.TopicName);
         if (this.QosLevel != QosLevel.AtMostOnce)
         {
-            byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         }
 
         #region properties
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
-        MqttExtension.WritePayloadFormatIndicator(ref byteBlock, this.PayloadFormatIndicator);
-        MqttExtension.WriteMessageExpiryInterval(ref byteBlock, this.MessageExpiryInterval);
-        MqttExtension.WriteTopicAlias(ref byteBlock, this.TopicAlias);
-        MqttExtension.WriteResponseTopic(ref byteBlock, this.ResponseTopic);
-        MqttExtension.WriteCorrelationData(ref byteBlock, this.CorrelationData);
+        MqttExtension.WritePayloadFormatIndicator(ref byteBlockWriter, this.PayloadFormatIndicator);
+        MqttExtension.WriteMessageExpiryInterval(ref byteBlockWriter, this.MessageExpiryInterval);
+        MqttExtension.WriteTopicAlias(ref byteBlockWriter, this.TopicAlias);
+        MqttExtension.WriteResponseTopic(ref byteBlockWriter, this.ResponseTopic);
+        MqttExtension.WriteCorrelationData(ref byteBlockWriter, this.CorrelationData.Span);
 
         foreach (var item in this.m_subscriptionIdentifiers)
         {
-            MqttExtension.WriteSubscriptionIdentifier(ref byteBlock, item);
+            MqttExtension.WriteSubscriptionIdentifier(ref byteBlockWriter, item);
         }
 
-        MqttExtension.WriteContentType(ref byteBlock, this.ContentType);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
-        variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        MqttExtension.WriteContentType(ref byteBlockWriter, this.ContentType);
+        MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
+        variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+        writer.Advance(byteBlockWriter.Position);
 
         #endregion properties
 
-        byteBlock.Write(this.Payload.Span);
+        writer.Write(this.Payload.Span);
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.TopicName = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        this.TopicName = MqttExtension.ReadMqttInt16String(ref reader);
         if (this.QosLevel != QosLevel.AtMostOnce)
         {
-            this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
+            this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
         }
 
         #region properties
 
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.PayloadFormatIndicator:
-                    this.PayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator(ref byteBlock);
+                    this.PayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator(ref reader);
                     break;
                 case MqttPropertyId.MessageExpiryInterval:
-                    this.MessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval(ref byteBlock);
+                    this.MessageExpiryInterval = propertiesReader.ReadMessageExpiryInterval(ref reader);
                     break;
                 case MqttPropertyId.TopicAlias:
-                    this.TopicAlias = propertiesReader.ReadTopicAlias(ref byteBlock);
+                    this.TopicAlias = propertiesReader.ReadTopicAlias(ref reader);
                     break;
                 case MqttPropertyId.ResponseTopic:
-                    this.ResponseTopic = propertiesReader.ReadResponseTopic(ref byteBlock);
+                    this.ResponseTopic = propertiesReader.ReadResponseTopic(ref reader);
                     break;
                 case MqttPropertyId.CorrelationData:
-                    this.CorrelationData = propertiesReader.ReadCorrelationData(ref byteBlock);
+                    this.CorrelationData = propertiesReader.ReadCorrelationData(ref reader);
                     break;
                 case MqttPropertyId.SubscriptionIdentifier:
-                    this.m_subscriptionIdentifiers.Add(propertiesReader.ReadSubscriptionIdentifier(ref byteBlock));
+                    this.m_subscriptionIdentifiers.Add(propertiesReader.ReadSubscriptionIdentifier(ref reader));
                     break;
                 case MqttPropertyId.ContentType:
-                    this.ContentType = propertiesReader.ReadContentType(ref byteBlock);
+                    this.ContentType = propertiesReader.ReadContentType(ref reader);
                     break;
                 case MqttPropertyId.UserProperty:
-                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                     break;
                 default:
                     ThrowHelper.ThrowInvalidEnumArgumentException(mqttPropertyId);
@@ -113,24 +112,9 @@ public partial class MqttPublishMessage
             }
         }
 
-        //this.PayloadFormatIndicator = propertiesReader.PayloadFormatIndicator;
-
-        //this.MessageExpiryInterval = propertiesReader.MessageExpiryInterval;
-
-        //this.TopicAlias = propertiesReader.TopicAlias;
-
-        //this.ResponseTopic = propertiesReader.ResponseTopic;
-
-        //this.CorrelationData = propertiesReader.CorrelationData;
-
-        //this.m_subscriptionIdentifiers.Add(propertiesReader.SubscriptionIdentifier);
-
-        //this.ContentType = propertiesReader.ContentType;
-
-        //this.UserProperties = propertiesReader.UserProperties;
 
         #endregion properties
 
-        this.Payload = this.ReadPayload(ref byteBlock);
+        this.Payload = this.ReadPayload(ref reader);
     }
 }

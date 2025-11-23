@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -26,7 +24,6 @@ public static class ModbusResponseExtension
     /// <returns></returns>
     public static BytesReader CreateReader(this IModbusResponse response)
     {
-        // 使用response的数据创建并返回一个新的ValueByteBlock对象
-        return new BytesReader(response.Data.Span);
+        return new BytesReader(response.Data);
     }
 }

@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -30,70 +28,64 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
     /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
     /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
     /// </summary>
-    /// <param name="byteBlock">字节块</param>
+    /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request)
     {
         if (beCached)
         {
-            if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
+            if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
             {
-                tempCapacity = request.BodyLength + this.HeaderLength;
-                this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                 return FilterResult.Cache;
             }
 
             //var body = byteBlock.ToArray(byteBlock.Position, request.BodyLength);
-            if (request.OnParsingBody(byteBlock.Span.Slice(byteBlock.Position, request.BodyLength)))
+            if (request.OnParsingBody(reader.GetSpan(request.BodyLength)))
             {
-                byteBlock.Position += request.BodyLength;
+                reader.Advance(request.BodyLength);
                 return FilterResult.Success;
             }
             else
             {
-                byteBlock.Position += 1;
+                reader.Advance(1);
                 return FilterResult.GoOn;
             }
         }
         else
         {
-            if (this.HeaderLength > byteBlock.CanReadLength)
+            if (this.HeaderLength > reader.BytesRemaining)
             {
-                this.SurLength = this.HeaderLength - byteBlock.CanReadLength;
                 return FilterResult.Cache;
             }
 
             var requestInfo = this.GetInstance();
             //var header = byteBlock.ToArray(byteBlock.Position, this.HeaderLength);
-            if (requestInfo.OnParsingHeader(byteBlock.Span.Slice(byteBlock.Position, this.HeaderLength)))
+            if (requestInfo.OnParsingHeader(reader.GetSpan(this.HeaderLength)))
             {
-                byteBlock.Position += this.HeaderLength;
+                reader.Advance(this.HeaderLength);
                 request = requestInfo;
-                if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
+                if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
                 {
-                    tempCapacity = request.BodyLength + this.HeaderLength;
-                    this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                     return FilterResult.Cache;
                 }
 
                 //var body = byteBlock.ToArray(byteBlock.Position, request.BodyLength);
-                if (request.OnParsingBody(byteBlock.Span.Slice(byteBlock.Position, request.BodyLength)))
+                if (request.OnParsingBody(reader.GetSpan(request.BodyLength)))
                 {
-                    byteBlock.Position += request.BodyLength;
+                    reader.Advance(request.BodyLength);
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Position += 1;
+                    reader.Advance(1);
                     return FilterResult.GoOn;
                 }
             }
             else
             {
-                byteBlock.Position += 1;
+                reader.Advance(1);
                 return FilterResult.GoOn;
             }
         }

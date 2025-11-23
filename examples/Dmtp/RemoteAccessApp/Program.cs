@@ -43,36 +43,39 @@ internal static class Program
 
     private static async Task<TcpDmtpService> GetTcpDmtpService()
     {
-        var service = await new TouchSocketConfig()//����
+        var service = await new TouchSocketConfig()//配置
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
                })
+               #region 远程文件系统配置插件
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRemoteAccess();//��������Զ�̷��ʲ��
+                   a.UseDmtpRemoteAccess();//使用Dmtp远程访问插件
                    a.Add<MyRemoteAccessPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               #endregion
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"//������֤���
+                   options.VerifyToken = "Dmtp";//连接验证口令
                })
-               .BuildServiceAsync<TcpDmtpService>();//�˴�build�൱��new TcpDmtpService��Ȼ��SetupAsync��Ȼ��StartAsync��
-        service.Logger.Info("�������ɹ�����");
+               .BuildServiceAsync<TcpDmtpService>();//此处build相当于new TcpDmtpService，然后SetupAsync，然后StartAsync。
+        service.Logger.Info("服务器成功启动");
         return service;
     }
 
+    #region 远程文件系统响应端插件
     public class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin
     {
         public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)
         {
-            //Console.WriteLine($"�пͻ�����������Զ�̲���");
-            //Console.WriteLine($"���ͣ�{e.AccessType}��ģʽ��{e.AccessMode}");
-            //Console.WriteLine($"����·����{e.Path}");
-            //Console.WriteLine($"Ŀ��·����{e.TargetPath}");
+            //Console.WriteLine($"有客户端正在请求远程操作");
+            //Console.WriteLine($"类型：{e.AccessType}，模式：{e.AccessMode}");
+            //Console.WriteLine($"源路径：{e.Path}");
+            //Console.WriteLine($"目标路径：{e.TargetPath}");
 
-            //Console.WriteLine("������y/n�����Ƿ����������?");
+            //Console.WriteLine("请输入y/n，表示是否允许该操作?");
 
             //var input = Console.ReadLine();
             //if (input == "y")
@@ -81,8 +84,9 @@ internal static class Program
             //    return;
             //}
 
-            //�����ǰ����޷�������ת����һ�����
+            //如果当前插件无法处理，请转至下一个插件
             await e.InvokeNext();
         }
     }
+    #endregion
 }

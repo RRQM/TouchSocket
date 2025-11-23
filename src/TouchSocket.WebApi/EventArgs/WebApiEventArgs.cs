@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.WebApi;
@@ -48,7 +47,6 @@ public partial class WebApiEventArgs : PluginEventArgs
     public HttpResponse Response { get; }
 }
 
-#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
 
 /// <summary>
 /// WebAPI事件参数类，用于封装HTTP请求和响应信息
@@ -77,5 +75,3 @@ public partial class WebApiEventArgs
     /// </summary>
     public System.Net.Http.HttpResponseMessage ResponseMessage { get; }
 }
-
-#endif

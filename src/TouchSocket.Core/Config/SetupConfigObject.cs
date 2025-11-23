@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -42,20 +39,20 @@ public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObje
 
         this.BuildConfig(config);
 
-        await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseILoadingConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         this.LoadConfig(config);
-        await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseILoadedConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
             this.m_scopedResolver.SafeDispose();
             this.ClearConfig();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>
@@ -78,7 +75,7 @@ public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObje
             }
             if (!registrator.IsRegistered(typeof(ILog)))
             {
-                registrator.RegisterSingleton<ILog>(new LoggerGroup());
+                registrator.RegisterSingleton<ILog, LoggerGroup>(new LoggerGroup());
             }
 
             if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)

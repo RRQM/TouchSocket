@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Text;
 
 namespace TouchSocket.Core;
 
@@ -69,7 +66,11 @@ public sealed class FileLogger : LoggerBase, IDisposable
     public Func<LogLevel, string> CreateLogFolder
     {
         get => this.m_createLogFolder;
-        set => this.m_createLogFolder = ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(this.CreateLogFolder));
+        set
+        {
+            ThrowHelper.ThrowIfNull(value, nameof(this.CreateLogFolder));
+            this.m_createLogFolder = value;
+        }
     }
 
     /// <summary>
@@ -139,14 +140,7 @@ public sealed class FileLogger : LoggerBase, IDisposable
                     writer.SeekToEnd();
                     writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
 
-                    if (this.m_writers.TryAdd(dirPath, writer))
-                    {
-                        return writer;
-                    }
-                    else
-                    {
-                        return this.GetFileStorageWriter(dirPath);
-                    }
+                    return this.m_writers.TryAdd(dirPath, writer) ? writer : this.GetFileStorageWriter(dirPath);
                 }
                 count++;
             }
@@ -157,15 +151,15 @@ public sealed class FileLogger : LoggerBase, IDisposable
     {
         var dirPath = this.CreateLogFolder(logLevel);
 
-        var writer = this.GetFileStorageWriter(dirPath);
+        var writer1 = this.GetFileStorageWriter(dirPath);
 
-        lock (writer)
+        lock (writer1)
         {
             try
             {
-                writer.Write(Encoding.UTF8.GetBytes(logString));
-                writer.FileStorage.Flush();
-                if (writer.FileStorage.Length > this.MaxSize)
+                writer1.Write((Encoding.UTF8.GetBytes(logString)));
+                writer1.FileStorage.Flush();
+                if (writer1.FileStorage.Length > this.MaxSize)
                 {
                     if (this.m_writers.TryRemove(dirPath, out var fileStorageWriter))
                     {

@@ -68,14 +68,14 @@ public class TcpServiceController : ControllerBase
         {
             if (this.m_tcpService.Clients.TryGetClient(id, out var client))
             {
-                var result = await client.CreateWaitingClient(new WaitingOptions()
+                using var result = await client.CreateWaitingClient(new WaitingOptions()
                 {
                     FilterFunc = data =>
                     {
                         return true;//此处可以筛选返回数据。
                     }
-                }).SendThenReturnAsync(Encoding.UTF8.GetBytes(msg));
-                return new Result(ResultCode.Success, Encoding.UTF8.GetString(result));
+                }).SendThenResponseAsync(Encoding.UTF8.GetBytes(msg));
+                return new Result(ResultCode.Success, Encoding.UTF8.GetString(result.Memory.Span));
             }
             else
             {

@@ -6,8 +6,9 @@ title: 创建UdpSession
 import Tag from "@site/src/components/Tag.js";
 import CardLink from "@site/src/components/CardLink.js";
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
+
 
 <TouchSocketDefinition />
 
@@ -40,28 +41,11 @@ UDP组件是基于UDP协议的最基础组件，其功能简单，易用。它�
 
 ### 5.1 作为服务器使用
 
-```csharp showLineNumbers
-var udpService = new UdpSession();
-udpService.Received = (c,e) =>
-{
-    Console.WriteLine(e.ByteBlock.ToString());
-    return EasyTask.CompletedTask;
-};
-udpService.Setup(new TouchSocketConfig()
-    .SetBindIPHost(new IPHost(7789)));
-udpService.Start();
-Console.WriteLine("等待接收");
-```
+<CustomCodeBlock region="UdpSession作为服务器使用"/>
 
 ### 5.2 作为客户端使用
 
-```csharp showLineNumbers
-var udpClient = new UdpSession();
-udpClient.Setup(new TouchSocketConfig()
-    //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
-    .SetBindIPHost(new IPHost(7788)));
-udpClient.Start();
-```
+<CustomCodeBlock region="UdpSession作为客户端使用"/>
 
 :::caution 注意
 
@@ -88,16 +72,7 @@ public virtual void SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int 
 
 例如：
 
-```csharp {5} showLineNumbers
-class MyPluginClass : PluginBase, IUdpReceivedPlugin
-{
-    public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
-    {
-        await client.SendAsync(e.EndPoint, "RRQM");
-        await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="UdpSession发送到接收数据的地址"/>
 
 ### 6.3 发送到默认地址
 
@@ -115,15 +90,7 @@ public virtual void SendAsync(byte[] buffer, int offset, int length)
 
 委托接收，则是直接订阅Received即可。
 
-```csharp showLineNumbers
-var udpService = new UdpSession();
-udpService.Received = (c, e) =>
-{
-    Console.WriteLine(e.ByteBlock.ToString());
-    return EasyTask.CompletedTask;
-};
-udpService.Start(7789);
-```
+<CustomCodeBlock region="UdpSession委托接收"/>
 
 ### 7.2 插件接收 <Tag>推荐</Tag>
 
@@ -131,56 +98,103 @@ udpService.Start(7789);
 
 声明插件
 
-```csharp showLineNumbers
-class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
-{
-    public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
-    {
-        var msg = e.ByteBlock.ToString();
-        if (msg == "hello")
-        {
-            Console.WriteLine("已处理Hello");
-        }
-        else
-        {
-            //如果判断逻辑发现此处无法处理，即可转到下一个插件
-            await e.InvokeNext();
-        }
-    }
-}
+<CustomCodeBlock region="UdpSession插件接收声明插件1"/>
 
-class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
-{
-    public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
-    {
-        var msg = e.ByteBlock.ToString();
-        if (msg == "hi")
-        {
-            Console.WriteLine("已处理Hi");
-        }
-        else
-        {
-            //如果判断逻辑发现此处无法处理，即可转到下一个插件
-            await e.InvokeNext();
-        }
-    }
-}
-```
+<CustomCodeBlock region="UdpSession插件接收声明插件2"/>
 
 使用插件
 
-```csharp showLineNumbers {6-7}
-var udpService = new UdpSession();
-udpService.Setup(new TouchSocketConfig()
-    .SetBindIPHost(new IPHost(7789))
-    .ConfigurePlugins(a =>
-    {
-        a.Add<MyPluginClass1>();
-        a.Add<MyPluginClass2>();
-    }));
-udpService.Start();
-```
+<CustomCodeBlock region="UdpSession插件接收使用插件"/>
 
-## 八、本文示例Demo
+## 八、组播和广播
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Udp/UdpDemoApp"/>
+### 8.1 说明
+
+- **广播BroadCast**：主机之间"一对所有"的通讯模式，广播者可以向网络中所有主机发送信息。广播禁止在Internet宽带网上传输（广播风暴）。
+- **多播MultiCast**：主机之间"一对一组"的通讯模式，也就是加入了同一个组的主机可以接受到此组内的所有数据。
+
+### 8.2 组播使用
+
+组播使用非常简单：
+
+1. 配置中启用广播 **SetEnableBroadcast** （重要）
+2. 在UdpSession **启动** 后，调用 **JoinMulticastGroup** 即可加入组播。调用 **DropMulticastGroup** 退出组播。
+
+#### 8.2.1 创建组播服务器
+
+<CustomCodeBlock region="UdpSession创建组播服务器"/>
+
+#### 8.2.2 发送组播数据
+
+<CustomCodeBlock region="UdpSession发送组播数据"/>
+
+### 8.3 广播使用
+
+广播使用非常简单：
+
+1. 配置中启用广播 **SetEnableBroadcast** （重要）
+
+#### 8.3.1 创建广播服务器
+
+广播接收时，是不需要加入组播组的。
+
+<CustomCodeBlock region="UdpSession创建广播服务器"/>
+
+#### 8.3.2 发送广播数据
+
+<CustomCodeBlock region="UdpSession发送广播数据"/>
+
+:::caution 注意
+
+在发送广播数据时，发送端配置 SetEnableBroadcast 是必须的。
+
+:::
+
+## 九、传输大于64K的数据
+
+### 9.1 说明
+
+UDP由于自身限制，每次发送的数据包最大约64K，但是在局域网内，有时候希望传输更大的数据。所以必须有策略发送。
+
+TouchSocket可通过简单设置，实现该功能。
+
+### 9.2 使用
+
+只需要在配置中，设置其适配器为 **UdpPackageAdapter** 类型即可（默认为 **NormalUdpDataHandlingAdapter**）。同时可以根据传输数据的大小，修改相关属性，如：**MTU**，**Timeout** 等。
+
+<CustomCodeBlock region="UdpSession传输大于64K的数据"/>
+
+:::caution 注意
+
+**此模式下，发送端与接收端均必须为TouchSocket（或实现相同算法），且为相同设置。**
+
+:::
+
+### 9.3 原理
+
+在发送时，会将要发送的数据分割成MTU长度的数据。然后为其编号，然后发送，最后由接收方重组。
+
+#### 9.3.1 数据格式
+
+**ID：由雪花算法生成，在并发请求时1毫秒中有400w分之一的概率发生ID重复。但基本可以忽略不计。**
+
+| Bit | 说明 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 协议名 |  |  |  |  |  |  |  |  |  |
+| byte1 | PackageID为long类型，占用8字节，标识数据包唯一性。 |  |  |  |  |  |  |  |  |
+| byte2 |  |  |  |  |  |  |  |  |  |
+| byte3 |  |  |  |  |  |  |  |  |  |
+| byte4 |  |  |  |  |  |  |  |  |  |
+| byte5 |  |  |  |  |  |  |  |  |  |
+| byte6 |  |  |  |  |  |  |  |  |  |
+| byte7 |  |  |  |  |  |  |  |  |  |
+| byte8 | SN为Ushort占2字节，标识帧序 |  |  |  |  |  |  |  |  |
+| byte9 |  |  |  |  |  |  |  |  |  |
+| byte10 | flag，占1字节，最高位标识是否为结束，其他位保留。 | 1 |  |  |  |  |  |  |  |
+| byte？ | 有效载荷数据 |  |  |  |  |  |  |  |  |
+| byte^2 | 当不为终结帧时，此处仍然为载荷数据。当是终结帧时，倒数两个字节为Crc16校验。 |  |  |  |  |  |  |  |  |
+| byte^1 |  |  |  |  |  |  |  |  |  |
+
+## 十、本文示例Demo
+
+<CardLink link="examples/Udp/UdpDemoApp"/>

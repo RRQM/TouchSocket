@@ -12,8 +12,8 @@
 
 namespace TouchSocket.Core;
 
-//[PluginRaise(typeof(ILoadingConfigPlugin))]
-//[PluginRaise(typeof(ILoadedConfigPlugin))]
-//internal static partial class PluginRaiseExtension
-//{
-//}
+[PluginRaise(typeof(ILoadingConfigPlugin))]
+[PluginRaise(typeof(ILoadedConfigPlugin))]
+internal static partial class PluginRaiseExtension
+{
+}

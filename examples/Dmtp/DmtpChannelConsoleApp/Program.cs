@@ -38,13 +38,10 @@ internal class Program
         //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel =await client.CreateChannelAsync())
+        using (var channel = await client.CreateChannelAsync())
         {
-            //设置限速
-            //channel.MaxSpeed = 1024 * 1024;
-
             ConsoleLogger.Default.Info($"通道创建成功，即将写入");
-            var bytes = new byte[1024];
+            var bytes = new byte[100];
 
             for (var i = 0; i < 100; i++)//循环100次
             {
@@ -65,73 +62,67 @@ internal class Program
 
     private static async Task RunComplete(IDmtpActorObject client)
     {
-        var count = 1024 * 1;//测试1Gb数据
+        #region TcpDmtpClient创建Channel
+        var count = 1024;
 
         //1.创建通道，同时支持通道路由和元数据传递
-        using (var channel =await client.CreateChannelAsync())
-        {
-            //设置限速
-            //channel.MaxSpeed = 1024 * 1024;
 
-            ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
-            var bytes = new byte[1024 * 1024];
+        using var cts = new CancellationTokenSource(1000 * 10);
+        var metadata = new Metadata();
+
+        using (var channel = await client.CreateChannelAsync(metadata, cts.Token))
+        {
+            ConsoleLogger.Default.Info($"通道创建成功");
+            var bytes = new byte[1000];
             for (var i = 0; i < count; i++)
             {
+                if (!channel.CanWrite)
+                {
+                    //通道不可写，即客户端可能已经断开连接
+                    break;
+                }
+                using var writeCts = new CancellationTokenSource(1000 * 5);
                 //2.持续写入数据
-                await channel.WriteAsync(bytes);
+                await channel.WriteAsync(bytes, writeCts.Token);
             }
 
             //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
             await channel.CompleteAsync("我完成了");
             ConsoleLogger.Default.Info("通道写入结束");
         }
+        #endregion
+
     }
 
     private static async Task<TcpDmtpClient> GetTcpDmtpClient()
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Channel"
+                   options.VerifyToken = "Channel";
                })
-               .SetSendTimeout(0)
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
                })
-               .ConfigurePlugins(a =>
-               {
-                   a.Add<MyPlugin>();
+        #region Dmtp心跳重连插件
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyPlugin>();
 
-                   //使用重连
-                   a.UseDmtpReconnection<TcpDmtpClient>()
-                   .UsePolling(TimeSpan.FromSeconds(3))//使用轮询，每3秒检测一次
-                   .SetActionForCheck(async (c, i) =>//重新定义检活策略
-                   {
-                       //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用。因为如果直接断网，则检测不出来
-                       //await Task.CompletedTask;//消除Task
-                       //return c.Online;//判断是否在握手状态
+                    //使用重连
+                    a.UseReconnection<TcpDmtpClient>(options =>
+                    {
+                        //重连间隔3秒
+                        options.PollingInterval = TimeSpan.FromSeconds(3);
 
-                       //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
-                       if (await c.PingAsync())
-                       {
-                           return true;
-                       }
-                       //返回false时可以判断，如果最近活动时间不超过3秒，则猜测客户端确实在忙，所以跳过本次重连
-                       else if (DateTime.Now - c.GetLastActiveTime() < TimeSpan.FromSeconds(3))
-                       {
-                           return null;
-                       }
-                       //否则，直接重连。
-                       else
-                       {
-                           return false;
-                       }
-                   });
+                        //使用Dmtp状态、心跳等联合检测作为连接状态检查依据。
+                        options.UseDmtpCheckAction();
+                    });
+                })
+        #endregion
 
-
-               })
                .BuildClientAsync<TcpDmtpClient>();
 
         client.Logger.Info("连接成功");
@@ -152,9 +143,9 @@ internal class Program
                {
                    a.Add<MyPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Channel"//连接验证口令。
+                   options.VerifyToken = "Channel";//连接验证口令。
                });
 
         await service.SetupAsync(config);
@@ -164,6 +155,7 @@ internal class Program
     }
 }
 
+#region TcpDmtpService使用插件订阅Channel
 internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
 {
     private readonly ILog m_logger;
@@ -175,30 +167,41 @@ internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
 
     public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
     {
+        //1.订阅通道
         if (client.TrySubscribeChannel(e.ChannelId, out var channel))
         {
-            //设定读取超时时间
-            //channel.Timeout = TimeSpan.FromSeconds(30);
+            //2.准备处理通道数据
             using (channel)
             {
                 this.m_logger.Info("通道开始接收");
 
-                //此判断主要是探测是否有Hold操作
-                while (channel.CanMoveNext)
+                long count = 0;
+
+                //3.持续读取数据
+                while (channel.CanRead)
                 {
-                    long count = 0;
-                    foreach (var byteBlock in channel)
+                    //4.设置读取超时
+                    using var cts = new CancellationTokenSource(10 * 1000);
+
+                    //5.读取到的数据
+                    var memory = await channel.ReadAsync(cts.Token);
+
+                    //6.可以判断通道状态
+                    if (channel.Status == ChannelStatus.HoldOn)
                     {
-                        //这里处理数据
-                        count += byteBlock.Length;
-                        this.m_logger.Info($"通道已接收：{count}字节");
+                        Console.WriteLine($"HoldOn:{channel.LastOperationMes}");
                     }
 
-                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+                    //这里处理数据
+                    count += memory.Length;
+                    this.m_logger.Info($"通道已接收：{count}字节");
                 }
+
+                this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
             }
         }
 
         await e.InvokeNext();
     }
 }
+#endregion

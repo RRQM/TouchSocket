@@ -15,13 +15,13 @@ namespace TouchSocket.Mqtt;
 public partial class MqttPingRespMessage
 {
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
 
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
 
     }

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -31,7 +28,8 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">写入位置（从0开始）</param>
     /// <param name="bytes">待写入数据</param>
     /// <returns>响应值</returns>
-    public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+    [AsyncToSyncWarning]
+    public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
         return master.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
     }
@@ -45,7 +43,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">写入位置（从0开始）</param>
     /// <param name="bytes">待写入数据</param>
     /// <returns>响应值</returns>
-    public static Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+    public static Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
         return master.ReadWriteMultipleRegistersAsync(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
     }
@@ -61,9 +59,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>读取到的值集合</returns>
-    public static bool[] ReadCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
+    [AsyncToSyncWarning]
+    public static ReadOnlyMemory<bool> ReadCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadCoils(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -73,9 +72,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>读取到的值集合</returns>
-    public static bool[] ReadDiscreteInputs(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
+    [AsyncToSyncWarning]
+    public static ReadOnlyMemory<bool> ReadDiscreteInputs(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadDiscreteInputs(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -85,9 +85,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>响应值</returns>
+    [AsyncToSyncWarning]
     public static IModbusResponse ReadHoldingRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadHoldingRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadHoldingRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -97,9 +98,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>响应值</returns>
+    [AsyncToSyncWarning]
     public static IModbusResponse ReadInputRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
-        return master.ReadInputRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+        return master.ReadInputRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Read 默认超时
@@ -113,7 +115,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>读取到的值集合</returns>
-    public static Task<bool[]> ReadCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
+    public static Task<ReadOnlyMemory<bool>> ReadCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
         return master.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
     }
@@ -125,7 +127,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="quantity">读取数量</param>
     /// <returns>读取到的值集合</returns>
-    public static Task<bool[]> ReadDiscreteInputsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
+    public static Task<ReadOnlyMemory<bool>> ReadDiscreteInputsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
     {
         return master.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
     }
@@ -164,9 +166,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="values">待写入集合</param>
-    public static IModbusResponse WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
+    [AsyncToSyncWarning]
+    public static IModbusResponse WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<bool> values)
     {
-        return master.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
+        return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -175,9 +178,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="bytes">待写入集合</param>
-    public static IModbusResponse WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
+    [AsyncToSyncWarning]
+    public static IModbusResponse WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
-        return master.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
+        return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -186,9 +190,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="value">待写入数值</param>
+    [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
     {
-        return master.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     /// <summary>
@@ -197,9 +202,10 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="value">待写入数值</param>
+    [AsyncToSyncWarning]
     public static IModbusResponse WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
     {
-        return master.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
+        return master.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
     }
 
     #endregion Write 默认超时
@@ -212,7 +218,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="values">待写入集合</param>
-    public static Task<IModbusResponse> WriteMultipleCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
+    public static Task<IModbusResponse> WriteMultipleCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<bool> values)
     {
         return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None);
     }
@@ -223,7 +229,7 @@ public static class ModbusIgnoreSlaveMasterExtension
     /// <param name="master">通讯客户端</param>
     /// <param name="startingAddress">起始位置（从0开始）</param>
     /// <param name="bytes">待写入集合</param>
-    public static Task<IModbusResponse> WriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
+    public static Task<IModbusResponse> WriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<byte> bytes)
     {
         return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None);
     }

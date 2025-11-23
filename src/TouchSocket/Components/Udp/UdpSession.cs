@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -48,15 +44,15 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向默认远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(memory);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
 
     #endregion 向默认远程异步发送
@@ -64,34 +60,18 @@ public class UdpSession : UdpSessionBase, IUdpSession
     #region 向设置的远程异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(endPoint, memory);
+        return this.ProtectedSendAsync(endPoint, memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo)
+    public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(endPoint, requestInfo);
+        return this.ProtectedSendAsync(endPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向设置的远程异步发送
-
-    #region 组合发送
-
-    /// <inheritdoc/>
-    public Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(transferBytes);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(endPoint, transferBytes);
-    }
-
-    #endregion 组合发送
 
     #region Receiver
 

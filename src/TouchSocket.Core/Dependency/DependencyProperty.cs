@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 
 namespace TouchSocket.Core;
@@ -36,7 +35,8 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
         : base(propertyName)
     {
         this.m_name = propertyName;
-        this.OnFailedToGetTheValue = ThrowHelper.ThrowArgumentNullExceptionIf(onFailedToGetTheValue, nameof(onFailedToGetTheValue));
+        ThrowHelper.ThrowIfNull(onFailedToGetTheValue, nameof(onFailedToGetTheValue));
+        this.OnFailedToGetTheValue = onFailedToGetTheValue;
     }
 
     /// <summary>

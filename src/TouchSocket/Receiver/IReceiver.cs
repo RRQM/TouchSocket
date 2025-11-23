@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 
@@ -25,25 +21,9 @@ namespace TouchSocket.Sockets;
 public interface IReceiver<TResult> : IDisposableObject where TResult : IReceiverResult
 {
     /// <summary>
-    /// 获取或设置是否启用缓存模式。
-    /// <para>
-    /// 设为<see langword="true"/>即启用缓存模式。在缓存模式下，<see cref="IReceiverResult.ByteBlock"/>的数据如果<see cref="ByteBlock.CanReadLength"/>大于0。
-    /// 即会缓存未消费的数据。
-    /// </para>
-    /// </summary>
-    bool CacheMode { get; set; }
-
-    /// <summary>
-    /// 获取或设置最大缓存大小。
-    /// 这决定了缓存能够存储的最大数据量，以字节为单位。
-    /// </summary>
-    int MaxCacheSize { get; set; }
-
-
-    /// <summary>
     /// 异步读取操作。
     /// </summary>
-    /// <param name="token">用于取消异步读取操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消异步读取操作的取消令牌。</param>
     /// <returns>一个<see cref="ValueTask{TResult}"/>，其结果是异步读取的数据。</returns>
-    ValueTask<TResult> ReadAsync(CancellationToken token);
+    ValueTask<TResult> ReadAsync(CancellationToken cancellationToken);
 }

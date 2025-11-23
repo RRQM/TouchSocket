@@ -10,16 +10,15 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
-abstract class DynamicMethodInfoBase : IDynamicMethodInfo
+[RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
+internal abstract class DynamicMethodInfoBase : IDynamicMethodInfo
 {
+
     public DynamicMethodInfoBase(MethodInfo method)
     {
         if (method.ReturnType == typeof(void))
@@ -57,16 +56,14 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
 
     public MethodReturnKind ReturnKind { get; set; }
 
-    public async Task<object> GetResultAsync([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] object result)
+    public async Task<object> GetResultAsync(object result)
     {
         if (result is Task task)
         {
             await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (this.ReturnKind == MethodReturnKind.AwaitableObject)
-            {
-                return DynamicMethodMemberAccessor.Default.GetValue(task, nameof(Task<object>.Result));
-            }
-            return null;
+            return this.ReturnKind == MethodReturnKind.AwaitableObject
+                ? MemberAccessor.StaticGetValue(task, nameof(Task<object>.Result))
+                : null;
         }
         ThrowHelper.ThrowException("当源生成无法使用时，无法处理非Task的Awaitable对象。");
         return null;
@@ -115,14 +112,7 @@ abstract class DynamicMethodInfoBase : IDynamicMethodInfo
         }
 
         // 6. 检查GetResult方法的返回类型
-        if (getResultMethod.ReturnType == typeof(void))
-        {
-            returnType = null;
-        }
-        else
-        {
-            returnType = getResultMethod.ReturnType;
-        }
+        returnType = getResultMethod.ReturnType == typeof(void) ? null : getResultMethod.ReturnType;
 
         return true;
     }

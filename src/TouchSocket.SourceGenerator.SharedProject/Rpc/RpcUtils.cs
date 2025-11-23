@@ -23,6 +23,7 @@ internal static class RpcUtils
     public const string RpcAttributeTypeName = "TouchSocket.Rpc.RpcAttribute";
     public const string FromServicesAttributeTypeName = "TouchSocket.Rpc.FromServicesAttribute";
     public const string ICallContextTypeName = "TouchSocket.Rpc.ICallContext";
+    public const string FromServicesAttributeName = "TouchSocket.Rpc.FromServicesAttribute";
 
     public static StringBuilder CreateStringBuilder()
     {

@@ -25,11 +25,16 @@ internal class Program
     {
         var client = await GetXmlRpcClientAsync();
 
-        //直接调用
-        var result1 =await client.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+        #region XmlRpc直接调用
+        var result1 = await client.InvokeTAsync<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+        #endregion
+
         Console.WriteLine($"直接调用，返回结果:{result1}");
 
-        var result2 = client.Sum(10, 20);//此Sum方法是服务端生成的代理。
+        #region XmlRpc代理调用
+        var result2 = await client.SumAsync(10, 20);//此Sum方法是服务端生成的代理。
+        #endregion
+
         Console.WriteLine($"代理调用，返回结果:{result2}");
 
         Console.ReadKey();
@@ -37,9 +42,11 @@ internal class Program
 
     private static async Task<XmlRpcClient> GetXmlRpcClientAsync()
     {
-        var jsonRpcClient = new XmlRpcClient();
-        await jsonRpcClient.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
+        #region 创建XmlRpc客户端
+        var client = new XmlRpcClient();
+        await client.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
+        #endregion
         Console.WriteLine("连接成功");
-        return jsonRpcClient;
+        return client;
     }
 }

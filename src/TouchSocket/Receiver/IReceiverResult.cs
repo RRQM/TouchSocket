@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -22,7 +20,7 @@ public interface IReceiverResult : IBlockResult
     /// <summary>
     /// 获取接收到的数据字节块
     /// </summary>
-    ByteBlock ByteBlock { get; }
+    ReadOnlyMemory<byte> Memory { get; }
 
     /// <summary>
     /// 获取与接收数据相关的请求信息

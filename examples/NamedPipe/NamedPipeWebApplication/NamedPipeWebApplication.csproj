@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
-    <PackageReference Include="TouchSocket.Hosting" Version="3.1.15" />
-    <PackageReference Include="TouchSocket.NamedPipe" Version="3.1.15" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="TouchSocket.Hosting" />
+    <PackageReference Include="TouchSocket.NamedPipe" />
   </ItemGroup>
 
   <!--<ItemGroup>

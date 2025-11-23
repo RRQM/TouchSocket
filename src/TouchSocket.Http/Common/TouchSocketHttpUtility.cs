@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Text;
-using TouchSocket.Core;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Http;
 
@@ -21,10 +19,23 @@ namespace TouchSocket.Http;
 /// </summary>
 public static class TouchSocketHttpUtility
 {
+    public const int MaxReadSize = 1024 * 1024;
+
+    // HTTP头部解析相关常量
     /// <summary>
-    /// 非缓存上限
+    /// 冒号字节值
     /// </summary>
-    public const int NoCacheMaxSize = 1024 * 1024;
+    public const byte COLON = (byte)':';
+
+    /// <summary>
+    /// 空格字节值
+    /// </summary>
+    public const byte SPACE = (byte)' ';
+
+    /// <summary>
+    /// 制表符字节值
+    /// </summary>
+    public const byte TAB = (byte)'\t';
 
     /// <summary>
     /// 获取一个只读的字节序列，表示回车换行(CRLF)。
@@ -32,108 +43,144 @@ public static class TouchSocketHttpUtility
     /// <value>
     /// 一个包含回车和换行字节的只读字节序列。
     /// </value>
-    public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
+    public static ReadOnlySpan<byte> CRLF => "\r\n"u8;
+
+    /// <summary>
+    /// 获取一个只读的字节序列，表示双回车换行(CRLFCRLF)。
+    /// </summary>
+    /// <value>
+    /// 一个包含双回车和换行字节的只读字节序列。
+    /// </value>
+    public static ReadOnlySpan<byte> CRLFCRLF => "\r\n\r\n"u8;
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "&amp;" 符号。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendAnd<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendAnd<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("&"u8);
+        writer.Write("&"u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 ":" 符号。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendColon<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendColon<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write(":"u8);
+        writer.Write(":"u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "=" 符号。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendEqual<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendEqual<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("="u8);
+        writer.Write("="u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "HTTP" 字符串。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendHTTP<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendHTTP<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("HTTP"u8);
+        writer.Write("HTTP"u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "?" 符号。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendQuestionMark<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendQuestionMark<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("?"u8);
+        writer.Write("?"u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加回车换行符 "\r\n"。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendRn<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendRn<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("\r\n"u8);
+        writer.Write(CRLF);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加 "/" 符号。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendSlash<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write("/"u8);
+        writer.Write("/"u8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加空格符。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
-    public static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
+    public static void AppendSpace<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.Write(StringExtension.DefaultSpaceUtf8Span);
+        writer.Write(StringExtension.DefaultSpaceUtf8Span);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加指定的 UTF-8 编码字符串。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
     /// <param name="value">要追加的字符串。</param>
-    public static void AppendUtf8String<TByteBlock>(ref TByteBlock byteBlock, string value) where TByteBlock : IByteBlock
+    public static void AppendUtf8String<TWriter>(ref TWriter writer, string value) where TWriter : IBytesWriter
     {
-        byteBlock.WriteNormalString(value, Encoding.UTF8);
+        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
     }
 
     /// <summary>
     /// 在 <see cref="IByteBlock"/> 中追加指定整数的十六进制表示。
     /// </summary>
-    /// <typeparam name="TByteBlock">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="byteBlock">字节块实例。</param>
+    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
+    /// <param name="writer">字节块实例。</param>
     /// <param name="value">要追加的整数值。</param>
-    public static void AppendHex<TByteBlock>(ref TByteBlock byteBlock, int value) where TByteBlock : IByteBlock
+    public static void AppendHex<TWriter>(ref TWriter writer, int value) where TWriter : IBytesWriter
     {
-        AppendUtf8String(ref byteBlock, $"{value:X}");
+        AppendUtf8String(ref writer, $"{value:X}");
+    }
+
+    /// <summary>
+    /// 检查字节是否为HTTP规范允许的空白字符（空格或制表符）
+    /// </summary>
+    /// <param name="b">要检查的字节</param>
+    /// <returns>如果是空白字符返回true，否则返回false</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool IsWhitespace(byte b) => b == SPACE || b == TAB;
+
+    /// <summary>
+    /// 高效的空白字符去除，避免使用通用的Trim方法
+    /// </summary>
+    /// <param name="span">要处理的字节跨度</param>
+    /// <returns>去除前后空白字符后的字节跨度</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ReadOnlySpan<byte> TrimWhitespace(ReadOnlySpan<byte> span)
+    {
+        var start = 0;
+        var end = span.Length - 1;
+
+        while (start <= end && IsWhitespace(span[start]))
+            start++;
+
+        while (end >= start && IsWhitespace(span[end]))
+            end--;
+
+        return start > end ? ReadOnlySpan<byte>.Empty : span.Slice(start, end - start + 1);
     }
 
     internal static string UnescapeDataString(ReadOnlySpan<byte> urlSpan)
@@ -152,15 +199,12 @@ public static class TouchSocketHttpUtility
     internal static string UnescapeDataString(ReadOnlySpan<char> urlSpan)
     {
 #if NET9_0_OR_GREATER
-        return Uri.UnescapeDataString(urlSpan);
+  return Uri.UnescapeDataString(urlSpan);
 #else
         return Uri.UnescapeDataString(urlSpan.ToString());
 #endif
 
     }
-
-    internal static bool IsWhitespace(byte b) => b == ' ' || b == '\t';
-
 
     internal static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
     {
@@ -205,7 +249,7 @@ public static class TouchSocketHttpUtility
         {
             var key = TouchSocketHttpUtility.UnescapeDataString(keySpan);
             var value = TouchSocketHttpUtility.UnescapeDataString(valueSpan);
-            parameters.AddOrUpdate(key, value);
+            parameters.Add(key, value);
         }
     }
 }

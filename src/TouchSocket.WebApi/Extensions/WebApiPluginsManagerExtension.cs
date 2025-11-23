@@ -10,22 +10,43 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Rpc;
 using TouchSocket.WebApi;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// WebApiPluginManagerExtension
+/// WebApi插件管理器扩展
 /// </summary>
 public static class WebApiPluginManagerExtension
 {
     /// <summary>
     /// 使用WebApi的插件。仅服务器可用。
     /// </summary>
-    /// <param name="pluginManager"></param>
-    /// <returns></returns>
+    /// <param name="pluginManager">插件管理器</param>
+    /// <param name="options">WebApi配置选项</param>
+    /// <returns>WebApi解析插件</returns>
+    public static WebApiParserPlugin UseWebApi(this IPluginManager pluginManager, Action<WebApiOption> options)
+    {
+        var resolver = pluginManager.Resolver;
+        WebApiOption option = new WebApiOption();
+
+        options.Invoke(option);
+
+        var webApiParserPlugin = new WebApiParserPlugin(resolver.Resolve<IRpcServerProvider>(), option);
+
+        pluginManager.Add(webApiParserPlugin);
+
+        return webApiParserPlugin;
+    }
+
+    /// <summary>
+    /// 使用WebApi的插件。仅服务器可用。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器</param>
+    /// <returns>WebApi解析插件</returns>
     public static WebApiParserPlugin UseWebApi(this IPluginManager pluginManager)
     {
-        return pluginManager.Add<WebApiParserPlugin>();
+        return UseWebApi(pluginManager, options => { });
     }
 }

@@ -1,0 +1,641 @@
+---
+id: webapi-staticfiles
+title: WebAPI 静态文件服务
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+## 一、概述
+
+TouchSocket.WebApi 可以与静态文件服务插件结合使用，实现 WebAPI 和静态资源托管的一体化解决方案。这对于构建前后端分离应用、提供文档页面、托管资源文件等场景非常有用。
+
+:::tip 提示
+静态文件服务功能由 `HttpStaticPagePlugin` 插件提供，详细文档请参考 [HTTP静态页面插件](./httpstaticpageplugin.mdx)。
+:::
+
+## 二、基本使用
+
+### 2.1 同时启用 WebAPI 和静态文件服务
+
+```csharp showLineNumbers
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+    .SetListenIPHosts(7789)
+    .ConfigurePlugins(a =>
+    {
+        // 启用 WebAPI
+        a.UseWebApi();
+        
+        // 启用静态文件服务
+        a.UseHttpStaticPage()
+            .AddFolder("wwwroot/"); // 添加静态文件根目录
+
+        // 默认HTTP插件应最后添加
+        a.UseDefaultHttpServicePlugin();
+    }));
+
+await service.StartAsync();
+```
+
+目录结构示例：
+```
+项目根目录/
+├── wwwroot/
+│   ├── index.html
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── app.js
+│   └── images/
+│       └── logo.png
+└── Program.cs
+```
+
+访问方式：
+- API: `http://localhost:7789/api/users`
+- 静态文件: `http://localhost:7789/index.html`
+- CSS: `http://localhost:7789/css/style.css`
+
+## 三、配置静态文件服务
+
+### 3.1 添加多个文件夹
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .AddFolder("wwwroot/")       // 主要静态文件目录
+    .AddFolder("public/")        // 公共资源目录
+    .AddFolder("uploads/");      // 上传文件目录
+```
+
+### 3.2 设置默认文件
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetDefaultFile("index.html") // 设置默认首页
+    .AddFolder("wwwroot/");
+```
+
+访问 `http://localhost:7789/` 会自动返回 `index.html`。
+
+### 3.3 URL 重写
+
+使用 `SetNavigateAction` 实现 URL 重写：
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        // 重写规则：访问 /home 时实际返回 /index.html
+        if (request.RelativeURL.Equals("/home", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/index.html";
+        }
+        
+        // SPA 应用路由处理：所有未匹配的路由都返回 index.html
+        if (!Path.HasExtension(request.RelativeURL))
+        {
+            return "/index.html";
+        }
+        
+        return request.RelativeURL;
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 3.4 自定义响应处理
+
+使用 `SetResponseAction` 添加自定义响应头或处理：
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetResponseAction(response =>
+    {
+        // 添加缓存控制
+        response.Headers.Add("Cache-Control", "public, max-age=31536000");
+        
+        // 添加安全头
+        response.Headers.Add("X-Content-Type-Options", "nosniff");
+        response.Headers.Add("X-Frame-Options", "SAMEORIGIN");
+        
+        // 根据文件类型设置不同的缓存策略
+        if (response.ContentType?.Contains("text/html") == true)
+        {
+            response.Headers["Cache-Control"] = "no-cache";
+        }
+    })
+    .AddFolder("wwwroot/");
+```
+
+## 四、与 WebAPI 结合使用场景
+
+### 4.1 前后端分离应用
+
+#### 后端 API 服务
+
+```csharp showLineNumbers
+public partial class UserApiServer : SingletonRpcServer
+{
+    [WebApi(HttpMethodType.Get, Route = "/api/users")]
+    public List<UserInfo> GetUsers()
+    {
+        return userService.GetAll();
+    }
+    
+    [WebApi(HttpMethodType.Post, Route = "/api/users")]
+    public UserInfo CreateUser([FromBody] UserInfo user)
+    {
+        return userService.Create(user);
+    }
+}
+```
+
+#### 前端静态文件
+
+`wwwroot/index.html`:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>用户管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app"></div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
+```
+
+`wwwroot/js/app.js`:
+```javascript
+// 调用后端 API
+fetch('/api/users')
+    .then(response => response.json())
+    .then(data => {
+        console.log('用户列表:', data);
+        // 渲染用户列表
+    });
+```
+
+### 4.2 API 文档托管
+
+将 Swagger UI 或其他 API 文档作为静态文件托管：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi();
+    
+    // 托管 API 文档
+    a.UseHttpStaticPage()
+        .SetNavigateAction(request =>
+        {
+            // /docs 路由重定向到文档首页
+            if (request.RelativeURL == "/docs" || request.RelativeURL == "/docs/")
+            {
+                return "/docs/index.html";
+            }
+            return request.RelativeURL;
+        })
+        .AddFolder("wwwroot/");
+    
+    a.UseDefaultHttpServicePlugin();
+})
+```
+
+### 4.3 文件上传与访问
+
+#### 上传 API
+
+```csharp showLineNumbers
+public partial class FileApiServer : SingletonRpcServer
+{
+    [WebApi(HttpMethodType.Post, Route = "/api/upload")]
+    public async Task<UploadResult> Upload([FromCallContext] IHttpCallContext callContext)
+    {
+        var request = callContext.HttpContext.Request;
+        
+        // 处理文件上传
+        if (request.ContentType?.Contains("multipart/form-data") == true)
+        {
+            var file = await request.GetFirstFileAsync();
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine("uploads", fileName);
+            
+            // 保存文件
+            await File.WriteAllBytesAsync(filePath, file.Data);
+            
+            return new UploadResult
+            {
+                Success = true,
+                Url = $"/uploads/{fileName}",
+                FileName = fileName
+            };
+        }
+        
+        throw new Exception("无效的请求");
+    }
+}
+```
+
+#### 配置静态文件访问
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .AddFolder("uploads/"); // 允许访问上传的文件
+```
+
+上传后可以通过 `http://localhost:7789/uploads/xxx.jpg` 访问文件。
+
+## 五、高级配置
+
+### 5.1 MIME 类型配置
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetMimeMapping(new Dictionary<string, string>
+    {
+        { ".json", "application/json" },
+        { ".wasm", "application/wasm" },
+        { ".md", "text/markdown" }
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 5.2 文件过滤
+
+只允许访问特定类型的文件：
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        var ext = Path.GetExtension(request.RelativeURL).ToLower();
+        
+        // 只允许特定文件类型
+        var allowedExtensions = new[] { ".html", ".css", ".js", ".png", ".jpg", ".gif" };
+        
+        if (!allowedExtensions.Contains(ext))
+        {
+            return null; // 返回 null 表示拒绝访问
+        }
+        
+        return request.RelativeURL;
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 5.3 访问控制
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        // 禁止访问敏感目录
+        if (request.RelativeURL.StartsWith("/config/") ||
+            request.RelativeURL.StartsWith("/private/"))
+        {
+            return null;
+        }
+        
+        return request.RelativeURL;
+    })
+    .SetResponseAction(response =>
+    {
+        // 添加访问控制头
+        response.Headers.Add("Access-Control-Allow-Origin", "*");
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 5.4 压缩支持
+
+对静态文件启用压缩：
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetResponseAction(response =>
+    {
+        // 对可压缩的内容类型启用压缩
+        var compressibleTypes = new[] { "text/", "application/json", "application/javascript" };
+        
+        if (compressibleTypes.Any(t => response.ContentType?.StartsWith(t) == true))
+        {
+            response.Headers.Add("Content-Encoding", "gzip");
+            // 实际压缩处理
+        }
+    })
+    .AddFolder("wwwroot/");
+```
+
+## 六、SPA 应用支持
+
+### 6.1 Vue/React/Angular 应用
+
+对于单页应用，需要处理路由回退：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi();
+    
+    a.UseHttpStaticPage()
+        .SetNavigateAction(request =>
+        {
+            var url = request.RelativeURL;
+            
+            // API 路由直接放行
+            if (url.StartsWith("/api/"))
+            {
+                return null; // 交给 WebAPI 处理
+            }
+            
+            // 静态资源文件直接返回
+            if (Path.HasExtension(url))
+            {
+                return url;
+            }
+            
+            // 其他所有路由都返回 index.html（SPA 路由）
+            return "/index.html";
+        })
+        .SetResponseAction(response =>
+        {
+            // 对 index.html 禁用缓存
+            if (response.ContentType?.Contains("text/html") == true)
+            {
+                response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            }
+        })
+        .AddFolder("wwwroot/");
+    
+    a.UseDefaultHttpServicePlugin();
+})
+```
+
+### 6.2 路由优先级
+
+确保 API 路由优先于静态文件：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    // 1. 先添加 WebAPI（优先匹配 API 路由）
+    a.UseWebApi();
+    
+    // 2. 再添加 Swagger（如果使用）
+    a.UseSwagger();
+    
+    // 3. 最后添加静态文件服务
+    a.UseHttpStaticPage()
+        .AddFolder("wwwroot/");
+    
+    // 4. 兜底插件
+    a.UseDefaultHttpServicePlugin();
+})
+```
+
+## 七、性能优化
+
+### 7.1 缓存策略
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetResponseAction(response =>
+    {
+        var url = response.Request.RelativeURL;
+        
+        // 对带版本号的资源设置长期缓存
+        if (Regex.IsMatch(url, @"\.([\w]+)\.\w+$"))
+        {
+            response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+        }
+        // 对 HTML 文件不缓存
+        else if (url.EndsWith(".html"))
+        {
+            response.Headers["Cache-Control"] = "no-cache";
+        }
+        // 其他静态资源短期缓存
+        else
+        {
+            response.Headers["Cache-Control"] = "public, max-age=86400";
+        }
+        
+        // 添加 ETag
+        response.Headers["ETag"] = $"\"{response.GetHashCode()}\"";
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 7.2 CDN 配置
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        var url = request.RelativeURL;
+        
+        // 将特定资源重定向到 CDN
+        if (url.StartsWith("/assets/"))
+        {
+            request.Response.StatusCode = 301;
+            request.Response.Headers["Location"] = $"https://cdn.example.com{url}";
+            return null;
+        }
+        
+        return url;
+    })
+    .AddFolder("wwwroot/");
+```
+
+## 八、安全考虑
+
+### 8.1 防止目录遍历
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        var url = request.RelativeURL;
+        
+        // 防止路径穿越攻击
+        if (url.Contains("..") || url.Contains("~"))
+        {
+            return null;
+        }
+        
+        // 规范化路径
+        url = Path.GetFullPath(url).Replace("\\", "/");
+        
+        return url;
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 8.2 添加安全响应头
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetResponseAction(response =>
+    {
+        // 防止 XSS
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-XSS-Protection"] = "1; mode=block";
+        
+        // 防止点击劫持
+        response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+        
+        // CSP 策略
+        response.Headers["Content-Security-Policy"] = "default-src 'self'";
+        
+        // HTTPS 强制
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 8.3 文件大小限制
+
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        var filePath = Path.Combine("wwwroot", request.RelativeURL.TrimStart('/'));
+        
+        if (File.Exists(filePath))
+        {
+            var fileInfo = new FileInfo(filePath);
+            
+            // 限制单个文件大小（例如 10MB）
+            if (fileInfo.Length > 10 * 1024 * 1024)
+            {
+                request.Response.StatusCode = 413; // Payload Too Large
+                return null;
+            }
+        }
+        
+        return request.RelativeURL;
+    })
+    .AddFolder("wwwroot/");
+```
+
+## 九、常见问题
+
+### 9.1 静态文件不显示
+
+**问题**：访问静态文件返回 404
+
+**解决方案**：
+1. 确认文件路径正确，相对于程序运行目录
+2. 检查文件是否被正确复制到输出目录（设置为"始终复制"）
+3. 确认静态文件插件在 WebAPI 之后添加
+4. 检查 `SetNavigateAction` 是否正确返回路径
+
+### 9.2 SPA 路由刷新 404
+
+**问题**：单页应用刷新页面时返回 404
+
+**解决方案**：
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        // 对于没有扩展名的请求（SPA路由），返回 index.html
+        if (!Path.HasExtension(request.RelativeURL))
+        {
+            return "/index.html";
+        }
+        return request.RelativeURL;
+    })
+    .AddFolder("wwwroot/");
+```
+
+### 9.3 API 和静态文件冲突
+
+**问题**：API 路由被静态文件服务拦截
+
+**解决方案**：
+确保正确的插件顺序：
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi();           // 1. 先添加 WebAPI
+    a.UseHttpStaticPage()    // 2. 后添加静态文件
+        .AddFolder("wwwroot/");
+    a.UseDefaultHttpServicePlugin(); // 3. 最后添加兜底插件
+})
+```
+
+或在 `SetNavigateAction` 中排除 API 路由：
+```csharp showLineNumbers
+a.UseHttpStaticPage()
+    .SetNavigateAction(request =>
+    {
+        if (request.RelativeURL.StartsWith("/api/"))
+        {
+            return null; // 交给 WebAPI 处理
+        }
+        return request.RelativeURL;
+    })
+    .AddFolder("wwwroot/");
+```
+
+## 十、最佳实践
+
+### 10.1 文件组织
+
+```
+wwwroot/
+├── index.html          # 入口文件
+├── favicon.ico         # 网站图标
+├── assets/             # 资源目录
+│   ├── css/
+│   ├── js/
+│   ├── images/
+│   └── fonts/
+├── docs/               # 文档目录
+└── downloads/          # 下载文件
+```
+
+### 10.2 版本化资源
+
+在构建时为资源添加版本号：
+```html
+<link rel="stylesheet" href="/css/style.v1.0.0.css">
+<script src="/js/app.v1.0.0.js"></script>
+```
+
+### 10.3 开发与生产环境分离
+
+```csharp showLineNumbers
+#if DEBUG
+    a.UseHttpStaticPage()
+        .SetResponseAction(response =>
+        {
+            // 开发环境：禁用缓存
+            response.Headers["Cache-Control"] = "no-cache";
+        })
+        .AddFolder("wwwroot/");
+#else
+    a.UseHttpStaticPage()
+        .SetResponseAction(response =>
+        {
+            // 生产环境：启用缓存
+            response.Headers["Cache-Control"] = "public, max-age=31536000";
+        })
+        .AddFolder("wwwroot/");
+#endif
+```
+
+## 十一、总结
+
+TouchSocket.WebApi 与静态文件服务的结合提供了完整的 Web 应用解决方案：
+
+✅ **一体化部署**：API 和静态资源统一部署  
+✅ **灵活配置**：支持 URL 重写、响应定制  
+✅ **SPA 友好**：完美支持单页应用路由  
+✅ **高性能**：内置缓存策略和优化选项  
+✅ **安全可靠**：提供多层安全防护  
+
+这使得 TouchSocket 成为构建现代 Web 应用的理想选择，无论是简单的静态网站还是复杂的前后端分离应用。
+

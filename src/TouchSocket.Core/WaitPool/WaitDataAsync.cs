@@ -10,28 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
 /// 等待数据对象
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
+public class WaitDataAsync<T> : DisposableObject
 {
-    private readonly AsyncAutoResetEvent m_asyncWaitHandle;
+    private readonly AsyncManualResetEvent m_asyncWaitHandle;
     private volatile WaitDataStatus m_status;
-    private CancellationTokenRegistration m_tokenRegistration;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     public WaitDataAsync()
     {
-        this.m_asyncWaitHandle = new AsyncAutoResetEvent(false);
+        this.m_asyncWaitHandle = new AsyncManualResetEvent(false);
     }
 
     /// <inheritdoc/>
@@ -56,35 +51,18 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
     }
 
     /// <inheritdoc/>
-    public bool Set()
+    public void Set()
     {
-        this.m_status = WaitDataStatus.SetRunning;
-        return this.m_asyncWaitHandle.Set();
+        this.m_status = WaitDataStatus.Success;
+        this.m_asyncWaitHandle.Set();
     }
 
     /// <inheritdoc/>
-    public bool Set(T waitResult)
+    public void Set(T waitResult)
     {
         this.WaitResult = waitResult;
-        this.m_status = WaitDataStatus.SetRunning;
-        return this.m_asyncWaitHandle.Set();
-    }
-
-    /// <inheritdoc/>
-    public void SetCancellationToken(CancellationToken cancellationToken)
-    {
-        if (cancellationToken.CanBeCanceled)
-        {
-            if (this.m_tokenRegistration == default)
-            {
-                this.m_tokenRegistration = cancellationToken.Register(this.Cancel);
-            }
-            else
-            {
-                this.m_tokenRegistration.Dispose();
-                this.m_tokenRegistration = cancellationToken.Register(this.Cancel);
-            }
-        }
+        this.m_status = WaitDataStatus.Success;
+        this.m_asyncWaitHandle.Set();
     }
 
     /// <inheritdoc/>
@@ -94,20 +72,18 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
     }
 
     /// <inheritdoc/>
-    public async Task<WaitDataStatus> WaitAsync(TimeSpan timeSpan)
+    public async ValueTask<WaitDataStatus> WaitAsync(CancellationToken cancellationToken)
     {
-        if (!await this.m_asyncWaitHandle.WaitOneAsync(timeSpan).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        try
         {
-            this.m_status = WaitDataStatus.Overtime;
+            await this.m_asyncWaitHandle.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return this.m_status;
         }
-
-        return this.m_status;
-    }
-
-    /// <inheritdoc/>
-    public Task<WaitDataStatus> WaitAsync(int millisecond)
-    {
-        return this.WaitAsync(TimeSpan.FromMilliseconds(millisecond));
+        catch (OperationCanceledException)
+        {
+            this.m_status = WaitDataStatus.Canceled;
+            return this.m_status;
+        }
     }
 
     /// <inheritdoc/>
@@ -117,8 +93,6 @@ public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
         {
             this.m_status = WaitDataStatus.Disposed;
             this.WaitResult = default;
-            this.m_asyncWaitHandle.SafeDispose();
-            this.m_tokenRegistration.Dispose();
         }
 
         base.Dispose(disposing);

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
@@ -23,12 +23,7 @@ public class StringToPrimitiveSerializerFormatter<TState> : ISerializerFormatter
     public int Order { get; set; }
 
     /// <inheritdoc/>
-    /// <param name="state"></param>
-    /// <param name="source"></param>
-    /// <param name="targetType"></param>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
+    public virtual bool TryDeserialize(TState state, in string source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType, out object target)
     {
         if (targetType.IsPrimitive())
         {
@@ -39,11 +34,7 @@ public class StringToPrimitiveSerializerFormatter<TState> : ISerializerFormatter
     }
 
     /// <inheritdoc/>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    public virtual bool TrySerialize(TState state, in object target, out string source)
+    public virtual bool TrySerialize<TTarget>(TState state, in TTarget target, out string source)
     {
         if (target != null)
         {

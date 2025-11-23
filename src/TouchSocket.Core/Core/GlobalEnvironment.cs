@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -20,10 +19,10 @@ namespace TouchSocket.Core;
 /// </summary>
 public static class GlobalEnvironment
 {
-    /// <summary>
-    /// 动态构建类型，默认使用IL
-    /// </summary>
-    public static DynamicBuilderType DynamicBuilderType { get; set; } = DynamicBuilderType.IL;
+    ///// <summary>
+    ///// 动态构建类型时仅仅使用反射。一般在unity等不支持动态代码的平台使用。
+    ///// </summary>
+    //public static bool ReflectOnly { get; set; } = false;
 
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 
@@ -41,10 +40,5 @@ public static class GlobalEnvironment
     /// <summary>
     /// 获取应用程序的基础目录。
     /// </summary>
-    public static string BaseDirectory =>
-#if NET45
-            AppDomain.CurrentDomain.BaseDirectory;
-#else
-            AppContext.BaseDirectory;
-#endif
+    public static string BaseDirectory => AppContext.BaseDirectory;
 }

@@ -10,11 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+using System.IO.Pipelines;
 
 namespace TouchSocket.Http;
 
@@ -50,7 +46,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
         {
             return true;//直接构建成功，也不用调用后续的WriteContent
         }
-        if (byteBlock.FreeLength > this.m_memory.Length)
+        if (this.m_memory.Length < 1024 * 1024)
         {
             //如果空闲空间足够，构建成功，也不用调用后续的WriteContent
             byteBlock.Write(this.m_memory.Span);
@@ -76,9 +72,9 @@ public class ReadonlyMemoryHttpContent : HttpContent
     }
 
     /// <inheritdoc/>
-    protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
+    protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
-        await writeFunc(this.m_memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writer.WriteAsync(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

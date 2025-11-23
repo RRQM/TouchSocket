@@ -5,8 +5,9 @@ title: 常用插件
 
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import CardLink from '@site/src/components/CardLink.js';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketDefinition />
 
@@ -23,33 +24,29 @@ import { TouchSocketDefinition } from "@site/src/components/Definition.js";
 
 所以需要使用该插件进行健康活性检验，以便及时断开无效连接。
 
-代码示例：
+### 1.1 使用方法
 
-只需要在插件中添加UseCheckClear即可。其中，可配置：
+只需要在插件中添加`UseTcpSessionCheckClear`（或泛型的`UseCheckClear<TClient>`）即可。该插件支持以下配置选项：
 
-- CheckClearType：健康检验类型，默认是所有类型都进行健康检验，即同时开启发送、接收健康检验，只要有一方有数据交互，即认为连接有效。
-- Tick：健康检验的间隔时间，默认是60秒。
-- OnClose：健康检验失败时的回调函数，默认是直接关闭连接。
+- **CheckClearType**：健康检验类型，默认是`CheckClearType.All`，即同时开启发送、接收健康检验，只要有一方有数据交互，即认为连接有效。
+  - `CheckClearType.OnlySend`：仅检测发送方向是否有数据流动
+  - `CheckClearType.OnlyReceive`：仅检测接收方向是否有数据流动
+  - `CheckClearType.All`：同时检测发送和接收两个方向
+- **Tick**：健康检验的间隔时间，默认是60秒。
+- **OnClose**：健康检验失败时的回调函数，默认是直接关闭连接并输出相应的超时消息。
 
-```csharp {3} showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseCheckClear()
-    .SetCheckClearType( CheckClearType.All)
-    .SetTick(TimeSpan.FromSeconds(60))
-    .SetOnClose((c,t) => 
-    {
-        await c.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both);
-        await c.SafeCloseAsync("超时无数据");
-    });
-})
-```
+<CustomCodeBlock region="Tcp健康活性检验插件配置"/>
 
 :::info 温馨提示
 
-健康检验插件，可能因为操作系定时器原因和检验周期原因，导致检验时间间隔比配置的间隔时间要长。一般来说，最坏情况不会超过设置周期的10%。例如：设置周期为100秒，则最坏情况可能到110秒才会执行清理。
+健康检验插件，可能因为操作系统定时器原因和检验周期原因，导致检验时间间隔比配置的间隔时间要长。一般来说，最坏情况不会超过设置周期的10%。例如：设置周期为100秒，则最坏情况可能到110秒才会执行清理。
 
 :::  
 
+### 1.2 示例代码
+
+<CardLink link="examples/Tcp/TcpConsoleApp"/>
+
+### 1.3 教学视频
 
 <BilibiliCard title="健康活性插件设置" link="https://www.bilibili.com/cheese/play/ep1541430" isPro="true"/>

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -57,7 +56,7 @@ public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
@@ -67,6 +66,6 @@ public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
         {
             this.m_scopedResolver.SafeDispose();
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 }

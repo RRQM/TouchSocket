@@ -11,8 +11,13 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
+using System;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -34,7 +39,10 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
                 DiagnosticDescriptors.m_rule_Plugin0002,
                 DiagnosticDescriptors.m_rule_Plugin0003,
                 DiagnosticDescriptors.m_rule_Plugin0004,
-                DiagnosticDescriptors.m_rule_FastSerialize0001
+                DiagnosticDescriptors.m_rule_Plugin0005,
+                DiagnosticDescriptors.m_rule_FastSerialize0001,
+                DiagnosticDescriptors.m_rule_CodeAnalysis0001,
+                DiagnosticDescriptors.m_rule_CodeAnalysis0002
                 );
         }
     }
@@ -46,6 +54,140 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
 
         //context.RegisterOperationAction(this.AnalyzeSymbol, OperationKind.PropertyReference);
         context.RegisterSymbolAction(this.AnalyzePluginSymbol, SymbolKind.NamedType);
+        context.RegisterOperationAction(this.AnalyzeAsyncToSyncMethodSymbol, OperationKind.Invocation);
+
+        context.RegisterSyntaxNodeAction(this.AnalyzeMember, SyntaxKind.FieldDeclaration);
+        context.RegisterSyntaxNodeAction(this.AnalyzeMember, SyntaxKind.PropertyDeclaration);
+    }
+
+    #region AnalyzeMember
+    private void AnalyzeMember(SyntaxNodeAnalysisContext context)
+    {
+        switch (context.Node)
+        {
+            case FieldDeclarationSyntax field:
+                this.AnalyzeField(field, context);
+                break;
+            case PropertyDeclarationSyntax property:
+                this.AnalyzeProperty(property, context);
+                break;
+        }
+    }
+
+    private void AnalyzeField(FieldDeclarationSyntax field, SyntaxNodeAnalysisContext context)
+    {
+        foreach (var variable in field.Declaration.Variables)
+        {
+            var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
+            if (!Utils.IsDependencyProperty(fieldSymbol?.Type))
+            {
+                return;
+            }
+
+            // 检查static修饰符
+            if (field.Modifiers.Any(SyntaxKind.StaticKeyword) && field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+            {
+                continue;
+            }
+
+            this.ReportDiagnostic_CodeAnalysis0002(field.Declaration.Type.GetLocation(), fieldSymbol.Name, context);
+        }
+    }
+
+    private void AnalyzeProperty(PropertyDeclarationSyntax property, SyntaxNodeAnalysisContext context)
+    {
+        var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
+        if (!Utils.IsDependencyProperty(propertySymbol?.Type))
+        {
+            return;
+        }
+
+        // 检查static修饰符
+        if (property.Modifiers.Any(SyntaxKind.StaticKeyword) && propertySymbol.IsReadOnly)
+        {
+            return;
+        }
+        this.ReportDiagnostic_CodeAnalysis0002(property.Type.GetLocation(), propertySymbol.Name, context);
+    }
+
+    private void ReportDiagnostic_CodeAnalysis0002(Location location, string memberName, SyntaxNodeAnalysisContext context)
+    {
+        var diagnostic = Diagnostic.Create(
+            DiagnosticDescriptors.m_rule_CodeAnalysis0002,
+            location,
+            memberName);
+
+        context.ReportDiagnostic(diagnostic);
+    }
+    #endregion
+
+    private void AnalyzeAsyncToSyncMethodSymbol(OperationAnalysisContext context)
+    {
+        //Debugger.Launch();
+        if (context.Operation is not IInvocationOperation invocationOperation)
+        {
+            return;
+        }
+        var methodSymbol = invocationOperation.TargetMethod;
+
+        //取消任何框架的限制
+
+        //// 1. 检测目标框架
+        //if (!context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.TargetFramework", out var targetFramework))
+        //{
+        //    return;
+        //}
+
+        //if (!IsTargetFrameworkValid(targetFramework))
+        //{
+        //    return;
+        //}
+
+        if (methodSymbol.HasAttribute(AsyncToSyncWarningAttribute))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_CodeAnalysis0001, invocationOperation.Syntax.GetLocation(), methodSymbol.Name));
+        }
+    }
+
+    public const string AsyncToSyncWarningAttribute = "TouchSocket.Core.AsyncToSyncWarningAttribute";
+
+    private static bool IsTargetFrameworkValid(string targetFramework)
+    {
+        return true;//在任何框架下都提示同步不推荐使用
+        if (string.IsNullOrEmpty(targetFramework))
+        {
+            return false;
+        }
+
+        // 处理不同目标框架格式：
+        // - net6.0
+        // - net7.0-windows
+        // - net8.0.1
+        if (targetFramework.StartsWith("net", StringComparison.OrdinalIgnoreCase) &&
+            targetFramework.Length > 3 &&
+            char.IsDigit(targetFramework[3]))
+        {
+            var versionString = targetFramework.Substring(3);
+            var dashIndex = versionString.IndexOf('-');
+            if (dashIndex > 0)
+            {
+                versionString = versionString.Substring(0, dashIndex);
+            }
+
+            // 处理带小数点的版本号
+            var decimalIndex = versionString.IndexOf('.');
+            if (decimalIndex > 0)
+            {
+                versionString = versionString.Substring(0, decimalIndex + 1) +
+                              versionString.Substring(decimalIndex + 1).Replace(".", "");
+            }
+
+            if (decimal.TryParse(versionString, NumberStyles.Any, CultureInfo.InvariantCulture, out var version))
+            {
+                return version >= 6.0m;
+            }
+        }
+        return false;
     }
 
     public static bool IsPluginInterface(INamedTypeSymbol namedTypeSymbol)
@@ -97,7 +239,7 @@ internal class CoreAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!namedTypeSymbol.HasAttribute(MethodInvokeSyntaxReceiver.DynamicMethod))
+        if (!namedTypeSymbol.HasAttribute(MethodInvokeSourceGenerator.DynamicMethod))
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.m_rule_Plugin0004, namedTypeSymbol.Locations[0]));
             return;

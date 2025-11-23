@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Dmtp;
 using TouchSocket.Http;
 
@@ -35,7 +34,7 @@ public static class AspNetCoreExtension
     /// <param name="services">服务集合，用于存储应用程序中所有注册的服务。</param>
     /// <param name="actionConfig">配置操作委托，用于定制TouchSocket的配置。</param>
     /// <returns>返回扩展后的服务集合，允许方法链式调用。</returns>
-    public static IServiceCollection AddTcpDmtpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddTcpDmtpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TService : class, ITcpDmtpServiceBase
         where TImpService : class, TService
     {
@@ -68,7 +67,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddScopedTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddScopedTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
     {
@@ -94,7 +93,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddSingletonTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddSingletonTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
     {
@@ -120,7 +119,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddTransientTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddTransientTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
     {
@@ -150,7 +149,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddHttpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddHttpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TService : class, IHttpServiceBase
         where TImpService : class, TService
     {
@@ -180,7 +179,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddScopedHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddScopedHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
     {
@@ -206,7 +205,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddSingletonHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddSingletonHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
     {
@@ -232,7 +231,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddTransientHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddTransientHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
     {
@@ -262,7 +261,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddHttpDmtpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddHttpDmtpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TService : class, IHttpDmtpServiceBase
         where TImpService : class, TService
     {
@@ -292,7 +291,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddScopedHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddScopedHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
     {
@@ -318,7 +317,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddSingletonHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddSingletonHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
     {
@@ -344,7 +343,7 @@ public static class AspNetCoreExtension
     /// <param name="services"></param>
     /// <param name="actionConfig"></param>
     /// <returns></returns>
-    public static IServiceCollection AddTransientHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    public static IServiceCollection AddTransientHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
     {

@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -40,9 +52,9 @@ public class Touch_TcpDmtp : BaseTouchServer
                  a.Add<Touch_Dmtp_Log_Plguin>();
 
              })
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options =>
              {
-                 VerifyToken = "Dmtp"//设置验证token
+                 options.VerifyToken = "Dmtp";//设置验证token
              });
 
         await this.dmtpService.SetupAsync(config);
@@ -55,7 +67,7 @@ public class Touch_TcpDmtp : BaseTouchServer
     /// <summary>
     /// 状态日志打印插件
     /// </summary>
-    internal class Touch_Dmtp_Log_Plguin : PluginBase, IDmtpHandshakedPlugin, IDmtpClosedPlugin, IDmtpCreatedChannelPlugin
+    internal class Touch_Dmtp_Log_Plguin : PluginBase, IDmtpConnectedPlugin, IDmtpClosedPlugin, IDmtpCreatedChannelPlugin
     {
         public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
@@ -76,26 +88,23 @@ public class Touch_TcpDmtp : BaseTouchServer
                 using (channel)
                 {
                     client.DmtpActor.Logger.Info("通道开始接收");
-                    //此判断主要是探测是否有Hold操作
-                    while (channel.CanMoveNext)
+                    long count = 0;
+                    while (channel.CanRead)
                     {
-                        long count = 0;
-                        foreach (var byteBlock in channel)
-                        {
-                            //这里处理数据
-                            count += byteBlock.Length;
-                            client.DmtpActor.Logger.Info($"通道已接收：{count}字节");
-                        }
-
-                        client.DmtpActor.Logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+                        using var cts = new CancellationTokenSource(10 * 1000);
+                        var memory = await channel.ReadAsync(cts.Token);
+                        //这里处理数据
+                        count += memory.Length;
                     }
+
+                    client.DmtpActor.Logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
                 }
             }
 
             await e.InvokeNext();
         }
 
-        public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public async Task OnDmtpConnected(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             if (client is TcpDmtpSessionClient clientSession)
             {
@@ -150,7 +159,7 @@ public class Touch_TcpDmtp : BaseTouchServer
                         this.Logger.Info("客户端计算数据不对");
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     this.StopReverseRPC();
                 }

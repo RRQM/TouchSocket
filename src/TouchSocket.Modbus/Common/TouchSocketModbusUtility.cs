@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
+using System.Buffers;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
@@ -83,7 +82,7 @@ public static class TouchSocketModbusUtility
         ushort wCrc = 0xFFFF;
         for (var i = 0; i < sourceSpan.Length; i++)
         {
-            wCrc ^= Convert.ToUInt16(sourceSpan[i]);
+            wCrc ^= sourceSpan[i];
             for (var j = 0; j < 8; j++)
             {
                 if ((wCrc & 0x0001) == 1)
@@ -101,7 +100,15 @@ public static class TouchSocketModbusUtility
         crcSpan[1] = (byte)((wCrc & 0xFF00) >> 8);//高位在后
         crcSpan[0] = (byte)(wCrc & 0x00FF);       //低位在前
 
-        return TouchSocketBitConverter.BigEndian.UnsafeTo<ushort>(ref crcSpan[0]);
+        return TouchSocketBitConverter.BigEndian.To<ushort>(crcSpan);
+    }
+
+    public static ushort ToModbusCrcValue(ReadOnlySequence<byte> sourceSequence)
+    {
+        using (var buffer = new ContiguousMemoryBuffer(sourceSequence))
+        {
+            return ToModbusCrcValue(buffer.Memory.Span);
+        }
     }
 
     /// <summary>
@@ -109,7 +116,7 @@ public static class TouchSocketModbusUtility
     /// </summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public static byte[] BoolToBytes(bool value)
+    public static ReadOnlyMemory<byte> BoolToBytes(bool value)
     {
         return value ? new byte[] { 255, 0 } : new byte[] { 0, 0 };
     }

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -33,9 +30,8 @@ public partial class FileStorageReader : SafetyDisposableObject
     /// </remarks>
     public FileStorageReader(FileStorage fileStorage)
     {
-        // 使用ThrowHelper提供的扩展方法验证fileStorage参数是否为<see langword="null"/>，
-        // 并将fileStorage赋值给类成员变量FileStorage。
-        this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
+        ThrowHelper.ThrowIfNull(fileStorage, nameof(fileStorage));
+        this.FileStorage = fileStorage;
     }
 
     /// <summary>

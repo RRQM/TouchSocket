@@ -1,35 +1,100 @@
----
+﻿---
 id: consoleaction
 title: 控制台行为
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
-
-### 定义
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
 <TouchSocketCoreDefinition />
 
-
 ## 一、说明
-这是一个很简单的控制台命令器，重要作用就是很方便的实现控制台控制。
 
-## 二、使用
-```csharp showLineNumbers
-ConsoleAction consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
-consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
+`ConsoleAction` 是一个简洁高效的控制台命令处理器，用于快速构建交互式控制台应用程序。它提供了命令注册、命令执行、帮助信息展示等功能，让控制台程序的开发变得简单优雅。
 
-//下列的ShareProxy，StopShareProxy，GetAll均为无参数的方法
-consoleAction.Add("sp|shareProxy", "分享代理", ShareProxy);//示例命令
-consoleAction.Add("ssp|stopShareProxy", "停止分享代理", StopShareProxy);//示例命令
-consoleAction.Add("ga|getAll", "获取所有客户端信息", GetAll);//示例命令
-consoleAction.ShowAll();
-while (true)
+### 1.1 核心特性
+
+- **命令别名支持**：一个命令可以设置多个别名（如 `start|s|run`）
+- **同步/异步命令**：同时支持同步 `Action` 和异步 `Func<Task>` 命令
+- **异常处理**：统一的异常处理机制
+- **帮助信息**：自动生成和展示所有注册命令的帮助信息
+- **Banner 展示**：内置精美的 ASCII 艺术 Banner
+- **命令行循环**：提供开箱即用的命令行交互循环
+
+## 二、基础使用
+
+### 2.1 创建控制台命令器
+
+创建 `ConsoleAction` 实例时，可以指定帮助命令的别名，默认为 `"h|help|?"`：
+
+<CustomCodeBlock region="控制台行为基础用法"/>
+
+### 2.2 异常处理
+
+通过订阅 `OnException` 事件来处理命令执行过程中的异常：
+
+<CustomCodeBlock region="控制台行为异常处理"/>
+
+## 三、添加命令
+
+### 3.1 添加同步命令
+
+可以添加返回 `void` 的同步命令，支持使用 `|` 分隔多个命令别名：
+
+<CustomCodeBlock region="控制台行为添加同步命令"/>
+
+### 3.2 添加异步命令
+
+支持添加返回 `Task` 的异步命令：
+
+<CustomCodeBlock region="控制台行为添加异步命令"/>
+
+## 四、运行命令
+
+### 4.1 手动执行命令
+
+可以使用 `RunAsync` 方法手动执行指定的命令：
+
+```csharp
+// 执行命令，返回值表示命令是否存在
+var success = await consoleAction.RunAsync("start");
+if (!success)
 {
-    if (!consoleAction.Run(Console.ReadLine()))
-    {
-        Console.WriteLine("命令不正确，请输入“h|help|?”获得帮助。");
-    }
+    Console.WriteLine("命令不存在");
 }
 ```
-## 三、效果图
+
+### 4.2 命令行交互循环
+
+使用 `RunCommandLineAsync` 方法启动命令行交互循环，用户可以持续输入命令：
+
+<CustomCodeBlock region="控制台行为运行命令行"/>
+
+## 五、高级功能
+
+### 5.1 获取所有命令信息
+
+可以通过 `AllActionInfos` 属性获取所有已注册的命令信息：
+
+<CustomCodeBlock region="控制台行为获取所有命令"/>
+
+### 5.2 显示帮助信息
+
+调用 `ShowAll()` 方法可以显示所有注册的命令及其描述：
+
+```csharp
+consoleAction.ShowAll();
+```
+
+该方法会自动格式化输出命令列表，包括命令别名和描述信息。
+
+## 六、效果展示
+
 ![](@site/static/img/docs/consoleaction-1.gif)
+
+## 七、注意事项
+
+1. **命令别名区分大小写**：命令匹配时会自动转换为小写，因此命令别名不区分大小写
+2. **异常处理**：建议始终订阅 `OnException` 事件以处理命令执行中的异常
+3. **命令冲突**：如果多个命令使用相同的别名，后注册的命令会覆盖先注册的命令
+4. **Banner 展示**：在构造函数中会自动显示 TouchSocket 的 Banner，这是内置行为

@@ -10,9 +10,12 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace TouchSocket.Core;
+
+[RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
 internal class ReflectDynamicMethodInfo : DynamicMethodInfoBase
 {
     private readonly MethodInfo m_method;

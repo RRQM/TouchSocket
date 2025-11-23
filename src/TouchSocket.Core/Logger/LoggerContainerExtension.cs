@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
@@ -208,10 +207,10 @@ public static class LoggerContainerExtension
     /// <param name="registrator">要添加日志单例的注册器。</param>
     /// <param name="logger">要添加到容器的日志对象。</param>
     /// <returns>返回更新后的注册器对象，以便进行链式调用。</returns>
-    public static IRegistrator AddLogger(this IRegistrator registrator, ILog logger)
+    public static IRegistrator AddLogger<[DynamicallyAccessedMembers(AOT.Container)] TLog>(this IRegistrator registrator, TLog logger) where TLog : class, ILog
     {
         // 将日志对象作为单例注册到容器中
-        registrator.RegisterSingleton<ILog>(logger);
+        registrator.RegisterSingleton<ILog, TLog>(logger);
         // 返回注册器对象，支持链式调用
         return registrator;
     }
@@ -229,7 +228,7 @@ public static class LoggerContainerExtension
         // 调用传入的委托来配置LoggerGroup
         loggerAction.Invoke(loggerGroup);
         // 将配置好的LoggerGroup注册为单例
-        registrator.RegisterSingleton<ILog>(loggerGroup);
+        registrator.RegisterSingleton<ILog, LoggerGroup>(loggerGroup);
         // 返回注册器接口
         return registrator;
     }

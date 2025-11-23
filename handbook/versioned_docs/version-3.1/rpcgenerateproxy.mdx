@@ -1,0 +1,657 @@
+---
+id: rpcgenerateproxy
+title: 生成、获取代理
+---
+
+import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketRpcDefinition />
+
+
+## 一、为什么要生成代理
+
+使用Rpc的原则就是像使用本地方法一样，让开发者感觉不到任何的不同。
+
+但是我们的Rpc预留的接口都是`Invoke`函数。也就是每次调用都必须手动传入参数和返回值类型，即使有`InvokeT`的扩展调用，也很容易出错。因为参数类型都是`object`，所以可以无法进行良好的**代码提示**。
+
+同时，当服务端更新时，例如：新增一个参数，或者修改了返回值类型，那么调用代码必须同步修改，不然就非常容易报错。
+
+诸如此类的情况，会大大降低开发效率。
+
+所以就必须把服务代理到本地，即生成调用接口代码，或者扩展调用代码。要实现此方式，常见的有三种，**动态代理接口**，**静态织入**，**静态编译**。三种方式殊途同归，最终都是构建本地数据结构，然后和远程通信。三种方式各有优缺，具体如下：
+
+| **优缺点** | **动态代理接口** | **静态织入（源代码生成）** | **静态编译** |
+| --- | --- | --- | --- |
+| **优点** | 动态构建类，灵活、适应性强。 | 静态代码生成，自定义类参数自动生成，修改较灵活，调用效率高 | 自定义类参数自动生成，密封性强，安全性高，调用效率高。 |
+| **缺点** | 调用效率较低，自定义类参数须自行构建，实现须IL支持，对调用平台有要求，例如：IOS不允许动态类生成，则不可使用。 | 项目代码管理难统一，强迫症猝死 | 服务一旦有破坏性升级，则必须重新替换dll，灵活性几乎为0。 |
+
+:::tip 提示
+
+该内容，对[DmtpRpc](./dmtprpc.mdx)、[JsonRpc](./jsonrpc.mdx)、[XmlRpc](./xmlrpc.mdx)、[WebApi](./webapi.mdx)均适用。
+
+:::  
+
+
+## 二、从服务端生成代理
+
+### 2.1 生成代理代码
+
+在开发过程中，如果服务器和客户端，都是我们自己开发的话（在同一个电脑），则使用本地代理生成非常方便。如果不在一起，也没关系，可以直接把生成的cs文件直接复制到客户端项目。
+
+使用的基本步骤如下：
+
+1. 在服务端生成.cs的代理文件。
+2. 将生成的.cs文件，复制到客户端项目（如果是同一电脑开发，则可以使用添加链接的方式编译）。
+3. 在客户端调用代理。
+
+【示例1】
+将代理字符串，写成.cs文件，然后通过链接的形式，将代码添加到客户端项目。
+
+服务器代码，在服务器`启动`后，会在运行路径下，生成一个**RpcProxy.cs**的文件。
+
+```csharp {16-17}
+            var service = new TcpDmtpService();
+            var config = new TouchSocketConfig()//配置
+                   .SetListenIPHosts(7789)
+                   .ConfigureContainer(a =>
+                   {
+                       a.AddDmtpRouteService();
+                       a.AddConsoleLogger();
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc()
+                       .ConfigureRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+#if DEBUG
+                           File.WriteAllText("RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
+                           ConsoleLogger.Default.Info("成功生成代理");
+#endif
+                       });
+
+                       a.Add<MyTouchRpcPlugin>();
+                   })
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                        VerifyToken = "Rpc"//连接验证口令。
+                   });
+
+            await service.SetupAsync(config);
+            await service.StartAsync();
+```
+
+:::tip
+
+`RpcProxy.cs`字符串是代理文件路径，可以传入相对路径，也可以传入绝对路径。`RpcProxy`是生成的代理代码的命名空间。`typeof(DmtpRpcAttribute)`是需要生成的代理的服务类型。此处是以`DmtpRpcAttribute`为标记的Rpc服务。如果是其他标记，请替换为对应标记的类型。
+
+最后，生成代理的操作，最好使用`DEBUG`预编译，因为这个功能仅在DEBUG模式我们才用得上。
+
+:::  
+
+然后打开需要引入的**客户端**解决方案。选择需要添加代理的项目，依次执行：
+
+**右击项目=>添加=>现有项**
+
+**然后选择服务器生成的.cs文件，选择“添加”的下拉框，选择“添加为连接”。**
+
+<img src={require('@site/static/img/docs/generateproxy-2.png').default} />
+<img src={require('@site/static/img/docs/generateproxy-3.png').default} />
+
+
+最后确认文件被正确添加为链接。
+<img src={require('@site/static/img/docs/generateproxy-4.png').default} />
+
+**这样，每次当服务有更新的时候，只需要启动一下服务器，代理就会自动刷新。**
+
+:::caution 注意
+
+上述操作仅对**客户端**与**服务器**都在同一电脑上开发时才有效。
+
+:::  
+
+:::tip 提示
+
+当不在同一个电脑上时，可将代理信息写成文件，直接发给客户端开发电脑。亦或者，为防止篡改生成的代码，不想把代理代码直接投入使用，那可以考虑将代码单独编译成dll，然后将编译的程序集发送。
+
+:::  
+
+:::tip 提示
+
+上述行为，均是导出所有已注册的服务，当需要直接生成多个不同代理的源码时，可通过CodeGenerator静态类的相关方法直接生成。例如：
+
+```csharp {1}
+string codes=CodeGenerator.GetProxyCodes("Namespace",new Type[]{typeof(MyRpcServer) },new Type[] { typeof(DmtpRpcAttribute)});
+```
+
+:::  
+
+
+### 2.2 代理类型添加
+
+通过之前的学习，大家可能大概明白了，在Rpc中，客户端与服务器在进行交互时，所需的数据结构不要求是同一类型，。所以在声明了服务以后，服务中所包含的自定义类型，会被复刻成结构相同的类型，但是这也仅仅局限于参数与服务`相同程序集`的时候。如果服务中引入了其他程序集的数据结构，则**不会**复刻。
+
+但是，往往在服务端开发中，会引入其他程序集，例如，我们习惯在项目中建立一个Models程序集，用于存放所有的实体模型，那是不是意味着客户端也必须引入这个程序集才能调用呢？没别的方法了？
+
+**答案，当然不是！！！**
+
+Rpc规范了两种方式来添加实体模型的复刻。
+
+#### 2.2.1 直接添加代理类型
+
+在服务注册之前，任意时刻，可调用CodeGenerator.AddProxyType静态方法，添加代理类型，同时可传入一个bool值，表明是否深度搜索，比如，假如ProxyClass1中还有其他类型，则参数为True时，依然会代理。
+
+```csharp showLineNumbers
+CodeGenerator.AddProxyType<ProxyClass1>();
+CodeGenerator.AddProxyType<ProxyClass2>(deepSearch:true);
+```
+
+或者直接按程序集添加
+
+```csharp showLineNumbers
+CodeGenerator.AddProxyAssembly(typeof(Program).Assembly);
+```
+
+#### 2.2.2 通过特性标记添加
+
+在需要代理的类上面声明RpcProxy标签，然后也可以重新指定代理类名。
+
+```csharp showLineNumbers
+[RpcProxy("MyArgs")]
+public class Args
+{
+}
+```
+
+:::tip 提示
+
+该场景可用于代理其他dll的自定义类型。
+
+:::  
+
+### 2.3 代理类型排除
+
+默认情况下，与声明服务相同的自定义类型，会被代理复刻成结构相同的类型。但是有时候，我们希望服务端与客户端公用一个dll，所以就不需要复刻，那么可以排除代理类型。
+
+```csharp showLineNumbers
+CodeGenerator.AddIgnoreProxyType(typeof(Program));
+```
+
+或者直接按程序集排除
+
+```csharp showLineNumbers
+CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
+```
+
+:::tip 提示
+
+该场景可用于服务端与客户端公用一个实体dll，例如：当使用**MemoryPack**序列化的场景。
+
+:::  
+
+
+### 2.4 代理生成配置
+
+代理生成配置，可以配置生成的代理。具体操作都是声明自定义特性，然后重写，或者属性配置等。
+
+#### 2.4.1 重写GetGenericConstraintTypes
+
+泛型约束类型。用于约束生成代理的泛型类型，从而让生成的扩展方法只能让特定的类型执行。默认情况下只会约束**IRpcClient**接口。
+
+例如：
+
+```csharp showLineNumbers
+class MyRpcAttribute : RpcAttribute
+{
+    public override Type[] GetGenericConstraintTypes()
+    {
+        return new Type[] { typeof(IRpcClient) };
+    }
+}
+```
+
+结果：
+
+```csharp {2}
+public static LoginResponse Login<TClient>(this TClient client,LoginRequest request,IInvokeOption invokeOption = default) 
+where TClient:IRpcClient
+{
+    object[] parameters = new object[]{request};
+    RpcClassLibrary.Models.LoginResponse returnData=client.InvokeT<RpcClassLibrary.Models.LoginResponse>("Login",invokeOption, parameters);
+    return returnData;
+}
+```
+
+:::caution 注意
+
+泛型约束的总和，必须直接或间接实现**IRpcClient**接口。
+
+:::  
+
+#### 2.4.2 属性GeneratorFlag
+
+生成标识，可表示是否生成同步代码，或异步，或不生成接口等等。
+
+例如：下列示例，只会生成**异步扩展**调用，和**异步接口**代码。
+
+```csharp showLineNumbers
+class MyRpcAttribute : RpcAttribute
+{
+    public MyRpcAttribute()
+    {
+        this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;     
+    }
+}
+```
+
+#### 2.4.3 重写GetDescription
+
+获取生成方法的注释。
+
+#### 2.4.4 其他
+
+其他配置请在代码中自行探索。
+
+
+## 三、从源生成器生成代理
+
+对于源代码生成代理来说，他可以仅凭一个接口，自己生成代理服务代码，然后再编译到当前程序集中。
+
+:::tip 提示
+
+源生成器也支持.net framework等，但是只能在支持的IDE中使用，例如：vs2019高版本，vs2022，Rider，vs code等。
+
+:::  
+
+### 3.1 生成代理代码
+
+例如：对于下列服务
+
+```csharp showLineNumbers
+public partial class MyRpcServer : SingletonRpcServer
+{
+    [DmtpRpc]
+    public bool Login(string account, string password)
+    {
+        if (account == "123" && password == "abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+```csharp showLineNumbers
+public interface IMyRpcServer
+{
+    public bool Login(string account, string password);
+}
+```
+
+我们需要设置接口，如下：
+
+```csharp showLineNumbers
+/// <summary>
+/// GeneratorRpcProxy的标识，表明这个接口应该被生成其他源代码。
+/// ConsoleApp2.MyRpcServer参数是整个rpc调用的前缀，即：除方法名的所有，包括服务的类名。
+/// </summary>
+[GeneratorRpcProxy(Prefix = "GeneratorRpcProxyConsoleApp.MyRpcServer")]//此处还可以设置其他参数，例如：生成代理的命名空间，是否生成接口等。具体f12查看。
+interface IMyRpcServer
+{
+    [Description("这是登录方法")]//该作用是生成注释
+    [DmtpRpc]
+    public bool Login(string account, string password);
+}
+```
+
+这时候，神奇的一幕发生了，凡是实现**IRpcClient**的接口的实例，都增加了扩展方法。而这功能，和服务器生成的扩展Rpc方法的功能是一致的。
+
+![](@site/static/img/docs/generateproxy-1.png)
+
+:::info 说明
+
+生成的扩展方法的类名，就是**接口名+Extensions**，命名空间默认在**TouchSocket.Rpc.Generators**下，所以可能需要提前using。
+
+:::  
+
+
+:::tip 提示
+
+大家可能会疑问，源代码生成代理，和服务端生成代理，有什么区别？或者说有什么优点？
+实际上没有区别，优点最后会对比。之所以设计这个，是因为之前有人提过需求，想要完全分离前、后端。即：后端写好服务后，前端自由定义服务接口，和调用参数，仅此而已。
+
+所以，生成代理的方式，按照大家的习惯需求选择就可以。
+
+:::  
+
+[源代码生成代理示例代码](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/GeneratorRpcProxyConsoleApp)
+
+### 3.2 生成配置
+
+#### 3.2.1 GeneratorRpcProxyAttribute配置
+
+GeneratorRpcProxyAttribute的配置，是对整个接口的总体配置，通过**特性名称**直接配置即可。
+
+```csharp {1}
+[GeneratorRpcProxy(Prefix = "RpcClassLibrary")]
+public interface IUserServer:ISingletonRpcServer
+{
+    [DmtpRpc]
+    LoginResponse Login(LoginRequest request);
+}
+```
+
+可配置项：
+
+** （1）Prefix**
+
+调用前缀。用于配置接口方法的调用键前缀，应包括**命名空间**和**类名**，方法名会自动组合，不区分大小写。
+
+**（2）GenericConstraintTypes**
+
+泛型约束类型。用于约束生成代理的泛型类型，从而让生成的扩展方法只能让特定的类型执行。默认情况下只会约束**IRpcClient**接口。
+
+例如：
+
+```csharp {2}
+public static LoginResponse Login<TClient>(this TClient client,LoginRequest request,IInvokeOption invokeOption = default) 
+where TClient:IRpcClient
+{
+    if (client.TryCanInvoke?.Invoke(client)==false)
+    {
+        throw new RpcException("Rpc无法执行。");
+    }
+    object[] parameters = new object[]{request};
+    RpcClassLibrary.Models.LoginResponse returnData=client.Invoke<RpcClassLibrary.Models.LoginResponse>("rpcclasslibrary.login",invokeOption, parameters);
+    return returnData;
+}
+```
+
+:::caution 注意
+
+泛型约束的总和，必须直接或间接实现**IRpcClient**接口。
+
+:::  
+
+**（3）MethodInvoke**
+
+表示接口的所有方法，均仅通过方法名调用，也就是直接会将方法名设置为调用键，区别大小写。
+
+**（4） Namespace**
+
+表示生成接口，扩展类的命名空间。默认是**TouchSocket.Rpc.Generators**。
+
+**（5）ClassName**
+
+表示生成接口，扩展类的基础名称，例如设为A，则生成的接口是IA，扩展类是AExtensions。默认是**声明接口的名称**（除去“I”）。
+
+**（6）GeneratorFlag**
+
+生成标识，可表示是否生成同步代码，或异步，或不生成接口等等。
+
+例如：下列示例，只会生成**异步扩展**调用，和**异步接口**代码。
+
+```csharp {1}
+[GeneratorRpcProxy(GeneratorFlag = CodeGeneratorFlag.ExtensionAsync| CodeGeneratorFlag.InterfaceAsync)]
+public interface IUserServer:ISingletonRpcServer
+{
+    [DmtpRpc]
+    LoginResponse Login(LoginRequest request);
+}
+```
+
+**（7） MethodFlags**
+
+函数标识，可以声明该函数支持调用上下文，即在生成代理时，会忽略第一个参数项。
+
+```csharp {1,6} 
+[GeneratorRpcProxy]
+public interface IUserServer:ISingletonRpcServer
+{
+    [DmtpRpc]
+    LoginResponse Login(ICallContext callContext,LoginRequest request);
+}
+```
+
+:::tip 提示
+
+该场景的使用，一般是，该接口会作为**服务实现**接口。
+
+:::  
+
+**（8） InheritedInterface**
+
+继承接口，标识生成接口代理时，是否依然保持其他接口的继承实现。
+
+例如：下列示例中，A接口继承了IRpcServer（外部接口），而B和接口又继承了A，所以全部设置为true时，在生成接口中，依然会保持整个继承链。
+
+```csharp {1,7}
+[GeneratorRpcProxy(InheritedInterface =true)]
+public interface IA:ISingletonRpcServer
+{
+   
+}
+
+[GeneratorRpcProxy(InheritedInterface =true)]
+public interface IB:IA
+{
+   
+}
+
+```
+
+## 四、从DispatchProxy生成代理
+
+使用DispatchProxy生成代理，是对源代码生成代理的一个补充，他也是仅凭一个接口，自己生成代理服务，并且隐藏连接客户端。
+
+
+例如：对于下列服务
+
+```csharp showLineNumbers
+public partial class MyRpcServer : SingletonRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        this.m_logger.Info("调用Add");
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+我们需要设置接口，如下：
+
+```csharp showLineNumbers
+interface IMyRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+```
+
+并且需要构建基类：
+
+```csharp showLineNumbers
+/// <summary>
+/// 新建一个类，按照需要，继承DmtpRpcDispatchProxy，亦或者预设的JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
+{
+    private readonly TcpDmtpClient m_client;
+
+    public MyDmtpRpcDispatchProxy()
+    {
+        this.m_client = GetTcpDmtpClient();
+    }
+
+    private static TcpDmtpClient GetTcpDmtpClient()
+    {
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .ConfigureContainer(a =>
+            {
+                a.AddConsoleLogger();
+            })
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc();
+            })
+            .SetRemoteIPHost("127.0.0.1:7789")
+            .SetDmtpOption(new DmtpOption()
+            {
+                VerifyToken = "Dmtp"//连接验证口令。
+            }));
+        await client.ConnectAsync();
+        client.Logger.Info($"连接成功，Id={client.Id}");
+        return client;
+    }
+
+    public override IDmtpRpcActor GetClient()
+    {
+        return m_client.GetDmtpRpcActor();
+    }
+}
+```
+
+然后生成代理，并直接调用
+
+```csharp showLineNumbers
+IMyRpcServer myRpcServer = DmtpRpcDispatchProxy.Create<IMyRpcServer, MyDmtpRpcDispatchProxy>();
+
+var result = myRpcServer.Add(10, 20);
+Console.WriteLine(result);
+```
+
+:::caution 注意
+
+该功能仅在net6以上才可以使用，并使用该方案，无法在限制IL的场景使用，例如：unity-ilcpp，native-aot等。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DispatchProxyDmtpRpcConsoleApp)
+
+
+## 五、从RealityProxy生成透明代理
+
+使用RealityProxy生成代理，是对源代码生成代理的一个补充，他也是仅凭一个接口，自己生成代理服务，并且隐藏连接客户端。
+
+
+例如：对于下列服务
+
+```csharp showLineNumbers
+public partial class MyRpcServer : SingletonRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        this.m_logger.Info("调用Add");
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+我们需要设置接口，如下：
+
+```csharp showLineNumbers
+interface IMyRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+```
+
+并且需要构建基类：
+
+```csharp showLineNumbers
+/// <summary>
+/// 新建一个类，按照需要，继承DmtpRpcRealityProxy，亦或者RpcRealityProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
+{
+    private readonly TcpDmtpClient m_client;
+
+    public MyDmtpRpcRealityProxy()
+    {
+        this.m_client = GetTcpDmtpClient();
+    }
+
+    private static TcpDmtpClient GetTcpDmtpClient()
+    {
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .ConfigureContainer(a =>
+            {
+                a.AddConsoleLogger();
+            })
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc();
+            })
+            .SetRemoteIPHost("127.0.0.1:7789")
+        .SetDmtpOption(new DmtpOption()
+        {
+            VerifyToken = "Dmtp"
+        }));
+        await client.ConnectAsync();
+        client.Logger.Info($"连接成功，Id={client.Id}");
+        return client;
+    }
+
+    public override IDmtpRpcActor GetClient()
+    {
+        return m_client.GetDmtpRpcActor();
+    }
+}
+```
+
+然后生成代理，并直接调用
+
+```csharp showLineNumbers
+var myDmtpRpcRealityProxy = new MyDmtpRpcRealityProxy<IMyRpcServer>();
+
+var myRpcServer = myDmtpRpcRealityProxy.GetTransparentProxy();
+
+var result = myRpcServer.Add(10, 20);
+```
+
+:::caution 注意
+
+该功能仅在net45以上，至net481才可以使用，并使用该方案，无法在限制IL的场景使用，例如：unity-ilcpp等。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/RealityProxyDmtpRpcConsoleApp)

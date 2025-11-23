@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace TouchSocket.Core;
@@ -49,7 +47,8 @@ public sealed class SerializObject
     /// </summary>
     /// <param name="type"></param>
     /// <exception cref="Exception"></exception>
-    public SerializObject(Type type)
+    [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
+    public SerializObject([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         this.Type = type;
         if (type.IsArray)//数组
@@ -59,9 +58,9 @@ public sealed class SerializObject
         }
         else if (type.IsClass || type.IsStruct())
         {
-            if (type.IsNullableType())
+            if (type.IsNullableType(out var actualType))
             {
-                type = type.GetGenericArguments()[0];
+                type = actualType;
             }
             this.Type = type;
             if (type.IsList())
@@ -105,27 +104,22 @@ public sealed class SerializObject
             else
             {
                 this.InstanceType = InstanceType.Class;
-                this.MemberAccessor = new MemberAccessor(type)
-                {
-                    OnGetFieldInfos = GetFieldInfos,
-                    OnGetProperties = GetProperties
-                };
-                this.MemberAccessor.Build();
+                this.MemberAccessor = new MemberAccessor(type, GetFieldInfos(type), GetProperties(type));
             }
 
-            if (type.GetCustomAttribute(typeof(FastConverterAttribute), false) is FastConverterAttribute attribute)
+            if (type.GetCustomAttribute<FastConverterAttribute>(false) is FastConverterAttribute attribute)
             {
                 this.Converter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
             }
 
-            if (type.GetCustomAttribute(typeof(FastSerializedAttribute), false) is FastSerializedAttribute fastSerializedAttribute)
+            if (type.GetCustomAttribute<FastSerializedAttribute>(false) is FastSerializedAttribute fastSerializedAttribute)
             {
                 this.EnableIndex = fastSerializedAttribute.EnableIndex;
             }
 
             var list = new List<MemberInfo>();
-            list.AddRange(GetProperties(type));
-            list.AddRange(GetFieldInfos(type));
+            list.AddRange(GetProperties(type).Values);
+            list.AddRange(GetFieldInfos(type).Values);
 
             this.FastMemberInfoDicForIndex = new Dictionary<byte, FastMemberInfo>();
             this.FastMemberInfoDicForName = new Dictionary<string, FastMemberInfo>();
@@ -174,17 +168,17 @@ public sealed class SerializObject
     /// </summary>
     public Type Type { get; private set; }
 
-    private static FieldInfo[] GetFieldInfos(Type type)
+    private static Dictionary<string, FieldInfo> GetFieldInfos([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
             .Where(p =>
             {
                 return !p.IsInitOnly && (!p.IsDefined(typeof(FastNonSerializedAttribute), false));
             })
-            .ToArray();
+            .ToDictionary(a => a.Name);
     }
 
-    private static PropertyInfo[] GetProperties(Type type)
+    private static Dictionary<string, PropertyInfo> GetProperties([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
                       .Where(p =>
@@ -199,12 +193,8 @@ public sealed class SerializObject
                               return false;
                           }
 
-                          if (p.CanPublicRead() && p.CanPublicWrite())
-                          {
-                              return true;
-                          }
-                          return false;
+                          return p.CanPublicRead() && p.CanPublicWrite();
                       })
-                      .ToArray();
+                      .ToDictionary(a => a.Name);
     }
 }

@@ -1,0 +1,253 @@
+---
+id: webapi-cors
+title: WebAPI 跨域配置
+---
+
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+
+## 一、CORS 跨域
+
+CORS（Cross-Origin Resource Sharing，跨域资源共享）允许浏览器跨域访问资源。在 WebAPI 中，可以通过配置 CORS 策略来控制哪些来源可以访问 API。
+
+## 二、配置方式
+
+### 2.1 方法级 CORS
+
+在特定方法上启用 CORS：
+
+<CustomCodeBlock region="启用跨域"/>
+
+**说明**：
+- `[EnableCors("cors")]` 特性需要配合容器中注册的跨域策略名称使用
+- "cors" 是在容器中注册的跨域策略名称
+
+### 2.2 类级 CORS
+
+在整个类上启用 CORS，所有方法都应用该策略：
+
+```csharp
+[EnableCors("cors")]
+public partial class ApiServer : SingletonRpcServer
+{
+    [WebApi(Method = HttpMethodType.Get)]
+    public string GetData()
+    {
+        return "Data";
+    }
+
+    [WebApi(Method = HttpMethodType.Post)]
+    public string PostData(string data)
+    {
+        return $"Received: {data}";
+    }
+}
+```
+
+### 2.3 全局 CORS 配置
+
+使用插件启用全局 CORS，所有 API 都允许跨域：
+
+```csharp
+.ConfigurePlugins(a =>
+{
+    // 启用全局CORS，允许所有来源
+    a.UseCors(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+
+    a.UseWebApi();
+    a.UseDefaultHttpServicePlugin();
+})
+```
+
+## 三、注册 CORS 策略
+
+在容器中注册命名的 CORS 策略：
+
+```csharp
+.ConfigureContainer(a =>
+{
+    // 添加跨域服务
+    a.AddCors(corsOption =>
+    {
+        // 添加名为 "cors" 的跨域策略
+        corsOption.Add("cors", corsBuilder =>
+        {
+            corsBuilder.AllowAnyMethod()
+                .AllowAnyOrigin();
+        });
+    });
+})
+```
+
+## 四、CORS 策略配置
+
+### 4.1 允许所有来源
+
+```csharp
+corsBuilder.AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+```
+
+### 4.2 限制特定来源
+
+```csharp
+corsBuilder.AllowOrigins("http://localhost:3000", "https://example.com")
+    .AllowMethods("GET", "POST")
+    .AllowHeaders("Content-Type", "Authorization");
+```
+
+### 4.3 允许携带凭证
+
+```csharp
+corsBuilder.AllowOrigins("http://localhost:3000")
+    .AllowMethods("GET", "POST", "PUT", "DELETE")
+    .AllowHeaders("Content-Type", "Authorization")
+    .AllowCredentials(); // 允许携带凭证（Cookie、Authorization header 等）
+```
+
+### 4.4 设置预检请求缓存时间
+
+```csharp
+corsBuilder.AllowOrigins("http://localhost:3000")
+    .AllowMethods("GET", "POST")
+    .AllowHeaders("Content-Type")
+    .SetMaxAge(3600); // 预检请求缓存时间（秒）
+```
+
+## 五、完整示例
+
+```csharp
+// 服务器端配置
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+    .SetListenIPHosts(7789)
+    .ConfigureContainer(a =>
+    {
+        a.AddRpcStore(store =>
+        {
+            store.RegisterServer<ApiServer>();
+        });
+
+        // 注册跨域策略
+        a.AddCors(corsOption =>
+        {
+            // 策略1：允许所有来源
+            corsOption.Add("allowAll", corsBuilder =>
+            {
+                corsBuilder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+
+            // 策略2：限制特定来源
+            corsOption.Add("restricted", corsBuilder =>
+            {
+                corsBuilder.AllowOrigins("http://localhost:3000")
+                    .AllowMethods("GET", "POST")
+                    .AllowHeaders("Content-Type", "Authorization")
+                    .AllowCredentials();
+            });
+        });
+
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebApi();
+        a.UseDefaultHttpServicePlugin();
+    }));
+
+await service.StartAsync();
+
+// API 服务
+public partial class ApiServer : SingletonRpcServer
+{
+    // 使用 allowAll 策略
+    [EnableCors("allowAll")]
+    [WebApi(Method = HttpMethodType.Get)]
+    public List<string> GetUsers()
+    {
+        return new List<string> { "Alice", "Bob", "Charlie" };
+    }
+
+    // 使用 restricted 策略
+    [EnableCors("restricted")]
+    [WebApi(Method = HttpMethodType.Post)]
+    public string CreateUser([FromBody] UserDto user)
+    {
+        return $"Created: {user.Name}";
+    }
+}
+```
+
+## 六、客户端调用示例
+
+### 6.1 JavaScript/Fetch API
+
+```javascript
+// 简单请求
+fetch('http://localhost:7789/apiserver/getusers', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+
+// 携带凭证的请求
+fetch('http://localhost:7789/apiserver/createuser', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer token123'
+    },
+    credentials: 'include', // 携带凭证
+    body: JSON.stringify({ name: 'Alice', age: 25 })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+### 6.2 jQuery/AJAX
+
+```javascript
+$.ajax({
+    url: 'http://localhost:7789/apiserver/getusers',
+    type: 'GET',
+    dataType: 'json',
+    xhrFields: {
+        withCredentials: true // 携带凭证
+    },
+    success: function(data) {
+        console.log(data);
+    }
+});
+```
+
+## 七、注意事项
+
+### 7.1 安全考虑
+
+- **生产环境**：避免使用 `AllowAnyOrigin()`，应明确指定允许的来源
+- **凭证传递**：使用 `AllowCredentials()` 时，不能使用 `AllowAnyOrigin()`，必须指定具体来源
+
+### 7.2 预检请求
+
+浏览器对于"非简单请求"会先发送 OPTIONS 预检请求：
+
+- **简单请求**：GET、HEAD、POST（Content-Type 为 text/plain、multipart/form-data 或 application/x-www-form-urlencoded）
+- **非简单请求**：使用了自定义 Header、Content-Type 为 application/json 等
+
+`UseDefaultHttpServicePlugin` 会自动处理 OPTIONS 请求。
+
+### 7.3 策略选择建议
+
+- **开发环境**：可以使用 `AllowAnyOrigin()` 简化开发
+- **测试环境**：使用具体的测试域名
+- **生产环境**：严格限制允许的来源、方法和头部

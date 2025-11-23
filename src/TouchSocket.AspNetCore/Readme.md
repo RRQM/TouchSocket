@@ -12,7 +12,7 @@ TouchSocket.AspNetCore是TouchSocket的一个扩展包，提供了基于Asp.Net 
 ## 支持的目标框架
 - net6.0
 - net8.0
-- net9.0
+- net10.0
 
 ## 使用方法
 

@@ -10,36 +10,5 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Dmtp;
 
-/// <inheritdoc/>
-[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(TcpDmtpSessionClient)}代替。", true)]
-public class TcpDmtpSocketClient
-{
-}
-
-/// <inheritdoc/>
-[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(ITcpDmtpSessionClient)}代替。", true)]
-public interface ITcpDmtpSocketClient
-{
-}
-
-/// <inheritdoc/>
-[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(HttpDmtpSessionClient)}代替。", true)]
-public class HttpDmtpSocketClient
-{
-}
-
-/// <inheritdoc/>
-[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IHttpDmtpSessionClient)}代替。", true)]
-public interface IHttpDmtpSocketClient
-{
-}
-
-/// <inheritdoc/>
-[Obsolete($"此接口由于表述不清，已被弃用，请使用{nameof(IDmtpCreatedChannelPlugin)}代替。", true)]
-public interface IDmtpCreateChannelPlugin
-{
-}

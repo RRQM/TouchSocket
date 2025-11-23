@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -43,9 +41,9 @@ public interface IUnfixedHeaderRequestInfo : IRequestInfo
     /// <para>如果返回<see langword="false"/>，意味着缓存剩余数据，此时如果仅仅是因为长度不足，则不必修改其他。</para>
     /// <para>但是如果是因为数据错误，则需要修改<see cref="ByteBlock.Position"/>到正确位置，如果都不正确，则设置<see cref="ByteBlock.Position"/>等于<see cref="ByteBlock.Length"/></para>
     /// </summary>
-    /// <param name="byteBlock"></param>
+    /// <param name="reader"></param>
     /// <returns>是否满足解析包头</returns>
-    bool OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    bool OnParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader;
 }
 
 /// <summary>
@@ -59,61 +57,56 @@ public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderReque
     /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
     /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
     /// </summary>
-    /// <param name="byteBlock">字节块</param>
+    /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TUnfixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TUnfixedHeaderRequestInfo request)
     {
         if (beCached)
         {
-            if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
+            if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
             {
-                this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                 return FilterResult.Cache;
             }
 
-            var body = byteBlock.Span.Slice(byteBlock.Position, request.BodyLength);
+            var body = reader.GetSpan(request.BodyLength);
             if (request.OnParsingBody(body))
             {
-                byteBlock.Position += request.BodyLength;
+                reader.Advance(request.BodyLength);
                 return FilterResult.Success;
             }
             else
             {
-                byteBlock.Position += 1;
+                reader.Advance(1);
                 return FilterResult.GoOn;
             }
         }
         else
         {
             var requestInfo = this.GetInstance();
-            if (requestInfo.OnParsingHeader(ref byteBlock))
+            if (requestInfo.OnParsingHeader(ref reader))
             {
                 request = requestInfo;
-                if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
+                if (request.BodyLength > reader.BytesRemaining)//body不满足解析，开始缓存，然后保存对象
                 {
-                    tempCapacity = request.BodyLength + request.HeaderLength;
-                    this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                     return FilterResult.Cache;
                 }
 
-                var body = byteBlock.Span.Slice(byteBlock.Position, request.BodyLength);
+                var body = reader.GetSpan(request.BodyLength);
                 if (request.OnParsingBody(body))
                 {
-                    byteBlock.Position += request.BodyLength;
+                    reader.Advance(request.BodyLength);
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Position += 1;
+                    reader.Advance(1);
                     return FilterResult.GoOn;
                 }
             }
             else
             {
-                this.SurLength = int.MaxValue;
                 return FilterResult.Cache;
             }
         }

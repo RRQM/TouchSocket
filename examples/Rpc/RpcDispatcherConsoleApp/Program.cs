@@ -15,14 +15,85 @@ using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 using TouchSocket.Rpc.DmtpRpc.Generators;
+using TouchSocket.Sockets;
 
 namespace RpcDispatcherConsoleApp;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
+    {
+        #region Rpc调度器配置并发调度器
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(7789)
+               .ConfigureContainer(a =>
+               {
+                   a.AddRpcStore(store =>
+                   {
+                       store.RegisterServer<IMyRpcServer, MyRpcServer>();//注册服务
+                   });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.UseConcurrencyDispatcher();
+                   });
+               })
+               .SetDmtpOption(options =>
+               {
+                   options.VerifyToken = "Rpc";//连接验证口令。
+               });
+
+        await service.SetupAsync(config);
+
+        await service.StartAsync();
+
+        service.Logger.Info($"{service.GetType().Name}已启动");
+        #endregion
+
+        #region Rpc调度器创建客户端
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:7789")
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc();
+            })
+            .SetDmtpOption(options =>
+            {
+                options.VerifyToken = "Rpc";//连接验证口令。
+            }));
+        await client.ConnectAsync();
+        #endregion
+
+        #region Rpc调度器并发调用
+        //Task.Run(() => 
+        //{
+
+        //});
+
+        var dmtpInvokeOption = new DmtpInvokeOption()
+        {
+            FeedbackType = FeedbackType.OnlySend
+        };
+        for (var i = 0; i < 10; i++)
+        {
+            var actor = client.GetDmtpRpcActor();
+            await actor.OutputAsync(i, dmtpInvokeOption);
+        }
+        #endregion
+
+        while (true)
+        {
+            Console.ReadLine();
+        }
+    }
+
+    #region Rpc调度器配置队列调度器
+    private static async Task UseQueueDispatcher()
     {
         var service = new TcpDmtpService();
         var config = new TouchSocketConfig()//配置
@@ -36,64 +107,63 @@ internal class Program
                })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRpc()
-                   .UseConcurrencyDispatcher();
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.UseQueueRpcDispatcher();
+                   });
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Rpc"//连接验证口令。
+                   options.VerifyToken = "Rpc";//连接验证口令。
                });
 
         await service.SetupAsync(config);
-
         await service.StartAsync();
-
-        service.Logger.Info($"{service.GetType().Name}已启动");
-
-        var client = new TcpDmtpClient();
-        await client.SetupAsync(new TouchSocketConfig()
-            .SetRemoteIPHost("127.0.0.1:7789")
-            .ConfigurePlugins(a =>
-            {
-                a.UseDmtpRpc();
-            })
-            .SetDmtpOption(new DmtpOption()
-            {
-                VerifyToken = "Rpc"//连接验证口令。
-            }));
-        await client.ConnectAsync();
-
-        //Task.Run(() => 
-        //{
-
-        //});
-
-        DmtpInvokeOption dmtpInvokeOption = new DmtpInvokeOption()
-        {
-            FeedbackType = FeedbackType.OnlySend
-        };
-        for (var i = 0; i < 10; i++)
-        {
-            var actor = client.GetDmtpRpcActor();
-            await actor.OutputAsync(i, dmtpInvokeOption);
-        }
-
-        while (true)
-        {
-            Console.ReadLine();
-        }
     }
+    #endregion
+
+    #region Rpc调度器配置立即调度器
+    private static async Task UseImmediateDispatcher()
+    {
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(7789)
+               .ConfigureContainer(a =>
+               {
+                   a.AddRpcStore(store =>
+                   {
+                       store.RegisterServer<IMyRpcServer, MyRpcServer>();//注册服务
+                   });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.UseImmediateRpcDispatcher();
+                   });
+               })
+               .SetDmtpOption(options =>
+               {
+                   options.VerifyToken = "Rpc";//连接验证口令。
+               });
+
+        await service.SetupAsync(config);
+        await service.StartAsync();
+    }
+    #endregion
 }
 
 
+#region Rpc调度器服务接口定义
 [GeneratorRpcProxy]
-interface IMyRpcServer : IRpcServer
+internal interface IMyRpcServer : IRpcServer
 {
     [Reenterable(false)]
-    [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [DmtpRpc(MethodInvoke = true)]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    [Description("登录")]//服务描述,在生成代理时,会变成注释。
+    [DmtpRpc(MethodInvoke = true)]//服务注册的函数键,此处为显式指定。默认不传参的时候,为该函数类全名+方法名的全小写。
     Task Output(int value);
 }
+#endregion
 
 public class MyRpcServer : SingletonRpcServer, IMyRpcServer
 {

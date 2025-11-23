@@ -10,13 +10,13 @@ TouchSocket.Modbus 是一个 Modbus 功能库，为开发者提供了多种 Modb
 详细的说明文档请访问：[https://touchsocket.net/](https://touchsocket.net/)
 
 ## 支持的目标框架
-- net45
+
 - net462
 - net472
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 贡献与反馈

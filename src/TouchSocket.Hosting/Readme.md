@@ -9,7 +9,7 @@ TouchSocket.Hosting 是 TouchSocket 基于通用主机的扩展项目，提供�
 - netstandard2.0
 - netstandard2.1
 - net6.0
-- net9.0
+- net10.0
 - net8.0
 
 ## 使用方法

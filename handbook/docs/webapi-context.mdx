@@ -1,0 +1,116 @@
+---
+id: webapi-context
+title: WebAPI 调用上下文
+---
+
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+
+## 一、调用上下文
+
+在 WebAPI 方法中，可以通过 `IWebApiCallContext` 访问请求的详细信息和进行高级操作。
+
+<BilibiliCard title="在WebApi服务方法中获取调用上下文" link="https://www.bilibili.com/cheese/play/ep1709018" isPro="true"/>
+<BilibiliCard title="使用调用上下文完成获取IP、取消调用、日志记录等功能" link="https://www.bilibili.com/cheese/play/ep1709019" isPro="true"/>
+
+### 1.1 获取调用上下文
+
+<CustomCodeBlock region="使用调用上下文"/>
+
+**调用上下文提供的信息：**
+
+- `callContext.Caller` - 客户端连接对象（IP、Port、Id 等）
+- `callContext.HttpContext` - HTTP 上下文
+- `callContext.HttpContext.Request` - HTTP 请求对象
+- `callContext.HttpContext.Response` - HTTP 响应对象
+
+## 二、客户端信息
+
+### 2.1 获取客户端 IP 和端口
+
+通过 `Caller` 属性获取客户端连接信息：
+
+<CustomCodeBlock region="使用调用上下文"/>
+
+**可用信息**：
+- `callContext.Caller.IP` - 客户端 IP 地址
+- `callContext.Caller.Port` - 客户端端口
+- `callContext.Caller.Id` - 客户端连接 ID
+
+## 三、HTTP 上下文
+
+### 3.1 访问 HTTP 请求
+
+通过 `HttpContext.Request` 访问请求信息：
+
+- `request.Method` - HTTP 方法（GET、POST 等）
+- `request.URL` - 完整 URL
+- `request.RelativeURL` - 相对路径
+- `request.Headers` - 请求头集合
+- `request.Query` - 查询参数集合
+
+### 3.2 访问 HTTP 响应
+
+通过 `HttpContext.Response` 设置响应：
+
+- `response.SetStatus(code, message)` - 设置状态码
+- `response.Headers[name] = value` - 设置响应头
+- `response.ContentType` - 设置内容类型
+- `response.SetContent(data)` - 设置响应内容
+
+## 四、响应定制
+
+### 4.1 自定义响应状态码
+
+<CustomCodeBlock region="WebApi调用上下文自定义响应状态码"/>
+
+### 4.2 设置响应头
+
+<CustomCodeBlock region="WebApi调用上下文设置响应头"/>
+
+### 4.3 设置 Content-Type
+
+<CustomCodeBlock region="WebApi调用上下文设置ContentType"/>
+
+## 五、高级场景
+
+### 5.1 WebSocket 升级
+
+可以将 HTTP 连接升级为 WebSocket：
+
+<CustomCodeBlock region="WebApi调用上下文WebSocket升级"/>
+
+### 5.2 流式响应
+
+对于大型数据或实时数据，可以使用流式响应：
+
+<CustomCodeBlock region="WebApi调用上下文流式响应"/>
+
+## 六、常见场景示例
+
+### 6.1 获取客户端信息和请求详情
+
+<CustomCodeBlock region="WebApi调用上下文获取客户端信息和请求详情"/>
+
+### 6.2 条件响应
+
+根据条件返回不同的响应：
+
+<CustomCodeBlock region="WebApi调用上下文条件响应"/>
+
+## 七、注意事项
+
+### 7.1 响应写入时机
+
+- 如果方法有返回值，框架会自动序列化并写入响应
+- 如果使用 `Response.AnswerAsync()` 手动写入，方法应返回 `Task` 或 `void`
+
+### 7.2 异步操作
+
+- 文件操作、流操作建议使用异步方法（`async/await`）
+- 避免在 WebAPI 方法中执行长时间阻塞操作
+
+### 7.3 资源释放
+
+- 对于文件流、数据库连接等资源，确保正确释放
+- 使用 `using` 语句或 `try-finally` 块

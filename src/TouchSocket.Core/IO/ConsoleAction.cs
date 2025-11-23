@@ -10,44 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
-
-/// <summary>
-/// 控制台行为
-/// </summary>
-
-internal readonly struct VAction
-{
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="action"></param>
-    /// <param name="description"></param>
-    /// <param name="fullOrder"></param>
-    public VAction(string description, string fullOrder, Func<Task> action)
-    {
-        this.FullOrder = fullOrder;
-        this.Action = action ?? throw new ArgumentNullException(nameof(action));
-        this.Description = description ?? throw new ArgumentNullException(nameof(description));
-    }
-
-    public Func<Task> Action { get; }
-
-    public string Description { get; }
-    public string FullOrder { get; }
-}
 
 /// <summary>
 /// 控制台行为
 /// </summary>
 public sealed class ConsoleAction
 {
-    private readonly Dictionary<string, VAction> m_actions = new Dictionary<string, VAction>();
+    private readonly Dictionary<string, ConsoleActionInfo> m_actions = new Dictionary<string, ConsoleActionInfo>();
 
     /// <summary>
     /// 构造函数
@@ -59,24 +29,7 @@ public sealed class ConsoleAction
 
         this.Add(helpOrder, "帮助信息", this.ShowAll);
 
-        var title = $@"
-
-  _______                   _       _____               _          _
- |__   __|                 | |     / ____|             | |        | |
-    | |  ___   _   _   ___ | |__  | (___    ___    ___ | | __ ___ | |_
-    | | / _ \ | | | | / __|| '_ \  \___ \  / _ \  / __|| |/ // _ \| __|
-    | || (_) || |_| || (__ | | | | ____) || (_) || (__ |   <|  __/| |_
-    |_| \___/  \__,_| \___||_| |_||_____/  \___/  \___||_|\_\\___| \__|
-
- -------------------------------------------------------------------
-     Author     :   若汝棋茗
-     Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}
-     Gitee      :   https://gitee.com/rrqm_home
-     Github     :   https://github.com/rrqm
-     API        :   https://touchsocket.net/
- -------------------------------------------------------------------
-";
-        Console.WriteLine(title);
+        this.ShowBanner();
     }
 
     /// <summary>
@@ -87,12 +40,17 @@ public sealed class ConsoleAction
     /// <summary>
     /// 帮助信息指令
     /// </summary>
-    public string HelpOrder { get; private set; }
+    public string HelpOrder { get; }
+
+    /// <summary>
+    /// 所有命令信息
+    /// </summary>
+    public IReadOnlyList<ConsoleActionInfo> AllActionInfos => this.m_actions.Values.Where(a => a.FullOrder != this.HelpOrder).ToList();
 
     /// <summary>
     /// 添加
     /// </summary>
-    /// <param name="order">指令，多个指令用“|”分割</param>
+    /// <param name="order">指令，多个指令用"|"分割</param>
     /// <param name="description">描述</param>
     /// <param name="action"></param>
     public void Add(string order, string description, Action action)
@@ -108,7 +66,7 @@ public sealed class ConsoleAction
     /// <summary>
     /// 添加
     /// </summary>
-    /// <param name="order">指令，多个指令用“|”分割</param>
+    /// <param name="order">指令，多个指令用"|"分割</param>
     /// <param name="description">描述</param>
     /// <param name="action"></param>
     public void Add(string order, string description, Func<Task> action)
@@ -116,7 +74,7 @@ public sealed class ConsoleAction
         var orders = order.ToLower().Split('|');
         foreach (var item in orders)
         {
-            this.m_actions.Add(item, new VAction(description, order, action));
+            this.m_actions.Add(item, new ConsoleActionInfo(description, order, action));
         }
     }
 
@@ -135,6 +93,7 @@ public sealed class ConsoleAction
             }
             catch (Exception ex)
             {
+                this.WriteError($"执行命令时发生错误: {ex.Message}");
                 OnException?.Invoke(ex);
             }
             return true;
@@ -152,10 +111,16 @@ public sealed class ConsoleAction
     {
         while (true)
         {
+            this.WritePrompt("请输入命令: ");
             var str = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(str))
+            {
+                continue;
+            }
+
             if (!await this.RunAsync(str).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                Console.WriteLine($"没有这个指令。");
+                this.WriteWarning($"没有找到命令 '{str}'，输入 '{this.HelpOrder.Split('|')[0]}' 查看帮助信息。");
             }
         }
     }
@@ -165,21 +130,162 @@ public sealed class ConsoleAction
     /// </summary>
     public void ShowAll()
     {
-        var max = this.m_actions.Values.Max(a => a.FullOrder.Length) + 8;
+        this.WriteTitle("\n可用命令列表:");
+        this.WriteLine();
 
-        var s = new List<string>();
-        foreach (var item in this.m_actions)
+        var maxOrderLength = this.m_actions.Values.Max(a => a.FullOrder.Length);
+        var separator = new string('─', maxOrderLength + 4);
+
+        var distinctActions = new List<string>();
+        foreach (var item in this.m_actions.OrderBy(a => a.Value.FullOrder))
         {
-            if (!s.Contains(item.Value.FullOrder.ToLower()))
+            if (!distinctActions.Contains(item.Value.FullOrder.ToLower()))
             {
-                s.Add(item.Value.FullOrder.ToLower());
-                Console.Write($"[{item.Value.FullOrder}]");
-                for (var i = 0; i < max - item.Value.FullOrder.Length; i++)
-                {
-                    Console.Write("-");
-                }
-                Console.WriteLine(item.Value.Description);
+                distinctActions.Add(item.Value.FullOrder.ToLower());
+
+                this.WriteCommand($"  [{item.Value.FullOrder}]");
+                var padding = maxOrderLength - item.Value.FullOrder.Length + 2;
+                Console.Write(new string(' ', padding));
+                this.WriteDescription(item.Value.Description);
+                this.WriteLine();
             }
         }
+
+        this.WriteLine();
+    }
+
+    /// <summary>
+    /// 显示Banner
+    /// </summary>
+    private void ShowBanner()
+    {
+        var originalColor = Console.ForegroundColor;
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        var title = @"
+
+  _______                   _       _____               _          _
+ |__   __|                 | |     / ____|             | |        | |
+    | |  ___   _   _   ___ | |__  | (___    ___    ___ | | __ ___ | |_
+    | | / _ \ | | | | / __|| '_ \  \___ \  / _ \  / __|| |/ // _ \| __|
+    | || (_) || |_| || (__ | | | | ____) || (_) || (__ |   <|  __/| |_
+    |_| \___/  \__,_| \___||_| |_||_____/  \___/  \___||_|\_\\___| \__|
+
+";
+        Console.WriteLine(title);
+
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.WriteLine(" " + new string('─', 67));
+
+        this.WriteInfo("     Author     : ");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("若汝棋茗");
+
+        this.WriteInfo("     Version    : ");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+
+        this.WriteInfo("     Gitee      : ");
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("https://gitee.com/rrqm_home");
+
+        this.WriteInfo("     Github     : ");
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("https://github.com/rrqm");
+
+        this.WriteInfo("     API        : ");
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("https://touchsocket.net/");
+
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.WriteLine(" " + new string('─', 67));
+
+        Console.ForegroundColor = originalColor;
+        Console.WriteLine();
+    }
+
+    /// <summary>
+    /// 写入标题
+    /// </summary>
+    private void WriteTitle(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入命令
+    /// </summary>
+    private void WriteCommand(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入描述
+    /// </summary>
+    private void WriteDescription(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入提示
+    /// </summary>
+    private void WritePrompt(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入警告
+    /// </summary>
+    private void WriteWarning(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入错误
+    /// </summary>
+    private void WriteError(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入信息
+    /// </summary>
+    private void WriteInfo(string text)
+    {
+        var originalColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(text);
+        Console.ForegroundColor = originalColor;
+    }
+
+    /// <summary>
+    /// 写入空行
+    /// </summary>
+    private void WriteLine()
+    {
+        Console.WriteLine();
     }
 }

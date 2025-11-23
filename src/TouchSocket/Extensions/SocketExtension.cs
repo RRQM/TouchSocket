@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -58,7 +56,7 @@ public static class SocketExtension
     /// 尝试关闭<see cref="Socket"/>。不会抛出异常。
     /// </summary>
     /// <param name="socket"></param>
-    public static void TryClose(this Socket socket)
+    public static Result SafeClose(this Socket socket)
     {
         try
         {
@@ -66,9 +64,11 @@ public static class SocketExtension
             {
                 socket.Close();
             }
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
+            return Result.FromException(ex.Message);
         }
     }
 }

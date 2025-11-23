@@ -18,22 +18,6 @@ namespace BetweenAndConsoleApp;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
-    {
-        var service = await CreateService();
-        var client = await CreateClient();
-
-        ConsoleLogger.Default.Info("按任意键发送10次");
-        while (true)
-        {
-            Console.ReadKey();
-            for (var i = 0; i < 10; i++)
-            {
-                await client.SendAsync("**12##12##");
-            }
-        }
-    }
-
     private static async Task<TcpClient> CreateClient()
     {
         var client = new TcpClient();
@@ -54,6 +38,7 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+        #region 接收自定义区间适配器
         service.Received = (client, e) =>
         {
             //从客户端收到信息
@@ -64,7 +49,7 @@ internal class Program
             }
             return Task.CompletedTask;
         };
-
+        #endregion
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
              .SetTcpDataHandlingAdapter(() => new MyCustomBetweenAndDataHandlingAdapter())
@@ -80,6 +65,44 @@ internal class Program
         service.Logger.Info("服务器已启动");
         return service;
     }
+
+    private static async Task Main(string[] args)
+    {
+        var service = await CreateService();
+        var client = await CreateClient();
+
+        ConsoleLogger.Default.Info("按任意键发送10次");
+        while (true)
+        {
+            Console.ReadKey();
+            for (var i = 0; i < 10; i++)
+            {
+                await client.SendAsync("**12##12##");
+            }
+        }
+    }
+}
+
+#region 创建自定义区间适配器
+internal class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
+{
+    private readonly ReadOnlyMemory<byte> m_endCode;
+
+    private readonly ReadOnlyMemory<byte> m_startCode;
+
+    public MyCustomBetweenAndDataHandlingAdapter()
+    {
+        this.MinSize = 5;//表示，实际数据体不会小于5，例如“**12##12##”数据，解析后会解析成“12##12”
+
+        this.m_startCode = Encoding.UTF8.GetBytes("**");//可以为0长度字节，意味着没有起始标识。
+        this.m_endCode = Encoding.UTF8.GetBytes("##");//必须为有效值。
+    }
+    public override ReadOnlyMemory<byte> EndCode => this.m_endCode;
+    public override ReadOnlyMemory<byte> StartCode => this.m_startCode;
+    protected override MyBetweenAndRequestInfo GetInstance(ReadOnlySpan<byte> body)
+    {
+        return new MyBetweenAndRequestInfo(body.ToArray());
+    }
 }
 
 internal class MyBetweenAndRequestInfo : IRequestInfo
@@ -91,26 +114,4 @@ internal class MyBetweenAndRequestInfo : IRequestInfo
 
     public byte[] Body { get; private set; }
 }
-
-internal class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
-{
-    public MyCustomBetweenAndDataHandlingAdapter()
-    {
-        this.MinSize = 5;//表示，实际数据体不会小于5，例如“**12##12##”数据，解析后会解析成“12##12”
-
-        this.m_startCode = Encoding.UTF8.GetBytes("**");//可以为0长度字节，意味着没有起始标识。
-        this.m_endCode = Encoding.UTF8.GetBytes("##");//必须为有效值。
-    }
-
-    private readonly byte[] m_startCode;
-    private readonly byte[] m_endCode;
-
-    public override byte[] StartCode => this.m_startCode;
-
-    public override byte[] EndCode => this.m_endCode;
-
-    protected override MyBetweenAndRequestInfo GetInstance(ReadOnlySpan<byte> body)
-    {
-        return new MyBetweenAndRequestInfo(body.ToArray());
-    }
-}
+#endregion

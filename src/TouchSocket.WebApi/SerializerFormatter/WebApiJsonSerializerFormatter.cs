@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.WebApi;
 
 internal sealed class WebApiJsonSerializerFormatter : JsonStringToClassSerializerFormatter<HttpContext>
 {
-    public override bool TrySerialize(HttpContext state, in object target, out string source)
+    public override bool TrySerialize<TTarget>(HttpContext state, in TTarget target, out string source)
     {
         switch (state.Request.Accept)
         {

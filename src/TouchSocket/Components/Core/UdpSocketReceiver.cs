@@ -10,35 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
-internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs
+internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs<UdpOperationResult>
 {
-    public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket, EndPoint endPoint)
+    public ValueTask<UdpOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
     {
-#if NET6_0_OR_GREATER
-        this.SetBuffer(Memory<byte>.Empty);
-#else
-        var empty = new byte[0];
-        this.SetBuffer(empty, 0, 0);
-#endif
-        this.RemoteEndPoint = endPoint;
-        if (socket.ReceiveFromAsync(this))
-        {
-            return new ValueTask<SocketOperationResult>(this, 0);
-        }
-
-        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
-    }
-
-    public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
-    {
+        this.m_core.Reset();
 #if NET6_0_OR_GREATER
         this.SetBuffer(buffer);
 #else
@@ -49,9 +30,14 @@ internal sealed class UdpSocketReceiver : SocketAwaitableEventArgs
         this.RemoteEndPoint = endPoint;
         if (socket.ReceiveFromAsync(this))
         {
-            return new ValueTask<SocketOperationResult>(this, 0);
+            return new ValueTask<UdpOperationResult>(this, this.m_core.Version);
         }
 
-        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        return new ValueTask<UdpOperationResult>(this.GetResult());
+    }
+
+    protected override UdpOperationResult GetResult()
+    {
+        return new UdpOperationResult(this.BytesTransferred, this.RemoteEndPoint, this.SocketError, this.ReceiveMessageFromPacketInfo);
     }
 }

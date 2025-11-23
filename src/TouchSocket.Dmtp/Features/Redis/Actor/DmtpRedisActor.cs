@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis;
@@ -39,33 +36,30 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     public IDmtpActor DmtpActor { get; }
 
     /// <inheritdoc/>
-    public ICache<string, byte[]> ICache { get; set; }
+    public ICache<string, ReadOnlyMemory<byte>> ICache { get; set; }
 
     /// <inheritdoc/>
-    public int Timeout { get; set; } = 30 * 1000;
-
-    /// <inheritdoc/>
-    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000)
+    public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration, CancellationToken cancellationToken)
     {
-        var cache = new CacheEntry<string, byte[]>(key)
+        var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
             Duration = TimeSpan.FromSeconds(duration)
         };
-        if (!(value is byte[]))
+        if (value is not ReadOnlyMemory<byte>)
         {
             cache.Value = this.Converter.Serialize(null, value);
         }
-        return await this.AddCacheAsync(cache).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.AddCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity)
+    public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken cancellationToken)
     {
-        return !await this.ContainsCacheAsync(entity.Key).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return !await this.ContainsCacheAsync(entity.Key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task ClearCacheAsync()
+    public async Task ClearCacheAsync(CancellationToken cancellationToken)
     {
         var package = new RedisRequestWaitPackage
         {
@@ -81,17 +75,17 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(this.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        if (waitData.WaitResult.Status == 1)
+                        if (waitData.CompletedData.Status == 1)
                         {
                             return;
                         }
                         else
                         {
-                            throw new Exception(waitData.WaitResult.Message);
+                            throw new Exception(waitData.CompletedData.Message);
                         }
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
@@ -104,12 +98,12 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ContainsCacheAsync(string key)
+    public async Task<bool> ContainsCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -131,13 +125,13 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(this.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        return waitData.WaitResult.Status == 1
+                        return waitData.CompletedData.Status == 1
                             ? true
-                            : waitData.WaitResult.Status == byte.MaxValue ? false : throw new Exception(waitData.WaitResult.Message);
+                            : waitData.CompletedData.Status == byte.MaxValue ? false : throw new Exception(waitData.CompletedData.Message);
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
                 case WaitDataStatus.Canceled:
@@ -149,18 +143,18 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 
     /// <inheritdoc/>
-    public async Task<TValue> GetAsync<TValue>(string key)
+    public async Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken = default)
     {
-        var cache = await this.GetCacheAsync(key).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var cache = await this.GetCacheAsync(key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         if (cache != null)
         {
-            if (cache.Value is null)
+            if (cache.Value.IsEmpty)
             {
                 return default;
             }
@@ -175,7 +169,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<ICacheEntry<string, byte[]>> GetCacheAsync(string key)
+    public async Task<ICacheEntry<string, ReadOnlyMemory<byte>>> GetCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -191,23 +185,23 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(this.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        var responsePackage = (RedisResponseWaitPackage)waitData.WaitResult;
+                        var responsePackage = (RedisResponseWaitPackage)waitData.CompletedData;
                         return responsePackage.Status == 1
-                            ? new CacheEntry<string, byte[]>(key)
+                            ? new CacheEntry<string, ReadOnlyMemory<byte>>(key)
                             {
                                 Value = responsePackage.value
                             }
-                            : responsePackage.Status == byte.MaxValue ? new CacheEntry<string, byte[]>(key) : (ICacheEntry<string, byte[]>)default;
+                            : responsePackage.Status == byte.MaxValue ? new CacheEntry<string, ReadOnlyMemory<byte>>(key) : (ICacheEntry<string, ReadOnlyMemory<byte>>)default;
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
                 case WaitDataStatus.Canceled:
@@ -219,7 +213,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 
@@ -236,15 +230,15 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             try
             {
                 var package = new RedisRequestWaitPackage();
-                var block = message.BodyByteBlock;
-                package.Unpackage(ref block);
+                var reader = new BytesReader(message.Memory);
+                package.Unpackage(ref reader);
                 waitResult.Sign = package.Sign;
 
                 switch (package.packageType)
                 {
                     case RedisPackageType.Set:
                         {
-                            var success = this.ICache.SetCache(new CacheEntry<string, byte[]>(package.key)
+                            var success = this.ICache.SetCache(new CacheEntry<string, ReadOnlyMemory<byte>>(package.key)
                             {
                                 Duration = package.timeSpan.Value,
                                 Value = package.value
@@ -307,16 +301,16 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         else if (message.ProtocolFlags == this.m_redis_Response)
         {
             var waitResult = new RedisResponseWaitPackage();
-            var block = message.BodyByteBlock;
-            waitResult.Unpackage(ref block);
-            this.DmtpActor.WaitHandlePool.SetRun(waitResult);
+            var reader = new BytesReader(message.Memory);
+            waitResult.Unpackage(ref reader);
+            this.DmtpActor.WaitHandlePool.Set(waitResult);
             return true;
         }
         return false;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> RemoveCacheAsync(string key)
+    public async Task<bool> RemoveCacheAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -332,19 +326,19 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(this.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        return waitData.WaitResult.Status == 1
+                        return waitData.CompletedData.Status == 1
                             ? true
-                            : waitData.WaitResult.Status == byte.MaxValue ? false : throw new Exception(waitData.WaitResult.Message);
+                            : waitData.CompletedData.Status == byte.MaxValue ? false : throw new Exception(waitData.CompletedData.Message);
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(Resources.TouchSocketDmtpStatus.Overtime.GetDescription());
                 case WaitDataStatus.Canceled: return false;
@@ -356,23 +350,23 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 
     /// <inheritdoc/>
-    public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000)
+    public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000, CancellationToken cancellationToken = default)
     {
-        var cache = new CacheEntry<string, byte[]>(key)
+        var cache = new CacheEntry<string, ReadOnlyMemory<byte>>(key)
         {
             Duration = TimeSpan.FromSeconds(duration),
-            Value = value is byte[] bytes ? bytes : this.Converter.Serialize(null, value)
+            Value = value is ReadOnlyMemory<byte> bytes ? bytes : this.Converter.Serialize(null, value)
         };
-        return await this.SetCacheAsync(cache).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.SetCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> SetCacheAsync(ICacheEntry<string, byte[]> cache)
+    public async Task<bool> SetCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> cache, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(cache.Key))
         {
@@ -395,17 +389,17 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
         try
         {
-            using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
+            using (var byteBlock = new ByteBlock((package.value.Length) + 1024))
             {
                 var block = byteBlock;
                 package.Package(ref block);
                 await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            switch (await waitData.WaitAsync(this.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        return waitData.WaitResult.Status == 1 || (waitData.WaitResult.Status == byte.MaxValue ? false : throw new Exception(waitData.WaitResult.Message));
+                        return waitData.CompletedData.Status == 1 || (waitData.CompletedData.Status == byte.MaxValue ? false : throw new Exception(waitData.CompletedData.Message));
                     }
                 case WaitDataStatus.Overtime: throw new TimeoutException(Resources.TouchSocketDmtpStatus.Overtime.GetDescription());
                 case WaitDataStatus.Canceled: return false;
@@ -417,7 +411,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 

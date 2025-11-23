@@ -1,0 +1,258 @@
+---
+id: webapi-client
+title: WebAPI 客户端调用
+---
+
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+
+## 一、概述
+
+TouchSocket.WebApi 支持多种客户端调用方式，包括浏览器、标准 HttpClient、TouchSocket 专用客户端以及代理方式调用。
+
+
+## 二、浏览器调用
+
+最简单的方式是直接通过浏览器访问 WebApi 接口：
+
+**直接访问：**
+```
+http://localhost:7789/apiserver/sum?a=10&b=20
+```
+
+**使用 JavaScript/Fetch API：**
+
+```javascript
+// GET 请求
+fetch('http://localhost:7789/apiserver/sum?a=10&b=20')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// POST 请求
+fetch('http://localhost:7789/apiserver/create', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ name: 'Alice', age: 25 })
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+## 三、使用原生 HttpClient
+
+对于简单场景，可以使用 .NET 标准库的 `HttpClient` 或任何支持 HTTP 协议的客户端工具直接调用：
+
+<CustomCodeBlock region="WebApi客户端使用原生HttpClient"/>
+
+:::info 说明
+
+原生 HttpClient 调用简单直接，但需要手动处理 URL 拼接、序列化/反序列化、异常处理等。对于更复杂的场景，推荐使用 TouchSocket 提供的专用客户端。
+
+:::
+
+## 四、使用 TouchSocket WebApiClient（推荐）
+
+TouchSocket 提供的 `WebApiClient` 是专为 WebApi 设计的客户端，提供了更强大的功能和更好的开发体验。
+
+<BilibiliCard title="使用代码生成的方式调用WebApi" link="https://www.bilibili.com/cheese/play/ep1688293" isPro="true"/>
+
+### 4.1 核心优势
+
+| 特性 | WebApiClient | 原生 HttpClient |
+|------|-------------|----------------|
+| **强类型调用** | ✅ 支持泛型返回 | ❌ 需要手动反序列化 |
+| **代码生成** | ✅ 自动生成调用代码 | ❌ 手动编写 |
+| **插件系统** | ✅ 丰富的插件支持 | ❌ 需要自行实现 |
+| **超时控制** | ✅ 灵活的超时配置 | ⚠️ 全局超时 |
+| **异常处理** | ✅ 统一的异常体系 | ⚠️ 需要自行包装 |
+
+### 4.2 创建 WebApiClient
+
+<CustomCodeBlock region="WebApi客户端创建WebApiClient"/>
+
+**配置说明**：
+- `SetRemoteIPHost`：设置服务器地址和端口
+- `ConfigurePlugins`：配置插件（如日志、认证、重连等）
+- 支持链式配置，简洁易用
+
+### 4.3 GET 请求调用
+
+<CustomCodeBlock region="WebApi客户端GET调用"/>
+
+**优势**：
+- 使用 `WebApiRequest` 对象构建请求，避免字符串拼接错误
+- `Querys` 参数自动编码，防止 URL 注入
+- `InvokeTAsync<T>` 直接返回强类型结果，无需手动反序列化
+
+### 4.4 POST 请求调用
+
+<CustomCodeBlock region="WebApi客户端POST调用"/>
+
+**优势**：
+- `Body` 属性自动序列化对象
+- 支持复杂类型参数，无需手动处理 JSON
+- 自动设置 Content-Type 头
+
+### 4.5 使用代理调用
+
+<CustomCodeBlock region="WebApi客户端使用代理调用"/>
+
+**优势**：
+- 使用生成的扩展方法，调用更简洁
+- 编译时类型检查，避免运行时错误
+- IDE 智能提示，提高开发效率
+
+## 五、使用 WebApiClientSlim
+
+`WebApiClientSlim` 是基于 `System.Net.Http.HttpClient` 的轻量级封装，结合了原生 HttpClient 的兼容性和 TouchSocket 的便利性。
+
+### 5.1 创建 WebApiClientSlim
+
+<CustomCodeBlock region="WebApi客户端创建WebApiClientSlim"/>
+
+### 5.2 字符串模板调用
+
+<CustomCodeBlock region="WebApi客户端字符串模板调用"/>
+
+**适用场景**：
+- ✅ 需要兼容现有的 `HttpClient` 代码
+- ✅ 希望使用 `IHttpClientFactory` 管理连接池
+- ✅ 需要在 .NET 6.0+ 或 .NET 4.8.1 环境中运行
+- ✅ 想要轻量级封装，同时保留原生 HttpClient 的灵活性
+
+**核心特点**：
+- 支持字符串模板调用：`GET:/ApiServer/Sum?a={0}&b={1}`
+- 自动参数替换和 URL 编码
+- 兼容标准 `HttpClient` 生态（如 Polly、HttpClientFactory 等）
+- 支持插件系统，可扩展功能
+
+:::tip 提示
+
+`WebApiClientSlim` 可以复用已有的 `HttpClient` 实例，遵循微软最佳实践。仅在 .NET 6.0+ 和 .NET 4.8.1 可用。
+
+:::
+
+## 六、使用 DispatchProxy 代理
+
+使用 DispatchProxy 代理可以像调用本地方法一样调用远程 WebApi。
+
+
+### 6.1 定义代理接口
+
+<CustomCodeBlock region="WebApi客户端DispatchProxy代理接口定义"/>
+
+**说明**：
+- 接口方法需要添加 `[WebApi]` 特性，指定 HTTP 方法
+- 使用 `[Router]` 特性自定义路由规则
+- 支持多个 `[Router]` 特性，实现多路由
+
+### 6.2 实现代理类
+
+<CustomCodeBlock region="WebApi客户端DispatchProxy代理类实现"/>
+
+**说明**：
+- 继承 `WebApiDispatchProxy` 或 `RpcDispatchProxy` 基类
+- 实现 `GetClient()` 方法，返回用于通信的客户端
+- 建议复用客户端实例，避免频繁创建连接
+
+### 6.3 使用代理调用
+
+<CustomCodeBlock region="WebApi客户端DispatchProxy代理调用"/>
+
+**优点**：
+- 类型安全，编译时检查
+- 调用简洁，像本地方法一样
+- 支持 async/await
+- 便于单元测试（可以 mock 接口）
+
+## 七、代码生成
+
+TouchSocket 支持通过源生成器或代码生成自动生成客户端代理，避免手动编写调用代码。
+
+<BilibiliCard title="使用代码生成的方式调用WebApi" link="https://www.bilibili.com/cheese/play/ep1688293" isPro="true"/>
+
+### 7.1 服务端代码生成
+
+在服务端注册服务时生成客户端代理代码：
+
+<CustomCodeBlock region="WebApi服务端代码生成"/>
+
+### 7.2 使用生成的代理
+
+生成的代理代码包含了所有 WebApi 方法的客户端扩展方法，可以直接使用：
+
+<CustomCodeBlock region="WebApi客户端代码生成使用代理"/>
+
+### 7.3 源生成器
+
+使用源生成器在编译时生成代理：
+
+```csharp
+[GenerateWebApiProxy]
+public partial class ApiServer : SingletonRpcServer
+{
+    [WebApi(Method = HttpMethodType.Get)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+源生成器会自动生成客户端接口，可以用于 DispatchProxy 代理。
+
+:::tip 提示
+
+更多代码生成的详细信息，请参考 [RPC 代理生成](./rpcgenerateproxy.mdx) 文档。
+
+:::
+
+## 八、客户端插件
+
+### 8.1 请求拦截
+
+使用插件可以在发送请求前后进行拦截处理，例如添加认证 Token、日志记录等。
+
+<CustomCodeBlock region="WebApi客户端插件拦截"/>
+
+**说明**：
+- `IWebApiRequestPlugin`：请求发送前拦截
+- `IWebApiResponsePlugin`：响应接收后拦截
+- `e.IsHttpMessage`：判断是否使用 `System.Net.Http.HttpClient` 作为通讯主体
+- `e.RequestMessage`：`System.Net.Http.HttpRequestMessage` 对象
+- `e.Request`：TouchSocket 的 `HttpRequest` 对象
+- 必须调用 `await e.InvokeNext()` 继续执行链
+
+### 8.2 使用插件
+
+<CustomCodeBlock region="WebApi客户端使用插件"/>
+
+### 8.3 常见应用场景
+
+**添加认证 Token：**
+
+在 `MyWebApiPlugin` 的 `OnWebApiRequest` 方法中添加Token即可(参见上面的插件拦截代码)。
+
+**日志记录：**
+
+在插件的请求和响应方法中添加日志记录即可。
+
+**错误重试：**
+
+在插件的响应方法中根据状态码实现重试逻辑即可。
+
+## 九、异常处理
+
+### 9.1 基本异常处理
+
+<CustomCodeBlock region="WebApi客户端异常处理"/>
+
+### 9.2 设置超时
+
+<CustomCodeBlock region="WebApi客户端设置超时"/>
+
+### 9.3 使用 CancellationToken
+
+<CustomCodeBlock region="WebApi客户端使用CancellationToken"/>

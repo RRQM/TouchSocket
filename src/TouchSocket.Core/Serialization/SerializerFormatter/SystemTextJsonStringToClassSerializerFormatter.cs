@@ -10,14 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if SystemTextJson
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -25,27 +19,12 @@ namespace TouchSocket.Core;
 /// 使用System.Text.Json进行字符串与类之间序列化和反序列化的格式化器。
 /// </summary>
 /// <typeparam name="TState">状态类型。</typeparam>
-public class SystemTextJsonStringToClassSerializerFormatter<TState> : ISerializerFormatter<string, TState>
+[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "使用该序列化时，会和源生成配合使用")]
+[UnconditionalSuppressMessage("AOT", "IL3050:", Justification = "使用该序列化时，会和源生成配合使用")]
+public class SystemTextJsonStringToClassSerializerFormatter<TState> : SystemTextJsonSerializerFormatter<string, TState>
 {
-    /// <summary>
-    /// 获取或设置Json序列化选项。
-    /// </summary>
-    public JsonSerializerOptions JsonSettings { get; set; } = new JsonSerializerOptions();
-
-    /// <summary>
-    /// 获取或设置格式化器的顺序。
-    /// </summary>
-    public int Order { get; set; }
-
-    /// <summary>
-    /// 尝试将字符串反序列化为指定类型的对象。
-    /// </summary>
-    /// <param name="state">状态对象。</param>
-    /// <param name="source">源字符串。</param>
-    /// <param name="targetType">目标类型。</param>
-    /// <param name="target">反序列化后的对象。</param>
-    /// <returns>如果反序列化成功，则为true；否则为false。</returns>
-    public bool TryDeserialize(TState state, in string source, Type targetType, out object target)
+    /// <inheritdoc/>
+    public override bool TryDeserialize(TState state, in string source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType, out object target)
     {
         try
         {
@@ -64,14 +43,8 @@ public class SystemTextJsonStringToClassSerializerFormatter<TState> : ISerialize
         }
     }
 
-    /// <summary>
-    /// 尝试将对象序列化为字符串。
-    /// </summary>
-    /// <param name="state">状态对象。</param>
-    /// <param name="target">要序列化的对象。</param>
-    /// <param name="source">序列化后的字符串。</param>
-    /// <returns>如果序列化成功，则为true；否则为false。</returns>
-    public bool TrySerialize(TState state, in object target, out string source)
+    /// <inheritdoc/>
+    public override bool TrySerialize<TTarget>(TState state, in TTarget target, out string source)
     {
         try
         {
@@ -91,4 +64,3 @@ public class SystemTextJsonStringToClassSerializerFormatter<TState> : ISerialize
 
     }
 }
-#endif

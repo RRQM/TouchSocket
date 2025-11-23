@@ -6,17 +6,13 @@
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
 //  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
+//交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
+using System.Diagnostics;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+using System.Runtime.CompilerServices;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -41,12 +37,10 @@ public abstract class HttpBase : IRequestInfo
 
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
 
-    private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
-
     /// <summary>
     /// 可接受MIME类型
     /// </summary>
-    public string Accept
+    public TextValues Accept
     {
         get => this.m_headers.Get(HttpHeaders.Accept);
         set => this.m_headers.Add(HttpHeaders.Accept, value);
@@ -55,7 +49,7 @@ public abstract class HttpBase : IRequestInfo
     /// <summary>
     /// 允许编码
     /// </summary>
-    public string AcceptEncoding
+    public TextValues AcceptEncoding
     {
         get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
         set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
@@ -67,9 +61,32 @@ public abstract class HttpBase : IRequestInfo
     public virtual HttpContent Content { get; set; }
 
     /// <summary>
-    /// 内容填充完成
+    /// 内容填充完成状态
     /// </summary>
-    public bool? ContentCompleted { get; protected set; } = null;
+    public ContentCompletionStatus ContentStatus { get; protected set; } = ContentCompletionStatus.Unknown;
+
+    /// <summary>
+    /// 是否分块
+    /// </summary>
+    public bool IsChunk
+    {
+        get
+        {
+            var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
+            return "chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase);
+        }
+        set
+        {
+            if (value)
+            {
+                this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+            }
+            else
+            {
+                this.Headers.Remove(HttpHeaders.TransferEncoding);
+            }
+        }
+    }
 
     /// <summary>
     /// 内容长度
@@ -79,7 +96,7 @@ public abstract class HttpBase : IRequestInfo
         get
         {
             var contentLength = this.m_headers.Get(HttpHeaders.ContentLength);
-            return contentLength.IsNullOrEmpty() ? 0 : long.TryParse(contentLength, out var value) ? value : 0;
+            return contentLength.IsEmpty ? 0 : long.TryParse(contentLength, out var value) ? value : 0;
         }
         set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
     }
@@ -87,7 +104,7 @@ public abstract class HttpBase : IRequestInfo
     /// <summary>
     /// 内容类型
     /// </summary>
-    public string ContentType
+    public TextValues ContentType
     {
         get => this.m_headers.Get(HttpHeaders.ContentType);
         set => this.m_headers.Add(HttpHeaders.ContentType, value);
@@ -113,46 +130,40 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public string ProtocolVersion { get; set; } = "1.1";
 
-    ///// <summary>
-    ///// 请求行
-    ///// </summary>
-    //public string RequestLine { get; private set; }
-
-    internal Task CompleteInput()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool ParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
     {
-        return this.m_httpBlockSegment.InternalComplete(string.Empty);
-    }
+        var index = ReaderExtension.IndexOf(ref reader, TouchSocketHttpUtility.CRLFCRLF);
 
-    internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
-    {
-        return this.m_httpBlockSegment.InternalInputAsync(memory);
-    }
-
-    internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        var unreadSpan = byteBlock.Span.Slice(byteBlock.Position);
-        var index = unreadSpan.IndexOf(StringExtension.Default_RNRN_Utf8Span);
-        if (index > 0)
-        {
-            var headerLength = index + 2;
-            this.ReadHeaders(unreadSpan.Slice(0, headerLength));
-            byteBlock.Position += headerLength;
-            byteBlock.Position += 2;
-            return true;
-        }
-        else
+        if (index < 0)
         {
             return false;
         }
+
+        var headerLength = (int)index;
+
+        // 提前检查数据完整性，避免后续无效操作
+        var totalRequired = headerLength + 4; // +4 为 \r\n\r\n 的长度
+        if (reader.BytesRemaining < totalRequired)
+        {
+            return false;
+        }
+
+        // 一次性获取头部数据，减少多次调用GetSpan的开销
+        var headerSpan = reader.GetSpan(headerLength);
+
+        // 调用优化后的头部解析方法
+        this.ReadHeadersOptimized(headerSpan);
+
+        // 跳过头部数据和 \r\n\r\n 分隔符
+        reader.Advance(totalRequired);
+        return true;
     }
 
-    internal virtual void ResetHttp()
+    protected internal virtual void Reset()
     {
         this.m_headers.Clear();
-        this.ContentCompleted = null;
-        //this.RequestLine = default;
-
-        this.m_httpBlockSegment.InternalReset();
+        this.ContentStatus = ContentCompletionStatus.Unknown;
     }
 
     /// <summary>
@@ -161,72 +172,111 @@ public abstract class HttpBase : IRequestInfo
     /// <param name="requestLineSpan">包含请求行的只读字节跨度。</param>
     protected abstract void ReadRequestLine(ReadOnlySpan<byte> requestLineSpan);
 
-    private void ParseHeaderLine(ReadOnlySpan<byte> line)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ParseHeaderLineOptimized(ReadOnlySpan<byte> line)
     {
-        var colonIndex = line.IndexOf((byte)':');
+        var colonIndex = line.IndexOf(TouchSocketHttpUtility.COLON);
         if (colonIndex <= 0)
         {
-            return; // 无效格式
+            return; // 无效格式，冒号必须存在且不能在第一位
         }
 
-        // 分割键值
-        var keySpan = line.Slice(0, colonIndex).Trim();
-        var valueSpan = line.Slice(colonIndex + 1).Trim();
+        var keySpan = TouchSocketHttpUtility.TrimWhitespace(line.Slice(0, colonIndex));
+        var valueSpan = TouchSocketHttpUtility.TrimWhitespace(line.Slice(colonIndex + 1));
 
-        if (!keySpan.IsEmpty && !valueSpan.IsEmpty)
+        if (keySpan.IsEmpty || valueSpan.IsEmpty)
         {
-            var key = keySpan.ToString(Encoding.UTF8).ToLower();
+            return;
+        }
+
+        var key = keySpan.ToString(Encoding.UTF8).ToLowerInvariant();
+
+        // 检测是否包含英文逗号，按需分割
+        if (valueSpan.IndexOf((byte)',') < 0)
+        {
             var value = valueSpan.ToString(Encoding.UTF8);
-            this.m_headers[key] = value;
+            this.m_headers.Add(key, value);
+            return;
+        }
+
+        // 多值处理
+        var values = new List<string>();
+        int start = 0;
+        while (start < valueSpan.Length)
+        {
+            int commaIndex = valueSpan.Slice(start).IndexOf((byte)',');
+            ReadOnlySpan<byte> segment;
+            if (commaIndex >= 0)
+            {
+                segment = valueSpan.Slice(start, commaIndex);
+                start += commaIndex + 1;
+            }
+            else
+            {
+                segment = valueSpan.Slice(start);
+                start = valueSpan.Length;
+            }
+            segment = TouchSocketHttpUtility.TrimWhitespace(segment);
+            if (!segment.IsEmpty)
+            {
+                values.Add(segment.ToString(Encoding.UTF8));
+            }
+        }
+        if (values.Count == 1)
+        {
+            this.m_headers.Add(key, values[0]);
+        }
+        else if (values.Count > 1)
+        {
+            this.m_headers.Add(key, values.ToArray());
         }
     }
 
-    private void ReadHeaders(ReadOnlySpan<byte> span)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReadHeadersOptimized(ReadOnlySpan<byte> span)
     {
-        //string ss=span.ToString(Encoding.UTF8);
-        this.m_headers.Clear();
-
         // 解析请求行（首个有效行）
-        var lineEnd = span.IndexOf("\r\n"u8);
-        if (lineEnd == -1) // 没有完整请求行
+        var lineEnd = span.IndexOf(TouchSocketHttpUtility.CRLF);
+        if (lineEnd == -1)
         {
-            throw new ArgumentException("Invalid HTTP header format.");
+            ThrowHelper.ThrowException("Invalid HTTP header format.");
         }
 
-        // 提取请求行
+        // 提取并处理请求行
         var requestLineSpan = span.Slice(0, lineEnd);
         this.ReadRequestLine(requestLineSpan);
-        //this.RequestLine = requestLineSpan.ToString(Encoding.UTF8);
 
-        // 跳过请求行及CRLF（+2）
+        // 跳过请求行及CRLF
         var remaining = span.Slice(lineEnd + 2);
 
-        // 解析headers
-        while (true)
+        // 优化的头部解析循环
+        while (!remaining.IsEmpty)
         {
-            // 查找当前行结尾
-            var headerEnd = remaining.IndexOf("\r\n"u8);
+            var headerEnd = remaining.IndexOf(TouchSocketHttpUtility.CRLF);
+
             if (headerEnd == -1)
             {
+                // 处理最后一行没有CRLF的情况
+                if (!remaining.IsEmpty)
+                {
+                    this.ParseHeaderLineOptimized(remaining);
+                }
                 break;
             }
 
-            // 空行表示headers结束
             if (headerEnd == 0)
             {
-                remaining = remaining.Slice(2); // 跳过空行的CRLF
+                // 空行表示headers结束
                 break;
             }
 
-            // 提取单行header
+            // 提取并解析当前行
             var lineSpan = remaining.Slice(0, headerEnd);
-            this.ParseHeaderLine(lineSpan);
+            this.ParseHeaderLineOptimized(lineSpan);
 
             // 移动到下一行
             remaining = remaining.Slice(headerEnd + 2);
         }
-
-        //this.LoadHeaderProperties();
     }
 
     #region Content
@@ -238,8 +288,6 @@ public abstract class HttpBase : IRequestInfo
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
     public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
 
-    internal abstract void InternalSetContent(in ReadOnlyMemory<byte> content);
-
     #endregion Content
 
     #region Read
@@ -249,11 +297,7 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
     /// <returns>返回一个<see cref="IReadOnlyMemoryBlockResult"/>，表示异步读取操作的结果。</returns>
-    public virtual ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken)
-    {
-        // 调用m_httpBlockSegment的InternalValueWaitAsync方法，等待HTTP块段的内部值。
-        return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
-    }
+    public abstract ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步读取并复制流数据
@@ -261,24 +305,14 @@ public abstract class HttpBase : IRequestInfo
     /// <param name="stream">需要读取并复制的流</param>
     /// <param name="cancellationToken">异步操作的取消令牌</param>
     /// <returns>一个异步任务，表示复制操作的完成</returns>
-    public async Task ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
+    public async Task<Result> ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
     {
-        while (true)
+        var flowOperator = new HttpFlowOperator()
         {
-            using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
-                {
-                    var memory = blockResult.Memory;
-                    await stream.WriteAsync(memory, cancellationToken);
-                }
-                if (blockResult.IsCompleted)
-                {
-                    break;
-                }
-            }
-        }
+            Token = cancellationToken,
+            MaxSpeed = int.MaxValue
+        };
+        return await this.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -298,11 +332,17 @@ public abstract class HttpBase : IRequestInfo
             {
                 using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        var memory = blockResult.Memory;
-                        await stream.WriteAsync(memory, cancellationToken);
+                        return flowOperator.SetResult(Result.Canceled);
+                    }
+
+                    var memory = blockResult.Memory;
+                    Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
+                    if (!memory.IsEmpty)
+                    {
+
+                        await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     if (blockResult.IsCompleted)

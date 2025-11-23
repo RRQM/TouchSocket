@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -33,11 +29,6 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     string IP { get; }
 
     /// <summary>
-    /// 主通信器
-    /// </summary>
-    Socket MainSocket { get; }
-
-    /// <summary>
     /// 端口号
     /// </summary>
     int Port { get; }
@@ -46,11 +37,4 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     /// 使用Ssl加密
     /// </summary>
     bool UseSsl { get; }
-
-    /// <summary>
-    /// 异步关闭TCP会话。此操作相比于<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>,会等待缓存中的数据发送完成后再关闭会话。
-    /// </summary>
-    /// <param name="how">指定如何关闭套接字。</param>
-    /// <returns>表示异步操作的任务。</returns>
-    Task<Result> ShutdownAsync(SocketShutdown how);
 }

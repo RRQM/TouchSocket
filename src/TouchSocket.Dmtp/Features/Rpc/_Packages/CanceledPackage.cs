@@ -10,21 +10,19 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.Rpc;
 
 internal class CanceledPackage : RouterPackage
 {
     public long Sign { get; set; }
 
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteInt64(this.Sign);
+        WriterExtension.WriteValue<TWriter, long>(ref writer, this.Sign);
     }
 
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        this.Sign = byteBlock.ReadInt64();
+        this.Sign = ReaderExtension.ReadValue<TReader, long>(ref reader);
     }
 }

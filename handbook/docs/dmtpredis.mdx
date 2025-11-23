@@ -4,66 +4,87 @@ title: Redis缓存
 ---
 
 import { TouchSocketDmtpDefinition } from "@site/src/components/Definition.js";
-
-### 定义
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 <TouchSocketDmtpDefinition />
 
-
 ## 一、说明
 
-REmote DIctionary Server(Redis) 是一个key-value存储系统，也是一个简单的非关系型数据库。
+REmote DIctionary Server(Redis) 是一个 key-value 存储系统，也是一个简单的非关系型数据库。
 
 :::caution 警告
 
-此组件是基于Dmtp协议的Redis。所以无法连接到常规Redis中。但是此组件无论是扩展性还是性能，都是远胜常规Redis的。
+此组件是基于 Dmtp 协议的 Redis。所以无法连接到常规 Redis 中。但是此组件无论是扩展性还是性能，都是远胜常规 Redis 的。
 
 :::  
 
-## 二、使用
+## 二、特性
 
-Redis是由RedisFeature功能插件提供的，所以需要添加`UseDmtpRedis`。
+基于 Dmtp 协议的 Redis 实现具有以下特性：
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseDmtpRedis();//添加Redis功能插件
-})
-```
+- **高性能**：基于 Dmtp 协议的高效通信机制
+- **强类型支持**：支持泛型，可以直接存储和获取强类型数据
+- **异步操作**：完全支持异步操作，提高并发性能
+- **可扩展性**：支持自定义缓存实现，可以轻松实现持久化
+- **简单易用**：API 设计简洁，易于集成和使用
 
-【请求端】
+## 三、服务器配置
 
-```csharp showLineNumbers
-var client = GetTcpDmtpClient();
+在服务器端，需要通过插件的方式启用 Redis 功能。
 
-//获取Redis
-var redis = client.GetDmtpRedisActor();
+<CustomCodeBlock region="Redis服务器配置"/>
 
-//执行Set
-var result = redis.Set("1", "1");
-client.Logger.Info($"Set result={result}");
-client.Logger.Info($"ContainsCache result={redis.ContainsCache("1")}");
+## 四、客户端配置
 
-//执行Get
-var result1 = redis.Get<string>("1");
-client.Logger.Info($"Get result={result}");
+在客户端，同样需要添加 Redis 插件以启用相关功能。
 
-//执行Remove
-result = redis.RemoveCache("1");
-client.Logger.Info($"Get result={result}");
-redis.ClearCache();
-```
+<CustomCodeBlock region="Redis客户端配置"/>
 
-## 三、缓存持久化
+## 五、基本使用
 
-默认情况下，Redis组件会使用`MemoryCache<string, byte[]>`作为实际储存。所以要实现缓存持久化，只需要替换该缓存、或者保存该缓存即可。
+配置完成后，可以通过 `GetDmtpRedisActor()` 方法获取 Redis 操作对象，然后进行各种缓存操作。
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseDmtpRedis()//必须添加Redis访问插件
-    .SetCache(new MemoryCache<string, byte[]>());//这里可以设置缓存持久化，此处仍然是使用内存缓存。
-})
-```
+<CustomCodeBlock region="Redis基本使用"/>
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpRedisConsoleApp)
+### 5.1 主要方法说明
+
+- **SetAsync**：设置缓存值，支持指定过期时间（毫秒）
+- **GetAsync**：获取缓存值，支持泛型
+- **AddAsync**：添加缓存项，如果键已存在则不进行任何操作
+- **ContainsCacheAsync**：检查指定键是否存在
+- **RemoveCacheAsync**：移除指定的缓存项
+- **ClearCacheAsync**：清空所有缓存
+
+## 六、缓存持久化
+
+默认情况下，Redis 组件会使用 `MemoryCache<string, ReadOnlyMemory<byte>>` 作为实际存储。要实现缓存持久化，只需要替换该缓存实现即可。
+
+<CustomCodeBlock region="Redis缓存持久化配置"/>
+
+### 6.1 自定义缓存实现
+
+您可以实现 `ICache<string, ReadOnlyMemory<byte>>` 接口来创建自己的缓存持久化方案，例如：
+
+- 基于文件的持久化
+- 基于数据库的持久化
+- 基于其他存储系统的持久化
+
+只需要在配置时通过 `options.Cache` 属性指定自定义的缓存实现即可。
+
+## 七、数据序列化
+
+Redis 组件默认使用 `BytesSerializerConverter` 进行数据序列化和反序列化。该转换器支持各种常见的数据类型，包括基本类型、字符串、字节数组等。
+
+如需使用自定义的序列化方式，可以通过 `IDmtpRedisActor.Converter` 属性进行设置。
+
+## 八、注意事项
+
+1. **协议兼容性**：此 Redis 实现基于 Dmtp 协议，与标准 Redis 协议不兼容
+2. **过期时间**：所有缓存操作都支持设置过期时间，单位为毫秒
+3. **异步操作**：建议使用异步方法以获得最佳性能
+4. **类型安全**：使用泛型方法时，确保存储和读取的类型一致
+
+## 九、示例代码
+
+<CardLink link="examples/Dmtp/DmtpRedisConsoleApp"/>

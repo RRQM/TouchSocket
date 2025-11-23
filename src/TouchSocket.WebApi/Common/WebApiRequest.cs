@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
 namespace TouchSocket.WebApi;
 
 /// <summary>
@@ -22,7 +20,7 @@ public class WebApiRequest
     /// <summary>
     /// 获取或设置 HTTP 方法类型。
     /// </summary>
-    public HttpMethodType Method { get; set; }
+    public string Method { get; set; }
 
     /// <summary>
     /// 获取或设置请求的主体。

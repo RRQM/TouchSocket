@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Dmtp.Redis;
 
 internal class RedisRequestWaitPackage : RedisResponseWaitPackage
@@ -20,30 +18,30 @@ internal class RedisRequestWaitPackage : RedisResponseWaitPackage
     public TimeSpan? timeSpan;
     public RedisPackageType packageType;
 
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        base.Package(ref byteBlock);
-        byteBlock.WriteString(this.key);
-        byteBlock.WriteByte((byte)this.packageType);
+        base.Package(ref writer);
+        WriterExtension.WriteString(ref writer, this.key);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.packageType);
         if (this.timeSpan.HasValue)
         {
-            byteBlock.WriteByte(1);
-            byteBlock.WriteTimeSpan(this.timeSpan.Value);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 1);
+            WriterExtension.WriteValue<TWriter, TimeSpan>(ref writer, this.timeSpan.Value);
         }
         else
         {
-            byteBlock.WriteByte(0);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, 0);
         }
     }
 
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        base.Unpackage(ref byteBlock);
-        this.key = byteBlock.ReadString();
-        this.packageType = (RedisPackageType)byteBlock.ReadByte();
-        if (byteBlock.ReadByte() == 1)
+        base.Unpackage(ref reader);
+        this.key = ReaderExtension.ReadString(ref reader);
+        this.packageType = (RedisPackageType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        if (ReaderExtension.ReadValue<TReader, byte>(ref reader) == 1)
         {
-            this.timeSpan = byteBlock.ReadTimeSpan();
+            this.timeSpan = ReaderExtension.ReadValue<TReader, TimeSpan>(ref reader);
         }
     }
 }

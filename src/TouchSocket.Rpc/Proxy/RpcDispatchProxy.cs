@@ -10,20 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER || NET481_OR_GREATER
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Rpc;
 
 /// <summary>
 /// RpcDispatchProxy
 /// </summary>
+[RequiresUnreferencedCode("动态代理不支持AOT环境")]
 public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy where TClient : IRpcClient where TAttribute : RpcAttribute
 {
     private readonly ConcurrentDictionary<MethodInfo, ProxyModel> m_methods = new ConcurrentDictionary<MethodInfo, ProxyModel>();
@@ -32,6 +28,7 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
     /// <summary>
     /// RpcDispatchProxy
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL3050:使用动态代码可能与修剪不兼容")]
     public RpcDispatchProxy()
     {
         this.m_fromResultMethod = typeof(Task).GetMethod("FromResult");
@@ -49,11 +46,12 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
         var rpcMethod = value.RpcMethod;
         var invokeKey = value.InvokeKey;
 
-        var invokeOption = value.InvokeOption ? (IInvokeOption)args.Last() : InvokeOption.WaitInvoke;
+        InvokeOption invokeOption;
 
         object[] ps;
         if (value.InvokeOption)
         {
+            invokeOption = (InvokeOption)args.Last();
             var pslist = new List<object>();
 
             for (var i = 0; i < args.Length; i++)
@@ -68,6 +66,7 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
         }
         else
         {
+            invokeOption = default;
             ps = args;
         }
 
@@ -101,13 +100,14 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
     }
 
 
+    [UnconditionalSuppressMessage("Trimming", "IL3050:使用动态代码可能与修剪不兼容")]
     private ProxyModel AddMethod(MethodInfo info)
     {
         var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
         var rpcMethod = new RpcMethod(info);
         var invokeKey = attribute.GetInvokeKey(rpcMethod);
         var invokeOption = false;
-        if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
+        if (info.GetParameters().Length > 0 && typeof(InvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
         {
             invokeOption = true;
         }
@@ -144,4 +144,3 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
 
     }
 }
-#endif

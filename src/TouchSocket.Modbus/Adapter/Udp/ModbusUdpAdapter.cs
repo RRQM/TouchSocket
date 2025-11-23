@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus;
 
@@ -21,13 +18,14 @@ internal class ModbusUdpAdapter : UdpDataHandlingAdapter
 {
     public override bool CanSendRequestInfo => true;
 
-    protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+
+    protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
         var response = new ModbusTcpResponse();
 
-        if (((IFixedHeaderRequestInfo)response).OnParsingHeader(byteBlock.ToArray(0, 8)))
+        if (((IFixedHeaderRequestInfo)response).OnParsingHeader(memory.Span.Slice(0, 8)))
         {
-            if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
+            if (((IFixedHeaderRequestInfo)response).OnParsingBody(memory.Span.Slice(8)))
             {
                 await this.GoReceived(remoteEndPoint, default, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }

@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -22,7 +20,7 @@ public interface IModbusResponse
     /// <summary>
     /// 站点号
     /// </summary>
-    public byte SlaveId { get; }
+    byte SlaveId { get; }
 
     /// <summary>
     /// 数据

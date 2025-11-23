@@ -10,10 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace TouchSocket.Core;
 
@@ -21,7 +19,7 @@ namespace TouchSocket.Core;
 /// 依赖项对象. 线程安全。
 /// </summary>
 
-public class DependencyObject : DisposableObject, IDependencyObject
+public class DependencyObject : SafetyDisposableObject, IDependencyObject
 {
     private DependencyProperties m_dp;
     private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
@@ -29,11 +27,7 @@ public class DependencyObject : DisposableObject, IDependencyObject
     /// <inheritdoc/>
     public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
     {
-        if (this.TryGetValue(dp, out var value))
-        {
-            return value;
-        }
-        return dp.OnFailedToGetTheValue.Invoke(this);
+        return this.TryGetValue(dp, out var value) ? value : dp.OnFailedToGetTheValue.Invoke(this);
     }
 
     /// <inheritdoc/>
@@ -157,7 +151,7 @@ public class DependencyObject : DisposableObject, IDependencyObject
             this.m_lock.Enter(ref lockTakenFotThis);
             dependencyObject.m_lock.Enter(ref lockTakenFotOther);
 
-            ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject, nameof(dependencyObject));
+            ThrowHelper.ThrowIfNull(dependencyObject, nameof(dependencyObject));
 
             ThrowHelper.ThrowObjectDisposedExceptionIf(dependencyObject);
 
@@ -194,7 +188,7 @@ public class DependencyObject : DisposableObject, IDependencyObject
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (disposing)
         {
@@ -212,7 +206,6 @@ public class DependencyObject : DisposableObject, IDependencyObject
                 }
             }
         }
-        base.Dispose(disposing);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

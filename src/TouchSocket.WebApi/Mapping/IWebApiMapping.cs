@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
 using TouchSocket.Http;
-using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi;
 
@@ -26,11 +24,5 @@ public interface IWebApiMapping : IEnumerable<MappingMethod>
     /// </summary>
     void MakeReadonly();
 
-    /// <summary>
-    /// 根据指定的 URL 和 HTTP 方法匹配 RPC 方法。
-    /// </summary>
-    /// <param name="url">要匹配的 URL。</param>
-    /// <param name="httpMethod">要匹配的 HTTP 方法。</param>
-    /// <returns>匹配的 RPC 方法。</returns>
-    RpcMethod Match(string url, HttpMethod httpMethod);
+    RouteMatchResult TryMatch(string url, HttpMethod httpMethod);
 }

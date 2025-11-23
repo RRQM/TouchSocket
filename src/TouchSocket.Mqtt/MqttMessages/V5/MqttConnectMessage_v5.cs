@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 public partial class MqttConnectMessage
@@ -27,7 +24,7 @@ public partial class MqttConnectMessage
     /// <remarks>
     /// Mqtt 5.0.0以上
     /// </remarks>
-    public byte[] AuthenticationData { get; private set; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; private set; }
 
     /// <summary>
     /// 获取或设置认证方法。
@@ -103,7 +100,7 @@ public partial class MqttConnectMessage
     /// <remarks>
     /// Mqtt 5.0.0以上
     /// </remarks>
-    public byte[] WillCorrelationData { get; private set; }
+    public ReadOnlyMemory<byte> WillCorrelationData { get; private set; }
 
     /// <summary>
     /// 获取或设置遗嘱延迟时间间隔。
@@ -156,105 +153,105 @@ public partial class MqttConnectMessage
     public bool CleanStart => this.m_connectFlags.GetBit(1);
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.ProtocolName);
-        byteBlock.WriteByte((byte)this.Version);
-        byteBlock.WriteByte(this.m_connectFlags);
-        byteBlock.WriteUInt16(this.KeepAlive, EndianType.Big);
+        MqttExtension.WriteMqttInt16String(ref writer, this.ProtocolName);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Version);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectFlags);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.KeepAlive, EndianType.Big);
 
         #region Properties
 
-        MqttExtension.WriteSessionExpiryInterval(ref byteBlock, this.SessionExpiryInterval);
-        MqttExtension.WriteAuthenticationMethod(ref byteBlock, this.AuthenticationMethod);
-        MqttExtension.WriteAuthenticationData(ref byteBlock, this.AuthenticationData);
-        MqttExtension.WriteReceiveMaximum(ref byteBlock, this.ReceiveMaximum);
-        MqttExtension.WriteTopicAliasMaximum(ref byteBlock, this.TopicAliasMaximum);
-        MqttExtension.WriteMaximumPacketSize(ref byteBlock, this.MaximumPacketSize);
-        MqttExtension.WriteRequestResponseInformation(ref byteBlock, this.RequestResponseInformation);
-        MqttExtension.WriteRequestProblemInformation(ref byteBlock, this.RequestProblemInformation);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
+        MqttExtension.WriteSessionExpiryInterval(ref writer, this.SessionExpiryInterval);
+        MqttExtension.WriteAuthenticationMethod(ref writer, this.AuthenticationMethod);
+        MqttExtension.WriteAuthenticationData(ref writer, this.AuthenticationData.Span);
+        MqttExtension.WriteReceiveMaximum(ref writer, this.ReceiveMaximum);
+        MqttExtension.WriteTopicAliasMaximum(ref writer, this.TopicAliasMaximum);
+        MqttExtension.WriteMaximumPacketSize(ref writer, this.MaximumPacketSize);
+        MqttExtension.WriteRequestResponseInformation(ref writer, this.RequestResponseInformation);
+        MqttExtension.WriteRequestProblemInformation(ref writer, this.RequestProblemInformation);
+        MqttExtension.WriteUserProperties(ref writer, this.UserProperties);
 
         #endregion Properties
 
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.ClientId);
+        MqttExtension.WriteMqttInt16String(ref writer, this.ClientId);
         if (this.WillFlag)
         {
-            MqttExtension.WritePayloadFormatIndicator(ref byteBlock, this.WillPayloadFormatIndicator);
-            MqttExtension.WriteMessageExpiryInterval(ref byteBlock, this.WillMessageExpiryInterval);
-            MqttExtension.WriteResponseTopic(ref byteBlock, this.WillResponseTopic);
-            MqttExtension.WriteCorrelationData(ref byteBlock, this.WillCorrelationData);
-            MqttExtension.WriteContentType(ref byteBlock, this.WillContentType);
-            MqttExtension.WriteWillDelayInterval(ref byteBlock, this.WillDelayInterval);
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.WillTopic);
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.WillMessage);
-            MqttExtension.WriteUserProperties(ref byteBlock, this.WillUserProperties);
+            MqttExtension.WritePayloadFormatIndicator(ref writer, this.WillPayloadFormatIndicator);
+            MqttExtension.WriteMessageExpiryInterval(ref writer, this.WillMessageExpiryInterval);
+            MqttExtension.WriteResponseTopic(ref writer, this.WillResponseTopic);
+            MqttExtension.WriteCorrelationData(ref writer, this.WillCorrelationData.Span);
+            MqttExtension.WriteContentType(ref writer, this.WillContentType);
+            MqttExtension.WriteWillDelayInterval(ref writer, this.WillDelayInterval);
+            MqttExtension.WriteMqttInt16String(ref writer, this.WillTopic);
+            MqttExtension.WriteMqttInt16Memory(ref writer, this.WillPayload);
+            MqttExtension.WriteUserProperties(ref writer, this.WillUserProperties);
         }
 
         if (this.UserNameFlag)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.UserName);
+            MqttExtension.WriteMqttInt16String(ref writer, this.UserName);
         }
         if (this.PasswordFlag)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.Password);
+            MqttExtension.WriteMqttInt16String(ref writer, this.Password);
         }
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
         #region Properties
 
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.SessionExpiryInterval:
                     {
-                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref byteBlock);
+                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref reader);
                         break;
                     }
                 case MqttPropertyId.AuthenticationMethod:
                     {
-                        this.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod(ref byteBlock);
+                        this.AuthenticationMethod = propertiesReader.ReadAuthenticationMethod(ref reader);
                         break;
                     }
                 case MqttPropertyId.AuthenticationData:
                     {
-                        this.AuthenticationData = propertiesReader.ReadAuthenticationData(ref byteBlock);
+                        this.AuthenticationData = propertiesReader.ReadAuthenticationData(ref reader);
                         break;
                     }
                 case MqttPropertyId.ReceiveMaximum:
                     {
-                        this.ReceiveMaximum = propertiesReader.ReadReceiveMaximum(ref byteBlock);
+                        this.ReceiveMaximum = propertiesReader.ReadReceiveMaximum(ref reader);
                         break;
                     }
                 case MqttPropertyId.TopicAliasMaximum:
                     {
-                        this.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum(ref byteBlock);
+                        this.TopicAliasMaximum = propertiesReader.ReadTopicAliasMaximum(ref reader);
                         break;
                     }
                 case MqttPropertyId.MaximumPacketSize:
                     {
-                        this.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize(ref byteBlock);
+                        this.MaximumPacketSize = propertiesReader.ReadMaximumPacketSize(ref reader);
                         break;
                     }
                 case MqttPropertyId.RequestResponseInformation:
                     {
-                        this.RequestResponseInformation = propertiesReader.ReadRequestResponseInformation(ref byteBlock);
+                        this.RequestResponseInformation = propertiesReader.ReadRequestResponseInformation(ref reader);
                         break;
                     }
                 case MqttPropertyId.RequestProblemInformation:
                     {
-                        this.RequestProblemInformation = propertiesReader.ReadRequestProblemInformation(ref byteBlock);
+                        this.RequestProblemInformation = propertiesReader.ReadRequestProblemInformation(ref reader);
                         break;
                     }
                 case MqttPropertyId.UserProperty:
                     {
-                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                         break;
                     }
                 default:
@@ -275,48 +272,48 @@ public partial class MqttConnectMessage
 
         #endregion Properties
 
-        this.ClientId = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        this.ClientId = MqttExtension.ReadMqttInt16String(ref reader);
         if (this.WillFlag)
         {
-            var willPropertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+            var willPropertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-            while (willPropertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+            while (willPropertiesReader.TryRead(ref reader, out var mqttPropertyId))
             {
                 switch (mqttPropertyId)
                 {
                     case MqttPropertyId.PayloadFormatIndicator:
                         {
-                            this.WillPayloadFormatIndicator = willPropertiesReader.ReadPayloadFormatIndicator(ref byteBlock);
+                            this.WillPayloadFormatIndicator = willPropertiesReader.ReadPayloadFormatIndicator(ref reader);
                             break;
                         }
                     case MqttPropertyId.MessageExpiryInterval:
                         {
-                            this.WillMessageExpiryInterval = willPropertiesReader.ReadMessageExpiryInterval(ref byteBlock);
+                            this.WillMessageExpiryInterval = willPropertiesReader.ReadMessageExpiryInterval(ref reader);
                             break;
                         }
                     case MqttPropertyId.ResponseTopic:
                         {
-                            this.WillResponseTopic = willPropertiesReader.ReadResponseTopic(ref byteBlock);
+                            this.WillResponseTopic = willPropertiesReader.ReadResponseTopic(ref reader);
                             break;
                         }
                     case MqttPropertyId.CorrelationData:
                         {
-                            this.WillCorrelationData = willPropertiesReader.ReadCorrelationData(ref byteBlock);
+                            this.WillCorrelationData = willPropertiesReader.ReadCorrelationData(ref reader);
                             break;
                         }
                     case MqttPropertyId.ContentType:
                         {
-                            this.WillContentType = willPropertiesReader.ReadContentType(ref byteBlock);
+                            this.WillContentType = willPropertiesReader.ReadContentType(ref reader);
                             break;
                         }
                     case MqttPropertyId.WillDelayInterval:
                         {
-                            this.WillDelayInterval = willPropertiesReader.ReadWillDelayInterval(ref byteBlock);
+                            this.WillDelayInterval = willPropertiesReader.ReadWillDelayInterval(ref reader);
                             break;
                         }
                     case MqttPropertyId.UserProperty:
                         {
-                            this.AddWillUserProperties(willPropertiesReader.ReadUserProperty(ref byteBlock));
+                            this.AddWillUserProperties(willPropertiesReader.ReadUserProperty(ref reader));
                             break;
                         }
                     default:
@@ -325,18 +322,18 @@ public partial class MqttConnectMessage
                 }
             }
 
-            this.WillTopic = MqttExtension.ReadMqttInt16String(ref byteBlock);
-            this.WillMessage = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.WillTopic = MqttExtension.ReadMqttInt16String(ref reader);
+            this.WillPayload = MqttExtension.ReadMqttInt16Memory(ref reader);
         }
 
         if (this.UserNameFlag)
         {
-            this.UserName = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.UserName = MqttExtension.ReadMqttInt16String(ref reader);
         }
 
         if (this.PasswordFlag)
         {
-            this.Password = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.Password = MqttExtension.ReadMqttInt16String(ref reader);
         }
     }
 

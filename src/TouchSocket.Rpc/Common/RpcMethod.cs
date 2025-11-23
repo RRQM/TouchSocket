@@ -10,13 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -33,6 +30,7 @@ public sealed class RpcMethod : Method
     /// 实例化一个Rpc调用函数，并在方法声明的类上操作
     /// </summary>
     /// <param name="methodInfo"></param>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public RpcMethod(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType, methodInfo.DeclaringType)
     {
     }
@@ -43,7 +41,7 @@ public sealed class RpcMethod : Method
     /// <param name="method"></param>
     /// <param name="serverFromType"></param>
     /// <param name="serverToType"></param>
-    public RpcMethod(MethodInfo method, Type serverFromType, Type serverToType) : base(method)
+    public RpcMethod(MethodInfo method, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverFromType, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverToType) : base(method)
     {
         this.ServerFromType = serverFromType;
         this.ServerToType = serverToType;
@@ -106,12 +104,6 @@ public sealed class RpcMethod : Method
 
         return null;
     }
-
-    /// <summary>
-    /// 是否可用
-    /// </summary>
-    [Obsolete("此属性已被弃用", true)]
-    public bool IsEnable { get; set; } = true;
 
     /// <summary>
     /// 参数名集合
@@ -248,6 +240,7 @@ public sealed class RpcMethod : Method
     /// 筛选器
     /// </summary>
     /// <param name="filters">全局筛选器</param>
+    /// <param name="resolver"></param>
     /// <returns></returns>
     public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<Type> filters, IResolver resolver)
     {
@@ -260,7 +253,7 @@ public sealed class RpcMethod : Method
                 foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false))
                 {
                     this.m_hasFilters[0] = true;
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                 }
             }
 
@@ -272,7 +265,7 @@ public sealed class RpcMethod : Method
                     foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
                         this.m_hasFilters[1] = true;
-                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
             }
@@ -283,7 +276,7 @@ public sealed class RpcMethod : Method
                 foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                 {
                     this.m_hasFilters[2] = true;
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                 }
             }
 
@@ -295,7 +288,7 @@ public sealed class RpcMethod : Method
                     foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
                         this.m_hasFilters[3] = true;
-                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
             }
@@ -304,14 +297,14 @@ public sealed class RpcMethod : Method
             foreach (var filterType in filters)
             {
                 var filter = resolver.Resolve(filterType);
-                this.AddActionFilter(Unsafe.As<object, IRpcActionFilter>(ref filter), ref actionFilters);
+                AddActionFilter(Unsafe.As<object, IRpcActionFilter>(ref filter), ref actionFilters);
             }
             return actionFilters;
         }
         return [];
     }
 
-    private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
+    private static void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
     {
         foreach (var item in filters)
         {

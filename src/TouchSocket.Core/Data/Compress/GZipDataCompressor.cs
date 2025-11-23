@@ -10,23 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
-/// GZip压缩算法的压缩机
+/// 表示一个GZip数据压缩器，提供基于GZip算法的数据压缩和解压缩功能。
+/// 实现了<see cref="IDataCompressor"/>接口。
 /// </summary>
-
+/// <remarks>
+/// GZipDataCompressor使用GZip压缩算法对数据进行压缩和解压缩操作。
+/// GZip是一种广泛使用的无损数据压缩算法，具有良好的压缩率和兼容性。
+/// 适用于需要减少数据传输量或存储空间的场景。
+/// </remarks>
 public sealed partial class GZipDataCompressor : IDataCompressor
 {
-    byte[] IDataCompressor.Compress(ArraySegment<byte> data)
+    /// <inheritdoc/>
+    public void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
-        return GZip.Compress(data.Array, data.Offset, data.Count);
+        GZip.Compress(ref writer, data);
     }
 
-    byte[] IDataCompressor.Decompress(ArraySegment<byte> data)
+    /// <inheritdoc/>
+    public void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter
     {
-        return GZip.Decompress(data.Array, data.Offset, data.Count);
+        GZip.Decompress(ref writer, data);
     }
 }

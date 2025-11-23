@@ -19,14 +19,14 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        #region TcpCommandLine创建服务器
         var service = new TcpService();
 
         var config = new TouchSocketConfig();
         config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
               .SetTcpDataHandlingAdapter(() =>
               {
-                  //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾
-                  return new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
+                  return new TerminatorPackageAdapter("\r\n");//命令行中使用\r\n结尾
               })
               .ConfigureContainer(a =>
               {
@@ -34,9 +34,11 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseTcpSessionCheckClear()
-                  .SetCheckClearType(CheckClearType.All)
-                  .SetTick(TimeSpan.FromSeconds(60));
+                  a.UseTcpSessionCheckClear(options =>
+                  {
+                      options.CheckClearType = CheckClearType.All;
+                      options.Tick = TimeSpan.FromSeconds(60);
+                  });
 
                   a.Add<MyCommandLinePlugin>();
               });
@@ -48,13 +50,15 @@ internal class Program
         await service.StartAsync();
 
         service.Logger.Info("服务器成功启动。");
-        service.Logger.Info("使用：“Add 10 20”测试");
-        service.Logger.Info("使用：“MUL 10 20”测试");
-        service.Logger.Info("使用：“Exc”测试异常");
+        service.Logger.Info("使用：\"Add 10 20\"测试");
+        service.Logger.Info("使用：\"MUL 10 20\"测试");
+        service.Logger.Info("使用：\"Exc\"测试异常");
+        #endregion
         Console.ReadKey();
     }
 }
 
+#region TcpCommandLine创建命令行插件
 /// <summary>
 /// 命令执行插件。方法必须以Command结尾。
 /// </summary>
@@ -102,3 +106,4 @@ internal class MyCommandLinePlugin : TcpCommandLinePlugin
         throw new Exception("我异常了");
     }
 }
+#endregion

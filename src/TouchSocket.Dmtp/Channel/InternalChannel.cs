@@ -10,14 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp;
 
@@ -25,11 +18,10 @@ namespace TouchSocket.Dmtp;
 internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpChannel
 {
     private readonly DmtpActor m_actor;
-    private readonly ConcurrentQueue<ChannelPackage> m_dataQueue;
-    private readonly FlowGate m_flowGate;
-    private ByteBlock m_currentData;
+    private readonly SemaphoreSlim m_dataAvailable;
+    private readonly Queue<ChannelPackage> m_dataQueue;
     private DateTimeOffset m_lastOperationTime;
-    private long m_maxSpeed;
+    private bool m_using;
 
     public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
     {
@@ -37,50 +29,21 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         this.m_lastOperationTime = DateTimeOffset.UtcNow;
         this.TargetId = targetId;
         this.Status = ChannelStatus.Default;
-        this.m_dataQueue = new ConcurrentQueue<ChannelPackage>();
-        this.m_maxSpeed = int.MaxValue;
-        this.m_flowGate = new FlowGate() { Maximum = this.m_maxSpeed };
+        this.m_dataQueue = new Queue<ChannelPackage>();
+        this.m_dataAvailable = new SemaphoreSlim(0);
         this.Metadata = metadata;
     }
 
-    ~InternalChannel()
-    {
-        this.Dispose(false);
-    }
+    /// <inheritdoc/>
+    public bool CanRead => this.Status == ChannelStatus.Default ||
+                                   this.Status == ChannelStatus.HoldOn;
 
-    public int Available => this.m_dataQueue.Count;
-
-    public int CacheCapacity { get; set; }
-
-    public bool CanMoveNext
-    {
-        get
-        {
-            return this.Available > 0 || (byte)this.Status < 4;
-        }
-    }
-
-    public bool CanWrite => (byte)this.Status <= 3;
-
+    public bool CanWrite => this.m_actor.Online && (byte)this.Status <= 1;
     public int Id { get; private set; }
 
     public string LastOperationMes { get; private set; }
 
     public DateTimeOffset LastOperationTime => this.m_lastOperationTime;
-
-    public long MaxSpeed
-    {
-        get => this.m_maxSpeed;
-        set
-        {
-            if (value < 1024)
-            {
-                value = 1024;
-            }
-            this.m_maxSpeed = value;
-            this.m_flowGate.Maximum = value;
-        }
-    }
 
     public Metadata Metadata { get; private set; }
 
@@ -88,31 +51,86 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     public string TargetId { get; }
 
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
+    public bool Using => this.m_using;
 
-    public bool Using { get; private set; }
+    #region 读取
+
+    /// <inheritdoc/>
+    public async Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken cancellationToken = default)
+    {
+        if (!this.CanRead)
+        {
+            throw new InvalidOperationException($"通道状态为{this.Status}，无法读取数据");
+        }
+
+        if (this.DisposedValue)
+        {
+            throw new ObjectDisposedException(nameof(InternalChannel), "通道已被释放");
+        }
+
+        var channelPackage = await this.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        try
+        {
+            switch (channelPackage.DataType)
+            {
+                case ChannelDataType.Data:
+                    this.Status = ChannelStatus.Default;
+                    this.LastOperationMes = string.Empty;
+                    var data = channelPackage.Data;
+                    return data;
+
+                case ChannelDataType.Completed:
+                    this.Status = ChannelStatus.Completed;
+                    this.LastOperationMes = channelPackage.Message;
+                    // 通道正常完成，返回空数据表示没有更多数据
+                    return ReadOnlyMemory<byte>.Empty;
+
+                case ChannelDataType.Canceled:
+                    this.Status = ChannelStatus.Cancel;
+                    this.LastOperationMes = channelPackage.Message;
+                    // 通道被取消，返回空数据，调用者可以检查状态决定是否继续
+                    return ReadOnlyMemory<byte>.Empty;
+
+                case ChannelDataType.HoldOn:
+                    this.Status = ChannelStatus.HoldOn;
+                    this.LastOperationMes = channelPackage.Message;
+                    // 通道暂停，返回空数据，调用者可以检查状态决定是否继续
+                    return ReadOnlyMemory<byte>.Empty;
+
+                default:
+                    throw new InvalidOperationException("未知的通道数据类型");
+            }
+        }
+        finally
+        {
+            channelPackage.SafeDispose();
+        }
+    }
+
+    #endregion 读取
 
     #region 操作
 
-    public async Task<Result> CancelAsync(string operationMes = null)
+    public async Task<Result> CancelAsync(string operationMes = null, CancellationToken cancellationToken = default)
     {
-        if ((byte)this.Status > 3)
+        if ((byte)this.Status > 1)
         {
             return Result.Success;
         }
         try
         {
-            this.RequestCancel(true);
+            this.Status = ChannelStatus.Cancel;
+            this.LastOperationMes = operationMes;
             var channelPackage = new ChannelPackage()
             {
                 ChannelId = this.Id,
-                RunNow = true,
-                DataType = ChannelDataType.CancelOrder,
+                DataType = ChannelDataType.Canceled,
                 Message = operationMes,
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
@@ -122,25 +140,25 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         }
     }
 
-    public async Task<Result> CompleteAsync(string operationMes = null)
+    public async Task<Result> CompleteAsync(string operationMes = null, CancellationToken cancellationToken = default)
     {
-        if ((byte)this.Status > 3)
+        if ((byte)this.Status > 1)
         {
             return Result.Success;
         }
         try
         {
-            this.RequestComplete(true);
+            this.Status = ChannelStatus.Completed;
+            this.LastOperationMes = operationMes;
             var channelPackage = new ChannelPackage()
             {
                 ChannelId = this.Id,
-                RunNow = true,
-                DataType = ChannelDataType.CompleteOrder,
+                DataType = ChannelDataType.Completed,
                 Message = operationMes,
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
@@ -148,264 +166,73 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         {
             return Result.FromException(ex);
         }
-
     }
 
-    public async Task<Result> HoldOnAsync(string operationMes = null)
+    public async Task<Result> HoldOnAsync(string operationMes = null, CancellationToken cancellationToken = default)
     {
-        if ((byte)this.Status > 3)
+        if ((byte)this.Status > 1)
         {
             return Result.Success;
         }
         try
         {
+            this.Status = ChannelStatus.HoldOn;
+            this.LastOperationMes = operationMes;
             var channelPackage = new ChannelPackage()
             {
                 ChannelId = this.Id,
-                RunNow = true,
-                DataType = ChannelDataType.HoldOnOrder,
+                DataType = ChannelDataType.HoldOn,
                 Message = operationMes,
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
         catch (Exception ex)
         {
             return Result.FromException(ex);
-        }
-
-    }
-
-
-    protected override void SafetyDispose(bool disposing)
-    {
-        //不判断disposing，能够让GC也能发送释放指令
-        try
-        {
-            this.RequestDispose(true);
-
-            if ((byte)this.Status > 3)
-            {
-                return;
-            }
-
-            var channelPackage = new ChannelPackage()
-            {
-                ChannelId = this.Id,
-                RunNow = true,
-                DataType = ChannelDataType.HoldOnOrder,
-                SourceId = this.m_actor.Id,
-                TargetId = this.TargetId
-            };
-            this.m_actor.SendChannelPackageAsync(channelPackage).GetFalseAwaitResult();
-            this.m_lastOperationTime = DateTimeOffset.UtcNow;
-        }
-        catch
-        {
         }
     }
 
     #endregion 操作
 
-    public ByteBlock GetCurrent()
+    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.m_currentData;
-    }
-
-    public bool MoveNext()
-    {
-        if (!this.CanMoveNext)
-        {
-            return false;
-        }
-        if (this.m_dataQueue.TryDequeue(out var channelPackage))
-        {
-            switch (channelPackage.DataType)
-            {
-                case ChannelDataType.DataOrder:
-                    {
-                        this.m_currentData = channelPackage.Data;
-                        return true;
-                    }
-                case ChannelDataType.CompleteOrder:
-                    this.RequestComplete(true);
-                    return false;
-
-                case ChannelDataType.CancelOrder:
-                    this.RequestCancel(true);
-                    return false;
-
-                case ChannelDataType.DisposeOrder:
-                    this.RequestDispose(true);
-                    return false;
-
-                case ChannelDataType.HoldOnOrder:
-                    this.Status = ChannelStatus.HoldOn;
-                    return false;
-
-                case ChannelDataType.QueueRun:
-                    //this.m_canFree = true;
-                    return false;
-
-                case ChannelDataType.QueuePause:
-                    //this.m_canFree = false;
-                    return false;
-
-                default:
-                    return false;
-            }
-        }
-
-        //this.Reset();
-        if (this.Wait())
-        {
-            return this.MoveNext();
-        }
-        else
-        {
-            this.Status = ChannelStatus.Overtime;
-            return false;
-        }
-    }
-
-    public async Task<bool> MoveNextAsync()
-    {
-        if (!this.CanMoveNext)
-        {
-            return false;
-        }
-        if (this.m_dataQueue.TryDequeue(out var channelPackage))
-        {
-            switch (channelPackage.DataType)
-            {
-                case ChannelDataType.DataOrder:
-                    {
-                        this.m_currentData = channelPackage.Data;
-                        return true;
-                    }
-                case ChannelDataType.CompleteOrder:
-                    this.RequestComplete(true);
-                    return false;
-
-                case ChannelDataType.CancelOrder:
-                    this.RequestCancel(true);
-                    return false;
-
-                case ChannelDataType.DisposeOrder:
-                    this.RequestDispose(true);
-                    return false;
-
-                case ChannelDataType.HoldOnOrder:
-                    this.Status = ChannelStatus.HoldOn;
-                    return false;
-
-                case ChannelDataType.QueueRun:
-                    //this.m_canFree = true;
-                    return false;
-
-                case ChannelDataType.QueuePause:
-                    //this.m_canFree = false;
-                    return false;
-
-                default:
-                    return false;
-            }
-        }
-
-        //this.Reset();
-        if (await this.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-        {
-            return await this.MoveNextAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            this.Status = ChannelStatus.Overtime;
-            return false;
-        }
-    }
-
-    public async Task WriteAsync(ReadOnlyMemory<byte> memory)
-    {
-        if ((byte)this.Status > 3)
+        if ((byte)this.Status > 1)
         {
             throw new Exception($"通道已{this.Status}");
         }
-
-        await this.m_flowGate.AddCheckWaitAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var channelPackage = new ChannelPackage()
         {
             ChannelId = this.Id,
-            DataType = ChannelDataType.DataOrder,
+            DataType = ChannelDataType.Data,
             SourceId = this.m_actor.Id,
-            TargetId = this.TargetId
+            TargetId = this.TargetId,
+            Data = memory
         };
+        await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
+    }
 
-        var byteBlock = new ByteBlock(memory.Length);
-        byteBlock.Write(memory.Span);
-        channelPackage.Data = byteBlock;
-
-        using (channelPackage.Data)
-        {
-            await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_lastOperationTime = DateTimeOffset.UtcNow;
-        }
+    internal void MakeUsing()
+    {
+        this.m_using = true;
     }
 
     internal void ReceivedData(ChannelPackage channelPackage)
     {
-        this.m_lastOperationTime = DateTimeOffset.UtcNow;
-        if (channelPackage.RunNow)
-        {
-            switch (channelPackage.DataType)
-            {
-                case ChannelDataType.CompleteOrder:
-                    this.LastOperationMes = channelPackage.Message;
-                    this.RequestComplete(false);
-                    break;
-
-                case ChannelDataType.CancelOrder:
-                    this.LastOperationMes = channelPackage.Message;
-                    this.RequestCancel(false);
-                    break;
-
-                case ChannelDataType.DisposeOrder:
-                    this.RequestDispose(false);
-                    break;
-
-                case ChannelDataType.HoldOnOrder:
-                    this.LastOperationMes = channelPackage.Message;
-                    this.Status = ChannelStatus.HoldOn;
-                    break;
-
-                case ChannelDataType.QueueRun:
-                    //this.m_canFree = true;
-                    return;
-
-                case ChannelDataType.QueuePause:
-                    //this.m_canFree = false;
-                    return;
-
-                default:
-                    return;
-            }
-        }
-        this.m_dataQueue.Enqueue(channelPackage);
-    }
-
-    internal void RequestDispose(bool clear)
-    {
-        if (clear)
-        {
-            this.Clear();
-        }
-        if ((byte)this.Status > 3)
+        if (this.DisposedValue)
         {
             return;
         }
-        this.Status = ChannelStatus.Disposed;
+        this.m_lastOperationTime = DateTimeOffset.UtcNow;
+        lock (this.m_dataQueue)
+        {
+            this.m_dataQueue.Enqueue(channelPackage);
+        }
+        this.m_dataAvailable.Release();
     }
 
     internal void SetId(int id)
@@ -413,97 +240,32 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         this.Id = id;
     }
 
-    internal void MakeUsing()
+    protected override void SafetyDispose(bool disposing)
     {
-        this.Using = true;
-    }
-
-    private void Clear()
-    {
-        try
+        if (disposing)
         {
-            this.m_dataQueue.Clear(package =>
+            this.m_dataAvailable.SafeDispose();
+            lock (this.m_dataQueue)
             {
-                package.Data.SafeDispose();
-            });
-            this.m_actor.RemoveChannel(this.Id);
-        }
-        catch
-        {
-        }
-    }
-
-    private void RequestCancel(bool clear)
-    {
-        this.Status = ChannelStatus.Cancel;
-        if (clear)
-        {
-            this.Clear();
-        }
-    }
-
-    private void RequestComplete(bool clear)
-    {
-        this.Status = ChannelStatus.Completed;
-        if (clear)
-        {
-            this.Clear();
-        }
-    }
-
-    private bool Wait()
-    {
-        var spinWait = new SpinWait();
-        var now = DateTimeOffset.UtcNow;
-        while (true)
-        {
-            if (!this.m_dataQueue.IsEmpty)
-            {
-                return true;
+                while (this.m_dataQueue.Count > 0)
+                {
+                    this.m_dataQueue.Dequeue().SafeDispose();
+                }
             }
-            if (DateTimeOffset.UtcNow - now > this.Timeout)
-            {
-                return false;
-            }
-            spinWait.SpinOnce();
         }
     }
 
-    private async Task<bool> WaitAsync()
+    private async Task<ChannelPackage> WaitAsync(CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-        while (true)
+        await this.m_dataAvailable.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        lock (this.m_dataQueue)
         {
-            if (!this.m_dataQueue.IsEmpty) // Replaced Count with IsEmpty  
+            if (this.m_dataQueue.Count > 0)
             {
-                return true;
+                return this.m_dataQueue.Dequeue();
             }
-            if (DateTimeOffset.UtcNow - now > this.Timeout)
-            {
-                return false;
-            }
-            await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+        // 理论上不会走到这里
+        throw new InvalidOperationException("信号量与队列不同步");
     }
-
-    #region 迭代器
-
-    public IEnumerator<ByteBlock> GetEnumerator()
-    {
-        ByteBlock byteBlock = null;
-        while (this.MoveNext())
-        {
-            byteBlock.SafeDispose();
-            byteBlock = this.GetCurrent();
-            yield return byteBlock;
-        }
-        byteBlock.SafeDispose();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return this.GetEnumerator();
-    }
-
-    #endregion 迭代器
 }

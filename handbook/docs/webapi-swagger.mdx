@@ -1,0 +1,62 @@
+---
+id: webapi-swagger
+title: WebAPI Swagger文档
+---
+
+import Tag from "@site/src/components/Tag.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import { TouchSocketWebApiSwaggerDefinition } from "@site/src/components/Definition.js";
+
+## 一、Swagger 文档支持
+
+<TouchSocketWebApiSwaggerDefinition />
+
+### 1.1 什么是 Swagger
+
+Swagger是一个用于生成、描述和调用RESTful接口的Web服务。通俗的来讲，Swagger就是将项目中所有（想要暴露的）接口展现在页面上，并且可以进行接口调用和测试的服务。
+
+
+<BilibiliCard title="启用Swagger" link="https://www.bilibili.com/cheese/play/ep1688289" isPro="true"/>
+
+### 1.2 启用 Swagger
+
+使用非常简单，先安装`TouchSocket.WebApi.Swagger`的包，然后直接UseSwagger即可。
+
+```csharp showLineNumbers
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+   .SetListenIPHosts(7789)
+   .ConfigurePlugins(a =>
+   {
+       a.UseTcpSessionCheckClear();
+
+       a.UseWebApi();
+
+       // 添加 Swagger 支持
+       a.UseSwagger(options =>
+       {
+           options.UseLaunchBrowser(); // 启动时自动打开浏览器
+       });
+
+       // 此插件是http的兜底插件，应该最后添加
+       a.UseDefaultHttpServicePlugin();
+   }));
+      
+await service.StartAsync();
+
+Console.WriteLine("测试swagger http://127.0.0.1:7789/swagger/index.html");
+```
+
+访问 Swagger UI：
+```
+http://127.0.0.1:7789/swagger
+```
+
+### 1.3 Swagger 配置选项
+
+```csharp showLineNumbers
+a.UseSwagger(options =>
+{
+    options.UseLaunchBrowser(); // 自动打开浏览器
+});
+```

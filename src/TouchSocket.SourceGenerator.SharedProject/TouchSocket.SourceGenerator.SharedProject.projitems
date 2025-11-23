@@ -9,6 +9,7 @@
     <Import_RootNamespace>TouchSocket.SourceGenerator.SharedProject</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Core\UtilsCore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rpc\GeneratorFlag.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rpc\RpcClientCodeBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Rpc\RpcUtils.cs" />
@@ -17,8 +18,5 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)tools\install.ps1" />
     <None Include="$(MSBuildThisFileDirectory)tools\uninstall.ps1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Core\" />
   </ItemGroup>
 </Project>

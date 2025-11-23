@@ -11,15 +11,14 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
 /// <summary>
 /// Json字节转到对应类
 /// </summary>
-public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<byte[], TState>
+public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<ReadOnlyMemory<byte>, TState>
 {
     /// <summary>
     /// JsonSettings
@@ -31,11 +30,11 @@ public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<
 
 
     /// <inheritdoc/>
-    public virtual bool TryDeserialize(TState state, in byte[] source, Type targetType, out object target)
+    public virtual bool TryDeserialize(TState state, in ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType, out object target)
     {
         try
         {
-            target = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(source), targetType, this.JsonSettings);
+            target = JsonConvert.DeserializeObject(source.Span.ToUtf8String(), targetType, this.JsonSettings);
             return true;
         }
         catch
@@ -46,11 +45,7 @@ public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<
     }
 
     /// <inheritdoc/>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    public virtual bool TrySerialize(TState state, in object target, out byte[] source)
+    public virtual bool TrySerialize<TTarget>(TState state, in TTarget target, out ReadOnlyMemory<byte> source)
     {
         try
         {
@@ -59,7 +54,7 @@ public class JsonBytesToClassSerializerFormatter<TState> : ISerializerFormatter<
         }
         catch (Exception)
         {
-            source = null;
+            source = ReadOnlyMemory<byte>.Empty;
             return false;
         }
     }

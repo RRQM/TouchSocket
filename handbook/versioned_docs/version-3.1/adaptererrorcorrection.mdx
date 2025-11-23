@@ -1,0 +1,250 @@
+---
+id: adaptererrorcorrection
+title: 适配器纠错
+---
+
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+
+### 定义
+
+<TouchSocketCoreDefinition />
+
+
+## 一、说明
+
+适配器纠错功能，用于对接收的数据进行纠错。
+
+<BilibiliCard title="适配器纠错机制" link="https://www.bilibili.com/cheese/play/ep1522803" isPro="true"/>
+
+## 二、纠错流式单线程数据
+
+我们在[适配器介绍](./adapterdescription.mdx)中讲过，流式单线程数据的解析，**标识**和**顺位**就是解决问题的关键，这也就意味着一般来说，流式单线程数据是不允许有其他数据的。不然数据解析将会发生灾难性故障。
+
+但是有时候，往往环境不是我们所控制的。在数据实际传输时，有极小的情况确实会发生其他数据包混入的情况。
+
+此时，我们就可以使用适配器纠错功能，来解决这种问题。
+
+## 2.1 纠错原理
+
+对于纠错，我们的目的就是要重新定位到正确数据的起始位置，让数据能够重新解析。那么对于重新定位，我们有以下策略：
+
+1. 按照算法找到正确的起始位置。这要求数据格式本身就具有验证性。
+2. 即时重置缓存。
+3. 断开连接。
+
+下列，我们将以Tcp数据为例，讲解如何使用适配器纠错功能。
+
+## 2.2 纠错示例
+
+我们假设一个常见的TLV数据，其格式为：
+
+|Tag|Length|Value|
+
+其中，Tag为4字节，Length为4字节，Value为可变长度的数据。
+
+要解析该数据，我们非常容易的会想到使用[模版解析固定包头适配器](./customfixedheaderdatahandlingadapter.mdx)来解决问题。
+
+所以代码大概如下：
+
+```csharp showLineNumbers
+public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyFixedHeaderRequestInfo>
+{
+    /// <summary>
+    /// 接口实现，指示固定包头长度
+    /// </summary>
+    public override int HeaderLength => 8;
+
+    /// <summary>
+    /// 获取新实例
+    /// </summary>
+    /// <returns></returns>
+    protected override MyFixedHeaderRequestInfo GetInstance()
+    {
+        return new MyFixedHeaderRequestInfo();
+    }
+}
+public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
+{
+    public int Tag { get; set; }
+    public int Length => this.m_bodyLength;
+    public byte[] Value { get;private set; }
+    private int m_bodyLength;
+
+    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+
+    bool IFixedHeaderRequestInfo.OnParsingBody(byte[] body)
+    {
+        if (body.Length!=this.m_bodyLength)
+        {
+            return false;
+        }
+
+        this.Value = body;
+        return true;
+    }
+
+    bool IFixedHeaderRequestInfo.OnParsingHeader(byte[] header)
+    {
+        if (header.Length!=8)
+        {
+            return false;
+        }
+
+        this.Tag = TouchSocketBitConverter.BigEndian.ToInt32(header,0);
+        this.m_bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(header,4);
+        return true;
+    }
+}
+```
+
+此时，如果我们的数据是完全符合我们定义的协议的，那么我们的算法就是100%可靠的。
+
+但是，如果我们的数据不符合我们的协议呢？例如：在Tag、Length、Value之间多出n个字节，那么我们的算法就无法解析了。
+
+此时，我们需要对数据进行处理，进行纠错。
+
+## 2.3 自我纠错
+
+首先，我们来看能不能自己纠错。自己纠错，必须是数据格式自己能识别错误，并且能自己纠错。在此案例中，明显是不适用的，因为简单的TLV数据是不具备自我纠错能力的。
+
+那么什么样的数据可以自我纠错呢？
+
+例如：|Begin|Tag|TagCrc|Length|LengthCrc|Value|ValueCrc|End|
+
+其中假设：Begin、End是固定的“\*\*和##”，Tag、Length均为4字节，TagCrc、LengthCrc、ValueCrc是对应数据的CRC校验。
+
+那么对于此类数据，**可能**具有一定纠错能力。
+
+原因是，当在解析数据时，如果我们发现该数据并不是以“\*\*”开头，则会认为该数据是错误的。可以在`OnParsingHeader`中返回`false`，表示数据错误。**然后适配器会向后递推1个字节，再次尝试解析**。Tag、Length、Value也可以使用crc校验来决定返回`true`或`false`。
+
+聪明的小伙伴应该发现了，这种机制也只能解决部分问题。例如：当冗余数据出现在Tag、Length、Value数据间隔时，可能是有用的。一旦冗余数据在Tag、Length、Value之中时，我们仍然无法解析。所以，这种机制**可能**能解决部分问题。
+
+但是，这仍然是有意义的，因为纠错的目的不仅仅是纠错还原本次数据，更主要的是能解析下次正确的数据。
+
+## 2.4 即时重置缓存
+
+即时重置缓存，是指当数据不完整时，立即重置缓存。这也就意味着，当数据不完整时，我们会立即放弃本次数据的解析。直接进行下一次数据的解析。
+
+该操作对于[用户自定义解析](./customdatahandlingadapter.mdx)是容易的。您只需要调用`this.Reset()`即可。
+
+但是对于模版解析，可能需要传递一些委托来完成重置工作。
+
+例如上述代码，我们可以这样写：
+
+在`MyFixedHeaderRequestInfo`的构造函数中，将`MyFixedHeaderCustomDataHandlingAdapter`的`Reset`函数通过委托传递给`MyFixedHeaderRequestInfo`。
+
+```csharp {14,19-22,35,47} showLineNumbers
+public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyFixedHeaderRequestInfo>
+{
+    /// <summary>
+    /// 接口实现，指示固定包头长度
+    /// </summary>
+    public override int HeaderLength => 8;
+
+    /// <summary>
+    /// 获取新实例
+    /// </summary>
+    /// <returns></returns>
+    protected override MyFixedHeaderRequestInfo GetInstance()
+    {
+        return new MyFixedHeaderRequestInfo(this.Reset);
+    }
+}
+public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
+{
+    public MyFixedHeaderRequestInfo(Action action)
+    {
+        this.m_actionForReset = action;
+    }
+    public int Tag { get; set; }
+    public int Length => this.m_bodyLength;
+    public byte[] Value { get;private set; }
+    private int m_bodyLength;
+    private readonly Action m_actionForReset;
+
+    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+
+    bool IFixedHeaderRequestInfo.OnParsingBody(byte[] body)
+    {
+        if (body.Length!=this.m_bodyLength)
+        {
+            this.m_actionForReset.Invoke();
+            return false;
+        }
+
+        this.Value = body;
+        return true;
+    }
+
+    bool IFixedHeaderRequestInfo.OnParsingHeader(byte[] header)
+    {
+        if (header.Length!=8)
+        {
+            this.m_actionForReset.Invoke();
+            return false;
+        }
+
+        this.Tag = TouchSocketBitConverter.BigEndian.ToInt32(header,0);
+        this.m_bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(header,4);
+        return true;
+    }
+}
+```
+
+亦或者，使用适配器自带的缓存超时来处理。
+
+例如下列设置：
+
+启用了缓存超时，和超时更新。
+
+这也就意味着，当我们收到一个错误数据时，只要等待1秒以后再重新发送，那么上个错误的缓存将不再有效，也就是此次数据会被正确解析。
+
+```csharp {3-8} showLineNumbers
+public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyFixedHeaderRequestInfo>
+{
+    public MyFixedHeaderCustomDataHandlingAdapter()
+    {
+        this.CacheTimeoutEnable = true;
+        this.CacheTimeout=TimeSpan.FromSeconds(1);
+        this.UpdateCacheTimeWhenRev = true;
+    }
+    /// <summary>
+    /// 接口实现，指示固定包头长度
+    /// </summary>
+    public override int HeaderLength => 8;
+
+    /// <summary>
+    /// 获取新实例
+    /// </summary>
+    /// <returns></returns>
+    protected override MyFixedHeaderRequestInfo GetInstance()
+    {
+        return new MyFixedHeaderRequestInfo(this.Reset);
+    }
+}
+```
+
+:::caution 注意
+
+使用此配置，要注意发送数据的频次，如果是数秒甚至更大时间发送一次数据，那么这将是有用的。
+
+:::  
+
+## 2.5 断开连接
+
+当数据有异常时，直接断开连接，也不失为一种处理方式。同样，该操作对于[用户自定义解析](./customdatahandlingadapter.mdx)是容易的。您只需要调用`Owner`的相关操作即可。例如：
+
+可以声明一个方法。用于关闭连接。
+
+```csharp showLineNumbers
+private void Close()
+{
+    if (this.Owner is ICloseObject client)
+    {
+        client.Close("适配器关闭");
+    }
+}
+```
+
+同理，如果是模版解析，依然需要使用委托的方法，将`Close()`函数传递到`IRequestInfo`中。此处就不再赘述。

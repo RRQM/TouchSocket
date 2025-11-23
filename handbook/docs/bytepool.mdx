@@ -5,8 +5,8 @@ title: 内存池
 
 import CardLink from "@site/src/components/CardLink.js";
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
@@ -29,10 +29,7 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 
 当然您可以创建只属于自己的`ArrayPool<T>`。
 
-```csharp showLineNumbers
-ArrayPool<byte> bytePool = new ArrayPool<byte>(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50);
-```
-
+<CustomCodeBlock region="内存池创建自定义内存池"/>
 
 其中：
 
@@ -45,34 +42,19 @@ ArrayPool<byte> bytePool = new ArrayPool<byte>(maxArrayLength: 1024 * 1024, maxA
 
 【创建ByteBlock】
 
-```csharp showLineNumbers
-var byteBlock = new ByteBlock(1024 * 64);
-byteBlock.Dispose();
-```
-
+<CustomCodeBlock region="内存池创建ByteBlock"/>
 
 【创建ValueByteBlock】
 
-```csharp showLineNumbers
-var byteBlock = new ValueByteBlock(1024 * 64);
-byteBlock.Dispose();
-```
+<CustomCodeBlock region="内存池创建ValueByteBlock"/>
 
 以上的创建方式，都是从默认内存池创建。如果想要自定义内存池，可以在new的时候指定内存池。
 
-```csharp showLineNumbers
-var byteBlock = new ByteBlock(1024 * 64,ArrayPool.Default);
-byteBlock.Dispose();
-```
+<CustomCodeBlock region="内存池使用自定义内存池创建"/>
 
 释放过程也完全可以使用`using`。
 
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock(1024 * 64))
-{
-    //使用ByteBlock
-}
-```
+<CustomCodeBlock region="内存池使用using释放"/>
 
 :::tip 提示
 
@@ -123,59 +105,15 @@ Memory<byte> memory = byteBlock.TotalMemory;
 
 使用比较简单，支持Byte[]，Span、Memory等数据的直接写入。
 
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock(1024*64))
-{
-    byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
-
-    byteBlock.SeekToStart();//将游标重置
-
-    var buffer = new byte[byteBlock.Length];//定义一个数组容器
-    var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
-}
-```
+<CustomCodeBlock region="内存池读写数组"/>
 
 ### 4.2 基础类型的写入和读取
 
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock(1024*64))
-{
-    byteBlock.WriteByte(byte.MaxValue);//写入byte类型
-    byteBlock.WriteInt32(int.MaxValue);//写入int类型
-    byteBlock.WriteInt64(long.MaxValue);//写入long类型
-    byteBlock.WriteString("RRQM");//写入字符串类型
-
-    byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
-
-    var byteValue = byteBlock.ReadByte();
-    var intValue = byteBlock.ReadInt32();
-    var longValue = byteBlock.ReadInt64();
-    var stringValue = byteBlock.ReadString();
-}
-```
+<CustomCodeBlock region="内存池基础类型读写"/>
 
 ### 4.3 按照BufferWriter方式写入
 
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock(1024*64))
-{
-    var span = byteBlock.GetSpan(4);
-    span[0] = 0;
-    span[1] = 1;
-    span[2] = 2;
-    span[3] = 3;
-    byteBlock.Advance(4);
-
-    var memory = byteBlock.GetMemory(4);
-    memory.Span[0] = 4;
-    memory.Span[1] = 5;
-    memory.Span[2] = 6;
-    memory.Span[3] = 7;
-    byteBlock.Advance(4);
-
-    //byteBlock.Length 应该是8
-}
-```
+<CustomCodeBlock region="内存池BufferWriter方式写入"/>
 
 ## 五、多线程同步协作（Hold）
 
@@ -185,39 +123,11 @@ using (var byteBlock = new ByteBlock(1024*64))
 
 **原因非常简单，byteBlock对象在到达HandleReceivedData时，触发Task异步，此时触发线程会立即返回，并释放byteBlock，而Task异步线程会滞后，然后试图从已释放的byteBlock中获取数据，所以，必定发生异常。**
 
-```csharp showLineNumbers
-public class MyTClient : TcpClient
-{
-    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-    {
-        Task.Run(()=> 
-        {
-            string mes = byteBlock.Span.ToString(Encoding.UTF8);
-            Console.WriteLine($"已接收到信息：{mes}");
-        });
-        return true;
-    }
-}
-```
+<CustomCodeBlock region="内存池异步Hold错误示例"/>
 
 解决方法也非常简单，只需要在异步前锁定，然后使用完成后取消锁定，且不用再调用Dispose。
 
-```csharp showLineNumbers
-public class MyTClient : TcpClient
-{
-    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-    {
-        byteBlock.SetHolding(true);//异步前锁定
-        Task.Run(()=> 
-        {
-            string mes = byteBlock.Span.ToString(Encoding.UTF8);
-            byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
-            Console.WriteLine($"已接收到信息：{mes}");
-        });
-        return true;
-    }
-}
-```
+<CustomCodeBlock region="内存池异步Hold正确示例"/>
 
 :::caution 注意
 
@@ -227,4 +137,4 @@ ByteBlock在设置SetHolding(false)后，不需要再调用Dispose。
 
 ## 六、本文示例Demo
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/ArrayPoolConsoleApp"/>
+<CardLink link="examples/Core/BytePoolConsoleApp"/>

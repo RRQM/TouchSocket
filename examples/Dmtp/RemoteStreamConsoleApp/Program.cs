@@ -34,16 +34,22 @@ internal class Program
 
         var client = await GetTcpDmtpClient();
 
+        #region 远程流映射请求端
         //元数据可以传递一些字符串数据
         var metadata = new Metadata();
         metadata.Add("tag", "tag1");
 
-        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata);
+        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata, CancellationToken.None);
+        #endregion
 
         client.Logger.Info("已经成功载入流，请输入任意字符");
 
         //可以持续写入流，但在此处只写入了一次
-        await remoteStream.WriteAsync(Encoding.UTF8.GetBytes(Console.ReadLine()));
+        var input = Console.ReadLine();
+        if (input != null)
+        {
+            await remoteStream.WriteAsync(Encoding.UTF8.GetBytes(input));
+        }
 
         //可以使用下列代码完成持续读流
         //while (true)
@@ -71,9 +77,9 @@ internal class Program
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options =>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              })
              .ConfigureContainer(a =>
              {
@@ -82,10 +88,6 @@ internal class Program
              .ConfigurePlugins(a =>
              {
                  a.UseDmtpRemoteStream();
-
-                 a.UseDmtpHeartbeat()//使用Dmtp心跳
-                 .SetTick(TimeSpan.FromSeconds(3))
-                 .SetMaxFailCount(3);
              }));
         await client.ConnectAsync();
         return client;
@@ -101,19 +103,40 @@ internal class Program
                })
                .ConfigurePlugins(a =>
                {
+                   #region 远程流映射启用插件
                    a.UseDmtpRemoteStream();//必须添加远程流访问插件
+                   #endregion
                    a.Add<MyRemoteStreamPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Dmtp"//连接验证口令。
+                   options.VerifyToken = "Dmtp";//连接验证口令。
                })
                .BuildServiceAsync<TcpDmtpService>();//此处build相当于new TcpDmtpService，然后SetupAsync，然后StartAsync。
         service.Logger.Info("服务器成功启动");
         return service;
     }
+
+    #region 远程流映射读写操作
+    private static async Task RemoteStreamReadWrite(TcpDmtpClient client)
+    {
+        var metadata = new Metadata();
+        metadata.Add("tag", "tag1");
+        var remoteStream = await client.GetDmtpRemoteStreamActor().LoadRemoteStreamAsync(metadata, CancellationToken.None);
+
+        byte[] data = new byte[] { 0, 1, 2, 3, 4 };
+        await remoteStream.WriteAsync(data);
+
+        remoteStream.Position = 0;
+        byte[] buffer = new byte[5];
+        await remoteStream.ReadAsync(buffer);
+
+        remoteStream.Dispose();
+    }
+    #endregion
 }
 
+#region 远程流映射响应端插件
 internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin
 {
     private readonly ILog m_logger;
@@ -133,7 +156,7 @@ internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin
             //此处加载的是一个内存流，实际上只要是Stream，都可以，例如：FileStream
             using (var stream = new MemoryStream())
             {
-                await e.WaitingLoadStreamAsync(stream, TimeSpan.FromSeconds(60));
+                await e.WaitingLoadStreamAsync(stream, CancellationToken.None);
 
                 this.m_logger.Info($"载入的流已被释放，流中信息：{Encoding.UTF8.GetString(stream.ToArray())}");
             }
@@ -145,3 +168,4 @@ internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin
         await e.InvokeNext();
     }
 }
+#endregion

@@ -38,53 +38,56 @@ public partial class MqttDisconnectMessage
     public uint SessionExpiryInterval { get; set; }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteByte((byte)this.ReasonCode);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReasonCode);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock);
 
-        MqttExtension.WriteServerReference(ref byteBlock, this.ServerReference);
-        MqttExtension.WriteReasonString(ref byteBlock, this.ReasonString);
-        MqttExtension.WriteSessionExpiryInterval(ref byteBlock, this.SessionExpiryInterval);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
-        variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        MqttExtension.WriteServerReference(ref byteBlockWriter, this.ServerReference);
+        MqttExtension.WriteReasonString(ref byteBlockWriter, this.ReasonString);
+        MqttExtension.WriteSessionExpiryInterval(ref byteBlockWriter, this.SessionExpiryInterval);
+        MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
+
+        variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+        writer.Advance(byteBlockWriter.Position);
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.ReasonCode = (MqttReasonCode)byteBlock.ReadByte();
+        this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.ServerReference:
                     {
-                        this.ServerReference = propertiesReader.ReadServerReference(ref byteBlock);
+                        this.ServerReference = propertiesReader.ReadServerReference(ref reader);
                         break;
                     }
 
                 case MqttPropertyId.ReasonString:
                     {
-                        this.ReasonString = propertiesReader.ReadReasonString(ref byteBlock);
+                        this.ReasonString = propertiesReader.ReadReasonString(ref reader);
                         break;
                     }
 
                 case MqttPropertyId.SessionExpiryInterval:
                     {
-                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref byteBlock);
+                        this.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval(ref reader);
                         break;
                     }
 
                 case MqttPropertyId.UserProperty:
                     {
-                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                        this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                         break;
                     }
 

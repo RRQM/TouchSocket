@@ -4,8 +4,9 @@ title: Rpc服务AOP
 ---
 
 import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketRpcDefinition />
 
@@ -13,6 +14,23 @@ import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
 ## 一、说明
 
 Rpc服务在被调用时，会触发一系列的Rpc筛选器AOP**IRpcActionFilter**的**特性（Attribute）**，进行相关AOP操作。所以可以利用该特性做很多有关Rpc的AOP操作。
+
+通过RpcActionFilter，你可以实现：
+- **日志记录**：记录方法调用的详细信息
+- **权限验证**：在方法执行前验证用户权限
+- **异常处理**：全局捕获和处理RPC调用异常
+- **性能监控**：统计方法执行时间
+- **参数验证**：在方法执行前验证参数有效性
+
+:::tip 提示
+
+RpcActionFilter特性基于AOP（面向切面编程）思想，可以在不修改业务代码的情况下，为RPC方法添加横切关注点功能。
+
+:::
+
+import CardLink from "@site/src/components/CardLink";
+
+<CardLink link="examples/Rpc/RpcAopConsoleApp"/>
 
 ## 二、支持的特性方法
 
@@ -25,78 +43,63 @@ Rpc服务在被调用时，会触发一系列的Rpc筛选器AOP**IRpcActionFilte
 
 ### 3.1 定义RpcActionFilterAttribute特性
 
-```csharp showLineNumbers
-public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
-{
-    public override async Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
-    {
-        if (callContext.Caller is ITcpSessionClient client)
-        {
-            client.Logger.Info($"即将执行Rpc-{callContext.RpcMethod.Name}");
-        }
-        return await Task.FromResult(invokeResult);
-    }
+要使用RpcActionFilter，首先需要创建一个继承自`RpcActionFilterAttribute`的特性类，并重写相应的方法。
 
-    public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
-    {
-        if (callContext.Caller is ITcpSessionClient client)
-        {
-            client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}结束，状态={invokeResult.Status}");
-        }
-        
-        return  await base.ExecutedAsync(callContext, parameters, invokeResult, exception);
-    }
-}
-```
+#### 3.1.1 基础日志记录特性
+
+<CustomCodeBlock region="RpcAop定义基础特性"/>
+
+#### 3.1.2 权限验证特性
+
+通过在`ExecutingAsync`方法中检查用户权限，可以实现访问控制：
+
+<CustomCodeBlock region="RpcAop定义权限验证特性"/>
+
+#### 3.1.3 全局异常处理特性
+
+在`ExecutedAsync`方法中捕获异常，实现统一的异常处理：
+
+<CustomCodeBlock region="RpcAop定义异常处理特性"/>
 
 :::tip 提示
 
-使用RpcActionFilterAttribute特性，不仅可以实现日志记录，还可以实现访问权限限制、全局异常捕捉等。
+使用RpcActionFilterAttribute特性，不仅可以实现日志记录，还可以实现访问权限限制、全局异常捕捉、性能监控等功能。
 
 :::  
 
 
-### 3.2 使用
+### 3.2 在类上使用特性
 
-RpcActionFilterAttribute 特性可以应用到任何方法上，也可以应用到类上。
+RpcActionFilterAttribute特性可以应用到RPC服务类上，这样类中的所有方法都会受到该特性的影响：
 
-```csharp {1,19}
-[MyRpcActionFilter]
-class MyRpcServer : SingletonRpcServer
-{
-    private readonly ILog m_logger;
+<CustomCodeBlock region="RpcAop使用特性类"/>
 
-    public MyRpcServer(ILog logger)
-    {
-        this.m_logger = logger;
-    }
+### 3.3 在接口上使用特性
 
-    /// <summary>
-    /// 将两个数相加
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    [MyRpcActionFilter]
-    public int Add(int a, int b)
-    {
-        this.m_logger.Info("调用Add");
-        var sum = a + b;
-        return sum;
-    }
-}
-```
+特性也可以应用到接口及接口方法上：
 
-### 3.3 规则
+<CustomCodeBlock region="RpcAop使用特性接口"/>
 
-1. 标签添加在`方法`、`注册接口`或`注册服务`上均会生效。
-2. 标签生效顺序为`接口方法（如果有）`、`服务方法`、`注册接口（如果有`）、`服务`。
-3. 同一类型的标签仅生效一次。
-4. 继承的特性，可以通过`MutexAccessTypes`属性来标识以哪个类型作为同一特性标识。
+### 3.4 启动服务示例
 
-第1、2条规则，以下代码为例，执行顺序依次为`MyRpcActionFilter1`、`MyRpcActionFilter3`、`MyRpcActionFilter2`、`MyRpcActionFilter4`。
+<CustomCodeBlock region="RpcAop启动服务"/>
+
+### 3.5 测试调用
+
+<CustomCodeBlock region="RpcAop测试调用"/>
+
+### 3.6 规则
+
+RpcActionFilter特性的应用遵循以下规则：
+
+1. **应用位置**：标签可以添加在`方法`、`注册接口`或`注册服务`上均会生效。
+2. **执行顺序**：标签生效顺序为`接口方法（如果有）` → `服务方法` → `注册接口（如果有）` → `服务类`。
+3. **去重机制**：同一类型的标签仅生效一次。
+4. **互斥特性**：继承的特性，可以通过`MutexAccessTypes`属性来标识以哪个类型作为同一特性标识。
+
+#### 3.6.1 执行顺序示例
+
+以下代码展示了特性的执行顺序。执行顺序依次为：`MyRpcActionFilter1` → `MyRpcActionFilter3` → `MyRpcActionFilter2` → `MyRpcActionFilter4`。
 
 ```csharp showLineNumbers
 [MyRpcActionFilter2]
@@ -117,7 +120,9 @@ class MyRpcServer :SingletonRpcServer, IMyRpcServer
 }
 ```
 
-第3条规则，以下代码为例，只会将`MyRpcActionFilter`执行一次。
+#### 3.6.2 去重机制示例
+
+以下代码中，虽然`MyRpcActionFilter`特性被应用了4次，但只会执行一次：
 
 ```csharp showLineNumbers
 [MyRpcActionFilter]
@@ -138,28 +143,78 @@ class MyRpcServer :SingletonRpcServer, IMyRpcServer
 }
 ```
 
-第4条规则，以下代码为例。在`MyBaseAttribute`中指定`MutexAccessTypes`为`MyBaseAttribute`，则`MyAttribute`和`My2Attribute`都继承`MyBaseAttribute`时，即为互斥，在生效时会按照优先等级有且只有一个生效。
+#### 3.6.3 互斥特性示例
 
-```csharp showLineNumbers
-interface IInterface
-{
-    [My]
-    [My2]
-    void Test();
-}
+通过设置`MutexAccessTypes`属性，可以让不同的特性类互斥。在以下代码中，`MyAttribute`和`My2Attribute`都继承自`MyBaseAttribute`，由于基类指定了互斥类型，因此在同一个方法上只有一个会生效（按优先级）。
 
-class MyBaseAttribute:RpcActionFilterAttribute
-{
-    public override Type[] MutexAccessTypes => new Type[] {typeof(MyBaseAttribute) };
-}
+定义互斥特性基类：
 
-class MyAttribute: MyBaseAttribute
-{
+<CustomCodeBlock region="RpcAop互斥特性基类"/>
 
-}
+定义互斥特性子类：
 
-class My2Attribute : MyBaseAttribute
-{
+<CustomCodeBlock region="RpcAop互斥特性子类"/>
 
-}
-```
+应用互斥特性：
+
+<CustomCodeBlock region="RpcAop互斥特性应用"/>
+
+:::caution 注意
+
+互斥特性在实际应用中，应该谨慎使用。确保互斥逻辑符合业务需求，避免出现预期之外的行为。
+
+:::
+
+## 四、常见应用场景
+
+### 4.1 日志记录
+
+RpcActionFilter最常见的用途是记录RPC调用日志，包括方法名、参数、执行时间等信息。
+
+### 4.2 权限验证
+
+在方法执行前验证调用者是否有权限访问该方法，可以实现细粒度的访问控制。
+
+### 4.3 异常处理
+
+统一处理RPC调用过程中的异常，将技术异常转换为用户友好的错误信息。
+
+### 4.4 性能监控
+
+记录方法的执行时间，用于性能分析和优化。
+
+### 4.5 参数验证
+
+在方法执行前验证参数的有效性，提前拦截无效请求。
+
+### 4.6 缓存处理
+
+对于查询类方法，可以在ExecutingAsync中检查缓存，如果命中缓存直接返回，避免执行实际方法。
+
+## 五、最佳实践
+
+### 5.1 特性命名规范
+
+- 特性类名应该以`Attribute`结尾
+- 使用描述性的名称，清晰表达特性的用途
+- 例如：`LoggingFilterAttribute`、`AuthorizationFilterAttribute`
+
+### 5.2 性能考虑
+
+- 避免在ExecutingAsync和ExecutedAsync中执行耗时操作
+- 如果需要执行耗时操作，考虑使用异步方式
+- 注意特性的执行顺序，避免不必要的重复操作
+
+### 5.3 异常处理
+
+- 在特性方法中妥善处理异常，避免影响正常的RPC调用
+- 记录异常信息，便于问题排查
+
+### 5.4 状态管理
+
+- 通过`InvokeResult`对象传递状态和结果
+- 合理使用`InvokeStatus`枚举值表示不同的执行状态
+
+## 六、总结
+
+RpcActionFilter提供了一种优雅的方式来实现RPC服务的横切关注点，通过特性的方式可以在不修改业务代码的情况下，为RPC方法添加各种功能。合理使用RpcActionFilter可以提高代码的可维护性和可扩展性。

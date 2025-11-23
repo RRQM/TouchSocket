@@ -1,117 +1,121 @@
----
+﻿---
 id: tcpcommandlineplugin
 title: 命令行执行插件
 ---
 
 import { TouchSocketDefinition } from "@site/src/components/Definition.js";
+import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from '@site/src/components/CardLink.js';
 
-### 定义
 
 <TouchSocketDefinition />
 
 
 ## 一、说明
 
-**TcpCommandLinePlugin**命令行执行插件，是用于TCP的快捷事务实现。该类是抽象类，必须通过继承，在继承类中，声明的具的**公共的**且名称以**Command**结尾的方法，均可被快捷执行。
+**TcpCommandLinePlugin**命令行执行插件，是用于TCP的快捷事务实现。该类是抽象类,必须通过继承使用。在继承类中，声明的**公共的**且名称以**Command**结尾的方法，均可被快捷执行。
+
+### 主要特性
+
+- **自动命令识别**：所有以"Command"结尾的公共方法都会自动注册为可执行命令
+- **灵活的参数支持**：支持基础类型参数和JSON格式的自定义实体类参数
+- **上下文访问**：命令方法可以通过参数获取当前会话客户端信息
+- **异常处理**：可配置是否将执行异常返回给客户端
+- **数据转换**：内置字符串转换器，支持基础类型和JSON数据格式
 
 ## 二、创建快捷执行插件
 
-```csharp showLineNumbers
-/// <summary>
-/// 命令执行插件。方法必须以Command结尾。
-/// </summary>
-class MyCommandLinePlugin : TcpCommandLinePlugin
-{
-    private readonly ILog logger;
+继承`TcpCommandLinePlugin`类，并实现您的命令方法。方法必须是公共的，且名称以**Command**结尾。
 
-    public MyCommandLinePlugin(ILog logger) : base(logger)
-    {
-        this.ReturnException = true;//表示执行异常的时候，是否返回异常信息
-        this.logger = logger;
-    }
+<CustomCodeBlock region="TcpCommandLine创建命令行插件"/>
 
-    /// <summary>
-    /// 加法
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    public int AddCommand(int a, int b)
-    {
-        this.logger.Info($"执行{nameof(AddCommand)}");
-        return a + b;
-    }
+### 命令方法说明
 
-    /// <summary>
-    /// 乘法，并且获取调用者信息
-    /// </summary>
-    /// <param name=""></param>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    public int MULCommand(ITcpSessionClient SessionClient,int a, int b)
-    {
-        this.logger.Info($"{SessionClient.IP}:{SessionClient.Port}执行{nameof(MULCommand)}");
-        return a * b;
-    }
+1. **AddCommand**：简单的加法命令，接收两个整数参数并返回结果
+2. **MULCommand**：乘法命令，同时演示如何获取调用者会话信息
+   - 第一个参数`ITcpSessionClient`会自动注入当前会话客户端
+   - 通过会话客户端可获取IP、端口等信息
+3. **ExcCommand**：演示异常处理的命令
 
-    /// <summary>
-    /// 测试异常
-    /// </summary>
-    /// <exception cref="Exception"></exception>
-    public void ExcCommand()
-    {
-        throw new Exception("我异常了");
-    }
-}
-```
+### 配置说明
+
+- **ReturnException**：设置为`true`时，命令执行出现异常会将异常信息返回给客户端
+- **Converter**：字符串转换器，默认支持基础类型和JSON格式，可自定义扩展
 
 ## 三、创建服务器
 
-```csharp showLineNumbers
-TcpService service = new TcpService();
+配置TCP服务器并添加命令行插件。需要注意数据处理适配器的选择。
 
-var config = new TouchSocketConfig();
-config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
-      .SetDataHandlingAdapter(() =>
-      {
-          //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾 
-          return new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
-      })
-      .ConfigureContainer(a => 
-      {
-          a.AddConsoleLogger();
-      })
-      .ConfigurePlugins(a =>
-      {
-          a.Add<MyCommandLinePlugin>();
-      });
+<CustomCodeBlock region="TcpCommandLine创建服务器"/>
 
-//载入配置
-await service.SetupAsync(config);
+### 配置要点
 
-//启动
-await service.StartAsync();
+1. **数据处理适配器**：
+   - 使用`TerminatorPackageAdapter`时，客户端命令需要以`\r\n`结尾
+   - 使用`NormalDataHandlingAdapter`时，可省略终止符，但不能高速连续调用（会粘包）
 
-service.Logger.Info("服务器成功启动。");
-service.Logger.Info("使用：“Add 10 20”测试");
-service.Logger.Info("使用：“MUL 10 20”测试");
-service.Logger.Info("使用：“Exc”测试异常");
+2. **插件注册**：通过`ConfigurePlugins`方法添加自定义的命令行插件
+
+## 四、调用方式
+
+命令行插件可以被普通TCP客户端、命令提示符(cmd)、telnet等工具调用。
+
+### 调用格式
+
+```text
+命令名 参数1 参数2 ... [终止符]
 ```
 
-## 四、调用
+### 示例
 
-上述快捷执行插件，即可被普通tcp客户端，或cmd/telnet等便捷调用。
-
-调用数据格式：
-
-`Add 10 20 /r/n` **/r/n**非必须，但是当适配器选为[终止字符分割适配器](./packageadapter.mdx)时，则必须。不然，则不可连续调用，会粘包。
+- `Add 10 20\r\n` - 调用加法命令，计算10+20
+- `MUL 5 6\r\n` - 调用乘法命令，计算56  
+- `Exc\r\n` - 调用异常测试命令
 
 :::tip 提示
 
-调用的参数也支持自定义实体类，届时参数使用Json数据格式即可。
+- 命令名称不需要包含"Command"后缀
+- 终止符`\r\n`是否必需取决于所选的数据处理适配器
+- 调用参数支持基础类型和JSON格式的自定义实体类
+- 不同适配器下连续调用的性能表现不同，需根据实际场景选择
 
 :::  
 
+## 五、高级用法
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp/TcpCommandLineConsoleApp)
+### 自定义数据转换器
+
+如果需要支持更复杂的数据类型转换，可以自定义`Converter`：
+
+```csharp
+public MyCommandLinePlugin(ILog logger) : base(logger)
+{
+    // 自定义转换器逻辑
+    this.Converter = new MyCustomConverter();
+}
+```
+
+### 使用自定义实体类参数
+
+命令方法支持接收复杂对象，客户端传递JSON格式数据即可：
+
+```csharp
+public class UserInfo
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+
+public string UserCommand(UserInfo user)
+{
+    return $"Hello {user.Name}, age {user.Age}";
+}
+```
+
+调用示例：
+```
+User {"Name":"张三","Age":25}\r\n
+```
+
+<CardLink link="examples/Tcp/TcpCommandLineConsoleApp"/>

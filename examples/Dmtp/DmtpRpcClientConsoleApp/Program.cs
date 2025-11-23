@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using MemoryPack;
 using RpcProxy;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -68,11 +69,10 @@ internal class Program
         //创建一个指定时间可取消令箭源，可用于取消Rpc的调用。
         using (var tokenSource = new CancellationTokenSource(5000))
         {
-            var invokeOption = new DmtpInvokeOption()//调用配置
+            var invokeOption = new DmtpInvokeOption(5000)//调用配置
             {
                 FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
                 SerializationType = SerializationType.FastBinary,//序列化类型
-                Timeout = 5000,//调用超时设置
                 Token = tokenSource.Token//配置可取消令箭
             };
 
@@ -110,33 +110,64 @@ internal class Program
     {
         var client = await GetTcpDmtpClient();
 
+        #region DmtpRpc直接调用
         //设置调用配置
-        var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
+        using var cts = new CancellationTokenSource(5000);//可取消令箭源，可用于取消Rpc的调用
         var invokeOption = new DmtpInvokeOption()//调用配置
         {
             FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
             SerializationType = SerializationType.FastBinary,//序列化类型
-            Timeout = 5000,//调用超时设置
-            Token = tokenSource.Token//配置可取消令箭
+            Token = cts.Token//配置可取消令箭
         };
+        //获取RpcActor，用于后续的rpc调用
+        var rpcActor = client.GetDmtpRpcActor();
 
-        var sum = await client.GetDmtpRpcActor().InvokeTAsync<int>("Add", invokeOption, 10, 20);
+        //调用Add方法
+        var sum = await rpcActor.InvokeTAsync<int>("Add", invokeOption, 10, 20);
         client.Logger.Info($"调用Add方法成功，结果：{sum}");
+        #endregion
+
     }
 
+    private static async Task RunInvokeWithProxy()
+    {
+        using var client = await GetTcpDmtpClient();
+
+        #region DmtpRpc代理调用
+        //设置调用配置
+        using var cts = new CancellationTokenSource(5000);//可取消令箭源，可用于取消Rpc的调用
+        var invokeOption = new DmtpInvokeOption()//调用配置
+        {
+            FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+            SerializationType = SerializationType.FastBinary,//序列化类型
+            Token = cts.Token//配置可取消令箭
+        };
+        //获取RpcActor，用于后续的rpc调用
+        var rpcActor = client.GetDmtpRpcActor();
+
+        //调用Add方法
+        var sum = await rpcActor.AddAsync(10, 20, invokeOption);
+        client.Logger.Info($"调用Add方法成功，结果：{sum}");
+        #endregion
+
+    }
+
+    #region DmtpRpc客户端请求流数据
     private static async Task RunRpcPullChannel()
     {
         using var client = await GetTcpDmtpClient();
         var status = ChannelStatus.Default;
         var size = 0;
-        var channel =await client.CreateChannelAsync();//创建通道
-        var task = Task.Run(() =>//这里必须用异步
+        var channel = await client.CreateChannelAsync();//创建通道
+        var task = Task.Run(async () =>//这里必须用异步
         {
             using (channel)
             {
-                foreach (var currentByteBlock in channel)
+                while (channel.CanRead)
                 {
-                    size += currentByteBlock.Length;//此处可以处理传递来的流数据
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    size += memory.Length;
                 }
                 status = channel.Status;//最后状态
             }
@@ -145,7 +176,9 @@ internal class Program
         await task;//等待异步接收完成
         Console.WriteLine($"状态：{status}，size={size}");
     }
+    #endregion
 
+    #region DmtpRpc客户端推送流数据
     private static async Task RunRpcPushChannel()
     {
         using var client = await GetTcpDmtpClient();
@@ -168,33 +201,57 @@ internal class Program
         await task;//等待异步接收完成
         Console.WriteLine($"状态：{status}，result={result}");
     }
+    #endregion
+
+    private static async Task CreateDmtpRpcClient()
+    {
+        #region 创建DmtpRpc客户端
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+              .ConfigureContainer(a =>
+              {
+                  a.AddConsoleLogger();
+              })
+              .ConfigurePlugins(a =>
+              {
+                  //启用dmtp rpc插件
+                  a.UseDmtpRpc();
+              })
+              .SetRemoteIPHost("127.0.0.1:7789")
+              .SetDmtpOption(options =>
+              {
+                  options.VerifyToken = "Dmtp";
+              }));
+        await client.ConnectAsync();
+        #endregion
+    }
 
     private static async Task<TcpDmtpClient> GetTcpDmtpClient()
     {
         var client = new TcpDmtpClient();
         await client.SetupAsync(new TouchSocketConfig()
-             .ConfigureContainer(a =>
-             {
-                 a.AddConsoleLogger();
-                 a.AddRpcStore(store =>
-                 {
-                     store.RegisterServer<MyClientRpcServer>();
-                 });
-             })
+
+        #region 客户端注册反向DmtpRpc服务
+            .ConfigureContainer(a =>
+            {
+                a.AddConsoleLogger();
+                a.AddRpcStore(store =>
+                {
+                    store.RegisterServer<MyClientRpcServer>();
+                });
+            })
+        #endregion
              .ConfigurePlugins(a =>
              {
-                 a.UseDmtpRpc()
-                 //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                 .SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
-
-                 a.UseDmtpHeartbeat()
-                 .SetTick(TimeSpan.FromSeconds(3))
-                 .SetMaxFailCount(3);
+                 a.UseDmtpRpc(options =>
+                 {
+                     options.SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
+                 });
              })
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options =>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              }));
         await client.ConnectAsync();
 
@@ -206,6 +263,7 @@ internal class Program
     }
 }
 
+#region DmtpRpc限制代理接口声明
 internal interface IRpcClient1 : IDmtpRpcActor
 {
 }
@@ -220,7 +278,44 @@ internal class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     {
     }
 }
+#endregion
 
+#region DmtpRpc限制代理接口配置
+internal class LimitInterfaceExample
+{
+    public async Task ConfigLimitInterface()
+    {
+        var client = new TcpDmtpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc(options =>
+                {
+                    options.SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider, dispatcher));
+                });
+            })
+            .SetRemoteIPHost("127.0.0.1:7789")
+            .SetDmtpOption(options =>
+            {
+                options.VerifyToken = "Rpc";//连接验证口令。
+            }));
+        await client.ConnectAsync();
+    }
+}
+#endregion
+
+#region DmtpRpc限制代理接口使用
+internal class UseLimitInterfaceExample
+{
+    public void UseLimitInterface(TcpDmtpClient client)
+    {
+        IRpcClient1 rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();
+        IRpcClient2 rpcClient2 = client.GetDmtpRpcActor<IRpcClient2>();
+    }
+}
+#endregion
+
+#region 声明反向DmtpRpc服务
 internal partial class MyClientRpcServer : SingletonRpcServer
 {
     private readonly ILog m_logger;
@@ -238,18 +333,206 @@ internal partial class MyClientRpcServer : SingletonRpcServer
     }
 }
 
+#endregion
+
 /// <summary>
 /// 序列化选择器
 /// </summary>
 public class MySerializationSelector : ISerializationSelector
 {
-    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
     {
         throw new NotImplementedException();
     }
 
-    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IBytesWriter
     {
         throw new NotImplementedException();
     }
 }
+
+#region DmtpRpc配置路由
+internal class ConfigureRouteExample
+{
+    public void ConfigureRoute()
+    {
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()
+            .ConfigureContainer(a =>
+            {
+                a.AddDmtpRouteService();
+                a.AddConsoleLogger();
+            });
+    }
+}
+#endregion
+
+#region DmtpRpc设置最大包大小
+internal class SetMaxPackageSizeExample
+{
+    public void ConfigMaxPackageSize()
+    {
+        var config = new TouchSocketConfig();//配置
+        config.SetAdapterOption(options =>
+        {
+            options.MaxPackageSize = 10 * 1024 * 1024;//设置最大包大小为10MB
+        });
+    }
+}
+#endregion
+
+#region DmtpRpc配置序列化选择器
+internal class ConfigureSerializationSelectorExample
+{
+    public void ConfigSerializationSelector()
+    {
+        var config = new TouchSocketConfig()
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc(options =>
+                {
+                    options.ConfigureDefaultSerializationSelector(selector =>
+                    {
+                        selector.JsonSerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
+                        selector.FastSerializerContext = default;
+                    });
+                });
+            });
+    }
+}
+#endregion
+
+#region DmtpRpc自定义序列化配置
+internal class CustomSerializationExample
+{
+    public void ConfigCustomSerialization()
+    {
+        var config = new TouchSocketConfig()
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc(options =>
+                {
+                    options.SerializationSelector = new MemoryPackSerializationSelector();
+                });
+            });
+    }
+}
+
+public class MemoryPackSerializationSelector : ISerializationSelector
+{
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IBytesReader
+    {
+        var len = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
+        var span = ReaderExtension.ReadToSpan(ref byteBlock, len);
+        return MemoryPackSerializer.Deserialize(parameterType, span);
+    }
+
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IBytesWriter
+    {
+        var writerAnchor = new WriterAnchor<TByteBlock>(ref byteBlock, 4);
+
+        var memoryPackWriter = new MemoryPackWriter<TByteBlock>(ref byteBlock, null);
+
+        MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
+
+        var span = writerAnchor.Rewind(ref byteBlock, out var len);
+        span.WriteValue(memoryPackWriter.WrittenCount);
+    }
+}
+#endregion
+
+#region DmtpRpc使用自定义序列化类型
+internal class UseCustomSerializationTypeExample
+{
+    public async Task UseCustomSerializationType()
+    {
+        var client = new TcpDmtpClient();
+        var invokeOption = new DmtpInvokeOption()//调用配置
+        {
+            FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+            SerializationType = (SerializationType)4,//序列化类型
+            Timeout = 5000,//调用超时设置
+        };
+    }
+}
+#endregion
+
+#region DmtpRpc使用Metadata
+internal partial class MetadataRpcServer : SingletonRpcServer
+{
+    [DmtpRpc(MethodInvoke = true)]
+    public Metadata CallContextMetadata(IDmtpRpcCallContext callContext)
+    {
+        return callContext.Metadata;
+    }
+}
+#endregion
+
+#region DmtpRpc客户端使用Metadata
+internal class ClientUseMetadataExample
+{
+    public async Task UseMetadata()
+    {
+        var client = new TcpDmtpClient();
+        var invokeOption = new DmtpInvokeOption()//调用配置
+        {
+            FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+            SerializationType = SerializationType.FastBinary,//序列化类型
+            Timeout = 5000,//调用超时设置
+            Metadata = new Metadata() { { "a", "a" } }
+        };
+
+        var metadata = await client.GetDmtpRpcActor().InvokeTAsync<Metadata>("CallContextMetadata", invokeOption);
+    }
+}
+#endregion
+
+#region DmtpRpc使用CancellationToken
+internal class UseCancellationTokenExample
+{
+    public async Task UseCancellationToken()
+    {
+        var client = new TcpDmtpClient();
+
+        //设置调用配置
+        var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
+        var invokeOption = new DmtpInvokeOption()//调用配置
+        {
+            FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+            SerializationType = SerializationType.FastBinary,//序列化类型
+            Timeout = 5000,//调用超时设置
+            Token = tokenSource.Token//配置可取消令箭
+        };
+
+        var sum = await client.GetDmtpRpcActor().InvokeTAsync<int>("Add", invokeOption, 10, 20);
+        client.Logger.Info($"调用Add方法成功，结果：{sum}");
+    }
+}
+#endregion
+
+#region DmtpRpc客户端互Call示例
+internal class ClientToClientCallExample
+{
+    public async Task CallBetweenClients()
+    {
+        var client1 = new TcpDmtpClient();
+        var client2 = new TcpDmtpClient();
+
+        await client1.GetDmtpRpcActor().InvokeTAsync<bool>(client2.Id, "Notice", InvokeOption.WaitInvoke, "Hello");
+    }
+}
+#endregion
+
+#region DmtpRpc客户端互Call使用目标RpcActor
+internal class ClientToClientCallWithTargetExample
+{
+    public async Task CallWithTarget()
+    {
+        var client1 = new TcpDmtpClient();
+        var client2 = new TcpDmtpClient();
+
+        var targetRpcClient = client1.CreateTargetDmtpRpcActor(client2.Id);
+        await targetRpcClient.InvokeTAsync<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
+    }
+}
+#endregion

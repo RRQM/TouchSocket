@@ -5,8 +5,8 @@ title: Rpc功能
 
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import { TouchSocketDmtpDefinition } from "@site/src/components/Definition.js";
-
-### 定义
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from "@site/src/components/CardLink.js";
 
 <TouchSocketDmtpDefinition />
 
@@ -35,49 +35,9 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 
 ### 2.1 定义服务
 
-1. 在**服务器**端中新建一个类名为`MyRpcServer`。
-2. 继承于`SingletonRpcServer`类、或实现`ISingletonRpcServer`。亦或者将服务器声明为**瞬时生命**的服务，继承`TransientRpcServer`、或`ITransientRpcServer`。
-3. 在该类中写**公共方法**，并用`DmtpRpc`属性标签标记。
+在**服务器**端中新建一个类，继承于`SingletonRpcServer`类、或实现`ISingletonRpcServer`。亦或者将服务器声明为**瞬时生命**的服务，继承`TransientRpcServer`、或`ITransientRpcServer`。详情请看:[Rpc服务注册](./rpcregister.mdx)。然后在该类中写**公共方法**，并用`DmtpRpc`属性标签标记。
 
-```csharp showLineNumbers
-public partial class MyRpcServer : SingletonRpcServer
-{
-    [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [DmtpRpc(InvokeKey ="Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
-    public bool Login(string account, string password)
-    {
-        if (account == "123" && password == "abc")
-        {
-            return true;
-        }
-
-        return false;
-    }
-}
-```
-
-```csharp showLineNumbers
-public partial class MyRpcServer : TransientRpcServer
-{
-    [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [DmtpRpc(InvokeKey ="Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
-    public bool Login(string account,string password)
-    {
-        if (account=="123"&&password=="abc")
-        {
-            return true;
-        }
-
-        return false;
-    }
-}
-```
-
-:::info 信息
-
-`ITransientRpcServer`和`ISingletonRpcServer`相比，意为瞬时生命服务，即实现`ITransientRpcServer`的服务，在每次被调用时，都会创建一个新的服务实例。其优点为可以直接通过`this.CallContext`属性获得调用上下文。其缺点则是每次调用时会多消耗一些性能。
-
-:::  
+<CustomCodeBlock region="声明DmtpRpc服务"/>
 
 ### 2.2 启动Dmtp并注册Rpc服务
 
@@ -85,217 +45,58 @@ public partial class MyRpcServer : TransientRpcServer
 
 更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
 
-```csharp showLineNumbers
-var service = new TcpDmtpService();
-var config = new TouchSocketConfig()//配置
-       .SetListenIPHosts(7789)
-       .ConfigureContainer(a=> 
-       {
-           a.AddRpcStore(store =>
-           {
-               store.RegisterServer<MyRpcServer>();//注册服务
-           });
-       })
-       .ConfigurePlugins(a =>
-       {
-           a.UseDmtpRpc();
-       })
-       .SetDmtpOption(new DmtpOption()
-       {
-           VerifyToken = "Rpc"//连接验证口令。
-       });
-
-await service.SetupAsync(config);
-
-await service.StartAsync();
-
-service.Logger.Info($"{service.GetType().Name}已启动");
-```
+<CustomCodeBlock region="启动TcpDmtpRpc服务器"/>
 
 ### 2.3 调用Rpc
+
+#### 2.3.1 创建DmtpRpc客户端
+
+适用于DmtpRpc的客户端其实就是常规的Dmtp客户端，只需要在插件中添加DmtpRpc插件即可。下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./dmtpclient.mdx)。
+
+<CustomCodeBlock region="创建DmtpRpc客户端"/>
 
 #### 2.3.1 直接调用
 
 直接调用，则是不使用**任何代理**，使用**字符串**和**参数**直接Call Rpc，使用比较简单。
 
-下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./dmtpclient.mdx)。
-
-```csharp showLineNumbers
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .ConfigurePlugins(a =>
-    {
-        a.UseDmtpRpc();
-    })
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-await client.ConnectAsync();
-
-bool result =(bool) client.GetDmtpRpcActor().Invoke(typeof(bool),"Login", InvokeOption.WaitInvoke, "123", "abc");
-```
+<CustomCodeBlock region="DmtpRpc直接调用"/>
 
 :::info 信息
 
-直接调用时，第一个参数为`返回值`类型，当没有返回值时则可以不用。第二个参数为`调用键`，调用键默认情况下为服务类的“`命名空间+类名+方法名`”的`全小写`。但在本案例中直接指定了以“Login”为调用键。第三个参数为`调用配置`参数，可设置调用超时时间，取消调用等功能。示例中使用的预设，实际上可以自行new InvokeOption()。后续参数为`调用参数`。
+直接调用时，泛型参数为`返回值`类型，当没有返回值时则可以不用。
+
+第1个参数为`调用键`，调用键默认情况下为服务类的“`命名空间+类名+方法名`”的`全小写`。但在本案例中直接指定了以“Add”为调用键。
+
+第2个参数为`调用配置`参数，可设置调用超时时间，取消调用等功能。
+
+后续参数为`调用参数`。
 
 :::  
 
-或者使用`InvokeT`的扩展方法调用。在有返回值时，可以直接泛型传参。
-
-```csharp showLineNumbers
-bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitInvoke, "123", "abc");
-```
 
 #### 2.3.2 代理调用
 
-代理调用的便捷在于，客户端不用再知道哪些服务可调，也不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。
+代理调用的便捷在于，客户端不用再知道哪些服务可调，也不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。代理的详细使用请看：[Rpc代理生成](./rpcgenerateproxy.mdx)
 
 <BilibiliCard title="使用代理生成文件的方式调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742132" isPro="true"/>
 
 <BilibiliCard title="使用源生成的方式调用DmtpRpc" link="https://www.bilibili.com/cheese/play/ep1742133" isPro="true"/>
 
-详细步骤：
-
-1. [生成代理文件](./rpcgenerateproxy.mdx)
-2. 将生成的cs文件添加到调用端一起编译。
-
-:::info 备注
-
-以上示例，会生成下列代理代码。
-
-:::  
-
-
-<details>
-<summary>生成的代理</summary>
-<div>
-
-
-```csharp showLineNumbers
-using System;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-using TouchSocket.Rpc;
-using TouchSocket.Dmtp.Rpc;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Threading.Tasks;
-namespace RpcProxy
-{
-    public interface IMyRpcServer : TouchSocket.Rpc.IRemoteServer
-    {
-        ///<summary>
-        ///登录
-        ///</summary>
-        /// <exception cref="System.TimeoutException">调用超时</exception>
-        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-        /// <exception cref="System.Exception">其他异常</exception>
-        System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default);
-        ///<summary>
-        ///登录
-        ///</summary>
-        /// <exception cref="System.TimeoutException">调用超时</exception>
-        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-        /// <exception cref="System.Exception">其他异常</exception>
-        Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default);
-    }
-    public class MyRpcServer : IMyRpcServer
-    {
-        public MyRpcServer(IRpcClient client)
-        {
-            this.Client = client;
-        }
-        public IRpcClient Client { get; private set; }
-        ///<summary>
-        ///登录
-        ///</summary>
-        /// <exception cref="System.TimeoutException">调用超时</exception>
-        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-        /// <exception cref="System.Exception">其他异常</exception>
-        public System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default)
-        {
-            if (Client == null)
-            {
-                throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
-            }
-            object[] parameters = new object[] { account, password };
-            System.Boolean returnData = (System.Boolean)Client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
-            return returnData;
-        }
-        ///<summary>
-        ///登录
-        ///</summary>
-        public async Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default)
-        {
-            if (Client == null)
-            {
-                throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
-            }
-            object[] parameters = new object[] { account, password };
-            return (System.Boolean)await Client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
-        }
-    }
-    public static class MyRpcServerExtensions
-    {
-        ///<summary>
-        ///登录
-        ///</summary>
-        /// <exception cref="System.TimeoutException">调用超时</exception>
-        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-        /// <exception cref="System.Exception">其他异常</exception>
-        public static System.Boolean Login<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
-        TouchSocket.Rpc.IRpcClient
-        {
-            object[] parameters = new object[] { account, password };
-            System.Boolean returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
-            return returnData;
-        }
-        ///<summary>
-        ///登录
-        ///</summary>
-        public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
-        TouchSocket.Rpc.IRpcClient
-        {
-            object[] parameters = new object[] { account, password };
-            return (System.Boolean)await client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
-        }
-    }
-}
-```
-
-
-</div>
-</details>
-
 
 使用代理扩展直接调用。
 
-```csharp showLineNumbers
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .ConfigurePlugins(a =>
-    {
-        a.UseDmtpRpc();
-    })
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-await client.ConnectAsync();
-
-bool result = client.GetDmtpRpcActor().Login("123", "abc", InvokeOption.WaitInvoke);//Login是生成的代理扩展方法。可能需要额外添加命名空间。
-```
-
+<CustomCodeBlock region="DmtpRpc代理调用"/>
 :::tip 提示
 
 client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作。所以，如果为效率考虑的话，在连接稳定的前提下，可以保存好client.GetDmtpRpcActor()的返回值对象，直接执行Rpc操作。但是需要的注意的是，一旦重新连接，则该对象也需要重新获取。
 
 :::  
+
+:::tip 代理生成的代码示例
+
+代理生成的代码示例可以参考示例工程中的 `RpcProxy.cs` 文件，或者参考 [Rpc代理生成](./rpcgenerateproxy.mdx) 文档。
+
+:::
 
 ## 三、反向Rpc
 
@@ -306,106 +107,53 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 
 ### 3.1 定义、发布反向Rpc服务
 
-实际上，Dmtp的全称（Duplex Message Transport Protocol双工消息传输协议），Duplex意为双工，则表明，当Dmtp客户端连接到服务以后，拥有与服务器同等的通讯权限与功能。所以客户端发布Rpc服务的步骤和服务器完全一致。即：当客户端和服务器建立连接以后，就不再区分谁是客户端，谁是服务器了。只关心，**谁能提供服务，谁在调用服务**。
+实际上，Dmtp的全称（Duplex Message Transport Protocol双工消息传输协议），Duplex意为双工，则表明，当Dmtp客户端连接到服务以后，拥有与服务器同等的通讯权限与功能。
+
+所以客户端发布Rpc服务的步骤和服务器完全一致。
+
+即：当客户端和服务器建立连接以后，就不再区分谁是客户端，谁是服务器了。只关心，**谁能提供服务，谁在调用服务**。
 
 下列就以简单的示例下，由客户端声明服务，服务器调用服务。
 
-具体步骤：
+#### 3.1.1 声明反向Rpc服务
 
-1. 在**客户端项目**中定义Rpc服务，名为`ReverseCallbackServer`。
-2. 用**DmtpRpc**标记需要公开的公共方法。
+具体步骤和服务器端一致。
 
-```csharp showLineNumbers
-public partial class ReverseCallbackServer : SingletonRpcServer
-{
-    [DmtpRpc(MethodInvoke = true)]//使用方法名作为调用键
-    public string SayHello(string name)
-    {
-        return $"{name},hi";
-    }
-}
-```
+<CustomCodeBlock region="声明反向DmtpRpc服务"/>
 
-**【客户端注册发布服务】**
+#### 3.1.2 客户端注册发布服务
 
-```csharp showLineNumbers
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigureContainer(a => 
-    {
-        a.AddRpcStore(store =>
-        {
-            store.RegisterServer<ReverseCallbackServer>();
-        });
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.UseDmtpRpc();
-    })
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-await client.ConnectAsync();
-client.Logger.Info($"连接成功，Id={client.Id}");
-```
+客户端发布服务的步骤和服务器端一致。
+
+<CustomCodeBlock region="客户端注册反向DmtpRpc服务"/>
 
 ### 3.2 调用反向Rpc
 
-服务器回调客户端，最终必须通过**服务器辅助类客户端**（`ITcpSessionClient`的派生类），以`TcpDmtpService`为例，其辅助客户端为`TcpDmtpSessionClient`（或其接口：`ITcpDmtpSessionClient`）。
+服务器回调客户端，最终必须通过**服务器辅助类客户端**（`ISessionClient`的派生类）来执行。
 
-下列示例以TcpDmtpSessionClient为例，其余一致。
-
+以`TcpDmtpService`为例，其辅助客户端为`TcpDmtpSessionClient`（或其接口：`ITcpDmtpSessionClient`）。
 
 #### 3.2.1 通过服务器直接获取
 
 可以获取所有`TcpDmtpSessionClient`，进行广播式调用。
 
-```csharp showLineNumbers
-foreach (var item in service.GetClients())
-{
-    item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
-}
-```
+<CustomCodeBlock region="从TcpDmtp服务器中获取调用客户端"/>
 
 也可以先筛选Id，然后再调用。
 
-```csharp showLineNumbers
-var id = service.GetIds().FirstOrDefault(a => a.Equals("特定id"));
-if (service.TryGetClient(id, out var SessionClient))
-{
-    SessionClient.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
-}
-```
+#### 3.2.2 通过生命周期获取
 
-#### 3.2.2 通过调用上下文获取
+一般的，Dmtp会有完整的生命周期管理。例如：`IDmtpConnectedPlugin`、`IDmtpClosedPlugin`等，详情请看：[Dmtp服务器](./dmtpservice.mdx)。
 
-例如：下列声明在服务器端的Rpc服务MyRpcServer，使其使用瞬时服务（也可以通过函数注入服务）。
+所以可以通过生命周期获取到对应的客户端。此处不再赘述。
 
-上下文的Caller，即为服务器辅助类终端，进行强转即可。
+#### 3.2.3 通过调用上下文获取
 
-使用该方式可以实现，当客户端调用服务器的Add接口的时候，服务器又回调客户端的SayHello接口。
+当服务端的的Rpc服务被调用时可以通过调用上下文，获取Caller，即可以获取到对应的客户端。
 
-```csharp showLineNumbers
-partial class MyRpcServer : TransientRpcServer
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    public int Add(int a, int b)
-    {
-        if (this.CallContext.Caller is ITcpDmtpSessionClient SessionClient)
-        {
-            SessionClient.GetDmtpRpcActor().InvokeT<string>("SayHello",InvokeOption.WaitInvoke,"张三");
-        }
-        int sum = a + b;
-        return sum;
-    }
-}
-```
+使用该方式可以实现，当客户端调用服务器的Rpc方法的时候，服务器又回调客户端的Rpc方法。
+
+<CustomCodeBlock region="通过调用上下文获取调用客户端"/>
 
 :::tip 提示
 
@@ -416,7 +164,9 @@ partial class MyRpcServer : TransientRpcServer
 
 ## 四、客户端互Call Rpc
 
-除了Rpc，反向Rpc，DmtpRpc还支持**客户端**之间互Call Rpc。服务的定义与Rpc一样。
+除了常规Rpc，反向Rpc，DmtpRpc还支持**客户端**之间互Call Rpc。
+
+互Call Rpc的服务的定义与常规Rpc一样。
 
 <BilibiliCard title="客户端互CallRpc" link="https://www.bilibili.com/cheese/play/ep1742136" isPro="true"/>
 <BilibiliCard title="使用源生成客户端互CallRpc" link="https://www.bilibili.com/cheese/play/ep1742137" isPro="true"/>
@@ -425,19 +175,11 @@ partial class MyRpcServer : TransientRpcServer
 
 客户端1调用客户端2的方法，需要知道对方的**Id**。然后和调用Rpc方法一致。然后使用下列函数调用即可。
 
-```csharp showLineNumbers
-var client1 = GetTcpDmtpClient();
-var client2 = GetTcpDmtpClient();
-
-client1.GetDmtpRpcActor().InvokeT<bool>(client2.Id,"Notice",InvokeOption.WaitInvoke,"Hello");
-```
+<CustomCodeBlock region="DmtpRpc客户端互Call示例"/>
 
 亦或者
 
-```csharp showLineNumbers
-var targetRpcClient = client1.CreateTargetDmtpRpcActor(client2.Id);
-targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
-```
+<CustomCodeBlock region="DmtpRpc客户端互Call使用目标RpcActor"/>
 
 :::tip 提示
 
@@ -459,31 +201,11 @@ targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
 
 配置路由。
 
-```csharp {3}
-.ConfigureContainer(a =>
-{
-    a.AddDmtpRouteService();
-    a.AddConsoleLogger();
-})
-```
+<CustomCodeBlock region="DmtpRpc配置路由"/>
 
 同意转发路由数据。
 
-```csharp showLineNumbers
-internal class MyPlugin : PluginBase,IDmtpRoutingPlugin
-{
-    public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
-    {
-        if (e.RouterType == RouteType.Rpc)
-        {
-            e.IsPermitOperation = true;
-            return;
-        }
-
-       await e.InvokeNext();
-    }
-}
-```
+<CustomCodeBlock region="DmtpRpc同意转发路由数据"/>
 
 ## 五、调用配置
 
@@ -521,15 +243,7 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
  例如：
 
- ```csharp showLineNumbers
- a.UseDmtpRpc()
-.ConfigureDefaultSerializationSelector(selector =>
-{
-    selector.JsonSerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-    selector.FastSerializerContext=default;
-    ...
-});
- ```
+ <CustomCodeBlock region="DmtpRpc配置序列化选择器"/>
 
  #### 5.2.2 支持AOT的序列化选择器
 
@@ -555,41 +269,11 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
 下列将使用[MemoryPack](https://www.nuget.org/packages/MemoryPack) 序列化为例。
 
-```csharp {3,10} showLineNumbers
-public class MemoryPackSerializationSelector : ISerializationSelector
-{
-    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
-    {
-        var len = byteBlock.ReadInt32();
-        var span = byteBlock.ReadToSpan(len);
-        return MemoryPackSerializer.Deserialize(parameterType, span);
-    }
-
-    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
-    {
-        var pos = byteBlock.Position;
-        byteBlock.Seek(4, SeekOrigin.Current);
-        var memoryPackWriter = new MemoryPackWriter<TByteBlock>(ref byteBlock, null);
-
-        MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
-
-        var newPos = byteBlock.Position;
-        byteBlock.Position = pos;
-        byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
-        byteBlock.Position = newPos;
-    }
-}
-```
+<CustomCodeBlock region="DmtpRpc自定义序列化配置"/>
 
 然后配置序列化器
 
-```csharp {4}
-.ConfigurePlugins(a =>
-{
-    a.UseDmtpRpc()
-    .SetSerializationSelector(new MemoryPackSerializationSelector());
-})
-```
+<CustomCodeBlock region="DmtpRpc自定义序列化配置"/>
 
 :::caution 注意
 
@@ -764,15 +448,7 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
 
 最后在使用时，因为序列化类型是枚举值，所以使用时需要强制转换一下。
 
-```csharp {4}
-var invokeOption = new DmtpInvokeOption()//调用配置
-{
-    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
-    SerializationType = (SerializationType)4,//序列化类型
-    Timeout = 5000,//调用超时设置
-    Token = tokenSource.Token//配置可取消令箭
-};
-```
+<CustomCodeBlock region="DmtpRpc使用自定义序列化类型"/>
 
 [序列化选择器Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/SerializationSelectorConsoleApp)
 
@@ -795,22 +471,7 @@ CancellationToken是取消令箭源，可用于取消Rpc的调用。
 
 :::  
 
-```csharp showLineNumbers
-var client = GetTcpDmtpClient();
-
-//设置调用配置
-var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
-var invokeOption = new DmtpInvokeOption()//调用配置
-{
-    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
-    SerializationType = SerializationType.FastBinary,//序列化类型
-    Timeout = 5000,//调用超时设置
-    Token = tokenSource.Token//配置可取消令箭
-};
-
-var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", invokeOption, 10, 20);
-client.Logger.Info($"调用Add方法成功，结果：{sum}");
-```
+<CustomCodeBlock region="DmtpRpc使用CancellationToken"/>
 
 ### 5.5 Metadata 元数据
 
@@ -820,27 +481,11 @@ Metadata是字符串键值对，其作用类似http的headers，用于传递一�
 
 在请求时可以通过DmtpInvokeOption进行传参。
 
-```csharp {6} showLineNumbers
-var invokeOption = new DmtpInvokeOption()//调用配置
-{
-    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
-    SerializationType = SerializationType.FastBinary,//序列化类型
-    Timeout = 5000,//调用超时设置
-    Metadata=new Metadata(){{"a","a"}}
-};
-
-var metadata = client.GetDmtpRpcActor().InvokeT<Metadata>("CallContextMetadata", invokeOption);
-```
+<CustomCodeBlock region="DmtpRpc客户端使用Metadata"/>
 
 在接收可以通过IDmtpCallContext（调用上下文）获取到Metadata。
 
-```csharp {4} showLineNumbers
-[DmtpRpc(MethodInvoke = true)]
-public Metadata CallContextMetadata(IDmtpRpcCallContext callContext)
-{
-    return callContext.Metadata;
-}
-```
+<CustomCodeBlock region="DmtpRpc使用Metadata"/>
 
 ## 六、Rpc大数据传输
 
@@ -857,11 +502,7 @@ public Metadata CallContextMetadata(IDmtpRpcCallContext callContext)
 
 该方法简单粗暴，能够解决一定程度的大数据问题，但并不建议这么做。
 
-
-```csharp showLineNumbers
-TouchSocketConfig config = new TouchSocketConfig()//配置
-                .SetMaxPackageSize(1024 * 1024 * 10)
-```
+<CustomCodeBlock region="DmtpRpc设置最大包大小"/>
 
 :::caution 注意
 
@@ -880,57 +521,11 @@ TouchSocketConfig config = new TouchSocketConfig()//配置
 
 【Service端】
 
-```csharp showLineNumbers
-/// <summary>
-/// 测试客户端请求，服务器响应大量流数据
-/// </summary>
-/// <param name="callContext"></param>
-/// <param name="channelID"></param>
-[Description("测试客户端请求，服务器响应大量流数据")]
-[DmtpRpc]
-public async Task<int> RpcPullChannel(ICallContext callContext, int channelID)
-{
-    var size = 0;
-    var package = 1024 * 64;
-    if (callContext.Caller is TcpDmtpSessionClient SessionClient)
-    {
-        if (SessionClient.TrySubscribeChannel(channelID, out var channel))
-        {
-            for (var i = 0; i < 10; i++)
-            {
-                size += package;
-                await channel.WriteAsync(new byte[package]);
-            }
-            await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
-        }
-    }
-    return size;
-}
-```
+<CustomCodeBlock region="DmtpRpc服务端请求流数据"/>
 
 【Client端】
 
-```csharp showLineNumbers
-using var client = GetTcpDmtpClient();
-ChannelStatus status = ChannelStatus.Default;
-int size = 0;
-var channel = await client.CreateChannelAsync(new Metadata() { {"rpc","rpc" } });//创建通道
-Task task = Task.Run(() =>//这里必须用异步
-{
-    using (channel)
-    {
-        foreach (var currentByteBlock in channel)
-        {
-            var data = currentByteBlock.Span;
-            size += currentByteBlock.Length;//此处可以处理传递来的流数据
-        }
-        status = channel.Status;//最后状态
-    }
-});
-int result =await client.GetDmtpRpcActor().RpcPullChannelAsync(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
-await task;//等待异步接收完成
-Console.WriteLine($"状态：{status}，size={size}");
-```
+<CustomCodeBlock region="DmtpRpc客户端请求流数据"/>
 
 <a name="GmNPl"></a>
 
@@ -938,56 +533,11 @@ Console.WriteLine($"状态：{status}，size={size}");
 
 【Service端】
 
-```csharp showLineNumbers
-/// <summary>
-/// "测试推送"
-/// </summary>
-/// <param name="callContext"></param>
-/// <param name="channelID"></param>
-[Description("测试客户端推送流数据")]
-[DmtpRpc]
-public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
-{
-    int size = 0;
-
-    if (callContext.Caller is TcpDmtpSessionClient SessionClient)
-    {
-        if (SessionClient.TrySubscribeChannel(channelID, out var channel))
-        {
-            await foreach (var currentByteBlock in channel)
-            {
-                var data = currentByteBlock.Span;
-                size += currentByteBlock.Length;//此处处理流数据
-            }
-        }
-    }
-    return size;
-}
-```
+<CustomCodeBlock region="DmtpRpc服务端推送流数据"/>
 
 【Client端】
 
-```csharp showLineNumbers
-using var client = GetTcpDmtpClient();
-ChannelStatus status = ChannelStatus.Default;
-int size = 0;
-int package = 1024;
-var channel = await client.CreateChannelAsync();//创建通道
-Task task = Task.Run(async () =>//这里必须用异步
-{
-    for (int i = 0; i < 1024; i++)
-    {
-        size += package;
-        await channel.WriteAsync(new byte[package]);
-    }
-    await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
-
-    status = channel.Status;
-});
-int result = await client.GetDmtpRpcActor().RpcPushChannelAsync(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
-await task;//等待异步接收完成
-Console.WriteLine($"状态：{status}，result={result}");
-```
+<CustomCodeBlock region="DmtpRpc客户端推送流数据"/>
 
 ## 七、限制代理接口
 
@@ -1003,48 +553,16 @@ Console.WriteLine($"状态：{status}，result={result}");
 
 然后新建类，命名为`MyDmtpRpcActor`，继承`DmtpRpcActor`，然后分别实现`IRpcClient1`与`IRpcClient2`两个接口。
 
-```csharp showLineNumbers
-interface IRpcClient1:IDmtpRpcActor
-{
-
-}
-
-interface IRpcClient2 : IDmtpRpcActor
-{
-
-}
-
-class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
-{
-    public MyDmtpRpcActor(IDmtpActor smtpActor) : base(smtpActor)
-    {
-    }
-}
-```
+<CustomCodeBlock region="DmtpRpc限制代理接口声明"/>
 
 然后在`UseDmtpRpc`时，设置`SetCreateDmtpRpcActor`，这样获得的实际实例则会是`MyDmtpRpcActor`类型。
 
-```csharp {6}
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .ConfigurePlugins(a =>
-    {
-        a.UseDmtpRpc()
-        .SetCreateDmtpRpcActor((actor)=>new MyDmtpRpcActor(actor));
-    })
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-await client.ConnectAsync();
-```
+<CustomCodeBlock region="DmtpRpc限制代理接口配置"/>
 
 最后在获得RpcActor时，就可以按接口获取。然后配合服务器代码接口约束，就可以实现我们所期望的功能。
 
-```csharp showLineNumbers
-IRpcClient1 rpcClient1= client.GetDmtpRpcActor<IRpcClient1>();
-IRpcClient2 rpcClient2= client.GetDmtpRpcActor<IRpcClient2>();
-```
+<CustomCodeBlock region="DmtpRpc限制代理接口使用"/>
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpRpcServerConsoleApp)
+## 八、示例Demo
+
+<CardLink link="examples/Dmtp/DmtpRpcServerConsoleApp" isPro="true"/>

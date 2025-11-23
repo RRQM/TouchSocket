@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.FileTransfer;
@@ -23,21 +20,6 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// </summary>
 public static class DmtpFileTransferActorExtension
 {
-    #region 插件扩展
-
-    /// <summary>
-    /// 使用DmtpFileTransfer插件
-    /// </summary>
-    /// <param name="pluginManager">插件管理器实例，用于管理插件的加载和执行</param>
-    /// <returns>返回DmtpFileTransferFeature实例，以便进一步操作或配置</returns>
-    public static DmtpFileTransferFeature UseDmtpFileTransfer(this IPluginManager pluginManager)
-    {
-        // 通过插件管理器添加DmtpFileTransfer插件，并返回插件实例
-        return pluginManager.Add<DmtpFileTransferFeature>();
-    }
-
-    #endregion 插件扩展
-
     #region DependencyProperty
 
     ///// <summary>
@@ -67,7 +49,7 @@ public static class DmtpFileTransferActorExtension
     public static IDmtpFileTransferActor GetDmtpFileTransferActor(this IDmtpActorObject client)
     {
         var actor = client.DmtpActor.GetDmtpFileTransferActor();
-        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor), TouchSocketDmtpResource.DmtpFileTransferActorNull);
+        ThrowHelper.ThrowIfNull(actor, nameof(actor), TouchSocketDmtpResource.DmtpFileTransferActorNull);
         return actor;
     }
 
@@ -111,10 +93,10 @@ public static class DmtpFileTransferActorExtension
 
         try
         {
-            var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (!resourceInfoResult.IsSuccess)
             {
-                return fileOperator.SetResult(new Result(resourceInfoResult));
+                return fileOperator.SetResult(new Result(resourceInfoResult.ResultCode, resourceInfoResult.Message));
             }
             var resourceInfo = resourceInfoResult.FileResourceInfo;
             if (fileOperator.ResourceInfo == null)
@@ -147,7 +129,7 @@ public static class DmtpFileTransferActorExtension
             }
 
             var failResult = Result.UnknownFail;
-            await Task.Run(async () =>
+            await EasyTask.SafeRun(async () =>
              {
                  var failed = 0;
                  while (true)
@@ -162,7 +144,7 @@ public static class DmtpFileTransferActorExtension
                      }
                      try
                      {
-                         using (var result = await actor.PullFileSectionAsync(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                         using (var result = await actor.PullFileSectionAsync(targetId, fileSection, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                          {
                              if (result.IsSuccess)
                              {
@@ -179,7 +161,7 @@ public static class DmtpFileTransferActorExtension
                              }
                              else
                              {
-                                 failResult = new Result(result);
+                                 failResult = new Result(result.ResultCode, result.Message);
                                  if (result.ResultCode == ResultCode.Canceled)
                                  {
                                      return;
@@ -202,14 +184,14 @@ public static class DmtpFileTransferActorExtension
             {
                 if (actor.DmtpActor.Online)
                 {
-                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 return fileOperator.SetResult(Result.Canceled);
             }
             var result1 = locator.TryFinished();
             if (actor.DmtpActor.Online)
             {
-                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             return result1.IsSuccess ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
@@ -259,7 +241,7 @@ public static class DmtpFileTransferActorExtension
             fileOperator.SetLength(fileOperator.ResourceInfo.FileInfo.Length);
 
             using var locator = new FileResourceLocator(fileOperator.ResourceInfo);
-            var resultInfo = await actor.PushFileResourceInfoAsync(targetId, fileOperator.SavePath, locator, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
+            var resultInfo = await actor.PushFileResourceInfoAsync(targetId, fileOperator.SavePath, locator, fileOperator.Metadata, fileOperator.Token);
             if (!resultInfo.IsSuccess)
             {
                 return fileOperator.SetResult(resultInfo);
@@ -282,7 +264,7 @@ public static class DmtpFileTransferActorExtension
             }
 
             var failResult = Result.UnknownFail;
-            await Task.Run(async () =>
+            await EasyTask.SafeRun(async () =>
             {
                 var failed = 0;
                 while (true)
@@ -297,14 +279,14 @@ public static class DmtpFileTransferActorExtension
                     }
                     try
                     {
-                        var result = await actor.PushFileSectionAsync(targetId, locator, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
+                        var result = await actor.PushFileSectionAsync(targetId, locator, fileSection, fileOperator.Token);
                         if (result.IsSuccess)
                         {
                             await fileOperator.AddFlowAsync(fileSection.Length);
                         }
                         else
                         {
-                            failResult = new Result(result);
+                            failResult = new Result(result.ResultCode, result.Message);
                             if (result.ResultCode == ResultCode.Canceled)
                             {
                                 return;
@@ -325,13 +307,13 @@ public static class DmtpFileTransferActorExtension
 
             if (fileOperator.Token.IsCancellationRequested)
             {
-                await actor.FinishedFileResourceInfoAsync(targetId, fileOperator.ResourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
+                await actor.FinishedFileResourceInfoAsync(targetId, fileOperator.ResourceInfo, ResultCode.Canceled, fileOperator.Metadata, fileOperator.Token);
                 return fileOperator.SetResult(Result.Canceled);
             }
             else
             {
-                var res = await actor.FinishedFileResourceInfoAsync(targetId, fileOperator.ResourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                return fileOperator.SetResult(res.ToResult());
+                var res = await actor.FinishedFileResourceInfoAsync(targetId, fileOperator.ResourceInfo, ResultCode.Success, fileOperator.Metadata, fileOperator.Token);
+                return fileOperator.SetResult(new Result(res.ResultCode, res.Message));
             }
         }
         catch (Exception ex)

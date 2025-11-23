@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -72,22 +68,22 @@ public sealed partial class MqttSubAckMessage : MqttIdentifierMessage
     }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         foreach (var item in this.ReturnCodes)
         {
-            byteBlock.WriteByte((byte)item);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item);
         }
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
-        while (!this.EndOfByteBlock(byteBlock))
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        while (!this.EndOfByteBlock(reader))
         {
-            this.m_returnCodes.Add((MqttReasonCode)byteBlock.ReadByte());
+            this.m_returnCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader));
         }
     }
 }

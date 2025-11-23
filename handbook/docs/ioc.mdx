@@ -4,265 +4,160 @@ title: 依赖注入容器(IOC)
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
 
 ## 一、说明
 
-依赖注入，是指程序运行过程中，如果需要调用另一个对象协助时，无须在代码中创建被调用者，而是依赖于外部的注入。
+依赖注入（Dependency Injection，简称DI），是指程序运行过程中，如果需要调用另一个对象协助时，无须在代码中创建被调用者，而是依赖于外部的注入。
 
 通俗来讲，就是把有依赖关系的类放到容器中，然后在我们需要这些类时，容器自动解析出这些类的实例。
 
-依赖注入最大的好处时实现类的解耦，利于程序拓展、单元测试、自动化模拟测试等。依赖注入的英文为：`Dependency Injection`，简称 `DI`。（说明来自网络）
+依赖注入最大的好处是实现类的解耦，利于程序拓展、单元测试、自动化模拟测试等。
 
-`TouchSocket`内置了`Container`容器。
+`TouchSocket`内置了`Container`容器，提供了完整的依赖注入功能。
 
 ## 二、特点
 
-- 支持构造函数、属性、方法三种注入方式，可以选择其中部分生效。
-- 支持`Singleton`、`Transient`两种生命周期。
-- 支持单接口，多实现注入。
-- 支持当获取类型是可实例类型时，即使不注册，也能成功构造。
-- 支持默认参数注入。
-- 支持构建参数注入。
-- 支持标签参数注入。
-- 支持泛型注入。
-- 支持Object注入。
-- 支持**源生成注入**，全面接入AOT模式。
+- 支持构造函数注入
+- 支持三种生命周期：`Singleton`（单例）、`Scoped`（作用域）、`Transient`（瞬态）
+- 支持接口到实现类的映射注册
+- 支持泛型类型注册
+- 支持Key标识的多实例注册
+- 支持工厂方法注册
+- 兼容ASP.NET Core的`IServiceCollection`
+- 支持作用域解析器（IScopedResolver）
+- 支持AOT（Ahead-of-Time Compilation）。
 
-## 三、注入方式
+## 三、基础使用
 
 ### 3.1 构造函数注入
 
-【定义类型】
-
-```csharp showLineNumbers
-class MyClass1
-{
-
-}
-
-class MyClass2
-{
-    public MyClass2(MyClass1 myClass1)
-    {
-        this.MyClass1 = myClass1;
-    }
-
-    public MyClass1 MyClass1 { get; }
-}
-```
-
-【注册和获取】
-
-```csharp showLineNumbers
-var container = new Container();
-container.RegisterSingleton<MyClass1>();
-container.RegisterSingleton<MyClass2>();
-
-var myClass1 = container.Resolve<MyClass1>();
-var myClass2 = container.Resolve<MyClass2>();
-```
-
-### 3.2 属性注入
-
-使用`DependencyInject`标记属性，即可注入。
+容器会自动解析构造函数的参数依赖，并注入所需的实例。
 
 【定义类型】
 
-```csharp showLineNumbers
-class MyClass3
-{
-    /// <summary>
-    /// 直接按类型，默认方式获取
-    /// </summary>
-    [DependencyInject]
-    public MyClass1 MyClass1 { get; set; }
+<CustomCodeBlock region="IOC定义类型"/>
 
-    /// <summary>
-    /// 获得指定类型的对象，然后赋值到object
-    /// </summary>
-    [DependencyInject(typeof(MyClass2))]
-    public object MyClass2 { get; set; }
+【注册和解析】
 
-    /// <summary>
-    /// 按照类型+Key获取
-    /// </summary>
-    [DependencyInject("key")]
-    public MyClass1 KeyMyClass1 { get; set; }
-}
-```
-
-【注册和获取】
-
-```csharp showLineNumbers
-var container = new Container();
-container.RegisterSingleton<MyClass1>();
-container.RegisterSingleton<MyClass1>("key");
-container.RegisterSingleton<MyClass2>();
-
-container.RegisterSingleton<MyClass3>();
-
-var myClass3 = container.Resolve<MyClass3>();
-```
+<CustomCodeBlock region="IOC构造函数注入"/>
 
 :::tip 提示
 
-`DependencyInject`特性中，`Type`和`Key`，可以同时使用，也可以只使用其中一个。
+容器会自动选择参数最多的构造函数进行实例化。
 
-:::  
+:::
 
-### 3.3 方法注入
+## 四、生命周期
 
-使用`DependencyInject`标记属性，即可对方法注入。
+`TouchSocket`支持三种生命周期，不同的生命周期决定了实例的创建和销毁策略。
 
-【定义类型】
+### 4.1 Singleton（单例）
 
-```csharp showLineNumbers
-class MyClass4
-{
-    public MyClass1 MyClass1 { get;private set; }
+单例生命周期意味着在整个容器生命周期内，该类型只会创建一个实例，所有解析操作都会返回同一个实例。
 
-    [DependencyInject]
-    public void MethodInject(MyClass1 myClass1)
-    {
-        this.MyClass1 = myClass1;
-    }
-}
-```
+<CustomCodeBlock region="IOC单例生命周期"/>
 
-【注册和获取】
+**使用场景**：适用于无状态的服务、配置对象、日志服务等。
 
-```csharp showLineNumbers
-var container = new Container();
-container.RegisterSingleton<MyClass1>();
-container.RegisterSingleton<MyClass4>();
+### 4.2 Transient（瞬态）
 
-var myClass4 = container.Resolve<MyClass4>();
-```
+瞬态生命周期意味着每次解析都会创建一个新的实例。
 
-:::tip 提示
+<CustomCodeBlock region="IOC瞬态生命周期"/>
 
-`DependencyInject`特性，也可以在方法注入时，对参数进行使用。
+**使用场景**：适用于轻量级、有状态的对象，或需要确保每次使用都是全新实例的服务。
 
-::: 
+### 4.3 Scoped（作用域）
 
-### 3.4 注入筛选
+作用域生命周期意味着在同一个作用域内，解析会返回同一个实例；在不同作用域内，会创建不同的实例。
 
-对于一个类，默认情况下，会支持`构造函数`、`属性`、`方法`三种注入方式。但是，当明确知道该类型仅会使用其中部分方式注入时，可以设置注入类型，以此节约性能。
+<CustomCodeBlock region="IOC作用域生命周期"/>
 
-```csharp {4}
-/// <summary>
-/// 让MyClass1仅支持构造函数和属性注入
-/// </summary>
-[DependencyType(DependencyType.Constructor | DependencyType.Property)]
-class MyClass1
-{
-
-}
-```
+**使用场景**：适用于需要在特定范围内共享状态的对象，如数据库上下文（DbContext）、HTTP请求处理器等。
 
 :::info 备注
 
-`Constructor`构造函数配置不管配不配置，默认都是支持的。
+`Container`默认支持`Scoped`生命周期。如果需要与ASP.NET Core完全兼容的Scoped语义，可以使用`TouchSocket.Core.DependencyInjection`包中的`AspNetCoreContainer`。
 
-:::  
+:::
 
-## 四、源生成IOC容器
+## 五、高级功能
 
-使用源生成IOC容器，能实现100%代码静态生成。能够有效解决运行时代码效率问题和AOT反射问题。
+### 5.1 使用Key注册
 
-然后声明自己的容器，遵循如下：
+支持为同一类型注册多个实例，使用不同的Key进行区分。
 
-1. 必须继承`ManualContainer`。
-2. 必须使用`partial`修饰为部分类。
-3. 必须添加特性`GeneratorContainer`。
+<CustomCodeBlock region="IOC使用Key注册"/>
 
-```csharp showLineNumbers
- [GeneratorContainer]
- partial class MyContainer : ManualContainer
- {
+### 5.2 使用工厂方法注册
 
- }
-```
+可以使用自定义工厂方法来创建实例，获得更灵活的控制。
 
-### 4.1 注册类型
+<CustomCodeBlock region="IOC使用工厂方法注册"/>
 
-注册类型，可以直接添加特性即可：
+### 5.3 接口映射
 
-```csharp showLineNumbers 
-[AutoInjectForSingleton]//将声明的类型直接标识为单例注入
-class MyClass12
-{
+支持将接口映射到具体的实现类。
 
-}
+<CustomCodeBlock region="IOC接口映射注册"/>
 
-[AutoInjectForTransient]//将声明的类型直接标识为瞬态注入
-class MyClass13
-{
+### 5.4 泛型类型注册
 
-}
-```
+支持注册泛型类型定义，容器会自动处理具体的泛型参数。
 
-### 4.2 注册现有类型
+<CustomCodeBlock region="IOC泛型类型注册"/>
 
-现有类型已经完成声明，所以无法直接添加特性。所以只能将特性添加在`ManualContainer`的继承类上。
+## 六、使用AspNetCoreContainer
 
-```csharp showLineNumbers
-[AddSingletonInject(typeof(IInterface10), typeof(MyClass10))]//直接添加现有类型为单例
-[AddTransientInject(typeof(IInterface11), typeof(MyClass11))]//直接添加现有类型为瞬态
-[GeneratorContainer]
-partial class MyContainer : ManualContainer
-{
+如果需要与ASP.NET Core的依赖注入系统集成，可以使用`TouchSocket.Core.DependencyInjection`包中的`AspNetCoreContainer`。
 
-}
-```
+首先，安装NuGet包：`TouchSocket.Core.DependencyInjection`。
 
-:::tip 提示
+然后使用`AspNetCoreContainer`替代`Container`：
 
-源生成IOC容器，同样支持属性、方法、Key等注册配置，使用规则和第三节一致。
+<CustomCodeBlock region="IOC使用AspNetCoreContainer"/>
 
-:::  
+在TouchSocket配置中使用：
+
+<CustomCodeBlock region="IOC配置中使用ServiceCollection"/>
+
+:::tip 优势
+
+使用`AspNetCoreContainer`可以：
+- 与ASP.NET Core的DI系统完全兼容
+- 支持所有ASP.NET Core的依赖注入特性
+- 实现服务注册的共享和复用
+
+:::
+
+## 七、API参考
+
+### 注册方法
+
+| 方法 | 说明 |
+|------|------|
+| `RegisterSingleton<T>()` | 注册单例服务 |
+| `RegisterSingleton<TFrom, TTo>()` | 注册单例接口映射 |
+| `RegisterTransient<T>()` | 注册瞬态服务 |
+| `RegisterTransient<TFrom, TTo>()` | 注册瞬态接口映射 |
+| `RegisterScoped<T>()` | 注册作用域服务 |
+| `RegisterScoped<TFrom, TTo>()` | 注册作用域接口映射 |
+
+### 解析方法
+
+| 方法 | 说明 |
+|------|------|
+| `Resolve<T>()` | 解析指定类型的实例 |
+| `Resolve<T>(object key)` | 解析指定Key的实例 |
+| `CreateScopedResolver()` | 创建作用域解析器 |
 
 
-## 五、生命周期
+## 八、示例代码
 
-生命周期是对注入构造的实例的有效性而言的。`TouchSocket`支持两种生命周期。
-
-- `Singleton`：单例注入，当注入，并且实例化以后，全局唯一实例。
-- `Transient`：瞬时注入，每次获取的实例都是新实例。
-
-对于这两种，熟悉IOC的同学，相信都知道到。
-
-:::tip 提示
-
-`Container`默认情况下不支持`Scoped`生命周期。所以如果需要，可以安装`TouchSocket.Core.DependencyInjection`实现。
-
-:::  
-
-## 六、使用ServiceCollection
-
-首先，需要安装NuGet包：`TouchSocket.Core.DependencyInjection`。
-
-然后直接使用`AspNetCoreContainer`替代`Container`。
-
-```csharp showLineNumbers
-static IContainer GetContainer()
-{
-    //return new Container();//默认IOC容器
-
-    return new AspNetCoreContainer(new ServiceCollection());//使用Aspnetcore的容器
-}
-```
-
-Config使用
-
-```csharp showLineNumbers
-var config=new TouchSocketConfig()//载入配置
-                .UseAspNetCoreContainer(new ServiceCollection());//ServiceCollection可以使用现有的
-```
-
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/IocConsoleApp)
+<CardLink link="examples/Core/IocConsoleApp"/>

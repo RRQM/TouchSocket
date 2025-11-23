@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
@@ -33,12 +32,12 @@ public interface IWebSocketClient : IDependencyClient, IClosableClient, ISetupCo
     /// <summary>
     /// 表示完成握手后。
     /// </summary>
-    HttpContextEventHandler<IWebSocketClient> Handshaked { get; set; }
+    HttpContextEventHandler<IWebSocketClient> Connected { get; set; }
 
     /// <summary>
     /// 表示在即将握手连接时。
     /// </summary>
-    HttpContextEventHandler<IWebSocketClient> Handshaking { get; set; }
+    HttpContextEventHandler<IWebSocketClient> Connecting { get; set; }
 
     /// <summary>
     /// 收到WebSocket数据

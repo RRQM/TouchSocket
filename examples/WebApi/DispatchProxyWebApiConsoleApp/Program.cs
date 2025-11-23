@@ -18,6 +18,7 @@ namespace DispatchProxyWebApiConsoleApp;
 
 internal class Program
 {
+    #region WebApi客户端DispatchProxy代理调用
     /// <summary>
     /// 使用DispatchProxy生成调用代理
     /// </summary>
@@ -37,8 +38,10 @@ internal class Program
             Console.WriteLine(sum);
         }
     }
+    #endregion
 }
 
+#region WebApi客户端DispatchProxy代理类实现
 /// <summary>
 /// 新建一个类，继承WebApiDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
@@ -59,7 +62,7 @@ internal class MyWebApiDispatchProxy : WebApiDispatchProxy
             .SetRemoteIPHost("127.0.0.1:7789")
             .ConfigurePlugins(a =>
             {
-                a.UseTcpReconnection();
+                a.UseReconnection<WebApiClient>();
             }));
         client.ConnectAsync();
         Console.WriteLine("连接成功");
@@ -71,7 +74,9 @@ internal class MyWebApiDispatchProxy : WebApiDispatchProxy
         return this.m_client;
     }
 }
+#endregion
 
+#region WebApi客户端DispatchProxy代理接口定义
 internal interface IApiServer
 {
     [Router("ApiServer/[action]ab")]
@@ -79,3 +84,4 @@ internal interface IApiServer
     [WebApi(Method = HttpMethodType.Get)]
     int Sum(int a, int b);
 }
+#endregion

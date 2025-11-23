@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
@@ -27,7 +21,6 @@ public class HttpRequest : HttpBase
 {
     private readonly bool m_isServer;
     private readonly InternalHttpParams m_query = new InternalHttpParams();
-    private ReadOnlyMemory<byte> m_contentMemory;
     private string m_relativeURL = "/";
     private string m_url = "/";
 
@@ -39,18 +32,7 @@ public class HttpRequest : HttpBase
     /// </remarks>
     public HttpRequest()
     {
-        // 初始化时，设置m_isServer为false，表示当前请求不是由服务器发起的。
         this.m_isServer = false;
-        // 初始化时，设置m_canRead为false，表示当前请求不能读取数据。
-    }
-
-    /// <summary>
-    /// 初始化 HttpRequest 实例。
-    /// </summary>
-    /// <param name="httpClientBase">提供底层 HTTP 通信功能的 HttpClientBase 实例。</param>
-    [Obsolete("此构造函数已被弃用，请使用无参构造函数代替", true)]
-    public HttpRequest(HttpClientBase httpClientBase)
-    {
     }
 
     internal HttpRequest(HttpSessionClient httpSessionClient)
@@ -59,20 +41,7 @@ public class HttpRequest : HttpBase
     }
 
     /// <inheritdoc/>
-    public override HttpContent Content
-    {
-        get => base.Content;
-        set
-        {
-            if (value is ReadonlyMemoryHttpContent readonlyMemoryHttpContent)
-            {
-                this.ContentLength = readonlyMemoryHttpContent.Memory.Length;
-                this.ContentCompleted = true;
-                this.m_contentMemory = readonlyMemoryHttpContent.Memory;
-            }
-            base.Content = value;
-        }
-    }
+    public override bool IsServer => this.m_isServer;
 
     /// <summary>
     /// 保持连接。
@@ -86,8 +55,8 @@ public class HttpRequest : HttpBase
         {
             var keepAlive = this.Headers.Get(HttpHeaders.Connection);
             return this.ProtocolVersion == "1.0"
-                ? !keepAlive.IsNullOrEmpty() && keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
-                : keepAlive.IsNullOrEmpty() || keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+                ? !keepAlive.IsEmpty && keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
+                : keepAlive.IsEmpty || keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
         }
         set
         {
@@ -112,10 +81,6 @@ public class HttpRequest : HttpBase
         }
     }
 
-
-    /// <inheritdoc/>
-    public override bool IsServer => this.m_isServer;
-
     /// <summary>
     /// HTTP请求方式。
     /// </summary>
@@ -129,7 +94,7 @@ public class HttpRequest : HttpBase
     /// <summary>
     /// 相对路径（不含参数）
     /// </summary>
-    public string RelativeURL { get => this.m_relativeURL; }
+    public string RelativeURL => this.m_relativeURL;
 
     /// <summary>
     /// Url全地址，包含参数
@@ -139,90 +104,21 @@ public class HttpRequest : HttpBase
         get => this.m_url;
         set
         {
-            // 确保URL以斜杠开始，如果不是，则添加斜杠
-            this.m_url = value.StartsWith("/") ? value : $"/{value}";
-            // 解析设置后的URL，以进行进一步的操作
+            this.m_url = value;
             this.ParseUrl(this.m_url.AsSpan());
         }
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
     {
-        if (!this.ContentCompleted.HasValue)
-        {
-            if (!this.IsServer)
-            {
-                //非Server模式下不允许获取
-                return default;
-            }
-            if (this.ContentLength == 0)
-            {
-                this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
-                this.ContentCompleted = true;
-                return this.m_contentMemory;
-            }
-
-            if (this.ContentLength > MaxCacheSize)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
-            }
-
-            try
-            {
-                using (var memoryStream = new MemoryStream((int)this.ContentLength))
-                {
-                    while (true)
-                    {
-                        using (var blockResult = await this.ReadAsync(cancellationToken))
-                        {
-                            var segment = blockResult.Memory.GetArray();
-                            if (blockResult.IsCompleted)
-                            {
-                                break;
-                            }
-                            memoryStream.Write(segment.Array, segment.Offset, segment.Count);
-                        }
-                    }
-                    this.ContentCompleted = true;
-                    this.m_contentMemory = memoryStream.ToArray();
-                    return this.m_contentMemory;
-                }
-            }
-            catch
-            {
-                this.ContentCompleted = false;
-                return default;
-            }
-            finally
-            {
-            }
-        }
-        else
-        {
-            return this.ContentCompleted == true ? this.m_contentMemory : default;
-        }
+        throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<IReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
     {
-        if (this.ContentLength == 0)
-        {
-            return HttpReadOnlyMemoryBlockResult.Completed;
-        }
-        if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
-        {
-            return HttpReadOnlyMemoryBlockResult.FromResult(this.m_contentMemory);
-        }
-
-        var blockResult = await base.ReadAsync(cancellationToken);
-        if (blockResult.IsCompleted)
-        {
-            this.ContentCompleted = true;
-        }
-
-        return blockResult;
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -238,66 +134,57 @@ public class HttpRequest : HttpBase
         return this;
     }
 
-    internal void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    internal void BuildHeader<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        byteBlock.WriteNormalString(this.Method.ToString(), Encoding.UTF8);//Get
-        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-        TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, this.RelativeURL);
+        WriterExtension.WriteNormalString(ref writer, this.Method.ToString(), Encoding.UTF8);//Get
+        TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+        TouchSocketHttpUtility.AppendUtf8String(ref writer, this.RelativeURL);
         if (this.m_query.Count > 0)
         {
-            TouchSocketHttpUtility.AppendQuestionMark(ref byteBlock);
+            TouchSocketHttpUtility.AppendQuestionMark(ref writer);
             var i = 0;
             foreach (var item in this.m_query.Keys)
             {
-                byteBlock.WriteNormalString(item, Encoding.UTF8);
-                TouchSocketHttpUtility.AppendEqual(ref byteBlock);
+                WriterExtension.WriteNormalString(ref writer, item, Encoding.UTF8);
+                TouchSocketHttpUtility.AppendEqual(ref writer);
                 var value = this.m_query[item];
-                if (value.HasValue())
+                if (!value.IsEmpty)
                 {
-                    byteBlock.WriteNormalString(Uri.EscapeDataString(value), Encoding.UTF8);
+                    WriterExtension.WriteNormalString(ref writer, Uri.EscapeDataString(value), Encoding.UTF8);
                 }
 
                 if (++i < this.m_query.Count)
                 {
-                    TouchSocketHttpUtility.AppendAnd(ref byteBlock);
+                    TouchSocketHttpUtility.AppendAnd(ref writer);
                 }
             }
         }
-        TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-        TouchSocketHttpUtility.AppendHTTP(ref byteBlock);//HTTP
-        TouchSocketHttpUtility.AppendSlash(ref byteBlock);//斜杠
-        byteBlock.WriteNormalString(this.ProtocolVersion, Encoding.UTF8);//1.1
-        TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
+        TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+        TouchSocketHttpUtility.AppendHTTP(ref writer);//HTTP
+        TouchSocketHttpUtility.AppendSlash(ref writer);//斜杠
+        WriterExtension.WriteNormalString(ref writer, this.ProtocolVersion, Encoding.UTF8);//1.1
+        TouchSocketHttpUtility.AppendRn(ref writer);//换行
 
         foreach (var headerKey in this.Headers.Keys)
         {
-            byteBlock.WriteNormalString(headerKey, Encoding.UTF8);//key
-            TouchSocketHttpUtility.AppendColon(ref byteBlock);//冒号
-            TouchSocketHttpUtility.AppendSpace(ref byteBlock);//空格
-            byteBlock.WriteNormalString(this.Headers[headerKey], Encoding.UTF8);//value
-            TouchSocketHttpUtility.AppendRn(ref byteBlock);//换行
+            WriterExtension.WriteNormalString(ref writer, headerKey, Encoding.UTF8);//key
+            TouchSocketHttpUtility.AppendColon(ref writer);//冒号
+            TouchSocketHttpUtility.AppendSpace(ref writer);//空格
+            WriterExtension.WriteNormalString(ref writer, this.Headers[headerKey], Encoding.UTF8);//value
+            TouchSocketHttpUtility.AppendRn(ref writer);//换行
         }
 
-        TouchSocketHttpUtility.AppendRn(ref byteBlock);
+        TouchSocketHttpUtility.AppendRn(ref writer);
     }
 
     /// <inheritdoc/>
-    internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
+    protected internal override void Reset()
     {
-        this.m_contentMemory = content;
-        this.ContentLength = content.Length;
-        this.ContentCompleted = true;
-    }
+        base.Reset();
 
-    /// <inheritdoc/>
-    internal override void ResetHttp()
-    {
-        base.ResetHttp();
-        this.m_contentMemory = null;
-        //this.m_sentHeader = false;
         this.m_relativeURL = "/";
         this.m_url = "/";
-        //this.m_sentLength = 0;
+
         this.m_query.Clear();
     }
 

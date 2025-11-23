@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 internal class WaitSmallFilePackage : WaitRouterPackage
@@ -23,21 +21,56 @@ internal class WaitSmallFilePackage : WaitRouterPackage
     public Metadata Metadata { get; set; }
     public string Path { get; set; }
 
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
-        byteBlock.WriteString(this.Path);
-        byteBlock.WritePackage(this.Metadata);
-        byteBlock.WritePackage(this.FileInfo);
-        byteBlock.WriteBytesPackage(this.Data, 0, this.Len);
+        base.PackageBody(ref writer);
+        WriterExtension.WriteString(ref writer, this.Path);
+        if (this.Metadata is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+            WriterExtension.WriteNotNull(ref writer);
+            this.Metadata.Package(ref writer);
+        }
+
+        if (this.FileInfo is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+            WriterExtension.WriteNotNull(ref writer);
+            this.FileInfo.Package(ref writer);
+        }
+
+        WriterExtension.WriteByteSpan(ref writer, new System.ReadOnlySpan<byte>(this.Data, 0, this.Len));
     }
 
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
-        this.Path = byteBlock.ReadString();
-        this.Metadata = byteBlock.ReadPackage<Metadata>();
-        this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-        this.Data = byteBlock.ReadBytesPackage();
+        base.UnpackageBody(ref reader);
+        this.Path = ReaderExtension.ReadString(ref reader);
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.Metadata = null;
+        }
+        else
+        {
+            this.Metadata = new Metadata();
+            this.Metadata.Unpackage(ref reader);
+        }
+
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.FileInfo = null;
+        }
+        else
+        {
+            this.FileInfo = new RemoteFileInfo();
+            this.FileInfo.Unpackage(ref reader);
+        }
+        this.Data = ReaderExtension.ReadByteSpan(ref reader).ToArray();
     }
 }

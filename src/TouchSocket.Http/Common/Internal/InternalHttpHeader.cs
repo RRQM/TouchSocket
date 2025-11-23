@@ -10,41 +10,29 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
-internal sealed class InternalHttpHeader : Dictionary<string, string>, IHttpHeader
+internal sealed class InternalHttpHeader : InternalHttpCollection, IHttpHeader
 {
     public InternalHttpHeader() : base(StringComparer.OrdinalIgnoreCase)
     {
     }
 
-    public new string this[string key]
+    public bool Contains(string key, TextValues value, bool ignoreCase = true)
     {
-        get
-        {
-            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
-            return this.TryGetValue(key, out var value) ? value : null;
-        }
-        set
-        {
-            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
-            base[key] = value;
-        }
-    }
+        ThrowHelper.ThrowIfNull(key, nameof(key));
 
-    public new void Add(string key, string value)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
-        base[key] = value; // 直接覆盖，避免二次查找
-    }
+        if (!TryGetValue(key, out var headerValue))
+        {
+            return false;
+        }
 
-    public string Get(string key)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
-        return this.TryGetValue(key, out var value) ? value : null;
+        if (value == TextValues.Empty)
+        {
+            return headerValue == TextValues.Empty;
+        }
+
+        var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(headerValue, value, comparison);
     }
 }

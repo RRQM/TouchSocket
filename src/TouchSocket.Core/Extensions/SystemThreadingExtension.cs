@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -53,13 +50,13 @@ public static class SystemThreadingExtension
     /// </summary>
     /// <param name="semaphoreSlim">要等待的信号量。</param>
     /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
-    /// <param name="token">用于取消操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>
     /// <remarks>
     /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
     /// </remarks>
-    public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+    public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        if (!semaphoreSlim.Wait(millisecondsTimeout, token))
+        if (!semaphoreSlim.Wait(millisecondsTimeout, cancellationToken))
         {
             ThrowHelper.ThrowTimeoutException();
         }
@@ -70,14 +67,14 @@ public static class SystemThreadingExtension
     /// </summary>
     /// <param name="semaphoreSlim">要等待的信号量。</param>
     /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
-    /// <param name="token">用于取消操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>
     /// <returns>一个Task对象，表示异步等待操作。</returns>
     /// <remarks>
     /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
     /// </remarks>
-    public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+    public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
             ThrowHelper.ThrowTimeoutException();
         }
@@ -87,13 +84,13 @@ public static class SystemThreadingExtension
     /// 异步等待信号量并返回结果，支持取消令牌。  
     /// </summary>  
     /// <param name="semaphoreSlim">要等待的信号量。</param>  
-    /// <param name="token">用于取消操作的取消令牌。</param>  
+    /// <param name="cancellationToken">用于取消操作的取消令牌。</param>  
     /// <returns>一个 <see cref="Result"/> 对象，表示操作的结果。</returns>  
-    public static async Task<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken token)
+    public static async ValueTask<Result> WaitResultAsync(this SemaphoreSlim semaphoreSlim, CancellationToken cancellationToken)
     {
         try
         {
-            await semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (OperationCanceledException)
@@ -182,7 +179,7 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// 配置ConfigureAwait为false。
+    /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="task"></param>
@@ -194,7 +191,7 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// 配置ConfigureAwait为false。
+    /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
     /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -228,7 +225,7 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// 同步获取配置ConfigureAwait为false时的结果。
+    /// 同步获取配置ConfigureAwait为<see langword="false"/>时的结果。
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="task"></param>
@@ -240,7 +237,7 @@ public static class SystemThreadingExtension
     }
 
     /// <summary>
-    /// 同步配置ConfigureAwait为false时的执行。
+    /// 同步配置ConfigureAwait为<see langword="false"/>时的执行。
     /// </summary>
     /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -332,4 +329,239 @@ public static class SystemThreadingExtension
     }
 #endif
     #endregion Task
+
+    #region CancellationTokenSource
+    /// <summary>
+    /// 获取 <see cref="CancellationToken"/>，如果 <paramref name="tokenSource"/> 为 null，则返回一个已取消的 <see cref="CancellationToken"/>。
+    /// </summary>
+    /// <param name="tokenSource">用于生成 <see cref="CancellationToken"/> 的 <see cref="CancellationTokenSource"/>。</param>
+    /// <returns>返回一个 <see cref="CancellationToken"/>。</returns>
+    public static CancellationToken GetTokenOrCanceled(this CancellationTokenSource tokenSource)
+    {
+        if (tokenSource is null)
+        {
+            // 如果 tokenSource 为 null，则返回一个已取消的 CancellationToken
+            return new CancellationToken(canceled: true);
+        }
+        // 如果 tokenSource 不为 null，则返回其 Token 属性
+        return tokenSource.Token;
+    }
+
+
+    /// <summary>
+    /// 安全地取消 <see cref="CancellationTokenSource"/>，并返回操作结果。
+    /// </summary>
+    /// <param name="tokenSource">要取消的 <see cref="CancellationTokenSource"/>。</param>
+    /// <returns>一个 <see cref="Result"/> 对象，表示操作的结果。</returns>
+    public static Result SafeCancel(this CancellationTokenSource tokenSource)
+    {
+        if (tokenSource is null)
+        {
+            return Result.Success;
+        }
+        try
+        {
+            tokenSource.Cancel();
+            return Result.Success;
+        }
+        catch (ObjectDisposedException)
+        {
+            return Result.Disposed;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+    #endregion
+
+    #region MyRegion
+    /// <summary>
+    /// Optimistically performs some value transformation based on some field and tries to apply it back to the field,
+    /// retrying as many times as necessary until no other thread is manipulating the same field.
+    /// </summary>
+    /// <typeparam name="T">The type of data.</typeparam>
+    /// <param name="hotLocation">The field that may be manipulated by multiple threads.</param>
+    /// <param name="applyChange">A function that receives the unchanged value and returns the changed value.</param>
+    /// <returns>
+    /// <see langword="true" /> if the location's value is changed by applying the result of the <paramref name="applyChange"/> function;
+    /// <see langword="false" /> if the location's value remained the same because the last invocation of <paramref name="applyChange"/> returned the existing value.
+    /// </returns>
+    public static bool ApplyChangeOptimistically<T>(ref T hotLocation, Func<T, T> applyChange)
+        where T : class
+    {
+
+        bool successful;
+        do
+        {
+            var oldValue = Volatile.Read(ref hotLocation);
+            var newValue = applyChange(oldValue);
+            if (object.ReferenceEquals(oldValue, newValue))
+            {
+                // No change was actually required.
+                return false;
+            }
+
+            var actualOldValue = Interlocked.CompareExchange<T>(ref hotLocation, newValue, oldValue);
+            successful = object.ReferenceEquals(oldValue, actualOldValue);
+        }
+        while (!successful);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Optimistically performs some value transformation based on some field and tries to apply it back to the field,
+    /// retrying as many times as necessary until no other thread is manipulating the same field.
+    /// </summary>
+    /// <remarks>
+    /// Use this overload when <paramref name="applyChange"/> requires a single item, as is common when updating immutable
+    /// collection types. By passing the item as a method operand, the caller may be able to avoid allocating a closure
+    /// object for every call.
+    /// </remarks>
+    /// <typeparam name="T">The type of data to apply the change to.</typeparam>
+    /// <typeparam name="TArg">The type of argument passed to the <paramref name="applyChange" />.</typeparam>
+    /// <param name="hotLocation">The field that may be manipulated by multiple threads.</param>
+    /// <param name="applyChangeArgument">An argument to pass to <paramref name="applyChange"/>.</param>
+    /// <param name="applyChange">A function that receives both the unchanged value and <paramref name="applyChangeArgument"/>, then returns the changed value.</param>
+    /// <returns>
+    /// <see langword="true" /> if the location's value is changed by applying the result of the <paramref name="applyChange"/> function;
+    /// <see langword="false" /> if the location's value remained the same because the last invocation of <paramref name="applyChange"/> returned the existing value.
+    /// </returns>
+    public static bool ApplyChangeOptimistically<T, TArg>(ref T hotLocation, TArg applyChangeArgument, Func<T, TArg, T> applyChange)
+        where T : class
+    {
+        bool successful;
+        do
+        {
+            var oldValue = Volatile.Read(ref hotLocation);
+            var newValue = applyChange(oldValue, applyChangeArgument);
+            if (object.ReferenceEquals(oldValue, newValue))
+            {
+                // No change was actually required.
+                return false;
+            }
+
+            var actualOldValue = Interlocked.CompareExchange<T>(ref hotLocation, newValue, oldValue);
+            successful = object.ReferenceEquals(oldValue, actualOldValue);
+        }
+        while (!successful);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
+    /// </summary>
+    /// <typeparam name="T">The type of value returned by the task.</typeparam>
+    /// <param name="task">The task to wrap.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
+    /// <returns>The wrapping task.</returns>
+    public static Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
+    {
+
+        if (!cancellationToken.CanBeCanceled || task.IsCompleted)
+        {
+            return task;
+        }
+
+        return cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled<T>(cancellationToken)
+            : WithCancellationSlow(task, cancellationToken);
+    }
+
+    /// <summary>
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
+    /// </summary>
+    /// <param name="task">The task to wrap.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
+    /// <returns>The wrapping task.</returns>
+    public static Task WithCancellation(this Task task, CancellationToken cancellationToken)
+    {
+
+        if (!cancellationToken.CanBeCanceled || task.IsCompleted)
+        {
+            return task;
+        }
+
+        return cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled(cancellationToken)
+            : WithCancellationSlow(task, continueOnCapturedContext: false, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
+    /// </summary>
+    /// <param name="task">The task to wrap.</param>
+    /// <param name="continueOnCapturedContext">A value indicating whether *internal* continuations required to respond to cancellation should run on the current <see cref="SynchronizationContext"/>.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
+    /// <returns>The wrapping task.</returns>
+    internal static Task WithCancellation(this Task task, bool continueOnCapturedContext, CancellationToken cancellationToken)
+    {
+        if (!cancellationToken.CanBeCanceled || task.IsCompleted)
+        {
+            return task;
+        }
+
+        return cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled(cancellationToken)
+            : WithCancellationSlow(task, continueOnCapturedContext, cancellationToken);
+    }
+
+
+    /// <summary>
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
+    /// </summary>
+    /// <typeparam name="T">The type of value returned by the task.</typeparam>
+    /// <param name="task">The task to wrap.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
+    /// <returns>The wrapping task.</returns>
+    private static async Task<T> WithCancellationSlow<T>(Task<T> task, CancellationToken cancellationToken)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        using (cancellationToken.Register(s => ((TaskCompletionSource<bool>)s!).TrySetResult(true), tcs))
+        {
+            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(false))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        // Rethrow any fault/cancellation exception, even if we awaited above.
+        // But if we skipped the above if branch, this will actually yield
+        // on an incompleted task.
+        return await task.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Wraps a task with one that will complete as cancelled based on a cancellation cancellationToken,
+    /// allowing someone to await a task but be able to break out early by cancelling the cancellationToken.
+    /// </summary>
+    /// <param name="task">The task to wrap.</param>
+    /// <param name="continueOnCapturedContext">A value indicating whether *internal* continuations required to respond to cancellation should run on the current <see cref="SynchronizationContext"/>.</param>
+    /// <param name="cancellationToken">The cancellationToken that can be canceled to break out of the await.</param>
+    /// <returns>The wrapping task.</returns>
+    private static async Task WithCancellationSlow(this Task task, bool continueOnCapturedContext, CancellationToken cancellationToken)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        using (cancellationToken.Register(s => ((TaskCompletionSource<bool>)s!).TrySetResult(true), tcs))
+        {
+            if (task != await Task.WhenAny(task, tcs.Task).ConfigureAwait(continueOnCapturedContext))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        // Rethrow any fault/cancellation exception, even if we awaited above.
+        // But if we skipped the above if branch, this will actually yield
+        // on an incompleted task.
+        await task.ConfigureAwait(continueOnCapturedContext);
+    }
+
+
+    #endregion
 }

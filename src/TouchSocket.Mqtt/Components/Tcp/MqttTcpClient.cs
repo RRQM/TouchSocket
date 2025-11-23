@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -20,6 +17,8 @@ namespace TouchSocket.Mqtt;
 public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 {
     private readonly MqttClientActor m_mqttActor;
+
+    private MqttAdapter m_mqttAdapter;
 
     public MqttTcpClient()
     {
@@ -56,9 +55,24 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
         await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message)
+    private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(message);
+        if (message.MessageType == MqttMessageType.Connect)
+        {
+            this.m_mqttAdapter.Version = message.Version;
+        }
+        var locker = base.Transport.WriteLocker;
+        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            var writer = new PipeBytesWriter(base.Transport.Writer);
+            message.Build(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            locker.Release();
+        }
     }
 
     #endregion MqttActor
@@ -67,15 +81,15 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     public override bool Online => base.Online && this.m_mqttActor.Online;
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
             if (this.Online)
             {
-                await this.m_mqttActor.DisconnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_mqttActor.DisconnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
         }
@@ -86,7 +100,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     }
 
     /// <inheritdoc/>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
         if (this.Online)
         {
@@ -94,42 +108,42 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
         }
 
         var mqttConnectOptions = this.Config.GetValue(MqttConfigExtension.MqttConnectOptionsProperty);
-        ThrowHelper.ThrowArgumentNullExceptionIf(mqttConnectOptions, nameof(mqttConnectOptions));
+        ThrowHelper.ThrowIfNull(mqttConnectOptions, nameof(mqttConnectOptions));
 
         var connectMessage = new MqttConnectMessage(mqttConnectOptions);
 
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
 
-        await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    public async Task PingAsync(int timeout = 5000, CancellationToken token = default)
+    public ValueTask<Result> PingAsync(CancellationToken cancellationToken = default)
     {
-        await this.m_mqttActor.PingAsync(timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.PingAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task PublishAsync(MqttPublishMessage mqttMessage)
+    public Task PublishAsync(MqttPublishMessage mqttMessage, CancellationToken cancellationToken = default)
     {
-        await this.m_mqttActor.PublishAsync(mqttMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.PublishAsync(mqttMessage, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message)
+    public Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken cancellationToken = default)
     {
         //订阅
-        return await this.m_mqttActor.SubscribeAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.SubscribeAsync(message, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message)
+    public Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken = default)
     {
-        return await this.m_mqttActor.UnsubscribeAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return this.m_mqttActor.UnsubscribeAsync(message, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -143,7 +157,8 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.SetAdapter(new MqttAdapter());
+        this.m_mqttAdapter = new MqttAdapter();
+        this.SetAdapter(this.m_mqttAdapter);
     }
 
     /// <inheritdoc/>
@@ -153,7 +168,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
         {
             await this.PluginManager.RaiseAsync(typeof(IMqttReceivingPlugin), this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await this.m_mqttActor.InputMqttMessageAsync(mqttMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

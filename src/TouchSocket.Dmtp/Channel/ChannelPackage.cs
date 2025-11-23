@@ -10,49 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
+using System.Buffers;
 
 namespace TouchSocket.Dmtp;
 
-internal enum ChannelDataType : byte
+internal class ChannelPackage : MsgRouterPackage, IDisposable
 {
-    DataOrder,
-    CompleteOrder,
-    CancelOrder,
-    DisposeOrder,
-    HoldOnOrder,
-    QueueRun,
-    QueuePause
-}
+    private IMemoryOwner<byte> m_memoryOwner;
 
-internal class ChannelPackage : MsgRouterPackage
-{
     public int ChannelId { get; set; }
-    public ByteBlock Data { get; set; }
+    public ReadOnlyMemory<byte> Data { get; set; }
     public ChannelDataType DataType { get; set; }
-    public bool RunNow { get; set; }
+
+    public void Dispose()
+    {
+        this.m_memoryOwner?.Dispose();
+    }
 
     public int GetLen()
     {
-        return this.Data == null ? 1024 : this.Data.Length + 1024;
+        return this.Data.Length + 1024;
     }
 
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
-        byteBlock.WriteBoolean(this.RunNow);
-        byteBlock.WriteByte((byte)this.DataType);
-        byteBlock.WriteInt32(this.ChannelId);
-
-        byteBlock.WriteByteBlock(this.Data);
+        base.PackageBody(ref writer);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.DataType);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ChannelId);
+        WriterExtension.WriteByteSpan(ref writer, this.Data.Span);
     }
 
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
-        this.RunNow = byteBlock.ReadBoolean();
-        this.DataType = (ChannelDataType)byteBlock.ReadByte();
-        this.ChannelId = byteBlock.ReadInt32();
-        this.Data = byteBlock.ReadByteBlock();
+        base.UnpackageBody(ref reader);
+        this.DataType = (ChannelDataType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.ChannelId = ReaderExtension.ReadValue<TReader, int>(ref reader);
+
+        var dataSpan = ReaderExtension.ReadByteSpan(ref reader);
+
+        this.m_memoryOwner = MemoryPool<byte>.Shared.Rent(dataSpan.Length);
+        dataSpan.CopyTo(this.m_memoryOwner.Memory.Span);
+        this.Data = this.m_memoryOwner.Memory.Slice(0, dataSpan.Length);
     }
 }

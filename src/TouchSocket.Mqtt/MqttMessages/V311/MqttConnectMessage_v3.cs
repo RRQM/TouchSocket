@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -61,7 +59,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
         this.WillMessageExpiryInterval = options.WillMessageExpiryInterval;
         this.WillPayloadFormatIndicator = options.WillPayloadFormatIndicator;
 
-        this.WillMessage = options.WillMessage;
+        this.WillPayload = options.WillPayload;
         this.WillTopic = options.WillTopic;
 
         foreach (var item in options.UserProperties.GetSafeEnumerator())
@@ -122,28 +120,28 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     public string UserName { get; private set; }
 
     /// <inheritdoc/>
-    public override void Unpack<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpack<TReader>(ref TReader reader)
     {
-        var firstByte = byteBlock.ReadByte();
+        var firstByte = ReaderExtension.ReadValue<TReader, byte>(ref reader);
         this.SetFlags((byte)firstByte.GetLow4());
-        this.RemainingLength = MqttExtension.ReadVariableByteInteger(ref byteBlock);
+        this.RemainingLength = MqttExtension.ReadVariableByteInteger(ref reader);
 
-        this.ProtocolName = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        this.ProtocolName = MqttExtension.ReadMqttInt16String(ref reader);
 
-        this.Version = (MqttProtocolVersion)byteBlock.ReadByte();
+        this.Version = (MqttProtocolVersion)ReaderExtension.ReadValue<TReader, byte>(ref reader);
 
-        this.m_connectFlags = byteBlock.ReadByte();
-        this.KeepAlive = byteBlock.ReadUInt16(EndianType.Big);
+        this.m_connectFlags = ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.KeepAlive = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
 
         switch (this.Version)
         {
             case MqttProtocolVersion.V310:
             case MqttProtocolVersion.V311:
-                this.UnpackWithMqtt3(ref byteBlock);
+                this.UnpackWithMqtt3(ref reader);
                 break;
 
             case MqttProtocolVersion.V500:
-                this.UnpackWithMqtt5(ref byteBlock);
+                this.UnpackWithMqtt5(ref reader);
                 break;
 
             case MqttProtocolVersion.Unknown:
@@ -154,27 +152,27 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.ProtocolName);
-        byteBlock.WriteByte((byte)this.Version);
-        byteBlock.WriteByte(this.m_connectFlags);
-        byteBlock.WriteUInt16(this.KeepAlive, EndianType.Big);
+        MqttExtension.WriteMqttInt16String(ref writer, this.ProtocolName);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Version);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.m_connectFlags);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.KeepAlive, EndianType.Big);
 
-        MqttExtension.WriteMqttInt16String(ref byteBlock, this.ClientId);
+        MqttExtension.WriteMqttInt16String(ref writer, this.ClientId);
         if (this.WillFlag)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.WillTopic);
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.WillMessage);
+            MqttExtension.WriteMqttInt16String(ref writer, this.WillTopic);
+            MqttExtension.WriteMqttInt16Memory(ref writer, this.WillPayload);
         }
 
         if (this.UserNameFlag)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.UserName);
+            MqttExtension.WriteMqttInt16String(ref writer, this.UserName);
         }
         if (this.PasswordFlag)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, this.Password);
+            MqttExtension.WriteMqttInt16String(ref writer, this.Password);
         }
     }
 
@@ -217,7 +215,7 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     /// <summary>
     /// 获取或设置遗嘱消息。
     /// </summary>
-    public string WillMessage { get; set; }
+    public ReadOnlyMemory<byte> WillPayload { get; set; }
 
     /// <summary>
     /// 获取遗嘱服务质量级别。
@@ -237,23 +235,23 @@ public sealed partial class MqttConnectMessage : MqttUserPropertiesMessage
     #endregion ConnectFlags
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.ClientId = MqttExtension.ReadMqttInt16String(ref byteBlock);
+        this.ClientId = MqttExtension.ReadMqttInt16String(ref reader);
         if (this.WillFlag)
         {
-            this.WillTopic = MqttExtension.ReadMqttInt16String(ref byteBlock);
-            this.WillMessage = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.WillTopic = MqttExtension.ReadMqttInt16String(ref reader);
+            this.WillPayload = MqttExtension.ReadMqttInt16Memory(ref reader);
         }
 
         if (this.UserNameFlag)
         {
-            this.UserName = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.UserName = MqttExtension.ReadMqttInt16String(ref reader);
         }
 
         if (this.PasswordFlag)
         {
-            this.Password = MqttExtension.ReadMqttInt16String(ref byteBlock);
+            this.Password = MqttExtension.ReadMqttInt16String(ref reader);
         }
     }
 }

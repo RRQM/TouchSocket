@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi;
@@ -29,17 +24,6 @@ namespace TouchSocket.WebApi;
 public sealed class WebApiAttribute : RpcAttribute
 {
     /// <summary>
-    /// 构造函数，用于初始化WebApiAttribute对象并设置HTTP方法类型。
-    /// </summary>
-    /// <param name="method">指定HTTP请求的方法类型，如GET、POST等。</param>
-    [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-    public WebApiAttribute(HttpMethodType method) : this()
-    {
-        // 设置HTTP方法类型
-        this.Method = method;
-    }
-
-    /// <summary>
     /// 使用Get函数的WebApi特性
     /// </summary>
     public WebApiAttribute()
@@ -51,7 +35,7 @@ public sealed class WebApiAttribute : RpcAttribute
     /// <summary>
     /// 请求函数类型。
     /// </summary>
-    public HttpMethodType Method { get; set; }
+    public string Method { get; set; }
 
     /// <inheritdoc/>
     public override Type[] GetGenericConstraintTypes()
@@ -72,7 +56,7 @@ public sealed class WebApiAttribute : RpcAttribute
         var codeString = new StringBuilder();
 
         codeString.AppendLine("var _request=new WebApiRequest();");
-        codeString.AppendLine($"_request.Method = HttpMethodType.{webApiAttribute.Method};");
+        codeString.AppendLine($"_request.Method = \"{webApiAttribute.Method}\";");
         codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod, webApiParameterInfos)};");
         codeString.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
         codeString.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
@@ -256,7 +240,7 @@ public sealed class WebApiAttribute : RpcAttribute
         codeString.AppendLine("}");
 
         codeString.AppendLine("var _request=new WebApiRequest();");
-        codeString.AppendLine($"_request.Method = HttpMethodType.{webApiAttribute.Method};");
+        codeString.AppendLine($"_request.Method = \"{webApiAttribute.Method}\";");
         codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod, webApiParameterInfos)};");
         codeString.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
         codeString.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");

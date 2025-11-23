@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -45,7 +42,7 @@ public class StaticEntry
     /// <summary>
     /// 获取一个值，指示当前条目是否为字节缓存。
     /// </summary>
-    /// <value>如果条目的值非空，则为true；否则为false。</value>
+    /// <value>如果条目的值非空，则为<see langword="true"/>；否则为<see langword="false"/>。</value>
     public bool IsCacheBytes => this.Value != null;
 
     /// <summary>

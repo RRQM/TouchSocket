@@ -8,8 +8,8 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
 import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
-
-### 定义
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+import CardLink from '@site/src/components/CardLink';
 
 <TouchSocketRpcDefinition />
 
@@ -20,68 +20,29 @@ import { TouchSocketRpcDefinition } from "@site/src/components/Definition.js";
 
 当服务仅是一个实例类，则可以在`AddRpcStore`时，可通过`RpcStore`实例，直接注册服务。
 
-```csharp showLineNumbers
-public partial class MyRpcServer : SingletonRpcServer
-{
-    /// <summary>
-    /// 将两个数相加
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    public int Add(int a, int b)
-    {
-        var sum = a + b;
-        return sum;
-    }
-}
-```
+**服务定义：**
 
-```csharp {5,8} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRpcStore(store =>
-    {
-        store.RegisterServer<MyRpcServer>();
+<CustomCodeBlock region="Rpc服务类定义单例服务"/>
 
-        //或者按照类型注册
-        //store.RegisterServer(typeof(MyRpcServer));
-    });
-})
-```
+**服务注册：**
+
+<CustomCodeBlock region="Rpc注册实例服务"/>
+
+<CardLink link="examples/Rpc/RpcRegisterConsoleApp"/>
 
 ### 1.2 注册接口服务
 
 当服务是一个接口时，则可以在`AddRpcStore`时，通过`RpcStore`实例，按注册接口与实例服务。
 
-```csharp showLineNumbers
-public interface IMyRpcServer2 : ISingletonRpcServer
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    int Add(int a, int b);
-}
+**服务定义：**
 
-public partial class MyRpcServer2 : SingletonRpcServer, IMyRpcServer2
-{
-    public int Add(int a, int b)
-    {
-        var sum = a + b;
-        return sum;
-    }
-}
-```
+<CustomCodeBlock region="Rpc服务类定义接口服务"/>
 
-```csharp {5} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRpcStore(store =>
-    {
-        store.RegisterServer<IMyRpcServer2, MyRpcServer2>();
-    });
-})
-```
+**服务注册：**
+
+<CustomCodeBlock region="Rpc注册接口服务"/>
+
+<CardLink link="examples/Rpc/RpcRegisterConsoleApp"/>
 
 :::tip 提示
 
@@ -96,102 +57,31 @@ public partial class MyRpcServer2 : SingletonRpcServer, IMyRpcServer2
 - 注册为瞬态的服务，在每次调用时，都会创建一个**新的服务实例**。瞬态服务可以直接通过`this.CallContext`获取调用上下文。
 - 注册为区域的服务，在每次调用时，也会创建一个**新的服务实例**，并且在区域可用时单例。区域服务也可以直接通过`this.CallContext`获取调用上下文。
 
-【瞬态服务】
-<Tabs
-    defaultValue="tab1"
-    values=
-    {[
-        { label: "常规",value: "tab1"},
-        { label: "泛型", value: "tab2" }
-    ]}
->
-<TabItem value="tab1">
-```csharp {7} showLineNumbers
-public partial class MyRpcServer : TransientRpcServer
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    public int Add(int a, int b)
-    {
-        var callContext= this.CallContext;
-        var sum = a + b;
-        return sum;
-    }
-}
-```
-</TabItem>
-<TabItem value="tab2">
-```csharp {1,7} showLineNumbers
-public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    public int Add(int a, int b)
-    {
-        var callContext= this.CallContext;
-        var sum = a + b;
-        return sum;
-    }
-}
-```
-</TabItem>
-</Tabs>
+**瞬态服务定义：**
 
+<CustomCodeBlock region="Rpc服务类定义瞬态服务"/>
 
-【区域服务】
-<Tabs
-    defaultValue="tab1"
-    values=
-    {[
-        { label: "常规",value: "tab1"},
-        { label: "泛型", value: "tab2" }
-    ]}
->
-<TabItem value="tab1">
-```csharp {7} showLineNumbers
-public partial class MyRpcServer : ScopedRpcServer
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    public int Add(int a, int b)
-    {
-        var callContext= this.CallContext;
-        var sum = a + b;
-        return sum;
-    }
-}
-```
-</TabItem>
-<TabItem value="tab2">
-```csharp {1,7} showLineNumbers
-public partial class MyRpcServer : ScopedRpcServer<IDmtpRpcCallContext>
-{
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    public int Add(int a, int b)
-    {
-        var callContext= this.CallContext;
-        var sum = a + b;
-        return sum;
-    }
-}
-```
-</TabItem>
-</Tabs>
+**瞬态服务注册：**
+
+<CustomCodeBlock region="Rpc注册瞬态服务"/>
+
+**区域服务定义：**
+
+<CustomCodeBlock region="Rpc服务类定义区域服务"/>
+
+**区域服务注册：**
+
+<CustomCodeBlock region="Rpc注册区域服务"/>
+
+<CardLink link="examples/Rpc/RpcRegisterConsoleApp"/>
 
 ## 二、注册所有服务
 
 ### 2.1 注册指定程序集的服务
 
-```csharp {5} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRpcStore(store =>
-    {
-        store.RegisterAllServer(typeof(MyRpcServer).Assembly);
-    });
-})
-```
+<CustomCodeBlock region="Rpc注册程序集所有服务"/>
+
+<CardLink link="examples/Rpc/RpcRegisterConsoleApp"/>
 
 ### 2.2 注册已加载程序集中的所有服务
 
@@ -244,46 +134,21 @@ public partial class MyRpcServer : ScopedRpcServer<IDmtpRpcCallContext>
 
 ### 3.2 注册指定程序集的服务
 
-```csharp {6,9} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddRpcStore(store =>
-    {
-        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有公共Rpc服务
-        store.RegisterAllFromDmtpRpcServerConsoleApp();
+<CustomCodeBlock region="Rpc源生成注册"/>
 
-        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有Rpc服务（包含非公共服务）
-        store.InternalRegisterAllFromDmtpRpcServerConsoleApp();
-    });
-})
-```
+<CardLink link="examples/Rpc/RpcRegisterConsoleApp"/>
 
 :::tip 提示
 
-源生成的注册方法名并不固定，而是与**程序集名称**有关，或者如果直接指定的话，则是指定的方法名。例如上程序，默认情况下，程序集名称为DmtpRpcServerConsoleApp，即生成`RegisterAllFromDmtpRpcServerConsoleApp`方法与`InternalRegisterAllFromDmtpRpcServerConsoleApp`方法。
+源生成的注册方法名并不固定，而是与**程序集名称**有关，或者如果直接指定的话，则是指定的方法名。例如上程序，默认情况下，程序集名称为RpcRegisterConsoleApp，即生成`RegisterAllFromRpcRegisterConsoleApp`方法与`InternalRegisterAllFromRpcRegisterConsoleApp`方法。
 
 :::  
 
 源生成的注册，支持接口与实例注册。例如下列服务：
 
-```csharp showLineNumbers
-public interface IMyRpcServer : ISingletonRpcServer
-{ 
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    int Add(int a, int b);
-}
+<CustomCodeBlock region="Rpc服务类定义接口服务"/>
 
-public partial class MyRpcServer : SingletonRpcServer,IMyRpcServer
-{
-    public int Add(int a, int b)
-    {
-        var sum = a + b;
-        return sum;
-    }
-}
-```
-
-在生成源代码注册时，会以`IMyRpcServer`接口为注册，以`MyRpcServer`为实现。生成以下注册代码：
+在生成源代码注册时，会以`IMyRpcServer2`接口为注册，以`MyRpcServer2`为实现。生成以下注册代码：
 
 ```csharp showLineNumbers
 /*
@@ -293,31 +158,31 @@ public partial class MyRpcServer : SingletonRpcServer,IMyRpcServer
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    /// RegisterRpcServerFromRpcRegisterConsoleAppExtension
     /// </summary>
-    public static class RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    public static class RegisterRpcServerFromRpcRegisterConsoleAppExtension
     {
         /// <summary>
-        /// 注册程序集DmtpRpcServerConsoleApp中的所有公共Rpc服务。包括：
+        /// 注册程序集RpcRegisterConsoleApp中的所有公共Rpc服务。包括：
         /// <list type="number">
-        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// <item><see cref="RpcRegisterConsoleApp.IMyRpcServer2"/>:<see cref="RpcRegisterConsoleApp.MyRpcServer2"/></item>
         /// </list>
         /// </summary>
         /// <param name="rpcStore"></param>
-        public static void RegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        public static void RegisterAllFromRpcRegisterConsoleApp(this RpcStore rpcStore)
         {
-            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+            rpcStore.RegisterServer<RpcRegisterConsoleApp.IMyRpcServer2,RpcRegisterConsoleApp.MyRpcServer2>();
         }
         /// <summary>
-        /// 注册程序集DmtpRpcServerConsoleApp中的所有Rpc服务。包括：
+        /// 注册程序集RpcRegisterConsoleApp中的所有Rpc服务。包括：
         /// <list type="number">
-        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// <item><see cref="RpcRegisterConsoleApp.IMyRpcServer2"/>:<see cref="RpcRegisterConsoleApp.MyRpcServer2"/></item>
         /// </list>
         /// </summary>
         /// <param name="rpcStore"></param>
-        internal static void InternalRegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        internal static void InternalRegisterAllFromRpcRegisterConsoleApp(this RpcStore rpcStore)
         {
-            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+            rpcStore.RegisterServer<RpcRegisterConsoleApp.IMyRpcServer2,RpcRegisterConsoleApp.MyRpcServer2>();
         }
     }
 }

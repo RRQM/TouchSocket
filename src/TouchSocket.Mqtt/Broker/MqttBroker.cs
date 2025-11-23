@@ -6,18 +6,11 @@
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
 //  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
+//交流QQ群：234762506
+// 感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
 
@@ -151,6 +144,7 @@ public class MqttBroker
         public Subscription(string clientId)
         {
             this.ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            this.QosLevel = default;
         }
 
         public string ClientId { get; }
@@ -183,7 +177,7 @@ public class MqttBroker
     }
 
     /// <summary>
-    /// 线程安全的主题-订阅者映射管理类（使用读写锁）
+    ///线程安全的主题-订阅者映射管理类（使用读写锁）
     /// </summary>
     private class ThreadSafeTopicSubscriptions
     {
@@ -201,11 +195,9 @@ public class MqttBroker
         /// </summary>
         /// <param name="topic">主题名称（非空）</param>
         /// <param name="subscriber">订阅者实例（非空）</param>
-        /// <exception cref="ArgumentException">主题名称为空</exception>
-        /// <exception cref="ArgumentNullException">订阅者为 null</exception>
         public void AddSubscriber(string topic, Subscription subscriber)
         {
-            this.ValidateTopic(topic);
+            ValidateTopic(topic);
 
             this.m_lock.EnterWriteLock();
             try
@@ -246,12 +238,9 @@ public class MqttBroker
         /// <summary>
         /// 移除指定主题的所有订阅者（保留空主题）
         /// </summary>
-        /// <param name="topic">主题名称（非空）</param>
-        /// <returns>是否成功移除（主题存在时为 true）</returns>
-        /// <exception cref="ArgumentException">主题名称为空</exception>
         public bool ClearTopic(string topic)
         {
-            this.ValidateTopic(topic);
+            ValidateTopic(topic);
 
             this.m_lock.EnterWriteLock();
             try
@@ -267,14 +256,9 @@ public class MqttBroker
         /// <summary>
         /// 检查指定主题是否包含特定订阅者
         /// </summary>
-        /// <param name="topic">主题名称（非空）</param>
-        /// <param name="subscriber">要检查的订阅者实例（非空）</param>
-        /// <returns>是否存在该订阅者</returns>
-        /// <exception cref="ArgumentException">主题名称为空</exception>
-        /// <exception cref="ArgumentNullException">订阅者为 null</exception>
         public bool ContainsSubscriber(string topic, Subscription subscriber)
         {
-            this.ValidateTopic(topic);
+            ValidateTopic(topic);
 
             this.m_lock.EnterReadLock();
             try
@@ -291,7 +275,6 @@ public class MqttBroker
         /// <summary>
         /// 获取所有存在的主题名称（返回只读副本）
         /// </summary>
-        /// <returns>主题名称的只读集合</returns>
         public IReadOnlyList<string> GetAllTopics()
         {
             this.m_lock.EnterReadLock();
@@ -307,24 +290,29 @@ public class MqttBroker
         }
 
         /// <summary>
-        /// 获取指定主题的所有订阅者（返回只读副本，防止外部修改）
+        /// 获取指定主题的所有订阅者（支持通配符匹配）
         /// </summary>
-        /// <param name="topic">主题名称（非空）</param>
-        /// <returns>订阅者集合的只读副本（可能为空）</returns>
-        /// <exception cref="ArgumentException">主题名称为空</exception>
         public IReadOnlyList<Subscription> GetSubscribers(string topic)
         {
-            this.ValidateTopic(topic);
+            ValidateTopic(topic);
 
             this.m_lock.EnterReadLock();
             try
             {
-                if (this.m_topicToSubscribers.TryGetValue(topic, out var subscribers))
+                var matchingSubscriptions = new List<Subscription>();
+
+                foreach (var kv in this.m_topicToSubscribers)
                 {
-                    // 返回副本确保线程安全（避免外部修改内部集合）
-                    return subscribers.ToArray();
+                    var subscriptionTopic = kv.Key;
+                    var subscribers = kv.Value;
+
+                    if (this.IsTopicMatch(topic, subscriptionTopic))
+                    {
+                        matchingSubscriptions.AddRange(subscribers);
+                    }
                 }
-                return [];
+
+                return matchingSubscriptions.ToArray();
             }
             finally
             {
@@ -335,14 +323,9 @@ public class MqttBroker
         /// <summary>
         /// 从指定主题移除订阅者
         /// </summary>
-        /// <param name="topic">主题名称（非空）</param>
-        /// <param name="subscriber">要移除的订阅者实例（非空）</param>
-        /// <returns>是否成功移除</returns>
-        /// <exception cref="ArgumentException">主题名称为空</exception>
-        /// <exception cref="ArgumentNullException">订阅者为 null</exception>
         public bool RemoveSubscriber(string topic, Subscription subscriber)
         {
-            this.ValidateTopic(topic);
+            ValidateTopic(topic);
 
             this.m_lock.EnterWriteLock();
             try
@@ -350,7 +333,6 @@ public class MqttBroker
                 if (this.m_topicToSubscribers.TryGetValue(topic, out var subscribers))
                 {
                     var isRemoved = subscribers.Remove(subscriber);
-                    // 如果主题已无订阅者，清理空主题
                     if (isRemoved && subscribers.Count == 0)
                     {
                         this.m_topicToSubscribers.Remove(topic);
@@ -365,17 +347,176 @@ public class MqttBroker
             }
         }
 
-        #region 辅助方法
+        // topic 匹配逻辑，支持 + 和 # 通配符
+        private bool IsTopicMatch(string publishTopic, string subscriptionTopic)
+        {
+            if (subscriptionTopic.IndexOf('+') < 0 && subscriptionTopic.IndexOf('#') < 0)
+            {
+                return string.Equals(publishTopic, subscriptionTopic, StringComparison.Ordinal);
+            }
 
-        private void ValidateTopic(string topic)
+            return this.CompareTopicWithWildcard(publishTopic, subscriptionTopic);
+        }
+
+        private bool CompareTopicWithWildcard(ReadOnlySpan<char> topic, ReadOnlySpan<char> filter)
+        {
+            const char LevelSeparator = '/';
+            const char MultiLevelWildcard = '#';
+            const char SingleLevelWildcard = '+';
+            const char ReservedTopicPrefix = '$';
+
+            if (topic.IsEmpty || filter.IsEmpty)
+            {
+                return false;
+            }
+
+            var filterOffset = 0;
+            var filterLength = filter.Length;
+            var topicOffset = 0;
+            var topicLength = topic.Length;
+
+            // 检查过滤器长度
+            if (filterLength > topicLength)
+            {
+                var lastFilterChar = filter[filterLength - 1];
+                if (lastFilterChar != MultiLevelWildcard && lastFilterChar != SingleLevelWildcard)
+                {
+                    return false;
+                }
+            }
+
+            var isMultiLevelFilter = filter[filterLength - 1] == MultiLevelWildcard;
+            var isReservedTopic = topic[0] == ReservedTopicPrefix;
+
+            // 保留主题的特殊规则
+            if (isReservedTopic && filterLength == 1 && isMultiLevelFilter)
+            {
+                return false; // 不允许用 '#' 订阅 '$foo/bar'
+            }
+
+            if (isReservedTopic && filter[0] == SingleLevelWildcard)
+            {
+                return false; // 不允许用 '+/monitor/Clients' 订阅 '$SYS/monitor/Clients'
+            }
+
+            if (filterLength == 1 && isMultiLevelFilter)
+            {
+                return true; // '#' 匹配所有内容
+            }
+
+            // 逐字符比较
+            while (filterOffset < filterLength && topicOffset < topicLength)
+            {
+                // 检查多级通配符是否在最后位置
+                if (filter[filterOffset] == MultiLevelWildcard && filterOffset != filterLength - 1)
+                {
+                    return false; // 多级通配符只能在最后
+                }
+
+                if (filter[filterOffset] == topic[topicOffset])
+                {
+                    if (topicOffset == topicLength - 1)
+                    {
+                        if (filterOffset == filterLength - 3 && filter[filterOffset + 1] == LevelSeparator && isMultiLevelFilter)
+                        {
+                            return true;
+                        }
+
+                        if (filterOffset == filterLength - 2 && filter[filterOffset] == LevelSeparator && isMultiLevelFilter)
+                        {
+                            return true;
+                        }
+                    }
+
+                    filterOffset++;
+                    topicOffset++;
+
+                    // 检查是否完全匹配
+                    if (filterOffset == filterLength && topicOffset == topicLength)
+                    {
+                        return true;
+                    }
+
+                    var endOfTopic = topicOffset == topicLength;
+
+                    if (endOfTopic && filterOffset == filterLength - 1 && filter[filterOffset] == SingleLevelWildcard)
+                    {
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                        {
+                            return false;
+                        }
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (filter[filterOffset] == SingleLevelWildcard)
+                    {
+                        // 检查单级通配符的有效性
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                        {
+                            return false; // 无效的 "+foo" 或 "a/+foo"
+                        }
+
+                        if (filterOffset < filterLength - 1 && filter[filterOffset + 1] != LevelSeparator)
+                        {
+                            return false; // 无效的 "foo+" 或 "foo+/a"
+                        }
+
+                        filterOffset++;
+                        // 跳过主题中的当前级别
+                        while (topicOffset < topicLength && topic[topicOffset] != LevelSeparator)
+                        {
+                            topicOffset++;
+                        }
+
+                        if (topicOffset == topicLength && filterOffset == filterLength)
+                        {
+                            return true;
+                        }
+                    }
+                    else if (filter[filterOffset] == MultiLevelWildcard)
+                    {
+                        if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                        {
+                            return false;
+                        }
+
+                        if (filterOffset + 1 != filterLength)
+                        {
+                            return false;
+                        }
+
+                        return true; // 多级通配符匹配剩余所有内容
+                    }
+                    else
+                    {
+                        // 检查 "foo/bar" 匹配 "foo/+/#"
+                        if (filterOffset > 0 &&
+                            filterOffset + 2 == filterLength &&
+                            topicOffset == topicLength &&
+                            filter[filterOffset - 1] == SingleLevelWildcard &&
+                            filter[filterOffset] == LevelSeparator &&
+                            isMultiLevelFilter)
+                        {
+                            return true;
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static void ValidateTopic(string topic)
         {
             if (string.IsNullOrWhiteSpace(topic))
             {
                 throw new ArgumentException("主题名称不能为 null 或空白", nameof(topic));
             }
         }
-
-        #endregion 辅助方法
     }
 
     #endregion Class

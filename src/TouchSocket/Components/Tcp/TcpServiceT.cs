@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -158,13 +154,13 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
     #region 发送
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
+    public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return this.GetClientOrThrow(id).SendAsync(memory);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, IRequestInfo requestInfo)
+    public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
         return this.GetClientOrThrow(id).SendAsync(requestInfo);
     }

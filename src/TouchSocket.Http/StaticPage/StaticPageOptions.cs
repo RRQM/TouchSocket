@@ -10,16 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http;
 
 /// <summary>
 /// 静态页面配置
 /// </summary>
-public class StaticPageOptions
+public sealed class StaticPageOptions
 {
     private readonly StaticFilesPool m_filesPool = new StaticFilesPool();
 
@@ -95,9 +91,18 @@ public class StaticPageOptions
     /// <param name="provider">一个实现了IContentTypeProvider接口的对象，用于提供文件扩展名与MIME类型的映射。</param>
     public void SetContentTypeProvider(IContentTypeProvider provider)
     {
-        // 校验provider参数是否为空，如果为空则抛出ArgumentNullException异常。
-        // 这里是确保ContentTypeProvider的设置必须是有效的，非空对象。
         this.ContentTypeProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+    }
+
+    /// <summary>
+    /// 设置提供文件扩展名和MIME类型之间的映射。
+    /// </summary>
+    /// <param name="provider">用于配置<see cref="IContentTypeProvider"/>的委托。</param>
+    public void SetContentTypeProvider(Action<IContentTypeProvider> provider)
+    {
+        var contentTypeProvider = this.ContentTypeProvider ?? new FileExtensionContentTypeProvider();
+        provider.Invoke(contentTypeProvider);
+        this.ContentTypeProvider = contentTypeProvider;
     }
 
     /// <summary>

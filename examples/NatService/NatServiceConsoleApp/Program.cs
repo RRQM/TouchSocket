@@ -21,6 +21,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        #region NatService创建并启动服务
         var service = new MyNatService();
         await service.SetupAsync(new TouchSocketConfig()
              .SetListenIPHosts(7788)
@@ -35,7 +36,9 @@ internal class Program
 
         await service.StartAsync();
 
-        service.Logger.Info("转发服务器已启动。已将7788端口转发到127.0.0.1:7789与127.0.0.1:7790地址");
+        service.Logger.Info("转发服务器已启动。已将7788端口转发到127.0.0.1:7789地址");
+        #endregion
+
         while (true)
         {
             Console.ReadKey();
@@ -43,6 +46,7 @@ internal class Program
     }
 }
 
+#region NatService创建服务类
 internal class MyNatService : NatService<MyNatSessionClient>
 {
     protected override MyNatSessionClient NewClient()
@@ -50,10 +54,42 @@ internal class MyNatService : NatService<MyNatSessionClient>
         return new MyNatSessionClient();
     }
 }
+#endregion
 
+#region NatService创建会话客户端类
 internal class MyNatSessionClient : NatSessionClient
 {
-    #region 抽象类必须实现
+    protected override async Task OnNatConnected(ConnectedEventArgs e)
+    {
+        try
+        {
+            await this.AddTargetClientAsync(config =>
+            {
+                config.SetRemoteIPHost("127.0.0.1:7789");
+                //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+            });
+        }
+        catch (Exception ex)
+        {
+            //目标客户端无法连接，也就是无法转发
+            this.Logger.Exception(ex);
+        }
+    }
+
+    protected override async Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e)
+    {
+        //可以自己重连，或者其他操作
+
+        //或者直接移除
+        this.RemoveTargetClient(client);
+        await EasyTask.CompletedTask;
+    }
+}
+#endregion
+
+#region NatService实现一转多
+internal class OneToMultipleNatSessionClient : NatSessionClient
+{
     protected override async Task OnNatConnected(ConnectedEventArgs e)
     {
         try
@@ -86,22 +122,10 @@ internal class MyNatSessionClient : NatSessionClient
         this.RemoveTargetClient(client);
         await EasyTask.CompletedTask;
     }
-    #endregion
-
-    #region 可选重写方法
-    protected override Task OnNatReceived(ReceivedDataEventArgs e)
-    {
-        return base.OnNatReceived(e);
-    }
-
-
-    protected override Task OnTargetClientReceived(NatTargetClient client, ReceivedDataEventArgs e)
-    {
-        return base.OnTargetClientReceived(client, e);
-    }
-    #endregion
 }
+#endregion
 
+#region NatService实现多转一会话客户端
 internal class MultipleToOneNatSessionClient : NatSessionClient
 {
     protected override async Task OnNatConnected(ConnectedEventArgs e)
@@ -115,7 +139,9 @@ internal class MultipleToOneNatSessionClient : NatSessionClient
         await e.InvokeNext();
     }
 }
+#endregion
 
+#region NatService实现多转一目标客户端管理
 internal static class MyClientClass
 {
     public static NatTargetClient TargetClient { get; }
@@ -128,3 +154,4 @@ internal static class MyClientClass
         await client.ConnectAsync("127.0.0.1:7789");
     }
 }
+#endregion

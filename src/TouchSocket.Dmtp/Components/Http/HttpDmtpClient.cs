@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
@@ -30,6 +26,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
 
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private bool m_allowRoute;
+    private DmtpAdapter m_adapter;
     private SealedDmtpActor m_dmtpActor;
     private Func<string, Task<IDmtpActor>> m_findDmtpActor;
 
@@ -49,14 +46,13 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// <summary>
     /// 异步使用基于Http升级的协议，连接Dmtp服务器
     /// </summary>
-    /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒</param>
-    /// <param name="token">用于取消异步操作的取消令牌</param>
+    /// <param name="cancellationToken">用于取消异步操作的取消令牌</param>
     /// <returns>异步操作任务</returns>
     /// <exception cref="Exception">在连接过程中遇到错误时抛出异常</exception>
-    public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public async Task ConnectAsync(CancellationToken cancellationToken)
     {
         // 等待信号量，以确保同时只有一个连接操作
-        await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -68,21 +64,20 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 如果基础连接不在状态，则尝试建立TCP连接
             if (!base.Online)
             {
-                await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             // 创建并配置HttpRequest，为升级到Dmtp协议做准备
-            var request = new HttpRequest()
-                .SetHost(this.RemoteIPHost.Host);
+            var request = new HttpRequest();
             request.Headers.Add(HttpHeaders.Connection, "upgrade");
             request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());
-
             request.AsMethod(DmtpUtility.Dmtp);
 
             // 发送请求并处理响应
-            using (var responseResult = await this.ProtectedRequestContentAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await this.ProtectedRequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
+                await response.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 如果状态码为101，则切换协议为Dmtp
                 if (response.StatusCode == 101)
                 {
@@ -91,12 +86,15 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
                 else
                 {
                     // 其他状态码视为错误，抛出异常
-                    throw new Exception(response.StatusMessage);
+                    ThrowHelper.ThrowException($"无法升级协议，状态码：{response.StatusCode}，内容：{response.StatusMessage}");
                 }
             }
 
+            var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
+            ThrowHelper.ThrowIfNull(dmtpOption, nameof(dmtpOption));
+
             // 与Dmtp服务器进行握手操作，完成连接
-            await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         finally
         {
@@ -113,9 +111,9 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// 发送<see cref="IDmtpActor"/>关闭消息。
     /// </summary>
     /// <param name="msg">关闭消息的内容</param>
-    /// <param name="token"></param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         // 检查是否已初始化IDmtpActor对象
         if (this.m_dmtpActor != null)
@@ -123,11 +121,11 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 向IDmtpActor对象发送关闭消息
             await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 关闭IDmtpActor对象
-            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         // 调用基类的关闭方法
-        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion 断开
@@ -135,10 +133,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     #region Override
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         this.m_dmtpActor?.SafeDispose();
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -190,9 +188,9 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     #region ResetId
 
     ///<inheritdoc/>
-    public Task ResetIdAsync(string newId)
+    public Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
-        return this.m_dmtpActor.ResetIdAsync(newId);
+        return this.m_dmtpActor.ResetIdAsync(newId, cancellationToken);
     }
 
     #endregion ResetId
@@ -201,34 +199,91 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     {
         this.Protocol = DmtpUtility.DmtpProtocol;
         var adapter = new DmtpAdapter();
-        base.SetWarpAdapter(adapter);
         this.SetAdapter(adapter);
+        this.m_adapter = adapter;
         this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
         {
             //OutputSend = this.DmtpActorSend,
             OutputSendAsync = this.DmtpActorSendAsync,
             Routing = this.OnDmtpActorRouting,
-            Handshaking = this.OnDmtpActorHandshaking,
-            Handshaked = this.OnDmtpActorHandshaked,
+            Connecting = this.OnDmtpActorConnecting,
+            Connected = this.OnDmtpActorConnected,
             Closing = this.OnDmtpActorClose,
             CreatedChannel = this.OnDmtpActorCreateChannel,
             Logger = this.Logger,
             Client = this,
             FindDmtpActor = this.m_findDmtpActor
         };
+
+        var transport = base.Transport;
+        _ = EasyTask.SafeRun(this.DmtpReceiveLoopAsync, transport);
+    }
+
+    private async Task DmtpReceiveLoopAsync(ITransport transport)
+    {
+        var cancellationToken = transport.ClosedToken;
+        using var reader = new PooledBytesReader();
+        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            while (true)
+            {
+                if (this.DisposedValue || cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                var result = await transport.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (result.Buffer.Length == 0)
+                {
+                    break;
+                }
+
+                try
+                {
+                    reader.Reset(result.Buffer);
+                    if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    {
+                        await this.m_adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    var position = result.Buffer.GetPosition(reader.BytesRead);
+                    transport.Reader.AdvanceTo(position, result.Buffer.End);
+
+                    if (result.IsCompleted || result.IsCanceled)
+                    {
+                        return;
+                    }
+                    reader.Clear();
+
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 如果发生异常，记录日志并退出接收循环
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.ReadLocker.Release();
+        }
     }
 
     #region 内部委托绑定
 
-    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
         await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.Abort(false, msg);
+        //this.Abort(false, msg);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -236,14 +291,14 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
         return this.OnCreateChannel(e);
     }
 
-    private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaked(e);
+        return this.OnConnected(e);
     }
 
-    private Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaking(e);
+        return this.OnConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -315,7 +370,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// 在完成握手连接时
     /// </summary>
     /// <param name="e">包含握手信息的事件参数</param>
-    protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnected(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则不再执行后续操作
         if (e.Handled)
@@ -323,14 +378,14 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 即将握手连接时
     /// </summary>
     /// <param name="e">参数</param>
-    protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnecting(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则直接返回
         if (e.Handled)
@@ -338,7 +393,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             return;
         }
         // 触发握手过程的插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

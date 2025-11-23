@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -19,15 +18,15 @@ namespace TouchSocket.Sockets;
 /// UdpReceiveingEventArgs 类，继承自 ByteBlockEventArgs 类
 /// 用于封装 UDP 接收到的数据及相关信息
 /// </summary>
-public class UdpReceiveingEventArgs : ByteBlockEventArgs
+public class UdpReceiveingEventArgs : MemoryEventArgs
 {
     /// <summary>
     /// 构造函数
     /// 初始化 UdpReceivedDataEventArgs 对象
     /// </summary>
     /// <param name="endPoint">接收数据的终结点</param>
-    /// <param name="byteBlock">接收到的数据块</param>
-    public UdpReceiveingEventArgs(EndPoint endPoint, ByteBlock byteBlock) : base(byteBlock)
+    /// <param name="memory">接收到的内存块</param>
+    public UdpReceiveingEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory) : base(memory)
     {
         this.EndPoint = endPoint;
     }

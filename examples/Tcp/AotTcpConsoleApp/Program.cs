@@ -1,6 +1,16 @@
-using System.Collections;
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -46,7 +56,7 @@ namespace TcpConsoleApp
             tcpClient.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+                var mes = e.Memory.Span.ToString(Encoding.UTF8);
 
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
                 return EasyTask.CompletedTask;
@@ -57,8 +67,10 @@ namespace TcpConsoleApp
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                   .ConfigurePlugins(a =>
                   {
-                      a.UseTcpReconnection()
-                      .UsePolling(TimeSpan.FromSeconds(1));
+                      a.UseReconnection<TcpClient>(options =>
+                      {
+                          options.PollingInterval = TimeSpan.FromSeconds(1);
+                      });
                   })
                   .ConfigureContainer(a =>
                   {
@@ -99,12 +111,12 @@ namespace TcpConsoleApp
         }
     }
 
-    partial class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
+    internal partial class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
     {
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             //从客户端收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             if (mes == "close")
             {
                 throw new CloseException(mes);
@@ -137,7 +149,7 @@ namespace TcpConsoleApp
     /// <summary>
     /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
     /// </summary>
-    partial class ClosePlugin : PluginBase, ITcpReceivedPlugin
+    internal partial class ClosePlugin : PluginBase, ITcpReceivedPlugin
     {
         private readonly ILog m_logger;
 
@@ -154,10 +166,10 @@ namespace TcpConsoleApp
             }
             catch (CloseException ex)
             {
-                m_logger.Info("拦截到CloseException");
+                this.m_logger.Info("拦截到CloseException");
                 await client.CloseAsync(ex.Message);
             }
-            catch (Exception exx)
+            catch (Exception)
             {
 
             }
@@ -168,7 +180,7 @@ namespace TcpConsoleApp
         }
     }
 
-    class CloseException : Exception
+    internal class CloseException : Exception
     {
         public CloseException(string msg) : base(msg) { }
     }

@@ -10,27 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-
 namespace TouchSocket.Core;
 
 internal class MemoryStreamFastBinaryConverter : FastBinaryConverter<MemoryStream>
 {
-    protected override MemoryStream Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+    protected override MemoryStream Read<TReader>(ref TReader reader, Type type)
     {
-        return new MemoryStream(byteBlock.ReadBytesPackage());
+        return new MemoryStream(ReaderExtension.ReadByteSpan(ref reader).ToArray());
     }
 
-    protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in MemoryStream obj)
+    protected override void Write<TWriter>(ref TWriter writer, in MemoryStream obj)
     {
-#if !NET45
         if (obj.TryGetBuffer(out var array))
         {
-            byteBlock.WriteBytesPackage(array.Array, array.Offset, array.Count);
+            WriterExtension.WriteByteSpan(ref writer, new ReadOnlySpan<byte>(array.Array, array.Offset, array.Count));
         }
-#endif
-        var bytes = obj.ToArray();
-        byteBlock.Write(bytes);
     }
 }

@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -29,12 +27,12 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
     {
         get
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            ThrowHelper.ThrowIfNull(key, nameof(key));
             return this.TryGetValue(key, out var value) ? value : null;
         }
         set
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(key, nameof(key));
+            ThrowHelper.ThrowIfNull(key, nameof(key));
             base[key] = value;
         }
     }
@@ -51,26 +49,35 @@ public sealed class Metadata : Dictionary<string, string>, IPackage
         return this;
     }
 
+
     /// <inheritdoc/>
-    public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public void Package<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+
     {
-        byteBlock.WriteInt32(this.Count);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Count);
         foreach (var item in this)
         {
-            byteBlock.WriteString(item.Key, FixedHeaderType.Byte);
-            byteBlock.WriteString(item.Value, FixedHeaderType.Byte);
+            WriterExtension.WriteString(ref writer, item.Key, FixedHeaderType.Byte);
+            WriterExtension.WriteString(ref writer, item.Value, FixedHeaderType.Byte);
         }
     }
 
     /// <inheritdoc/>
-    public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public void Unpackage<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+#if AllowsRefStruct
+, allows ref struct
+#endif
     {
-        var count = byteBlock.ReadInt32();
+        var count = ReaderExtension.ReadValue<TReader, int>(ref reader);
         for (var i = 0; i < count; i++)
         {
-            var key = byteBlock.ReadString(FixedHeaderType.Byte);
-            var value = byteBlock.ReadString(FixedHeaderType.Byte);
+            var key = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
+            var value = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
             this.Add(key, value);
         }
     }
+
+
 }

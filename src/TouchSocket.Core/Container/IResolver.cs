@@ -26,7 +26,7 @@ public interface IResolver : IServiceProvider
     /// <param name="fromType">要解析的目标类型。</param>
     /// <param name="key">可选的实例标识符。</param>
     /// <returns>解析出的实例。</returns>
-    object Resolve(Type fromType, string key);
+    object Resolve(Type fromType, object key);
 
     /// <summary>
     /// 解析给定类型的实例。如果解析失败，则返回 null。

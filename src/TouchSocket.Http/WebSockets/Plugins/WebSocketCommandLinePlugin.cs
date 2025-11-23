@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets;
 
@@ -23,6 +19,7 @@ namespace TouchSocket.Http.WebSockets;
 /// WS命令行插件。
 /// </summary>
 [DynamicMethod]
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
 {
     private readonly ILog m_logger;

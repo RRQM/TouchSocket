@@ -10,26 +10,42 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 数据压缩机接口
+/// 定义数据压缩器的接口，提供数据压缩和解压缩的抽象操作。
 /// </summary>
+/// <remarks>
+/// IDataCompressor接口为不同的压缩算法提供统一的接口定义，
+/// 支持将数据压缩后写入到字节写入器中，以及从压缩数据中解压缩并写入到字节写入器中。
+/// 实现此接口的类可以提供如GZip、Deflate、Brotli等各种压缩算法的支持。
+/// </remarks>
 public interface IDataCompressor
 {
     /// <summary>
-    /// 压缩数据
+    /// 将指定的数据进行压缩，并将压缩结果写入到字节写入器中。
     /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    byte[] Compress(ArraySegment<byte> data);
+    /// <typeparam name="TWriter">字节写入器类型，必须继承自<see cref="IBytesWriter"/>。</typeparam>
+    /// <param name="writer">用于写入压缩数据的字节写入器。</param>
+    /// <param name="data">要压缩的原始数据。</param>
+    /// <remarks>
+    /// 此方法将原始数据使用特定的压缩算法进行压缩，
+    /// 然后将压缩后的数据写入到提供的字节写入器中。
+    /// 压缩算法的选择取决于具体的实现类。
+    /// </remarks>
+    void Compress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter;
 
     /// <summary>
-    /// 解压数据
+    /// 将指定的压缩数据进行解压缩，并将解压缩结果写入到字节写入器中。
     /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    byte[] Decompress(ArraySegment<byte> data);
+    /// <typeparam name="TWriter">字节写入器类型，必须继承自<see cref="IBytesWriter"/>。</typeparam>
+    /// <param name="writer">用于写入解压缩数据的字节写入器。</param>
+    /// <param name="data">要解压缩的压缩数据。</param>
+    /// <remarks>
+    /// 此方法将压缩数据使用对应的解压缩算法进行解压缩，
+    /// 然后将解压缩后的原始数据写入到提供的字节写入器中。
+    /// 解压缩算法必须与压缩时使用的算法相匹配。
+    /// </remarks>
+    /// <exception cref="InvalidDataException">当压缩数据格式无效或损坏时可能抛出。</exception>
+    void Decompress<TWriter>(ref TWriter writer, ReadOnlySpan<byte> data) where TWriter : IBytesWriter;
 }

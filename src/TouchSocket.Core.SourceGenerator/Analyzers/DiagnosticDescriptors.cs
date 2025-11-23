@@ -61,6 +61,12 @@ internal static class DiagnosticDescriptors
 "判断声明的插件接口是否包含[DynamicMethod]特性",
 "声明的插件接口必须标识[DynamicMethod]特性。",
 "Plugin", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor m_rule_Plugin0005 = new DiagnosticDescriptor(
+"Plugin0005",
+"判断声明的插件触发接口是否继承了IPlugin",
+"类型{0}并不是有效的插件接口类",
+"Plugin", DiagnosticSeverity.Error, isEnabledByDefault: true);
     #endregion Plugin
 
     #region FastSerialize
@@ -69,5 +75,19 @@ internal static class DiagnosticDescriptors
 "判断添加的类型是否已实现IPackage接口",
 "类型{0}并非IPackage，所以无法使用源生成Fast序列化。",
 "FastSerialize", DiagnosticSeverity.Error, isEnabledByDefault: true);
+    #endregion
+
+    #region CodeAnalysis
+    public static readonly DiagnosticDescriptor m_rule_CodeAnalysis0001 = new DiagnosticDescriptor(
+"CodeAnalysis0001",
+"判断该方法是不是由异步转为的同步",
+"方法{0}是由异步转为的同步，这可能会导致死锁。请使用{0}Async代替。该方法将在正式发布时删除。",
+"CodeAnalysis", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor m_rule_CodeAnalysis0002 = new DiagnosticDescriptor(
+"CodeAnalysis0002",
+"判断DependencyProperty属性是否为静态只读字段或者静态只读属性",
+"依赖属性{0}应该使用静态只读字段（static readonly）或者静态只读属性（不包含set访问器）可能更加推荐。",
+"CodeAnalysis", DiagnosticSeverity.Error, isEnabledByDefault: true);
     #endregion
 }

@@ -38,7 +38,7 @@ namespace NamedPipeStressTestingConsoleApp
             var client = new NamedPipeClient();
             //载入配置
             await client.SetupAsync(new TouchSocketConfig()
-                 .SetPipeServer(".")//一般本机管道时，可以不用此配置
+                 .SetPipeServerName(".")//一般本机管道时，可以不用此配置
                  .SetPipeName(name)//管道名称
                  .ConfigurePlugins(a =>
                  {
@@ -66,7 +66,7 @@ namespace NamedPipeStressTestingConsoleApp
             };
             service.Received = (client, e) =>
             {
-                counter.Increment(e.ByteBlock.Length);
+                counter.Increment(e.Memory.Length);
                 return EasyTask.CompletedTask;
             };
             await service.SetupAsync(new TouchSocketConfig()//载入配置

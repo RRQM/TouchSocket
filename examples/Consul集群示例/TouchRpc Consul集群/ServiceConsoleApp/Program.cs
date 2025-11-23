@@ -48,11 +48,16 @@ internal class Program
             .ConfigurePlugins(a =>
             {
                 a.UseDmtpRpc();
-                a.UseXmlRpc().SetXmlRpcUrl("/xmlrpc");
+                a.UseXmlRpc("/xmlrpc");
                 a.UseWebApi();
 
-                a.UseWebSocket()//添加WebSocket功能
-                    .SetWSUrl("/ws");
+                //添加WebSocket功能
+                a.UseWebSocket(options =>
+                {
+                    options.SetUrl("/ws");//设置url直接可以连接。
+                    options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                });
+
                 a.Add<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
                 a.Add<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
             })
@@ -149,9 +154,9 @@ internal class MyWebSocketCommand : WebSocketCommandLinePlugin
 /// <summary>
 /// WS收到数据等业务。
 /// </summary>
-internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+internal class MyWebSocketPlug : PluginBase, IWebSocketConnectedPlugin, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket client, HttpContextEventArgs e)
     {
         if (client.Client is IHttpSessionClient socketClient)
         {

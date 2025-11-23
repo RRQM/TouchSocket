@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -24,43 +21,48 @@ public partial interface ICacheAsync<TKey, TValue>
     /// 添加缓存。当缓存存在时，不会添加成功。
     /// </summary>
     /// <param name="entity">要添加的缓存项，类型为ICacheEntry泛型接口。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回一个<see cref="bool"/>类型的异步操作结果，表示添加缓存项的操作是否成功。</returns>
-    Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity);
+    Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 清空所有缓存
     /// </summary>
     /// <returns>一个异步任务，表示清空缓存操作</returns>
-    Task ClearCacheAsync();
+    Task ClearCacheAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步判断指定键的缓存是否存在且在生命周期内。
     /// </summary>
     /// <param name="key">缓存的键。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回一个Task对象，其结果指示缓存是否存在且在生命周期内。</returns>
     /// <exception cref="ArgumentNullException">当键值为空时抛出。</exception>
-    Task<bool> ContainsCacheAsync(TKey key);
+    Task<bool> ContainsCacheAsync(TKey key, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步获取指定键的缓存条目。
     /// </summary>
     /// <param name="key">用于检索缓存条目的键。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回一个任务，该任务结果包含缓存条目。</returns>
     /// <exception cref="ArgumentNullException">当键为<see langword="null"/>时抛出此异常。</exception>
-    Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key);
+    Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步移除缓存项。
     /// </summary>
     /// <param name="key">缓存项的键。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>移除操作是否成功的布尔值。</returns>
-    Task<bool> RemoveCacheAsync(TKey key);
+    Task<bool> RemoveCacheAsync(TKey key, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 设置缓存，不管缓存存不存在，都会添加。
     /// </summary>
     /// <param name="entity">要添加到缓存中的项，类型为ICacheEntry泛型接口。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回一个<see cref="bool"/>类型的异步操作结果，表示缓存设置操作是否成功。</returns>
     /// <exception cref="ArgumentNullException">当尝试将null作为缓存项添加时，抛出此异常。</exception>
-    Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity);
+    Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity, CancellationToken cancellationToken = default);
 }

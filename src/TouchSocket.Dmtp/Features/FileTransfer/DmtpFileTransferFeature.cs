@@ -10,28 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
 /// 能够基于Dmtp协议，提供文件传输的能力
 /// </summary>
-public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin, IDmtpFeature
+public sealed class DmtpFileTransferFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlugin, IDmtpFeature
 {
-    private readonly IFileResourceController m_fileResourceController;
+    private readonly DmtpFileTransferOption m_option;
     private IPluginManager m_pluginManager;
 
     /// <summary>
     /// 能够基于Dmtp协议，提供文件传输的能力
     /// </summary>
-    /// <param name="resolver"></param>
-    public DmtpFileTransferFeature(IResolver resolver)
+    /// <param name="resolver">服务解析器</param>
+    /// <param name="option">配置选项</param>
+    public DmtpFileTransferFeature(IResolver resolver, DmtpFileTransferOption option)
     {
-        this.m_fileResourceController = resolver.Resolve<IFileResourceController>() ?? FileResourceController.Default;
-        this.MaxSmallFileLength = 1024 * 1024;
-        this.SetProtocolFlags(30);
+        ThrowHelper.ThrowIfNull(option, nameof(option));
+        this.m_option = option;
+        this.m_option.FileResourceController ??= resolver.Resolve<IFileResourceController>() ?? FileResourceController.Default;
     }
 
     /// <inheritdoc/>
@@ -41,29 +39,28 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin
         this.m_pluginManager = pluginManager;
     }
 
-    /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
-    public int MaxSmallFileLength { get; set; }
-
     /// <inheritdoc/>
     public ushort ReserveProtocolSize => 20;
 
-    /// <inheritdoc cref="IDmtpFileTransferActor.RootPath"/>
-    public string RootPath { get; set; }
+    /// <inheritdoc/>
+    public ushort StartProtocol => this.m_option.StartProtocol;
+
+    /// <summary>
+    /// 获取配置选项
+    /// </summary>
+    public DmtpFileTransferOption Option => this.m_option;
 
     /// <inheritdoc/>
-    public ushort StartProtocol { get; set; }
-
-    /// <inheritdoc/>
-    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    public async Task OnDmtpConnecting(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
-        var dmtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor, this.m_fileResourceController)
+        var dmtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor, this.m_option.FileResourceController)
         {
             OnFileTransferring = this.OnFileTransfering,
             OnFileTransferred = this.OnFileTransfered,
-            RootPath = this.RootPath,
-            MaxSmallFileLength = this.MaxSmallFileLength
+            RootPath = this.m_option.RootPath,
+            MaxSmallFileLength = this.m_option.MaxSmallFileLength
         };
-        dmtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
+        dmtpFileTransferActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpFileTransferActor>(dmtpFileTransferActor);
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -81,34 +78,6 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin
         }
 
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
-    public DmtpFileTransferFeature SetMaxSmallFileLength(int maxSmallFileLength)
-    {
-        this.MaxSmallFileLength = maxSmallFileLength;
-        return this;
-    }
-
-    /// <summary>
-    /// 设置<see cref="DmtpFileTransferFeature"/>的起始协议。
-    /// <para>
-    /// 默认起始为：30，保留20个协议长度。
-    /// </para>
-    /// </summary>
-    /// <param name="start"></param>
-    /// <returns></returns>
-    public DmtpFileTransferFeature SetProtocolFlags(ushort start)
-    {
-        this.StartProtocol = start;
-        return this;
-    }
-
-    /// <inheritdoc cref="IDmtpFileTransferActor.RootPath"/>
-    public DmtpFileTransferFeature SetRootPath(string rootPath)
-    {
-        this.RootPath = rootPath;
-        return this;
     }
 
     private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)

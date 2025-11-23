@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace TouchSocket.Core;
@@ -50,14 +48,6 @@ public class TouchSocketCoreUtility
     /// </summary>
     public const string Empty = "";
 
-    /// <summary>
-    /// 0长度字节数组
-    /// </summary>
-#if NET45
-    public static readonly byte[] ZeroBytes = new byte[0];
-#else
-    public static readonly byte[] ZeroBytes = Array.Empty<byte>();
-#endif
     private static int s_seed;
 
     /// <summary>
@@ -150,36 +140,6 @@ public class TouchSocketCoreUtility
             pattern = @"^([\da-f]{1,4}:){0,5}::([\da-f]{1,4}:){0,5}[\da-f]{1,4}$";
             var regex1 = new Regex(pattern);
             return regex1.IsMatch(input);
-        }
-    }
-
-    /// <summary>
-    /// 命中BufferLength
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int HitBufferLength(long value)
-    {
-        if (value < 1024 * 100)
-        {
-            return 1024;
-        }
-        else if (value < 1024 * 512)
-        {
-            return 1024 * 10;
-        }
-        else if (value < 1024 * 1024)
-        {
-            return 1024 * 64;
-        }
-        else
-        {
-            return value < 1024 * 1024 * 50
-                ? 1024 * 512
-                : value < 1024 * 1024 * 100
-                                ? 1024 * 1024
-                                : value < 1024 * 1024 * 1024 ? 1024 * 1024 * 2 : value < 1024 * 1024 * 1024 * 10L ? 1024 * 1024 * 5 : 1024 * 1024 * 10;
         }
     }
 }

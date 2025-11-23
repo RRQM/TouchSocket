@@ -15,7 +15,7 @@ using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
-internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
+internal class SimpleDmtpRpcActor : DisposableObject, ISimpleDmtpRpcActor
 {
     private readonly ushort m_invoke_Request = 1000;
     private readonly ushort m_invoke_Response = 1001;
@@ -30,20 +30,21 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
 
     public async Task<bool> InputReceivedData(DmtpMessage message)
     {
-        var byteBlock = message.BodyByteBlock;
+        var memory = message.Memory;
+        var reader = new BytesReader(memory);
         if (message.ProtocolFlags == this.m_invoke_Request)
         {
             try
             {
                 var rpcPackage = new SimpleDmtpRpcPackage();
-                rpcPackage.UnpackageRouter(ref byteBlock);
+                rpcPackage.UnpackageRouter(ref reader);
                 if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                 {
                     if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(new RouteType("SimpleRpc"), rpcPackage)))
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory);
+                            await actor.SendAsync(this.m_invoke_Request, memory);
                             return true;
                         }
                         else
@@ -56,15 +57,23 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
                         rpcPackage.Status = 3;
                     }
 
-                    byteBlock.Reset();
                     rpcPackage.SwitchId();
 
-                    rpcPackage.Package(ref byteBlock);
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
+                    var byteBlock = new ByteBlock(1024);
+                    try
+                    {
+                        rpcPackage.Package(ref byteBlock);
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
+                    }
+                    finally
+                    {
+                        byteBlock.Dispose();
+                    }
+
                 }
                 else
                 {
-                    rpcPackage.UnpackageBody(ref byteBlock);
+                    rpcPackage.UnpackageBody(ref reader);
                     _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                 }
             }
@@ -79,18 +88,18 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
             try
             {
                 var rpcPackage = new SimpleDmtpRpcPackage();
-                rpcPackage.UnpackageRouter(ref byteBlock);
+                rpcPackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                 {
                     if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
+                        await actor.SendAsync(this.m_invoke_Response, memory);
                     }
                 }
                 else
                 {
-                    rpcPackage.UnpackageBody(ref byteBlock);
-                    this.DmtpActor.WaitHandlePool.SetRun(rpcPackage);
+                    rpcPackage.UnpackageBody(ref reader);
+                    this.DmtpActor.WaitHandlePool.Set(rpcPackage);
                 }
             }
             catch (Exception ex)
@@ -109,7 +118,7 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         var methodModel = this.TryFindMethod.Invoke(package.MethodName);
         if (methodModel == null)
         {
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 package.Status = 4;
@@ -127,7 +136,7 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         try
         {
             methodModel.Method.Invoke(methodModel.Target, default);
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 package.Status = 1;
@@ -143,7 +152,7 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         }
         catch (Exception ex)
         {
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 package.Status = 5;
@@ -176,12 +185,12 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         return default;
     }
 
-    public void Invoke(string methodName)
+    public async Task Invoke(string methodName, CancellationToken token)
     {
-        this.PrivateInvoke(default, methodName);
+        await this.PrivateInvoke(default, methodName, token);
     }
 
-    public async void Invoke(string targetId, string methodName)
+    public async Task Invoke(string targetId, string methodName, CancellationToken token)
     {
         if (string.IsNullOrEmpty(targetId))
         {
@@ -195,14 +204,14 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
 
         if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId) is SimpleDmtpRpcActor actor)
         {
-            actor.Invoke(methodName);
+            await actor.Invoke(methodName, token);
             return;
         }
 
-        this.PrivateInvoke(targetId, methodName);
+        await this.PrivateInvoke(targetId, methodName, token);
     }
 
-    private async void PrivateInvoke(string id, string methodName)
+    private async Task PrivateInvoke(string id, string methodName, CancellationToken token)
     {
         var package = new SimpleDmtpRpcPackage()
         {
@@ -211,11 +220,11 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
             TargetId = id
         };
 
-        var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+        var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
 
         try
         {
-            var byteBlock = new ByteBlock(1024*64);
+            var byteBlock = new ByteBlock(1024 * 64);
             try
             {
                 package.Package(ref byteBlock);
@@ -226,10 +235,10 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
                 byteBlock.Dispose();
             }
 
-            switch (waitData.Wait(5000))
+            switch (await waitData.WaitAsync(token))
             {
-                case WaitDataStatus.SetRunning:
-                    var result = (SimpleDmtpRpcPackage)waitData.WaitResult;
+                case WaitDataStatus.Success:
+                    var result = (SimpleDmtpRpcPackage)waitData.CompletedData;
                     result.CheckStatus();
                     return;
 
@@ -246,7 +255,7 @@ internal class SimpleDmtpRpcActor :DisposableObject, ISimpleDmtpRpcActor
         }
         finally
         {
-            this.DmtpActor.WaitHandlePool.Destroy(package.Sign);
+            waitData.Dispose();
         }
     }
 }

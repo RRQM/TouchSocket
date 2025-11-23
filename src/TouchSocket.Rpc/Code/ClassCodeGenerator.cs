@@ -10,14 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc;
 
@@ -55,6 +50,7 @@ public class ClassCodeGenerator
     /// 添加类型字符串
     /// </summary>
     /// <param name="type"></param>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public void AddTypeString(Type type)
     {
         var list = new List<Type>();
@@ -298,6 +294,7 @@ public class ClassCodeGenerator
         return nonGenericType;
     }
 
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     private void GetTransmitTypes(Type type, ref List<Type> types)
     {
         if (type.IsByRef)
@@ -365,6 +362,7 @@ public class ClassCodeGenerator
         }
     }
 
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     private void PrivateAddTypeString(Type type)
     {
         if (CodeGenerator.m_ignoreTypes.Contains(type))

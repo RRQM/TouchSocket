@@ -10,19 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Text;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
+/// <summary>
+/// 性能还没有优化，后续会优化2025.7.20
+/// </summary>
 internal class InternalFormCollection : Dictionary<string, string>, IFormCollection
 {
     private readonly InternalMultifileCollection m_files = new InternalMultifileCollection();
 
-    public InternalFormCollection(ReadOnlyMemory<byte> context, Span<byte> boundary) : this()
+    public InternalFormCollection(ReadOnlyMemory<byte> context, ReadOnlySpan<byte> boundary) : this()
     {
         if (context.IsEmpty)
         {

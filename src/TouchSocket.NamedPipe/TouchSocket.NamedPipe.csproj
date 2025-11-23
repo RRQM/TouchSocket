@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net10.0;net8.0</TargetFrameworks>
 		<PackageTags>Pipeline;NamedPipe;Ipc;TouchSocket</PackageTags>
 		<Description>这是一个基于命名管道的组件库。它模仿Tcp封装了命名管道的服务器和客户端，以及连接、断开连接等消息。功能上实现了多管道名称监听、流式数据解析，以极致接近Tcp的体验使用命名管道。
 
@@ -10,9 +10,11 @@
 
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\BaseTransport.cs" Link="Transports\BaseTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Common\InternalClientCollection.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Common\InternalReceiver.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Common\InternalReceiverResult.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\StreamTransport.cs" Link="Transports\StreamTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>
 
@@ -20,7 +22,16 @@
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
 
+	<!--全局命名空间-->
+	<ItemGroup>
+		<Using Include="TouchSocket.Sockets" />
+	</ItemGroup>
+
 	<ItemGroup>
 	  <Folder Include="Exceptions\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="../TouchSocket/Components/Tcp/TcpClientBase.cs" />
 	</ItemGroup>
 </Project>

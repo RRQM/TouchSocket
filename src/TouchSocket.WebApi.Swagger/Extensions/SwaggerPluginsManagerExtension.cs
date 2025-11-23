@@ -10,22 +10,34 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.WebApi.Swagger;
 
 /// <summary>
-/// SwaggerPluginManagerExtension
+/// <inheritdoc/>
 /// </summary>
 public static class SwaggerPluginManagerExtension
 {
     /// <summary>
     /// 使用<see cref="SwaggerPlugin"/>插件。
     /// </summary>
-    /// <param name="pluginManager"></param>
-    /// <returns></returns>
-    public static SwaggerPlugin UseSwagger(this IPluginManager pluginManager)
+    /// <param name="pluginManager">插件管理器</param>
+    /// <param name="options">Swagger配置选项</param>
+    /// <returns>Swagger插件实例</returns>
+    public static void UseSwagger(this IPluginManager pluginManager, Action<SwaggerOption> options)
     {
-        return pluginManager.Add<SwaggerPlugin>();
+        SwaggerOption option = new();
+        options.Invoke(option);
+        SwaggerPlugin swaggerPlugin = new(pluginManager.Resolver.Resolve<ILog>(), option);
+        pluginManager.Add(swaggerPlugin);
+    }
+
+    /// <summary>
+    /// 使用<see cref="SwaggerPlugin"/>插件。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器</param>
+    /// <returns>Swagger插件实例</returns>
+    public static void UseSwagger(this IPluginManager pluginManager)
+    {
+        pluginManager.UseSwagger(options => { });
     }
 }

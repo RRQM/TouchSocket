@@ -10,15 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -79,7 +74,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     public Protocol Protocol { get; protected set; }
 
     /// <inheritdoc/>
-    public IPHost RemoteIPHost => this.Config?.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+    public IPHost RemoteIPHost => this.Config?.RemoteIPHost;
 
     /// <inheritdoc/>
     public override ServerState ServerState => this.m_serverState;
@@ -99,7 +94,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         this.ThrowIfDisposed();
 
-        ThrowHelper.ThrowArgumentNullExceptionIf(multicastAddr, nameof(multicastAddr));
+        ThrowHelper.ThrowIfNull(multicastAddr, nameof(multicastAddr));
 
         // 根据Socket的地址族类型，执行相应的退出组播组操作
         if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
@@ -127,7 +122,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         this.ThrowIfDisposed();
 
-        ThrowHelper.ThrowArgumentNullExceptionIf(multicastAddr, nameof(multicastAddr));
+        ThrowHelper.ThrowIfNull(multicastAddr, nameof(multicastAddr));
 
         // 根据不同的地址族设置组播成员资格
         if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
@@ -153,25 +148,17 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             switch (this.m_serverState)
             {
                 case ServerState.None:
+                case ServerState.Stopped:
                     {
+                        this.m_serverState = ServerState.Running;
                         if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
                         {
                             this.BeginReceive(iPHost);
                         }
-
                         break;
                     }
                 case ServerState.Running:
                     return;
-
-                case ServerState.Stopped:
-                    {
-                        if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                        {
-                            this.BeginReceive(iPHost);
-                        }
-                        break;
-                    }
                 default:
                     {
                         ThrowHelper.ThrowInvalidEnumArgumentException(this.m_serverState);
@@ -179,20 +166,21 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                     }
             }
 
-            this.m_serverState = ServerState.Running;
-
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default))
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message })
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             throw;
         }
     }
 
     /// <inheritdoc/>
-    public override async Task<Result> StopAsync(CancellationToken token = default)
+    public override async Task<Result> StopAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -202,10 +190,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             this.m_receiveTasks.Clear();
 
-            if (this.m_receiver != null)
-            {
-                await this.m_receiver.Complete(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+            this.m_receiver?.Complete(default);
             await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             return Result.Success;
@@ -217,7 +202,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (!this.DisposedValue)
         {
@@ -226,7 +211,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                 this.StopAsync().GetFalseAwaitResult();
             }
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
     }
 
     /// <summary>
@@ -275,23 +260,25 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         // 检查当前实例是否已被释放
         this.ThrowIfDisposed();
-        // 如果适配器参数为空，则抛出ArgumentNullException异常
-        ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
+
+
+        if (adapter is null)
+        {
+            this.m_dataHandlingAdapter = null;//允许Null赋值
+            return;
+        }
 
         // 如果当前实例的配置信息不为空，则将配置信息应用到适配器上
         if (this.Config != null)
         {
             adapter.Config(this.Config);
         }
-        // 设置适配器的日志记录器
-        adapter.Logger = this.Logger;
         // 通知适配器当前实例的状态
         adapter.OnLoaded(this);
         // 设置适配器接收到数据时的回调方法
         adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
         // 设置适配器发送数据时的异步回调方法
         adapter.SendCallBackAsync = this.ProtectedDefaultSendAsync;
-        // 将提供的适配器设置为当前实例的数据处理适配器
         this.m_dataHandlingAdapter = adapter;
     }
 
@@ -311,8 +298,8 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
     private void BeginReceive(IPHost iPHost)
     {
-        var threadCount = this.Config.GetValue(TouchSocketConfigExtension.ThreadCountProperty);
-        threadCount = threadCount < 0 ? 1 : threadCount;
+        var overlappedCount = this.Config.GetValue(TouchSocketConfigExtension.UdpOverlappedCountProperty);
+
         var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
         {
             EnableBroadcast = this.Config.GetValue(TouchSocketConfigExtension.EnableBroadcastProperty)
@@ -324,7 +311,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
         #region Windows下UDP连接被重置错误10054
 
-#if NET45_OR_GREATER
+#if NET462_OR_GREATER
         if (this.Config.GetValue(TouchSocketConfigExtension.UdpConnResetProperty))
         {
             const int SIP_UDP_CONNRESET = -1744830452;
@@ -349,10 +336,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
         this.m_monitor = new UdpNetworkMonitor(iPHost, socket);
 
-        for (var i = 0; i < threadCount; i++)
+        for (var i = 0; i < overlappedCount; i++)
         {
-            var task = Task.Run(this.RunReceive);
-            task.FireAndForget();
+            var task = EasyTask.SafeRun(this.RunReceive);
             this.m_receiveTasks.Add(task);
         }
     }
@@ -363,43 +349,43 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         {
             while (true)
             {
-                using (var byteBlock = new ByteBlock(1024 * 64))
-                {
-                    try
-                    {
-                        if (this.m_serverState != ServerState.Running)
-                        {
-                            return;
-                        }
-                        var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                //UDP单次接收最大64k数据，所以此处直接申请64k内存。
+                var memory = new Memory<byte>(new byte[1024 * 64]);
 
-                        if (result.BytesTransferred > 0)
-                        {
-                            byteBlock.SetLength(result.BytesTransferred);
-                            await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        else if (result.SocketError != null)
-                        {
-                            this.Logger?.Debug(this, result.SocketError.Message);
-                            return;
-                        }
-                        else
-                        {
-                            this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
+                try
+                {
+                    if (this.m_serverState != ServerState.Running)
                     {
-                        this.Logger?.Exception(this, ex);
                         return;
                     }
+                    var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, memory)
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                    if (result.BytesTransferred > 0)
+                    {
+                        await this.HandleReceivingData(memory.Slice(0, result.BytesTransferred), result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    else if (result.SocketError != SocketError.Success)
+                    {
+                        this.Logger?.Debug(this, result.SocketError.ToString());
+                        return;
+                    }
+                    else
+                    {
+                        this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    return;
                 }
             }
         }
     }
 
-    private async Task HandleReceivingData(ByteBlock byteBlock, EndPoint remoteEndPoint)
+    private async Task HandleReceivingData(ReadOnlyMemory<byte> memory, EndPoint remoteEndPoint)
     {
         try
         {
@@ -410,18 +396,18 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
             this.m_lastReceivedTime = DateTimeOffset.UtcNow;
 
-            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, byteBlock)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, memory)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 return;
             }
 
             if (this.m_dataHandlingAdapter == null)
             {
-                await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateHandleReceivedData(remoteEndPoint, memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_dataHandlingAdapter.ReceivedInputAsync(remoteEndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
         catch (Exception ex)
@@ -444,14 +430,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
     }
 
-    private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
+    private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
         if (this.m_receiver != null)
         {
             await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
-                await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_receiver.InputReceive(remoteEndPoint, memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             finally
@@ -459,7 +445,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                 this.m_semaphoreSlimForReceiver.Release();
             }
         }
-        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #region Throw
@@ -467,7 +453,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ThrowIfRemoteIPHostNull()
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
+        ThrowHelper.ThrowIfNull(this.RemoteIPHost, nameof(this.RemoteIPHost));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -496,26 +482,25 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// 异步发送数据，使用提供的内存数据。
     /// </summary>
     /// <param name="memory">要发送的字节数据的内存段。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
-    protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
+    protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        // 确保RemoteIPHost不为<see langword="null"/>，因为发送操作需要它。
         this.ThrowIfRemoteIPHostNull();
         // 调用重载的ProtectedSendAsync方法，传递目的端点和内存数据。
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory);
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken);
     }
 
     /// <summary>
     /// 异步发送数据，使用提供的请求信息。
     /// </summary>
     /// <param name="requestInfo">包含要发送数据的请求信息的对象。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
-    protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo)
+    protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        // 确保RemoteIPHost不为<see langword="null"/>，因为发送操作需要它。
         this.ThrowIfRemoteIPHostNull();
-        // 调用重载的ProtectedSendAsync方法，传递目的端点和请求信息。
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo);
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向默认远程异步发送
@@ -528,13 +513,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的目标端点。</param>
     /// <param name="memory">待发送的字节数据。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的结果。</returns>
-    protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         // 根据m_dataHandlingAdapter是否已设置，选择不同的发送方式
         return this.m_dataHandlingAdapter == null
-            ? this.ProtectedDefaultSendAsync(endPoint, memory) // 使用默认发送方式
-            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory); // 通过适配器发送数据
+            ? this.ProtectedDefaultSendAsync(endPoint, memory, cancellationToken) // 使用默认发送方式
+            : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory, cancellationToken); // 通过适配器发送数据
     }
 
     /// <summary>
@@ -543,13 +529,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的目标端点。</param>
     /// <param name="requestInfo">待发送的请求信息。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，表示异步操作的结果。</returns>
-    protected virtual Task ProtectedSendAsync(EndPoint endPoint, IRequestInfo requestInfo)
+    protected virtual Task ProtectedSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         // 检查是否具备发送请求信息的能力
         this.ThrowIfCannotSendRequestInfo();
         // 通过适配器发送请求信息
-        return this.m_dataHandlingAdapter.SendInputAsync(endPoint, requestInfo);
+        return this.m_dataHandlingAdapter.SendInputAsync(endPoint, requestInfo, cancellationToken);
     }
 
     #endregion 向设置的远程异步发送
@@ -561,15 +548,16 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// 此方法提供了一种默认的发送方式，确保只有在可以发送且远程IP主机不为空时才尝试发送数据。
     /// </summary>
     /// <param name="memory">要发送的只读字节内存。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个等待任务，表示异步操作。</returns>
-    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
+    protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         // 如果不能发送数据，则抛出异常。
         this.ThrowIfCannotSend();
         // 如果远程IP主机为空，则抛出异常。
         this.ThrowIfRemoteIPHostNull();
         // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
-        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
 #if NET6_0_OR_GREATER
@@ -580,6 +568,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的端点。</param>
     /// <param name="memory">待发送的数据，以只读内存块的形式。</param>
+    /// <param name="cancellationToken"></param>
     /// <remarks>
     /// <para>在执行实际的数据发送之前，方法会：</para>
     /// <list type="bullet">
@@ -590,12 +579,12 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// <para>之后，使用<see cref="Socket.SendToAsync(ArraySegment{byte}, SocketFlags, EndPoint)"/>方法异步地将数据发送到指定的端点。</para>
     /// <para>发送完成后，更新最后一次发送时间（<see cref="m_lastSendTime"/>）为当前的UTC时间。</para>
     /// </remarks>
-    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
         this.ThrowIfCannotSend();
         await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
+        await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint, cancellationToken);
         this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
 #else
@@ -605,12 +594,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的端点。</param>
     /// <param name="memory">待发送的数据，以只读内存形式提供。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <remarks>
     /// 此方法为异步发送操作提供保护措施，确保数据在发送前进行必要的检查，
     /// 并通过UDP协议进行发送。
     /// </remarks>
-    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // 检查是否具备发送条件，如果不具备则抛出异常。
         this.ThrowIfCannotSend();
         // 检查对象是否已被释放，如果已被释放则抛出异常。
@@ -639,74 +630,6 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 #endif
 
     #endregion DefaultSendAsync
-
-    #region 组合发送
-
-    /// <summary>
-    /// 异步安全发送数据方法。
-    ///
-    /// 本方法提供了一种安全的异步数据发送方式，确保在发送过程中，
-    /// 使用了端点信息并且避免了潜在的空引用错误。
-    /// </summary>
-    /// <param name="transferBytes">要发送的字节数据集合。</param>
-    /// <returns>返回一个任务，表示异步操作的完成。</returns>
-    protected Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        // 检查RemoteIPHost是否为<see langword="null"/>，因为发送数据前需要确保目标端点已设置。
-        this.ThrowIfRemoteIPHostNull();
-        // 调用重载的ProtectedSendAsync方法，传入远端端点和要传输的字节数据。
-        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, transferBytes);
-    }
-
-    /// <summary>
-    /// 异步发送数据到指定的端点。
-    /// </summary>
-    /// <param name="endPoint">要发送数据的端点。</param>
-    /// <param name="transferBytes">待发送的字节数据列表，每个项包含要传输的字节片段。</param>
-    /// <returns>异步操作任务。</returns>
-    protected async Task ProtectedSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-    {
-        // 确保对象未被释放
-        this.ThrowIfDisposed();
-
-        // 检查是否需要拼接发送数据
-        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
-        {
-            // 计算所有数据片段的总长度
-            var length = 0;
-            foreach (var item in transferBytes)
-            {
-                length += item.Count;
-            }
-
-            // 创建一个具有计算出的长度的字节块，用于拼接所有数据片段
-            using (var byteBlock = new ByteBlock(length))
-            {
-                // 将每个数据片段写入字节块
-                foreach (var item in transferBytes)
-                {
-                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
-                }
-
-                // 根据数据处理适配器的存在与否，选择不同的发送方法
-                if (this.m_dataHandlingAdapter == null)
-                {
-                    await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-                else
-                {
-                    await this.m_dataHandlingAdapter.SendInputAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-        }
-        else
-        {
-            // 如果数据处理适配器支持拼接发送，则直接使用适配器发送数据列表
-            await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
-
-    #endregion 组合发送
 
     #region Receiver
 

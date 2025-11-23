@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 public partial class MqttSubscribeMessage
@@ -19,38 +17,41 @@ public partial class MqttSubscribeMessage
     public uint SubscriptionIdentifier { get; set; }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock);
-        MqttExtension.WriteSubscriptionIdentifier(ref byteBlock, this.SubscriptionIdentifier);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
-        variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
+        MqttExtension.WriteSubscriptionIdentifier(ref byteBlockWriter, this.SubscriptionIdentifier);
+        MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
+        variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+        writer.Advance(byteBlockWriter.Position);
 
         foreach (var item in this.m_subscribeRequests)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, item.Topic);
-            byteBlock.WriteByte((byte)item.QosLevel);
+            MqttExtension.WriteMqttInt16String(ref writer, item.Topic);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item.QosLevel);
         }
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.SubscriptionIdentifier:
-                    this.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier(ref byteBlock);
+                    this.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier(ref reader);
                     break;
                 case MqttPropertyId.UserProperty:
-                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                     break;
                 default:
                     ThrowHelper.ThrowInvalidEnumArgumentException(mqttPropertyId);
@@ -59,10 +60,10 @@ public partial class MqttSubscribeMessage
         }
         //this.SubscriptionIdentifier = propertiesReader.SubscriptionIdentifier;
         //this.UserProperties = propertiesReader.UserProperties;
-        while (!this.EndOfByteBlock(byteBlock))
+        while (!this.EndOfByteBlock(reader))
         {
-            var topic = MqttExtension.ReadMqttInt16String(ref byteBlock);
-            var options = byteBlock.ReadByte();
+            var topic = MqttExtension.ReadMqttInt16String(ref reader);
+            var options = ReaderExtension.ReadValue<TReader, byte>(ref reader);
             this.m_subscribeRequests.Add(new SubscribeRequest(topic, options));
         }
     }

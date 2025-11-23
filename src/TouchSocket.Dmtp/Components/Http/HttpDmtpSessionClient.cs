@@ -10,22 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
 
 /// <summary>
-/// 抽象类 HttpDmtpSessionClient 继承自 HttpSessionClient，并实现 IHttpDmtpSessionClient 接口。
-/// 该类提供了与 HTTP DMTP 协议相关的会话客户端功能。
+/// 表示基于HTTP协议的Dmtp会话客户端，继承自<see cref="HttpSessionClient"/>，实现<see cref="IHttpDmtpSessionClient"/>接口。
 /// </summary>
 public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessionClient
 {
-    internal Func<SealedDmtpActor> m_internalOnRpcActorInit;
     private SealedDmtpActor m_dmtpActor;
 
     /// <inheritdoc/>
@@ -47,24 +41,24 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region 断开
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         if (this.m_dmtpActor != null)
         {
-            await this.m_dmtpActor.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
-        return await base.CloseAsync(msg, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
         if (this.DisposedValue)
         {
             return;
         }
-        base.Dispose(disposing);
+        base.SafetyDispose(disposing);
         if (disposing && this.m_dmtpActor != null)
         {
             this.m_dmtpActor.Dispose();
@@ -76,14 +70,14 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region ResetId
 
     ///<inheritdoc/>
-    public override async Task ResetIdAsync(string newId)
+    public override async Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
         if (this.m_dmtpActor == null)
         {
-            await base.ResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.ResetIdAsync(newId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
-        await this.m_dmtpActor.ResetIdAsync(newId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_dmtpActor.ResetIdAsync(newId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion ResetId
@@ -93,27 +87,61 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private void SetRpcActor(SealedDmtpActor actor)
+    private void InitDmtpActor()
     {
-        actor.Id = this.Id;
-        actor.IdChanged = this.OnDmtpIdChanged;
-        actor.OutputSendAsync = this.ThisDmtpActorOutputSendAsync;
-        actor.Client = this;
-        actor.Closing = this.OnDmtpActorClose;
-        actor.Routing = this.OnDmtpActorRouting;
-        actor.Handshaked = this.OnDmtpActorHandshaked;
-        actor.Handshaking = this.OnDmtpActorHandshaking;
-        actor.CreatedChannel = this.OnDmtpActorCreatedChannel;
-        actor.Logger = this.Logger;
+        var allowRoute = false;
+        Func<string, Task<IDmtpActor>> findDmtpActor = default;
+        var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+        if (dmtpRouteService != null)
+        {
+            allowRoute = true;
+            findDmtpActor = dmtpRouteService.FindDmtpActor;
+        }
+
+        async Task<IDmtpActor> FindDmtpActor(string id)
+        {
+            if (allowRoute)
+            {
+                if (findDmtpActor != null)
+                {
+                    return await findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                if (this.ProtectedTryGetClient(id, out var client) && client is IDmtpActorObject dmtpActorObject)
+                {
+                    return dmtpActorObject.DmtpActor;
+                }
+                return null;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        var actor = new SealedDmtpActor(allowRoute, true)
+        {
+            Id = this.Id,
+            FindDmtpActor = FindDmtpActor,
+            IdChanged = this.OnDmtpIdChanged,
+            OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
+            Client = this,
+            Closing = this.OnDmtpActorClose,
+            Routing = this.OnDmtpActorRouting,
+            Connected = this.OnDmtpActorConnected,
+            Connecting = this.OnDmtpActorConnecting,
+            CreatedChannel = this.OnDmtpActorCreatedChannel,
+            Logger = this.Logger
+        };
+
         this.m_dmtpActor = actor;
 
         this.Protocol = DmtpUtility.DmtpProtocol;
         this.SetAdapter(new DmtpAdapter());
     }
 
-    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedDefaultSendAsync(memory);
+        return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
     #region Override
@@ -124,12 +152,15 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         var request = httpContext.Request;
         var response = httpContext.Response;
 
-        if (request.IsMethod(DmtpUtility.Dmtp) && request.IsUpgrade() &&
-            string.Equals(request.Headers.Get(HttpHeaders.Upgrade), DmtpUtility.Dmtp, StringComparison.OrdinalIgnoreCase))
+        if (request.IsMethod(DmtpUtility.Dmtp)
+            && request.IsUpgrade()
+            && request.Headers.Contains(HttpHeaders.Upgrade, DmtpUtility.Dmtp))
         {
-            this.SetRpcActor(this.m_internalOnRpcActorInit.Invoke());
+            this.InitDmtpActor();
 
-            await response.SetStatus(101, "Switching Protocols").AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response.SetStatus(101, "Switching Protocols")
+                .AnswerAsync()
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         await base.OnReceivedHttpRequest(httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -139,7 +170,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
         await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.OnTcpClosed(e);
+        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
@@ -168,7 +199,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        base.Abort(false, msg);
+        //base.Abort(false, msg);
         return EasyTask.CompletedTask;
     }
 
@@ -177,12 +208,12 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         return this.OnCreatedChannel(e);
     }
 
-    private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnHandshaked(e);
+        return this.OnConnected(e);
     }
 
-    private Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+    private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
         if (e.Token == this.VerifyToken)
         {
@@ -193,7 +224,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             e.Message = "Token不受理";
         }
 
-        return this.OnHandshaking(e);
+        return this.OnConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -264,7 +295,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// 在完成握手连接时
     /// </summary>
     /// <param name="e">包含握手信息的事件参数</param>
-    protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnected(DmtpVerifyEventArgs e)
     {
         // 如果握手已经被处理，则不再执行后续操作
         if (e.Handled)
@@ -272,20 +303,20 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
     /// 在验证Token时
     /// </summary>
     /// <param name="e">参数</param>
-    protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
+    protected virtual async Task OnConnecting(DmtpVerifyEventArgs e)
     {
         if (e.Handled)
         {
             return;
         }
-        await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>

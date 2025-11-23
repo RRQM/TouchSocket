@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -22,11 +18,6 @@ namespace TouchSocket.Sockets;
 /// <typeparam name="TClient">客户端类型，必须实现IClient和IConnectableClient接口。</typeparam>
 public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient> where TClient : class, IClient, IConnectableClient, IOnlineClient
 {
-    /// <summary>
-    /// 连接超时设定
-    /// </summary>
-    public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
-
     /// <summary>
     /// 获取传输的客户端配置
     /// </summary>
@@ -39,17 +30,18 @@ public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient>
     }
 
     /// <inheritdoc/>
-    protected sealed override Task<TClient> CreateClient()
+    protected sealed override Task<TClient> CreateClient(CancellationToken cancellationToken)
     {
-        return this.CreateClient(this.OnGetConfig());
+        return this.CreateClient(this.OnGetConfig(), cancellationToken);
     }
 
     /// <summary>
     /// 创建客户端。
     /// </summary>
     /// <param name="config">传输客户端配置。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>返回创建的客户端任务。</returns>
-    protected abstract Task<TClient> CreateClient(TouchSocketConfig config);
+    protected abstract Task<TClient> CreateClient(TouchSocketConfig config, CancellationToken cancellationToken);
 
     /// <summary>
     /// 获取配置。

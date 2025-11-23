@@ -10,19 +10,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
 namespace TouchSocket.Http;
 
 /// <summary>
 /// Http参数
 /// </summary>
-public interface IHttpParams : IDictionary<string, string>
+public interface IHttpParams : IDictionary<string, TextValues>
 {
     /// <summary>
     /// 获取参数
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    string Get(string key);
+    TextValues Get(string key);
 }

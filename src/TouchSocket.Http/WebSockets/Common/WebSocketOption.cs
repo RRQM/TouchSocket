@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Http.WebSockets;
 
 /// <summary>
@@ -21,4 +23,9 @@ public class WebSocketOption
     /// 版本
     /// </summary>
     public string Version { get; set; } = "13";
+
+    /// <summary>
+    /// 客户端保活时间间隔。设置为大于0的值以启用底层WebSocket Ping保活；设置为<see cref="TimeSpan.Zero"/>则禁用。
+    /// </summary>
+    public TimeSpan KeepAliveInterval { get; set; } = TimeSpan.Zero;
 }

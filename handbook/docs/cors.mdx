@@ -4,8 +4,9 @@ title: 跨域资源共享
 ---
 
 import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
+
 
 <TouchSocketHttpDefinition />
 
@@ -28,21 +29,7 @@ import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
 
 ### 2.1 添加Cors服务
 
-```csharp {4} showLineNumbers
-.ConfigureContainer(a =>
-{
-    //添加跨域服务
-    a.AddCors(corsOption =>
-    {
-        //添加跨域策略，后续使用policyName即可应用跨域策略。
-        corsOption.Add("cors", corsBuilder =>
-        {
-            corsBuilder.AllowAnyMethod()
-                .AllowAnyOrigin();
-        });
-    });
-})
-```
+<CustomCodeBlock region="Http服务器添加跨域服务"/>
 
 :::tip 提示
 
@@ -52,13 +39,7 @@ import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
 
 ### 2.2 应用跨域策略
 
-```csharp {4} showLineNumbers
-.ConfigurePlugins(a =>
-{
-    //应用名称为cors的跨域策略。
-    a.UseCors("cors");
-})
-```
+<CustomCodeBlock region="应用跨域策略"/>
 
 :::tip 提示
 

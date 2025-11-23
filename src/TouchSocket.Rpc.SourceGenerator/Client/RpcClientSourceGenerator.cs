@@ -16,7 +16,7 @@ using System.Reflection;
 namespace TouchSocket;
 
 [Generator]
-public class RpcClientSourceGenerator : ISourceGenerator
+public class RpcClientSourceGenerator : IIncrementalGenerator
 {
     private readonly string m_generatorRpcProxyAttribute = @"
 
@@ -113,18 +113,13 @@ namespace TouchSocket.Rpc
 }
 ";
 
-    public void Initialize(GeneratorInitializationContext context)
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForPostInitialization(a =>
+        context.RegisterPostInitializationOutput(a =>
         {
             var sourceCode = this.m_generatorRpcProxyAttribute.Replace("/*GeneratedCode*/", $"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
-
             a.AddSource(nameof(this.m_generatorRpcProxyAttribute) + ".g.cs", sourceCode);
         });
-    }
-
-    void ISourceGenerator.Execute(GeneratorExecutionContext context)
-    {
-
     }
 }

@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -24,15 +21,10 @@ public class NamedPipeListenOption
     /// 名称
     /// </summary>
     public string Name { get; set; }
-
-    /// <summary>
-    /// 发送超时时间
-    /// </summary>
-    public int SendTimeout { get; set; }
+    public string PipeName { get; set; }
 
     /// <summary>
     /// 配置适配器
     /// </summary>
-    public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; } =
-        () => new NormalDataHandlingAdapter();
+    public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; }
 }

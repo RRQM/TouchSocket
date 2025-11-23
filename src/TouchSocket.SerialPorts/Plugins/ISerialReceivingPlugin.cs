@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.SerialPorts;
 
 
@@ -30,5 +26,5 @@ public interface ISerialReceivingPlugin : IPlugin
     /// <param name="client">触发事件的串行端口会话对象。</param>
     /// <param name="e">包含接收数据的事件参数对象。</param>
     /// <returns>一个Task对象，代表异步操作的结果。</returns>
-    Task OnSerialReceiving(ISerialPortSession client, ByteBlockEventArgs e);
+    Task OnSerialReceiving(ISerialPortSession client, BytesReaderEventArgs e);
 }

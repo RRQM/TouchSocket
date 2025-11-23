@@ -23,8 +23,11 @@ internal static class NormalContainer
     public static void Run()
     {
         ConstructorInject();
-        PropertyInject();
-        MethodInject();
+        SingletonLifetime();
+        TransientLifetime();
+        ScopedLifetime();
+        RegisterWithKey();
+        RegisterWithFactory();
     }
 
     /// <summary>
@@ -32,53 +35,124 @@ internal static class NormalContainer
     /// </summary>
     private static void ConstructorInject()
     {
-        var container = GetContainer();
+        #region IOC构造函数注入
+        var container = new Container();
         container.RegisterSingleton<MyClass1>();
         container.RegisterSingleton<MyClass2>();
 
         var myClass1 = container.Resolve<MyClass1>();
         var myClass2 = container.Resolve<MyClass2>();
+        #endregion
 
         Console.WriteLine(MethodBase.GetCurrentMethod().Name);
     }
 
     /// <summary>
-    /// 属性注入
+    /// 单例生命周期
     /// </summary>
-    private static void PropertyInject()
+    private static void SingletonLifetime()
     {
-        var container = GetContainer();
+        #region IOC单例生命周期
+        var container = new Container();
         container.RegisterSingleton<MyClass1>();
-        container.RegisterSingleton<MyClass1>("key");
-        container.RegisterSingleton<MyClass2>();
 
-        container.RegisterSingleton<MyClass3>();
+        var instance1 = container.Resolve<MyClass1>();
+        var instance2 = container.Resolve<MyClass1>();
+        // instance1 和 instance2 是同一个实例
+        Console.WriteLine($"Singleton: {ReferenceEquals(instance1, instance2)}"); // True
+        #endregion
 
-        var myClass3 = container.Resolve<MyClass3>();
         Console.WriteLine(MethodBase.GetCurrentMethod().Name);
     }
 
     /// <summary>
-    /// 方法注入
+    /// 瞬态生命周期
     /// </summary>
-    private static void MethodInject()
+    private static void TransientLifetime()
     {
-        var container = GetContainer();
-        container.RegisterSingleton<MyClass1>();
-        container.RegisterSingleton<MyClass4>();
+        #region IOC瞬态生命周期
+        var container = new Container();
+        container.RegisterTransient<MyClass1>();
 
-        var myClass4 = container.Resolve<MyClass4>();
+        var instance1 = container.Resolve<MyClass1>();
+        var instance2 = container.Resolve<MyClass1>();
+        // instance1 和 instance2 是不同的实例
+        Console.WriteLine($"Transient: {ReferenceEquals(instance1, instance2)}"); // False
+        #endregion
+
         Console.WriteLine(MethodBase.GetCurrentMethod().Name);
     }
 
-    private static IContainer GetContainer()
+    /// <summary>
+    /// 作用域生命周期
+    /// </summary>
+    private static void ScopedLifetime()
     {
-        return new Container();//默认IOC容器
+        #region IOC作用域生命周期
+        var container = new Container();
+        container.RegisterScoped<MyClass1>();
 
-        //return new AspNetCoreContainer(new ServiceCollection());//使用Aspnetcore的容器
+        // 在同一作用域内是同一实例
+        using (var scope = container.CreateScopedResolver())
+        {
+            var instance1 = scope.Resolver.Resolve<MyClass1>();
+            var instance2 = scope.Resolver.Resolve<MyClass1>();
+            Console.WriteLine($"Scoped (same scope): {ReferenceEquals(instance1, instance2)}"); // True
+        }
+
+        // 在不同作用域内是不同实例
+        using (var scope1 = container.CreateScopedResolver())
+        using (var scope2 = container.CreateScopedResolver())
+        {
+            var instance1 = scope1.Resolver.Resolve<MyClass1>();
+            var instance2 = scope2.Resolver.Resolve<MyClass1>();
+            Console.WriteLine($"Scoped (different scopes): {ReferenceEquals(instance1, instance2)}"); // False
+        }
+        #endregion
+
+        Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+    }
+
+    /// <summary>
+    /// 使用Key注册
+    /// </summary>
+    private static void RegisterWithKey()
+    {
+        #region IOC使用Key注册
+        var container = new Container();
+        container.RegisterSingleton<MyClass1>();
+        container.RegisterSingleton<MyClass1>("specialKey");
+
+        var defaultInstance = container.Resolve<MyClass1>();
+        var keyedInstance = container.Resolve<MyClass1>("specialKey");
+        // 不同的注册，不同的实例
+        Console.WriteLine($"Keyed: {ReferenceEquals(defaultInstance, keyedInstance)}"); // False
+        #endregion
+
+        Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+    }
+
+    /// <summary>
+    /// 使用工厂方法注册
+    /// </summary>
+    private static void RegisterWithFactory()
+    {
+        #region IOC使用工厂方法注册
+        var container = new Container();
+        container.RegisterSingleton<MyClass1>(resolver =>
+        {
+            Console.WriteLine("Creating MyClass1 using factory");
+            return new MyClass1();
+        });
+
+        var instance = container.Resolve<MyClass1>();
+        #endregion
+
+        Console.WriteLine(MethodBase.GetCurrentMethod().Name);
     }
 }
 
+#region IOC定义类型
 internal class MyClass1
 {
 }
@@ -92,35 +166,4 @@ internal class MyClass2
 
     public MyClass1 MyClass1 { get; }
 }
-
-internal class MyClass3
-{
-    /// <summary>
-    /// 直接按类型，默认方式获取
-    /// </summary>
-    [DependencyInject]
-    public MyClass1 MyClass1 { get; set; }
-
-    /// <summary>
-    /// 获得指定类型的对象，然后赋值到object
-    /// </summary>
-    [DependencyInject(typeof(MyClass2))]
-    public object MyClass2 { get; set; }
-
-    /// <summary>
-    /// 按照类型+Key获取
-    /// </summary>
-    [DependencyInject("key")]
-    public MyClass1 KeyMyClass1 { get; set; }
-}
-
-internal class MyClass4
-{
-    public MyClass1 MyClass1 { get; private set; }
-
-    [DependencyInject]
-    public void MethodInject(MyClass1 myClass1)
-    {
-        this.MyClass1 = myClass1;
-    }
-}
+#endregion

@@ -10,56 +10,32 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO.Ports;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
-using TouchSocket.Core;
 
 namespace TouchSocket.SerialPorts;
 
 /// <summary>
 /// Serial核心
 /// </summary>
-internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationResult>
+internal sealed class SerialCore : SafetyDisposableObject, IValueTaskSource<SerialOperationResult>
 {
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
-    private readonly SemaphoreSlim m_receiveLock = new(0, 1);
-    private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
+    private readonly CircularBuffer<byte> m_circularBuffer = new CircularBuffer<byte>(1024 * 4);
+    private readonly Lock m_lock = new Lock();
     private readonly SerialPort m_serialPort;
     private readonly bool m_streamAsync;
-    private ByteBlock m_byteBlock;
     private ManualResetValueTaskSourceCore<SerialOperationResult> m_core = new ManualResetValueTaskSourceCore<SerialOperationResult>();
-
-    //private SerialData m_eventType;
-    private int m_receiveBufferSize = 1024 * 10;
-
-    private ValueCounter m_receiveCounter;
-
-    private int m_sendBufferSize = 1024 * 10;
-
-    private ValueCounter m_sendCounter;
+    private Memory<byte> m_memory;
+    private volatile bool m_disposed = false;
+    private volatile bool m_hasWaitingReceiver = false; // 标记是否有等待中的接收者
 
     /// <summary>
     /// Serial核心
     /// </summary>
-    public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits, bool streamAsync)
+    public SerialCore(SerialPort serialPort, bool streamAsync)
     {
-        this.m_receiveCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnReceivePeriod
-        };
-
-        this.m_sendCounter = new ValueCounter
-        {
-            Period = TimeSpan.FromSeconds(1),
-            OnPeriod = this.OnSendPeriod
-        };
-
-        this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
-
+        this.m_serialPort = serialPort;
         this.m_streamAsync = streamAsync;
 
         if (!streamAsync)
@@ -68,189 +44,197 @@ internal class SerialCore : DisposableObject, IValueTaskSource<SerialOperationRe
         }
     }
 
-    /// <summary>
-    /// 最大缓存尺寸
-    /// </summary>
-    public int MaxBufferSize { get; set; } = 1024 * 1024 * 10;
-
-    /// <summary>
-    /// 最小缓存尺寸
-    /// </summary>
-    public int MinBufferSize { get; set; } = 1024 * 10;
-
-    /// <summary>
-    /// 接收缓存池,运行时的值会根据流速自动调整
-    /// </summary>
-    public int ReceiveBufferSize => this.m_receiveBufferSize;
-
-    /// <summary>
-    /// 接收计数器
-    /// </summary>
-    public ValueCounter ReceiveCounter => this.m_receiveCounter;
-
-    /// <summary>
-    /// 发送缓存池,运行时的值会根据流速自动调整
-    /// </summary>
-    public int SendBufferSize => this.m_sendBufferSize;
-
-    /// <summary>
-    /// 发送计数器
-    /// </summary>
-    public ValueCounter SendCounter => this.m_sendCounter;
-
     public SerialPort SerialPort => this.m_serialPort;
 
-    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short token)
+    SerialOperationResult IValueTaskSource<SerialOperationResult>.GetResult(short cancellationToken)
     {
-        return this.m_core.GetResult(token);
+        return this.m_core.GetResult(cancellationToken);
     }
 
-    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short token)
+    ValueTaskSourceStatus IValueTaskSource<SerialOperationResult>.GetStatus(short cancellationToken)
     {
-        return this.m_core.GetStatus(token);
+        return this.m_core.GetStatus(cancellationToken);
     }
 
-    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
+    void IValueTaskSource<SerialOperationResult>.OnCompleted(Action<object> continuation, object state, short cancellationToken, ValueTaskSourceOnCompletedFlags flags)
     {
-        try
-        {
-            this.m_core.OnCompleted(continuation, state, token, flags);
-        }
-        catch (Exception ex)
-        {
-            // 记录异常并尝试设置异常状态，防止continuation执行异常影响整个应用
-            // 这里可以根据需要添加日志记录
-            // Logger?.LogError(ex, "Error in OnCompleted continuation execution");
-            
-            // 如果可能，尝试通知异常
-            try
-            {
-                this.m_core.SetException(ex);
-            }
-            catch
-            {
-                // 忽略SetException的异常，避免递归异常
-            }
-        }
+        this.m_core.OnCompleted(continuation, state, cancellationToken, flags);
     }
 
-    public async Task<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
+    public async ValueTask<SerialOperationResult> ReceiveAsync(Memory<byte> memory, CancellationToken cancellationToken)
     {
+        this.ThrowIfDisposed();
+
         if (this.m_streamAsync)
         {
+            this.m_cancellationTokenSource.Token.ThrowIfCancellationRequested();
             // 如果是异步流，则使用异步读取方式
-            var token = this.m_cancellationTokenSource.Token;
             var stream = this.m_serialPort.BaseStream;
-            var memory = byteBlock.TotalMemory;
-            var r = await stream.ReadAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_receiveCounter.Increment(r);
+            var r = await stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return new SerialOperationResult(r, SerialData.Chars);
         }
         else
         {
-            return await this.ValueReceiveAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.ValueReceiveAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
-    public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
+    public async Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        var token = this.m_cancellationTokenSource.Token;
-        await this.m_semaphoreForSend.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        try
+        this.ThrowIfDisposed();
+        this.m_cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+        if (this.m_streamAsync)
         {
             var stream = this.m_serialPort.BaseStream;
-            await stream.WriteAsync(memory, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            this.m_sendCounter.Increment(memory.Length);
+            await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        finally
+        else
         {
-            this.m_semaphoreForSend.Release();
+            var bytes = memory.GetArray();
+            this.m_serialPort.Write(bytes.Array, bytes.Offset, bytes.Count);
         }
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
         if (disposing)
         {
+            this.m_disposed = true;
+
             try
             {
-                // 取消未完成的任务源
-                this.m_cancellationTokenSource.Cancel();
-                this.m_cancellationTokenSource.Dispose();
+                // 首先取消令牌，阻止新的操作
+                this.m_cancellationTokenSource.SafeCancel();
+
+                // 在持有锁的情况下处理任务源，确保线程安全
+                lock (this.m_lock)
+                {
+                    if (this.m_hasWaitingReceiver)
+                    {
+                        this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
+                        this.m_hasWaitingReceiver = false;
+                    }
+                }
+
+                // 移除事件处理器（在串口关闭之前）
                 this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
-                this.m_serialPort.Close();
-                this.m_serialPort.Dispose();
-                this.m_core.SetException(new ObjectDisposedException(nameof(SerialCore)));
+
+                // 关闭串口
+                if (this.m_serialPort.IsOpen)
+                {
+                    this.m_serialPort.Close();
+                }
+
+                // 释放资源
+                this.m_serialPort.SafeDispose();
+                this.m_cancellationTokenSource.SafeDispose();
             }
             catch
             {
+                // 释放过程中的异常应该被忽略
             }
         }
-        base.Dispose(disposing);
-    }
-
-    private void OnReceivePeriod(long value)
-    {
-        this.m_receiveBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
-    }
-
-    private void OnSendPeriod(long value)
-    {
-        this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
     }
 
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        var token = this.m_cancellationTokenSource.Token;
-        if (token.IsCancellationRequested)
+        if (this.m_disposed || this.m_cancellationTokenSource.Token.IsCancellationRequested)
         {
             return;
         }
 
         try
         {
-            var bytesToRead = this.m_serialPort.BytesToRead;
-            while (bytesToRead > 0)
+            lock (this.m_lock)
             {
-                this.m_receiveLock.Wait(token);
+                if (this.m_disposed) // 双重检查
+                {
+                    return;
+                }
 
-                var eventType = e.EventType;
+                if (!this.m_hasWaitingReceiver)
+                {
+                    // 如果没有等待接收，则放入环形缓冲区
+                    var spinWait = new SpinWait();
+                    Memory<byte> buffer;
 
-                var length = Math.Min(bytesToRead, this.m_byteBlock.Capacity);
-                var bytes = this.m_byteBlock.TotalMemory.GetArray();
-                var r = this.m_serialPort.Read(bytes.Array, 0, length);
-                this.m_receiveCounter.Increment(r);
-                var serialOperationResult = new SerialOperationResult(r, eventType);
-                this.m_core.SetResult(serialOperationResult);
-                bytesToRead -= r;
+                    do
+                    {
+                        if (this.m_disposed || this.m_cancellationTokenSource.Token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        buffer = this.m_circularBuffer.GetWriteMemory();
+                        if (!buffer.IsEmpty)
+                        {
+                            break;
+                        }
+                        spinWait.SpinOnce();
+                    }
+                    while (true);
+
+                    var r = this.m_serialPort.Read(buffer);
+                    this.m_circularBuffer.AdvanceWrite(r);
+                }
+                else
+                {
+                    // 有等待的接收者，直接读取到其缓冲区
+                    if (!this.m_memory.IsEmpty)
+                    {
+                        var buffer = this.m_memory.GetArray();
+                        var r = this.m_serialPort.Read(buffer);
+                        var serialOperationResult = new SerialOperationResult(r, e.EventType);
+
+                        // 清除等待状态
+                        this.m_hasWaitingReceiver = false;
+                        this.m_memory = Memory<byte>.Empty;
+
+                        // 设置结果
+                        this.m_core.SetResult(serialOperationResult);
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
-            // 设置任务源的异常
-            this.m_core.SetException(ex);
+            lock (this.m_lock)
+            {
+                if (this.m_hasWaitingReceiver)
+                {
+                    this.m_hasWaitingReceiver = false;
+                    this.m_memory = Memory<byte>.Empty;
+                    this.m_core.SetException(ex);
+                }
+            }
         }
     }
 
-    private void SetBuffer(ByteBlock byteBlock)
+    private ValueTask<SerialOperationResult> ValueReceiveAsync(Memory<byte> memory)
     {
-        this.m_byteBlock = byteBlock;
-    }
-
-    private ValueTask<SerialOperationResult> ValueReceiveAsync(ByteBlock byteBlock)
-    {
-        this.m_core.Reset();
-        this.SetBuffer(byteBlock);
-
-        if (this.m_receiveLock.CurrentCount == 0)
+        lock (this.m_lock)
         {
-            this.m_receiveLock.Release();
-        }
+            this.ThrowIfDisposed();
 
-        return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
+            // 首先检查缓冲区是否有数据
+            if (!this.m_circularBuffer.IsEmpty)
+            {
+                var r = this.m_circularBuffer.Read(memory.Span);
+                return new ValueTask<SerialOperationResult>(new SerialOperationResult(r, SerialData.Chars));
+            }
+
+            // 确保没有其他等待中的接收者
+            if (this.m_hasWaitingReceiver)
+            {
+                throw new InvalidOperationException("已有一个接收操作正在等待中");
+            }
+
+            // 重置任务源并设置等待状态
+            this.m_core.Reset();
+            this.m_memory = memory;
+            this.m_hasWaitingReceiver = true;
+
+            return new ValueTask<SerialOperationResult>(this, this.m_core.Version);
+        }
     }
 }

@@ -10,15 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
 /// Modbus请求类
 /// </summary>
-public class ModbusRequest : IModbusRequest
+public class ModbusRequest : IModbusReadWriteRequest
 {
     /// <summary>
     /// Modbus请求类
@@ -61,31 +58,31 @@ public class ModbusRequest : IModbusRequest
         this.FunctionCode = functionCode;
     }
 
-   
+
     /// <inheritdoc/>
     public ReadOnlyMemory<byte> Data { get; set; }
 
-    
+
     /// <inheritdoc/>
     public FunctionCode FunctionCode { get; set; }
 
-   
+
     /// <inheritdoc/>
     public ushort Quantity { get; set; }
 
-    
+
     /// <inheritdoc/>
     public ushort ReadQuantity { get; set; }
 
-   
+
     /// <inheritdoc/>
     public ushort ReadStartAddress { get; set; }
 
-    
+
     /// <inheritdoc/>
     public byte SlaveId { get; set; }
 
-    
+
     /// <inheritdoc/>
     public ushort StartingAddress { get; set; }
 
@@ -135,10 +132,9 @@ public class ModbusRequest : IModbusRequest
     /// 设置<see cref="Data"/>的值为 bool数组，同时设置<see cref="Quantity"/>的数量（即数组长度）。
     /// </summary>
     /// <param name="values">要设置的 bool数组</param>
-    public void SetValue(bool[] values)
+    public void SetValue(ReadOnlySpan<bool> values)
     {
-        // 将 bool数组转换为字节，并赋值给Data属性
-        this.Data = TouchSocketBitConverter.BigEndian.GetBytes(values);
+        this.Data = TouchSocketBitConverter.ConvertValues<bool, byte>(values);
         // 设置Quantity属性为数组的长度，以记录 bool值的数量
         this.Quantity = (ushort)values.Length;
     }

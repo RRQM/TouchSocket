@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -28,7 +25,7 @@ public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
     /// <param name="topics">要取消订阅的主题。</param>
     public MqttUnsubscribeMessage(params string[] topics)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(topics, nameof(topics));
+        ThrowHelper.ThrowIfNull(topics, nameof(topics));
 
         if (topics.Length < 1)
         {
@@ -52,12 +49,12 @@ public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
     public IReadOnlyList<string> TopicFilters => this.m_topicFilters;
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         foreach (var topicFilter in this.TopicFilters)
         {
-            MqttExtension.WriteMqttInt16String(ref byteBlock, topicFilter);
+            MqttExtension.WriteMqttInt16String(ref writer, topicFilter);
         }
     }
 
@@ -75,12 +72,12 @@ public sealed partial class MqttUnsubscribeMessage : MqttIdentifierMessage
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt3<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt3<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
-        while (!this.EndOfByteBlock(byteBlock))
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+        while (!this.EndOfByteBlock(reader))
         {
-            this.m_topicFilters.Add(MqttExtension.ReadMqttInt16String(ref byteBlock));
+            this.m_topicFilters.Add(MqttExtension.ReadMqttInt16String(ref reader));
         }
     }
 }

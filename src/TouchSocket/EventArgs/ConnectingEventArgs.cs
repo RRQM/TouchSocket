@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -24,7 +22,7 @@ public class ConnectingEventArgs : MsgPermitEventArgs
 
     /// <summary>
     /// 构造函数
-    /// 初始化IsPermitOperation属性为true，表示默认允许操作。
+    /// 初始化IsPermitOperation属性为<see langword="true"/>，表示默认允许操作。
     /// </summary>
     public ConnectingEventArgs()
     {

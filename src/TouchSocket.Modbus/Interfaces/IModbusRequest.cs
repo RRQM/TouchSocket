@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Modbus;
 
 /// <summary>
@@ -43,14 +41,4 @@ public interface IModbusRequest
     /// 功能码
     /// </summary>
     FunctionCode FunctionCode { get; }
-
-    /// <summary>
-    /// 在读起始位置。该属性仅仅在<see cref="FunctionCode"/>为<see cref="FunctionCode.ReadWriteMultipleRegisters"/>时才表示读取起始位置。
-    /// </summary>
-    ushort ReadStartAddress { get; }
-
-    /// <summary>
-    /// 读取长度，该属性仅在<see cref="FunctionCode"/>为<see cref="FunctionCode.ReadWriteMultipleRegisters"/>时才表示读取数量。
-    /// </summary>
-    ushort ReadQuantity { get; }
 }

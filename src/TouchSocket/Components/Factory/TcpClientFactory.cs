@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -22,15 +18,6 @@ namespace TouchSocket.Sockets;
 /// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
 public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
 {
-    /// <summary>
-    /// 处理Tcp客户端的释放操作。
-    /// </summary>
-    /// <param name="client">要释放的Tcp客户端。</param>
-    public override void DisposeClient(TClient client)
-    {
-        client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
-        base.DisposeClient(client);
-    }
 }
 
 /// <summary>
@@ -39,11 +26,11 @@ public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClie
 public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
 {
     /// <inheritdoc/>
-    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
+    protected override async Task<TcpClient> CreateClient(TouchSocketConfig config, CancellationToken cancellationToken)
     {
         var client = new TcpClient();
         await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return client;
     }
 }

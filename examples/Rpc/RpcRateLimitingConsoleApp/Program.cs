@@ -37,6 +37,7 @@ internal class Program
                        store.RegisterServer<MyRpcServer>();//注册服务
                    });
 
+                   #region Rpc限流添加固定窗口限制器
                    a.AddRateLimiter(p =>
                    {
                        //添加一个名称为FixedWindow的固定窗口的限流策略
@@ -45,7 +46,12 @@ internal class Program
                            options.PermitLimit = 10;
                            options.Window = TimeSpan.FromSeconds(10);
                        });
+                   });
+                   #endregion
 
+                   #region Rpc限流添加滑动窗口限制器
+                   a.AddRateLimiter(p =>
+                   {
                        //添加一个名称为SlidingWindow的滑动窗口的限流策略
                        p.AddSlidingWindowLimiter("SlidingWindow", options =>
                        {
@@ -53,7 +59,12 @@ internal class Program
                            options.Window = TimeSpan.FromSeconds(10);
                            options.SegmentsPerWindow = 5;
                        });
+                   });
+                   #endregion
 
+                   #region Rpc限流添加令牌桶限制器
+                   a.AddRateLimiter(p =>
+                   {
                        //添加一个名称为TokenBucket的令牌桶的限流策略
                        p.AddTokenBucketLimiter("TokenBucket", options =>
                        {
@@ -64,7 +75,12 @@ internal class Program
                            options.TokensPerPeriod = 10;
                            options.AutoReplenishment = true;
                        });
+                   });
+                   #endregion
 
+                   #region Rpc限流添加并发限制器
+                   a.AddRateLimiter(p =>
+                   {
                        //添加一个名称为Concurrency的并发的限流策略
                        p.AddConcurrencyLimiter("Concurrency", options =>
                        {
@@ -73,14 +89,15 @@ internal class Program
                            options.QueueLimit = 10;
                        });
                    });
+                   #endregion
                })
                .ConfigurePlugins(a =>
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Rpc"//连接验证口令。
+                   options.VerifyToken = "Rpc";//连接验证口令。
                });
 
         service.SetupAsync(config);
@@ -92,11 +109,12 @@ internal class Program
     }
 }
 
+#region Rpc限流使用特性
 public partial class MyRpcServer : SingletonRpcServer
 {
     [EnableRateLimiting("FixedWindow")]
-    [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [DmtpRpc(InvokeKey = "Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    [Description("登录")]//服务描述,在生成代理时,会变成注释。
+    [DmtpRpc(InvokeKey = "Login")]//服务注册的函数键,此处为显式指定。默认不传参的时候,为该函数类全名+方法名的全小写。
     public bool Login(string account, string password)
     {
         if (account == "123" && password == "abc")
@@ -107,3 +125,4 @@ public partial class MyRpcServer : SingletonRpcServer
         return false;
     }
 }
+#endregion

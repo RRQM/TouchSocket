@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 
 namespace TouchSocket.Rpc;
@@ -24,14 +21,10 @@ namespace TouchSocket.Rpc;
 public static class RpcStoreExtension
 {
     /// <summary>
-    /// DynamicallyAccessed
-    /// </summary>
-    public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicProperties;
-
-    /// <summary>
     /// 注册<see cref="AppDomain"/>已加载程序集的所有Rpc服务
     /// </summary>
     /// <returns>返回搜索到的服务数</returns>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static void RegisterAllServer(this RpcStore rpcStore)
     {
         var types = new List<Type>();
@@ -47,6 +40,7 @@ public static class RpcStoreExtension
     /// </summary>
     /// <param name="rpcStore"></param>
     /// <param name="assembly"></param>
+    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static void RegisterAllServer(this RpcStore rpcStore, Assembly assembly)
     {
         foreach (var type in assembly.ExportedTypes.Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray())
@@ -60,7 +54,7 @@ public static class RpcStoreExtension
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this RpcStore rpcStore) where T : IRpcServer
+    public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] T>(this RpcStore rpcStore) where T : IRpcServer
     {
         rpcStore.RegisterServer(typeof(T));
     }
@@ -71,7 +65,7 @@ public static class RpcStoreExtension
     /// <param name="rpcStore"></param>
     /// <param name="providerType"></param>
     /// <returns></returns>
-    public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type providerType)
+    public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type providerType)
     {
         rpcStore.RegisterServer(providerType, providerType);
     }
@@ -82,7 +76,7 @@ public static class RpcStoreExtension
     /// <typeparam name="TFrom"></typeparam>
     /// <typeparam name="TTo"></typeparam>
     /// <returns></returns>
-    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
+    public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] TFrom, [DynamicallyAccessedMembers(AOT.RpcRegister)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
     {
         rpcStore.RegisterServer(typeof(TFrom), typeof(TTo));
     }
@@ -92,7 +86,7 @@ public static class RpcStoreExtension
     /// </summary>
     /// <typeparam name="TFrom"></typeparam>
     /// <returns></returns>
-    public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom rpcServer) where TFrom : class, IRpcServer
+    public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] TFrom>(this RpcStore rpcStore, TFrom rpcServer) where TFrom : class, IRpcServer
     {
         rpcStore.RegisterServer(typeof(TFrom), rpcServer);
     }

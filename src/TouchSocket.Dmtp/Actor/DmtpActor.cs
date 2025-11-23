@@ -10,14 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -33,42 +26,44 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <summary>
     /// 请求关闭
     /// </summary>
-    public Func<DmtpActor, string, Task> Closing { get; set; }
-
-    /// <summary>
-    /// 当创建通道时
-    /// </summary>
-    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; set; }
-
-    /// <summary>
-    /// 查找其他IDmtpActor
-    /// </summary>
-    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
+    public Func<DmtpActor, string, Task> Closing { get; init; }
 
     /// <summary>
     /// 在完成握手连接时
     /// </summary>
-    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Handshaked { get; set; }
+    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connected { get; init; }
 
     /// <summary>
     /// 握手
     /// </summary>
-    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Handshaking { get; set; }
+    public Func<DmtpActor, DmtpVerifyEventArgs, Task> Connecting { get; init; }
+
+    /// <summary>
+    /// 当创建通道时
+    /// </summary>
+    public Func<DmtpActor, CreateChannelEventArgs, Task> CreatedChannel { get; init; }
+
+    /// <summary>
+    /// 查找其他IDmtpActor
+    /// </summary>
+    public Func<string, Task<IDmtpActor>> FindDmtpActor { get; init; }
 
     /// <summary>
     /// 重设Id
     /// </summary>
-    public Func<DmtpActor, IdChangedEventArgs, Task> IdChanged { get; set; }
-
-    /// <summary>
-    /// 当需要路由的时候
-    /// </summary>
-    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; set; }
+    public Func<DmtpActor, IdChangedEventArgs, Task> IdChanged { get; init; }
 
     /// <summary>
     /// 异步发送数据接口
     /// </summary>
-    public Func<DmtpActor, ReadOnlyMemory<byte>, Task> OutputSendAsync { get; set; }
+    public Func<DmtpActor, ReadOnlyMemory<byte>, CancellationToken, Task> OutputSendAsync { get; init; }
+
+    /// <summary>
+    /// 当需要路由的时候
+    /// </summary>
+    public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; init; }
+
+    public ITransportWriter TransportWriter { get; init; }
 
     #endregion 委托
 
@@ -81,10 +76,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public IDmtpActorObject Client { get; set; }
 
     /// <inheritdoc/>
-    public string Id { get; set; }
+    public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
 
     /// <inheritdoc/>
-    public virtual bool Online => this.m_online;
+    public string Id { get => this.m_id; init => this.m_id = value; }
 
     /// <inheritdoc/>
     public bool IsReliable { get; }
@@ -96,21 +91,24 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public ILog Logger { get; set; }
 
     /// <inheritdoc/>
-    public WaitHandlePool<IWaitResult> WaitHandlePool { get; protected set; }
+    public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
-    public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
+    public WaitHandlePool<IWaitResult> WaitHandlePool { get; }
 
     #endregion 属性
 
     #region 字段
+
+    private readonly Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
+    private readonly AsyncManualResetEvent m_handshakeFinished = new(false);
+    private readonly Lock m_syncRoot = new Lock();
     private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
-    private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
     private CancellationTokenSource m_cancellationTokenSource;
     private bool m_online;
-    private readonly Lock m_syncRoot = new Lock();
-    private readonly Dictionary<Type, IActor> m_actors = new Dictionary<Type, IActor>();
-    #endregion
+    private string m_id;
+
+    #endregion 字段
 
     /// <summary>
     /// 创建一个Dmtp协议的最基础功能件
@@ -133,15 +131,18 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     {
     }
 
-
     /// <summary>
     /// 建立对点
     /// </summary>
     /// <exception cref="Exception"></exception>
     /// <exception cref="TokenVerifyException"></exception>
     /// <exception cref="TimeoutException"></exception>
-    public virtual async Task HandshakeAsync(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
+    public virtual async Task ConnectAsync(DmtpOption dmtpOption, CancellationToken cancellationToken)
     {
+        var verifyToken = dmtpOption.VerifyToken;
+        var id = dmtpOption.Id;
+        var metadata = dmtpOption.Metadata;
+
         if (this.m_online)
         {
             return;
@@ -155,7 +156,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         this.m_handshakeFinished.Reset();
 
-        await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         var waitVerify = new WaitVerify()
         {
@@ -163,22 +164,20 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             Id = args.Id,
             Metadata = args.Metadata
         };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify);
-        waitData.SetCancellationToken(token);
 
-        try
+        using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify))
         {
-            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        var verifyResult = (WaitVerify)waitData.WaitResult;
+                        var verifyResult = (WaitVerify)waitData.CompletedData;
                         if (verifyResult.Status == 1)
                         {
-                            this.Id = verifyResult.Id;
+                            this.m_id = verifyResult.Id;
                             this.m_online = true;
-                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
+                            _ = EasyTask.SafeRun(this.PrivateOnConnected, new DmtpVerifyEventArgs()
                             {
                                 Id = verifyResult.Id,
                                 Metadata = verifyResult.Metadata,
@@ -203,10 +202,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 default:
                     throw new OperationCanceledException();
             }
-        }
-        finally
-        {
-            this.WaitHandlePool.Destroy(waitVerify.Sign);
         }
     }
 
@@ -238,43 +233,29 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <summary>
-    /// 正在握手连接
-    /// </summary>
-    /// <param name="e"></param>
-    /// <returns></returns>
-    protected virtual Task OnHandshaking(DmtpVerifyEventArgs e)
-    {
-        if (this.Handshaking != null)
-        {
-            return this.Handshaking.Invoke(this, e);
-        }
-        return EasyTask.CompletedTask;
-    }
-
-    /// <summary>
     /// 握手连接完成
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    protected virtual Task OnHandshaked(DmtpVerifyEventArgs e)
+    protected virtual Task OnConnected(DmtpVerifyEventArgs e)
     {
-        if (this.Handshaked != null)
+        if (this.Connected != null)
         {
-            return this.Handshaked.Invoke(this, e);
+            return this.Connected.Invoke(this, e);
         }
         return EasyTask.CompletedTask;
     }
 
     /// <summary>
-    /// 当Id修改时
+    /// 正在握手连接
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    protected virtual Task OnIdChanged(IdChangedEventArgs e)
+    protected virtual Task OnConnecting(DmtpVerifyEventArgs e)
     {
-        if (this.IdChanged != null)
+        if (this.Connecting != null)
         {
-            return this.IdChanged.Invoke(this, e);
+            return this.Connecting.Invoke(this, e);
         }
         return EasyTask.CompletedTask;
     }
@@ -293,9 +274,23 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
-    private async Task PrivateOnHandshaked(DmtpVerifyEventArgs e)
+    /// <summary>
+    /// 当Id修改时
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    protected virtual Task OnIdChanged(IdChangedEventArgs e)
     {
-        await this.OnHandshaked(e);
+        if (this.IdChanged != null)
+        {
+            return this.IdChanged.Invoke(this, e);
+        }
+        return EasyTask.CompletedTask;
+    }
+
+    private async Task PrivateOnConnected(DmtpVerifyEventArgs e)
+    {
+        await this.OnConnected(e);
     }
 
     private async Task PrivateOnCreatedChannel(object obj)
@@ -387,7 +382,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public virtual async Task<bool> InputReceivedData(DmtpMessage message)
     {
         this.LastActiveTime = DateTimeOffset.UtcNow;
-        var byteBlock = message.BodyByteBlock;
+        var reader = new BytesReader(message.Memory);
         switch (message.ProtocolFlags)
         {
             case P0_Close:
@@ -407,17 +402,17 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             Metadata = waitVerify.Metadata,
                             Id = waitVerify.Id,
                         };
-                        await this.OnHandshaking(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         if (args.Id.HasValue())
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.Id = args.Id;
+                            await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            this.m_id = args.Id;
                         }
 
                         if (args.IsPermitOperation)
                         {
-                            waitVerify.Id = this.Id;
+                            waitVerify.Id = this.m_id;
                             waitVerify.Status = 1;
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = args.Message ?? TouchSocketCoreResource.OperationSuccessful;
@@ -425,7 +420,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             this.m_online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                             this.m_cancellationTokenSource = new CancellationTokenSource();
-                            _ = EasyTask.SafeRun(this.PrivateOnHandshaked, args);
+                            _ = EasyTask.SafeRun(this.PrivateOnConnected, args);
                         }
                         else//不允许连接
                         {
@@ -448,7 +443,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     try
                     {
                         var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
-                        this.WaitHandlePool.SetRun(waitVerify);
+                        this.WaitHandlePool.Set(waitVerify);
                         await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
@@ -466,7 +461,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         try
                         {
                             await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            this.Id = waitSetId.NewId;
+                            this.m_id = waitSetId.NewId;
                             waitSetId.Status = 1;
                         }
                         catch (Exception ex)
@@ -486,7 +481,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 {
                     try
                     {
-                        this.WaitHandlePool.SetRun(ResolveJsonObject<WaitSetId>(message.GetBodyString()));
+                        this.WaitHandlePool.Set(ResolveJsonObject<WaitSetId>(message.GetBodyString()));
                     }
                     catch (Exception ex)
                     {
@@ -506,7 +501,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             {
                                 if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P5_Ping_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await actor.SendAsync(P5_Ping_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     return true;
                                 }
                                 else
@@ -542,12 +537,12 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         {
                             if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                             {
-                                await actor.SendAsync(P6_Ping_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P6_Ping_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         else
                         {
-                            this.WaitHandlePool.SetRun(waitPing);
+                            this.WaitHandlePool.Set(waitPing);
                         }
                     }
                     catch (Exception ex)
@@ -562,31 +557,31 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     {
                         var waitCreateChannel = new WaitCreateChannelPackage();
 
-                        waitCreateChannel.UnpackageRouter(ref byteBlock);
+                        waitCreateChannel.UnpackageRouter(ref reader);
                         if (this.AllowRoute && waitCreateChannel.Route)
                         {
                             if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await actor.SendAsync(P7_CreateChannel_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     return true;
                                 }
                                 else
                                 {
-                                    waitCreateChannel.UnpackageBody(ref byteBlock);
+                                    waitCreateChannel.UnpackageBody(ref reader);
                                     waitCreateChannel.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                                 }
                             }
                             else
                             {
-                                waitCreateChannel.UnpackageBody(ref byteBlock);
+                                waitCreateChannel.UnpackageBody(ref reader);
                                 waitCreateChannel.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                             }
                         }
                         else
                         {
-                            waitCreateChannel.UnpackageBody(ref byteBlock);
+                            waitCreateChannel.UnpackageBody(ref reader);
 
                             while (true)
                             {
@@ -608,11 +603,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             }
                         }
                         waitCreateChannel.SwitchId();
-                        byteBlock.Reset();
 
-                        waitCreateChannel.Package(ref byteBlock);
-
-                        await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.SendAsync(P8_CreateChannel_Response, waitCreateChannel).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -626,19 +618,19 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     {
                         var waitCreateChannel = new WaitCreateChannelPackage();
 
-                        waitCreateChannel.UnpackageRouter(ref byteBlock);
+                        waitCreateChannel.UnpackageRouter(ref reader);
                         if (this.AllowRoute && waitCreateChannel.Route)
                         {
                             if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                             {
-                                await actor.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P8_CreateChannel_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 return true;
                             }
                         }
                         else
                         {
-                            waitCreateChannel.UnpackageBody(ref byteBlock);
-                            this.WaitHandlePool.SetRun(waitCreateChannel);
+                            waitCreateChannel.UnpackageBody(ref reader);
+                            this.WaitHandlePool.Set(waitCreateChannel);
                         }
                     }
                     catch (Exception ex)
@@ -653,30 +645,25 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     {
                         var channelPackage = new ChannelPackage();
 
-                        channelPackage.UnpackageRouter(ref byteBlock);
+                        channelPackage.UnpackageRouter(ref reader);
                         if (this.AllowRoute && channelPackage.Route)
                         {
                             if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
                             {
-                                await actor.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P9_ChannelPackage, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             else
                             {
-                                channelPackage.UnpackageBody(ref byteBlock);
+                                channelPackage.UnpackageBody(ref reader);
                                 channelPackage.Message = TouchSocketDmtpStatus.ClientNotFind.GetDescription(channelPackage.TargetId);
                                 channelPackage.SwitchId();
-                                channelPackage.RunNow = true;
-                                channelPackage.DataType = ChannelDataType.DisposeOrder;
-                                byteBlock.Reset();
-
-                                channelPackage.Package(ref byteBlock);
-
-                                await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                channelPackage.DataType = ChannelDataType.Canceled;
+                                await this.SendAsync(P9_ChannelPackage, channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         else
                         {
-                            channelPackage.UnpackageBody(ref byteBlock);
+                            channelPackage.UnpackageBody(ref reader);
                             this.QueueChannelPackage(channelPackage);
                         }
                     }
@@ -698,45 +685,45 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <inheritdoc/>
-    public virtual Task<bool> PingAsync(int millisecondsTimeout = 5000)
+    public virtual Task<Result> PingAsync(CancellationToken cancellationToken = default)
     {
-        return this.PrivatePingAsync(default, millisecondsTimeout);
+        return this.PrivatePingAsync(default, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000)
+    public virtual async Task<Result> PingAsync(string targetId, CancellationToken cancellationToken = default)
     {
         if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
         {
-            return await actor.PingAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.PingAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
-            return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivatePingAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
     /// <inheritdoc/>
-    public virtual async Task ResetIdAsync(string newId)
+    public virtual async Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
-        var waitSetId = new WaitSetId(this.Id, newId);
+        var waitSetId = new WaitSetId(this.m_id, newId);
 
         var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
-        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        switch (await waitData.WaitAsync(5000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
         {
-            case WaitDataStatus.SetRunning:
+            case WaitDataStatus.Success:
                 {
-                    if (waitData.WaitResult.Status == 1)
+                    if (waitData.CompletedData.Status == 1)
                     {
-                        await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        this.Id = newId;
+                        await this.OnIdChanged(new IdChangedEventArgs(this.m_id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        this.m_id = newId;
                     }
                     else
                     {
-                        throw new Exception(waitData.WaitResult.Message);
+                        throw new Exception(waitData.CompletedData.Message);
                     }
                     break;
                 }
@@ -751,50 +738,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private Task SendJsonObjectAsync<T>(ushort protocol, in T obj)
-    {
-#if SystemTextJson
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSokcetDmtpSourceGenerationContext.Default);
-#else
-        var bytes = JsonConvert.SerializeObject(obj).ToUtf8Bytes();
-#endif
-
-        return this.SendAsync(protocol, bytes);
-    }
-
-    private static T ResolveJsonObject<T>(string json)
-    {
-#if SystemTextJson
-
-        return (T)System.Text.Json.JsonSerializer.Deserialize(json, typeof(T), TouchSokcetDmtpSourceGenerationContext.Default);
-#else
-        return JsonConvert.DeserializeObject<T>(json);
-#endif
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task SendPackageAsync(ushort protocol, IPackage package)
-    {
-        using (var byteBlock = new ByteBlock(1024 * 64))
-        {
-            var block = byteBlock;
-            package.Package(ref block);
-
-            await this.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
-
-    /// <inheritdoc/>
-    public virtual Task SendStringAsync(ushort protocol, string value)
-    {
-        var data = Encoding.UTF8.GetBytes(value);
-        return this.SendAsync(protocol, data);
-    }
-
     /// <inheritdoc/>
     public virtual async Task<DmtpActor> TryFindDmtpActor(string targetId)
     {
-        if (targetId == this.Id)
+        if (targetId == this.m_id)
         {
             return this;
         }
@@ -827,29 +774,33 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private async Task<bool> PrivatePingAsync(string targetId, int millisecondsTimeout)
+    private static T ResolveJsonObject<T>(string json)
+    {
+        return (T)System.Text.Json.JsonSerializer.Deserialize(json, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
+    }
+
+    private async Task<Result> PrivatePingAsync(string targetId, CancellationToken cancellationToken = default)
     {
         if (!this.Online)
         {
-            return false;
+            return Result.FromFail(TouchSocketResource.ClientNotConnected);
         }
         var waitPing = new WaitPing
         {
             TargetId = targetId,
-            SourceId = this.Id
+            SourceId = this.m_id
         };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
-        try
+        using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing))
         {
-            await this.SendJsonObjectAsync(P5_Ping_Request, waitPing).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            await this.SendJsonObjectAsync(P5_Ping_Request, waitPing, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                case WaitDataStatus.SetRunning:
+                case WaitDataStatus.Success:
                     {
-                        return waitData.WaitResult.Status.ToStatus() switch
+                        return waitData.CompletedData.Status.ToStatus() switch
                         {
-                            TouchSocketDmtpStatus.Success => true,
-                            _ => false,
+                            TouchSocketDmtpStatus.Success => Result.Success,
+                            _ => Result.UnknownFail,
                         };
                     }
                 case WaitDataStatus.Default:
@@ -857,49 +808,23 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 case WaitDataStatus.Canceled:
                 case WaitDataStatus.Disposed:
                 default:
-                    return false;
+                    return Result.UnknownFail;
             }
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            this.WaitHandlePool.Destroy(waitPing.Sign);
         }
     }
 
     #region Actor
-    /// <inheritdoc/>
-    public bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
-        var type = typeof(TActor);
-
-        lock (this.m_syncRoot)
-        {
-            if (this.m_actors.ContainsKey(type))
-            {
-                return false;
-            }
-            this.m_actors.Add(type, actor);
-            return true;
-        }
-
-    }
 
     /// <inheritdoc/>
     public void AddActor<TActor>(TActor actor) where TActor : class, IActor
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(actor, nameof(actor));
+        ThrowHelper.ThrowIfNull(actor, nameof(actor));
         var type = typeof(TActor);
 
         lock (this.m_syncRoot)
         {
             this.m_actors.AddOrUpdate(type, actor);
         }
-
     }
 
     /// <inheritdoc/>
@@ -913,47 +838,29 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return default;
     }
 
-    #endregion
+    /// <inheritdoc/>
+    public bool TryAddActor<TActor>(TActor actor) where TActor : class, IActor
+    {
+        ThrowHelper.ThrowIfNull(actor, nameof(actor));
+        var type = typeof(TActor);
+
+        lock (this.m_syncRoot)
+        {
+            if (this.m_actors.ContainsKey(type))
+            {
+                return false;
+            }
+            this.m_actors.Add(type, actor);
+            return true;
+        }
+    }
+
+    #endregion Actor
 
     #region 断开
 
     /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            lock (this.m_syncRoot)
-            {
-                if (!this.m_online)
-                {
-                    return;
-                }
-                this.m_online = false;
-
-                this.Closing = null;
-                this.Routing = null;
-                this.FindDmtpActor = null;
-                this.Handshaked = null;
-                this.Handshaking = null;
-                this.IdChanged = null;
-                //this.OutputSend = null;
-
-                foreach (var item in this.m_actors)
-                {
-                    item.Value.SafeDispose();
-                }
-
-                this.m_actors.Clear();
-                this.WaitHandlePool.CancelAll();
-                this.WaitHandlePool.SafeDispose();
-            }
-        }
-
-        base.Dispose(disposing);
-    }
-
-    /// <inheritdoc/>
-    public async Task<Result> CloseAsync(string msg, CancellationToken token = default)
+    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -970,8 +877,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// 异步发送关闭消息
     /// </summary>
     /// <param name="msg"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<Result> SendCloseAsync(string msg)
+    public async Task<Result> SendCloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         if (!this.m_online)
         {
@@ -979,7 +887,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         try
         {
-            await this.SendStringAsync(0, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(0, msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -988,37 +896,163 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            lock (this.m_syncRoot)
+            {
+                if (!this.m_online)
+                {
+                    return;
+                }
+                this.m_online = false;
+                foreach (var item in this.m_actors)
+                {
+                    item.Value.SafeDispose();
+                }
+
+                this.m_handshakeFinished.Set();
+
+                this.m_actors.Clear();
+                this.WaitHandlePool.CancelAll();
+            }
+        }
+
+        base.Dispose(disposing);
+    }
+
     #endregion 断开
 
     #region 协议异步发送
 
+    private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
+    //    try
+    //    {
+    //        writer.Write(DmtpMessage.Head);
+    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
+    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer, 4);
+    //        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
+    //        var lengthSpan = writerAnchor.Rewind(ref writer, out var length);
+    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
+    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        this.LastActiveTime = DateTimeOffset.UtcNow;
+    //    }
+    //    finally
+    //    {
+    //        writer.Dispose();
+    //    }
+    //}
     /// <inheritdoc/>
-    public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory)
+    public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        using (var byteBlock = new ValueByteBlock(memory.Length + 8))
+        var writer = new SegmentedBytesWriter(memory.Length + 8);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken);
+        try
         {
-            byteBlock.Write(DmtpMessage.Head);
-            byteBlock.WriteUInt16(protocol, EndianType.Big);
-            byteBlock.WriteInt32(memory.Length, EndianType.Big);
-            byteBlock.Write(memory.Span);
+            writer.Write(DmtpMessage.Head);
+            writer.WriteValue(protocol, EndianType.Big);
+            WriterExtension.WriteValue<SegmentedBytesWriter, int>(ref writer, memory.Length, EndianType.Big);
+            writer.Write(memory.Span);
 
-            await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            foreach (var item in writer.Sequence)
+            {
+                await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
-
-        this.LastActiveTime = DateTimeOffset.UtcNow;
+        finally
+        {
+            writer.Dispose();
+            this.m_semaphoreSlim.Release();
+        }
     }
+
+    ///// <inheritdoc/>
+    //public async Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default)
+    //{
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
+        where TPackage : IPackage
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
+        {
+            package.Package(ref byteBlock);
+            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
+    //    try
+    //    {
+    //        writer.Write(DmtpMessage.Head);
+    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
+    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer,4);
+    //        package.Package(ref writer);
+    //        var lengthSpan=writerAnchor.Rewind(ref writer, out var length);
+    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
+    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        this.LastActiveTime = DateTimeOffset.UtcNow;
+    //    }
+    //    finally
+    //    {
+    //        writer.Dispose();
+    //    }
+    //}
+    /// <inheritdoc/>
+    public async Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default)
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
+        try
+        {
+            WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
+            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            byteBlock.Dispose();
+        }
+    }
+
+    private Task SendJsonObjectAsync<T>(ushort protocol, in T obj, CancellationToken cancellationToken = default)
+    {
+        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
+        return this.SendAsync(protocol, bytes, cancellationToken);
+    }
+
+    ///// <inheritdoc/>
+    //public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
+    //{
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+    //    try
+    //    {
+    //        writer.Write(DmtpMessage.Head);
+    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
+    //        WriterExtension.WriteValue(ref writer, memory.Length, EndianType.Big);
+    //        writer.Write(memory.Span);
+    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        this.LastActiveTime = DateTimeOffset.UtcNow;
+    //    }
+    //    finally
+    //    {
+    //        writer.Dispose();
+    //    }
+    //}
+
+    //public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
+    //    where TPackage:IPackage
+    //{
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
     #endregion 协议异步发送
 
     #region IDmtpChannel
-
-    private void CheckChannelShouldBeReliable()
-    {
-        if (!this.IsReliable)
-        {
-            throw new NotSupportedException("Channel不支持在不可靠协议使用。");
-        }
-    }
 
     /// <inheritdoc/>
     public virtual bool ChannelExisted(int id)
@@ -1028,19 +1062,19 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     }
 
     /// <inheritdoc/>
-    public virtual Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default)
+    public virtual Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivateCreateChannelAsync(default, true, 0, metadata);
+        return this.PrivateCreateChannelAsync(default, true, 0, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default)
+    public virtual Task<IDmtpChannel> CreateChannelAsync(int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
-        return this.PrivateCreateChannelAsync(default, false, id, metadata);
+        return this.PrivateCreateChannelAsync(default, false, id, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default)
+    public virtual async Task<IDmtpChannel> CreateChannelAsync(string targetId, int id, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(targetId))
         {
@@ -1048,16 +1082,16 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
         {
-            return await actor.CreateChannelAsync(id, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.CreateChannelAsync(id, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
     /// <inheritdoc/>
-    public virtual async Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default)
+    public virtual async Task<IDmtpChannel> CreateChannelAsync(string targetId, Metadata metadata = default, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(targetId))
         {
@@ -1066,11 +1100,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
         {
-            return await actor.CreateChannelAsync(metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.CreateChannelAsync(metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
@@ -1097,17 +1131,25 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return this.m_userChannels.TryRemove(id, out _);
     }
 
-    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage)
+    internal async Task SendChannelPackageAsync(ChannelPackage channelPackage, CancellationToken cancellationToken)
     {
         using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
         {
             var block = byteBlock;
             channelPackage.Package(ref block);
-            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 
-    private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata)
+    private void CheckChannelShouldBeReliable()
+    {
+        if (!this.IsReliable)
+        {
+            throw new NotSupportedException("Channel不支持在不可靠协议使用。");
+        }
+    }
+
+    private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata, CancellationToken cancellationToken)
     {
         this.CheckChannelShouldBeReliable();
 
@@ -1122,68 +1164,68 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 throw new Exception(TouchSocketDmtpStatus.ChannelExisted.GetDescription(id));
             }
         }
-
         var byteBlock = new ByteBlock(1024 * 64);
-        var waitCreateChannel = new WaitCreateChannelPackage()
-        {
-            Random = random,
-            ChannelId = id,
-            SourceId = this.Id,
-            TargetId = targetId,
-            Metadata = metadata
-        };
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitCreateChannel);
-
         try
         {
-            waitCreateChannel.Package(ref byteBlock);
-
-            await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            var waitCreateChannel = new WaitCreateChannelPackage()
             {
-                case WaitDataStatus.SetRunning:
-                    {
-                        var result = (WaitCreateChannelPackage)waitData.WaitResult;
-                        switch (result.Status.ToStatus())
+                Random = random,
+                ChannelId = id,
+                SourceId = this.m_id,
+                TargetId = targetId,
+                Metadata = metadata
+            };
+
+            using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitCreateChannel))
+            {
+                waitCreateChannel.Package(ref byteBlock);
+
+                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                {
+                    case WaitDataStatus.Success:
                         {
-                            case TouchSocketDmtpStatus.Success:
-                                {
-                                    var channel = new InternalChannel(this, targetId, result.Metadata);
-                                    channel.SetId(result.ChannelId);
-                                    channel.MakeUsing();
-                                    if (this.m_userChannels.TryAdd(result.ChannelId, channel))
+                            var result = (WaitCreateChannelPackage)waitData.CompletedData;
+                            switch (result.Status.ToStatus())
+                            {
+                                case TouchSocketDmtpStatus.Success:
                                     {
-                                        return channel;
+                                        var channel = new InternalChannel(this, targetId, result.Metadata);
+                                        channel.SetId(result.ChannelId);
+                                        channel.MakeUsing();
+                                        if (this.m_userChannels.TryAdd(result.ChannelId, channel))
+                                        {
+                                            return channel;
+                                        }
+                                        else
+                                        {
+                                            throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                                        }
                                     }
-                                    else
+                                case TouchSocketDmtpStatus.ClientNotFind:
                                     {
-                                        throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                                        throw new Exception(TouchSocketDmtpStatus.ClientNotFind.GetDescription(targetId));
                                     }
-                                }
-                            case TouchSocketDmtpStatus.ClientNotFind:
-                                {
-                                    throw new Exception(TouchSocketDmtpStatus.ClientNotFind.GetDescription(targetId));
-                                }
-                            case TouchSocketDmtpStatus.RoutingNotAllowed:
-                            default:
-                                {
-                                    throw new Exception(result.Status.ToStatus().GetDescription(result.Message));
-                                }
+                                case TouchSocketDmtpStatus.RoutingNotAllowed:
+                                default:
+                                    {
+                                        throw new Exception(result.Status.ToStatus().GetDescription(result.Message));
+                                    }
+                            }
                         }
-                    }
-                case WaitDataStatus.Overtime:
-                    {
-                        throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
-                    }
-                default:
-                    {
-                        throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
-                    }
+                    case WaitDataStatus.Overtime:
+                        {
+                            throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
+                        }
+                    default:
+                        {
+                            throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
+                        }
+                }
             }
         }
         finally
         {
-            this.WaitHandlePool.Destroy(waitCreateChannel.Sign);
             byteBlock.Dispose();
         }
     }
@@ -1209,7 +1251,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             }
             else
             {
-                channel.SafeDispose();
                 return false;
             }
         }

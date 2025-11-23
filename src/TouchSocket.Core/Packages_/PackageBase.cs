@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -20,9 +18,21 @@ namespace TouchSocket.Core;
 [Serializable]
 public abstract class PackageBase : IPackage
 {
-    /// <inheritdoc/>
-    public abstract void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 
     /// <inheritdoc/>
-    public abstract void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
+    public abstract void Package<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+, allows ref struct
+#endif
+        ;
+
+    /// <inheritdoc/>
+    public abstract void Unpackage<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+#if AllowsRefStruct
+, allows ref struct
+#endif
+        ;
+
 }

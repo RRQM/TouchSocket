@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
 
@@ -22,7 +19,7 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public class MqttSessionActor : MqttActor
 {
-    private readonly AsyncResetEvent m_asyncResetEvent = new(false, false);
+    private readonly AsyncManualResetEvent m_asyncResetEvent = new(false);
 
     private readonly Channel<DistributeMessage> m_mqttArrivedMessageQueue = Channel.CreateBounded<DistributeMessage>(new BoundedChannelOptions(1000)
     {
@@ -34,6 +31,7 @@ public class MqttSessionActor : MqttActor
     });
 
     private readonly MqttBroker m_mqttBroker;
+    private MqttPublishMessage m_mqttWillMessage;
     private bool m_sessionPresent;
 
     /// <summary>
@@ -43,7 +41,7 @@ public class MqttSessionActor : MqttActor
     public MqttSessionActor(MqttBroker messageCenter)
     {
         this.m_mqttBroker = messageCenter;
-        _=EasyTask.SafeRun(this.WaitForReadAsync);
+        _ = EasyTask.SafeRun(this.WaitForReadAsync);
     }
 
     /// <summary>
@@ -54,17 +52,40 @@ public class MqttSessionActor : MqttActor
     /// <summary>
     /// 激活会话。
     /// </summary>
-    public void Activate()
+    public void Activate(MqttConnectMessage mqttConnectMessage)
     {
+        if (mqttConnectMessage.WillFlag)
+        {
+            var mqttPublishMessage = new MqttPublishMessage(mqttConnectMessage.WillTopic, mqttConnectMessage.WillPayload);
+            this.m_mqttWillMessage = mqttPublishMessage;
+        }
+        else
+        {
+            this.m_mqttWillMessage = null;
+        }
         this.m_asyncResetEvent.Set();
     }
 
     /// <summary>
     /// 取消激活会话。
     /// </summary>
-    public void Deactivate()
+    public async Task Deactivate()
     {
         this.m_asyncResetEvent.Reset();
+        var willMessage = this.m_mqttWillMessage;
+        this.m_mqttWillMessage = null;
+        if (willMessage != null)
+        {
+            await this.m_mqttBroker.ForwardMessageAsync(new MqttArrivedMessage(willMessage));
+        }
+    }
+
+    /// <summary>
+    /// 设置会话存在标志为 true。
+    /// </summary>
+    public void MakeSessionPresent()
+    {
+        this.m_sessionPresent = true;
     }
 
     /// <summary>
@@ -89,20 +110,12 @@ public class MqttSessionActor : MqttActor
         }
     }
 
-    /// <summary>
-    /// 设置会话存在标志为 true。
-    /// </summary>
-    public void MakeSessionPresent()
-    {
-        this.m_sessionPresent = true;
-    }
-
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            this.m_asyncResetEvent.Dispose();
+            this.m_asyncResetEvent.Set();
             //this.m_mqttArrivedMessageQueue.Reader.();
         }
         base.Dispose(disposing);
@@ -117,12 +130,14 @@ public class MqttSessionActor : MqttActor
 
     #endregion 属性
 
-    protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message)
+    /// <inheritdoc/>
+    protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    protected override async Task InputMqttConnectMessageAsync(MqttConnectMessage message)
+    /// <inheritdoc/>
+    protected override async Task InputMqttConnectMessageAsync(MqttConnectMessage message, CancellationToken cancellationToken)
     {
         var mqttConnAckMessage = new MqttConnAckMessage(this.m_sessionPresent)
         {
@@ -143,26 +158,27 @@ public class MqttSessionActor : MqttActor
 
         if (mqttConnAckMessage.ReturnCode != MqttReasonCode.ConnectionAccepted)
         {
-            await this.ProtectedOutputSendAsync(mqttConnAckMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(mqttConnAckMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
         this.Id = message.ClientId;
 
-        await this.ProtectedOutputSendAsync(mqttConnAckMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(mqttConnAckMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         this.Online = true;
 
-        _ = EasyTask.Run(this.ProtectedMqttOnConnected, new MqttConnectedEventArgs(message, mqttConnAckMessage));
+        _ = EasyTask.SafeRun(this.ProtectedMqttOnConnected, new MqttConnectedEventArgs(message, mqttConnAckMessage));
     }
 
-    protected override Task InputMqttPingRespMessageAsync(MqttPingRespMessage message)
+    /// <inheritdoc/>
+    protected override Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
-    protected override async Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message)
+    protected override async Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message, CancellationToken cancellationToken)
     {
         var contentForAck = new MqttSubAckMessage()
         {
@@ -173,11 +189,11 @@ public class MqttSessionActor : MqttActor
             this.m_mqttBroker.RegisterActor(this.Id, item.Topic, item.QosLevel);
             contentForAck.AddReturnCode(item.QosLevel);
         }
-        await this.ProtectedOutputSendAsync(contentForAck).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
-    protected override async Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message)
+    protected override async Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken)
     {
         foreach (var topic in message.TopicFilters)
         {
@@ -187,19 +203,19 @@ public class MqttSessionActor : MqttActor
         {
             MessageId = message.MessageId
         };
-        await this.ProtectedOutputSendAsync(contentForAck).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
+    /// <inheritdoc/>
     protected override async Task PublishMessageArrivedAsync(MqttArrivedMessage message)
     {
         await this.m_mqttBroker.ForwardMessageAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await base.PublishMessageArrivedAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage)
+    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage, CancellationToken cancellationToken)
     {
-        var token = this.TokenSource.Token;
-        if (token.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
             return false;
         }
@@ -209,11 +225,11 @@ public class MqttSessionActor : MqttActor
 
         var publishMessage = new MqttPublishMessage(message.TopicName, message.Retain, qosLevel, message.Payload);
 
-        await this.m_asyncResetEvent.WaitOneAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_asyncResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
-            await this.PublishAsync(publishMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PublishAsync(publishMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return true;
         }
         catch (Exception ex)
@@ -225,19 +241,19 @@ public class MqttSessionActor : MqttActor
 
     private async Task WaitForReadAsync()
     {
-        var token = this.TokenSource.Token;
-        var reader=this.m_mqttArrivedMessageQueue.Reader;
+        var cancellationToken = this.TokenSource.Token;
+        var reader = this.m_mqttArrivedMessageQueue.Reader;
         while (true)
         {
             try
             {
-                if (token.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                 {
                     Console.WriteLine("WaitForReadAsync IsCancellationRequested");
                     return;
                 }
-                
-               var b=await reader.WaitToReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                var b = await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (!b)
                 {
                     return;
@@ -248,7 +264,7 @@ public class MqttSessionActor : MqttActor
                     continue;
                 }
 
-               var published= await this.PublishDistributeMessageAsync(distributeMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var published = await this.PublishDistributeMessageAsync(distributeMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (published)
                 {
                     reader.TryRead(out _);
@@ -257,6 +273,10 @@ public class MqttSessionActor : MqttActor
             catch (OperationCanceledException)
             {
                 return;
+            }
+            catch
+            {
+                //
             }
         }
     }

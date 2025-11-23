@@ -10,14 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
 
 namespace TouchSocket.Sockets;
 
-/// <summary>
-/// ReceiverResult
-/// </summary>
 internal class UdpReceiverResult : InternalReceiverResult, IUdpReceiverResult
 {
     public UdpReceiverResult(Action disAction) : base(disAction)

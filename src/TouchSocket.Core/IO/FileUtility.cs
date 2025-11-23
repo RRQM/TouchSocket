@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 
 namespace TouchSocket.Core;
@@ -307,10 +304,6 @@ public static partial class FileUtility
         {
             return $"{(length / gb):F2}Gb";
         }
-        if (length < pb)
-        {
-            return $"{(length / tb):F2}Tb";
-        }
-        return $"{(length / pb):F2}Pb";
+        return length < pb ? $"{(length / tb):F2}Tb" : $"{(length / pb):F2}Pb";
     }
 }

@@ -29,21 +29,26 @@ internal class Program
             Console.ReadKey();
             for (var i = 0; i < 10; i++)
             {
-                var myRequestInfo = new MyRequestInfo()
+                var myRequestInfo = new MyDataClass()
                 {
-                    Body = Encoding.UTF8.GetBytes("hello"),
+                    Data = Encoding.UTF8.GetBytes("hello"),
                     DataType = (byte)i,
                     OrderType = (byte)i
                 };
 
                 //构建发送数据
-                using (var byteBlock = new ByteBlock(1024))
+                var byteBlock = new ByteBlock(1024);
+                try
                 {
-                    byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                    byteBlock.WriteByte(myRequestInfo.DataType);//然后数据类型
-                    byteBlock.WriteByte(myRequestInfo.OrderType);//然后指令类型
-                    byteBlock.Write(myRequestInfo.Body);//再写数据
+                    WriterExtension.WriteValue(ref byteBlock, (byte)(myRequestInfo.Data.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.DataType);//然后数据类型
+                    WriterExtension.WriteValue(ref byteBlock, myRequestInfo.OrderType);//然后指令类型
+                    byteBlock.Write(myRequestInfo.Data);//再写数据
                     await client.SendAsync(byteBlock.Memory);
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
         }
@@ -69,17 +74,17 @@ internal class Program
     private static async Task<TcpService> CreateService()
     {
         var service = new TcpService();
+
+        #region 使用自定义适配器接收数据 {3}
         service.Received = (client, e) =>
         {
-            //从客户端收到信息
-
-            if (e.RequestInfo is MyRequestInfo myRequest)
+            if (e.RequestInfo is MyDataClass myRequest)
             {
-                client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
+                client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Data)}");
             }
             return Task.CompletedTask;
         };
-
+        #endregion
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
              .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
@@ -97,77 +102,106 @@ internal class Program
     }
 }
 
-internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequestInfo>
+#region 用户自定义适配器
+
+/// <summary>
+/// 第1个字节表示指令类型
+/// 第2字节表示数据类型
+/// 第3字节表示后续数据的长度。使用ushort(大端)表示，最大长度为65535
+/// 后续字节表示载荷数据
+/// 最后2字节表示CRC16校验码
+/// </summary>
+internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyDataClass>
 {
-    /// <summary>
-    /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
-    /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
-    /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
-    /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
-    /// </summary>
-    /// <param name="byteBlock">字节块</param>
-    /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
-    /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量指导，指示当需要缓存时，应该申请多大的内存。</param>
-    /// <returns></returns>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+    private ushort m_payloadLength;
+
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MyDataClass request)
     {
-        //以下解析思路为一次性解析，不考虑缓存的临时对象。
-
-        if (byteBlock.CanReadLength < 3)
+        if (beCached)
         {
-            return FilterResult.Cache;//当头部都无法解析时，直接缓存
-        }
+            //说明上次已经解析了header
 
-        var pos = byteBlock.Position;//记录初始游标位置，防止本次无法解析时，回退游标。
-
-        var myRequestInfo = new MyRequestInfo();
-
-        //此操作实际上有两个作用，
-        //1.填充header
-        //2.将byteBlock.Pos递增3的长度。
-        var header = byteBlock.ReadToSpan(3);//填充header
-
-        //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
-        //所有只需呀再读取header[0]-2个长度即可。
-        var bodyLength = (byte)(header[0] - 2);
-
-        if (bodyLength > byteBlock.CanReadLength)
-        {
-            //body数据不足。
-            byteBlock.Position = pos;//回退游标
-            return FilterResult.Cache;
+            return this.ParseData(ref reader, request);
         }
         else
         {
-            //此操作实际上有两个作用，
-            //1.填充body
-            //2.将byteBlock.Pos递增bodyLength的长度。
-            var body = byteBlock.ReadToSpan(bodyLength);
+            //首次解析
 
-            myRequestInfo.DataType = header[1];
-            myRequestInfo.OrderType = header[2];
-            myRequestInfo.Body = body.ToArray();
-            request = myRequestInfo;//赋值ref
-            return FilterResult.Success;//返回成功
+            if (reader.BytesRemaining < 4)
+            {
+                //如果剩余数据小于4个字节，则继续等待
+                return FilterResult.Cache;
+            }
+
+            //读取前4个字节
+            var header = reader.GetSpan(4);
+
+            //推进已读取的4个字节
+            reader.Advance(4);
+
+            //获取指令类型
+            var orderType = header[0];
+            //获取数据类型
+            var dataType = header[1];
+
+            //创建数据对象
+            request = new MyDataClass()
+            {
+                OrderType = orderType,
+                DataType = dataType
+            };
+
+            //获取载荷长度
+            this.m_payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2, 2));
+
+            return this.ParseData(ref reader, request);
         }
+    }
+
+    private FilterResult ParseData<TReader>(ref TReader reader, MyDataClass myDataClass)
+        where TReader : IBytesReader
+    {
+        //判断剩余数据是否足够，+2是因为最后2个字节是CRC16校验码
+        if (reader.BytesRemaining < this.m_payloadLength + 2)
+        {
+            return FilterResult.Cache;
+        }
+
+        //读取数据
+        var data = reader.GetSpan(this.m_payloadLength);
+        reader.Advance(this.m_payloadLength);
+
+        //读取CRC16校验码
+        var crcData = reader.GetSpan(2);
+        reader.Advance(2);
+
+        //转换CRC16校验码为ushort，相比于byte[]，更节省内存
+        var crc16 = TouchSocketBitConverter.BigEndian.To<ushort>(crcData);
+
+        //计算CRC16
+        var newCrc16 = Crc.Crc16Value(data);
+        if (crc16 != newCrc16)
+        {
+            //CRC校验失败
+            throw new Exception("CRC校验失败");
+        }
+
+        //保存数据
+        myDataClass.Data = data.ToArray();
+
+        //至此，数据接收完成，可以进行投递处理
+        this.m_payloadLength = 0;
+        return FilterResult.Success;
     }
 }
 
-internal class MyRequestInfo : IRequestInfo
+/// <summary>
+/// 定义数据对象
+/// </summary>
+internal class MyDataClass : IRequestInfo
 {
-    /// <summary>
-    /// 自定义属性,Body
-    /// </summary>
-    public byte[] Body { get; internal set; }
-
-    /// <summary>
-    /// 自定义属性,DataType
-    /// </summary>
-    public byte DataType { get; internal set; }
-
-    /// <summary>
-    /// 自定义属性,OrderType
-    /// </summary>
-    public byte OrderType { get; internal set; }
+    public byte OrderType { get; set; }
+    public byte DataType { get; set; }
+    public byte[] Data { get; set; }
 }
+#endregion

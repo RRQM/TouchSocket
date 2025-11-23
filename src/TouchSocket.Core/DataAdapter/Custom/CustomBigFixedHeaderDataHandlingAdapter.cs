@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -31,22 +29,21 @@ public abstract class CustomBigFixedHeaderDataHandlingAdapter<TFixedHeaderReques
     /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
     /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
     /// </summary>
-    /// <param name="byteBlock">字节块</param>
+    /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
     /// <returns></returns>
-    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request)
     {
         if (beCached)
         {
-            while (this.m_surLen > 0 && byteBlock.CanReadLength > 0)
+            while (this.m_surLen > 0 && reader.BytesRemaining > 0)
             {
-                var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                var bytes = byteBlock.Span.Slice(byteBlock.Position, r);
+                var r = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
+                var bytes = reader.GetSpan(r);
                 request.OnAppendBody(bytes);
                 this.m_surLen -= r;
-                byteBlock.Position += r;
+                reader.Advance(r);
                 if (this.m_surLen == 0)
                 {
                     if (request.OnFinished())
@@ -61,16 +58,16 @@ public abstract class CustomBigFixedHeaderDataHandlingAdapter<TFixedHeaderReques
         }
         else
         {
-            if (this.HeaderLength > byteBlock.CanReadLength)
+            if (this.HeaderLength > reader.BytesRemaining)
             {
                 return FilterResult.Cache;
             }
 
             var requestInfo = this.GetInstance();
-            var header = byteBlock.Span.Slice(byteBlock.Position, this.HeaderLength);
+            var header = reader.GetSpan(this.HeaderLength);
             if (requestInfo.OnParsingHeader(header))
             {
-                byteBlock.Position += this.HeaderLength;
+                reader.Advance(this.HeaderLength);
                 request = requestInfo;
                 if (requestInfo.BodyLength == 0)
                 {
@@ -83,13 +80,13 @@ public abstract class CustomBigFixedHeaderDataHandlingAdapter<TFixedHeaderReques
                 }
                 this.m_surLen = request.BodyLength;
 
-                while (this.m_surLen > 0 && byteBlock.CanReadLength > 0)
+                while (this.m_surLen > 0 && reader.BytesRemaining > 0)
                 {
-                    var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                    var bytes = byteBlock.Span.Slice(byteBlock.Position, r);
+                    var r = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
+                    var bytes = reader.GetSpan(r);
                     request.OnAppendBody(bytes);
                     this.m_surLen -= r;
-                    byteBlock.Position += r;
+                    reader.Advance(r);
                     if (this.m_surLen == 0)
                     {
                         if (request.OnFinished())
@@ -104,7 +101,7 @@ public abstract class CustomBigFixedHeaderDataHandlingAdapter<TFixedHeaderReques
             }
             else
             {
-                byteBlock.Position += 1;
+                reader.Advance(1);
                 return FilterResult.GoOn;
             }
         }

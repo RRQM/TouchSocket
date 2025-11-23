@@ -32,7 +32,7 @@ internal class Program
         service.Received = async (client, e) =>
         {
             //从客户端收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
 
             await client.SendAsync(mes);//将收到的信息直接返回给发送方
@@ -42,6 +42,22 @@ internal class Program
              .SetListenIPHosts(7789)
              .ConfigureContainer(a =>
              {
+                 #region 日志容器配置文件日志
+                 a.AddFileLogger(fileLogger =>
+                 {
+                     fileLogger.MaxSize = 1024 * 1024;
+                     fileLogger.LogLevel = LogLevel.Debug;
+                 });
+                 #endregion
+
+                 #region 日志容器配置多日志记录器
+                 a.AddLogger(logger =>
+                 {
+                     logger.AddConsoleLogger();
+                     logger.AddFileLogger();
+                 });
+                 #endregion
+
                  a.AddLogger(logger =>
                  {
                      logger.AddConsoleLogger();
@@ -64,6 +80,7 @@ internal class Program
     }
 }
 
+#region 日志Log4net自定义日志记录器
 internal class Mylog4netLogger : LoggerBase
 {
     private readonly log4net.ILog m_logger;
@@ -109,3 +126,4 @@ internal class Mylog4netLogger : LoggerBase
         }
     }
 }
+#endregion

@@ -43,9 +43,9 @@ internal class Program
                {
                    a.UseDmtpRpc();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options=>
                {
-                   VerifyToken = "Dmtp"
+                   options.VerifyToken = "Dmtp";
                });//设定连接口令，作用类似账号密码
 
         await service.SetupAsync(config);
@@ -60,14 +60,14 @@ internal class Program
              {
                  a.UseDmtpRpc();
              })
-             .SetDmtpOption(new DmtpOption()
+             .SetDmtpOption(options=>
              {
-                 VerifyToken = "Dmtp"
+                 options.VerifyToken = "Dmtp";
              }));
         await client.ConnectAsync();
 
         //Login即为在RpcClassLibrary中自动生成的项目
-        var response =await client.GetDmtpRpcActor().LoginAsync(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
+        var response = await client.GetDmtpRpcActor().LoginAsync(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
         Console.WriteLine(response.Result);
         Console.ReadKey();
     }

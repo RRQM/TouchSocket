@@ -50,9 +50,9 @@ internal class Program
 
                    a.Add<MyRpcPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
                });
 
         await service.SetupAsync(config);
@@ -66,11 +66,52 @@ internal class Program
             var str = Console.ReadLine();
             if (service.TryGetClient(str.Split(' ')[0], out var socketClient))
             {
-                var result =await socketClient.GetDmtpRpcActor().InvokeTAsync<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
+                var result = await socketClient.GetDmtpRpcActor().InvokeTAsync<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
 
                 service.Logger.Info($"调用结果{result}");
             }
         }
+    }
+
+    private static async Task CreateDmtpRpcServiceAsync()
+    {
+        #region 启动TcpDmtpRpc服务器
+        var service = new TcpDmtpService();
+        var config = new TouchSocketConfig()//配置
+               .SetListenIPHosts(7789)
+               .ConfigureContainer(a =>
+               {
+                   //添加Rpc注册器
+                   a.AddRpcStore(store =>
+                   {
+                       store.RegisterServer<MyRpcServer>();//注册服务
+                   });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   //启用DmtpRpc功能
+                   a.UseDmtpRpc();
+               })
+               .SetDmtpOption(options =>
+               {
+                   options.VerifyToken = "Dmtp";//设定连接口令，作用类似账号密码
+                   options.VerifyTimeout = TimeSpan.FromSeconds(3);//设定验证超时时间为3秒
+               });
+
+        await service.SetupAsync(config);
+
+        await service.StartAsync();
+        #endregion
+
+
+        service.Logger.Info($"{service.GetType().Name}已启动");
+
+        #region 从TcpDmtp服务器中获取调用客户端
+        foreach (var client in service.Clients)
+        {
+            await client.GetDmtpRpcActor().InvokeTAsync<string>("Notice", InvokeOption.WaitInvoke, "Hello");
+        }
+        #endregion
     }
 }
 
@@ -81,28 +122,13 @@ public partial class MyRpcServer : SingletonRpcServer
     private readonly ILog m_logger;
     private readonly IRpcCallContextAccessor m_rpcCallContextAccessor;
 
-    public MyRpcServer(ILog logger,IRpcCallContextAccessor rpcCallContextAccessor)
+    public MyRpcServer(ILog logger, IRpcCallContextAccessor rpcCallContextAccessor)
     {
         this.m_logger = logger;
         this.m_rpcCallContextAccessor = rpcCallContextAccessor;
     }
 
-    /// <summary>
-    /// 将两个数相加
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
-    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-    [MyRpcActionFilter]
-    public int Add(int a, int b)
-    {
-        this.m_logger.Info("调用Add");
-        var sum = a + b;
-        return sum;
-    }
-
+    #region DmtpRpc服务端请求流数据
     /// <summary>
     /// 测试客户端请求，服务器响应大量流数据
     /// </summary>
@@ -128,7 +154,9 @@ public partial class MyRpcServer : SingletonRpcServer
         }
         return size;
     }
+    #endregion
 
+    #region DmtpRpc服务端推送流数据
     /// <summary>
     /// "测试推送"
     /// </summary>
@@ -136,7 +164,7 @@ public partial class MyRpcServer : SingletonRpcServer
     /// <param name="channelID"></param>
     [Description("测试客户端推送流数据")]
     [DmtpRpc]
-    public int RpcPushChannel(ICallContext callContext, int channelID)
+    public async Task<int> RpcPushChannel(ICallContext callContext, int channelID)
     {
         var size = 0;
 
@@ -144,14 +172,18 @@ public partial class MyRpcServer : SingletonRpcServer
         {
             if (socketClient.TrySubscribeChannel(channelID, out var channel))
             {
-                foreach (var item in channel)
+                while (channel.CanRead)
                 {
-                    size += item.Length;//此处处理流数据
+                    using var cts = new CancellationTokenSource(10 * 1000);
+                    var memory = await channel.ReadAsync(cts.Token);
+                    //这里处理数据
+                    size += memory.Length;
                 }
             }
         }
         return size;
     }
+    #endregion
 
     /// <summary>
     /// 测试取消调用
@@ -189,6 +221,22 @@ public partial class MyRpcServer : SingletonRpcServer
     }
 }
 
+#region 通过调用上下文获取调用客户端
+public partial class MyRpcServer : SingletonRpcServer
+{
+    [Description("测试反向Rpc")]
+    [DmtpRpc(MethodInvoke = true)]
+    public async Task CallClientNotice(ICallContext callContext)
+    {
+        if (callContext.Caller is ITcpDmtpSessionClient sessionClient)
+        {
+            await sessionClient.GetDmtpRpcActor().InvokeTAsync<string>("Notice", InvokeOption.WaitInvoke, "Hello");
+        }
+    }
+}
+#endregion
+
+#region DmtpRpc同意转发路由数据
 internal class MyRpcPlugin : PluginBase, IDmtpRoutingPlugin
 {
     public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
@@ -202,6 +250,7 @@ internal class MyRpcPlugin : PluginBase, IDmtpRoutingPlugin
         await e.InvokeNext();
     }
 }
+#endregion
 
 public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
 {
@@ -239,3 +288,25 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
         return Task.FromResult(invokeResult);
     }
 }
+
+#region 声明DmtpRpc服务
+public partial class MyRpcServer : SingletonRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用，服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    [Description("将两个数相加")]//服务描述，在生成代理时，会变成注释。
+    [MyRpcActionFilter]
+    public int Add(int a, int b)
+    {
+        this.m_logger.Info("调用Add");
+        var sum = a + b;
+        return sum;
+    }
+
+}
+#endregion

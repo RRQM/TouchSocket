@@ -20,7 +20,7 @@ public interface IDmtpFeature
     /// <summary>
     /// 起始协议
     /// </summary>
-    ushort StartProtocol { get; set; }
+    ushort StartProtocol { get; }
 
     /// <summary>
     /// 保留协议长度

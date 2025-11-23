@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc;
@@ -43,23 +41,4 @@ public static class JsonRpcClientExtension
             throw new System.Exception("SessionClient必须是Tcp协议，或者完成WebSocket连接");
         }
     }
-
-#if SystemTextJson
-
-    /// <summary>
-    /// 使用System.Text.Json进行序列化
-    /// </summary>
-    /// <param name="jsonRpcClient"></param>
-    /// <param name="options"></param>
-    public static TJsonRpcClient UseSystemTextJson<TJsonRpcClient>(this TJsonRpcClient jsonRpcClient, Action<System.Text.Json.JsonSerializerOptions> options)
-        where TJsonRpcClient : IJsonRpcClient
-    {
-        var serializerOptions = new System.Text.Json.JsonSerializerOptions();
-        options.Invoke(serializerOptions);
-        jsonRpcClient.SerializerConverter.Clear();
-        jsonRpcClient.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
-
-        return jsonRpcClient;
-    }
-#endif
 }

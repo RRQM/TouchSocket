@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 
 namespace TouchSocket.Core;
 
@@ -33,18 +30,16 @@ public abstract class FastSerializerContext
         this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
         this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
         this.AddConverter(typeof(Guid), new GuidFastBinaryConverter());
-        //this.AddConverter(typeof(DataTable), new DataTableFastBinaryConverter());
-        //this.AddConverter(typeof(DataSet), new DataSetFastBinaryConverter());
+        this.AddConverter(typeof(Metadata), new MetadataFastBinaryConverter());
     }
 
     /// <summary>
     /// 获取新实例
     /// </summary>
     /// <param name="type"></param>
-    /// <returns></returns>
-    public virtual object GetNewInstance(Type type)
+    public virtual object GetNewInstance([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
-        return InstanceCreater.Create(type, null);
+        return Activator.CreateInstance(type, null);
     }
 
     /// <summary>
@@ -52,7 +47,8 @@ public abstract class FastSerializerContext
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    public virtual SerializObject GetSerializeObject(Type type)
+    [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
+    public virtual SerializObject GetSerializeObject([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         return this.m_instanceCache.TryGetValue(type, out var serializObject) ? serializObject : null;
     }
@@ -62,7 +58,7 @@ public abstract class FastSerializerContext
     /// </summary>
     /// <param name="type"></param>
     /// <param name="converter"></param>
-    protected void AddConverter([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
+    protected void AddConverter([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type, IFastBinaryConverter converter)
     {
         var serializObject = new SerializObject(type, converter);
         this.m_instanceCache.AddOrUpdate(type, serializObject);

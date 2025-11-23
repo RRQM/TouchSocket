@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -159,15 +154,15 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     //}
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
+    public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(memory);
+        return this.GetClientOrThrow(id).SendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, IRequestInfo requestInfo)
+    public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.GetClientOrThrow(id).SendAsync(requestInfo);
+        return this.GetClientOrThrow(id).SendAsync(requestInfo, cancellationToken);
     }
 
     private NamedPipeSessionClient GetClientOrThrow(string id)

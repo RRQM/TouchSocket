@@ -10,21 +10,22 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace TouchSocket.Core;
 
-/// <summary>
-/// 表示属性的Getter
-/// </summary>
-public class MemberGetter
+internal class MemberGetter
 {
     /// <summary>
     /// get方法委托
     /// </summary>
     private readonly Func<object, object> m_getFunc;
+    
+    /// <summary>
+    /// 是否为静态成员
+    /// </summary>
+    private readonly bool m_isStatic;
 
     /// <summary>
     /// 表示属性的Getter
@@ -33,7 +34,9 @@ public class MemberGetter
     /// <exception cref="ArgumentNullException"></exception>
     public MemberGetter(PropertyInfo property)
     {
-        this.m_getFunc = CreateGetterDelegate(property);
+        var getMethod = property.GetGetMethod(true);
+        this.m_isStatic = getMethod != null && getMethod.IsStatic;
+        this.m_getFunc = CreateGetterDelegate(property, this.m_isStatic);
     }
 
     /// <summary>
@@ -42,7 +45,8 @@ public class MemberGetter
     /// <exception cref="ArgumentNullException"></exception>
     public MemberGetter(FieldInfo fieldInfo)
     {
-        this.m_getFunc = CreateGetterDelegate(fieldInfo);
+        this.m_isStatic = fieldInfo.IsStatic;
+        this.m_getFunc = CreateGetterDelegate(fieldInfo, this.m_isStatic);
     }
 
     /// <summary>
@@ -55,23 +59,41 @@ public class MemberGetter
         return this.m_getFunc.Invoke(instance);
     }
 
-    private static Func<object, object> CreateGetterDelegate(PropertyInfo property)
+    private static Func<object, object> CreateGetterDelegate(PropertyInfo property, bool isStatic)
     {
         var param_instance = Expression.Parameter(typeof(object));
-        var body_instance = Expression.Convert(param_instance, property.DeclaringType);
-        var body_property = Expression.Property(body_instance, property);
-        var body_return = Expression.Convert(body_property, typeof(object));
-
-        return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        
+        if (isStatic)
+        {
+            var body_property = Expression.Property(null, property);
+            var body_return = Expression.Convert(body_property, typeof(object));
+            return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        }
+        else
+        {
+            var body_instance = Expression.Convert(param_instance, property.DeclaringType);
+            var body_property = Expression.Property(body_instance, property);
+            var body_return = Expression.Convert(body_property, typeof(object));
+            return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        }
     }
 
-    private static Func<object, object> CreateGetterDelegate(FieldInfo fieldInfo)
+    private static Func<object, object> CreateGetterDelegate(FieldInfo fieldInfo, bool isStatic)
     {
         var param_instance = Expression.Parameter(typeof(object));
-        var body_instance = Expression.Convert(param_instance, fieldInfo.DeclaringType);
-        var body_field = Expression.Field(body_instance, fieldInfo);
-        var body_return = Expression.Convert(body_field, typeof(object));
-
-        return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        
+        if (isStatic)
+        {
+            var body_field = Expression.Field(null, fieldInfo);
+            var body_return = Expression.Convert(body_field, typeof(object));
+            return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        }
+        else
+        {
+            var body_instance = Expression.Convert(param_instance, fieldInfo.DeclaringType);
+            var body_field = Expression.Field(body_instance, fieldInfo);
+            var body_return = Expression.Convert(body_field, typeof(object));
+            return Expression.Lambda<Func<object, object>>(body_return, param_instance).Compile();
+        }
     }
 }

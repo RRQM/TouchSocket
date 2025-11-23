@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-using TouchSocket.Core;
-
 namespace TouchSocket.Mqtt;
 
 public partial class MqttUnsubAckMessage
@@ -23,37 +20,39 @@ public partial class MqttUnsubAckMessage
     public string ReasonString { get; set; }
 
     /// <inheritdoc/>
-    protected override void BuildVariableBodyWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteUInt16(this.MessageId, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        variableByteIntegerRecorder.CheckOut(ref byteBlock);
-        MqttExtension.WriteReasonString(ref byteBlock, this.ReasonString);
-        MqttExtension.WriteUserProperties(ref byteBlock, this.UserProperties);
-        variableByteIntegerRecorder.CheckIn(ref byteBlock);
+        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
+        MqttExtension.WriteReasonString(ref byteBlockWriter, this.ReasonString);
+        MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
+        variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
+        writer.Advance(byteBlockWriter.Position);
 
         foreach (var item in this.ReasonCodes)
         {
-            byteBlock.WriteByte((byte)item);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item);
         }
     }
 
     /// <inheritdoc/>
-    protected override void UnpackWithMqtt5<TByteBlock>(ref TByteBlock byteBlock)
+    protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
-        this.MessageId = byteBlock.ReadUInt16(EndianType.Big);
+        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
 
-        var propertiesReader = new MqttV5PropertiesReader<TByteBlock>(ref byteBlock);
+        var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
-        while (propertiesReader.TryRead(ref byteBlock, out var mqttPropertyId))
+        while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
         {
             switch (mqttPropertyId)
             {
                 case MqttPropertyId.ReasonString:
-                    this.ReasonString = propertiesReader.ReadReasonString(ref byteBlock);
+                    this.ReasonString = propertiesReader.ReadReasonString(ref reader);
                     break;
                 case MqttPropertyId.UserProperty:
-                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref byteBlock));
+                    this.AddUserProperty(propertiesReader.ReadUserProperty(ref reader));
                     break;
                 default:
                     ThrowHelper.ThrowInvalidEnumArgumentException(mqttPropertyId);
@@ -64,9 +63,9 @@ public partial class MqttUnsubAckMessage
         //this.ReasonString = propertiesReader.ReasonString;
         //this.UserProperties = propertiesReader.UserProperties;
 
-        while (!this.EndOfByteBlock(byteBlock))
+        while (!this.EndOfByteBlock(reader))
         {
-            this.m_reasonCodes.Add((MqttReasonCode)byteBlock.ReadByte());
+            this.m_reasonCodes.Add((MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader));
         }
     }
 }

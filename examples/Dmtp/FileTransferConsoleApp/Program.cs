@@ -54,9 +54,101 @@ internal class Program
         consoleAction.Add("9", "测试客户端工厂向服务器请求文件", async () => await MultithreadingClientPullFileFromService());
         consoleAction.Add("10", "测试客户端工厂向服务器推送文件", async () => await MultithreadingClientPushFileFromService());
 
+        consoleAction.Add("11", "测试Token取消传输", async () => await TestCancelWithToken());
+        consoleAction.Add("12", "测试CancellationFileOperator取消传输", async () => await TestCancelWithCancellationFileOperator());
+
         consoleAction.ShowAll();
 
         await consoleAction.RunCommandLineAsync();
+    }
+
+    /// <summary>
+    /// 测试使用Token取消传输
+    /// </summary>
+    private static async Task TestCancelWithToken()
+    {
+        var client = await GetTcpDmtpClient();
+        ConsoleLogger.Default.Info("开始测试Token取消传输");
+
+        var filePath = "TestCancelWithToken.Test";
+        var saveFilePath = "SaveTestCancelWithToken.Test";
+        if (!File.Exists(filePath))
+        {
+            using (var stream = File.OpenWrite(filePath))
+            {
+                stream.SetLength(FileLength);
+            }
+        }
+
+        #region 文件传输Token取消
+        var tokenSource = new CancellationTokenSource();
+
+        _ = Task.Run(async () =>
+        {
+            //此处模拟五秒后自动取消传输
+            await Task.Delay(5000);
+            tokenSource.Cancel();
+        });
+
+        var metadata = new Metadata();
+        var fileOperator = new FileOperator
+        {
+            SavePath = saveFilePath,
+            ResourcePath = filePath,
+            Metadata = metadata,
+            TryCount = 10,
+            FileSectionSize = 1024 * 512,
+            Token = tokenSource.Token
+        };
+
+        fileOperator.MaxSpeed = MaxSpeed;
+
+        var result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        #endregion
+
+        ConsoleLogger.Default.Info($"Token取消传输测试结束，结果：{result}");
+        File.Delete(filePath);
+        File.Delete(saveFilePath);
+    }
+
+    /// <summary>
+    /// 测试使用CancellationFileOperator取消传输
+    /// </summary>
+    private static async Task TestCancelWithCancellationFileOperator()
+    {
+        var client = await GetTcpDmtpClient();
+        ConsoleLogger.Default.Info("开始测试CancellationFileOperator取消传输");
+
+        var filePath = "TestCancelWithCancellationFileOperator.Test";
+        var saveFilePath = "SaveTestCancelWithCancellationFileOperator.Test";
+        if (!File.Exists(filePath))
+        {
+            using (var stream = File.OpenWrite(filePath))
+            {
+                stream.SetLength(FileLength);
+            }
+        }
+
+        #region 文件传输CancellationFileOperator取消
+        var fileOperator = new CancellationFileOperator
+        {
+            SavePath = saveFilePath,
+            ResourcePath = filePath,
+            TryCount = 10,
+            FileSectionSize = 1024 * 512
+        };
+
+        fileOperator.MaxSpeed = MaxSpeed;
+
+        //模拟五秒后自动取消传输，或者直接Cancel
+        fileOperator.CancelAfter(TimeSpan.FromSeconds(5));
+
+        var result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        #endregion
+
+        ConsoleLogger.Default.Info($"CancellationFileOperator取消传输测试结束，结果：{result}");
+        File.Delete(filePath);
+        File.Delete(saveFilePath);
     }
 
     /// <summary>
@@ -81,6 +173,7 @@ internal class Program
         }
         /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
+        #region 文件传输多线程推送文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
@@ -90,7 +183,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512,//分包大小，当网络较差时，应该适当减小该值
             MultithreadingCount = 10//多线程数量
@@ -111,7 +203,8 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会等待，直到传输结束
-        IResult result = await clientFactory.PushFileAsync(fileOperator);
+        var result = await clientFactory.PushFileAsync(fileOperator);
+        #endregion
 
         ConsoleLogger.Default.Info($"向服务器推送文件结束，{result}");
 
@@ -141,6 +234,7 @@ internal class Program
         }
         /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
+        #region 文件传输多线程请求文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
@@ -150,7 +244,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512,//分包大小，当网络较差时，应该适当减小该值
             MultithreadingCount = 10//多线程数量
@@ -171,7 +264,8 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会等待，直到传输结束
-        IResult result = await clientFactory.PullFileAsync(fileOperator);
+        var result = await clientFactory.PullFileAsync(fileOperator);
+        #endregion
 
         ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 
@@ -197,16 +291,18 @@ internal class Program
             }
         }
 
+        #region 文件传输推送小文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
 
         //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-        var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata);
+        var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata, CancellationToken.None);
         if (result.IsSuccess)
         {
             //成功
         }
+        #endregion
 
         ConsoleLogger.Default.Info($"从服务器下载小文件结束，结果：{result}");
         client.Logger.Info(result.ToString());
@@ -236,14 +332,16 @@ internal class Program
         }
         /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
+        #region 文件传输拉取小文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
 
         //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-        var result = await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata);
+        var result = await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata, CancellationToken.None);
         var data = result.Value;//此处即是下载的小文件的实际数据
-        result.Save(saveFilePath, overwrite: true);//将数据保存到指定路径。
+        await result.SaveAsync(saveFilePath, overwrite: true);//将数据保存到指定路径。
+        #endregion
 
         ConsoleLogger.Default.Info("从服务器下载小文件结束");
         client.Logger.Info(result.ToString());
@@ -289,7 +387,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -309,7 +406,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        IResult result = await client1.GetDmtpFileTransferActor().PushFileAsync(client2.Id, fileOperator);
+        var result = await client1.GetDmtpFileTransferActor().PushFileAsync(client2.Id, fileOperator);
 
         ConsoleLogger.Default.Info("从其他客户端下载文件结束");
         client1.Logger.Info(result.ToString());
@@ -350,7 +447,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -370,7 +466,7 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        IResult result = await client1.GetDmtpFileTransferActor().PullFileAsync(client2.Id, fileOperator);
+        var result = await client1.GetDmtpFileTransferActor().PullFileAsync(client2.Id, fileOperator);
 
         ConsoleLogger.Default.Info("从其他客户端下载文件结束");
         client1.Logger.Info(result.ToString());
@@ -387,6 +483,7 @@ internal class Program
     /// <param name="targetId">服务器要请求的客户端Id</param>
     private static async Task ServicePushFileFromClient(TcpDmtpService service, string targetId)
     {
+        #region 文件传输服务器推送文件
         if (!service.TryGetClient(targetId, out var socketClient))
         {
             throw new Exception($"没有找到Id={targetId}的客户端");
@@ -415,7 +512,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//服务器文件的资源路径
             Metadata = metadata,//传递到客户端的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -435,7 +531,8 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-        IResult result = await socketClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        var result = await socketClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        #endregion
 
         ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
         socketClient.Logger.Info(result.ToString());
@@ -452,6 +549,7 @@ internal class Program
     /// <param name="targetId">服务器要请求的客户端Id</param>
     private static async Task ServicePullFileFromClient(TcpDmtpService service, string targetId)
     {
+        #region 文件传输服务器请求文件
         if (!service.TryGetClient(targetId, out var socketClient))
         {
             throw new Exception($"没有找到Id={targetId}的客户端");
@@ -480,7 +578,6 @@ internal class Program
             SavePath = saveFilePath,//服务器本地保存路径
             ResourcePath = filePath,//请求客户端文件的资源路径
             Metadata = metadata,//传递到客户端的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -500,7 +597,8 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        IResult result = await socketClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        var result = await socketClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        #endregion
 
         ConsoleLogger.Default.Info("从客户端下载文件结束");
         socketClient.Logger.Info(result.ToString());
@@ -528,8 +626,9 @@ internal class Program
                 stream.SetLength(FileLength);
             }
         }
-        /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
+        /****此处的逻辑是在程序运行目录下创建一个空内容,但是有长度的文件，用于测试****/
 
+        #region 文件传输客户端请求文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
@@ -539,7 +638,6 @@ internal class Program
             SavePath = saveFilePath,//客户端本地保存路径
             ResourcePath = filePath,//请求文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -559,8 +657,10 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-        IResult result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        var result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
+        #endregion
 
+        #region 文件传输断点续传持久化
         ////关于断点续传
         ////在执行完PullFile(fileOperator)或PushFile(fileOperator)时。只要返回的结果不是Success。
         ////那么就意味着传输没有完成。
@@ -584,6 +684,7 @@ internal class Program
         //    var resourceInfo = new FileResourceInfo(byteBlock);
         //    //然后把resourceInfo赋值给新建的FileOperator的ResourceInfo属性。
         //}
+        #endregion
 
         ConsoleLogger.Default.Info("从服务器下载文件结束");
         client.Logger.Info(result.ToString());
@@ -613,6 +714,7 @@ internal class Program
         }
         /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
+        #region 文件传输客户端推送文件
         var metadata = new Metadata();//传递到服务器的元数据
         metadata.Add("1", "1");
         metadata.Add("2", "2");
@@ -622,7 +724,6 @@ internal class Program
             SavePath = saveFilePath,//服务器本地保存路径
             ResourcePath = filePath,//客户端本地即将上传文件的资源路径
             Metadata = metadata,//传递到服务器的元数据
-            Timeout = TimeSpan.FromSeconds(60),//传输超时时长
             TryCount = 10,//当遇到失败时，尝试次数
             FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
         };
@@ -642,7 +743,8 @@ internal class Program
         _ = loopAction.RunAsync();
 
         //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-        IResult result = await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        var result = await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
+        #endregion
 
         ConsoleLogger.Default.Info("上传文件到服务器结束");
         client.Logger.Info(result.ToString());
@@ -656,9 +758,9 @@ internal class Program
     {
         var client = await new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "File"
+                   options.VerifyToken = "File";
                })
                .ConfigureContainer(a =>
                {
@@ -669,10 +771,6 @@ internal class Program
                    a.UseDmtpFileTransfer();//必须添加文件传输插件
 
                    a.Add<MyPlugin>();
-
-                   a.UseDmtpHeartbeat()//使用Dmtp心跳
-                   .SetTick(TimeSpan.FromSeconds(3))
-                   .SetMaxFailCount(3);
                })
                .BuildClientAsync<TcpDmtpClient>();
 
@@ -684,25 +782,29 @@ internal class Program
     {
         var service = new TcpDmtpService();
 
+        #region 文件传输配置插件
         var config = new TouchSocketConfig()//配置
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
-
+                   #region 文件传输添加路由策略
                    a.AddDmtpRouteService();//添加路由策略
+                   #endregion
                })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpFileTransfer()//必须添加文件传输插件
-                   //.SetRootPath("C:\\新建文件夹")//设置RootPath
-                   .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
+                   a.UseDmtpFileTransfer(options =>
+                   {
+                       options.MaxSmallFileLength = 1024 * 1024 * 2;//设置小文件的最大限制长度
+                   });
                    a.Add<MyPlugin>();
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "File"//连接验证口令。
+                   options.VerifyToken = "File";//连接验证口令。
                });
+        #endregion
 
         await service.SetupAsync(config);
         await service.StartAsync();
@@ -720,6 +822,8 @@ internal class Program
         {
             ConsoleLogger.Default.Exception(ex);
         }
+
+        #region 文件传输多线程配置
         var clientFactory = new TcpDmtpClientFactory()
         {
             MinCount = 5,
@@ -728,9 +832,9 @@ internal class Program
             {
                 return new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
+                .SetDmtpOption(options =>
                 {
-                    VerifyToken = "File"
+                    options.VerifyToken = "File";
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -738,7 +842,9 @@ internal class Program
                 });
             }
         };
+        #endregion
 
+        #region 文件传输多线程获取目标传输客户端Id
         clientFactory.SetFindTransferIds((targetId) =>
         {
             //此处的操作不唯一，可能需要rpc实现。
@@ -747,10 +853,13 @@ internal class Program
 
             return new string[] { targetId };//此处为模拟结果。
         });
+        #endregion
+
         return clientFactory;
     }
 }
 
+#region 文件传输插件定义
 internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTransferredPlugin, IDmtpRoutingPlugin
 {
     private readonly ILog m_logger;
@@ -811,6 +920,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTran
         await e.InvokeNext();
     }
 
+    #region 文件传输同意路由
     public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
     {
         e.IsPermitOperation = true;//允许路由
@@ -818,4 +928,6 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTran
 
         await e.InvokeNext();
     }
+    #endregion
 }
+#endregion

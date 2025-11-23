@@ -1,5 +1,16 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -12,7 +23,7 @@ namespace DmtpRpcConsoleApp
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             try
             {
@@ -29,11 +40,10 @@ namespace DmtpRpcConsoleApp
                         continue;
                     }
 
-                    var invokeOption = new DmtpInvokeOption()
+                    var invokeOption = new DmtpInvokeOption(5000)
                     {
                         FeedbackType = FeedbackType.WaitInvoke,
-                        SerializationType = SerializationType.FastBinary,
-                        Timeout = 5000
+                        SerializationType = SerializationType.FastBinary
                     };
 
                     var result = await client.GetDmtpRpcActor().LoginAsync(strs[0], strs[1], invokeOption);
@@ -47,7 +57,7 @@ namespace DmtpRpcConsoleApp
             }
 
         }
-        static async Task<TcpDmtpClient> GetClient()
+        private static async Task<TcpDmtpClient> GetClient()
         {
             var client = new TcpDmtpClient();
             await client.SetupAsync(new TouchSocketConfig()
@@ -58,28 +68,29 @@ namespace DmtpRpcConsoleApp
                  .SetRemoteIPHost("127.0.0.1:7789")
                  .ConfigurePlugins(a =>
                  {
-                     a.UseDmtpRpc()
-                     .ConfigureDefaultSerializationSelector(selector =>
+                     a.UseDmtpRpc(options =>
                      {
-                         //配置Fast序列化器
-                         selector.FastSerializerContext = new AppFastSerializerContext();
-
-                         //配置System.Text.Json序列化器
-                         selector.UseSystemTextJson(options =>
-                         {
-                             options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                         });
+                         options.ConfigureDefaultSerializationSelector(selector =>
+                             {
+                                 //配置Fast序列化器
+                                 selector.FastSerializerContext = new AppFastSerializerContext();
+                                 //配置System.Text.Json序列化器
+                                 selector.UseSystemTextJson(options =>
+                                 {
+                                     options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                                 });
+                             });
                      });
                  })
-                 .SetDmtpOption(new DmtpOption()
-                 {
-                     VerifyToken = "Rpc"
-                 }));
+             .SetDmtpOption(options =>
+             {
+                 options.VerifyToken = "Rpc";
+             }));
             await client.ConnectAsync();
             client.Logger.Info($"客户端已连接");
             return client;
         }
-        static async Task<TcpDmtpService> GetService()
+        private static async Task<TcpDmtpService> GetService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -94,22 +105,24 @@ namespace DmtpRpcConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc()
-                       .ConfigureDefaultSerializationSelector(selector =>
+                       a.UseDmtpRpc(options =>
                        {
-                           //配置Fast序列化器
-                           selector.FastSerializerContext = new AppFastSerializerContext();
-
-                           //配置System.Text.Json序列化器
-                           selector.UseSystemTextJson(options =>
+                           options.ConfigureDefaultSerializationSelector(selector =>
                            {
-                               options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                               //配置Fast序列化器
+                               selector.FastSerializerContext = new AppFastSerializerContext();
+
+                               //配置System.Text.Json序列化器
+                               selector.UseSystemTextJson(options =>
+                               {
+                                   options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                               });
                            });
                        });
                    })
-                   .SetDmtpOption(new DmtpOption()
+                   .SetDmtpOption(options =>
                    {
-                       VerifyToken = "Rpc"
+                       options.VerifyToken = "Rpc";
                    });
 
             await service.SetupAsync(config);
@@ -124,7 +137,7 @@ namespace DmtpRpcConsoleApp
 
     [FastSerializable(typeof(MyResult))]
     [FastSerializable(typeof(IMyRpcServer), TypeMode.All)]//直接按类型，搜索其属性，字段，方法参数，方法返回值的类型进行注册序列化
-    partial class AppFastSerializerContext : FastSerializerContext
+    internal partial class AppFastSerializerContext : FastSerializerContext
     {
 
     }

@@ -11,8 +11,7 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
@@ -32,7 +31,7 @@ public class JsonMemoryToClassSerializerFormatter<TState> : ISerializerFormatter
     public int Order { get; set; }
 
     /// <inheritdoc/>
-    public bool TryDeserialize(TState state, in ReadOnlyMemory<byte> source, Type targetType, out object target)
+    public bool TryDeserialize(TState state, in ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType, out object target)
     {
         try
         {
@@ -47,7 +46,7 @@ public class JsonMemoryToClassSerializerFormatter<TState> : ISerializerFormatter
     }
 
     /// <inheritdoc/>
-    public bool TrySerialize(TState state, in object target, out ReadOnlyMemory<byte> source)
+    public bool TrySerialize<TTarget>(TState state, in TTarget target, out ReadOnlyMemory<byte> source)
     {
         try
         {

@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
@@ -226,7 +221,7 @@ public static partial class FilePool
 
     private static void DelayRunReleaseFile(string path, int time)
     {
-        Task.Run(async () =>
+        _ = EasyTask.SafeRun(async () =>
         {
             await Task.Delay(time).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (GetReferenceCount(path) == 0)

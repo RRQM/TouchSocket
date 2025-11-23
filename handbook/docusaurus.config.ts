@@ -13,7 +13,6 @@ const config = {
   url: "https://touchsocket.net/",
   baseUrl: '/',
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   projectName: "TouchSocket",
   scripts: [],
@@ -37,20 +36,20 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
+            'https://github.com/RRQM/TouchSocket/tree/master/handbook',
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
           sidebarCollapsed: true,
-          lastVersion: 'current',
+          lastVersion: '3.1',
           versions: {
             current: {
-              label: '3.1',
+              label: '4.0-rc',
               path: '/current',
             },
             // next: {
-            //   label: '2.1-rc',
-            //   path: '/next',
+            //   label: '4.0-beta',
+            //   path: '/current',
             //   banner: 'none'
             // }
           },
@@ -67,7 +66,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
+            'https://github.com/RRQM/TouchSocket/tree/master/handbook',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -109,7 +108,7 @@ const config = {
           {
             label: "更新日志",
             position: "left",
-            to: "docs/current/upgrade"
+            to: "/upgrade"
           },
           {
             label: "博客",
@@ -138,7 +137,7 @@ const config = {
             position: "right",
             items: [
               {
-                label: "Gitee（主库）",
+                label: "Gitee",
                 href: "https://gitee.com/rrqm_home/touchsocket",
               },
               {
@@ -213,6 +212,9 @@ const config = {
 
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: "throw",
+    },
   },
   themes: [
     ['@docusaurus/theme-mermaid',
@@ -232,7 +234,11 @@ const config = {
         explicitSearchResultPath: true,
       },
     ],
-  ]
+  ],
+  // future: {
+  //   v4: true, // opt-in for Docusaurus v4 planned changes
+  //   experimental_faster: true, // turns Docusaurus Faster on globally
+  // },
 };
 
 export default config;

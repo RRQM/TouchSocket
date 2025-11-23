@@ -10,56 +10,88 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace TouchSocket.Core;
 
-/// <summary>
-/// 表示属性的设置器
-/// </summary>
-public class MemberSetter
+internal class MemberSetter
 {
-    /// <summary>
-    /// set方法委托
-    /// </summary>
-    private readonly Action<object, object> setFunc;
 
+    private readonly Action<object, object> setFunc;
+    
     /// <summary>
-    /// 表示属性的Getter
+    /// 是否为静态成员
     /// </summary>
-    /// <param name="property">属性</param>
-    /// <exception cref="ArgumentNullException"></exception>
+    private readonly bool m_isStatic;
+
+
     public MemberSetter(PropertyInfo property)
     {
         if (property == null)
         {
             throw new ArgumentNullException(nameof(property));
         }
-        this.setFunc = CreateSetterDelegate(property);
+        var setMethod = property.GetSetMethod(true);
+        this.m_isStatic = setMethod != null && setMethod.IsStatic;
+        this.setFunc = CreateSetterDelegate(property, this.m_isStatic);
     }
 
-    /// <summary>
-    /// 设置属性的值
-    /// </summary>
-    /// <param name="instance">实例</param>
-    /// <param name="value">值</param>
-    /// <returns></returns>
+    public MemberSetter(FieldInfo fieldInfo)
+    {
+        if (fieldInfo == null)
+        {
+            throw new ArgumentNullException(nameof(fieldInfo));
+        }
+        this.m_isStatic = fieldInfo.IsStatic;
+        this.setFunc = CreateSetterDelegate(fieldInfo, this.m_isStatic);
+    }
+
+
     public void Invoke(object instance, object value)
     {
         this.setFunc.Invoke(instance, value);
     }
 
-    private static Action<object, object> CreateSetterDelegate(PropertyInfo property)
+    private static Action<object, object> CreateSetterDelegate(PropertyInfo property, bool isStatic)
     {
         var param_instance = Expression.Parameter(typeof(object));
         var param_value = Expression.Parameter(typeof(object));
 
-        var body_instance = Expression.Convert(param_instance, property.DeclaringType);
         var body_value = Expression.Convert(param_value, property.PropertyType);
-        var body_call = Expression.Call(body_instance, property.GetSetMethod(true), body_value);
+        
+        if (isStatic)
+        {
+            var body_call = Expression.Call(null, property.GetSetMethod(true), body_value);
+            return Expression.Lambda<Action<object, object>>(body_call, param_instance, param_value).Compile();
+        }
+        else
+        {
+            var body_instance = Expression.Convert(param_instance, property.DeclaringType);
+            var body_call = Expression.Call(body_instance, property.GetSetMethod(true), body_value);
+            return Expression.Lambda<Action<object, object>>(body_call, param_instance, param_value).Compile();
+        }
+    }
 
-        return Expression.Lambda<Action<object, object>>(body_call, param_instance, param_value).Compile();
+    private static Action<object, object> CreateSetterDelegate(FieldInfo fieldInfo, bool isStatic)
+    {
+        var param_instance = Expression.Parameter(typeof(object));
+        var param_value = Expression.Parameter(typeof(object));
+
+        var body_value = Expression.Convert(param_value, fieldInfo.FieldType);
+        
+        if (isStatic)
+        {
+            var body_field = Expression.Field(null, fieldInfo);
+            var body_assign = Expression.Assign(body_field, body_value);
+            return Expression.Lambda<Action<object, object>>(body_assign, param_instance, param_value).Compile();
+        }
+        else
+        {
+            var body_instance = Expression.Convert(param_instance, fieldInfo.DeclaringType);
+            var body_field = Expression.Field(body_instance, fieldInfo);
+            var body_assign = Expression.Assign(body_field, body_value);
+            return Expression.Lambda<Action<object, object>>(body_assign, param_instance, param_value).Compile();
+        }
     }
 }

@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp;
@@ -55,7 +52,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
             Id = this.Id,
             IsPermitOperation = true
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await pluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         if (args.IsPermitOperation == false)
         {
@@ -66,7 +63,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
         {
             Id = this.Id
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await pluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.m_udpSession.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         return true;
     }
@@ -86,21 +83,14 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     /// <summary>
     /// 不支持该操作
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
     /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
-    public override Task ResetIdAsync(string id)
+    public override Task ResetIdAsync(string id, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
     }
 
-    //private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-    //{
-    //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
-    //}
-
-    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
+    private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory);
+        return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory, cancellationToken);
     }
 }

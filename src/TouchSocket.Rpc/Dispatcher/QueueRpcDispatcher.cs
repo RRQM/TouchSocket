@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Rpc;
 
 /// <summary>
@@ -53,7 +48,7 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
     {
         if (disposing)
         {
-            this.m_cancellationTokenSource.Cancel();
+            this.m_cancellationTokenSource.SafeCancel();
             this.m_cancellationTokenSource.SafeDispose();
         }
         base.Dispose(disposing);

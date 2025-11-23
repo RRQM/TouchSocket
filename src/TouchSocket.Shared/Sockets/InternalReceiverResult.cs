@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -34,7 +31,7 @@ internal class InternalReceiverResult : IReceiverResult
     /// <summary>
     /// 字节块
     /// </summary>
-    public ByteBlock ByteBlock { get; set; }
+    public ReadOnlyMemory<byte> Memory { get; set; }
 
     /// <summary>
     /// 数据对象

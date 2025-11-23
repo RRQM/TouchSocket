@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.Rpc;
 
 /// <summary>
@@ -23,19 +20,23 @@ public interface ISerializationSelector
     /// <summary>
     /// 反序列化字节块中的参数。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块的类型，必须实现IByteBlock接口。</typeparam>
-    /// <param name="byteBlock">包含序列化参数的字节块。</param>
+    /// <typeparam name="TReader">字节块的类型，必须实现IByteBlock接口。</typeparam>
+    /// <param name="reader">包含序列化参数的字节块。</param>
     /// <param name="serializationType">指定的序列化类型。</param>
     /// <param name="parameterType">预期反序列化参数的类型。</param>
     /// <returns>反序列化后的参数对象。</returns>
-    object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock;
+    object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType) where TReader : IBytesReader
+
+        ;
 
     /// <summary>
     /// 序列化参数并将其添加到字节块中。
     /// </summary>
-    /// <typeparam name="TByteBlock">字节块的类型，必须实现IByteBlock接口。</typeparam>
-    /// <param name="byteBlock">将要包含序列化参数的字节块。</param>
+    /// <typeparam name="TWriter">字节块的类型，必须实现IByteBlock接口。</typeparam>
+    /// <param name="wirter">将要包含序列化参数的字节块。</param>
     /// <param name="serializationType">要使用的序列化类型。</param>
     /// <param name="parameter">要序列化的参数对象。</param>
-    void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock;
+    void SerializeParameter<TWriter>(ref TWriter wirter, SerializationType serializationType, in object parameter) where TWriter : IBytesWriter
+
+        ;
 }

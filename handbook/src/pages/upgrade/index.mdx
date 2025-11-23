@@ -1,0 +1,240 @@
+---
+id: upgrade
+title: 历史更新
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+
+## v4.0
+
+**更新日期：** 
+
+暂未发布正式版，Nuget请勾选预发布版本可以尝鲜更新。
+
+目前4.0版本已进入RC（发布候选）阶段，一般API基本不会再变动。正式版计划在2025年12月左右，随`.NET10`发布正式版。
+
+**更新描述：**
+
+- &nbsp;<Tag>更新</Tag> 此次更新可能会引入**破坏性变更**，升级前请务必做好代码备份。代码升级详情请看[4.0升级指南](/upgrade/upgrade-to-4-0)
+- &nbsp;<Tag>调整</Tag> **Fast序列化**、**Dmtp组件**在运行时无法向下兼容v3.x版本，请保证客户端和服务器同时升级
+- &nbsp;<Tag>调整</Tag> 全系不再支持`.NET Framework45`，最低支持`.NET Framework462`及以上版本，直至`.NET 10.0`。
+- &nbsp;<Tag>调整</Tag> 全系不再异步方法同步化，即：不再提供异步方法的同步版本，所有异步方法均需使用`await`调用。
+- &nbsp;<Tag>重构</Tag> 核心字节流处理系统重构和性能优化
+- &nbsp;<Tag>重构</Tag> 全面重构数据适配器架构，提升数据处理能力
+- &nbsp;<Tag>新增</Tag> 传输层新增多种传输模式支持
+- &nbsp;<Tag>新增</Tag> `WebSocket`新增异步读取、分包传输、自定义帧等高级功能
+- &nbsp;<Tag>新增</Tag> `DMTP`协议支持多种传输协议的服务器和客户端工厂模式
+- &nbsp;<Tag>升级</Tag> 最高至`.NET 10.0`框架，享受最新性能改进
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `IBytesReader` 和 `IByteBlockReader` 接口，提供统一的字节读取抽象
+- &nbsp;<Tag>新增</Tag> `IBytesWriter` 和 `IByteBlockWriter` 接口，提供高性能的字节写入能力
+- &nbsp;<Tag>新增</Tag> `ByteBlockStream`、`ReadOnlyStream`、`WriteOnlyStream` 流包装类，增强流操作能力
+- &nbsp;<Tag>新增</Tag> `BytesWriter`、`PipeBytesWriter`、`SegmentedBytesWriter` 多种字节写入器实现
+- &nbsp;<Tag>新增</Tag> `WriterAnchor<TWriter>` 写入锚点机制，支持位置回溯和数据重写
+- &nbsp;<Tag>新增</Tag> `AsyncExchange<T>` 异步数据交换器，提供线程安全的单槽异步交接
+- &nbsp;<Tag>新增</Tag> `ReadLease<T>` 读取租约机制，优化资源管理和生命周期控制
+- &nbsp;<Tag>新增</Tag> `IPackageConverter<T>` 包转换器接口，统一数据包序列化和反序列化
+- &nbsp;<Tag>新增</Tag> `CustomDataHandlingAdapterGroup<TRequest>` 适配器组，支持多适配器组合使用
+- &nbsp;<Tag>新增</Tag> `MultithreadingDataAdapterTester` 多线程数据适配器测试器
+- &nbsp;<Tag>新增</Tag> `TcpDataAdapterTester` 和 `UdpDataAdapterTester` 专用测试器
+- &nbsp;<Tag>新增</Tag> `UdpDataHandlingAdapter` UDP数据处理适配器基类
+- &nbsp;<Tag>新增</Tag> `UdpFrame` 和 `UdpPackage` UDP帧和包处理机制
+- &nbsp;<Tag>新增</Tag> `UdpPackageAdapter` UDP包适配器，支持大数据分包传输
+- &nbsp;<Tag>新增</Tag> `FastBinaryPrimitiveHelper` 快速二进制原生类型处理器
+- &nbsp;<Tag>新增</Tag> `TimeoutTokenSource` 类，提供超时令牌管理和异常区分机制
+- &nbsp;<Tag>新增</Tag> `TaskCompletionSourceWithoutInlining<T>` 防止延续内联，提升性能
+- &nbsp;<Tag>新增</Tag> `AsyncWaitData<T>` 高性能异步等待容器，基于 `ValueTask` 实现
+- &nbsp;<Tag>新增</Tag> `InternalUtilities` 内部工具类，优化队列中间元素移除等操作
+- &nbsp;<Tag>新增</Tag> `EmptyStruct` 轻量级空结构体
+- &nbsp;<Tag>新增</Tag> `NullableHelpers` 提供安全的空值转换
+- &nbsp;<Tag>优化</Tag> `WaitPool` 内部优化使用新的 `AsyncWaitData` 结构，支持高并发场景
+- &nbsp;<Tag>优化</Tag> 异步操作的取消令牌处理逻辑和内存分配优化
+
+#### TouchSocket.Http & WebSocket
+
+- &nbsp;<Tag>新增</Tag> `ContentCompletionStatus` 枚举，精确跟踪内容读取状态
+- &nbsp;<Tag>新增</Tag> `HttpReadOnlyMemoryBlockResult` 结构，支持零拷贝内存块读取
+- &nbsp;<Tag>新增</Tag> `ProxyAuthenticationException` 代理认证异常
+- &nbsp;<Tag>新增</Tag> `ProxyConnectionException` 代理连接异常
+- &nbsp;<Tag>新增</Tag> `AuthenticationPlugin` 基础认证插件，支持Basic Authentication认证机制
+- &nbsp;<Tag>新增</Tag> `WebSocketFeatureOptions` 统一配置类，支持URL路径匹配、自动Pong响应等
+- &nbsp;<Tag>重构</Tag> `ClientHttpResponse` 类，支持流式读取和分块传输（Chunked Transfer）
+- &nbsp;<Tag>优化</Tag> `ServerHttpRequest` 和 `ServerHttpResponse` 内容处理机制
+- &nbsp;<Tag>新增</Tag> 复杂代理场景的错误处理和状态管理
+- &nbsp;<Tag>新增</Tag> 可配置用户名、密码和认证域的认证系统
+- &nbsp;<Tag>新增</Tag> WebSocket分包数据传输（Continuation frames）
+- &nbsp;<Tag>新增</Tag> 自定义WebSocket帧（RSV位设置）
+- &nbsp;<Tag>新增</Tag> 多种关闭状态码设置
+- &nbsp;<Tag>调整</Tag> WebSocket插件接口统一化：`IWebSocketHandshakingPlugin` → `IWebSocketConnectingPlugin`
+- &nbsp;<Tag>调整</Tag> WebSocket插件接口统一化：`IWebSocketHandshakedPlugin` → `IWebSocketConnectedPlugin`
+- &nbsp;<Tag>优化</Tag> Ping/Pong心跳机制的可靠性
+- &nbsp;<Tag>新增</Tag> 插件扩展生成器自动化支持
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>新增</Tag> `ITransport` 核心传输接口，统一读写器和生命周期管理
+- &nbsp;<Tag>新增</Tag> `ITransportReader` 和 `ITransportWriter` 分离读写职责
+- &nbsp;<Tag>新增</Tag> `BaseTransport` 抽象基类，提供管道化传输基础设施
+- &nbsp;<Tag>新增</Tag> `TcpTransport` TCP传输层实现，支持SSL/TLS加密
+- &nbsp;<Tag>新增</Tag> `StreamTransport` 通用流传输层，适配各种流类型
+- &nbsp;<Tag>新增</Tag> `TransportStream` 基于管道的流实现
+- &nbsp;<Tag>新增</Tag> `PipeTcpClient` 管道化TCP客户端
+- &nbsp;<Tag>新增</Tag> `IPipeTcpClient` 接口支持直接管道操作
+- &nbsp;<Tag>新增</Tag> `TcpOperationResult` TCP操作结果封装
+- &nbsp;<Tag>新增</Tag> `UdpOperationResult` UDP操作结果封装
+- &nbsp;<Tag>新增</Tag> `TransportOption` 传输配置类
+- &nbsp;<Tag>新增</Tag> `CheckClearOption` 连接检查和清理配置
+- &nbsp;<Tag>新增</Tag> `ReconnectionOptions` 重连机制配置增强
+- &nbsp;<Tag>新增</Tag> `SslOption` 基础SSL配置
+- &nbsp;<Tag>新增</Tag> `ClientSslOption` 客户端SSL配置
+- &nbsp;<Tag>新增</Tag> `ServiceSslOption` 服务端SSL配置
+- &nbsp;<Tag>新增</Tag> `BytesReaderEventArgs` 字节读取器事件参数
+- &nbsp;<Tag>新增</Tag> `MemoryEventArgs` 内存数据事件参数
+- &nbsp;<Tag>新增</Tag> `ConnectionCheckResult` 连接检查结果枚举
+- &nbsp;<Tag>新增</Tag> `TcpListenOption` TCP监听选项
+- &nbsp;<Tag>新增</Tag> 零拷贝数据传输和内存优化
+- &nbsp;<Tag>新增</Tag> 管道选项、缓冲区大小等精细化配置
+- &nbsp;<Tag>新增</Tag> 证书验证回调、协议版本选择等高级功能
+- &nbsp;<Tag>调整</Tag> Socket错误处理和状态报告机制
+- &nbsp;<Tag>优化</Tag> 插件事件传递机制和性能
+
+#### TouchSocket.XmlRpc
+
+- &nbsp;<Tag>新增</Tag> `XmlRpcOption` 统一配置类，支持URL匹配、自定义验证委托等高级配置
+- &nbsp;<Tag>新增</Tag> `AsyncToSyncWarning` 特性标记，提供异步转同步警告
+- &nbsp;<Tag>调整</Tag> 代理生成器参数类型规范化：`IInvokeOption` → `InvokeOption`
+- &nbsp;<Tag>调整</Tag> 异步方法命名规范
+- &nbsp;<Tag>优化</Tag> 代码生成器的类型安全性
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>新增</Tag> `ChannelDataType` 通道数据类型枚举，支持多种通道数据类型
+- &nbsp;<Tag>新增</Tag> `TouchSocketDmtpSourceGenerationContext` JSON序列化上下文
+- &nbsp;<Tag>新增</Tag> `SealedDmtpActor` 密封演员模式实现
+- &nbsp;<Tag>新增</Tag> `DmtpAdapterSlim` 轻量级适配器（注释版本，预留扩展）
+- &nbsp;<Tag>新增</Tag> `DmtpFeatureOption` 基础特性配置
+- &nbsp;<Tag>新增</Tag> `DmtpOption` 核心DMTP配置选项
+- &nbsp;<Tag>新增</Tag> `DmtpRpcOption` RPC配置选项类
+- &nbsp;<Tag>新增</Tag> `DmtpRpcActorExtension` 扩展方法集合
+- &nbsp;<Tag>新增</Tag> `DmtpFileTransferOption` 文件传输配置
+- &nbsp;<Tag>新增</Tag> `DmtpFileTransferPluginManagerExtension` 扩展方法
+- &nbsp;<Tag>新增</Tag> `DmtpRedisOption` Redis配置选项
+- &nbsp;<Tag>新增</Tag> `RedisPluginManagerExtension` 插件管理扩展
+- &nbsp;<Tag>新增</Tag> `IDmtpConnectingPlugin` 连接中插件接口
+- &nbsp;<Tag>新增</Tag> `IDmtpConnectedPlugin` 已连接插件接口
+- &nbsp;<Tag>新增</Tag> `TcpDmtpService` TCP协议DMTP服务
+- &nbsp;<Tag>新增</Tag> `HttpDmtpService` HTTP协议DMTP服务
+- &nbsp;<Tag>新增</Tag> `NamedPipeDmtpService` 命名管道DMTP服务
+- &nbsp;<Tag>新增</Tag> `UdpDmtp` UDP协议DMTP支持
+- &nbsp;<Tag>新增</Tag> `WebSocketDmtpService` WebSocket协议DMTP服务
+- &nbsp;<Tag>新增</Tag> `TcpDmtpClientFactory` TCP客户端连接池
+- &nbsp;<Tag>新增</Tag> `HttpDmtpClientFactory` HTTP客户端连接池
+- &nbsp;<Tag>新增</Tag> 多种调度器模式：即时、队列、并发、全局队列
+- &nbsp;<Tag>新增</Tag> 序列化选择器配置
+- &nbsp;<Tag>新增</Tag> 文件资源控制器、根路径配置
+- &nbsp;<Tag>新增</Tag> 小文件优化传输策略
+- &nbsp;<Tag>新增</Tag> 字节序列化转换器配置
+- &nbsp;<Tag>新增</Tag> 内存缓存和自定义缓存后端
+- &nbsp;<Tag>新增</Tag> 动态方法生成和插件扩展
+- &nbsp;<Tag>新增</Tag> 元数据、验证等核心类型的AOT编译优化
+- &nbsp;<Tag>新增</Tag> WebSocket协议的DMTP服务器
+- &nbsp;<Tag>新增</Tag> HTTP中间件的DMTP服务器
+- &nbsp;<Tag>新增</Tag> 统一容器配置
+- &nbsp;<Tag>新增</Tag> 连接数控制和超时管理
+- &nbsp;<Tag>调整</Tag> 特性插件注册和生命周期管理
+- &nbsp;<Tag>调整</Tag> 协议号自定义分配
+- &nbsp;<Tag>优化</Tag> DMTP消息处理性能和内存使用
+- &nbsp;<Tag>优化</Tag> 序列化性能和包大小
+
+#### TouchSocket.JsonRpc
+
+- &nbsp;<Tag>新增</Tag> `JsonRpcOption` 基础配置类，支持序列化器管理
+- &nbsp;<Tag>新增</Tag> `HttpJsonRpcOption` HTTP协议专用配置
+- &nbsp;<Tag>新增</Tag> `TcpJsonRpcOption` TCP协议专用配置
+- &nbsp;<Tag>新增</Tag> `WebSocketJsonRpcOption` WebSocket协议专用配置
+- &nbsp;<Tag>新增</Tag> `TouchSocketSerializerConverter` 序列化转换器基础设施
+- &nbsp;<Tag>新增</Tag> Newtonsoft.Json、System.Text.Json等多种序列化器
+- &nbsp;<Tag>新增</Tag> 自定义序列化格式化器注册和管理
+- &nbsp;<Tag>新增</Tag> HTTP JsonRpc URL路径匹配和自定义验证
+- &nbsp;<Tag>新增</Tag> TCP JsonRpc连接验证委托
+- &nbsp;<Tag>新增</Tag> WebSocket JsonRpc连接上下文验证
+- &nbsp;<Tag>调整</Tag> 不同传输协议的JsonRpc配置接口
+- &nbsp;<Tag>调整</Tag> AllowJsonRpc委托配置模式
+
+#### TouchSocket.NamedPipe & TouchSocket.SerialPorts
+
+- &nbsp;<Tag>新增</Tag> `NamedPipeTransport` 基于流传输的命名管道实现
+- &nbsp;<Tag>新增</Tag> `SerialPortTransport` 专用串口传输实现
+- &nbsp;<Tag>新增</Tag> `SerialCore` 串口核心操作封装
+- &nbsp;<Tag>调整</Tag> `StreamTransport` 统一传输层接口
+- &nbsp;<Tag>调整</Tag> `BaseTransport` 提供统一的管道化接口
+- &nbsp;<Tag>新增</Tag> 双向通信和异步操作
+- &nbsp;<Tag>新增</Tag> 串口参数配置和异步读写操作
+
+#### TouchSocket.WebApi & TouchSocket.Mqtt
+
+- &nbsp;<Tag>新增</Tag> `WebApiOption` 统一配置类
+- &nbsp;<Tag>新增</Tag> `WebApiSerializerConverter` 序列化转换器
+- &nbsp;<Tag>新增</Tag> `SwaggerOption` Swagger配置选项
+- &nbsp;<Tag>新增</Tag> MQTT协议插件扩展自动生成
+- &nbsp;<Tag>新增</Tag> JSON序列化器配置和自定义转换器
+- &nbsp;<Tag>新增</Tag> 浏览器自动启动、访问前缀配置
+- &nbsp;<Tag>新增</Tag> 连接、接收、关闭等事件插件
+- &nbsp;<Tag>优化</Tag> API文档生成和展示功能
+- &nbsp;<Tag>调整</Tag> 插件注册和生命周期管理
+
+#### TouchSocket.SourceGenerator
+
+- &nbsp;<Tag>新增</Tag> `UtilsCore` 源生成器工具类
+- &nbsp;<Tag>新增</Tag> `EndianType` 字节序类型枚举
+- &nbsp;<Tag>新增</Tag> 大端、小端及交换字节序模式
+- &nbsp;<Tag>新增</Tag> 代码生成器基础设施支持
+
+#### TouchSocketPro.AspNetCore
+
+- &nbsp;<Tag>新增</Tag> `HttpStreamTransport` HTTP流传输实现
+
+#### 重要技术架构改进
+
+- &nbsp;<Tag>升级</Tag> 统一传输层架构，引入 `ITransport` 接口统一所有传输协议（TCP、UDP、HTTP、WebSocket、命名管道、串口等）
+- &nbsp;<Tag>升级</Tag> 基于 `System.IO.Pipelines` 的高性能管道化数据处理
+- &nbsp;<Tag>升级</Tag> 支持零拷贝数据传输，显著降低内存分配和GC压力
+- &nbsp;<Tag>升级</Tag> 统一的SSL/TLS加密支持，可在任意传输层启用加密
+- &nbsp;<Tag>升级</Tag> 全面采用 `ValueTask` 减少异步操作的内存分配
+- &nbsp;<Tag>升级</Tag> 新增超时控制和取消令牌的统一处理机制
+- &nbsp;<Tag>升级</Tag> 改进异步等待池系统，提升高并发场景性能
+- &nbsp;<Tag>升级</Tag> 支持异步延续防内联，避免线程池饥饿
+- &nbsp;<Tag>升级</Tag> 统一插件接口命名规范和生命周期管理
+- &nbsp;<Tag>升级</Tag> 支持插件扩展代码自动生成，减少样板代码
+- &nbsp;<Tag>升级</Tag> 改进插件事件传递机制，支持更复杂的事件链
+- &nbsp;<Tag>升级</Tag> 新增插件配置选项模式，提供更灵活的插件配置
+- &nbsp;<Tag>升级</Tag> 引入选项模式（Options Pattern），统一各组件配置接口
+- &nbsp;<Tag>升级</Tag> 支持链式配置方法，提升开发体验
+- &nbsp;<Tag>升级</Tag> 新增配置验证和默认值机制
+- &nbsp;<Tag>升级</Tag> 支持运行时配置动态修改
+
+#### 重要变更说明
+
+- &nbsp;<Tag>调整</Tag> WebSocket插件接口重命名：`IWebSocketHandshakingPlugin` → `IWebSocketConnectingPlugin`
+- &nbsp;<Tag>调整</Tag> WebSocket插件接口重命名：`IWebSocketHandshakedPlugin` → `IWebSocketConnectedPlugin`
+- &nbsp;<Tag>调整</Tag> WebSocket插件方法重命名：`OnWebSocketHandshaking` → `OnWebSocketConnecting`
+- &nbsp;<Tag>调整</Tag> WebSocket插件方法重命名：`OnWebSocketHandshaked` → `OnWebSocketConnected`
+- &nbsp;<Tag>调整</Tag> WebSocket配置方式调整：从链式调用改为选项配置模式
+- &nbsp;<Tag>调整</Tag> XmlRpc配置方式调整：使用 `SetAllowXmlRpc` 替代 `SetXmlRpcUrl`
+- &nbsp;<Tag>调整</Tag> 重连插件调整：使用泛型版本 `UseReconnection<WebSocketClient>()` 替代特定方法
+
+***
+
+- [v3.1 系列更新](/upgrade/v3-1)
+- [v3.0 系列更新](/upgrade/v3-0)
+- [v2.1 系列更新](/upgrade/v2-1)
+- [v2.0 系列更新](/upgrade/v2-0)
+- [v1 系列更新](/upgrade/v1)
+- [v0 系列与早期版本](/upgrade/v0)

@@ -1,28 +1,31 @@
 ---
 id: mqttclient
-title: Mqtt客户端使用
+title: Mqtt客户端
 ---
 
 import Tag from "@site/src/components/Tag.js";
 import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
+
 
 <TouchSocketMqttDefinition />
 
 
 ## 一、说明
 
-`MqttClient`是遵循Mqtt协议的消息客户端，支持连接Mqtt Broker、订阅主题、发布消息等功能，支持QoS 0/1/2三种消息质量等级。
+`MqttTcpClient` 是遵循Mqtt协议的消息客户端，支持连接Mqtt Broker、订阅主题、发布消息等功能，支持QoS 0/1/2三种消息质量等级，兼容 Mqtt 3.1.1 及 5.0+ 协议版本。
 
 ## 二、特点
 
 - 轻量级协议支持
-- QoS消息质量保障
+- QoS消息质量保障（0/1/2）
 - 遗嘱消息支持
 - 保留消息处理
+- 自动重连机制
 - TLS加密通信
 - 主题通配符匹配（+/#）
+- 插件化扩展体系
 
 ## 三、应用场景
 
@@ -30,16 +33,17 @@ import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
 - 跨平台消息推送
 - 低带宽环境通信
 - 设备状态同步
+- 远程设备控制
 
 ## 四、可配置项
 
-继承所有[TcpClient](./tcpclient.mdx)的配置。除此之外还支持Mqtt的一些专有配置。
+继承所有[TcpClient](./tcpclient.mdx)的配置。除此之外还支持Mqtt客户端专有配置。
 
 <details>
 <summary>可配置项</summary>
 <div>
 
-#### SetMqttConnectOptions
+### SetMqttConnectOptions
 
 `MqttConnectOptions` 类用于配置 Mqtt 客户端连接到 Mqtt 服务端时的参数，支持 Mqtt 3.1.1 及 5.0+ 协议版本。以下是各配置项的详细说明：
 
@@ -91,16 +95,17 @@ import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
 | `RequestProblemInformation` | 5.0+                | 是否请求服务端在出错时返回详细问题信息（如原因码、原因字符串）；默认值为 `true`（建议开启以便排查问题）。                 |
 | `RequestResponseInformation`| 5.0+                | 是否请求服务端返回连接响应的额外信息（如会话过期时间）；默认值为 `false`（仅当需要时启用）。                             |
 | `SessionExpiryInterval`     | 5.0+                | 会话过期时间间隔（单位：秒，0 表示立即过期）；客户端断开后，服务端保留会话的时间（仅当 `CleanSession=false` 时有效）。       |
-| `TopicAliasMaximum`         | 5.0+                | 客户端允许的最大主题别名值（服务站不能使用超过此值的别名）；默认值为 0（表示不使用主题别名）。                           |
+| `TopicAliasMaximum`         | 5.0+                | 客户端允许的最大主题别名值（服务端不能使用超过此值的别名）；默认值为 0（表示不使用主题别名）。                           |
 
 ---
 
-**注意事项**
+:::caution 注意
 
 1. **协议版本兼容性**：部分属性（如 `UserProperties`、`AuthenticationMethod`）仅在 Mqtt 5.0+ 中有效，需根据服务端版本选择配置。
 2. **遗嘱消息生效条件**：`WillFlag` 必须为 `true`，且 `WillTopic` 和 `WillMessage` 需有效配置，否则遗嘱不会被发送。
 3. **认证扩展**：5.0+ 的 `AuthenticationData` 需配合自定义认证插件使用，具体格式由服务端定义。
-4. **只读属性**：`WillMessage` 和 `WillTopic` 标记为 `internal set`，通常通过构造函数或专用方法设置（如 `MqttApplicationMessage`）。
+
+:::  
 
 </div>
 </details>
@@ -119,177 +124,92 @@ import { TouchSocketMqttDefinition } from "@site/src/components/Definition.js";
 
 ## 六、创建Mqtt客户端
 
-```csharp showLineNumbers
-var client = new MqttTcpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .SetRemoteIPHost("tcp://127.0.0.1:7789")
-    .SetMqttConnectOptions(options =>
-    {
-        options.ClientId = "TestClient";
-        options.UserName = "TestUser";
-        options.Password = "TestPassword";
-        options.ProtocolName = "MQTT";
-        options.Version = MqttProtocolVersion.V311;
-        options.KeepAlive = 60;
-        options.CleanSession = true;
+### 6.1 简单创建
 
-        // v5可以继续配置其他
+直接创建`MqttTcpClient`实例，配置连接参数和插件：
 
-        // options.UserProperties = new[]
-        // {
-        //     new MqttUserProperty("key1","value1"),
-        //     new MqttUserProperty("key2","value2")
-        // };
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.AddMqttConnectingPlugin(async (mqttSession, e) =>
-        {
-            Console.WriteLine($"Client Connecting:{e.ConnectMessage.ClientId}");
-            await e.InvokeNext();
-        });
+<CustomCodeBlock region="创建Mqtt客户端" />
 
-        a.AddMqttConnectedPlugin(async (mqttSession, e) =>
-        {
-            Console.WriteLine($"Client Connected:{e.ConnectMessage.ClientId}");
-            await e.InvokeNext();
-        });
+:::info 温馨提示
 
-        a.AddMqttReceivingPlugin(async (mqttSession, e) =>
-        {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        });
+`client.ConnectAsync()`方法会连接到Mqtt服务器，如果连接失败会抛出异常。
 
-        a.AddMqttReceivedPlugin(async (mqttSession, e) =>
-        {
-            var message = e.Message;
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        });
+:::  
 
-        a.AddMqttClosingPlugin(async (mqttSession, e) =>
-        {
-            Console.WriteLine($"Client Closing:{e.MqttMessage.MessageType}");
-            await e.InvokeNext();
-        });
+### 6.2 配置连接选项
 
-        a.AddMqttClosedPlugin(async (mqttSession, e) =>
-        {
-            Console.WriteLine($"Client Closed:{e.Message}");
-            await e.InvokeNext();
-        });
+<CustomCodeBlock region="Mqtt客户端配置连接选项" />
 
-    }));//载入配置
+### 6.3 配置插件
 
-await client.ConnectAsync();//连接
-```
+<CustomCodeBlock region="Mqtt客户端配置插件" />
 
+例如，连接相关插件：
+
+<CustomCodeBlock region="Mqtt连接插件" />
 
 ## 七、订阅与取消订阅
 
-### 7.1 订阅
+### 7.1 订阅主题
 
 按照Mqtt协议，客户端可以通过`Subscribe`指令订阅一个或多个主题，服务端会返回订阅结果。
 
-```csharp {10} showLineNumbers
-var topic1 = "topic1";
-var topic2 = "topic2";
-SubscribeRequest subscribeRequest1=new SubscribeRequest(topic1, QosLevel.AtLeastOnce);//订阅请求
-SubscribeRequest subscribeRequest2=new SubscribeRequest(topic2, QosLevel.AtMostOnce);//可以设置不同的Qos级别
-
-//多个订阅请求
-var mqttSubscribeMessage = new MqttSubscribeMessage(subscribeRequest1, subscribeRequest2);
-
-//执行订阅
-var mqttSubAckMessage = await client.SubscribeAsync(mqttSubscribeMessage);
-
-//输出订阅结果
-foreach (var item in mqttSubAckMessage.ReturnCodes)
-{
-    Console.WriteLine($"ReturnCode:{item}");
-}
-```
+<CustomCodeBlock region="Mqtt客户端订阅主题" />
 
 ### 7.2 取消订阅
 
 按照Mqtt协议，客户端可以通过`Unsubscribe`指令取消订阅一个或多个主题，服务端会返回所有取消订阅结果。
 
-```csharp {5} showLineNumbers
-var topic1 = "topic1";
-var topic2 = "topic2";
-
-//取消订阅
-var mqttUnsubAckMessage = await client.UnsubscribeAsync(new MqttUnsubscribeMessage(topic1,topic2));
-```
+<CustomCodeBlock region="Mqtt客户端取消订阅"/>
 
 
 ## 八、接收消息
 
-Mqtt组件的消息都是通过插件抛出的。你可以订阅`IMqttReceivingPlugin`插件和`IMqttReceivedPlugin`插件来接收消息。
+在Mqtt客户端连接成功之后,Mqtt组件的消息都是通过插件抛出的。你可以订阅`IMqttReceivingPlugin`插件和`IMqttReceivedPlugin`插件来接收消息。
 
-正如插件说明所示，`IMqttReceivingPlugin`插件可以在收到所有消息时触发，`IMqttReceivedPlugin`插件可以在收到发布消息时触发。
+正如插件说明所示,`IMqttReceivingPlugin`插件可以在收到所有消息时触发,`IMqttReceivedPlugin`插件可以在收到发布消息时触发。
 
-所以如果你只关心发布成功的消息，那么可以只订阅`IMqttReceivedPlugin`插件即可。
+所以如果你只关心接收（已发布）消息的消息,那么可以只订阅`IMqttReceivedPlugin`插件即可。
 
-你可以直接使用委托实现订阅：
+但是对于客户端来说,也可能需要获取到的消息可能是订阅确认、发布、发布确认、取消订阅确认等。所以你可以通过`IMqttReceivingPlugin`的`e.MqttMessage`来获取到具体的消息类型。
 
-```csharp {3-17} showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.AddMqttReceivedPlugin(async (client, e) =>
-    {
-        var mqttMessage = e.MqttMessage;
-        Console.WriteLine("Reved:" + mqttMessage);
+下列将简单演示。
 
-        //订阅消息的主题
-        var topicName = mqttMessage.TopicName;
+### 8.1 通过插件接收所有消息
 
-        //订阅消息的Qos级别
-        var qosLevel = mqttMessage.QosLevel;
+<CustomCodeBlock region="Mqtt客户端通过插件接收所有消息" />
 
-        //订阅消息的Payload
-        var payload = mqttMessage.Payload;
-        await e.InvokeNext();
-    });
-})
-```
+### 8.2 接收发布消息
 
-或者使用插件类来继承接口实现：
+如果你只关心发布成功的消息,那么可以只订阅`IMqttReceivedPlugin`插件即可:
 
-```csharp showLineNumbers
-class MyMqttReceivedPlugin : PluginBase, IMqttReceivedPlugin
-{
-    public async Task OnMqttReceived(IMqttSession client, MqttReceivedEventArgs e)
-    {
-        var mqttMessage = e.MqttMessage;
-
-        //订阅消息的主题
-        var topicName = mqttMessage.TopicName;
-
-        //订阅消息的Qos级别
-        var qosLevel = mqttMessage.QosLevel;
-
-        //订阅消息的Payload
-        var payload = mqttMessage.Payload;
-        await e.InvokeNext();
-    }
-}
-```
-
-然后把这个类添加到插件即可：
-
-```csharp {3} showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.Add<MyMqttReceivedPlugin>();//添加自定义插件
-})
-```
+<CustomCodeBlock region="Mqtt客户端接收发布消息" />
 
 ## 九、发布消息
 
-```csharp {3} showLineNumbers
-MqttPublishMessage message = new(topic1, false, QosLevel.AtLeastOnce, Encoding.UTF8.GetBytes("Hello World"));
+<CustomCodeBlock region="Mqtt客户端发布消息"/>
 
-await client.PublishAsync(message);
-```
+或者使用高性能的内存池方式发布数据。
 
+<CustomCodeBlock region="Mqtt客户端高性能发布消息"/>
+
+## 十、断开连接
+
+### 10.1 正常断开
+
+<CustomCodeBlock region="Mqtt客户端断开连接" />
+
+### 10.2 释放资源
+
+<CustomCodeBlock region="Mqtt客户端释放资源" />
+
+## 十一、连接管理
+
+### 11.1 检查连接状态
+
+<CustomCodeBlock region="Mqtt客户端检查连接状态" />
+
+### 11.2 自动重连配置
+
+<CustomCodeBlock region="Mqtt客户端自动重连配置" />
 

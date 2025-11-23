@@ -4,8 +4,8 @@ title: 大小端转换器
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
@@ -15,21 +15,18 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 ### 1. 大小端模式
 - **大端模式 (Big Endian)**  
   高位字节存储在内存低地址，低位字节存储在高地址。  
-  *示例：整数 `10` 的4字节大端表示为 `{0, 0, 0, 10}*`
+  *示例：整数 `10` 的4字节大端表示为 `{0, 0, 0, 10}`*
 
 - **小端模式 (Little Endian)**  
   低位字节存储在内存低地址，高位字节存储在高地址。  
-  *示例：整数 `10` 的4字节小端表示为 `{10, 0, 0, 0}`
+  *示例：整数 `10` 的4字节小端表示为 `{10, 0, 0, 0}`*
 
 ### 2. 端序类型枚举
-```csharp
-public enum EndianType {
-    Big,        // 标准大端
-    Little,     // 标准小端
-    BigSwap,    // 交换大端（特殊场景）
-    LittleSwap  // 交换小端（特殊场景）
-}
-```
+`TouchSocketBitConverter` 支持四种端序类型：
+- `EndianType.Big` - 标准大端
+- `EndianType.Little` - 标准小端
+- `EndianType.BigSwap` - 交换大端（特殊场景）
+- `EndianType.LittleSwap` - 交换小端（特殊场景）
 
 ---
 
@@ -37,22 +34,14 @@ public enum EndianType {
 ## 二、核心 API 使用
 
 ### 1. 直接指定端序转换器
-```csharp
-// 预定义静态实例
-TouchSocketBitConverter.BigEndian        // 绝对大端
-TouchSocketBitConverter.LittleEndian     // 绝对小端
-TouchSocketBitConverter.BigSwapEndian    // 交换大端
-TouchSocketBitConverter.LittleSwapEndian // 交换小端
-```
+`TouchSocketBitConverter` 提供了四个预定义的静态实例，可以直接使用：
+- `TouchSocketBitConverter.BigEndian` - 大端转换器
+- `TouchSocketBitConverter.LittleEndian` - 小端转换器
+- `TouchSocketBitConverter.BigSwapEndian` - 交换大端转换器
+- `TouchSocketBitConverter.LittleSwapEndian` - 交换小端转换器
 
 ### 2. 默认端序配置
-```csharp
-// 默认小端模式（可全局修改）
-TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
-
-// 获取当前默认转换器
-TouchSocketBitConverter.Default.GetBytes(123);
-```
+<CustomCodeBlock region="修改默认字节序示例"/>
 
 ---
 
@@ -60,90 +49,55 @@ TouchSocketBitConverter.Default.GetBytes(123);
 
 ### 1. 数值类型转换
 #### 转换整型 (`int`)
-```csharp
-// int -> byte[]
-byte[] data = TouchSocketBitConverter.BigEndian.GetBytes(0x12345678); 
-
-// byte[] -> int
-int value = TouchSocketBitConverter.BigEndian.ToInt32(data, 0);
-```
+<CustomCodeBlock region="大小端转换器转换整型"/>
 
 #### 转换浮点型 (`float`)
-```csharp
-// float -> byte[]
-float num = 3.14f;
-byte[] bytes = TouchSocketBitConverter.LittleEndian.GetBytes(num);
-
-// byte[] -> float
-float result = TouchSocketBitConverter.LittleEndian.ToSingle(bytes, 0);
-```
+<CustomCodeBlock region="大小端转换器转换浮点型"/>
 
 ### 2. 长数据类型处理
 #### 转换长整型 (`long`)
-```csharp
-// long -> byte[]
-long bigValue = 0x123456789ABCDEF0;
-byte[] data = TouchSocketBitConverter.Default.GetBytes(bigValue);
-
-// byte[] -> long
-long restored = TouchSocketBitConverter.Default.ToInt64(data, 0);
-```
+<CustomCodeBlock region="大小端转换器转换长整型"/>
 
 #### 转换高精度小数 (`decimal`)
-```csharp
-// decimal -> byte[]
-decimal money = 123456.78m;
-byte[] decimalBytes = TouchSocketBitConverter.BigEndian.GetBytes(money);
-
-// byte[] -> decimal
-decimal result = TouchSocketBitConverter.BigEndian.ToDecimal(decimalBytes, 0);
-```
+<CustomCodeBlock region="大小端转换器转换高精度小数"/>
 
 ---
 
 ## 四、高级功能
 
-### 1. 不安全内存操作
-```csharp
-unsafe {
-    byte[] buffer = new byte[8];
-    long value = 0x1122334455667788;
-
-    // 直接内存写入
-    fixed (byte* ptr = buffer) {
-        TouchSocketBitConverter.LittleEndian.UnsafeWriteBytes(ref *ptr, value);
-    }
-
-    // 直接内存读取
-    long readValue = TouchSocketBitConverter.LittleEndian.UnsafeTo<long>(ref buffer[0]);
-}
-```
+### 1. WriteBytes 写入既有缓冲区
+<CustomCodeBlock region="WriteBytes写入既有缓冲区示例"/>
 
 ### 2. 布尔数组转换
-```csharp
-// bool[] -> byte[]
-bool[] flags = { true, false, true, true, false, true, false, true };
-byte[] boolBytes = TouchSocketBitConverter.Default.GetBytes(flags);
+`TouchSocketBitConverter` 支持将布尔数组按位打包到字节数组中，这在处理位标志时非常有用。
 
-// byte[] -> bool[]
-bool[] decodedFlags = TouchSocketBitConverter.Default.ToBooleans(boolBytes, length: 1);
-```
+<CustomCodeBlock region="大小端转换器布尔数组转换"/>
+
+### 3. 批量类型转换
+<CustomCodeBlock region="ConvertValues类型批量转换示例"/>
 
 ---
 
 ## 五、特殊场景处理
 
 ### 1. 字节序验证
-```csharp
-// 检查当前配置是否与系统字节序一致
-bool isCompatible = TouchSocketBitConverter.Default.IsSameOfSet();
-```
+在跨平台开发时，可以通过 `IsSameOfSet()` 方法检查当前转换器的字节序是否与系统字节序一致。
+
+<CustomCodeBlock region="大小端转换器字节序验证"/>
 
 ### 2. 交换端序模式
-```csharp
-// 使用 BigSwap 模式处理网络数据包
-byte[] swappedData = TouchSocketBitConverter.BigSwapEndian.GetBytes(0xAABBCCDD);
-```
+`TouchSocketBitConverter` 提供了 `BigSwap` 和 `LittleSwap` 两种交换端序模式，用于处理特殊的数据格式。
+
+<CustomCodeBlock region="大小端转换器交换端序模式"/>
+
+### 3. ToValues 字节批量转换
+<CustomCodeBlock region="ToValues将字节批量转为数组示例"/>
+
+### 4. 布尔位打包
+<CustomCodeBlock region="ConvertValues布尔位打包示例"/>
+
+### 5. 跨端批量转换
+<CustomCodeBlock region="ConvertValues跨端批量转换示例"/>
 
 ---
 
@@ -153,33 +107,25 @@ byte[] swappedData = TouchSocketBitConverter.BigSwapEndian.GetBytes(0xAABBCCDD);
    所有转换方法会检查数组长度，不足时抛出 `ArgumentOutOfRangeException`
 
 2. **跨平台兼容性**  
-   建议通过 `IsSameOfSet()` 验证端序一致性
+   建议通过 `IsSameOfSet()` 验证端序一致性，确保数据在不同平台间正确传输
 
 3. **性能优化**  
-   对性能敏感场景推荐使用 `UnsafeWriteBytes` 和 `UnsafeTo` 方法
+   - 使用 `WriteBytes` 方法可以直接写入现有缓冲区，避免内存分配
+   - 使用 `Span<T>` 和 `ReadOnlySpan<T>` 减少内存拷贝
+   - 批量转换时使用 `ConvertValues` 方法提高效率
+
+4. **布尔类型特殊处理**  
+   布尔类型在转换时按位处理，每个布尔值占用1位而不是1字节
 
 ---
 
 ## 七、完整示例
 
-### 网络数据包处理
-```csharp
-// 配置全局大端模式
-TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
+### 1. 网络数据包处理
+<CustomCodeBlock region="大小端转换器网络数据包处理"/>
 
-// 构造数据包
-var packet = new byte[16];
-int header = 0x4D534754;  // "MSGT"
-float payload = 1024.5f;
-
-// 写入数据
-TouchSocketBitConverter.Default.WriteBytes(packet.AsSpan(0, 4), header);
-TouchSocketBitConverter.Default.WriteBytes(packet.AsSpan(4, 4), payload);
-
-// 解析数据
-int parsedHeader = TouchSocketBitConverter.Default.ToInt32(packet, 0);
-float parsedPayload = TouchSocketBitConverter.Default.ToSingle(packet, 4);
-```
+### 2. 自定义结构读写
+<CustomCodeBlock region="自定义结构读写示例"/>
 
 ---
 
@@ -187,8 +133,10 @@ float parsedPayload = TouchSocketBitConverter.Default.ToSingle(packet, 4);
 
 | 方法 | 说明 |
 |------|------|
-| `GetBytes<T>(T value)` | 将值转换为字节数组 |
-| `To<T>(ReadOnlySpan<byte>)` | 从字节跨度转换回值 |
-| `WriteBytes(Span<byte>, T)` | 将值写入字节跨度 |
-| `UnsafeWriteBytes(ref byte, T)` | 不安全内存写入 |
-| `UnsafeTo<T>(ref byte)` | 不安全内存读取 |
+| `GetBytes<T>(T value)` | 将值转换为只读内存 `ReadOnlyMemory<byte>` |
+| `To<T>(ReadOnlySpan<byte>)` | 从字节跨度转换为指定类型的值 |
+| `WriteBytes<T>(Span<byte>, T)` | 将值写入字节跨度，返回写入的字节数 |
+| `ToValues<T>(ReadOnlySpan<byte>)` | 将字节批量转换为指定类型的数组 |
+| `ConvertValues<TSource, TTarget>()` | 在不同类型之间批量转换 |
+| `GetConvertedLength<TSource, TTarget>()` | 计算转换后的长度 |
+| `IsSameOfSet()` | 检查字节序是否与系统一致 |

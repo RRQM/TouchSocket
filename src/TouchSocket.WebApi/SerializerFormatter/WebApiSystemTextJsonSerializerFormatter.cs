@@ -9,36 +9,26 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-
-#if SystemTextJson
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 
 namespace TouchSocket.WebApi;
 
-internal sealed class WebApiSystemTextJsonSerializerFormatter : ISerializerFormatter<string, HttpContext>
+[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "使用该序列化时，会和源生成配合使用")]
+[UnconditionalSuppressMessage("AOT", "IL3050:", Justification = "使用该序列化时，会和源生成配合使用")]
+internal sealed class WebApiSystemTextJsonSerializerFormatter : SystemTextJsonSerializerFormatter<string, HttpContext>
 {
-    private readonly JsonSerializerOptions m_jsonSerializerOptions;
-
     public WebApiSystemTextJsonSerializerFormatter(JsonSerializerOptions jsonSerializerOptions)
     {
-        this.m_jsonSerializerOptions = jsonSerializerOptions;
+        this.JsonSettings = jsonSerializerOptions;
     }
 
-    public int Order { get; set; }
-
-    public bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
+    public override bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
     {
         try
         {
-            target = System.Text.Json.JsonSerializer.Deserialize(source, targetType, this.m_jsonSerializerOptions);
+            target = System.Text.Json.JsonSerializer.Deserialize(source, targetType, this.JsonSettings);
             return true;
         }
         catch
@@ -48,7 +38,7 @@ internal sealed class WebApiSystemTextJsonSerializerFormatter : ISerializerForma
         }
     }
 
-    public bool TrySerialize(HttpContext state, in object target, out string source)
+    public override bool TrySerialize<TTarget>(HttpContext state, in TTarget target, out string source)
     {
         switch (state.Request.Accept)
         {
@@ -65,7 +55,7 @@ internal sealed class WebApiSystemTextJsonSerializerFormatter : ISerializerForma
                 {
                     try
                     {
-                        source = System.Text.Json.JsonSerializer.Serialize(target, target.GetType(), this.m_jsonSerializerOptions);
+                        source = System.Text.Json.JsonSerializer.Serialize(target, target.GetType(), this.JsonSettings);
                         return true;
                     }
                     catch
@@ -77,5 +67,3 @@ internal sealed class WebApiSystemTextJsonSerializerFormatter : ISerializerForma
         }
     }
 }
-
-#endif

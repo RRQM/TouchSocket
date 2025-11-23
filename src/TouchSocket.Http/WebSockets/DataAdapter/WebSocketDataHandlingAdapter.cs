@@ -10,228 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Http.WebSockets;
 
-/// <summary>
-/// WebSocket适配器
-/// </summary>
-public sealed class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapter
+
+internal sealed class WebSocketDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
 {
-    private WSDataFrame m_dataFrameTemp;
-
-    /// <summary>
-    /// 数据包剩余长度
-    /// </summary>
-    private int m_surPlusLength = 0;
-
-    /// <summary>
-    /// 临时包
-    /// </summary>
-    private ByteBlock m_tempByteBlock;
-
-    /// <summary>
-    /// 解码
-    /// </summary>
-    /// <param name="dataBuffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="dataFrame"></param>
-    /// <returns></returns>
-    public FilterResult DecodingFromBytes(byte[] dataBuffer, ref int offset, int length, out WSDataFrame dataFrame)
-    {
-        var index = offset;
-        dataFrame = new WSDataFrame
-        {
-            RSV1 = dataBuffer[offset].GetBit(6),
-            RSV2 = dataBuffer[offset].GetBit(5),
-            RSV3 = dataBuffer[offset].GetBit(4),
-            FIN = (dataBuffer[offset] >> 7) == 1,
-            Opcode = (WSDataType)(dataBuffer[offset] & 0xf),
-            Mask = (dataBuffer[++offset] >> 7) == 1
-        };
-
-        var payloadLength = dataBuffer[offset] & 0x7f;
-        if (payloadLength < 126)
-        {
-            offset++;
-        }
-        else if (payloadLength == 126)
-        {
-            if (length < 4)
-            {
-                offset = index;
-                return FilterResult.Cache;
-            }
-            payloadLength = TouchSocketBitConverter.BigEndian.ToUInt16(dataBuffer, ++offset);
-            offset += 2;
-        }
-        else if (payloadLength == 127)
-        {
-            if (length < 12)
-            {
-                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
-                this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
-                offset = index;
-                return FilterResult.GoOn;
-            }
-            payloadLength = (int)TouchSocketBitConverter.BigEndian.ToUInt64(dataBuffer, ++offset);
-            offset += 8;
-        }
-
-        dataFrame.PayloadLength = payloadLength;
-
-        if (dataFrame.Mask)
-        {
-            if (length < (offset - index) + 4)
-            {
-                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
-                this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
-                offset = index;
-                return FilterResult.GoOn;
-            }
-            dataFrame.MaskingKey = new byte[4];
-            dataFrame.MaskingKey[0] = dataBuffer[offset++];
-            dataFrame.MaskingKey[1] = dataBuffer[offset++];
-            dataFrame.MaskingKey[2] = dataBuffer[offset++];
-            dataFrame.MaskingKey[3] = dataBuffer[offset++];
-        }
-
-        var byteBlock = new ByteBlock(payloadLength);
-        dataFrame.PayloadData = byteBlock;
-
-        var surLen = length - (offset - index);
-        if (payloadLength <= surLen)
-        {
-            byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
-            offset += payloadLength;
-        }
-        else
-        {
-            byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surLen));
-            offset += surLen;
-        }
-
-        return FilterResult.Success;
-    }
-
-    /// <summary>
-    /// 当接收到数据时处理数据
-    /// </summary>
-    /// <param name="byteBlock">数据流</param>
-    protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
-    {
-        var buffer = byteBlock.Memory.GetArray().Array;
-        var r = byteBlock.Length;
-
-        if (this.m_tempByteBlock != null)
-        {
-            this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
-            buffer = this.m_tempByteBlock.ToArray();
-            r = this.m_tempByteBlock.Position;
-            this.m_tempByteBlock.Dispose();
-            this.m_tempByteBlock = null;
-        }
-
-        if (this.m_dataFrameTemp == null)
-        {
-            await this.SplitPackageAsync(buffer, 0, r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            if (this.m_surPlusLength == r)
-            {
-                this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_dataFrameTemp = null;
-                this.m_surPlusLength = 0;
-            }
-            else if (this.m_surPlusLength < r)
-            {
-                this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_dataFrameTemp = null;
-                await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
-                this.m_surPlusLength -= r;
-            }
-        }
-    }
-
     /// <inheritdoc/>
-    protected override void Reset()
+    protected override WSDataFrame GetInstance()
     {
-        this.m_tempByteBlock.SafeDispose();
-        this.m_tempByteBlock = null;
-        this.m_dataFrameTemp = null;
-        this.m_surPlusLength = 0;
-        base.Reset();
+        return new WSDataFrame();
     }
 
-    private async Task PreviewHandle(WSDataFrame dataFrame)
+    protected override async Task GoReceivedAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        try
+        await base.GoReceivedAsync(memory, requestInfo);
+        if (requestInfo is WSDataFrame wsDataFrame)
         {
-            if (dataFrame.Mask)
-            {
-                WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory.Span, dataFrame.MaskingKey);
-            }
-            await this.GoReceivedAsync(null, dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            dataFrame.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// 分解包
-    /// </summary>
-    /// <param name="dataBuffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    private async Task SplitPackageAsync(byte[] dataBuffer, int offset, int length)
-    {
-        while (offset < length)
-        {
-            if (length - offset < 2)
-            {
-                this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
-                this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
-                return;
-            }
-
-            switch (this.DecodingFromBytes(dataBuffer, ref offset, length - offset, out var dataFrame))
-            {
-                case FilterResult.Cache:
-                    {
-                        this.m_tempByteBlock ??= new ByteBlock(1024 * 64);
-                        this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
-                        return;
-                    }
-                case FilterResult.Success:
-                    {
-                        if (dataFrame.PayloadLength == dataFrame.PayloadData.Length)
-                        {
-                            await this.PreviewHandle(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        }
-                        else
-                        {
-                            this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Length;
-                            this.m_dataFrameTemp = dataFrame;
-                        }
-                    }
-                    break;
-
-                case FilterResult.GoOn:
-                default:
-                    return;
-            }
+            wsDataFrame.Dispose();
         }
     }
 }

@@ -11,16 +11,9 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -30,30 +23,32 @@ namespace TouchSocket.WebApi.Swagger;
 /// <summary>
 /// SwaggerPlugin
 /// </summary>
-public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
+internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
 {
     private readonly ILog m_logger;
-    private readonly IResolver m_resolver;
-    private readonly Dictionary<string, byte[]> m_swagger = new Dictionary<string, byte[]>();
+
+    private readonly Dictionary<string, ReadOnlyMemory<byte>> m_swagger = new();
 
     /// <summary>
     /// SwaggerPlugin
     /// </summary>
-    public SwaggerPlugin(IResolver resolver, ILog logger)
+    public SwaggerPlugin(ILog logger, SwaggerOption options)
     {
-        this.m_resolver = resolver;
         this.m_logger = logger;
+
+        this.LaunchBrowser = options.LaunchBrowser;
+        this.Prefix = options.Prefix;
     }
 
     /// <summary>
     /// 是否在浏览器打开Swagger页面
     /// </summary>
-    public bool LaunchBrowser { get; set; }
+    public bool LaunchBrowser { get; }
 
     /// <summary>
     /// 访问Swagger的前缀，默认“swagger”
     /// </summary>
-    public string Prefix { get; set; } = "swagger";
+    public string Prefix { get; }
 
     /// <inheritdoc/>
     public async Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
@@ -76,7 +71,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             using (var stream = assembly.GetManifestResourceStream(item))
             {
-                var bytes = stream.ReadAllToByteArray();
+                ReadOnlyMemory<byte> bytes = stream.ReadAllToByteArray();
                 var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
                 var name = item.Replace("TouchSocket.WebApi.Swagger.api.", string.Empty);
                 if (name == "openapi.json")
@@ -117,27 +112,6 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             var index = prefix == "/" ? $"/index.html" : $"{prefix}/index.html";
             this.OpenWebLink($"{scheme}://{host}:{iphost.Port}{index}");
         }
-    }
-
-    /// <summary>
-    /// 设置访问Swagger的前缀，默认“swagger”
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    public SwaggerPlugin SetPrefix(string value)
-    {
-        this.Prefix = value;
-        return this;
-    }
-
-    /// <summary>
-    /// 在浏览器打开Swagger页面
-    /// </summary>
-    /// <returns></returns>
-    public SwaggerPlugin UseLaunchBrowser()
-    {
-        this.LaunchBrowser = true;
-        return this;
     }
 
     /// <summary>
@@ -213,7 +187,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
             type = type.GetGenericArguments()[0];
         }
 
-        if (type.IsPrimitive || type == typeof(string))
+        if (IsSimpleType(type))
         {
             return;
         }
@@ -234,7 +208,21 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         }
     }
 
-    private byte[] BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
+    private static bool IsSimpleType(Type type)
+    {
+        if (type.IsPrimitive || type == TouchSocketCoreUtility.StringType)
+        {
+            return true;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            return IsSimpleType(actualType);
+        }
+        return false;
+    }
+
+    private ReadOnlyMemory<byte> BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
     {
         var openApiRoot = new OpenApiRoot();
         openApiRoot.Info = new OpenApiInfo();
@@ -536,10 +524,27 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         {
             var schema = this.CreateSchema(type);
             var properties = new Dictionary<string, OpenApiProperty>();
+
+
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
+                // 2. 如果已经有同名属性，优先选择当前类的（隐藏/重写 new 的情况）
+                if (properties.ContainsKey(propertyInfo.Name))
+                {
+                    if (propertyInfo.DeclaringType == type)
+                    {
+                        // 覆盖基类的属性
+                        properties[propertyInfo.Name] = this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription());
+                    }
+                    // 否则跳过（基类的被丢弃）
+                }
+                else
+                {
+                    properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
+                }
             }
+
+
             schema.Properties = properties.Count == 0 ? default : properties;
             components.Schemas.TryAdd(this.GetSchemaName(type), schema);
         }
@@ -549,7 +554,7 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
     private string GetIn(ParameterInfo parameter)
     {
         var type = parameter.ParameterType;
-        if (!type.IsPrimitive())
+        if (!IsSimpleType(type))
         {
             return default;
         }
@@ -672,6 +677,11 @@ public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugi
         if (type is null)
         {
             return OpenApiDataTypes.Any;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            return this.ParseDataTypes(actualType);
         }
 
         return type switch

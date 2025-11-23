@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
@@ -19,70 +18,6 @@ namespace TouchSocket.Core;
 
 internal static partial class ThrowHelper
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowMessageRegisteredException(string tokenString)
-    {
-        throw new MessageRegisteredException(TouchSocketCoreResource.TokenExisted.Format(tokenString));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowMessageNotFoundException(string tokenString)
-    {
-        throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.Format(tokenString));
-    }
-
-    #region NotSupportedException
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowNotSupportedException(string message)
-    {
-        throw CreateNotSupportedException(message);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static NotSupportedException CreateNotSupportedException(string message)
-    {
-        return new NotSupportedException(message);
-    }
-
-    #endregion NotSupportedException
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowArgumentOutOfRangeException_BetweenAnd(string name, long actualValue, long min, long max)
-    {
-        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueBetweenAnd.Format(name, actualValue, min, max));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowArgumentOutOfRangeException_LessThan(string name, long actualValue, long min)
-    {
-        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueLessThan.Format(name, actualValue, min));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowArgumentOutOfRangeException_MoreThan(string name, long actualValue, long max)
-    {
-        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueMoreThan.Format(name, actualValue, max));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalidOperationException(string message)
-    {
-        throw new InvalidOperationException(message);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowTimeoutException()
-    {
-        throw new TimeoutException(TouchSocketCoreResource.OperationOvertime);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowOperationCanceledException()
-    {
-        throw new OperationCanceledException(TouchSocketCoreResource.OperationCanceled);
-    }
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowArgumentNullException(string name)
     {
@@ -105,15 +40,21 @@ internal static partial class ThrowHelper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static T ThrowArgumentNullExceptionIf<T>(T obj, string objectName) where T : class
+    public static void ThrowArgumentOutOfRangeException_BetweenAnd(string name, long actualValue, long min, long max)
     {
-        return obj ?? throw new ArgumentNullException(TouchSocketCoreResource.ArgumentIsNull.Format(objectName));
+        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueBetweenAnd.Format(name, actualValue, min, max));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static T ThrowArgumentNullExceptionIf<T>(T obj, string objectName, string msg) where T : class
+    public static void ThrowArgumentOutOfRangeException_LessThan(string name, long actualValue, long min)
     {
-        return obj ?? throw new ArgumentNullException(msg.Format(objectName));
+        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueLessThan.Format(name, actualValue, min));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowArgumentOutOfRangeException_MoreThan(string name, long actualValue, long max)
+    {
+        throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueMoreThan.Format(name, actualValue, max));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -123,26 +64,56 @@ internal static partial class ThrowHelper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowUnknownErrorException()
+    public static void ThrowIfNull<T>(T obj, string objectName) where T : class
     {
-        throw new UnknownErrorException();
-    }
-
-    #region InvalidEnumArgumentException
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalidEnumArgumentException(Enum @enum)
-    {
-        throw CreateInvalidEnumArgumentException(@enum);
+        if (obj is null)
+        {
+            throw new ArgumentNullException(TouchSocketCoreResource.ArgumentIsNull.Format(objectName));
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static InvalidEnumArgumentException CreateInvalidEnumArgumentException(Enum @enum)
+    public static void ThrowIfNull<T>(T obj, string objectName, string msg) where T : class
     {
-        return new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
+        if (obj is null)
+        {
+            throw new ArgumentNullException(msg.Format(objectName));
+        }
     }
 
-    #endregion InvalidEnumArgumentException
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowInvalidOperationException(string message)
+    {
+        throw new InvalidOperationException(message);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowMessageNotFoundException(string tokenString)
+    {
+        throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.Format(tokenString));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowMessageRegisteredException(string tokenString)
+    {
+        throw new MessageRegisteredException(TouchSocketCoreResource.TokenExisted.Format(tokenString));
+    }
+
+    #region NotSupportedException
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static NotSupportedException CreateNotSupportedException(string message)
+    {
+        return new NotSupportedException(message);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowNotSupportedException(string message)
+    {
+        throw CreateNotSupportedException(message);
+    }
+
+    #endregion NotSupportedException
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowObjectDisposedException(object obj)
@@ -159,7 +130,52 @@ internal static partial class ThrowHelper
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowOperationCanceledException()
+    {
+        throw new OperationCanceledException(TouchSocketCoreResource.OperationCanceled);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowTimeoutException()
+    {
+        throw new TimeoutException(TouchSocketCoreResource.OperationOvertime);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowUnknownErrorException()
+    {
+        throw new UnknownErrorException();
+    }
+
+    #region InvalidEnumArgumentException
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static InvalidEnumArgumentException CreateInvalidEnumArgumentException<TEnum>(TEnum @enum)
+        where TEnum : Enum
+    {
+        return new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowInvalidEnumArgumentException<TEnum>(TEnum @enum)
+        where TEnum : Enum
+    {
+        throw CreateInvalidEnumArgumentException(@enum);
+    }
+
+    #endregion InvalidEnumArgumentException
+
     #region Assert
+
+    public static void AssertFalse(bool value, string name)
+    {
+        if (value)
+        {
+            throw new Exception(TouchSocketCoreResource.AssertFalseFail.Format(name, value));
+        }
+    }
+
     public static void AssertTrue(bool value, string name)
     {
         if (value)
@@ -170,12 +186,5 @@ internal static partial class ThrowHelper
         throw new Exception(TouchSocketCoreResource.AssertTrueFail.Format(name, value));
     }
 
-    public static void AssertFalse(bool value, string name)
-    {
-        if (value)
-        {
-            throw new Exception(TouchSocketCoreResource.AssertFalseFail.Format(name, value));
-        }
-    }
-    #endregion
+    #endregion Assert
 }

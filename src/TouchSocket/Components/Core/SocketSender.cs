@@ -10,35 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
-internal sealed class SocketSender : SocketAwaitableEventArgs
+internal sealed class SocketSender : SocketAwaitableEventArgs<TcpOperationResult>
 {
     private List<ArraySegment<byte>> m_bufferList;
 
-    public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlySequence<byte> buffers)
+    public ValueTask<TcpOperationResult> SendAsync(Socket socket, in ReadOnlySequence<byte> buffers)
     {
         if (buffers.IsSingleSegment)
         {
             return this.SendAsync(socket, buffers.First);
         }
 
+        this.m_core.Reset();
+
         this.SetBufferList(buffers);
 
         if (socket.SendAsync(this))
         {
-            return new ValueTask<SocketOperationResult>(this, 0);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
-        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        return new ValueTask<TcpOperationResult>(this.GetResult());
+    }
+
+    public ValueTask<TcpOperationResult> SendAsync(Socket socket, List<ArraySegment<byte>> buffers)
+    {
+        this.m_core.Reset();
+        this.SetBufferList(buffers);
+
+        if (socket.SendAsync(this))
+        {
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
+        }
+
+        return new ValueTask<TcpOperationResult>(this.GetResult());
     }
 
     public void Reset()
@@ -55,8 +66,9 @@ internal sealed class SocketSender : SocketAwaitableEventArgs
         }
     }
 
-    public ValueTask<SocketOperationResult> SendAsync(Socket socket, in ReadOnlyMemory<byte> memory)
+    public ValueTask<TcpOperationResult> SendAsync(Socket socket, in ReadOnlyMemory<byte> memory)
     {
+        this.m_core.Reset();
 #if NET6_0_OR_GREATER
         this.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
@@ -66,10 +78,10 @@ internal sealed class SocketSender : SocketAwaitableEventArgs
 #endif
         if (socket.SendAsync(this))
         {
-            return new ValueTask<SocketOperationResult>(this, 0);
+            return new ValueTask<TcpOperationResult>(this, this.m_core.Version);
         }
 
-        return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
+        return new ValueTask<TcpOperationResult>(this.GetResult());
     }
 
     private void SetBufferList(in ReadOnlySequence<byte> buffer)
@@ -81,5 +93,16 @@ internal sealed class SocketSender : SocketAwaitableEventArgs
             this.m_bufferList.Add(b.GetArray());
         }
         this.BufferList = this.m_bufferList;
+    }
+
+    private void SetBufferList(List<ArraySegment<byte>> buffer)
+    {
+        this.BufferList = buffer;
+    }
+
+
+    protected override TcpOperationResult GetResult()
+    {
+        return new TcpOperationResult(this.BytesTransferred, this.SocketError);
     }
 }

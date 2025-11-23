@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace TouchSocket.Core;
 
 /// <summary>
 /// String类型数据转换器
 /// </summary>
-public class StringSerializerConverter<TState> : TouchSocketSerializerConverter<string, TState>
+public class StringSerializerConverter<[DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] TState> : TouchSocketSerializerConverter<string, TState>
 {
     /// <summary>
     /// String类型数据转换器

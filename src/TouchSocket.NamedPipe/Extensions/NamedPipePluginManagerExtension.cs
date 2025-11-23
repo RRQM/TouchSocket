@@ -10,9 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 提供命名管道插件管理器的扩展方法。
@@ -26,8 +23,8 @@ public static class NamedPipePluginManagerExtension
     /// </summary>
     /// <param name="pluginManager">插件管理器对象，用于管理插件。</param>
     /// <returns>返回一个<see cref="CheckClearPlugin{TClient}"/>类型的插件实例，用于执行客户端活性检查及清理操作。</returns>
-    public static CheckClearPlugin<INamedPipeSession> UseNamedPipeSessionCheckClear(this IPluginManager pluginManager)
+    public static CheckClearPlugin<INamedPipeSession> UseNamedPipeSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<INamedPipeSession>> options = null)
     {
-        return pluginManager.UseCheckClear<INamedPipeSession>();
+        return pluginManager.UseCheckClear<INamedPipeSession>(options);
     }
 }

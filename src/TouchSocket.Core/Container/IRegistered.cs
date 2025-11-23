@@ -25,7 +25,7 @@ public interface IRegistered
     /// <param name="fromType">要检查的类型</param>
     /// <param name="key">与类型关联的唯一键，用于特定的注册场景</param>
     /// <returns>如果类型已注册，则返回 true；否则返回 false</returns>
-    bool IsRegistered(Type fromType, string key);
+    bool IsRegistered(Type fromType, object key);
 
     /// <summary>
     /// 判断某类型是否已经注册

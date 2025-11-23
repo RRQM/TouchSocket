@@ -1,0 +1,100 @@
+---
+id: upgrade-v1
+title: v1 系列更新
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+
+## v1.3
+
+更新日期：2023.3.1
+
+更新描述：兼容性更新。
+
+  - &nbsp;<Tag>优化</Tag> 整体增加异步方法。
+  - &nbsp;<Tag>优化</Tag> Rpc源代码生成策略，支持接口实例并存。
+  - &nbsp;<Tag>修复</Tag> TcpClient在UseReconnect插件时，Disconnect事件不触发bug。
+  - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+---
+
+
+## v1.2
+
+更新日期：2023.2.15
+
+更新描述：兼容性更新。
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc支持命名元组。
+  - &nbsp;<Tag>优化</Tag> Rpc源代码生成策略。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在Websocket协议下，启动，连接异常bug。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在调用WaitSend下失败的bug。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在Handshaked时，调用Rpc超时bug。
+  - &nbsp;<Tag>修复</Tag> 序列化、反射在unity中使用il2cpp编译的bug。
+  - &nbsp;<Tag>修复</Tag> 反序列化在初次加载时会失败的bug。
+  - &nbsp;<Tag>修复</Tag> BytePool没有公共构造函数的bug。
+  - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+  - &nbsp;<Tag>新增</Tag> ByteBlock对于int，long等数据，写入和读取的时候支持大小端指定。
+  - &nbsp;<Tag>新增</Tag> IServicePlugin插件，用于显示通知服务器的启动状态。
+  - &nbsp;<Tag>新增</Tag> Rpc支持接口特性标记。
+  - &nbsp;<Tag>调整</Tag> 将BytePool由静态调整为实例，且由其Default实例作为默认。
+
+
+## v1.1
+
+更新日期：2023.1.13
+
+更新描述：小版本升级，可能会有不兼容。请按下列提示修改。 
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc系文件传输时，文件夹不存在的提示。
+  - &nbsp;<Tag>优化</Tag> WaitingClient，当客户端断开连接时，可选是否抛出异常。
+  - &nbsp;<Tag>优化</Tag> Fast序列化时。可选序列化只读属性。
+  - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
+  - &nbsp;<Tag>新增</Tag> Tcp客户端新增Disconnecting事件。在主动Close时生效。
+  - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
+  - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
+
+## v1.0.0
+
+更新日期：2023.1.1
+
+更新描述：大版本升级，请详细阅读下列更新日志。
+
+  - &nbsp;<Tag>升级</Tag> 将最高版本升级为NET7。
+  - &nbsp;<Tag>优化</Tag> Tcp系异步发送效率。
+  - &nbsp;<Tag>优化</Tag> TouchRpc系Channel的稳健性。
+  - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
+  - &nbsp;<Tag>新增</Tag> ValueByteBlock，在简单代码块里面能有效减少创建的类。
+  - &nbsp;<Tag>新增</Tag> MemoryCache类，其功能类似微软官方。但是支持全部泛型。
+  - &nbsp;<Tag>新增</Tag> [IPackage系](https://www.yuque.com/rrqm/touchsocket/ag9tyar9mmhsme0m)。该系列能以超高效率的进行二进制序列化。
+  - &nbsp;<Tag>新增</Tag> SingleTimer类，不可重入的Timer。
+  - &nbsp;<Tag>新增</Tag> Jsonrpc支持自定义适配器解析（EE）
+  - &nbsp;<Tag>新增</Tag> 严重TouchRpc系OnRouting通知，所有的客户端之间的通信，都必须经过OnRouting的筛查。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系小文件传输，在文件小于1Mb时，其传输效率是常规传输的10倍以上。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系超大文件多链路传输，支持多个客户端协同传输同一个文件，这在互联网环境中，效率比常规传输提高类3-5倍。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系Redis组件，能实现双端共同存储。
+  - &nbsp;<Tag>调整</Tag> 严重精简所有命名空间，删除所有三级命名空间。例如：TouchSocket.Core.ByteManager精简为TouchSocket.Core。
+  - &nbsp;<Tag>调整</Tag> 严重删除Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)
+  - &nbsp;<Tag>调整</Tag> 严重框架默认日志由ConsoleLogger，替换为EmptyLogger（不输出任何东西）。
+  - &nbsp;<Tag>调整</Tag> 严重Tcp全系，在连接时，ID的初始值使用long类型从0递增。
+  - &nbsp;<Tag>调整</Tag> 严重Tcp服务器，将定时清理无数据交互的选项替换为UseCheckClear插件。并且默认没有启用，需要手动加入。
+  - &nbsp;<Tag>调整</Tag> Tcp系适配器，取消部分参数。
+  - &nbsp;<Tag>调整</Tag> DataLock改名为DataSecurity。
+  - &nbsp;<Tag>调整</Tag> EasyAction改名EasyTask。
+  - &nbsp;<Tag>调整</Tag> IMessage改名IMessageObject。
+  - &nbsp;<Tag>调整</Tag> TokenInstance改名MessageInstance。
+  - &nbsp;<Tag>调整</Tag> TouchRpc系，精简常规文件传输操作。
+  - &nbsp;<Tag>调整</Tag> 严重TouchRpc系，所有插件通知参数，默认都设为不允许操作，需要手动设置e.IsPermitOperation=true。
+  - &nbsp;<Tag>移除</Tag> Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)。
+
+*** 更新示例指南 ***
+
+（1）适配器参数报错：直接删除isAsync参数，以及isAsync为**True**的所有逻辑。
+![image.png](@site/static/img/docs/upgrade-1.png)
+（2）依赖属性的声明报错：增加泛型约束即可，详情查看[依赖属性](https://www.yuque.com/rrqm/touchsocket/ubk57o#jyzSl)
+![image.png](@site/static/img/docs/upgrade-2.png)
+（3）服务端定时清理警告：在配置插件中使用UseCheckClear，并且进行相关配置。
+![image.png](@site/static/img/docs/upgrade-3.png)
+![image.png](@site/static/img/docs/upgrade-4.png)

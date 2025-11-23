@@ -10,11 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
@@ -327,6 +323,17 @@ public class AsyncQueue<T>
         lock (this.SyncRoot)
         {
             return this.m_queueElements?.ToArray() ?? [];
+        }
+    }
+
+    /// <summary>
+    /// 清空队列中的所有元素。
+    /// </summary>
+    public void Clear()
+    {
+        lock (this.SyncRoot)
+        {
+            this.m_queueElements?.Clear();
         }
     }
 

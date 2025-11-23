@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Threading.RateLimiting;
 
 namespace TouchSocket.Rpc.RateLimiting;

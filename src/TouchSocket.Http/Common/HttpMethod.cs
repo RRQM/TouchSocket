@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Diagnostics;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http;
 
@@ -45,6 +44,11 @@ public readonly record struct HttpMethod
     /// Delete
     /// </summary>
     public static readonly HttpMethod Delete = new HttpMethod("delete");
+
+    /// <summary>
+    /// Connect
+    /// </summary>
+    public static readonly HttpMethod Connect = new HttpMethod("connect");
 
     /// <summary>
     /// 表示

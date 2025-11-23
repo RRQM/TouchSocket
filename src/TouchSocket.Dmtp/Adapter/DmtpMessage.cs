@@ -10,96 +10,103 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Text;
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp;
 
 /// <summary>
-/// Dmtp协议的消息。
+/// DMTP协议的消息对象。
+/// </summary>
+/// <remarks>
+/// <para>此类表示DMTP协议的消息格式，实现了<see cref="IBytesBuilder"/>和<see cref="IRequestInfo"/>接口。</para>
+/// <para>消息格式如下：</para>
 /// <para>|*2*|*2*|**4**|***************n***********|</para>
 /// <para>|dm|ProtocolFlags|Length|Data|</para>
-/// <para>|head|ushort|int32|bytes|</para>
-/// </summary>
-public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, IRequestInfoBuilder
+/// <para>|head|<see cref="ushort"/>|<see cref="int"/>|bytes|</para>
+/// <para>其中head为固定的"dm"标识符，ProtocolFlags为协议标志，Length为数据长度，Data为实际数据。</para>
+/// </remarks>
+public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
 {
-    private int m_bodyLength;
+    /// <summary>
+    /// DMTP协议的消息头部标识符。
+    /// </summary>
+    /// <value>固定为"dm"的字节数组。</value>
+    public static readonly byte[] Head = "dm"u8.ToArray();
+
+    private readonly ReadOnlyMemory<byte> m_memory;
 
     /// <summary>
-    /// Dmtp协议的消息。
+    /// 初始化<see cref="DmtpMessage"/>类的新实例。
+    /// </summary>
+    /// <param name="protocolFlags">协议标志。</param>
+    /// <param name="body">消息主体数据。</param>
+    /// <remarks>
+    /// <para>创建包含指定协议标志和主体数据的DMTP消息。</para>
+    /// <para>消息格式：</para>
     /// <para>|*2*|*2*|**4**|***************n***********|</para>
     /// <para>|Head|ProtocolFlags|Length|Data|</para>
-    /// <para>|dm|ushort|int32|bytes|</para>
-    /// </summary>
-    public DmtpMessage()
+    /// <para>|dm|<see cref="ushort"/>|<see cref="int"/>|bytes|</para>
+    /// </remarks>
+    public DmtpMessage(ushort protocolFlags, ReadOnlyMemory<byte> body)
     {
+        this.ProtocolFlags = protocolFlags;
+        this.m_memory = body;
     }
 
     /// <summary>
-    /// Head
+    /// 初始化<see cref="DmtpMessage"/>类的新实例。
     /// </summary>
-    public static readonly byte[] Head = "dm"u8.ToArray();
-
-    /// <summary>
-    /// Dmtp协议的消息。
+    /// <param name="protocolFlags">协议标志。</param>
+    /// <remarks>
+    /// <para>创建只包含协议标志的DMTP消息，主体数据为空。</para>
+    /// <para>消息格式：</para>
     /// <para>|*2*|**4**|***************n***********|</para>
     /// <para>|ProtocolFlags|Length|Data|</para>
-    /// <para>|ushort|int32|bytes|</para>
-    /// <param name="protocolFlags"></param>
-    /// </summary>
+    /// <para>|<see cref="ushort"/>|<see cref="int"/>|bytes|</para>
+    /// </remarks>
     public DmtpMessage(ushort protocolFlags)
     {
         this.ProtocolFlags = protocolFlags;
     }
 
     /// <summary>
-    /// 实际使用的Body数据。
+    /// 获取构建数据时指示内存池的申请长度。
     /// </summary>
-    public ByteBlock BodyByteBlock { get; set; }
-
-    int IFixedHeaderByteBlockRequestInfo.BodyLength => this.m_bodyLength;
+    /// <value>消息的最大长度，包括头部、协议标志、长度字段和数据部分。</value>
+    /// <remarks>
+    /// 此属性用于指示内存池应该申请的长度，建议设置得尽可能大一些以避免内存池扩容。
+    /// 计算方式为：数据长度 + 8字节（2字节头部 + 2字节协议标志 + 4字节长度字段）。
+    /// </remarks>
+    public int MaxLength => this.Memory.Length + 8;
 
     /// <summary>
-    /// 协议标识
+    /// 获取消息的主体数据内存块。
     /// </summary>
-    public ushort ProtocolFlags { get; set; }
-
-    /// <inheritdoc/>
-    public int MaxLength => this.BodyByteBlock == null ? 6 : this.BodyByteBlock.Length + 6;
+    /// <value>包含消息主体数据的只读内存块。</value>
+    public ReadOnlyMemory<byte> Memory => this.m_memory;
 
     /// <summary>
-    /// 构建数据到<see cref="ByteBlock"/>
+    /// 获取协议标志。
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
-    {
-        byteBlock.Write(Head);
-        byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.ProtocolFlags));
-        if (this.BodyByteBlock == null)
-        {
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(0));
-        }
-        else
-        {
-            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.BodyByteBlock.Length));
-            byteBlock.Write(this.BodyByteBlock.Span);
-        }
-    }
+    /// <value>标识DMTP协议类型或操作类型的16位无符号整数。</value>
+    public ushort ProtocolFlags { get; private set; }
 
     /// <summary>
-    /// 从当前内存中解析出一个<see cref="DmtpMessage"/>
-    /// <para>注意：
+    /// 从指定的内存块中解析并创建<see cref="DmtpMessage"/>实例。
+    /// </summary>
+    /// <param name="memory">包含完整DMTP消息数据的内存块。</param>
+    /// <returns>解析后的<see cref="DmtpMessage"/>实例。</returns>
+    /// <exception cref="Exception">当内存块不包含有效的DMTP协议数据时抛出。</exception>
+    /// <remarks>
+    /// <para>重要注意事项：</para>
     /// <list type="number">
-    /// <item>本解析只能解析一个完整消息。所以使用该方法时，请确认是否已经接收完成一个完整的<see cref="DmtpMessage"/>包。</item>
-    /// <item>本解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，所以需要手动释放。</item>
+    /// <item>此解析方法只能解析一个完整的消息，使用前请确认已接收到完整的<see cref="DmtpMessage"/>数据包。</item>
+    /// <item>解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，需要手动释放相关资源。</item>
     /// </list>
-    /// </para>
-    /// </summary>
-    /// <returns></returns>
-    public static DmtpMessage CreateFrom(ReadOnlySpan<byte> span)
+    /// <para>解析过程会验证消息头部是否为"dm"标识，如果不匹配则抛出异常。</para>
+    /// </remarks>
+    public static DmtpMessage CreateFrom(ReadOnlyMemory<byte> memory)
     {
         var offset = 0;
+        var span = memory.Span;
         if (span[offset++] != Head[0] || span[offset++] != Head[1])
         {
             throw new Exception("这可能不是Dmtp协议数据");
@@ -108,74 +115,50 @@ public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, I
         offset += 2;
         var bodyLength = TouchSocketBitConverter.BigEndian.To<int>(span.Slice(offset));
         offset += 4;
-        var byteBlock = new ByteBlock(bodyLength);
-        byteBlock.Write(span.Slice(offset, bodyLength));
-        byteBlock.SeekToStart();
-        return new DmtpMessage()
-        {
-            m_bodyLength = bodyLength,
-            BodyByteBlock = byteBlock,
-            ProtocolFlags = protocolFlags
-        };
+        return new DmtpMessage(protocolFlags, memory.Slice(offset, bodyLength));
     }
 
     /// <summary>
-    /// 将<see cref="BodyByteBlock"/>的有效数据转换为utf-8的字符串。
+    /// 将DMTP消息构建到指定的字节写入器中。
     /// </summary>
-    /// <returns></returns>
-    public string GetBodyString()
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的字节写入器类型。</typeparam>
+    /// <param name="writer">要写入数据的字节写入器。</param>
+    /// <remarks>
+    /// 此方法按照DMTP协议格式将消息数据写入到字节写入器中，写入顺序为：
+    /// <list type="number">
+    /// <item>消息头部标识符（"dm"）</item>
+    /// <item>协议标志（大端序的<see cref="ushort"/>）</item>
+    /// <item>数据长度（大端序的<see cref="int"/>）</item>
+    /// <item>实际数据内容（如果存在）</item>
+    /// </list>
+    /// </remarks>
+    public void Build<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+
     {
-        if (this.BodyByteBlock == null || this.BodyByteBlock.Length == 0)
+        writer.Write(Head);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ProtocolFlags, EndianType.Big);
+        if (this.Memory.IsEmpty)
         {
-            return default;
+            WriterExtension.WriteValue<TWriter, int>(ref writer, 0, EndianType.Big);
         }
         else
         {
-            return this.BodyByteBlock.Span.ToString(Encoding.UTF8);
+            WriterExtension.WriteValue<TWriter, int>(ref writer, this.Memory.Length, EndianType.Big);
+            writer.Write(this.Memory.Span);
         }
     }
 
-    bool IFixedHeaderByteBlockRequestInfo.OnParsingBody(ByteBlock byteBlock)
+    /// <summary>
+    /// 将消息主体数据转换为UTF-8编码的字符串。
+    /// </summary>
+    /// <returns>消息主体数据对应的UTF-8字符串。</returns>
+    /// <remarks>
+    /// 此方法将<see cref="Memory"/>中的有效字节数据按照UTF-8编码转换为字符串。
+    /// 如果主体数据为空，则返回空字符串。
+    /// </remarks>
+    public string GetBodyString()
     {
-        if (byteBlock.Length == this.m_bodyLength)
-        {
-            this.BodyByteBlock = byteBlock;
-            return true;
-        }
-
-        return false;
-    }
-
-    bool IFixedHeaderByteBlockRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
-    {
-        if (header.Length == 8)
-        {
-            var offset = 0;
-            if (header[offset++] != Head[0] || header[offset++] != Head[1])
-            {
-                throw new Exception("这可能不是Dmtp协议数据");
-            }
-            this.ProtocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(offset));
-            offset += 2;
-            this.m_bodyLength = TouchSocketBitConverter.BigEndian.To<int>(header.Slice(offset));
-            return true;
-        }
-        return false;
-    }
-
-    /// <inheritdoc/>
-    /// <param name="disposing"></param>
-    protected override void Dispose(bool disposing)
-    {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-        if (disposing)
-        {
-            this.BodyByteBlock.SafeDispose();
-        }
-
-        base.Dispose(disposing);
+        return this.Memory.Span.ToString(Encoding.UTF8);
     }
 }

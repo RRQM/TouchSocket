@@ -1,18 +1,16 @@
 //------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
+//  此代码版权(除特别声明或在XREF结尾的命名空间的代码)归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议,若本仓库没有设置,则按MIT开源协议授权
+//  CSDN博客:https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频:https://space.bilibili.com/94253567
+//  Gitee源代码仓库:https://gitee.com/RRQM_Home
+//  Github源代码仓库:https://github.com/RRQM
+//  API首页:https://touchsocket.net/
+//  交流QQ群:234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
 using TouchSocket.Hosting.Sockets.HostService;
@@ -21,26 +19,21 @@ using TouchSocket.Sockets;
 namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// ServiceCollectionExtensions
+/// 服务集合扩展类
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// DynamicallyAccessed
-    /// </summary>
-    public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors;
-
     #region SetupConfig
 
     /// <summary>
-    /// 添加SingletonSetupConfigObject服务。
+    /// 添加单例生命周期的配置对象服务
     /// </summary>
-    /// <typeparam name="TObjectService"></typeparam>
-    /// <typeparam name="TObjectImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TObjectService">服务接口类型</typeparam>
+    /// <typeparam name="TObjectImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(AOT.Container)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
            where TObjectService : class, ISetupConfigObject
    where TObjectImpService : class, TObjectService
     {
@@ -66,14 +59,14 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加TransientSetupConfigObject服务。
+    /// 添加瞬态生命周期的配置对象服务
     /// </summary>
-    /// <typeparam name="TObjectService"></typeparam>
-    /// <typeparam name="TObjectImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddTransientSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TObjectService">服务接口类型</typeparam>
+    /// <typeparam name="TObjectImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddTransientSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(AOT.Container)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where TObjectService : class, ISetupConfigObject
      where TObjectImpService : class, TObjectService
     {
@@ -99,14 +92,14 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加ScopedSetupConfigObject服务。
+    /// 添加作用域生命周期的配置对象服务
     /// </summary>
-    /// <typeparam name="TObjectService"></typeparam>
-    /// <typeparam name="TObjectImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddScopedSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TObjectService">服务接口类型</typeparam>
+    /// <typeparam name="TObjectImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddScopedSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(AOT.Container)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where TObjectService : class, ISetupConfigObject
      where TObjectImpService : class, TObjectService
     {
@@ -136,14 +129,14 @@ public static class ServiceCollectionExtensions
     #region HostedService
 
     /// <summary>
-    /// 添加Service类型的HostedService服务。这类服务必须实现<see cref="ISetupConfigObject"/>与<see cref="IServiceBase"/>
+    /// 添加托管服务,该服务必须实现<see cref="ISetupConfigObject"/>和<see cref="IServiceBase"/>接口
     /// </summary>
-    /// <typeparam name="TObjectService"></typeparam>
-    /// <typeparam name="TObjectImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddServiceHostedService<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TObjectService">服务接口类型</typeparam>
+    /// <typeparam name="TObjectImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddServiceHostedService<TObjectService, [DynamicallyAccessedMembers(AOT.Container)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where TObjectService : class, ISetupConfigObject, IServiceBase
      where TObjectImpService : class, TObjectService
     {
@@ -151,15 +144,15 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加SetupConfigObjectHostedService服务。
+    /// 添加配置对象托管服务
     /// </summary>
-    /// <typeparam name="THostService"></typeparam>
-    /// <typeparam name="TObjectService"></typeparam>
-    /// <typeparam name="TObjectImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddSetupConfigObjectHostedService<THostService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="THostService">托管服务类型</typeparam>
+    /// <typeparam name="TObjectService">服务接口类型</typeparam>
+    /// <typeparam name="TObjectImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddSetupConfigObjectHostedService<THostService, TObjectService, [DynamicallyAccessedMembers(AOT.Container)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where THostService : SetupConfigObjectHostedService<TObjectService>, new()
      where TObjectService : class, ISetupConfigObject
      where TObjectImpService : class, TObjectService
@@ -190,14 +183,14 @@ public static class ServiceCollectionExtensions
     #region TcpService
 
     /// <summary>
-    /// 添加TcpService服务。
+    /// 添加TCP服务
     /// </summary>
-    /// <typeparam name="TService"></typeparam>
-    /// <typeparam name="TImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddTcpService<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TService">服务接口类型</typeparam>
+    /// <typeparam name="TImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddTcpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where TService : class, ITcpServiceBase
      where TImpService : class, TService
     {
@@ -205,11 +198,11 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加TcpService服务。并使用<see cref="ITcpService"/>注册服务。
+    /// 添加TCP服务,使用<see cref="ITcpService"/>作为服务接口注册
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
     public static IServiceCollection AddTcpService(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddTcpService<ITcpService, TcpService>(actionConfig);
@@ -220,14 +213,14 @@ public static class ServiceCollectionExtensions
     #region UdpSession
 
     /// <summary>
-    /// 添加UdpSession服务。
+    /// 添加UDP会话服务
     /// </summary>
-    /// <typeparam name="TService"></typeparam>
-    /// <typeparam name="TImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddUdpSession<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TService">服务接口类型</typeparam>
+    /// <typeparam name="TImpService">服务实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddUdpSession<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TService : class, IUdpSession
     where TImpService : class, TService
     {
@@ -235,11 +228,11 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加Udp服务。并使用<see cref="IUdpSession"/>注册服务。
+    /// 添加UDP会话服务,使用<see cref="IUdpSession"/>作为服务接口注册
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
     public static IServiceCollection AddUdpSession(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddUdpSession<IUdpSession, UdpSession>(actionConfig);
@@ -250,14 +243,14 @@ public static class ServiceCollectionExtensions
     #region TcpClient
 
     /// <summary>
-    /// 添加单例TcpClient服务。
+    /// 添加单例生命周期的TCP客户端服务
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddSingletonTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TClient">客户端接口类型</typeparam>
+    /// <typeparam name="TImpClient">客户端实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddSingletonTcpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
            where TClient : class, ITcpClient
     where TImpClient : class, TClient
     {
@@ -265,25 +258,25 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加单例TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+    /// 添加单例生命周期的TCP客户端服务,使用<see cref="ITcpClient"/>作为服务接口注册
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
     public static IServiceCollection AddSingletonTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddSingletonTcpClient<ITcpClient, TcpClient>(actionConfig);
     }
 
     /// <summary>
-    /// 添加瞬态TcpClient服务。
+    /// 添加瞬态生命周期的TCP客户端服务
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddTransientTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+    /// <typeparam name="TClient">客户端接口类型</typeparam>
+    /// <typeparam name="TImpClient">客户端实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddTransientTcpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
              where TClient : class, ITcpClient
      where TImpClient : class, TClient
     {
@@ -291,36 +284,36 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// 添加瞬态TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+    /// 添加瞬态生命周期的TCP客户端服务,使用<see cref="ITcpClient"/>作为服务接口注册
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
     public static IServiceCollection AddTransientTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddTransientTcpClient<ITcpClient, TcpClient>(actionConfig);
     }
 
     /// <summary>
-    /// 添加Scoped TcpClient服务。
+    /// 添加作用域生命周期的TCP客户端服务
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddScopedTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig) where TClient : class, ITcpClient
+    /// <typeparam name="TClient">客户端接口类型</typeparam>
+    /// <typeparam name="TImpClient">客户端实现类型</typeparam>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
+    public static IServiceCollection AddScopedTcpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig) where TClient : class, ITcpClient
      where TImpClient : class, TClient
     {
         return AddScopedSetupConfigObject<TClient, TImpClient>(services, actionConfig);
     }
 
     /// <summary>
-    /// 添加Scoped TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+    /// 添加作用域生命周期的TCP客户端服务,使用<see cref="ITcpClient"/>作为服务接口注册
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
+    /// <param name="services">服务集合</param>
+    /// <param name="actionConfig">配置操作委托</param>
+    /// <returns>服务集合</returns>
     public static IServiceCollection AddScopedTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddScopedTcpClient<ITcpClient, TcpClient>(actionConfig);

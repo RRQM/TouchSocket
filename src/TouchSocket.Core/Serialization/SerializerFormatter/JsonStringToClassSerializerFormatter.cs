@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core;
 
@@ -29,12 +29,7 @@ public class JsonStringToClassSerializerFormatter<TState> : ISerializerFormatter
     public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
 
     /// <inheritdoc/>
-    /// <param name="state"></param>
-    /// <param name="source"></param>
-    /// <param name="targetType"></param>
-    /// <param name="target"></param>
-    /// <returns></returns>
-    public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
+    public virtual bool TryDeserialize(TState state, in string source, [DynamicallyAccessedMembers(AOT.SerializerFormatterMemberType)] Type targetType, out object target)
     {
         try
         {
@@ -49,11 +44,7 @@ public class JsonStringToClassSerializerFormatter<TState> : ISerializerFormatter
     }
 
     /// <inheritdoc/>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    public virtual bool TrySerialize(TState state, in object target, out string source)
+    public virtual bool TrySerialize<TTarget>(TState state, in TTarget target, out string source)
     {
         try
         {

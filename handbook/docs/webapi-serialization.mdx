@@ -1,0 +1,98 @@
+---
+id: webapi-serialization
+title: WebAPI 数据序列化
+---
+
+## 一、数据序列化
+
+数据序列化用于将对象转换为传输格式（如 JSON、XML）。TouchSocket.WebApi 支持多种序列化格式。
+
+### 1.1 默认序列化器
+
+框架默认支持以下格式化器，根据 `Accept` 请求头自动选择：
+
+- **application/json** 或 **text/json**：使用 JSON 格式化（默认：Newtonsoft.Json）
+- **application/xml** 或 **text/xml**：使用 XML 格式
+- **text/plain**：使用文本格式化
+
+### 1.2 配置序列化器
+
+在添加 WebApi 插件时，可以配置序列化器：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        // 可选：清空现有所有格式化器
+        // converter.Clear();
+
+        // 添加 Json 格式化器（Newtonsoft.Json）
+        converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() 
+        { 
+            Formatting = Newtonsoft.Json.Formatting.None 
+        });
+
+        // 添加 Xml 格式化器
+        converter.AddXmlSerializerFormatter();
+    });
+})
+```
+
+### 1.3 使用 System.Text.Json
+
+对于需要 AOT 支持的场景，推荐使用 `System.Text.Json`：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        converter.Clear();
+        
+        converter.AddSystemTextJsonSerializerFormatter(options => 
+        {
+            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.WriteIndented = false;
+        });
+    });
+})
+```
+
+### 1.4 自定义序列化器
+
+可以实现自定义的序列化器：
+
+```csharp showLineNumbers
+class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
+{
+    public int Order { get; set; }
+
+    public bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
+    {
+        // 实现反序列化逻辑
+        throw new NotImplementedException();
+    }
+
+    public bool TrySerialize(HttpContext state, in object target, out string source)
+    {
+        // 实现序列化逻辑
+        throw new NotImplementedException();
+    }
+}
+```
+
+添加自定义格式化器：
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        converter.Add(new MySerializerFormatter());
+    });
+})
+```

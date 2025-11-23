@@ -10,8 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -21,5 +19,34 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public interface IMqttClient : IMqttSession, IConnectableClient
 {
-    Task PingAsync(int timeout = 5000, CancellationToken token = default);
+    /// <summary>
+    /// 发送Ping请求。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>操作结果。</returns>
+    ValueTask<Result> PingAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 发布Mqtt消息。
+    /// </summary>
+    /// <param name="mqttMessage">要发布的消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>异步任务。</returns>
+    Task PublishAsync(MqttPublishMessage mqttMessage, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 订阅主题。
+    /// </summary>
+    /// <param name="message">订阅消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>订阅确认消息。</returns>
+    Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 取消订阅主题。
+    /// </summary>
+    /// <param name="message">取消订阅消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>取消订阅确认消息。</returns>
+    Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken = default);
 }

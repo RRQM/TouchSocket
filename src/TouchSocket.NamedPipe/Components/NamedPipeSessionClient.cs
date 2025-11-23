@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -177,37 +171,30 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     #region 异步发送
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+    public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(memory);
+        return this.ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public virtual Task SendAsync(IRequestInfo requestInfo)
+    public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.ProtectedSendAsync(requestInfo);
+        return this.ProtectedSendAsync(requestInfo, cancellationToken);
     }
-
-    /// <inheritdoc/>
-    public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-    {
-        return this.ProtectedSendAsync(transferBytes);
-    }
-
     #endregion 异步发送
 
     #region Id发送
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
+    public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        return this.GetClientOrThrow(id).ProtectedSendAsync(memory);
+        return this.GetClientOrThrow(id).ProtectedSendAsync(memory, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task SendAsync(string id, IRequestInfo requestInfo)
+    public Task SendAsync(string id, IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
-        return this.GetClientOrThrow(id).ProtectedSendAsync(requestInfo);
+        return this.GetClientOrThrow(id).ProtectedSendAsync(requestInfo, cancellationToken);
     }
 
     private NamedPipeSessionClient GetClientOrThrow(string id)

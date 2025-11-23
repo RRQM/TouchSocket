@@ -4,8 +4,9 @@ title: 日志记录器
 ---
 
 import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
+import CardLink from "@site/src/components/CardLink.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
 
 <TouchSocketCoreDefinition />
 
@@ -67,14 +68,9 @@ import { TouchSocketCoreDefinition } from "@site/src/components/Definition.js";
 
 ## 四、控制台日志记录器
 
-控制台日志记录器，是将日志信息输出到控制台。因为直接输出的控制台在当前进程中只会有一个，所以不可以多个创建控制台日志，只能使用其默认实例。
+控制台日志记录器,是将日志信息输出到控制台。因为直接输出的控制台在当前进程中只会有一个,所以不可以多个创建控制台日志,只能使用其默认实例。
 
-```csharp {1} showLineNumbers
-var logger = ConsoleLogger.Default;
-logger.Info("Message");
-logger.Warning("Warning");
-logger.Error("Error");
-```
+<CustomCodeBlock region="日志控制台日志记录器使用"/>
 
 ### 4.1 可配置属性
 
@@ -109,20 +105,17 @@ logger.Error("Error");
 
 ### 5.2 默认配置
 
-在默认配置下，文件日志记录器具有如下特点：
+在默认配置下,文件日志记录器具有如下特点:
 
-- **最大日志文件大小**：每个日志文件的最大容量默认为1MB。
-- **日志文件滚动机制**：当达到最大容量时，系统会自动创建一个新的日志文件，并按顺序编号。
-- **日志文件存储路径**：日志文件默认存储在可执行文件所在的目录下。
-- **目录结构**：在默认路径下，首先创建一个名为“logs”的目录；在此目录内，再根据当前日期（格式为“[yyyy-MM-dd]”）创建相应的子目录。
-- **日志文件命名**：最终的日志文件按照“0001.log”的格式命名，并根据需要添加序号区分不同的滚动文件。
+- **最大日志文件大小**:每个日志文件的最大容量默认为1MB。
+- **日志文件滚动机制**:当达到最大容量时,系统会自动创建一个新的日志文件,并按顺序编号。
+- **日志文件存储路径**:日志文件默认存储在可执行文件所在的目录下。
+- **目录结构**:在默认路径下,首先创建一个名为"logs"的目录;在此目录内,再根据当前日期(格式为"[yyyy-MM-dd]")创建相应的子目录。
+- **日志文件命名**:最终的日志文件按照"0001.log"的格式命名,并根据需要添加序号区分不同的滚动文件。
 
-```csharp showLineNumbers
-var logger = new FileLogger();
-logger.Info("Message");
-logger.Warning("Warning");
-logger.Error("Error");
-```
+<CustomCodeBlock region="日志文件日志记录器默认配置"/>
+
+日志文件的输出路径示例:
 
 ```csharp showLineNumbers
 logs\[2024-09-08]\0000.log
@@ -132,76 +125,34 @@ logs\[2024-09-08]\0000.log
 
 可以直接对FileLogger实例的MaxSize属性进行设置。
 
-```csharp {3} showLineNumbers
-var logger = new FileLogger()
-{
-    MaxSize = 1024 * 1024 * 2
-};
-```
+<CustomCodeBlock region="日志文件日志记录器配置文件大小"/>
 
 ### 5.4 配置文件路径
 
 可以通过设置FileLogger的CreateLogFolder**回调属性**来指定日志文件的存储路径。
 
-默认配置的实现如下：
+默认配置的实现如下:
 
-```csharp {5} showLineNumbers
-var logger = new FileLogger()
-{
-    CreateLogFolder = (logLevel) =>
-    {
-        return $"logs\\{DateTime.Now:[yyyy-MM-dd]}";
-    }
-};
-```
+<CustomCodeBlock region="日志文件日志记录器配置文件路径默认"/>
 
-例如，你可以实现按**日志类型**，来分类输出日志到单独文件。
+例如,你可以实现按**日志类型**,来分类输出日志到单独文件。
 
-```csharp {5} showLineNumbers
-var logger = new FileLogger()
-{
-    CreateLogFolder = (logLevel) =>
-    {
-        return $"logs\\{DateTime.Now:[yyyy-MM-dd]}\\{logLevel}";
-    }
-};
-```
+<CustomCodeBlock region="日志文件日志记录器配置文件路径按日志类型"/>
 
 ### 5.5 使用容器时配置
 
-当文件日志被添加到容器中时，可以通过如下方式进行配置。
+当文件日志被添加到容器中时,可以通过如下方式进行配置。
 
-```csharp {3-7} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddFileLogger(fileLogger =>
-    {
-        fileLogger.MaxSize = 1024 * 1024;
-        fileLogger.LogLevel = LogLevel.Debug;
-    });
-})
-```
+<CustomCodeBlock region="日志容器配置文件日志"/>
 
 或者
 
-```csharp {5-9} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddLogger(logger => 
-    {
-        logger.AddFileLogger(fileLogger => 
-        {
-            fileLogger.MaxSize = 1024 * 1024;
-            fileLogger.LogLevel = LogLevel.Debug;
-        });
-    });
-})
-```
+<CustomCodeBlock region="日志容器配置多日志记录器"/>
 
 
 ## 六、简易日志记录器
 
-简易日志记录器，是框架提供的一个便捷的字符串日志记录器，它将日志信息输出到回调委托中，方便使用者在需要时，直接输出日志信息。
+简易日志记录器,是框架提供的一个便捷的字符串日志记录器,它将日志信息输出到回调委托中,方便使用者在需要时,直接输出日志信息。
 
 ### 6.1 可配置属性
 
@@ -211,174 +162,71 @@ var logger = new FileLogger()
 | DateTimeFormat | 日志输出时间戳格式 | "yyyy-MM-dd HH:mm:ss ffff" |
 
 
-```csharp {1} showLineNumbers
-var logger = new EasyLogger(LoggerOutput);
-logger.Info("Message");
-logger.Warning("Warning");
-logger.Error("Error");
-```
+<CustomCodeBlock region="日志简易日志记录器使用"/>
 
-```csharp showLineNumbers
-private void LoggerOutput(string loggerString)
-{
-    Console.WriteLine(loggerString);
-
-    //或者如果是winform程序，可以直接输出到TextBox
-}
-```
+<CustomCodeBlock region="日志简易日志记录器回调方法"/>
 
 ## 七、自定义日志记录器
 
-框架提供了ILog接口，使用者可以自定义日志记录器。只需要实现ILog接口即可。
+框架提供了ILog接口,使用者可以自定义日志记录器。只需要实现ILog接口即可。
 
-```csharp {5-8} showLineNumbers
-class MyLogger : ILog
-{
-    public LogLevel LogLevel { get; set; } = LogLevel.Debug;
-
-    public void Log(LogLevel logLevel, object source, string message, Exception exception)
-    {
-        //此处可以自由实现逻辑。
-    }
-}
-```
+<CustomCodeBlock region="日志自定义日志记录器"/>
 
 :::caution 注意事项
 
-自定义实现日志，必须要满足，无论任何情况，日志记录处必须无任何异常抛出，因为日志记录时，可能是在框架异常时执行的。如果此时再抛出异常，可能会导致整个程序崩溃。
+自定义实现日志,必须要满足,无论任何情况,日志记录处必须无任何异常抛出,因为日志记录时,可能是在框架异常时执行的。如果此时再抛出异常,可能会导致整个程序崩溃。
 
 :::  
 
 ### 7.1 集成Log4net
 
-Log4net是一个非常优秀的日志记录框架，可以非常方便的实现日志记录。接下来，我们以Log4net为例，介绍如何将Log4net集成到框架日志中。
+Log4net是一个非常优秀的日志记录框架,可以非常方便的实现日志记录。接下来,我们以Log4net为例,介绍如何将Log4net集成到框架日志中。
 
-首先，需要引用Log4net的NuGet包，版本使用最新即可。
+首先,需要引用Log4net的NuGet包,版本使用最新即可。
 
 ```
 Install-Package log4net
 ```
 
-然后新建一个类文件Mylog4netLogger，继承TouchSocket.Core.ILog接口，并实现其方法。
+然后新建一个类文件Mylog4netLogger,继承TouchSocket.Core.ILog接口,并实现其方法。
 
-```csharp showLineNumbers
-internal class Mylog4netLogger : TouchSocket.Core.ILog
-{
-    private readonly log4net.ILog m_logger;
+<CustomCodeBlock region="日志Log4net自定义日志记录器"/>
 
-    public Mylog4netLogger()
-    {
-        this.m_logger = log4net.LogManager.GetLogger("Test");
-    }
-
-    public LogLevel LogLevel { get; set; }
-
-    public void Log(LogLevel logLevel, object source, string message, Exception exception)
-    {
-        //此处就是实际的日志输出
-
-        switch (logLevel)
-        {
-            case LogLevel.Trace:
-                this.m_logger.Debug(message, exception);
-                break;
-
-            case LogLevel.Debug:
-                this.m_logger.Debug(message, exception);
-                break;
-
-            case LogLevel.Info:
-                this.m_logger.Info(message, exception);
-                break;
-
-            case LogLevel.Warning:
-                this.m_logger.Warn(message, exception);
-                break;
-
-            case LogLevel.Error:
-                this.m_logger.Error(message, exception);
-                break;
-
-            case LogLevel.Critical:
-                this.m_logger.Error(message, exception);
-                break;
-
-            case LogLevel.None:
-            default:
-                break;
-        }
-    }
-}
-```
-
-然后可能还需要一些关于log4net的日志配置，此处省略了。
+然后可能还需要一些关于log4net的日志配置,此处省略了。
 
 最后就可以直接使用Mylog4netLogger了。
 
 
 ## 八、使用日志记录器
 
-框架提供的日志记录器比较简单，可以使用实例直接使用。
+框架提供的日志记录器比较简单,可以使用实例直接使用。
 
 ### 8.1 直接使用
 
-例如：控制台日志
+例如:控制台日志
 
-```csharp showLineNumbers
-var logger = ConsoleLogger.Default;
-logger.Info("Message");
-logger.Warning("Warning");
-logger.Error("Error");
-```
+<CustomCodeBlock region="日志控制台日志记录器使用"/>
 
 ### 8.2 注入容器使用
 
-框架提供了容器注入日志记录器，以TcpService为例，使用方式如下：
+框架提供了容器注入日志记录器,以TcpService为例,使用方式如下:
 
-需要在配置容器时（ConfigureContainer），添加日志记录器。
+需要在配置容器时(ConfigureContainer),添加日志记录器。
 
-```csharp {1,4-6,11} showLineNumbers
-var service = new TcpService();
-service.Received = async (client, e) =>
-{
-    //从客户端收到信息
-    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
+<CustomCodeBlock region="日志容器配置控制台日志"/>
 
-    await client.SendAsync(mes);//将收到的信息直接返回给发送方
-};
+然后在服务中就可以使用日志记录器了。
 
-await service.SetupAsync(new TouchSocketConfig()//载入配置
-     .SetListenIPHosts(7789)
-     .ConfigureContainer(a =>
-     {
-         a.AddConsoleLogger();
-         //a.AddFileLogger();
-     })
-     .ConfigurePlugins(a =>
-     {
-         //a.Add();//此处可以添加插件
-     }));
-await service.StartAsync();//启动
-```
+<CustomCodeBlock region="日志注入容器后使用示例"/>
 
 :::tip 提示
 
-使用容器注入日志记录器时，不可以Add多个日志记录器。因为他们使用的同一个接口注册的，后面注册的日志记录器会覆盖前面注册的日志记录器。
+使用容器注入日志记录器时,不可以Add多个日志记录器。因为他们使用的同一个接口注册的,后面注册的日志记录器会覆盖前面注册的日志记录器。
 
 :::  
 
-### 8.2 注入多日志记录器
+### 8.3 注入多日志记录器
 
-为实现多日志记录器，需要使用日志组（LoggerGroup），方法如下：
+为实现多日志记录器,需要使用日志组(LoggerGroup),方法如下:
 
-```csharp {5-6} showLineNumbers
-.ConfigureContainer(a =>
-{
-    a.AddLogger(logger => 
-    {
-        logger.AddConsoleLogger();
-        logger.AddFileLogger();
-    });
-})
-```
+<CustomCodeBlock region="日志容器配置多日志记录器"/>

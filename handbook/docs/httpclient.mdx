@@ -3,70 +3,95 @@ id: httpclient
 title: 创建HttpClient
 ---
 
+import Tag from "@site/src/components/Tag.js";
 import CardLink from "@site/src/components/CardLink.js";
 import BilibiliCard from '@site/src/components/BilibiliCard.js';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { TouchSocketHttpDefinition } from "@site/src/components/Definition.js";
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
 
-### 定义
+
 
 <TouchSocketHttpDefinition />
 
 
 ## 一、说明
 
-HttpClient是Http客户端类。主要用于请求Http报文。与.net的HttpClient不同的是，此处的HttpClient，是基于单个连接的客户端，且有明显的连接、断开连接等动作。
+`HttpClient`是Http系客户端类，他是基于单个TCP连接的Http客户端。与.NET框架中的HttpClient不同，TouchSocket的HttpClient具有明显的连接、断开连接等动作，且能够复用TCP连接来处理多个Http请求。
 
+## 二、特点
 
-## 二、可配置项
+- 简单易用。
+- 基于单个TCP连接，支持连接复用。
+- 支持Http/Https协议。
+- 支持自定义证书验证。
+- 内存池支持，高性能处理。
+- 支持流式上传和下载。
+- 支持SSE(Server-Sent Events)。
+- 基于委托、插件驱动，支持AOP扩展。
 
-继承TcpClient
+## 三、产品应用场景
 
-<a name="mMhq1"></a>
+- HTTP API调用：RESTful API客户端实现。
+- 文件上传下载：大文件流式传输。
+- 实时通信：SSE推送消息接收。
+- 微服务通信：服务间HTTP通信。
+- 爬虫应用：网页数据抓取。
+- HTTPS安全通信：SSL/TLS加密传输。
 
-## 三、支持插件接口
+## 四、可配置项
 
-支持**ITcpPlugin**接口。
+`HttpClient`继承自`TcpClient`，所以支持所有[TcpClient](./tcpclient.mdx)的所有配置项。
 
-<a name="LAsiE"></a>
+Http基本没有专用配置，但是下面依然会介绍一些在使用Http时的常用相关配置。
 
-## 四、创建HttpClient
+### 4.1 目标服务器地址
 
-### 4.1 创建常规HttpClient
-```csharp showLineNumbers
-var client = new HttpClient();
-await client.ConnectAsync("http://localhost:7219");//先做连接
-```
+`HttpClient`必须指定远程服务器地址，支持HTTP和HTTPS协议。支持类型：
+
+1. 使用HTTP协议，传入形如：`http://127.0.0.1:7219`的字符串即可。
+2. 使用HTTPS协议，传入形如：`https://127.0.0.1:7219`的字符串即可。
+3. 使用域名，必须包含协议类型，形如：`https://api.example.com`或者`http://api.example.com:8080`
+
+<CustomCodeBlock region="Http设置远程服务器地址"/>
+
+### 4.2 SSL/TLS配置
+
+当使用HTTPS协议时，`HttpClient`支持SSL/TLS加密连接。可以通过`SetClientSslOption`方法进行配置。
+
+不过一般来说，如果服务器使用受信任的证书，可以直接使用`https://`协议头连接服务器即可。
+
+例如：
+
+<CustomCodeBlock region="Http简单设置Ssl远程服务器地址"/>
+
+如果是自定义证书，则需要手动加载证书，详情见[创建Ssl的TcpClient配置](./tcpclient.mdx)。
+
+### 4.3 代理配置
+`HttpClient`支持HTTP代理，可以通过`SetProxy`方法进行配置。
+<CustomCodeBlock region="Http客户端配置代理"/>
+
+或者直接使用系统代理：
+<CustomCodeBlock region="Http客户端配置系统代理"/>
+
+## 五、支持插件接口
+
+支持**ITcpPlugin**所有接口，无特殊接口。
+
+## 六、创建HttpClient
 
 <BilibiliCard title="创建HttpClient并完成请求" link="https://www.bilibili.com/cheese/play/ep1688271" isPro="true"/>
-
-### 4.2 创建Ssl的HttpClient（Https）
-
-```csharp showLineNumbers
-var client = new HttpClient();
-await client.ConnectAsync("https://localhost:7219");//先做连接
-```
-
-如果是自定义证书，则需要手动加载证书
-
-```csharp showLineNumbers
-var client = new HttpClient();
-
-var config = new TouchSocketConfig();
-config.SetRemoteIPHost("https://localhost:7219")
-    .SetClientSslOption(new ClientSslOption()
-    {
-        ClientCertificates = new X509CertificateCollection() { new X509Certificate2("Socket.pfx", "Socket") },
-        SslProtocols = SslProtocols.Tls12,
-        TargetHost = "localhost",
-        CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-    }); ;
-
-//配置config
-await client.SetupAsync(config);
-await client.ConnectAsync();//先做连接
-```
-
 <BilibiliCard title="创建Https客户端" link="https://www.bilibili.com/cheese/play/ep1688272" isPro="true"/>
+
+### 6.1 简单创建HttpClient
+
+<CustomCodeBlock region="简单创建HttpClient"/>
+
+
+### 6.2 常规配置创建Http客户端
+
+<CustomCodeBlock region="常规配置创建Http客户端"/>
 
 :::info 备注
 
@@ -74,134 +99,91 @@ await client.ConnectAsync();//先做连接
 
 :::  
 
-## 五、发送请求
+## 七、发送HTTP请求
 
-因为我的HttpClient是面向连接的，所以，在请求时，请求url只需要填写host之后的部分即可（即路由部分）。
+因为`HttpClient`是面向连接的，所以在发送请求时，请求URL只需要填写主机地址之后的部分（即路由部分）。
 
-### 5.1 发起Get请求到字符串
+### 7.1 获取字符串响应
 
-```csharp showLineNumbers
-//直接发起一个Get请求，然后返回Body字符串。
-var body = await client.GetStringAsync("/WeatherForecast");
-```
+<CustomCodeBlock region="Http通过Get获取字符串"/>
 
-### 5.2 发起Get请求到字节数组
+### 7.2 获取字节数组响应
 
-```csharp showLineNumbers
-//直接发起一个Get请求，然后返回Body数组。
-var bodyBytes = await client.GetByteArrayAsync("/WeatherForecast");
-```
+<CustomCodeBlock region="Http客户端获取字节数组响应"/>
 
-### 5.3 发起Get请求到流数据
+### 7.3 获取流数据响应（下载文件）
 
-```csharp showLineNumbers
-//直接发起一个Get请求文件，然后写入到流中。
-using (var stream=File.Create("1.txt"))
-{
-    await client.GetFileAsync("/WeatherForecast",stream);
-}
-```
+<CustomCodeBlock region="Http客户端获取流数据响应"/>
+
+### 7.4 自定义请求构建
+
+#### 7.4.1 构建基础自定义请求
 
 <BilibiliCard title="自定义Query和Header参数" link="https://www.bilibili.com/cheese/play/ep1688274" isPro="true"/>
 
-### 5.4 构建自定义请求
+<CustomCodeBlock region="Http客户端构建基础自定义请求"/>
 
-```csharp showLineNumbers
-//创建一个请求
-var request = new HttpRequest();
-request.InitHeaders()
-    .SetUrl("/WeatherForecast")
-    .SetHost(client.RemoteIPHost.Host)
-    .AsGet();
-
-
-using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-{
-    var response = responseResult.Response;
-    Console.WriteLine(await response.GetBodyAsync());//将接收的数据，一次性转为utf8编码的字符串
-}
-```
-
-### 5.5 构建自定义请求，持续读取大数据
-
-```csharp showLineNumbers
-//创建一个请求
-var request = new HttpRequest();
-request.InitHeaders()
-    .SetUrl("/WeatherForecast")
-    .SetHost(client.RemoteIPHost.Host)
-    .AsGet();
-
-
-using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-{
-    var response = responseResult.Response;
-
-    while (true)
-    {
-        using (var blockResult = await response.ReadAsync())
-        {
-            //每次读到的数据
-            var memory = blockResult.Memory;
-            Console.WriteLine(memory.Length);
-
-            if (blockResult.IsCompleted)
-            {
-                //数据读完成
-                break;
-            }
-        }
-    }
-}
-```
-
-### 5.6 构建自定义Post请求，持续写入流
-
-```csharp {5} showLineNumbers
-using (var stream=File.OpenRead("TouchSocket.dll"))
-{
-    //创建一个请求
-    var request = new HttpRequest();
-    request.SetContent(new StreamHttpContent(stream));//设置流内容
-    request.InitHeaders()
-        .SetUrl("/bigwrite")
-        .SetHost(client.RemoteIPHost.Host)
-        .AsPost();
-
-    using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-    {
-        var response = responseResult.Response;
-    }
-    Console.WriteLine("完成");
-}
-```
+#### 7.4.2 构建自定义请求，持续读取大数据
 
 <BilibiliCard title="使用SSE实现类似AI问答效果" link="https://www.bilibili.com/cheese/play/ep1688275" isPro="true"/>
 
+<CustomCodeBlock region="Http客户端构建自定义请求并持续读取"/>
+
+### 7.5 Post发送JSON数据
+
+<CustomCodeBlock region="Http通过Post发送Json数据"/>
+
+### 7.6 流式上传数据（文件上传）
+
+<CustomCodeBlock region="Http客户端流式上传文件"/>
+
 :::tip 提示
 
-在构建自定义请求时，如果使用`AsGet`、`AsPost`等方法可以直接设置当前请求为`Get`、`Post`等。如果没有扩展方法可以使用时，可以使用`AsMethod`来实现，例如：`AsMethod("GET")`。
+在构建自定义请求时，如果使用`AsGet`、`AsPost`等方法可以直接设置当前请求为`Get`、`Post`等。如果没有扩展方法可以使用时，可以使用`AsMethod`来实现，例如：`AsMethod("PUT")`、`AsMethod("DELETE")`等。
 
 :::  
 
-## 六、传输文件
+## 八、断线重连
 
-### 6.1 下载文件
+因为我们的`HttpClient`是面向连接的，所以在网络较差时，可能会断线连接，此时你可以通过[Tcp客户端](./tcpclient.mdx)的机制，获取断开信息。
 
-```csharp {4} showLineNumbers
-//直接发起一个Get请求，然后写入到流中。
-using (var stream=File.Create("1.txt"))
-{
-    await client.GetFileAsync("/WeatherForecast",stream);
-}
-```
+例如：
 
-### 6.2 上传文件
+<CustomCodeBlock region="Http客户端获取断线通知"/>
 
-```csharp showLineNumbers
-await client.UploadFileAsync("/upfile", new FileInfo("filePath"));
-```
+除此之外，当连接断开时，我们希望客户端可以自动进行重连，即客户端在断开服务器后，主动发起的再次连接请求。
 
-## 七、本文示例Demo
+### 9.1 启用断线重连
 
-<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Http/HttpClientConsoleApp"/>
+断线重连，依靠的是客户端断开后，或者初始化后，`Online`属性为`false`时，会尝试连接。
+
+所以，重连机制在`Setup`完成后，即会生效。
+
+<BilibiliCard title="客户端轮询式断线重连" link="https://www.bilibili.com/cheese/play/ep1541438" isPro="true"/>
+
+<CustomCodeBlock region="Http客户端启用断线重连"/>
+
+:::caution 注意
+
+**断线重连，必须满足以下几个要求：**
+
+1. 必须有显式的断开信息，也就是说，直接拔网线的话，**不会**立即生效，会等tcp保活到期后再生效。此处可以结合[健康活性检验插件](./tcpcommonplugins.mdx)来绝对保活。
+
+:::  
+
+:::tip 提示
+
+`UseReconnection`插件，可以通过设置`SetActionForCheck`，自己规定检查活性的方法。默认情况下，只会检验`Online`属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
+
+:::  
+
+### 9.2 暂停重连
+
+适用于重连的客户端，都提供了`SetPauseReconnection`方法，可以暂停或者恢复重连。
+
+<CustomCodeBlock region="Reconnection重连插件暂停重连"/>
+
+
+## 九、示例Demo
+
+<CardLink link="examples/Http/HttpClientConsoleApp"/>

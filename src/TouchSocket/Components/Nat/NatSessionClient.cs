@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -75,7 +70,6 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         {
             if (!client.StandBy)
             {
-                client.ShutdownAsync(System.Net.Sockets.SocketShutdown.Both).GetFalseAwaitResult();
                 client.SafeDispose();
             }
 
@@ -127,13 +121,13 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
                 continue;
             }
 
-            if (e.ByteBlock != null)
+            if (!e.Memory.IsEmpty)
             {
                 // 转发数据到目标客户端
 
                 try
                 {
-                    await client.SendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await client.SendAsync(e.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
@@ -177,13 +171,13 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             return;
         }
 
-        if (e.ByteBlock != null)
+        if (!e.Memory.IsEmpty)
         {
             // 转发数据到当前客户端
 
             try
             {
-                await this.ProtectedSendAsync(e.ByteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -196,7 +190,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             // 转发数据到当前客户端
             try
             {
-                await this.ProtectedSendAsync(e.RequestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.RequestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {

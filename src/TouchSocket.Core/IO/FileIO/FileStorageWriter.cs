@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -29,8 +26,8 @@ public partial class FileStorageWriter : SafetyDisposableObject
     /// <param name="fileStorage">文件存储服务的实例，用于后续的文件写入操作。</param>
     public FileStorageWriter(FileStorage fileStorage)
     {
-        // 当fileStorage为<see langword="null"/>时，抛出带有参数名称的ArgumentException，确保fileStorage参数不是null
-        this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
+        ThrowHelper.ThrowIfNull(fileStorage, nameof(fileStorage));
+        this.FileStorage = fileStorage;
     }
 
     /// <summary>

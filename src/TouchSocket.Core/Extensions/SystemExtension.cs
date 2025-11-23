@@ -10,19 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -117,89 +112,61 @@ public static class SystemExtension
     /// <summary>
     /// 对于给定的无符号长整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到63。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static ulong SetBit(this ulong b, int index, bool bitvalue)
+    public static ulong SetBit(this ulong value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 63)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        ulong baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
+        var accessor = new BitAccessor<ulong>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到31。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static uint SetBit(this uint b, int index, bool bitvalue)
+    public static uint SetBit(this uint value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 31)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        uint baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
+        var accessor = new BitAccessor<uint>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号短整型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到15。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static ushort SetBit(this ushort b, int index, bool bitvalue)
+    public static ushort SetBit(this ushort value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 15)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        ushort baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? (ushort)(b | baseNumber << index) : (ushort)(b & ~(baseNumber << index));
+        var accessor = new BitAccessor<ushort>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     /// <summary>
     /// 对于给定的无符号字节型数值，设置指定索引位置的位值为指定的布尔值。
     /// </summary>
-    /// <param name="b">原始数值。</param>
+    /// <param name="value">原始数值。</param>
     /// <param name="index">位索引，范围为0到7。</param>
     /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
     /// <returns>修改后的数值。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
-    public static byte SetBit(this byte b, int index, bool bitvalue)
+    public static byte SetBit(this byte value, int index, bool bitvalue)
     {
-        // 检查索引范围是否有效
-        if (index < 0 || index > 7)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        }
-
-        // 构造一个基数，用于在指定索引位置设置位值
-        byte baseNumber = 1;
-        // 根据bitvalue的值，设置位
-        return bitvalue ? (byte)(b | baseNumber << index) : (byte)(b & ~(baseNumber << index));
+        var accessor = new BitAccessor<byte>(ref value);
+        accessor.Set(index, bitvalue);
+        return value;
     }
 
     #endregion
@@ -208,65 +175,53 @@ public static class SystemExtension
     /// <summary>
     /// 获取无符号长整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号长整型数值。</param>
+    /// <param name="value">要检查的无符号长整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到63。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到63之间时，抛出此异常。</exception>
-    public static bool GetBit(this ulong b, int index)
+    public static bool GetBit(this ulong value, int index)
     {
-        if (index > 63 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
-        }
-        return (b & (ulong)1 << index) != 0;
+        var accessor = new BitAccessor<ulong>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取无符号整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号整型数值。</param>
+    /// <param name="value">要检查的无符号整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到31。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到31之间时，抛出此异常。</exception>
-    public static bool GetBit(this uint b, int index)
+    public static bool GetBit(this uint value, int index)
     {
-        if (index > 31 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
-        }
-        return (b & (uint)1 << index) != 0;
+        var accessor = new BitAccessor<uint>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取无符号短整型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的无符号短整型数值。</param>
+    /// <param name="value">要检查的无符号短整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到15。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到15之间时，抛出此异常。</exception>
-    public static bool GetBit(this ushort b, int index)
+    public static bool GetBit(this ushort value, int index)
     {
-        if (index > 15 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
-        }
-        return (b & 1 << index) != 0;
+        var accessor = new BitAccessor<ushort>(ref value);
+        return accessor.Get(index);
     }
 
     /// <summary>
     /// 获取字节型数值中的指定位置的位是否为1。
     /// </summary>
-    /// <param name="b">要检查的字节型数值。</param>
+    /// <param name="value">要检查的字节型数值。</param>
     /// <param name="index">要检查的位的位置，从0到7。</param>
     /// <returns>如果指定位置的位为1，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到7之间时，抛出此异常。</exception>
-    public static bool GetBit(this byte b, int index)
+    public static bool GetBit(this byte value, int index)
     {
-        if (index > 7 || index < 0)
-        {
-            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        }
-        return (b & 1 << index) != 0;
+        var accessor = new BitAccessor<byte>(ref value);
+        return accessor.Get(index);
     }
     #endregion
 
@@ -382,7 +337,7 @@ public static class SystemExtension
     /// <param name="length"></param>
     /// <param name="subByteArray"></param>
     /// <returns></returns>
-    public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, Span<byte> subByteArray)
+    public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, ReadOnlySpan<byte> subByteArray)
     {
         var subByteArrayLen = subByteArray.Length;
         var indexes = new List<int>();
@@ -456,7 +411,7 @@ public static class SystemExtension
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    public static object GetDefault(this Type type)
+    public static object GetDefault([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
         return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
@@ -576,9 +531,29 @@ public static class SystemExtension
     /// <returns></returns>
     public static bool IsNullableType(this Type type)
     {
-        return (type.IsGenericType && type.
-          GetGenericTypeDefinition().Equals
-          (TouchSocketCoreUtility.NullableType));
+        return type != null
+     && type.IsGenericType
+        && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+    }
+
+    /// <summary>
+    /// 判断该类型是否为可空类型，并返回实际类型
+    /// </summary>
+    /// <param name="type">要检查的类型</param>
+    /// <param name="actualType">当类型是可空类型时，返回其实际类型；否则返回原类型</param>
+    /// <returns>如果是可空类型返回<see langword="true"/>，否则返回<see langword="false"/></returns>
+    public static bool IsNullableType(this Type type, out Type actualType)
+    {
+        if (type != null
+            && type.IsGenericType
+            && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            actualType = type.GetGenericArguments()[0];
+            return true;
+        }
+
+        actualType = type;
+        return false;
     }
 
     /// <summary>
@@ -643,20 +618,9 @@ public static class SystemExtension
     /// <returns></returns>
     public static string GetDeterminantName(this Type type)
     {
-        IEnumerable<Type> types;
-        if (type.IsGenericType)
-        {
-            types = type.GetGenericArguments();
-        }
-        else if (type.IsArray)
-        {
-            types = new Type[] { type.GetElementType() };
-        }
-        else
-        {
-            types = [];
-        }
-
+        var types = type.IsGenericType
+            ? type.GetGenericArguments()
+            : type.IsArray ? (new Type[] { type.GetElementType() }) : (IEnumerable<Type>)[];
         var stringBuilder = new StringBuilder();
         stringBuilder.Append(type.Namespace);
         stringBuilder.Append(type.Name);
@@ -670,64 +634,6 @@ public static class SystemExtension
     }
 
     #endregion Type
-
-    #region Memory
-
-    /// <summary>
-    /// 从指定的 <see cref="Memory{T}"/> 对象中获取内部数组。
-    /// </summary>
-    /// <param name="memory">要获取内部数组的内存对象。</param>
-    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
-    /// <remarks>
-    /// 此方法通过将 <see cref="Memory{T}"/> 对象转换为 <see cref="ReadOnlyMemory{T}"/> 对象，
-    /// 然后调用 <see cref="GetArray(ReadOnlyMemory{byte})"/> 方法来获取内部数组。
-    /// </remarks>
-    public static ArraySegment<byte> GetArray(this Memory<byte> memory)
-    {
-        return ((ReadOnlyMemory<byte>)memory).GetArray();
-    }
-
-    /// <summary>
-    /// 从指定的 <see cref="ReadOnlyMemory{T}"/> 对象中获取内部数组。
-    /// </summary>
-    /// <param name="memory">要获取内部数组的只读内存对象。</param>
-    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
-    /// <remarks>
-    /// 此方法尝试通过 <see cref="MemoryMarshal.TryGetArray"/> 方法获取内存的内部数组。
-    /// 如果成功，直接返回结果；如果失败（即内存不是由数组支持的），则将内存复制到数组并返回该数组的段。
-    /// </remarks>
-    public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
-    {
-        return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
-    }
-
-    #endregion Memory
-
-    #region EndPoint
-
-    /// <summary>
-    /// 从<see cref="EndPoint"/>中获得IP地址。
-    /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
-    public static string GetIP(this EndPoint endPoint)
-    {
-        var r = endPoint.ToString().LastIndexOf(":");
-        return endPoint.ToString().Substring(0, r);
-    }
-
-    /// <summary>
-    /// 从<see cref="EndPoint"/>中获得Port。
-    /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
-    public static int GetPort(this EndPoint endPoint)
-    {
-        var r = endPoint.ToString().LastIndexOf(":");
-        return Convert.ToInt32(endPoint.ToString().Substring(r + 1, endPoint.ToString().Length - (r + 1)));
-    }
-
-    #endregion EndPoint
 
     #region Span<byte>
     /// <summary>
@@ -752,6 +658,16 @@ public static class SystemExtension
         // 对于更早的版本，将Span转换为数组再处理
         return encoding.GetString(span.ToArray());
 #endif
+    }
+
+    /// <summary>
+    /// 将只读的字节连续内存表示形式按 UTF-8 编码转换为字符串。
+    /// </summary>
+    /// <param name="span">要转换为字符串的只读字节范围。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToUtf8String(this ReadOnlySpan<byte> span)
+    {
+        return ToString(span, Encoding.UTF8);
     }
 
     /// <summary>
@@ -810,7 +726,103 @@ public static class SystemExtension
     /// 检查字节是否为 HTTP 规范允许的空白字符（空格或制表符）
     /// </summary>
     private static bool IsWhitespace(byte b) => b == 0x20 || b == 0x09;
+
+    /// <summary>
+    /// 判断指定的 <see cref="ReadOnlySpan{T}"/> 是否包含指定的字节值。
+    /// </summary>
+    /// <param name="span">要检查的字节范围。</param>
+    /// <param name="value">要查找的字节值。</param>
+    /// <returns>如果包含指定字节值，则返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+    public static bool Contains(this ReadOnlySpan<byte> span, byte value)
+    {
+        if (span.IsEmpty)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            if (span[i] == value)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     #endregion
+
+    #region Memory
+
+    /// <summary>
+    /// 从指定的 <see cref="Memory{T}"/> 对象中获取内部数组。
+    /// </summary>
+    /// <param name="memory">要获取内部数组的内存对象。</param>
+    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+    /// <remarks>
+    /// 此方法通过将 <see cref="Memory{T}"/> 对象转换为 <see cref="ReadOnlyMemory{T}"/> 对象，
+    /// 然后调用 <see cref="GetArray(ReadOnlyMemory{byte})"/> 方法来获取内部数组。
+    /// </remarks>
+    public static ArraySegment<byte> GetArray(this Memory<byte> memory)
+    {
+        return ((ReadOnlyMemory<byte>)memory).GetArray();
+    }
+
+    /// <summary>
+    /// 从指定的 <see cref="ReadOnlyMemory{T}"/> 对象中获取内部数组。
+    /// </summary>
+    /// <param name="memory">要获取内部数组的只读内存对象。</param>
+    /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+    /// <remarks>
+    /// 此方法尝试通过 <see cref="MemoryMarshal.TryGetArray"/> 方法获取内存的内部数组。
+    /// 如果成功，直接返回结果；如果失败（即内存不是由数组支持的），则将内存复制到数组并返回该数组的段。
+    /// </remarks>
+    public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
+    {
+        return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
+    }
+
+    /// <summary>
+    /// 获取 <see cref="ReadOnlyMemory{T}"/> 的第一个元素。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    /// <param name="memory">要获取第一个元素的只读内存。</param>
+    /// <returns>第一个元素。</returns>
+    public static T First<T>(this ReadOnlyMemory<T> memory)
+    {
+        if (memory.IsEmpty)
+        {
+            ThrowHelper.ThrowArgumentNullException(nameof(memory));
+        }
+        return memory.Span[0];
+    }
+
+    #endregion Memory
+
+    #region EndPoint
+
+    /// <summary>
+    /// 从<see cref="EndPoint"/>中获得IP地址。
+    /// </summary>
+    /// <param name="endPoint"></param>
+    /// <returns></returns>
+    public static string GetIP(this EndPoint endPoint)
+    {
+        var r = endPoint.ToString().LastIndexOf(":");
+        return endPoint.ToString().Substring(0, r);
+    }
+
+    /// <summary>
+    /// 从<see cref="EndPoint"/>中获得Port。
+    /// </summary>
+    /// <param name="endPoint"></param>
+    /// <returns></returns>
+    public static int GetPort(this EndPoint endPoint)
+    {
+        var r = endPoint.ToString().LastIndexOf(":");
+        return Convert.ToInt32(endPoint.ToString().Substring(r + 1, endPoint.ToString().Length - (r + 1)));
+    }
+
+    #endregion EndPoint
 
     #region DateTime
     private static readonly DateTime s_utc_time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -923,14 +935,14 @@ public static class SystemExtension
     /// </summary>
     /// <param name="stream">此方法扩展的流对象，表示要写入的流。</param>
     /// <param name="memory">只读内存块，其中包含要写入的字节数据。</param>
-    /// <param name="token">用于取消异步写入操作的取消令牌。</param>
+    /// <param name="cancellationToken">用于取消异步写入操作的取消令牌。</param>
     /// <remarks>
     /// 此方法利用内存块的 GetArray 方法获取数组段信息，然后使用现有的 WriteAsync 方法异步地将内容写入流中，提高了写入操作的效率和灵活性。
     /// </remarks>
-    public static async Task WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
+    public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var segment = memory.GetArray();
-        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -986,11 +998,7 @@ public static class SystemExtension
         {
             var buffer = new byte[stream.Length];
             var bytesRead = stream.Read(buffer, 0, buffer.Length);
-            if (bytesRead != buffer.Length)
-            {
-                throw new IOException("读取的字节数与流的长度不匹配。");
-            }
-            return buffer;
+            return bytesRead != buffer.Length ? throw new IOException("读取的字节数与流的长度不匹配。") : buffer;
         }
 
         // 如果流不支持长度属性或位置不在起始位置，使用 MemoryStream 来读取数据
@@ -1013,12 +1021,126 @@ public static class SystemExtension
     /// </summary>
     public static IEnumerable<T> GetSafeEnumerator<T>(this IEnumerable<T> enumerator)
     {
-        if (enumerator is null)
+        return enumerator is null ? [] : enumerator;
+    }
+    #endregion
+
+    #region ReadOnlySequence
+
+    /// <summary>
+    /// 将 <see cref="ReadOnlySequence{T}"/> 按 UTF-8 编码转换为字符串。
+    /// </summary>
+    /// <param name="sequence">要转换的字节序列。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToUtf8String(this ReadOnlySequence<byte> sequence)
+    {
+        return ToString(sequence, Encoding.UTF8);
+    }
+
+    /// <summary>
+    /// 将 <see cref="ReadOnlySequence{T}"/> 按指定编码转换为字符串。
+    /// </summary>
+    /// <param name="sequence">要转换的字节序列。</param>
+    /// <param name="encoding">用于解码字节的编码。</param>
+    /// <returns>转换后的字符串。</returns>
+    public static string ToString(this ReadOnlySequence<byte> sequence, Encoding encoding)
+    {
+#if NET6_0_OR_GREATER
+        return encoding.GetString(sequence);
+#else
+        using (var buffer = new ContiguousMemoryBuffer(sequence))
         {
-            return [];
+            return buffer.Memory.Span.ToString(encoding);
+        }
+#endif
+    }
+
+    /// <summary>
+    /// 在 <see cref="ReadOnlySequence{T}"/> 中查找第一个与指定 <see cref="ReadOnlySpan{T}"/> 匹配的子序列的起始索引。
+    /// <para>如果未找到则返回 -1。</para>
+    /// </summary>
+    /// <param name="sequence">要搜索的字节序列。</param>
+    /// <param name="value">要查找的字节子序列。</param>
+    /// <returns>匹配子序列的起始索引，未找到则返回 -1。</returns>
+    public static long IndexOf(this ReadOnlySequence<byte> sequence, ReadOnlySpan<byte> value)
+    {
+        // 处理空值或空序列
+        if (value.Length == 0)
+        {
+            return 0;
         }
 
-        return enumerator;
+        if (sequence.Length < value.Length)
+        {
+            return -1;
+        }
+
+        var firstByte = value[0];
+        long globalPosition = 0;
+        var enumerator = sequence.GetEnumerator();
+
+        // 遍历每个内存段
+        while (enumerator.MoveNext())
+        {
+            var currentSpan = enumerator.Current.Span;
+            var localIndex = 0;
+
+            // 在当前段中搜索首字节
+            while (localIndex < currentSpan.Length)
+            {
+                // 查找首字节匹配位置
+                var matchIndex = currentSpan.Slice(localIndex).IndexOf(firstByte);
+                if (matchIndex == -1)
+                {
+                    break;
+                }
+
+                localIndex += matchIndex;
+                var globalIndex = globalPosition + localIndex;
+
+                // 检查剩余长度是否足够
+                if (sequence.Length - globalIndex < value.Length)
+                {
+                    return -1;
+                }
+
+                // 检查完整匹配
+                if (IsMatch(sequence, globalIndex, value))
+                {
+                    return globalIndex;
+                }
+
+                localIndex++; // 继续搜索下一个位置
+            }
+            globalPosition += currentSpan.Length;
+        }
+        return -1;
+    }
+
+    private static bool IsMatch(ReadOnlySequence<byte> sequence, long start, ReadOnlySpan<byte> value)
+    {
+        // 切片目标长度的子序列
+        var slice = sequence.Slice(start, value.Length);
+        var valueIndex = 0;
+
+        // 遍历子序列的所有段
+        foreach (var segment in slice)
+        {
+            var segmentSpan = segment.Span;
+            for (var i = 0; i < segmentSpan.Length; i++)
+            {
+                if (segmentSpan[i] != value[valueIndex++])
+                {
+                    return false;
+                }
+
+                if (valueIndex >= value.Length)
+                {
+                    return true; // 已匹配所有字节
+                }
+            }
+        }
+        return valueIndex == value.Length;
     }
     #endregion
 }

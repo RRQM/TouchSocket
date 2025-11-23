@@ -10,12 +10,13 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace TouchSocket.Core;
+
+[RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
 internal class ExpressionDynamicMethodInfo : DynamicMethodInfoBase
 {
     private readonly Func<object, object[], object> m_func;

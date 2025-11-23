@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -19,7 +21,7 @@ using TouchSocket.Sockets;
 namespace ScreenUdpReceiver;
 
 /// <summary>
-/// 本程序源码由网友“木南白水”提供。
+/// 本程序源码由网友"木南白水"提供。
 /// </summary>
 public partial class Form1 : Form
 {
@@ -38,7 +40,30 @@ public partial class Form1 : Form
 
             this.udpSession.Received = (c, e) =>
             {
-                this.pictureBox1.Image = Image.FromStream(e.ByteBlock.AsStream(false));
+
+                try
+                {
+                    using var stream = new ReadOnlyMemoryStream(e.Memory);
+
+                    // Update UI on the main thread
+                    this.Invoke(() =>
+                    {
+                        try
+                        {
+                            this.pictureBox1.Image = Image.FromStream(stream);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle image conversion errors silently or log them
+                            Console.WriteLine($"Error converting image: {ex.Message}");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                }
+                
+                
                 return EasyTask.CompletedTask;
             };
             this.udpSession.SetupAsync(new TouchSocketConfig()

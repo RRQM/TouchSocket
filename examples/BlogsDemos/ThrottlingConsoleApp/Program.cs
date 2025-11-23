@@ -31,7 +31,7 @@ internal class Program
         service.Received = (client, e) =>
         {
             //从客户端收到信息
-            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+            var mes = e.Memory.Span.ToString(Encoding.UTF8);
             client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             return EasyTask.CompletedTask;
         };
@@ -87,9 +87,9 @@ public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceiving
         return e.InvokeNext();
     }
 
-    public async Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e)
+    public async Task OnTcpReceiving(ITcpSession client, BytesReaderEventArgs e)
     {
-        await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Length);
+        await client.GetFlowGate().AddCheckWaitAsync(e.Reader.Sequence.Length);
         await e.InvokeNext();
     }
 }

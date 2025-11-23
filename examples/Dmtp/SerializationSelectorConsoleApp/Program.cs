@@ -29,11 +29,10 @@ internal class Program
 
         var client = await CreateClient();
 
-        InvokeOption invokeOption = new DmtpInvokeOption()
+        InvokeOption invokeOption = new DmtpInvokeOption(1000 * 10)
         {
             FeedbackType = FeedbackType.WaitInvoke,
-            SerializationType = (SerializationType)4,
-            Timeout = 1000 * 10
+            SerializationType = (SerializationType)4
         };
 
         var msg = await client.GetDmtpRpcActor().LoginAsync(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
@@ -48,8 +47,10 @@ internal class Program
               .SetRemoteIPHost("127.0.0.1:7789")
               .ConfigurePlugins(a =>
               {
-                  a.UseDmtpRpc()
-                      .SetSerializationSelector(new MemoryPackSerializationSelector());
+                  a.UseDmtpRpc(options =>
+                  {
+                      options.SerializationSelector = new MemoryPackSerializationSelector();
+                  });
 
                   //a.UseDmtpRpc()
                   //    .SetSerializationSelector(new DefaultSerializationSelector()
@@ -60,9 +61,9 @@ internal class Program
                   //        SerializationBinder = default,
                   //    });
               })
-              .SetDmtpOption(new DmtpOption()
+              .SetDmtpOption(options =>
               {
-                  VerifyToken = "Dmtp"
+                  options.VerifyToken = "Dmtp";
               }));
         await client.ConnectAsync();
         return client;
@@ -75,8 +76,10 @@ internal class Program
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                .ConfigurePlugins(a =>
                {
-                   a.UseDmtpRpc()
-                   .SetSerializationSelector(new MemoryPackSerializationSelector());
+                   a.UseDmtpRpc(options =>
+                   {
+                       options.SerializationSelector = new MemoryPackSerializationSelector();
+                   });
                })
                .ConfigureContainer(a =>
                {
@@ -86,9 +89,9 @@ internal class Program
                        store.RegisterServer<MyRpcServer>();
                    });
                })
-               .SetDmtpOption(new DmtpOption()
+               .SetDmtpOption(options =>
                {
-                   VerifyToken = "Dmtp"
+                   options.VerifyToken = "Dmtp";
                });
 
         await service.SetupAsync(config);

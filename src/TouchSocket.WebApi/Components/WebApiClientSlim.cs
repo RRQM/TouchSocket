@@ -10,17 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
-using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 using HttpClient = System.Net.Http.HttpClient;
@@ -50,7 +41,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     public StringSerializerConverter<HttpRequestMessage> Converter { get; }
 
     /// <inheritdoc/>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
         {
@@ -59,24 +50,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
 
         var request = new HttpRequestMessage();
 
-        switch (webApiRequest.Method)
-        {
-            case HttpMethodType.Get:
-                request.Method = HttpMethod.Get;
-                break;
-            case HttpMethodType.Post:
-                request.Method = HttpMethod.Post;
-                break;
-            case HttpMethodType.Put:
-                request.Method = HttpMethod.Put;
-                break;
-            case HttpMethodType.Delete:
-                request.Method = HttpMethod.Delete;
-                break;
-            default:
-                break;
-        }
-
+        request.Method = new HttpMethod(webApiRequest.Method);
         if (webApiRequest.Headers != null)
         {
             foreach (var item in webApiRequest.Headers)
@@ -106,39 +80,30 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
 
         await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-        using (var tokenSource = new CancellationTokenSource(invokeOption.Timeout))
+        var response = await this.HttpClient.SendAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
         {
-            if (invokeOption.Token.CanBeCanceled)
-            {
-                invokeOption.Token.Register(tokenSource.Cancel);
-            }
-            var response = await this.HttpClient.SendAsync(request, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return default;
+        }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
+        if (response.IsSuccessStatusCode)
+        {
+            if (returnType != null)
             {
-                return default;
+                return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), returnType);
             }
-
-            if (response.IsSuccessStatusCode)
-            {
-                if (returnType != null)
-                {
-                    return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), returnType);
-                }
-                return default;
-            }
-            else if ((int)response.StatusCode == 422)
-            {
-                throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
-            }
-            else
-            {
-                throw new RpcException(response.ReasonPhrase);
-            }
+            return default;
+        }
+        else if ((int)response.StatusCode == 422)
+        {
+            throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
+        }
+        else
+        {
+            throw new RpcException(response.ReasonPhrase);
         }
     }
 }
-
-#endif

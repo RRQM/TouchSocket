@@ -10,12 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core;
 
@@ -50,7 +46,7 @@ public sealed class PluginManager : DisposableObject, IPluginManager
     public IResolver Resolver => this.m_scopedResolver.Resolver;
 
     /// <inheritdoc/>
-    public void Add(Type pluginType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default)
+    public void Add([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default)
     {
         lock (this.m_locker)
         {
@@ -60,9 +56,11 @@ public sealed class PluginManager : DisposableObject, IPluginManager
     }
 
     /// <inheritdoc/>
-    public IPlugin Add([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type pluginType)
+    [UnconditionalSuppressMessage("AOT", "IL2075", Justification = "pluginInterface类型可确定，AOT下不会丢失Method")]
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Method方法在AOT确定")]
+    public IPlugin Add([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(pluginType, nameof(pluginType));
+        ThrowHelper.ThrowIfNull(pluginType, nameof(pluginType));
 
         this.ThrowIfDisposed();
 
@@ -134,15 +132,17 @@ public sealed class PluginManager : DisposableObject, IPluginManager
     }
 
     /// <inheritdoc/>
-    public void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin
+    [UnconditionalSuppressMessage("AOT", "IL2075", Justification = "pluginInterface类型可确定，AOT下不会丢失Method")]
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Method方法在AOT确定")]
+    public void Add<[DynamicallyAccessedMembers(AOT.PluginMemberType)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(plugin, nameof(plugin));
+        ThrowHelper.ThrowIfNull(plugin, nameof(plugin));
 
         this.ThrowIfDisposed();
 
         lock (this.m_locker)
         {
-            var pluginType = plugin.GetType();
+            var pluginType = typeof(TPlugin);
 
             var fromIoc = false;
             if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
@@ -184,36 +184,24 @@ public sealed class PluginManager : DisposableObject, IPluginManager
     }
 
     /// <inheritdoc/>
-    public int GetFromIocCount(Type pluginType)
+    public int GetFromIocCount([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType)
     {
         if (!this.Enable)
         {
             return 0;
         }
 
-        if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
-        {
-            return pluginInvokeLine.FromIocCount;
-        }
-
-        return 0;
+        return this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine) ? pluginInvokeLine.FromIocCount : 0;
     }
 
     /// <inheritdoc/>
-    public int GetPluginCount(Type pluginType)
+    public int GetPluginCount([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType)
     {
-        if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginModel))
-        {
-            return pluginModel.GetPluginEntities().Count;
-        }
-        else
-        {
-            return 0;
-        }
+        return this.m_pluginMethods.TryGetValue(pluginType, out var pluginModel) ? pluginModel.GetPluginEntities().Count : 0;
     }
 
     /// <inheritdoc/>
-    public ValueTask<bool> RaiseAsync(Type pluginType, IResolver resolver, object sender, PluginEventArgs e)
+    public ValueTask<bool> RaiseAsync([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType, IResolver resolver, object sender, PluginEventArgs e)
     {
         if (!this.Enable)
         {
@@ -225,11 +213,9 @@ public sealed class PluginManager : DisposableObject, IPluginManager
             return new ValueTask<bool>(true);
         }
 
-        if (!this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
-        {
-            return new ValueTask<bool>(false);
-        }
-        return new ValueTask<bool>(this.RaisePluginAsync(pluginInvokeLine, resolver, sender, e));
+        return !this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine)
+          ? new ValueTask<bool>(false)
+            : new ValueTask<bool>(this.RaisePluginAsync(pluginInvokeLine, resolver, sender, e));
     }
 
     /// <inheritdoc/>
@@ -259,7 +245,7 @@ public sealed class PluginManager : DisposableObject, IPluginManager
     }
 
     /// <inheritdoc/>
-    public void Remove(Type pluginType, Delegate func)
+    public void Remove([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType, Delegate func)
     {
         lock (this.m_locker)
         {
@@ -290,11 +276,7 @@ public sealed class PluginManager : DisposableObject, IPluginManager
 
     private static bool IsPluginInterface(Type type)
     {
-        if (type == typeof(IPlugin))
-        {
-            return false;
-        }
-        return typeof(IPlugin).IsAssignableFrom(type);
+        return type != typeof(IPlugin) && typeof(IPlugin).IsAssignableFrom(type);
     }
 
     private static bool IsPluginMethod(MethodInfo methodInfo)
@@ -302,12 +284,12 @@ public sealed class PluginManager : DisposableObject, IPluginManager
         return methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task);
     }
 
-    private PluginInvokeLine GetPluginInvokeLine([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type interfeceType)
+    private PluginInvokeLine GetPluginInvokeLine(Type interfaceType)
     {
-        if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+        if (!this.m_pluginMethods.TryGetValue(interfaceType, out var pluginModel))
         {
             pluginModel = new PluginInvokeLine();
-            this.m_pluginMethods.Add(interfeceType, pluginModel);
+            this.m_pluginMethods.Add(interfaceType, pluginModel);
         }
         return pluginModel;
     }

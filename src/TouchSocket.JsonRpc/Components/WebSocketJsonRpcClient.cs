@@ -10,11 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+using System.Buffers;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
 
@@ -32,11 +29,9 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     /// </summary>
     public WebSocketJsonRpcClient()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
         this.m_jsonRpcActor = new JsonRpcActor()
         {
-            SendAction = this.SendAction,
-            SerializerConverter = this.SerializerConverter
+            SendAction = this.SendAction
         };
     }
 
@@ -46,31 +41,21 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
 
     #region JsonRpcActor
 
-    private Task SendAction(ReadOnlyMemory<byte> memory)
+    private Task SendAction(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        return base.ProtectedSendAsync(memory, WebSocketMessageType.Text, true, CancellationToken.None);
+        return base.ProtectedSendAsync(memory, WebSocketMessageType.Text, true, cancellationToken);
     }
 
     #endregion JsonRpcActor
 
     /// <inheritdoc/>
-    public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_jsonRpcActor.SafeDispose();
-        }
-        base.Dispose(disposing);
     }
 
     /// <inheritdoc/>
@@ -85,22 +70,39 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
         {
             this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
         }
+
+        var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
+
+        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
     }
 
     /// <inheritdoc/>
-    protected override async Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
+    protected override async Task OnWebSocketReceived(WebSocketMessageType messageType, ReadOnlySequence<byte> sequence)
     {
-        if (result.MessageType == WebSocketMessageType.Text)
+        if (messageType == WebSocketMessageType.Text)
         {
-            var jsonMemory = byteBlock.Memory;
-
-            if (jsonMemory.IsEmpty)
+            using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
-                return;
-            }
+                var jsonMemory = buffer.Memory;
 
-            var callContext = new WebSocketJsonRpcCallContext(this);
-            await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                if (jsonMemory.IsEmpty)
+                {
+                    return;
+                }
+
+                var callContext = new WebSocketJsonRpcCallContext(this);
+                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing)
+        {
+            this.m_jsonRpcActor.SafeDispose();
+        }
+        base.SafetyDispose(disposing);
     }
 }

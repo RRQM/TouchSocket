@@ -1,3 +1,15 @@
+// ------------------------------------------------------------------------------
+// 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+// 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+// CSDN博客：https://blog.csdn.net/qq_40374647
+// 哔哩哔哩视频：https://space.bilibili.com/94253567
+// Gitee源代码仓库：https://gitee.com/RRQM_Home
+// Github源代码仓库：https://github.com/RRQM
+// API首页：https://touchsocket.net/
+// 交流QQ群：234762506
+// 感谢您的下载和使用
+// ------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
@@ -35,12 +47,18 @@ public class Touch_JsonWebSocket : BaseTouchServer
             })
             .ConfigurePlugins(a =>
             {
-                a.UseWebSocket()
-                 .SetWSUrl("/ws");
+                //添加WebSocket功能
+                a.UseWebSocket(options =>
+                {
+                    options.SetUrl("/ws");//设置url直接可以连接。
+                    options.SetAutoPong(true);//当收到ping报文时自动回应pong
+                });
 
                 //启用json rpc插件
-                a.UseWebSocketJsonRpc()
-                .SetAllowJsonRpc((websocket, context) => true);//让所有请求WebSocket都加载JsonRpc插件
+                a.UseWebSocketJsonRpc(options =>
+                {
+                    options.SetAllowJsonRpc((websocket, context) => true);//让所有请求WebSocket都加载JsonRpc插件
+                });
 
 
                 a.Add<Touch_JsonWebSocket_Log_Plguin>();
@@ -57,7 +75,7 @@ public class Touch_JsonWebSocket : BaseTouchServer
 /// <summary>
 /// 状态日志打印插件
 /// </summary>
-internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshakedPlugin, IWebSocketClosedPlugin
+internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketConnectedPlugin, IWebSocketClosedPlugin
 //,IWebSocketReceivedPlugin
 {
 
@@ -67,7 +85,7 @@ internal class Touch_JsonWebSocket_Log_Plguin : PluginBase, IWebSocketHandshaked
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e)
+    public async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
         webSocket.Client.Logger.Info($"TCP_WebSocket:客户端{webSocket.Client.IP}已连接");
         await e.InvokeNext();

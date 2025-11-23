@@ -25,7 +25,7 @@ public enum WaitDataStatus : byte
     /// <summary>
     /// 收到信号运行
     /// </summary>
-    SetRunning,
+    Success,
 
     /// <summary>
     /// 超时

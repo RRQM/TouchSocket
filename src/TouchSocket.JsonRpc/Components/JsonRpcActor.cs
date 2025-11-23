@@ -12,10 +12,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -27,7 +23,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 {
     private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
     private readonly JsonRpcWaitResultConverter m_jsonRpcWaitResultConverter = new JsonRpcWaitResultConverter();
-    private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new WaitHandlePool<JsonRpcWaitResult>();
+    private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new();
     private IRpcServerProvider m_rpcServerProvider;
 
     /// <summary>
@@ -58,7 +54,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <summary>
     /// 获取或设置发送动作。
     /// </summary>
-    public Func<ReadOnlyMemory<byte>, Task> SendAction { get; set; }
+    public Func<ReadOnlyMemory<byte>, CancellationToken, Task> SendAction { get; set; }
 
     /// <summary>
     /// 获取或设置序列化转换器。
@@ -72,8 +68,8 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="actionMap">动作映射。</param>
     public static void AddRpcToMap(IRpcServerProvider rpcServerProvider, ActionMap actionMap)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(rpcServerProvider));
-        ThrowHelper.ThrowArgumentNullExceptionIf(actionMap, nameof(actionMap));
+        ThrowHelper.ThrowIfNull(rpcServerProvider, nameof(rpcServerProvider));
+        ThrowHelper.ThrowIfNull(actionMap, nameof(actionMap));
 
         foreach (var rpcMethod in rpcServerProvider.GetMethods())
         {
@@ -116,7 +112,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             else if (this.TryParseResponse(str, out var internalJsonRpcWaitResult))
             {
                 internalJsonRpcWaitResult.Status = 1;
-                this.m_waitHandle.SetRun(internalJsonRpcWaitResult);
+                this.m_waitHandle.Set(internalJsonRpcWaitResult);
             }
             else
             {
@@ -138,12 +134,20 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="invokeOption">调用选项。</param>
     /// <param name="parameters">参数。</param>
     /// <returns>任务对象。</returns>
-    public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+    public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         var waitData = this.m_waitHandle.GetWaitDataAsync(out var sign);
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        parameters ??= new object[0];
+        parameters ??= [];
+
+        var cancellationToken = invokeOption.Token;
+        CancellationTokenSource cts = default;
+        if (!cancellationToken.CanBeCanceled)
+        {
+            cts = new CancellationTokenSource(invokeOption.Timeout);
+            cancellationToken = cts.Token;
+        }
 
         var strs = new string[parameters.Length];
         for (var i = 0; i < parameters.Length; i++)
@@ -160,11 +164,16 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 
         try
         {
-            using (var byteBlock = new ByteBlock(1024 * 64))
+            var byteBlock = new ByteBlock(1024 * 64);
+            try
             {
                 var str = this.BuildJsonRpcRequest(jsonRpcRequest);
-                byteBlock.WriteNormalString(str, this.Encoding);
-                await this.SendAction(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
+                await this.SendAction(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
 
             switch (invokeOption.FeedbackType)
@@ -177,16 +186,11 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 case FeedbackType.WaitInvoke:
                 default:
                     {
-                        if (invokeOption.Token.CanBeCanceled)
+                        switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
-                            waitData.SetCancellationToken(invokeOption.Token);
-                        }
-
-                        switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
-                        {
-                            case WaitDataStatus.SetRunning:
+                            case WaitDataStatus.Success:
                                 {
-                                    var resultContext = waitData.WaitResult;
+                                    var resultContext = waitData.CompletedData;
                                     if (resultContext.ErrorCode != 0)
                                     {
                                         throw new RpcException(resultContext.ErrorMessage);
@@ -216,7 +220,8 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
         }
         finally
         {
-            this.m_waitHandle.Destroy(sign);
+            waitData.Dispose();
+            cts?.Dispose();
         }
     }
 
@@ -237,8 +242,8 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="actionMap">动作映射。</param>
     public void SetRpcServerProvider(IRpcServerProvider rpcServerProvider, ActionMap actionMap)
     {
-        ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(rpcServerProvider));
-        ThrowHelper.ThrowArgumentNullExceptionIf(actionMap, nameof(actionMap));
+        ThrowHelper.ThrowIfNull(rpcServerProvider, nameof(rpcServerProvider));
+        ThrowHelper.ThrowIfNull(actionMap, nameof(actionMap));
         this.m_rpcServerProvider = rpcServerProvider;
         this.ActionMap = actionMap;
     }
@@ -408,10 +413,15 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             };
 
             var str = JsonConvert.SerializeObject(response, this.m_jsonRpcWaitResultConverter);
-            using (var byteBlock = new ByteBlock(1024 * 64))
+            var byteBlock = new ByteBlock(1024 * 64);
+            try
             {
-                byteBlock.WriteNormalString(str, this.Encoding);
-                await this.SendAction(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
+                await this.SendAction(byteBlock.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
         catch (Exception ex)

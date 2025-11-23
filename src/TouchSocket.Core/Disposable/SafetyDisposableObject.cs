@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
-
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -20,7 +17,7 @@ namespace TouchSocket.Core;
 /// </summary>
 public abstract class SafetyDisposableObject : DisposableObject
 {
-    private int m_count = 0;
+    private int m_disposed = 0;
 
     /// <inheritdoc/>
     protected sealed override void Dispose(bool disposing)
@@ -30,12 +27,11 @@ public abstract class SafetyDisposableObject : DisposableObject
             return;
         }
 
-        base.Dispose(disposing);
-
-        if (Interlocked.Increment(ref this.m_count) == 1)
+        if (Interlocked.Exchange(ref this.m_disposed, 1) == 0)
         {
             this.SafetyDispose(disposing);
         }
+        base.Dispose(disposing);
     }
 
     /// <summary>

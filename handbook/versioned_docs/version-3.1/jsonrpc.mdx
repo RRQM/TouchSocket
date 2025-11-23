@@ -1,0 +1,436 @@
+---
+id: jsonrpc
+title: 产品及架构介绍
+---
+
+import Tag from "@site/src/components/Tag.js";
+import CardLink from "@site/src/components/CardLink.js";
+import { TouchSocketJsonRpcDefinition } from "@site/src/components/Definition.js";
+
+
+### 定义
+
+<TouchSocketJsonRpcDefinition />
+
+
+## 一、说明
+
+JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关**。详细说明请参阅[JsonRpc 2.0 官方文档](https://www.jsonrpc.org/specification)，在TouchSocket中封装了**前后端**，使其使用更加方便、高效。
+
+目前支持`Tcp`、`Http`、`WebSocket`三种协议调用。
+
+
+## 二、特点：
+
+- **异常反馈** 。
+- 插件支持。
+- 支持自定义类型。
+- 支持类型嵌套。
+- 支持js、Android等调用。
+- 支持服务器主动调用客户端
+
+
+## 三、定义服务
+
+在**服务器**端中新建一个类，继承于`SingletonRpcServer`类（或实现`ISingletonRpcServer`），然后在该类中写**公共方法**，并用**JsonRpc**特性标签标记。
+
+
+```csharp showLineNumbers
+public partial class JsonRpcServer : SingletonRpcServer
+{
+    /// <summary>
+    /// 使用调用上下文。
+    /// 可以从上下文获取调用的SessionClient。从而获得IP和Port等相关信息。
+    /// </summary>
+    /// <param name="callContext"></param>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    [JsonRpc(MethodInvoke =true)]
+    public string TestGetContext(ICallContext callContext, string str)
+    {
+        if (callContext.Caller is IHttpSessionClient SessionClient)
+        {
+            if (SessionClient.Protocol == Protocol.WebSocket)
+            {
+                Console.WriteLine("WebSocket请求");
+                var client = callContext.Caller as IHttpSessionClient;
+                var ip = client.IP;
+                var port = client.Port;
+                Console.WriteLine($"WebSocket请求{ip}:{port}");
+            }
+            else
+            {
+                Console.WriteLine("HTTP请求");
+                var client = callContext.Caller as IHttpSessionClient;
+                var ip = client.IP;
+                var port = client.Port;
+                Console.WriteLine($"HTTP请求{ip}:{port}");
+            }
+        }
+        else if (callContext.Caller is ITcpSessionClient)
+        {
+            Console.WriteLine("Tcp请求");
+            var client = callContext.Caller as ITcpSessionClient;
+            var ip = client.IP;
+            var port = client.Port;
+            Console.WriteLine($"Tcp请求{ip}:{port}");
+        }
+        return "RRQM" + str;
+    }
+
+    [JsonRpc(MethodInvoke = true)]
+    public JObject TestJObject(JObject obj)
+    {
+        return obj;
+    }
+
+    [JsonRpc(MethodInvoke = true)]
+    public string TestJsonRpc(string str)
+    {
+        return "RRQM" + str;
+    }
+}
+```
+
+:::info 备注
+
+设置`MethodInvoke = true`，即以方法名作为调用键，这也是JsonRpc规范所规定。但同时框架内部还支持另一种方式，即默认情况下会使用方法的**全名称小写**作为调用键（即：命名空间.类名.方法名）
+
+:::  
+
+
+## 四、启动服务器
+
+JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
+
+更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
+
+### 4.1 以Tcp为基础协议
+
+当以Tcp为基础协议时，支持Tcp的任何操作。包括但不限于`设置适配器`等。
+
+下列代码创建的就是一个最普通Tcp协议下的JsonRpc服务器。该服务支持任何未处理的Tcp协议的JsonRpc数据包调用。
+
+```csharp showLineNumbers
+var service = new TcpService();
+await service.SetupAsync(new TouchSocketConfig()
+    .SetListenIPHosts(7705)
+    .ConfigureContainer(a => 
+    {
+        a.AddRpcStore(store =>
+        {
+            store.RegisterServer<JsonRpcServer>();
+        });
+    })
+    .ConfigurePlugins(a =>
+    {
+        /*
+         使用tcp服务器的时候，默认情况下会把所有连接的协议都转换为JsonRpcUtility.TcpJsonRpc。
+         这样所有的数据都会被尝试解释为JsonRpc。
+         如果不需要该功能，可以调用NoSwitchProtocol()。
+         */
+        a.UseTcpJsonRpc();
+    }));
+
+await service.StartAsync();
+```
+
+:::caution 注意
+
+因为上述服务器中没有使用任何适配器，所以在实际使用中，可能会发生数据包粘包、分包等问题。所以不建议直接使用。要想投入生产使用，最简单也建议使用`.SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))`换行符分割等适配器。
+
+:::  
+
+
+### 4.2 使用Http协议服务器
+
+创建后，如果想使用Http调用，只需要以Post方式，将调用Json字符串路由到设定路由地址即可（下文示例“/jsonRpc”）。
+
+```csharp showLineNumbers
+var service = new HttpService();
+
+await service.SetupAsync(new TouchSocketConfig()
+     .SetListenIPHosts(7706)
+     .ConfigureContainer(a => 
+     {
+         a.AddRpcStore(store =>
+         {
+             store.RegisterServer<JsonRpcServer>();
+         });
+     })
+     .ConfigurePlugins(a =>
+     {
+         a.UseHttpJsonRpc()
+         .SetJsonRpcUrl("/jsonRpc");
+     }));
+
+await service.StartAsync();
+```
+
+### 4.3 使用WebSocket协议服务器
+
+如果想使用Websocket调用，只需要以**文本**形式，传递到服务器即可。
+
+```csharp showLineNumbers
+var service = new HttpService();
+
+await service.SetupAsync(new TouchSocketConfig()
+     .SetListenIPHosts(7707)
+     .ConfigureContainer(a => 
+     {
+         a.AddRpcStore(store =>
+         {
+             store.RegisterServer<JsonRpcServer>();
+         });
+     })
+     .ConfigurePlugins(a =>
+     {
+         a.UseWebSocket()
+         .SetWSUrl("/ws");
+
+         a.UseWebSocketJsonRpc()
+         .SetAllowJsonRpc((SessionClient, context) =>
+         {
+             //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+             //当然除了此处可以设置外，也可以通过SessionClient.SetJsonRpc(true)直接设置。
+             return true;
+         });
+     }));
+
+await service.StartAsync();
+```
+
+:::tip 提示
+
+`WebSocket`协议服务器和`Http`协议服务器可以合并为一个。
+
+:::  
+
+## 五、通用调用
+
+因为`JsonRpc`是通用调用协议，所以只要**适配基础协议**，即可直接使用`Json`字符串调用。
+
+以下字符串只是示例，具体的method参数，应当遵循当前路由。
+
+### 5.1 Tcp协议直接调用
+
+在`Tcp`协议时，按照适配器，选择性的是否以`\r\n`结尾。
+
+```csharp showLineNumbers
+{"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
+```
+
+### 5.2 Http协议直接调用
+
+在`Http`协议时，以`Url+Post`方式即可
+
+```csharp showLineNumbers
+{"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
+```
+
+### 5.3 Websocket协议直接调用
+
+在`Websocket`协议时，以`文本类型`，直接发送到服务器即可。
+
+```csharp showLineNumbers
+{"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
+```
+
+
+## 六、客户端直接调用
+
+框架内部提供了`JsonRpc`的专属客户端，可以直接调用，也可以生成代理调用。下列将详细介绍。
+
+### 6.1 Tcp协议
+
+```csharp showLineNumbers
+var client = new TcpJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7705"));
+await client.ConnectAsync();
+
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+```
+
+### 6.2 Http协议
+
+```csharp showLineNumbers
+var client = new HttpJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
+    .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
+await client.ConnectAsync();
+
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+```
+
+### 6.3 Websocket协议
+
+```csharp showLineNumbers
+var client = new WebSocketJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
+    .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
+await client.ConnectAsync();
+
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+```
+
+### 6.4 生成代理调用
+
+在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
+
+```csharp {8-9}
+a.AddRpcStore(store =>
+{
+    store.RegisterServer<JsonRpcServer>();
+    #if DEBUG
+    //下列代码，会生成客户端的调用代码。
+    var codeString = store.GetProxyCodes("JsonRpcServerProxy", typeof(JsonRpcAttribute));
+    File.WriteAllText("../../../JsonRpcServerProxy.cs", codeString);
+    #endif
+});
+```
+
+然后把生成的`.cs`文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
+
+```csharp showLineNumbers
+var sum3 = client.TestJsonRpc("RRQM");
+```
+
+### 6.5 使用DispatchProxy代理调用
+
+使用`DispatchProxy`代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./rpcgenerateproxy.mdx)
+
+首先，需要声明一个基类，用于通讯基础。
+
+```csharp showLineNumbers
+/// <summary>
+/// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
+{
+    private readonly IJsonRpcClient m_client;
+
+    public MyJsonRpcDispatchProxy()
+    {
+        this.m_client = CreateJsonRpcClientByTcp().GetFalseAwaitResult();
+    }
+
+    public override IJsonRpcClient GetClient()
+    {
+        return this.m_client;
+    }
+
+    private static async Task<IJsonRpcClient> CreateJsonRpcClientByTcp()
+    {
+        var client = new TcpJsonRpcClient();
+        await client.SetupAsync(new TouchSocketConfig()
+             .SetRemoteIPHost("127.0.0.1:7705")
+             .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
+        await client.ConnectAsync();
+        return client;
+    }
+}
+```
+
+:::tip 提示
+
+此处其他协议的`JsonRpc`也是完全支持的。
+
+:::  
+
+
+然后按照服务，定义一个相同的代理接口。
+
+```csharp showLineNumbers
+interface IJsonRpcServer
+{
+    [JsonRpc(MethodInvoke = true)]
+    string TestJsonRpc(string str);
+}
+```
+
+最后生成代理，并按照接口调用。
+
+```csharp {1}
+var rpc = MyJsonRpcDispatchProxy.Create<IJsonRpcServer, MyJsonRpcDispatchProxy>();
+
+while (true)
+{
+    var result = rpc.TestJsonRpc(Console.ReadLine());
+    Console.WriteLine(result);
+}
+```
+
+## 七、反向Rpc（服务器主动调用客户端）
+
+框架提供了反向`Rpc`，即**服务器主动调用客户端**。该功可以用于`Web`等多端。
+
+反向Rpc必须在全双工协议下使用，如`WebSocket`、`Tcp`等。
+
+具体使用如下：
+
+首先，需要在*客户端*像常规`Rpc`一样声明一个`Rpc`服务。然后需要使用`JsonRpc`特性表示。
+
+```csharp {3} showLineNumbers
+public partial class ReverseJsonRpcServer : SingletonRpcServer
+{
+    [JsonRpc(MethodInvoke = true)]
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+然后注册服务。
+
+```csharp {5-8} showLineNumbers
+var jsonRpcClient = new WebSocketJsonRpcClient();
+await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+     .ConfigureContainer(a =>
+     {
+         a.AddRpcStore(store =>
+         {
+             store.RegisterServer<ReverseJsonRpcServer>();
+         });
+     })
+     .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
+await jsonRpcClient.ConnectAsync();
+```
+
+在服务器端中，拿到`IHttpSessionClient`对象。然后调用`GetJsonRpcActionClient`扩展方法获取到`IJsonRpcClient`。然后调用`Invoke`等。
+
+下列示例演示的是，当`WebSocket`连接上时，服务器主动调用客户端。
+
+```csharp  {8,10} showLineNumbers
+class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
+{
+    public async Task OnWebSocketHandshaked(IHttpSessionClient client, HttpContextEventArgs e)
+    {
+        try
+        {
+            //获取JsonRpcActionClient，用于执行反向Rpc
+            var jsonRpcClient = client.GetJsonRpcActionClient();
+
+            var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
+            Console.WriteLine($"反向调用成功，结果={result}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+:::tip
+
+反向JsonRpc也能使用代理。
+
+:::  
+
+## 八、本文示例Demo
+
+<CardLink link="examples/JsonRpc"/>

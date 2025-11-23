@@ -12,7 +12,6 @@
 
 using TouchSocket.Core;
 using TouchSocket.Modbus;
-using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
 namespace ModbusSlaveConsoleApp;
@@ -36,6 +35,7 @@ internal class Program
 
     private static async Task<ModbusTcpSlave> CreateModbusTcpSlaveAsync()
     {
+        #region 创建ModbusTcpSlave
         var service = new ModbusTcpSlave();
         await service.SetupAsync(new TouchSocketConfig()
              //监听端口
@@ -44,37 +44,54 @@ internal class Program
              {
                  a.Add<MyModbusSlavePlugin>();
 
-                 //当添加多个站点时，需要禁用IgnoreSlaveId的设定
+                 #region 创建多站点ModbusTcpSlave
+                 //注意：当添加多个站点时，不要忽略SlaveId验证的设定
 
-                 a.AddModbusSlavePoint()//添加一个从站站点
-                 .SetSlaveId(1)//设置站点号
-                               //.UseIgnoreSlaveId()//忽略站号验证
-                 .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
-
-                 a.AddModbusSlavePoint()//再添加一个从站站点
-                 .SetSlaveId(2)//设置站点号
-                               //.UseIgnoreSlaveId()//忽略站号验证
-                 .SetModbusDataLocater(new ModbusDataLocater()//设置数据区
+                 //添加第一个从站站点
+                 a.AddModbusSlavePoint(options =>
                  {
-                     //下列配置表示，起始地址从1000开始，10个长度
-                     Coils = new BooleanDataPartition(1000, 10),
-                     DiscreteInputs = new BooleanDataPartition(1000, 10),
-                     HoldingRegisters = new ShortDataPartition(1000, 10),
-                     InputRegisters = new ShortDataPartition(1000, 10)
+                     options.SlaveId = 1;//设置站点号
+                     options.IgnoreSlaveId = false;//不忽略站号验证
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
                  });
+
+                 //再添加一个从站站点
+                 a.AddModbusSlavePoint(options =>
+                 {
+                     options.SlaveId = 2;//设置站点号
+                     options.IgnoreSlaveId = false;//不忽略站号验证
+                     options.DataLocater = new ModbusDataLocater()//设置数据区
+                     {
+                         //下列配置表示，起始地址从1000开始，10个长度
+                         Coils = new BooleanDataPartition(1000, 10),
+                         DiscreteInputs = new BooleanDataPartition(1000, 10),
+                         HoldingRegisters = new ShortDataPartition(1000, 10),
+                         InputRegisters = new ShortDataPartition(1000, 10)
+                     };//设置数据区
+                 })
+                 ;
+                 #endregion
              })
              );
         await service.StartAsync();
         Console.WriteLine("服务已启动");
+        #endregion
 
-        //var modbusSlavePoint = service.GetSlavePointBySlaveId(slaveId: 1);
-        //var localMaster = modbusSlavePoint.ModbusDataLocater.CreateDataLocaterMaster();
-        //var coils = localMaster.ReadCoils(0, 1);
+        #region 获取ModbusSlavePoint
+        var modbusSlavePoint = service.GetSlavePointBySlaveId(slaveId: 1);
+        #endregion
+
+        #region ModbusSlave本地读写操作
+        var localMaster = modbusSlavePoint.DataLocater.CreateDataLocaterMaster();
+        var coils = await localMaster.ReadCoilsAsync(0, 1);
+        #endregion
+
         return service;
     }
 
     private static async Task<ModbusRtuOverTcpSlave> CreateModbusRtuOverTcpSlaveAsync()
     {
+        #region 创建ModbusRtuOverTcpSlave
         var slave = new ModbusRtuOverTcpSlave();
         await slave.SetupAsync(new TouchSocketConfig()
               //监听端口
@@ -83,19 +100,24 @@ internal class Program
               {
                   a.Add<MyModbusSlavePlugin>();
 
-                  a.AddModbusSlavePoint()//添加一个从站站点
-                  .SetSlaveId(1)//设置站点号
-                  .UseIgnoreSlaveId()//忽略站号验证
-                  .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                  a.AddModbusSlavePoint(options =>
+                  {
+                      options.SlaveId = 1;//设置站点号
+                      options.IgnoreSlaveId = true;//忽略站号验证
+                      options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                  });
               })
               );
         await slave.StartAsync();
+        #endregion
+
         Console.WriteLine("服务已启动");
         return slave;
     }
 
     private static async Task<ModbusUdpSlave> CreateModbusUdpSlaveAsync()
     {
+        #region 创建ModbusUdpSlave
         var slave = new ModbusUdpSlave();
         await slave.SetupAsync(new TouchSocketConfig()
              //监听端口
@@ -104,19 +126,24 @@ internal class Program
              {
                  a.Add<MyModbusSlavePlugin>();
 
-                 a.AddModbusSlavePoint()//添加一个从站站点
-                 .SetSlaveId(1)//设置站点号
-                 .UseIgnoreSlaveId()//忽略站号验证
-                 .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                 a.AddModbusSlavePoint(options =>
+                 {
+                     options.SlaveId = 1;//设置站点号
+                     options.IgnoreSlaveId = true;//忽略站号验证
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                 });
              })
              );
         await slave.StartAsync();
+        #endregion
+
         Console.WriteLine("服务已启动");
         return slave;
     }
 
     private static async Task<ModbusRtuOverUdpSlave> CreateModbusRtuOverUdpSlaveAsync()
     {
+        #region 创建ModbusRtuOverUdpSlave
         var slave = new ModbusRtuOverUdpSlave();
         await slave.SetupAsync(new TouchSocketConfig()
              //监听端口
@@ -125,47 +152,57 @@ internal class Program
              {
                  a.Add<MyModbusSlavePlugin>();
 
-                 a.AddModbusSlavePoint()//添加一个从站站点
-                 .SetSlaveId(1)//设置站点号
-                 .UseIgnoreSlaveId()//忽略站号验证
-                 .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                 a.AddModbusSlavePoint(options =>
+                 {
+                     options.SlaveId = 1;//设置站点号
+                     options.IgnoreSlaveId = true;//忽略站号验证
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                 });
              })
              );
         await slave.StartAsync();
+        #endregion
+
         Console.WriteLine("服务已启动");
         return slave;
     }
 
     private static async Task<ModbusRtuSlave> CreateModbusRtuSlaveAsync()
     {
+        #region 创建ModbusRtuSlave
         var slave = new ModbusRtuSlave();
         await slave.SetupAsync(new TouchSocketConfig()
              //设置串口
-             .SetSerialPortOption(new SerialPortOption()
+             .SetSerialPortOption(options =>
              {
-                 BaudRate = 9600,
-                 DataBits = 8,
-                 Parity = System.IO.Ports.Parity.Even,
-                 PortName = "COM1",
-                 StopBits = System.IO.Ports.StopBits.One
+                 options.BaudRate = 9600;
+                 options.DataBits = 8;
+                 options.Parity = System.IO.Ports.Parity.Even;
+                 options.PortName = "COM1";
+                 options.StopBits = System.IO.Ports.StopBits.One;
              })
              .ConfigurePlugins(a =>
              {
                  a.Add<MyModbusSlavePlugin>();
 
-                 a.AddModbusSlavePoint()//添加一个从站站点
-                 .SetSlaveId(1)//设置站点号
-                               //.UseIgnoreSlaveId()//如果不调用，默认会进行站号验证
-                 .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                 a.AddModbusSlavePoint(options =>
+                 {
+                     options.SlaveId = 1;//设置站点号
+                     options.IgnoreSlaveId = false;//不忽略站号验证
+                     options.DataLocater = new ModbusDataLocater(10, 10, 10, 10);//设置数据区
+                 });
              })
              );
 
         await slave.ConnectAsync();
+        #endregion
+
         Console.WriteLine("已连接COM端口");
         return slave;
     }
 }
 
+#region ModbusSlave插件使用示例
 internal class MyModbusSlavePlugin : PluginBase, IModbusSlaveExecutingPlugin, IModbusSlaveExecutedPlugin
 {
     public async Task OnModbusSlaveExecuted(IModbusSlavePoint sender, ModbusSlaveExecutedEventArgs e)
@@ -183,3 +220,4 @@ internal class MyModbusSlavePlugin : PluginBase, IModbusSlaveExecutingPlugin, IM
         await e.InvokeNext();
     }
 }
+#endregion

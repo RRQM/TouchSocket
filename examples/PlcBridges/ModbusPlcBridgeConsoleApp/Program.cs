@@ -13,14 +13,14 @@
 using TouchSocket.Core;
 using TouchSocket.Modbus;
 using TouchSocket.PlcBridges;
-using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
 namespace ModbusPlcBridgeConsoleApp;
 
+#region 代码测试 {1,3,5,7,9,10-20}
 internal class Program
 {
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         try
         {
@@ -40,8 +40,10 @@ internal class Program
         // 3.一个串口协议的Modbus设备，地址从20开始，寄存器数量为20个（可以一次性设置40个寄存器）。
 
 
+        #region PlcBridge初始化服务
         var plcBridge = new PlcBridgeService();
         await plcBridge.SetupAsync(new TouchSocketConfig());
+        #endregion
 
         //现在假设以下情况：
         // 1.一个Tcp协议Modbus设备，地址从0开始，寄存器数量为20个。同时还有地址从50开始，寄存器数量为20个。
@@ -55,11 +57,12 @@ internal class Program
         // Udp设备映射到桥接地址[40-60)中。
         // 串口设备映射到桥接地址[60-80)中。
 
-        // 1) 首先，对于Tcp协议的Modbus设备，我们需要先初始化连接器。
-
+        #region PlcBridge配置ModbusTCP设备连接
         var modbusTcpMaster = new ModbusTcpMaster();
         await modbusTcpMaster.ConnectAsync("127.0.0.1:502");
+        #endregion
 
+        #region PlcBridge添加ModbusTCP设备驱动1
         // 2) 创建一个ModbusHoldingRegistersDrive来桥接Tcp设备的[0-20)的地址。
         var plcDrive1 = new MyModbusHoldingRegistersDrive(modbusTcpMaster, new ModbusDriveOption()
         {
@@ -71,7 +74,9 @@ internal class Program
             ModbusStart = 0,// Modbus寄存器设备起始地址
         });
         await plcBridge.AddDriveAsync(plcDrive1);
+        #endregion
 
+        #region PlcBridge添加ModbusTCP设备驱动2
         // 3) 创建一个ModbusHoldingRegistersDrive来桥接Tcp设备的[50-70)的地址。
         // 注意！
         // 我们这里对于同一个设备的不同地址段，可以创建多个驱动。
@@ -86,7 +91,9 @@ internal class Program
             ModbusStart = 50,// Modbus寄存器设备起始地址
         });
         await plcBridge.AddDriveAsync(plcDrive2);
+        #endregion
 
+        #region PlcBridge配置ModbusUDP设备
         // 4) 对于Udp协议的Modbus设备，我们同样需要先初始化连接器。
         var modbusUdpMaster = new ModbusUdpMaster();
         await modbusUdpMaster.SetupAsync(new TouchSocketConfig()
@@ -105,17 +112,19 @@ internal class Program
             ModbusStart = 10,// Modbus寄存器设备起始地址
         });
         await plcBridge.AddDriveAsync(plcDrive3);
+        #endregion
 
+        #region PlcBridge配置Modbus串口设备
         // 6) 对于串口协议的Modbus设备，我们同样需要先初始化连接器。
         var modbusRtuMaster = new ModbusRtuMaster();
         await modbusRtuMaster.SetupAsync(new TouchSocketConfig()
-             .SetSerialPortOption(new SerialPortOption()
+             .SetSerialPortOption(options =>
              {
-                 BaudRate = 9600,
-                 DataBits = 8,
-                 Parity = System.IO.Ports.Parity.Even,
-                 PortName = "COM2",
-                 StopBits = System.IO.Ports.StopBits.One
+                 options.BaudRate = 9600;
+                 options.DataBits = 8;
+                 options.Parity = System.IO.Ports.Parity.Even;
+                 options.PortName = "COM2";
+                 options.StopBits = System.IO.Ports.StopBits.One;
              }));
         await modbusRtuMaster.ConnectAsync();
 
@@ -130,19 +139,23 @@ internal class Program
             ModbusStart = 20,// Modbus寄存器设备起始地址
         });
         await plcBridge.AddDriveAsync(plcDrive4);
+        #endregion
 
+        #region PlcBridge启动服务
         // 8) 启动PLC桥接服务
         await plcBridge.StartAsync();
+        #endregion
 
-        var modbusResponse=await modbusTcpMaster.ReadHoldingRegistersAsync(0,70);
+        var modbusResponse = await modbusTcpMaster.ReadHoldingRegistersAsync(0, 70);
 
         var plcOperator = plcBridge.CreateOperator<short>();
         var result = await plcOperator.ReadAsync(0, 80);
 
+        #region PlcBridge使用PlcObject读写数据
         // 9) 现在我们可以进行读写操作了。一般来说可以使用操作器，直接读写。
         // 但我们这里直接使用PlcObject来进行读写。
 
-        MyPlcObject myPlcObject = new MyPlcObject(plcBridge);
+        var myPlcObject = new MyPlcObject(plcBridge);
 
         // 写入long类型的寄存器数据
         var setInt64Result = await myPlcObject.SetInt64DataAsync(1000);
@@ -166,7 +179,9 @@ internal class Program
         //读取所有的80个寄存器数据，注意：80个寄存器会被合并成20个long类型的值。
         var readAllInt64Result = await myPlcObject.GetAllInt64DataAsync();
         Console.WriteLine($"读取所有Int64结束，结果：{readAllInt64Result.ToResult()}，Values={readAllInt64Result.Value.ToArray().ToJsonString()}");
+        #endregion
 
+        #region PlcBridge释放资源
         // 10) 最后，记得释放资源
         await plcBridge.StopAsync();
 
@@ -178,11 +193,13 @@ internal class Program
         modbusRtuMaster.Dispose();
 
         plcBridge.Dispose();
+        #endregion
         Console.ReadKey();
     }
 }
 
-partial class MyPlcObject : PlcObject
+#region PlcBridge定义PlcObject数据对象
+internal partial class MyPlcObject : PlcObject
 {
     public MyPlcObject(IPlcBridgeService bridgeService) : base(bridgeService)
     {
@@ -206,8 +223,10 @@ partial class MyPlcObject : PlcObject
     [PlcField<short>(Start = 59)]
     private long m_int64Data;
 }
+#endregion
 
-class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
+#region PlcBridge自定义驱动器实现
+internal class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
 {
     public MyModbusHoldingRegistersDrive(IModbusMaster master, ModbusDriveOption option) : base(master, option)
     {
@@ -231,3 +250,5 @@ class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
         return result;
     }
 }
+#endregion
+#endregion

@@ -35,19 +35,23 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <summary>
     /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter{TByteBlock}(ref TByteBlock)"/>，然后<see cref="PackageBody{TByteBlock}(ref TByteBlock)"/>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public sealed override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    /// <param name="writer"></param>
+    public sealed override void Package<TWriter>(ref TWriter writer)
     {
-        this.PackageRouter(ref byteBlock);
-        this.PackageBody(ref byteBlock);
+        this.PackageRouter(ref writer);
+        this.PackageBody(ref writer);
     }
 
     /// <summary>
     /// 打包数据体。一般不需要单独调用该方法。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public virtual void PackageBody<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <param name="writer"></param>
+    public virtual void PackageBody<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+#if AllowsRefStruct
+, allows ref struct
+#endif
     {
     }
 
@@ -55,10 +59,12 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// 打包路由。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    public virtual void PackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public virtual void PackageRouter<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+
     {
-        byteBlock.WriteString(this.SourceId, FixedHeaderType.Byte);
-        byteBlock.WriteString(this.TargetId, FixedHeaderType.Byte);
+        WriterExtension.WriteString(ref writer, this.SourceId, FixedHeaderType.Byte);
+        WriterExtension.WriteString(ref writer, this.TargetId, FixedHeaderType.Byte);
     }
 
     /// <summary>
@@ -72,18 +78,20 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     }
 
     /// <inheritdoc/>
-    public sealed override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public sealed override void Unpackage<TReader>(ref TReader reader)
     {
-        this.UnpackageRouter(ref byteBlock);
-        this.UnpackageBody(ref byteBlock);
+        this.UnpackageRouter(ref reader);
+        this.UnpackageBody(ref reader);
     }
 
     /// <summary>
     /// 解包数据体。一般不需要单独调用该方法。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public virtual void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <param name="reader"></param>
+    public virtual void UnpackageBody<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+
     {
     }
 
@@ -91,10 +99,12 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// 只解包路由部分。一般不需要单独调用该方法。
     /// <para>重写的话，约定基类方法必须先执行</para>
     /// </summary>
-    /// <param name="byteBlock"></param>
-    public virtual void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    /// <param name="reader"></param>
+    public virtual void UnpackageRouter<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+
     {
-        this.SourceId = byteBlock.ReadString(FixedHeaderType.Byte);
-        this.TargetId = byteBlock.ReadString(FixedHeaderType.Byte);
+        this.SourceId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
+        this.TargetId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
     }
 }

@@ -18,6 +18,6 @@ namespace TouchSocket.Modbus;
 /// <summary>
 /// 基于串口的Modbus主站接口
 /// </summary>
-public interface IModbusRtuMaster : IModbusMaster, ISerialPortSession,IConnectableClient
+public interface IModbusRtuMaster : IModbusMaster, ISerialPortSession, IConnectableClient
 {
 }

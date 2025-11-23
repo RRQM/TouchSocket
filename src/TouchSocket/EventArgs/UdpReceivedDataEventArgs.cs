@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets;
 
@@ -26,9 +25,9 @@ public class UdpReceivedDataEventArgs : ReceivedDataEventArgs
     /// 初始化 UdpReceivedDataEventArgs 对象
     /// </summary>
     /// <param name="endPoint">接收数据的终结点</param>
-    /// <param name="byteBlock">接收到的数据块</param>
+    /// <param name="memory">接收到的内存数据</param>
     /// <param name="requestInfo">请求信息，提供关于此次接收请求的元数据</param>
-    public UdpReceivedDataEventArgs(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock, requestInfo)
+    public UdpReceivedDataEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo) : base(memory, requestInfo)
     {
         this.EndPoint = endPoint;
     }

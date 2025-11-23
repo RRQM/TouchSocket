@@ -20,20 +20,26 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        #region 插件系统创建插件管理器
         IPluginManager pluginManager = new PluginManager(new Container())
         {
             Enable = true//必须启用
         };
+        #endregion
 
+        #region 插件系统按类型添加插件
         //添加插件
         pluginManager.Add<SayHelloPlugin>();
-        pluginManager.Add<SayHelloAction>();
-        pluginManager.Add<SayHelloGenerator>();
         pluginManager.Add<SayHiPlugin>();
         pluginManager.Add<LastSayPlugin>();
+        #endregion
 
+        //示例:注册委托方法
+        pluginManager.Add<SayHelloAction>();
+        //示例:源生成插件
+        pluginManager.Add<SayHelloGenerator>();
 
-
+        #region 插件系统按委托添加插件
         //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
         pluginManager.Add(typeof(ISayPlugin), () =>
         {
@@ -61,7 +67,9 @@ internal class Program
             Console.WriteLine("在Action3中获得");
             await e.InvokeNext();
         });
+        #endregion
 
+        #region 插件系统触发插件
         while (true)
         {
             Console.WriteLine("请输入hello、helloaction、hellogenerator、hi或者其他");
@@ -70,9 +78,11 @@ internal class Program
                 Words = Console.ReadLine()
             });
         }
+        #endregion
     }
 }
 
+#region 插件系统新建插件接口及事件类
 public class MyPluginEventArgs : PluginEventArgs
 {
     public string Words { get; set; }
@@ -94,7 +104,9 @@ public interface ISayPlugin : IPlugin
     /// <returns></returns>
     Task Say(object sender, MyPluginEventArgs e);
 }
+#endregion
 
+#region 插件系统实现插件接口
 public class SayHelloPlugin : PluginBase, ISayPlugin
 {
     public async Task Say(object sender, MyPluginEventArgs e)
@@ -144,7 +156,9 @@ internal class LastSayPlugin : PluginBase, ISayPlugin
         Console.WriteLine($"{this.GetType().Name}------Leave");
     }
 }
+#endregion
 
+#region 插件系统注册委托方法
 public class SayHelloAction : PluginBase
 {
     protected override void Loaded(IPluginManager pluginManager)
@@ -171,7 +185,9 @@ public class SayHelloAction : PluginBase
         Console.WriteLine($"{this.GetType().Name}------Leave");
     }
 }
+#endregion
 
+#region 插件系统源生成插件
 public partial class SayHelloGenerator : PluginBase, ISayPlugin
 {
     /// <summary>
@@ -196,3 +212,4 @@ public partial class SayHelloGenerator : PluginBase, ISayPlugin
         Console.WriteLine($"{this.GetType().Name}------Leave");
     }
 }
+#endregion

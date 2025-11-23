@@ -13,6 +13,7 @@
 using System;
 using System.Text;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace BytePoolConsoleApp;
 
@@ -20,21 +21,112 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        CreateArrayPool();
+        CreateByteBlock();
+        CreateValueByteBlock();
+        CreateByteBlockWithCustomPool();
+        CreateByteBlockWithUsing();
         BaseWriteRead();
-        BufferWriterWriteRead();
         PrimitiveWriteRead();
-        BytesPackageWriteRead();
-        IPackageWriteRead();
-        IPackageWriteRead();
+        BufferWriterWriteRead();
+        HoldingExample();
+
         Console.ReadKey();
     }
 
-    private static void ExtensionWrite()
+    #region 内存池创建自定义内存池
+
+    private static void CreateArrayPool()
     {
-        var byteBlock = new ValueByteBlock(1024);
+        System.Buffers.ArrayPool<byte> bytePool = System.Buffers.ArrayPool<byte>.Create(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50);
+    }
+
+    #endregion 内存池创建自定义内存池
+
+    #region 内存池创建ByteBlock
+
+    private static void CreateByteBlock()
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
+        byteBlock.Dispose();
+    }
+
+    #endregion 内存池创建ByteBlock
+
+    #region 内存池创建ValueByteBlock
+
+    private static void CreateValueByteBlock()
+    {
+        var byteBlock = new ValueByteBlock(1024 * 64);
+        byteBlock.Dispose();
+    }
+
+    #endregion 内存池创建ValueByteBlock
+
+    #region 内存池使用自定义内存池创建
+
+    private static void CreateByteBlockWithCustomPool()
+    {
+        var customPool = System.Buffers.ArrayPool<byte>.Create();
+        var byteBlock = new ByteBlock(1024 * 64, (c) => customPool.Rent(c), (m) =>
+        {
+            if (System.Runtime.InteropServices.MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)m, out var result))
+            {
+                customPool.Return(result.Array);
+            }
+        });
+        byteBlock.Dispose();
+    }
+
+    #endregion 内存池使用自定义内存池创建
+
+    #region 内存池使用using释放
+
+    private static void CreateByteBlockWithUsing()
+    {
+        using (var byteBlock = new ByteBlock(1024 * 64))
+        {
+            //使用ByteBlock
+        }
+    }
+
+    #endregion 内存池使用using释放
+
+    #region 内存池读写数组
+
+    private static void BaseWriteRead()
+    {
+        using (var byteBlock = new ByteBlock(1024 * 64))
+        {
+            byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
+
+            byteBlock.SeekToStart();//将游标重置
+
+            var buffer = new byte[byteBlock.Length];//定义一个数组容器
+            var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
+        }
+    }
+
+    #endregion 内存池读写数组
+
+    #region 内存池基础类型读写
+
+    private static void PrimitiveWriteRead()
+    {
+        var byteBlock = new ByteBlock(1024 * 64);
         try
         {
-            MyByteBlockExtension.ExtensionWrite(ref byteBlock);
+            WriterExtension.WriteValue(ref byteBlock, byte.MaxValue);//写入byte类型
+            WriterExtension.WriteValue(ref byteBlock, int.MaxValue);//写入int类型
+            WriterExtension.WriteValue(ref byteBlock, long.MaxValue);//写入long类型
+            WriterExtension.WriteString(ref byteBlock, "RRQM");//写入字符串类型
+
+            byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
+
+            var byteValue = ReaderExtension.ReadValue<ByteBlock, byte>(ref byteBlock);
+            var intValue = ReaderExtension.ReadValue<ByteBlock, int>(ref byteBlock);
+            var longValue = ReaderExtension.ReadValue<ByteBlock, long>(ref byteBlock);
+            var stringValue = ReaderExtension.ReadString<ByteBlock>(ref byteBlock);
         }
         finally
         {
@@ -42,59 +134,13 @@ internal class Program
         }
     }
 
-    private static void IPackageWriteRead()
-    {
-        using (var byteBlock = new ByteBlock(1024*64))
-        {
-            byteBlock.WritePackage(new MyPackage()
-            {
-                Property = 10
-            });
-            byteBlock.SeekToStart();
+    #endregion 内存池基础类型读写
 
-            var myPackage = byteBlock.ReadPackage<MyPackage>();
-        }
-    }
-
-    private static void BytesPackageWriteRead()
-    {
-        using (var byteBlock = new ByteBlock(1024*64))
-        {
-            byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
-
-            byteBlock.SeekToStart();
-
-            var bytes = byteBlock.ReadBytesPackage();
-
-            byteBlock.SeekToStart();
-
-            //使用下列方式即可高效完成读取
-            var memory = byteBlock.ReadBytesPackageMemory();
-
-        }
-    }
-
-    private static void PrimitiveWriteRead()
-    {
-        using (var byteBlock = new ByteBlock(1024*64))
-        {
-            byteBlock.WriteByte(byte.MaxValue);//写入byte类型
-            byteBlock.WriteInt32(int.MaxValue);//写入int类型
-            byteBlock.WriteInt64(long.MaxValue);//写入long类型
-            byteBlock.WriteString("RRQM");//写入字符串类型
-
-            byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
-
-            var byteValue = byteBlock.ReadByte();
-            var intValue = byteBlock.ReadInt32();
-            var longValue = byteBlock.ReadInt64();
-            var stringValue = byteBlock.ReadString();
-        }
-    }
+    #region 内存池BufferWriter方式写入
 
     private static void BufferWriterWriteRead()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        using (var byteBlock = new ByteBlock(1024 * 64))
         {
             var span = byteBlock.GetSpan(4);
             span[0] = 0;
@@ -114,81 +160,91 @@ internal class Program
         }
     }
 
-    private static void BaseWriteRead()
+    #endregion 内存池BufferWriter方式写入
+
+    #region 内存池多线程同步协作
+
+    private static void HoldingExample()
     {
-        using (var byteBlock = new ByteBlock(1024*64))
+        // 此示例演示了SetHolding的用法
+        // 实际使用请参考MyTClient和MyTClientError类
+    }
+
+    #endregion 内存池多线程同步协作
+
+    private static void ExtensionWrite()
+    {
+        var byteBlock = new ValueByteBlock(1024);
+        try
         {
-            byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
-
-            byteBlock.SeekToStart();//将游标重置
-
-            var buffer = new byte[byteBlock.Length];//定义一个数组容器
-            var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
+            MyByteBlockExtension.ExtensionWrite(ref byteBlock);
+        }
+        finally
+        {
+            byteBlock.Dispose();
         }
     }
+}
 
-    private static void Performance()
+#region 内存池异步Hold错误示例
+
+// 错误示例：直接在异步任务中使用ByteBlock会导致异常
+// 因为byteBlock在异步任务开始前就已经被释放了
+internal static class HoldErrorExample
+{
+    public static void HandleData(ByteBlock byteBlock)
     {
-        var count = 1000000;
-        var timeSpan1 = TimeMeasurer.Run(() =>
+        System.Threading.Tasks.Task.Run(() =>
         {
-            for (var i = 0; i < count; i++)
-            {
-                var buffer = new byte[1024];
-            }
+            // 错误：此时byteBlock可能已被释放
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
+            Console.WriteLine($"已接收到信息：{mes}");
         });
-
-        var timeSpan2 = TimeMeasurer.Run(() =>
-        {
-            for (var i = 0; i < count; i++)
-            {
-                var byteBlock = new ByteBlock(1024);
-                byteBlock.Dispose();
-            }
-        });
-
-        Console.WriteLine($"直接实例化：{timeSpan1}");
-        Console.WriteLine($"内存池实例化：{timeSpan2}");
     }
 }
+
+#endregion 内存池异步Hold错误示例
+
+#region 内存池异步Hold正确示例
+
+// 正确示例：使用SetHolding锁定ByteBlock，在异步任务中使用后再解锁
+internal static class HoldCorrectExample
+{
+    public static void HandleData(ByteBlock byteBlock)
+    {
+        byteBlock.SetHolding(true);//异步前锁定
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
+            byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
+            Console.WriteLine($"已接收到信息：{mes}");
+        });
+    }
+}
+
+#endregion 内存池异步Hold正确示例
 
 internal class MyPackage : PackageBase
 {
     public int Property { get; set; }
 
-    /*新写法*/
+
     public override void Package<TByteBlock>(ref TByteBlock byteBlock)
     {
-        byteBlock.WriteInt32(this.Property);
+        WriterExtension.WriteValue<TByteBlock, int>(ref byteBlock, this.Property);
     }
 
     public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
     {
-        this.Property = byteBlock.ReadInt32();
+        this.Property = ReaderExtension.ReadValue<TByteBlock, int>(ref byteBlock);
     }
-
-    /*旧写法*/
-    //public override void Package(in ByteBlock byteBlock)
-    //{
-    //    byteBlock.Write(this.Property);
-    //}
-    //public override void Unpackage(in ByteBlock byteBlock)
-    //{
-    //    this.Property = byteBlock.ReadInt32();
-    //}
-
-}
-
-internal class MyClass
-{
-    public int Property { get; set; }
 }
 
 internal static class MyByteBlockExtension
 {
-    public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+    public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IBytesWriter
     {
-        byteBlock.WriteInt16(10);
-        byteBlock.WriteInt32(10);
+        WriterExtension.WriteValue(ref byteBlock, (short)10);
+        WriterExtension.WriteValue(ref byteBlock, 10);
     }
 }

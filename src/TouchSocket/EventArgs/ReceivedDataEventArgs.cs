@@ -10,23 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets;
 
 /// <summary>
 /// 接收数据事件参数类，继承自ByteBlockEventArgs
 /// 用于封装接收到的数据和相关的请求信息
 /// </summary>
-public class ReceivedDataEventArgs : ByteBlockEventArgs
+public class ReceivedDataEventArgs : MemoryEventArgs
 {
 
     /// <summary>
     /// 构造函数，初始化接收到的数据和请求信息
     /// </summary>
-    /// <param name="byteBlock">接收到的数据块</param>
+    /// <param name="memory">接收到的数据块</param>
     /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
-    public ReceivedDataEventArgs(ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock)
+    public ReceivedDataEventArgs(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo) : base(memory)
     {
         this.RequestInfo = requestInfo;
     }

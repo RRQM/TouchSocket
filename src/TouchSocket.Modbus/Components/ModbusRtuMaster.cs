@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
 
@@ -23,7 +20,7 @@ namespace TouchSocket.Modbus;
 /// </summary>
 public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
 {
-    private ModbusRequest m_modbusRequest;
+    private IModbusRequest m_modbusRequest;
 
     /// <summary>
     /// 基于串口的Modbus主站接口
@@ -34,15 +31,15 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     }
 
     /// <inheritdoc/>
-    public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+    public Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return base.SerialPortConnectAsync(millisecondsTimeout, token);
+        return base.SerialPortConnectAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+    public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         try
         {
@@ -52,18 +49,16 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             try
             {
                 modbusRequest.Build(ref byteBlock);
-                await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
                 byteBlock.Dispose();
             }
 
-            this.m_waitDataAsync.SetCancellationToken(token);
-            var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            waitDataStatus.ThrowIfNotRunning();
+            this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            var response = this.m_waitDataAsync.WaitResult;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
 
             response.Request = request;
@@ -86,7 +81,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-    private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+    private TaskCompletionSource<ModbusRtuResponse> m_waitDataAsync;
 
     #endregion 字段
 
@@ -98,7 +93,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             var result = this.SetRun(this.m_modbusRequest, response);
             if (result)
             {
-                this.m_waitDataAsync.Set(response);
+                this.m_waitDataAsync?.TrySetResult(response);
             }
         }
         await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

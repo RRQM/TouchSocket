@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
@@ -45,23 +43,23 @@ public class FileSection : PackageBase
     public int Length { get; internal set; }
 
     /// <inheritdoc/>
-    public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Package<TWriter>(ref TWriter writer)
     {
-        byteBlock.WriteByte((byte)this.Status);
-        byteBlock.WriteInt32(this.ResourceHandle);
-        byteBlock.WriteInt64(this.Offset);
-        byteBlock.WriteInt32(this.Length);
-        byteBlock.WriteInt32(this.Index);
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Status);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+        WriterExtension.WriteValue<TWriter, long>(ref writer, this.Offset);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Length);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Index);
     }
 
     /// <inheritdoc/>
-    public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+    public override void Unpackage<TReader>(ref TReader reader)
     {
-        this.Status = (FileSectionStatus)byteBlock.ReadByte();
-        this.ResourceHandle = byteBlock.ReadInt32();
-        this.Offset = byteBlock.ReadInt64();
-        this.Length = byteBlock.ReadInt32();
-        this.Index = byteBlock.ReadInt32();
+        this.Status = (FileSectionStatus)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Offset = ReaderExtension.ReadValue<TReader, long>(ref reader);
+        this.Length = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Index = ReaderExtension.ReadValue<TReader, int>(ref reader);
     }
 
     /// <summary>

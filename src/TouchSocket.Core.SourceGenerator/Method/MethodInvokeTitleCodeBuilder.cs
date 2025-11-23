@@ -11,95 +11,52 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
 using System.Text;
 
 namespace TouchSocket;
 
-internal class MethodInvokeTitleCodeBuilder : CodeBuilder
+internal class MethodInvokeTitleCodeBuilder : MethodCodeBuilder
 {
-    private readonly INamedTypeSymbol m_namedTypeSymbol;
-
-    public MethodInvokeTitleCodeBuilder(INamedTypeSymbol type)
+    public MethodInvokeTitleCodeBuilder(INamedTypeSymbol type) : base(type)
     {
-        this.m_namedTypeSymbol = type;
     }
 
-    public override string Id => this.m_namedTypeSymbol.ToDisplayString();
-    public INamedTypeSymbol NamedTypeSymbol => this.m_namedTypeSymbol;
-
-    public virtual IEnumerable<string> Usings
-    {
-        get
-        {
-            yield return "using System;";
-            yield return "using System.Diagnostics;";
-            yield return "using TouchSocket.Core;";
-            yield return "using System.Threading.Tasks;";
-        }
-    }
-
-    protected virtual string GeneratorTypeNamespace => "TouchSocket.Core.__Internals";
-
+    public override string Id => this.TypeSymbol.ToDisplayString();
     public override string GetFileName()
     {
-        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Title.Generator";
+        return this.GeneratorTypeNamespace + this.GetGeneratorTypeName() + "Title.Generator.g.cs";
     }
 
-
-    public override string ToString()
+    protected override bool GeneratorCode(StringBuilder codeBuilder)
     {
-        var codeString = new StringBuilder();
-        codeString.AppendLine("/*");
-        codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
-        codeString.AppendLine("*/");
-        codeString.AppendLine("#pragma warning disable");
-
-        foreach (var item in this.Usings)
+        using (this.CreateNamespaceIfNotGlobalNamespace(codeBuilder, this.GeneratorTypeNamespace))
         {
-            codeString.AppendLine(item);
-        }
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine($"namespace {this.GeneratorTypeNamespace}");
-            codeString.AppendLine("{");
-        }
+            codeBuilder.AppendLine($"[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
+            codeBuilder.AppendLine($"[global::System.Obsolete(\"此方法不允许直接调用\")]");
+            codeBuilder.AppendLine(Utils.GetGeneratedCodeString());
 
-        codeString.AppendLine($"[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
-        codeString.AppendLine($"[global::System.Obsolete(\"此方法不允许直接调用\")]");
-        codeString.AppendLine(Utils.GetGeneratedCodeString());
+            codeBuilder.AppendLine($"#if NET6_0_OR_GREATER");
+            codeBuilder.AppendLine($"[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties)]");
+            codeBuilder.AppendLine($"[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+            codeBuilder.AppendLine($"[global::System.Diagnostics.DebuggerNonUserCode]");
+            codeBuilder.AppendLine($"#endif");
+            codeBuilder.AppendLine($"partial class {this.GetGeneratorTypeName()}");
+            using (this.CreateCodeSpace(codeBuilder))
+            {
+                codeBuilder.AppendLine($"#if NET6_0_OR_GREATER");
+                codeBuilder.AppendLine("[System.Runtime.CompilerServices.ModuleInitializer]");
+                codeBuilder.AppendLine($"[System.Diagnostics.CodeAnalysis.DynamicDependency( System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties,typeof({this.GetGeneratorTypeName()}))]");
+                codeBuilder.AppendLine("public static void TouchSocketModuleInitializer()");
 
-        codeString.AppendLine($"#if NET6_0_OR_GREATER");
-        codeString.AppendLine($"[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties)]");
-        codeString.AppendLine($"[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
-        codeString.AppendLine($"[global::System.Diagnostics.DebuggerNonUserCode]");
-        codeString.AppendLine($"#endif");
-        codeString.AppendLine($"partial class {this.GetGeneratorTypeName()}");
-        codeString.AppendLine("{");
-        codeString.AppendLine($"#if NET6_0_OR_GREATER");
-        codeString.AppendLine("[System.Runtime.CompilerServices.ModuleInitializer]");
-        codeString.AppendLine($"[System.Diagnostics.CodeAnalysis.DynamicDependency( System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties,typeof({this.GetGeneratorTypeName()}))]");
-        codeString.AppendLine("public static void TouchSocketModuleInitializer()");
-        codeString.AppendLine("{");
-        codeString.AppendLine("");
-        codeString.AppendLine("}");
-        codeString.AppendLine($"#endif");
+                using (this.CreateCodeSpace(codeBuilder))
+                {
+                    codeBuilder.AppendLine("");
+                }
 
-        codeString.AppendLine("}");
-
-        if (!this.NamedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
-        {
-            codeString.AppendLine("}");
+                codeBuilder.AppendLine($"#endif");
+            }
         }
 
-        // System.Diagnostics.Debugger.Launch();
-        return codeString.ToString();
-    }
-
-    private string GetGeneratorTypeName()
-    {
-        var typeName = $"__{Utils.MakeIdentifier(this.m_namedTypeSymbol.ToDisplayString())}MethodExtension";
-
-        return typeName;
+        return true;
     }
 }

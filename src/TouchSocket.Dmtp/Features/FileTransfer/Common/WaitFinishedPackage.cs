@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 internal class WaitFinishedPackage : WaitRouterPackage
@@ -20,19 +18,35 @@ internal class WaitFinishedPackage : WaitRouterPackage
     public Metadata Metadata { get; set; }
     public int ResourceHandle { get; set; }
 
-    public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void PackageBody<TWriter>(ref TWriter writer)
     {
-        base.PackageBody(ref byteBlock);
-        byteBlock.WriteInt32(this.ResourceHandle);
-        byteBlock.WritePackage(this.Metadata);
-        byteBlock.WriteByte((byte)this.Code);
+        base.PackageBody(ref writer);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
+        if (this.Metadata is null)
+        {
+            WriterExtension.WriteNull(ref writer);
+        }
+        else
+        {
+            WriterExtension.WriteNotNull(ref writer);
+            this.Metadata.Package(ref writer);
+        }
+        WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Code);
     }
 
-    public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
+    public override void UnpackageBody<TReader>(ref TReader reader)
     {
-        base.UnpackageBody(ref byteBlock);
-        this.ResourceHandle = byteBlock.ReadInt32();
-        this.Metadata = byteBlock.ReadPackage<Metadata>();
-        this.Code = (ResultCode)byteBlock.ReadByte();
+        base.UnpackageBody(ref reader);
+        this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        if (ReaderExtension.ReadIsNull(ref reader))
+        {
+            this.Metadata = null;
+        }
+        else
+        {
+            this.Metadata = new Metadata();
+            this.Metadata.Unpackage(ref reader);
+        }
+        this.Code = (ResultCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 }
