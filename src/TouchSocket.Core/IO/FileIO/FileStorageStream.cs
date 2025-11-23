@@ -10,111 +10,237 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+
 namespace TouchSocket.Core;
 
 /// <summary>
-/// FileStorageStream。
+/// 文件存储流
 /// </summary>
-public partial class FileStorageStream : Stream
+internal sealed partial class FileStorageStream : Stream
 {
     private long m_position;
-    private int m_dis = 1;
+    private FileStorage m_storage;
+    private bool m_disposed;
 
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="fileStorage"></param>
-    public FileStorageStream(FileStorage fileStorage)
+    internal FileStorageStream(FileStorage storage)
     {
-        ThrowHelper.ThrowIfNull(fileStorage, nameof(fileStorage));
-        this.FileStorage = fileStorage;
-    }
-
-    /// <summary>
-    /// 析构函数
-    /// </summary>
-    ~FileStorageStream()
-    {
-        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-        this.Dispose(disposing: false);
+        this.m_storage = storage;
     }
 
     /// <inheritdoc/>
-    public override bool CanRead => this.FileStorage.FileStream.CanRead;
+    public override bool CanRead => this.m_storage.CanRead;
 
     /// <inheritdoc/>
-    public override bool CanSeek => this.FileStorage.FileStream.CanSeek;
+    public override bool CanSeek => this.m_storage.CanSeek;
 
     /// <inheritdoc/>
-    public override bool CanWrite => this.FileStorage.FileStream.CanWrite;
-
-    /// <summary>
-    /// 文件存储器
-    /// </summary>
-    public FileStorage FileStorage { get; private set; }
+    public override bool CanWrite => this.m_storage.CanWrite;
 
     /// <inheritdoc/>
-    public override long Length => this.FileStorage.FileStream.Length;
+    public override long Length
+    {
+        get
+        {
+            this.ThrowIfDisposed();
+            return this.m_storage.Length;
+        }
+    }
 
     /// <inheritdoc/>
-    public override long Position { get => this.m_position; set => this.m_position = value; }
+    public override long Position
+    {
+        get => this.m_position;
+        set => this.m_position = value;
+    }
 
     /// <inheritdoc/>
-
     public override void Flush()
     {
-        this.FileStorage.Flush();
+        this.ThrowIfDisposed();
+        this.m_storage.Flush();
     }
 
     /// <inheritdoc/>
     public override int Read(byte[] buffer, int offset, int count)
     {
-        var r = this.FileStorage.Read(this.m_position, new System.Span<byte>(buffer, offset, count));
-        this.m_position += r;
-        return r;
+        this.ThrowIfDisposed();
+#if NET6_0_OR_GREATER
+        var span = buffer.AsSpan(offset, count);
+        var readCount = this.m_storage.Read(this.m_position, span);
+        this.m_position += readCount;
+        return readCount;
+#else
+        return this.ReadCore(buffer, offset, count);
+#endif
     }
 
     /// <inheritdoc/>
     public override long Seek(long offset, SeekOrigin origin)
     {
-        switch (origin)
+        this.ThrowIfDisposed();
+        this.m_position = origin switch
         {
-            case SeekOrigin.Begin:
-                this.m_position = offset;
-                break;
-
-            case SeekOrigin.Current:
-                this.m_position += offset;
-                break;
-
-            case SeekOrigin.End:
-                this.m_position = this.Length + offset;
-                break;
-        }
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => this.m_position + offset,
+            SeekOrigin.End => this.m_storage.Length + offset,
+            _ => throw new ArgumentException("Invalid seek origin", nameof(origin))
+        };
         return this.m_position;
     }
 
     /// <inheritdoc/>
     public override void SetLength(long value)
     {
-        this.FileStorage.FileStream.SetLength(value);
+        this.ThrowIfDisposed();
+        this.m_storage.SetLength(value);
     }
 
     /// <inheritdoc/>
     public override void Write(byte[] buffer, int offset, int count)
     {
-        this.FileStorage.Write(this.m_position, new System.ReadOnlySpan<byte>(buffer, offset, count));
+        this.ThrowIfDisposed();
+#if NET6_0_OR_GREATER
+        var span = buffer.AsSpan(offset, count);
+        this.m_storage.Write(this.m_position, span);
         this.m_position += count;
+#else
+        this.WriteCore(buffer, offset, count);
+#endif
     }
 
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        if (Interlocked.Decrement(ref this.m_dis) == 0)
+        if (this.m_disposed)
         {
-            FilePool.TryReleaseFile(this.FileStorage.Path);
-            this.FileStorage = null;
+            return;
         }
+        this.m_disposed = true;
+
+        if (disposing && this.m_storage != null)
+        {
+            FilePool.ReleaseFile(this.m_storage);
+            this.m_storage = null;
+        }
+
         base.Dispose(disposing);
     }
+
+    private void ThrowIfDisposed()
+    {
+        if (this.m_disposed)
+        {
+            ThrowHelper.ThrowObjectDisposedException(this);
+        }
+    }
 }
+
+#if NET6_0_OR_GREATER
+internal sealed partial class FileStorageStream
+{
+    /// <inheritdoc/>
+    public override int Read(Span<byte> buffer)
+    {
+        this.ThrowIfDisposed();
+        var count = this.m_storage.Read(this.m_position, buffer);
+        this.m_position += count;
+        return count;
+    }
+
+    /// <inheritdoc/>
+    public override void Write(ReadOnlySpan<byte> buffer)
+    {
+        this.ThrowIfDisposed();
+        this.m_storage.Write(this.m_position, buffer);
+        this.m_position += buffer.Length;
+    }
+    /// <inheritdoc/>
+    public override Task FlushAsync(CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        return this.m_storage.FlushAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        var memory = buffer.AsMemory(offset, count);
+        var readCount = await this.m_storage.ReadAsync(this.m_position, memory, cancellationToken).ConfigureAwait(false);
+        this.m_position += readCount;
+        return readCount;
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        this.ThrowIfDisposed();
+        var count = await this.m_storage.ReadAsync(this.m_position, buffer, cancellationToken).ConfigureAwait(false);
+        this.m_position += count;
+        return count;
+    }
+
+    /// <inheritdoc/>
+    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        var memory = buffer.AsMemory(offset, count);
+        await this.m_storage.WriteAsync(this.m_position, memory, cancellationToken).ConfigureAwait(false);
+        this.m_position += count;
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        this.ThrowIfDisposed();
+        await this.m_storage.WriteAsync(this.m_position, buffer, cancellationToken).ConfigureAwait(false);
+        this.m_position += buffer.Length;
+    }
+}
+
+#endif
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1 || NET462
+
+
+internal sealed partial class FileStorageStream
+{
+    private int ReadCore(byte[] buffer, int offset, int count)
+    {
+        var readCount = this.m_storage.Read(this.m_position, buffer, offset, count);
+        this.m_position += readCount;
+        return readCount;
+    }
+
+    private void WriteCore(byte[] buffer, int offset, int count)
+    {
+        this.m_storage.Write(this.m_position, buffer, offset, count);
+        this.m_position += count;
+    }
+
+    /// <inheritdoc/>
+    public override Task FlushAsync(CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        return this.m_storage.FlushAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        var readCount = await this.m_storage.ReadAsync(this.m_position, new Memory<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+        this.m_position += readCount;
+        return readCount;
+    }
+
+    /// <inheritdoc/>
+    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        await this.m_storage.WriteAsync(this.m_position, new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+        this.m_position += count;
+    }
+}
+
+#endif

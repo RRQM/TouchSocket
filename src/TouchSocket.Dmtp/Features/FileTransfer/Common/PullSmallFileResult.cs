@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-
 namespace TouchSocket.Dmtp.FileTransfer;
 
 /// <summary>
@@ -55,8 +54,9 @@ public class PullSmallFileResult : ResultBase
     /// </summary>
     /// <param name="path">要保存文件的路径。</param>
     /// <param name="overwrite">是否覆盖同名文件，默认为<see langword="true"/>。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回保存结果。</returns>
-    public Result Save(string path, bool overwrite = true)
+    public async Task<Result> SaveAsync(string path, bool overwrite = true, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -64,11 +64,13 @@ public class PullSmallFileResult : ResultBase
             {
                 FileUtility.Delete(path);
             }
-            using (var byteBlock = FilePool.GetWriter(path))
+            using (var stream = FilePool.GetStream(path))
             {
-                byteBlock.Write(this.Value);
-                return Result.Success;
+                await stream.WriteAsync(this.Value, cancellationToken);
+                await stream.FlushAsync(cancellationToken);
             }
+
+            return Result.Success;
         }
         catch (Exception ex)
         {

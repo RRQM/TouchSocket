@@ -95,9 +95,9 @@ public class FileResourceController : DisposableObject, IFileResourceController
     public virtual int ReadAllBytes(FileInfo fileInfo, byte[] buffer)
     {
         this.ThrowIfDisposed();
-        using (var byteBlock = FilePool.GetReader(fileInfo))
+        using (var stream = FilePool.GetStream(fileInfo.FullName))
         {
-            return byteBlock.Read(buffer);
+            return stream.Read(buffer);
         }
     }
 
@@ -125,9 +125,9 @@ public class FileResourceController : DisposableObject, IFileResourceController
     public virtual void WriteAllBytes(string path, byte[] buffer, int offset, int length)
     {
         this.ThrowIfDisposed();
-        using (var byteBlock = FilePool.GetWriter(path))
+        using (var stream = FilePool.GetStream(path))
         {
-            byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
+            stream.Write(new ReadOnlySpan<byte>(buffer, offset, length));
         }
     }
 

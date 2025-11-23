@@ -988,25 +988,25 @@ public static class SystemExtension
     /// <exception cref="IOException">当读取的字节数与流的长度不匹配时抛出。</exception>
     public static byte[] ReadAllToByteArray(this Stream stream)
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream), "输入的 Stream 不能为 null。");
-        }
-
-        // 如果流支持长度属性，并且流的位置在起始位置，可以直接创建对应长度的数组
-        if (stream.CanSeek && stream.Length > 0 && stream.Position == 0)
-        {
-            var buffer = new byte[stream.Length];
-            var bytesRead = stream.Read(buffer, 0, buffer.Length);
-            return bytesRead != buffer.Length ? throw new IOException("读取的字节数与流的长度不匹配。") : buffer;
-        }
-
-        // 如果流不支持长度属性或位置不在起始位置，使用 MemoryStream 来读取数据
         using (var memoryStream = new MemoryStream())
         {
             var buffer = new byte[4096];
             int bytesRead;
             while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                memoryStream.Write(buffer, 0, bytesRead);
+            }
+            return memoryStream.ToArray();
+        }
+    }
+
+    public static async Task<byte[]> ReadAllToByteArrayAsync(this Stream stream, CancellationToken cancellationToken)
+    {
+        using (var memoryStream = new MemoryStream())
+        {
+            var buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
             {
                 memoryStream.Write(buffer, 0, bytesRead);
             }

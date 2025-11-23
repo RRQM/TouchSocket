@@ -65,22 +65,6 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
         return base.OnTcpConnecting(e);
     }
 
-    /// <inheritdoc/>
-    protected sealed override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
-    {
-        var webSocket = this.m_webSocket;
-        if (webSocket is null)
-        {
-            await this.m_httpAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        else
-        {
-            await this.m_webSocketAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-
-        return true;
-    }
-
     private async Task OnReceivingHttpRequest(ServerHttpRequest request)
     {
         if (this.m_httpContext == null)

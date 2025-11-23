@@ -30,7 +30,7 @@ public class FileResourceLocator : DisposableObject
     {
         this.FileResourceInfo = fileResourceInfo;
         this.FileAccess = FileAccess.Read;
-        this.FileStorage = FilePool.GetFileStorageForRead(fileResourceInfo.FileInfo.FullName);
+        this.FileStorage = FilePool.GetStorage(fileResourceInfo.FileInfo.FullName);
         this.LocatorPath = fileResourceInfo.FileInfo.FullName;
         this.LastActiveTime = DateTimeOffset.UtcNow;
     }
@@ -55,7 +55,7 @@ public class FileResourceLocator : DisposableObject
         this.LocatorPath = locatorPath;
         this.FileResourceInfo = fileResourceInfo;
         this.FileAccess = FileAccess.Write;
-        this.FileStorage = FilePool.GetFileStorageForWrite(this.LocatorPath + ExtensionName);
+        this.FileStorage = FilePool.GetStorage(this.LocatorPath + ExtensionName);
         this.LastActiveTime = DateTimeOffset.UtcNow;
     }
 
@@ -115,9 +115,7 @@ public class FileResourceLocator : DisposableObject
         // 根据文件访问模式决定返回值
         // 如果是读取模式，则返回空数组
         // 否则，返回所有未完成状态的文件片段集合
-        return this.FileAccess == FileAccess.Read
-            ? (new FileSection[0])
-            : this.FileResourceInfo.FileSections.Where(a => a.Status != FileSectionStatus.Finished).ToArray();
+        return this.FileAccess == FileAccess.Read ? [] : this.FileResourceInfo.FileSections.Where(a => a.Status != FileSectionStatus.Finished).ToArray();
     }
 
     /// <summary>
@@ -126,12 +124,10 @@ public class FileResourceLocator : DisposableObject
     /// <param name="pos">要开始读取的文件位置。</param>
     /// <param name="span">用于存储读取的字节的跨度。</param>
     /// <returns>读取的字节数。</returns>
-    public int ReadBytes(long pos, Span<byte> span)
+    public async Task<int> ReadAsync(long pos, Memory<byte> span)
     {
-        // 更新最后一次活动时间，用于跟踪访问时间
         this.LastActiveTime = DateTimeOffset.UtcNow;
-        // 调用底层文件存储系统的读取方法，读取字节并返回读取的字节数
-        return this.FileStorage.Read(pos, span);
+        return await this.FileStorage.ReadAsync(pos, span);
     }
 
     /// <summary>
@@ -234,14 +230,7 @@ public class FileResourceLocator : DisposableObject
                 return new Result(ResultCode.Failure, "文件长度不一致。");
             }
 
-            // 尝试释放文件，最多尝试10次
-            for (var i = 0; i < 10; i++)
-            {
-                if (this.FileStorage.TryReleaseFile().IsSuccess)
-                {
-                    break;
-                }
-            }
+            this.FileStorage.Dispose();
 
             // 确保文件移动并重命名，最多尝试10次
             for (var i = 0; i < 10; i++)
@@ -350,7 +339,7 @@ public class FileResourceLocator : DisposableObject
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        this.FileStorage.TryReleaseFile();
+        this.FileStorage.Dispose();
         base.Dispose(disposing);
     }
 }

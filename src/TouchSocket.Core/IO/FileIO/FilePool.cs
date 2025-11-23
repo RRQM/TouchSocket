@@ -11,283 +11,54 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Concurrent;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 文件池。
+/// 文件池
 /// </summary>
-
 public static partial class FilePool
 {
-    private static readonly Lock s_locker = new Lock();
+    private static readonly ConcurrentDictionary<string, FileStorage> s_storages = new ConcurrentDictionary<string, FileStorage>();
 
-    private static readonly ConcurrentDictionary<string, FileStorage> m_pathStorage = new ConcurrentDictionary<string, FileStorage>();
-
-    private static readonly Timer s_timer;
-
-    static FilePool()
+    /// <summary>
+    /// 获取文件存储器
+    /// </summary>
+    /// <param name="path">文件路径</param>
+    /// <returns>文件存储器</returns>
+    public static FileStorage GetStorage(string path)
     {
-        s_timer = new Timer(OnTimer, null, 1000 * 60, 1000 * 60);
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(path, nameof(path));
+        var fullPath = Path.GetFullPath(path);
+
+        var storage = s_storages.GetOrAdd(fullPath, p => new FileStorage(p));
+        Interlocked.Increment(ref storage.m_referenceCount);
+        return storage;
     }
 
     /// <summary>
-    /// 获取所有的路径。
+    /// 获取文件流
     /// </summary>
-    /// <returns></returns>
-    public static IEnumerable<string> GetAllPaths()
+    /// <param name="path">文件路径</param>
+    /// <returns>文件流</returns>
+    public static Stream GetStream(string path)
     {
-        return m_pathStorage.Keys;
+        var storage = GetStorage(path);
+        return new FileStorageStream(storage);
     }
 
-    private static void ThrowIfPathIsNull(string path)
+    /// <summary>
+    /// 释放文件
+    /// </summary>
+    /// <param name="storage">文件存储器</param>
+    internal static void ReleaseFile(FileStorage storage)
     {
-        if (string.IsNullOrEmpty(path))
+        if (Interlocked.Decrement(ref storage.m_referenceCount) <= 0)
         {
-            ThrowHelper.ThrowArgumentNullException(nameof(path));
-        }
-    }
-
-    /// <summary>
-    /// 加载文件为读取流
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorage GetFileStorageForRead(string path)
-    {
-        ThrowIfPathIsNull(path);
-        return GetFileStorageForRead(new FileInfo(path));
-    }
-
-    /// <summary>
-    /// 加载文件为读取流
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorage GetFileStorageForRead(FileInfo fileInfo)
-    {
-        if (m_pathStorage.TryGetValue(fileInfo.FullName, out var storage))
-        {
-            if (storage.FileAccess != FileAccess.Read)
+            if (s_storages.TryRemove(storage.Path, out _))
             {
-                ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(fileInfo.FullName));
+                storage.DisposeInternal();
             }
-            Interlocked.Increment(ref storage.m_reference);
-            return storage;
-        }
-        lock (s_locker)
-        {
-            storage = new FileStorage(fileInfo, FileAccess.Read);
-            if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
-            {
-                Interlocked.Increment(ref storage.m_reference);
-                return storage;
-            }
-            return GetFileStorageForRead(fileInfo);
-        }
-    }
-
-    /// <summary>
-    /// 加载文件为写流
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorage GetFileStorageForWrite(string path)
-    {
-        ThrowIfPathIsNull(path);
-        return GetFileStorageForWrite(new FileInfo(path));
-    }
-
-    /// <summary>
-    /// 加载文件为写流
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorage GetFileStorageForWrite(FileInfo fileInfo)
-    {
-        if (m_pathStorage.TryGetValue(fileInfo.FullName, out var storage))
-        {
-            if (storage.FileAccess != FileAccess.Write)
-            {
-                ThrowHelper.ThrowException(TouchSocketCoreResource.FileReadOnly.Format(fileInfo.FullName));
-            }
-            Interlocked.Increment(ref storage.m_reference);
-            return storage;
-        }
-        lock (s_locker)
-        {
-            storage = new FileStorage(fileInfo, FileAccess.Write);
-            if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
-            {
-                Interlocked.Increment(ref storage.m_reference);
-                return storage;
-            }
-            return GetFileStorageForWrite(fileInfo);
-        }
-    }
-
-    /// <summary>
-    /// 获取一个可读可写的Stream对象。
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageStream GetFileStorageStream(string path)
-    {
-        return new FileStorageStream(GetFileStorageForWrite(path));
-    }
-
-    /// <summary>
-    /// 获取一个可读可写的Stream对象。
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageStream GetFileStorageStream(FileInfo fileInfo)
-    {
-        return new FileStorageStream(GetFileStorageForWrite(fileInfo));
-    }
-
-    /// <summary>
-    /// 获取一个文件读取访问器
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageReader GetReader(string path)
-    {
-        return new FileStorageReader(GetFileStorageForRead(path));
-    }
-
-    /// <summary>
-    /// 获取一个文件读取访问器
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageReader GetReader(FileInfo fileInfo)
-    {
-        return new FileStorageReader(GetFileStorageForRead(fileInfo));
-    }
-
-    /// <summary>
-    /// 获取引用次数。
-    /// </summary>
-    /// <param name="path">必须是全路径。</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static int GetReferenceCount(string path)
-    {
-        ThrowIfPathIsNull(path);
-        return m_pathStorage.TryGetValue(path, out var fileStorage) ? fileStorage.m_reference : 0;
-    }
-
-    /// <summary>
-    /// 获取一个文件写入访问器
-    /// </summary>
-    /// <param name="path">路径</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageWriter GetWriter(string path)
-    {
-        return new FileStorageWriter(GetFileStorageForWrite(path));
-    }
-
-    /// <summary>
-    /// 获取一个文件写入访问器
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static FileStorageWriter GetWriter(FileInfo fileInfo)
-    {
-        return new FileStorageWriter(GetFileStorageForWrite(fileInfo));
-    }
-
-    private static void DelayRunReleaseFile(string path, int time)
-    {
-        _ = EasyTask.SafeRun(async () =>
-        {
-            await Task.Delay(time).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (GetReferenceCount(path) == 0)
-            {
-                if (m_pathStorage.TryRemove(path, out var fileStorage))
-                {
-                    fileStorage.Dispose();
-                }
-            }
-        });
-    }
-
-    /// <summary>
-    /// 减少引用次数，并尝试释放流。
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="delayTime">延迟释放时间。当设置为0时，立即释放,单位毫秒。</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public static Result TryReleaseFile(string path, int delayTime = 0)
-    {
-        ThrowIfPathIsNull(path);
-        path = Path.GetFullPath(path);
-        if (m_pathStorage.TryGetValue(path, out var fileStorage))
-        {
-            if (Interlocked.Decrement(ref fileStorage.m_reference) <= 0)
-            {
-                if (delayTime > 0)
-                {
-                    DelayRunReleaseFile(path, delayTime);
-                    return new Result(ResultCode.Success);
-                }
-                else
-                {
-                    if (m_pathStorage.TryRemove(path, out fileStorage))
-                    {
-                        fileStorage.Dispose();
-                    }
-                    return new Result(ResultCode.Success);
-                }
-            }
-            else
-            {
-                return new Result(ResultCode.Error, TouchSocketCoreResource.StreamReferencing.Format(path, fileStorage.m_reference));
-            }
-        }
-        else
-        {
-            return new Result(ResultCode.Success, TouchSocketCoreResource.StreamNotFind.Format(path));
-        }
-    }
-
-    private static void OnTimer(object state)
-    {
-        var keys = new List<string>();
-        foreach (var item in m_pathStorage)
-        {
-            if (DateTimeOffset.UtcNow - item.Value.AccessTime > item.Value.AccessTimeout)
-            {
-                keys.Add(item.Key);
-            }
-        }
-        foreach (var item in keys)
-        {
-            TryReleaseFile(item);
         }
     }
 }

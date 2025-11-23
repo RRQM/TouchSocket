@@ -9,178 +9,283 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-
-using TouchSocket.Resources;
-
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 文件存储器。在该存储器中，读写线程安全。
+/// 简化版文件存储器
 /// </summary>
-public partial class FileStorage
+public sealed partial class FileStorage : IDisposable
 {
-    internal volatile int m_reference;
-    private readonly ReaderWriterLockSlim m_lockSlim;
-    private bool m_disposedValue;
+    private readonly FileStream m_fileStream;
+    private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+    internal int m_referenceCount;
+    private bool m_disposed;
 
-    /// <summary>
-    /// 初始化一个文件存储器。在该存储器中，读写线程安全。
-    /// </summary>
-    internal FileStorage(FileInfo fileInfo, FileAccess fileAccess) : this()
+    internal FileStorage(string path)
     {
-        this.FileAccess = fileAccess;
-        this.FileInfo = fileInfo;
-        this.Path = fileInfo.FullName;
-        this.m_reference = 0;
-        this.FileStream = fileInfo.Open(FileMode.OpenOrCreate, fileAccess, FileShare.ReadWrite);
-        this.m_lockSlim = new ReaderWriterLockSlim();
+        this.Path = path;
+        this.m_fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
     }
-
-    private FileStorage()
-    {
-        this.AccessTime = DateTimeOffset.UtcNow;
-        this.AccessTimeout = TimeSpan.FromSeconds(60);
-    }
-
-    /// <summary>
-    /// 最后访问时间。
-    /// </summary>
-    public DateTimeOffset AccessTime { get; private set; }
-
-    /// <summary>
-    /// 访问超时时间。默认60s
-    /// </summary>
-    public TimeSpan AccessTimeout { get; set; }
-
-    /// <summary>
-    /// 访问属性
-    /// </summary>
-    public FileAccess FileAccess { get; private set; }
-
-    /// <summary>
-    /// 文件信息
-    /// </summary>
-    public FileInfo FileInfo { get; private set; }
-
-    /// <summary>
-    /// 文件流。
-    /// 一般情况下，请不要直接访问该对象。否则有可能会产生不可预测的错误。
-    /// </summary>
-    public FileStream FileStream { get; private set; }
-
-    /// <summary>
-    /// 文件长度
-    /// </summary>
-    public long Length => this.FileStream.Length;
 
     /// <summary>
     /// 文件路径
     /// </summary>
-    public string Path { get; private set; }
+    public string Path { get; }
 
     /// <summary>
-    /// 引用次数。
+    /// 文件长度
     /// </summary>
-    public int Reference => this.m_reference;
+    public long Length
+    {
+        get
+        {
+            this.m_semaphore.Wait();
+            try
+            {
+                this.ThrowIfDisposed();
+                return this.m_fileStream.Length;
+            }
+            finally
+            {
+                this.m_semaphore.Release();
+            }
+        }
+    }
+
+    public bool CanRead => this.m_fileStream.CanRead;
+    public bool CanSeek => this.m_fileStream.CanSeek;
+    public bool CanWrite => this.m_fileStream.CanWrite;
 
     /// <summary>
-    /// 写入时清空缓存区
+    /// 设置文件长度
+    /// </summary>
+    /// <param name="length">新长度</param>
+    public void SetLength(long length)
+    {
+        this.m_semaphore.Wait();
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.SetLength(length);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 刷新缓冲区
     /// </summary>
     public void Flush()
     {
-        this.AccessTime = DateTimeOffset.UtcNow;
-        this.FileStream.Flush();
-    }
-
-    /// <summary>
-    /// 从当前文件中读取字节。
-    /// </summary>
-    /// <param name="startPos">开始读取的位置。</param>
-    /// <param name="span">用于接收读取数据的字节跨度。</param>
-    /// <returns>实际读取的字节数。</returns>
-    /// <exception cref="ObjectDisposedException">如果当前对象已被处置。</exception>
-    /// <exception cref="System.IO.IOException">如果文件仅被写入。</exception>
-    public int Read(long startPos, Span<byte> span)
-    {
-        // 更新访问时间，用于跟踪文件的最近访问时间。
-        this.AccessTime = DateTimeOffset.UtcNow;
-        // 使用写锁保护共享资源，确保读操作的线程安全性。
-        using (var writeLock = new WriteLock(this.m_lockSlim))
+        this.m_semaphore.Wait();
+        try
         {
-            // 检查对象是否已被处置，如果是，则抛出异常。
-            if (this.m_disposedValue)
-            {
-                ThrowHelper.ThrowObjectDisposedException(this);
-            }
-            // 检查文件访问模式，如果是写模式，则抛出异常。
-            if (this.FileAccess == FileAccess.Write)
-            {
-                ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(this.FileInfo.FullName));
-            }
-
-
-            this.FileStream.Position = startPos;
-            return this.FileStream.Read(span);
+            this.ThrowIfDisposed();
+            this.m_fileStream.Flush();
+        }
+        finally
+        {
+            this.m_semaphore.Release();
         }
     }
 
-    /// <summary>
-    /// 减少引用次数，并尝试释放流。
-    /// </summary>
-    /// <param name="delayTime">延迟释放时间。当设置为0时，立即释放,单位毫秒。</param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="Exception"></exception>
-    public Result TryReleaseFile(int delayTime = 0)
+    /// <inheritdoc/>
+    public void Dispose()
     {
-        return FilePool.TryReleaseFile(this.Path, delayTime);
+        // 通过文件池释放，确保引用计数正确
+        FilePool.ReleaseFile(this);
     }
 
-    /// <summary>
-    /// 写入数据到文件的特定位置。
-    /// </summary>
-    /// <param name="startPos">开始写入的位置。</param>
-    /// <param name="span">要写入的字节跨度。</param>
-    public void Write(long startPos, ReadOnlySpan<byte> span)
+    internal void DisposeInternal()
     {
-        // 更新文件的访问时间。
-        this.AccessTime = DateTimeOffset.UtcNow;
-
-        // 使用写锁确保线程安全。
-        using (var writeLock = new WriteLock(this.m_lockSlim))
-        {
-            // 检查对象是否已释放。
-            if (this.m_disposedValue)
-            {
-                // 如果对象已释放，抛出ObjectDisposedException。
-                ThrowHelper.ThrowObjectDisposedException(this);
-            }
-
-            // 检查文件访问权限。
-            if (this.FileAccess == FileAccess.Read)
-            {
-                // 如果文件只读，抛出异常。
-                ThrowHelper.ThrowException(TouchSocketCoreResource.FileReadOnly.Format(this.FileInfo.FullName));
-            }
-
-            // 设置文件流的位置为指定的开始写入位置。
-            this.FileStream.Position = startPos;
-
-            // 将数据写入文件。
-            this.FileStream.Write(span);
-        }
-    }
-
-    internal void Dispose()
-    {
-        if (this.m_disposedValue)
+        if (this.m_disposed)
         {
             return;
         }
-        using (var writeLock = new WriteLock(this.m_lockSlim))
+
+        // 等待获得独占访问，确保没有读写在进行
+        this.m_semaphore.Wait();
+        try
         {
-            this.m_disposedValue = true;
-            this.FileStream.SafeDispose();
+            if (this.m_disposed)
+            {
+                return;
+            }
+
+            this.m_disposed = true;
+            this.m_fileStream.Dispose();
+        }
+        finally
+        {
+            // 释放并处置信号量
+            try
+            {
+                this.m_semaphore.Release();
+            }
+            catch
+            {
+                // 忽略释放异常
+            }
+
+            this.m_semaphore.Dispose();
+        }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (this.m_disposed)
+        {
+            ThrowHelper.ThrowObjectDisposedException(this);
+        }
+    }
+
+    /// <summary>
+    /// 读取数据
+    /// </summary>
+    /// <param name="position">读取位置</param>
+    /// <param name="buffer">缓冲区</param>
+    /// <param name="offset">缓冲区偏移量</param>
+    /// <param name="count">读取字节数</param>
+    /// <returns>实际读取的字节数</returns>
+    public int Read(long position, byte[] buffer, int offset, int count)
+    {
+        this.m_semaphore.Wait();
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            return this.m_fileStream.Read(buffer, offset, count);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 写入数据
+    /// </summary>
+    /// <param name="position">写入位置</param>
+    /// <param name="buffer">数据</param>
+    /// <param name="offset">缓冲区偏移量</param>
+    /// <param name="count">写入字节数</param>
+    public void Write(long position, byte[] buffer, int offset, int count)
+    {
+        this.m_semaphore.Wait();
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            this.m_fileStream.Write(buffer, offset, count);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 异步读取数据
+    /// </summary>
+    /// <param name="position">读取位置</param>
+    /// <param name="memory">缓冲区</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>实际读取的字节数</returns>
+    public async Task<int> ReadAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
+    {
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            return await this.m_fileStream.ReadAsync(memory, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 异步写入数据
+    /// </summary>
+    /// <param name="position">写入位置</param>
+    /// <param name="memory">数据</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    public async Task WriteAsync(long position, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
+    {
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            await this.m_fileStream.WriteAsync(memory, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 异步刷新缓冲区
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌</param>
+    public async Task FlushAsync(CancellationToken cancellationToken = default)
+    {
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            this.ThrowIfDisposed();
+            await this.m_fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+
+    /// <summary>
+    /// 读取数据
+    /// </summary>
+    /// <param name="position">读取位置</param>
+    /// <param name="buffer">缓冲区</param>
+    /// <returns>实际读取的字节数</returns>
+    public int Read(long position, Span<byte> buffer)
+    {
+        this.m_semaphore.Wait();
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            return this.m_fileStream.Read(buffer);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// 写入数据
+    /// </summary>
+    /// <param name="position">写入位置</param>
+    /// <param name="buffer">数据</param>
+    public void Write(long position, ReadOnlySpan<byte> buffer)
+    {
+        this.m_semaphore.Wait();
+        try
+        {
+            this.ThrowIfDisposed();
+            this.m_fileStream.Position = position;
+            this.m_fileStream.Write(buffer);
+        }
+        finally
+        {
+            this.m_semaphore.Release();
         }
     }
 }

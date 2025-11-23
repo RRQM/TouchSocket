@@ -21,7 +21,7 @@ namespace TouchSocket.Core;
 public sealed class FileLogger : LoggerBase, IDisposable
 {
     private const int MaxRetryCount = 10;
-    private readonly ConcurrentDictionary<string, FileStorageWriter> m_writers = new ConcurrentDictionary<string, FileStorageWriter>();
+    private readonly ConcurrentDictionary<string, Stream> m_writers = new();
     private Func<LogLevel, string> m_createLogFolder;
     private bool m_disposedValue;
     private int m_retryCount;
@@ -117,7 +117,7 @@ public sealed class FileLogger : LoggerBase, IDisposable
         }
     }
 
-    private FileStorageWriter GetFileStorageWriter(string dirPath)
+    private Stream GetFileStorageWriter(string dirPath)
     {
         if (this.m_writers.TryGetValue(dirPath, out var writer))
         {
@@ -136,9 +136,8 @@ public sealed class FileLogger : LoggerBase, IDisposable
                 var filePath = Path.Combine(dirPath, $"{count.ToString(this.FileNameFormat)}" + ".log");
                 if (!(File.Exists(filePath) && new FileInfo(filePath).Length > this.MaxSize))
                 {
-                    writer = FilePool.GetWriter(filePath);
-                    writer.SeekToEnd();
-                    writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
+                    writer = FilePool.GetStream(filePath);
+                    writer.Seek(writer.Length, SeekOrigin.Begin);
 
                     return this.m_writers.TryAdd(dirPath, writer) ? writer : this.GetFileStorageWriter(dirPath);
                 }
@@ -158,8 +157,8 @@ public sealed class FileLogger : LoggerBase, IDisposable
             try
             {
                 writer1.Write((Encoding.UTF8.GetBytes(logString)));
-                writer1.FileStorage.Flush();
-                if (writer1.FileStorage.Length > this.MaxSize)
+                writer1.Flush();
+                if (writer1.Length > this.MaxSize)
                 {
                     if (this.m_writers.TryRemove(dirPath, out var fileStorageWriter))
                     {
