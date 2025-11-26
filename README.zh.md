@@ -23,7 +23,7 @@
 
 <div align="center">
 
-三十功名尘与土，八千里路云和月。
+纸上得来终觉浅，绝知此事要躬行。
 
 </div>
 
@@ -45,7 +45,7 @@
 
 ## 🖥支持环境
 
-- .NET Framework4.5及以上。
+- .NET Framework4.6.2及以上。
 - .NET 6.0及以上。
 - .NET Standard2.0及以上。
 
