@@ -1,25 +1,20 @@
-**En** | [中](./README.zh.md)
-<p></p>
-<p></p>
+**En** | [中文](./README.zh.md)
+
 <p align="center">
-<img src="logo.png" width = "100" height = "100" alt="The name of the image" align=center />
+  <img src="logo.png" width="100" height="100" />
 </p>
 
- <div align="center">  
+<div align="center">
 
 [![NuGet(TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket/)
 [![NuGet(TouchSocket)](https://img.shields.io/nuget/dt/TouchSocket.svg)](https://www.nuget.org/packages/TouchSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![star](https://gitee.com/RRQM_Home/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket) 
-[![star](https://gitcode.com/RRQM_Home/TouchSocket/star/badge.svg)](https://gitcode.com/RRQM_Home/TouchSocket) 
-[![fork](https://gitee.com/RRQM_Home/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket/members)
-<a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
-<img src="https://img.shields.io/badge/QQ group-234762506-red" alt="QQ">
-</a>
+[![star](https://gitee.com/RRQM_Home/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket/stargazers)
+[![star](https://gitcode.com/RRQM_Home/TouchSocket/star/badge.svg)](https://gitcode.com/RRQM_Home/TouchSocket)
+[![fork](https://gitee.com/RRQM_Home/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket/members) <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw"> <img src="https://img.shields.io/badge/QQ Group-234762506-red"> </a>
 [![NuGet(TouchSocket)](https://img.shields.io/github/stars/RRQM/TouchSocket?logo=github)](https://github.com/RRQM/TouchSocket)
 
-
-</div>  
+</div>
 
 <div align="center">
 
@@ -27,166 +22,258 @@
 
 </div>
 
-## 🎀Description
+---
 
-![Alt](https://repobeats.axiom.co/api/embed/7b543e0b31f0488b08dfd319fafca0044dfd1050.svg "Repobeats analytics image")
+# 🎀 Description
 
-'TouchSocket' is a powerful and easy-to-use.NET network communication framework for languages such as C#, VB.Net, and F#. It provides a variety of communication modules, including TCP, UDP, SSL, WebSocket, Modbus, etc. It supports solving the problem of TCP packet subcontracting and UDP large packet fragment combination. The framework supports a variety of protocol templates to quickly parse data packets such as fixed headers, fixed lengths, and interval characters.
+![Alt](https://repobeats.axiom.co/api/embed/7b543e0b31f0488b08dfd319fafca0044dfd1050.svg)
 
-***
+**TouchSocket is a simple, modern, and high-performance .NET networking framework**, supporting C#, VB.NET, F#, and more.
+It helps you build powerful communication applications such as **TCP / UDP / MQTT / WebSocket / SSL / HTTP / Modbus / RPC** with ease.
 
-## 🌟Related Documentation
+The framework features a highly optimized IOCP/Socket implementation, robust memory pooling, a flexible data-adapter pipeline, and a rich plugin ecosystem including heartbeat, reconnection, SSL, RPC, and more.
 
-- [The first page of the document](https://touchsocket.net/)
-- [Getting started as a newbie](https://touchsocket.net/docs/current/startguide)
-- [API documentation](https://touchsocket.net/api/)
+---
 
-***
+# 🌟 Documentation
 
-## 🖥Supporting the environment
+* [Documentation Home](https://touchsocket.net/)
+* [Getting Started](https://touchsocket.net/docs/current/startguide)
+* [API Reference](https://touchsocket.net/api/)
 
-- .NET Framework 4.6.2 or later.
-- .NET 6.0 and above.
-- .NET Standard 2.0 or later.
+---
 
-## 🥪Support frameworks
+# 🖥 Supported Platforms
 
-- Console
-- WPF
-- Winform
-- Blazor
-- Xamarin
-- MAUI
-- Avalonia 
-- Mono
-- Unity 3D(except WebGL)
-- Other (i.e. all C# faculties)
+* .NET Framework ≥ **4.6.2**
+* .NET Standard ≥ **2.0**
+* .NET ≥ **6.0**
 
+# 🥪 Supported Application Types
 
-## 🌴A quick overview of TouchSocket features
+Console / WinForm / WPF / MAUI / Avalonia / Blazor / Xamarin / Unity (non-WebGL) / Mono / All C#-based platforms
 
-#### Traditional IOCP and TouchSocket IOCP modes
+---
 
-The IOCP of TouchSocket is not the same as the traditional one, just take Microsoft's official example as an example, he uses MemoryBuffer to open up a piece of memory, divide it evenly, and then assign a zone to each session to receive, and then **copy** the received data, and then process the copied data. The TouchSocket is to take a usable memory block from the memory pool before each reception, and then use it directly for receiving, and after receiving the data, the memory block is directly thrown out for processing, so as to avoid the **copy operation**, although it is only a small design, but when transmitting **10w**times**64kb**data, the performance difference is **10 times**.
+# 🌴 TouchSocket at a Glance (Updated & Revised)
 
-#### Data Processing Adapters
+### 🚀 1. A Truly High-Performance IOCP Implementation
 
-I believe that everyone has used other Socket products, so TouchSocket is also designed to learn from the excellent design concept of other products, [data processing adapter](https://touchsocket.net/docs/current/adapterdescription) is one of them, but unlike the design of other products, the adapter of TouchSocket is more powerful and easy to use. and flexible. Not only can it parse packets in advance, but it can also parse data objects, which can be replaced at any time and then take effect immediately. For example, you can use a fixed packet header to preprocess the data, so as to solve the problem of data subcontracting and sticky packet. It can also directly parse the HTTP data protocol, WebSocket data protocol, etc.
+TouchSocket provides a deeply optimized IOCP design.
 
-#### Compatibility and adaptation
+| Implementation                          | Memory Handling                                                                | Performance Impact                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| **Traditional IOCP (Microsoft sample)** | Uses a fixed shared buffer; received data must be **copied** to another buffer | Extra copy → High overhead under load              |
+| **TouchSocket IOCP**                    | Allocates a fresh memory block from the **memory pool** for each receive       | **Zero extra copy** → Significant performance gain |
 
-TouchSocket provides a variety of framework models and is fully compatible with all protocols based on TCP and UDP protocols. For example, TcpService and TcpClient have the same basic functions as Sockets, but they enhance the robustness and concurrency of the framework, and throw the connection and received data in the form of events, so that users can use it more user-friendly.
+In stress tests (100k messages × 64KB), TouchSocket achieved **up to 10× faster throughput** compared to the traditional model.
 
-## 🔗Contact the author
+---
 
-- [Blog Homepage](https://blog.csdn.net/qq_40374647)
-- [Bilibili video](https://space.bilibili.com/94253567)
-- [Source code repository home page](https://gitee.com/RRQM_Home) 
-- QQ group:[234762506](https://jq.qq.com/?_wv=1027&k=gN7UL4fw)
+### 🔧 2. Data Adapter System — The Heart of the Framework
 
+The data-adapter pipeline is one of TouchSocket’s core strengths:
 
-## 👑Functional mapping
+* Parses **headers and payloads**
+* Handles **sticky packets & fragmentation**
+* Converts directly to **data objects**
+* Hot-swappable adapters
+* Built-in templates: fixed header, fixed length, terminator, HTTP, WebSocket, etc.
 
-<p align="center">
-<img src="images/1.png" alt="The name of the image" align=center />
-</p>
+Adapters make protocol development clean, modular, and highly reusable.
 
-## ✨Simple example
+---
 
-The following is just a simple example of how to create an example, please see [Documentation](https://touchsocket.net/) for more details.
+### 🧩 3. Pluggable Extension System
 
-#### TcpService
+TouchSocket’s **Plugins** system allows extending communication behavior across the entire lifecycle:
 
+* Auto reconnection
+* Heartbeat detection
+* SSL validation
+* Logging
+* Authentication
+* Custom data pipelines
+
+All via:
+
+```csharp
+.ConfigurePlugins(a => { ... });
 ```
+
+---
+
+### 🛠 4. Robust TCP/UDP Abstraction
+
+TouchSocket maintains full compatibility with native Socket semantics while improving:
+
+* Stability
+* Concurrency and throughput
+* Connection lifecycle management
+* Exception handling
+* Unified event model (Connected / Received / Closed)
+
+You can migrate existing Socket code with minimal changes.
+
+---
+
+### 📦 5. Unified Client/Server API
+
+Across TCP, UDP, WebSocket, and others, TouchSocket exposes a consistent set of APIs:
+
+```csharp
+client.ConnectAsync(...)
+client.SendAsync(...)
+client.Received += ...
+```
+
+This ensures a low learning curve and fast development.
+
+---
+
+### 🧠 6. High-Efficiency Memory Pool & Span-Based Processing
+
+The framework is optimized with:
+
+* **ByteBlock** reusable high-performance buffers
+* **MemoryPool**
+* **Span<T> / Memory<T>**
+
+Ensuring minimal allocations and low GC pressure during heavy workloads.
+
+---
+
+# ✨ Basic Examples
+
+> The following examples show only the simplest usage. Refer to the documentation for more advanced scenarios.
+
+## TcpService
+
+```csharp
 TcpService service = new TcpService();
-service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端连接
-service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+
+service.Connected = (client, e) => EasyTask.CompletedTask;
+service.Closed = (client, e) => EasyTask.CompletedTask;
+
 service.Received = (client, e) =>
 {
-    //Received information from the client
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"From {client.Id} received message：{mes}");
-    return EasyTask.CompletedTask;
-};
-await service.StartAsync(7789);//Start listening
-```
-
-#### TcpClient
-
-```
-TcpClient tcpClient = new TcpClient();
-tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//Successfully connected to the server
-tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//Disconnect from the server, which is not triggered when the connection is unsuccessful.
-tcpClient.Received = (client, e) =>
-{
-    //Information is received from the server
-    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
-    Console.WriteLine($"Message received: {mes}");
+    string str = e.Memory.Span.ToString(Encoding.UTF8);
+    Console.WriteLine($"Received: {str}");
     return EasyTask.CompletedTask;
 };
 
-await tcpClient.ConnectAsync("127.0.0.1:7789");
-
-//Send a message to the server
-await tcpClient.SendAsync("Hello");
+await service.StartAsync(7789);
 ```
 
-#### TcpClient reconnect
+## TcpClient
 
-In the plug-in configuration of Config, you can use the reconnection plug-in.
+```csharp
+TcpClient client = new TcpClient();
 
-```
-.ConfigurePlugins(a=> 
+client.Connected = (c, e) => EasyTask.CompletedTask;
+client.Closed = (c, e) => EasyTask.CompletedTask;
+
+client.Received = (c, e) =>
 {
-   a.UseReconnection(5, true, 1000);
+    Console.WriteLine(e.Memory.Span.ToString());
+    return EasyTask.CompletedTask;
+};
+
+await client.ConnectAsync("127.0.0.1:7789");
+await client.SendAsync("Hello");
+```
+
+## TcpClient Auto-Reconnection
+
+```csharp
+.ConfigurePlugins(a =>
+{
+    a.UseReconnection<TcpClient>();
 });
 ```
 
-#### FixedHeaderPackageAdapter package
+---
 
-The adapter mainly solves the problem of Tcp sticking and packing, and the data format adopts a simple and efficient "Baotou + Data Body" mode, in which Baotou supports:
+# 🧩 Fixed-Header Package Mode
 
-- Byte mode (1+n), a maximum of 255 bytes of data can be received at one time.
-- Ushort mode (2+n), the maximum number of bytes received at a time is 65535 bytes.
-- Int mode (4+n), maximum reception of 2G data at a time.
+Solves packet fragmentation & merging issues.
 
-The above data headers all use the default side mode (little-end mode) of TouchSocketBitConverter, and users can switch the default side mode according to their needs.
+Supports:
 
-```
+* **Byte = 1 + n** (≤255B)
+* **Ushort = 2 + n** (≤65535B)
+* **Int = 4 + n** (≤2GB)
+
+Endianness is configurable:
+
+```csharp
 TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 ```
 
-#### CustomFixedHeaderDataHandlingAdapter
+---
 
-The user-defined fixed header adapter mainly helps users solve the data frame information with fixed headers. For example, the following data formats only need to implement a few interfaces to complete the parsing, please refer to the API for details.
+# 🧱 Custom Adapters
 
-|1|1|1|**********|
+## CustomFixedHeaderDataHandlingAdapter
 
-#### CustomUnfixedHeaderDataHandlingAdapter
+For fixed-header formats such as:
 
-The user-defined non-fixed header adapter mainly helps users solve the problem of data frame information with unfixed headers. For example, the most typical HTTP packets have a data header separated from the data body by "\r\n", and the data header is not fixed because of the different request information of the requester, and the length of the data body is also explicitly specified by the value of the ContentLength of the data header, so you can consider using CustomUnfixedHeaderDataHandlingAdapter to parse, which can also be achieved through simple development.
+```
+| 1 | 1 | 1 | ********** |
+```
 
-***
+## CustomUnfixedHeaderDataHandlingAdapter
 
-## Thanks
+For variable-header protocols such as HTTP:
 
-Thank you for your support of TouchSocket, if you have any other questions, please submit an Issue, or join the group QQ: [234762506](https://jq.qq.com/?_wv=1027&k=gN7UL4fw) to discuss.
+* Header ends with `\r\n\r\n`
+* Body length from `Content-Length`
 
-Thanks to the support of the following tools
+A small amount of code can build a complete parser.
 
-- [Visual Studio](https://visualstudio.microsoft.com/zh-hans/)
-- [JetBrains](https://www.jetbrains.com/)
-- [Visual Studio Code](https://code.visualstudio.com/)
+---
 
-## Support the author
+# 👑 Feature Overview Diagram
 
-- [Tipping support](https://touchsocket.net/docs/current/donate)
-- [Pro support](https://touchsocket.net/docs/current/enterprise)
+<p align="center">
+  <img src="images/1.png" />
+</p>
 
-## Special Statement
+---
 
-The TouchSocket project has been added to the [dotNET China](https://gitee.com/dotnetchina) organization.
+# 🔗 Contact
 
+* [CSDN Blog](https://blog.csdn.net/qq_40374647)
+* [Bilibili Videos](https://space.bilibili.com/94253567)
+* [Source Repositories](https://gitee.com/RRQM_Home)
+* QQ Group: **234762506**
 
-![dotnetchina](https://images.gitee.com/uploads/images/2021/0324/120117_2da9922c_416720.png "132645_21007ea0_974299.png")
+---
 
+# 🙏 Acknowledgements
+
+Thank you all for supporting TouchSocket.
+If you have questions, feel free to submit an issue or join the QQ group.
+
+Special thanks to:
+
+* Visual Studio
+* JetBrains
+* Visual Studio Code
+
+---
+
+# ❤️ Support the Author
+
+* [Donate](https://touchsocket.net/docs/current/donate)
+* [Pro Edition](https://touchsocket.net/docs/current/enterprise)
+
+---
+
+# 📢 Statement
+
+TouchSocket is a member of the **dotNET China** organization.
+
+<p align="center">
+  <img src="https://images.gitee.com/uploads/images/2021/0324/120117_2da9922c_416720.png" width="300"/>
+</p>
