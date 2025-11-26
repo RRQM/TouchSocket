@@ -107,6 +107,7 @@ public sealed class WebSocketFeatureOptions
     public WebSocketFeatureOptions SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> verifyConnection)
     {
         ThrowHelper.ThrowIfNull(verifyConnection, nameof(verifyConnection));
+        this.VerifyConnection = verifyConnection;
         return this;
     }
 }
