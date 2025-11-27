@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styles from './CoursePromotionModal.module.css';
 
 const CoursePromotionModal: React.FC = () => {
+
+   return null;
   const [isVisible, setIsVisible] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
 
