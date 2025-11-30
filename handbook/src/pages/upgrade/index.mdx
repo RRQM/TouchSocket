@@ -3,12 +3,39 @@ id: upgrade
 title: 历史更新
 ---
 
+
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
 
 
-## v4.0
+## v4.0.1
+
+**更新日期：** 2025.11.30
+
+**更新描述：**
+
+- 兼容性修复升级。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>修复</Tag> `FastBinaryFormatter` 序列化器底层实现bug。 [Issue](https://gitee.com/RRQM_Home/TouchSocket/issues/ID9DBE)
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>修复</Tag> `WebSocketFeatureOptions` SetVerifyConnection方法失效的bug。 [PR](https://github.com/RRQM/TouchSocket/pull/95)
+- &nbsp;<Tag>调整</Tag> `WebSocketFeatureOptions` 的 `SetAutoClose`、`SetAutoPong`、`SetUrl`、`SetVerifyConnection` 等方法不再返回自身实例，链式调用方式已移除，需调整为单独调用。
+
+
+#### TouchSocket.Rpc
+
+- &nbsp;<Tag>移除</Tag> 同步代码生成已废弃：`CodeGeneratorFlag` 中的 `ExtensionSync`、`InstanceSync`、`InterfaceSync` 标记被标记为 `[Obsolete]`，同步代码生成不再支持，推荐全部使用异步模式。
+
+***
+
+## v4.0.0
 
 **更新日期：** 2025.11.23
 
