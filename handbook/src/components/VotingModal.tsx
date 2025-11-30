@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styles from './VotingModal.module.css';
 
 const VotingModal: React.FC = () => {
-  // 暂时禁用该弹窗
-  return null;
   
   // eslint-disable-next-line no-unreachable
   const [isVisible, setIsVisible] = useState(false);
