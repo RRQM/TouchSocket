@@ -36,30 +36,25 @@ public sealed class WebSocketFeatureOptions
     /// 设置是否自动处理Close报文
     /// </summary>
     /// <param name="autoClose">是否自动处理Close报文</param>
-    /// <returns>返回当前配置选项实例，支持链式调用</returns>
-    public WebSocketFeatureOptions SetAutoClose(bool autoClose)
+    public void SetAutoClose(bool autoClose)
     {
         this.AutoClose = autoClose;
-        return this;
     }
 
     /// <summary>
     /// 设置是否自动回应Ping报文
     /// </summary>
     /// <param name="autoPong">是否自动回应Ping报文</param>
-    /// <returns>返回当前配置选项实例，支持链式调用</returns>
-    public WebSocketFeatureOptions SetAutoPong(bool autoPong)
+    public void SetAutoPong(bool autoPong)
     {
         this.AutoPong = autoPong;
-        return this;
     }
 
     /// <summary>
     /// 设置WebSocket连接的URL路径
     /// </summary>
     /// <param name="url">WebSocket连接路径，如果为null或空则表示所有连接都解释为WS</param>
-    /// <returns>返回当前配置选项实例，支持链式调用</returns>
-    public WebSocketFeatureOptions SetUrl(string url = "/ws")
+    public void SetUrl(string url = "/ws")
     {
         if (url.IsNullOrEmpty())
         {
@@ -72,22 +67,15 @@ public sealed class WebSocketFeatureOptions
 
         this.SetVerifyConnection((client, context) =>
         {
-            if (url == "/" || context.Request.UrlEquals(url))
-            {
-                return true;
-            }
-
-            return false;
+            return url == "/" || context.Request.UrlEquals(url);
         });
-        return this;
     }
 
     /// <summary>
     /// 设置验证连接的同步方法
     /// </summary>
     /// <param name="verifyConnection">验证连接的同步委托</param>
-    /// <returns>返回当前配置选项实例，支持链式调用</returns>
-    public WebSocketFeatureOptions SetVerifyConnection(Func<IHttpSessionClient, HttpContext, bool> verifyConnection)
+    public void SetVerifyConnection(Func<IHttpSessionClient, HttpContext, bool> verifyConnection)
     {
         ThrowHelper.ThrowIfNull(verifyConnection, nameof(verifyConnection));
 
@@ -96,18 +84,15 @@ public sealed class WebSocketFeatureOptions
             await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return verifyConnection.Invoke(client, context);
         };
-        return this;
     }
 
     /// <summary>
     /// 设置验证连接的异步方法
     /// </summary>
     /// <param name="verifyConnection">验证连接的异步委托</param>
-    /// <returns>返回当前配置选项实例，支持链式调用</returns>
-    public WebSocketFeatureOptions SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> verifyConnection)
+    public void SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> verifyConnection)
     {
         ThrowHelper.ThrowIfNull(verifyConnection, nameof(verifyConnection));
         this.VerifyConnection = verifyConnection;
-        return this;
     }
 }

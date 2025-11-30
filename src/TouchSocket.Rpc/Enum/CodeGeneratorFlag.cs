@@ -21,6 +21,7 @@ public enum CodeGeneratorFlag
     /// <summary>
     /// 生成扩展同步代码
     /// </summary>
+    [Obsolete("此配置已被弃用，目前已经不再支持同步代码生成", true)]
     ExtensionSync = 1,
 
     /// <summary>
@@ -31,6 +32,7 @@ public enum CodeGeneratorFlag
     /// <summary>
     /// 生成实例类同步代码（源代码生成无效）
     /// </summary>
+    [Obsolete("此配置已被弃用，目前已经不再支持同步代码生成", true)]
     InstanceSync = 4,
 
     /// <summary>
@@ -41,6 +43,7 @@ public enum CodeGeneratorFlag
     /// <summary>
     /// 生成接口同步代码
     /// </summary>
+    [Obsolete("此配置已被弃用，目前已经不再支持同步代码生成", true)]
     InterfaceSync = 16,
 
     /// <summary>

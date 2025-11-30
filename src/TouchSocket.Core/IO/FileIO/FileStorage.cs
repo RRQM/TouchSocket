@@ -12,7 +12,7 @@
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 简化版文件存储器
+/// 简化版文件存储器。
 /// </summary>
 public sealed partial class FileStorage : IDisposable
 {
@@ -21,6 +21,10 @@ public sealed partial class FileStorage : IDisposable
     internal int m_referenceCount;
     private bool m_disposed;
 
+    /// <summary>
+    /// 初始化 <see cref="FileStorage"/> 类的新实例。
+    /// </summary>
+    /// <param name="path">文件路径。</param>
     internal FileStorage(string path)
     {
         this.Path = path;
@@ -28,12 +32,12 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 文件路径
+    /// 获取文件路径。
     /// </summary>
     public string Path { get; }
 
     /// <summary>
-    /// 文件长度
+    /// 获取文件长度。
     /// </summary>
     public long Length
     {
@@ -52,14 +56,25 @@ public sealed partial class FileStorage : IDisposable
         }
     }
 
+    /// <summary>
+    /// 获取一个值，指示是否可以读取文件。
+    /// </summary>
     public bool CanRead => this.m_fileStream.CanRead;
+
+    /// <summary>
+    /// 获取一个值，指示是否可以查找文件位置。
+    /// </summary>
     public bool CanSeek => this.m_fileStream.CanSeek;
+
+    /// <summary>
+    /// 获取一个值，指示是否可以写入文件。
+    /// </summary>
     public bool CanWrite => this.m_fileStream.CanWrite;
 
     /// <summary>
-    /// 设置文件长度
+    /// 设置文件长度。
     /// </summary>
-    /// <param name="length">新长度</param>
+    /// <param name="length">新长度。</param>
     public void SetLength(long length)
     {
         this.m_semaphore.Wait();
@@ -75,7 +90,7 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 刷新缓冲区
+    /// 刷新缓冲区。
     /// </summary>
     public void Flush()
     {
@@ -142,13 +157,13 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 读取数据
+    /// 读取数据。
     /// </summary>
-    /// <param name="position">读取位置</param>
-    /// <param name="buffer">缓冲区</param>
-    /// <param name="offset">缓冲区偏移量</param>
-    /// <param name="count">读取字节数</param>
-    /// <returns>实际读取的字节数</returns>
+    /// <param name="position">读取位置。</param>
+    /// <param name="buffer">缓冲区。</param>
+    /// <param name="offset">缓冲区偏移量。</param>
+    /// <param name="count">读取字节数。</param>
+    /// <returns>实际读取的字节数。</returns>
     public int Read(long position, byte[] buffer, int offset, int count)
     {
         this.m_semaphore.Wait();
@@ -165,12 +180,12 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 写入数据
+    /// 写入数据。
     /// </summary>
-    /// <param name="position">写入位置</param>
-    /// <param name="buffer">数据</param>
-    /// <param name="offset">缓冲区偏移量</param>
-    /// <param name="count">写入字节数</param>
+    /// <param name="position">写入位置。</param>
+    /// <param name="buffer">数据。</param>
+    /// <param name="offset">缓冲区偏移量。</param>
+    /// <param name="count">写入字节数。</param>
     public void Write(long position, byte[] buffer, int offset, int count)
     {
         this.m_semaphore.Wait();
@@ -187,12 +202,12 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 异步读取数据
+    /// 异步读取数据。
     /// </summary>
-    /// <param name="position">读取位置</param>
-    /// <param name="memory">缓冲区</param>
-    /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>实际读取的字节数</returns>
+    /// <param name="position">读取位置。</param>
+    /// <param name="memory">缓冲区。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>实际读取的字节数。</returns>
     public async Task<int> ReadAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
     {
         await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -209,11 +224,11 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 异步写入数据
+    /// 异步写入数据。
     /// </summary>
-    /// <param name="position">写入位置</param>
-    /// <param name="memory">数据</param>
-    /// <param name="cancellationToken">取消令牌</param>
+    /// <param name="position">写入位置。</param>
+    /// <param name="memory">数据。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     public async Task WriteAsync(long position, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -230,9 +245,9 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 异步刷新缓冲区
+    /// 异步刷新缓冲区。
     /// </summary>
-    /// <param name="cancellationToken">取消令牌</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     public async Task FlushAsync(CancellationToken cancellationToken = default)
     {
         await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -247,13 +262,12 @@ public sealed partial class FileStorage : IDisposable
         }
     }
 
-
     /// <summary>
-    /// 读取数据
+    /// 读取数据。
     /// </summary>
-    /// <param name="position">读取位置</param>
-    /// <param name="buffer">缓冲区</param>
-    /// <returns>实际读取的字节数</returns>
+    /// <param name="position">读取位置。</param>
+    /// <param name="buffer">缓冲区。</param>
+    /// <returns>实际读取的字节数。</returns>
     public int Read(long position, Span<byte> buffer)
     {
         this.m_semaphore.Wait();
@@ -270,10 +284,10 @@ public sealed partial class FileStorage : IDisposable
     }
 
     /// <summary>
-    /// 写入数据
+    /// 写入数据。
     /// </summary>
-    /// <param name="position">写入位置</param>
-    /// <param name="buffer">数据</param>
+    /// <param name="position">写入位置。</param>
+    /// <param name="buffer">数据。</param>
     public void Write(long position, ReadOnlySpan<byte> buffer)
     {
         this.m_semaphore.Wait();

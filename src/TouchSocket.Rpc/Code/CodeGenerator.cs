@@ -341,15 +341,15 @@ public static class CodeGenerator
             rpcAttribute.SetClassCodeGenerator(classCodeGenerator);
             if (first)
             {
-                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
+                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync))
                 {
                     serverCellCode.IncludeInterface = true;
                 }
-                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
+                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync))
                 {
                     serverCellCode.IncludeInstance = true;
                 }
-                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
+                if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync))
                 {
                     serverCellCode.IncludeExtension = true;
                 }

@@ -44,6 +44,7 @@ public struct ValueByteBlock : IByteBlock
     public ValueByteBlock(Memory<byte> memory)
     {
         this.m_memory = memory;
+        this.m_length = memory.Length;
     }
 
     /// <summary>

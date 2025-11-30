@@ -15,6 +15,9 @@ using System.Reflection;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 表示一个字段的封装。
+/// </summary>
 public sealed class Field
 {
     /// <summary>
@@ -30,7 +33,7 @@ public sealed class Field
     /// <summary>
     /// 字段
     /// </summary>
-    /// <param name="fieldInfo">字段信息</param>
+    /// <param name="fieldInfo">字段信息。</param>
     public Field(FieldInfo fieldInfo)
     {
         this.Info = fieldInfo;
@@ -44,37 +47,37 @@ public sealed class Field
     }
 
     /// <summary>
-    /// 获取字段信息
+    /// 获取字段信息。
     /// </summary>
     public FieldInfo Info { get; }
 
     /// <summary>
-    /// 从类型的字段获取字段
+    /// 从类型的字段获取字段。
     /// </summary>
-    /// <param name="type">类型</param>
-    /// <returns></returns>
+    /// <param name="type">类型。</param>
+    /// <returns>字段数组。</returns>
     public static Field[] GetFields([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type type)
     {
         return type.GetFields().Select(p => new Field(p)).ToArray();
     }
 
     /// <summary>
-    /// 获取字段的值
+    /// 获取字段的值。
     /// </summary>
-    /// <param name="instance">实例</param>
-    /// <exception cref="NotSupportedException"></exception>
-    /// <returns></returns>
+    /// <param name="instance">实例。</param>
+    /// <returns>字段的值。</returns>
+    /// <exception cref="NotSupportedException">当字段不支持获取值时抛出。</exception>
     public object GetValue(object instance)
     {
         return this.m_geter == null ? throw new NotSupportedException() : this.m_geter.Invoke(instance);
     }
 
     /// <summary>
-    /// 设置字段的值
+    /// 设置字段的值。
     /// </summary>
-    /// <param name="instance">实例</param>
-    /// <param name="value">值</param>
-    /// <exception cref="NotSupportedException"></exception>
+    /// <param name="instance">实例。</param>
+    /// <param name="value">值。</param>
+    /// <exception cref="NotSupportedException">当字段不支持设置值时抛出。</exception>
     public void SetValue(object instance, object value)
     {
         if (this.m_seter == null)

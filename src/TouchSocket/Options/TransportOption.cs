@@ -24,9 +24,11 @@ public class TransportOption
     /// </summary>
     public TransportOption()
     {
-        this.ReceivePipeOptions = CreateDefaultPipeOptions();
-        this.SendPipeOptions = CreateDefaultPipeOptions();
+        this.ReceivePipeOptions = CreateDefaultReadPipeOptions();
+        this.SendPipeOptions = CreateDefaultWritePipeOptions();
     }
+
+    public bool BufferOnDemand { get; set; } = true;
 
     /// <summary>
     /// 获取或设置最大缓冲区大小（字节）。
@@ -48,25 +50,8 @@ public class TransportOption
     /// </summary>
     public PipeOptions SendPipeOptions { get; set; }
 
-    public bool BufferOnDemand { get; set; } = true;
-
     /// <summary>
-    /// 创建默认的 <see cref="PipeOptions"/>。
-    /// </summary>
-    public static PipeOptions CreateDefaultPipeOptions()
-    {
-        return new PipeOptions(
-                pool: null,
-                readerScheduler: null,
-                writerScheduler: null,
-                pauseWriterThreshold: -1,
-                resumeWriterThreshold: -1,
-                minimumSegmentSize: -1,
-                useSynchronizationContext: true);
-    }
-
-    /// <summary>
-    /// 创建注重调度的 <see cref="PipeOptions"/>，适合需要主线程调度的场景。
+    /// 创建注重调度的 <see cref="PipeOptions"/>。
     /// </summary>
     public static PipeOptions CreateSchedulerOptimizedPipeOptions()
     {
@@ -74,9 +59,33 @@ public class TransportOption
             pool: null,
             readerScheduler: PipeScheduler.Inline,
             writerScheduler: PipeScheduler.Inline,
-            pauseWriterThreshold: -1,
-            resumeWriterThreshold: -1,
+            pauseWriterThreshold: 1024 * 64,
+            resumeWriterThreshold: 1024 * 32,
             minimumSegmentSize: -1,
             useSynchronizationContext: false);
+    }
+
+    private static PipeOptions CreateDefaultReadPipeOptions()
+    {
+        return new PipeOptions(
+                pool: null,
+                readerScheduler: PipeScheduler.ThreadPool,
+                writerScheduler: PipeScheduler.ThreadPool,
+                pauseWriterThreshold: 1024 * 1024,
+                resumeWriterThreshold: 1024 * 512,
+                minimumSegmentSize: -1,
+                useSynchronizationContext: true);
+    }
+
+    private static PipeOptions CreateDefaultWritePipeOptions()
+    {
+        return new PipeOptions(
+                pool: null,
+                readerScheduler: PipeScheduler.ThreadPool,
+                writerScheduler: PipeScheduler.ThreadPool,
+                pauseWriterThreshold: 64 * 1024,
+                resumeWriterThreshold: 32 * 1024,
+                minimumSegmentSize: -1,
+                useSynchronizationContext: true);
     }
 }

@@ -44,8 +44,8 @@ public abstract class RpcAttribute : Attribute
     /// 生成代码
     /// </summary>
     public CodeGeneratorFlag GeneratorFlag { get; set; } =
-        CodeGeneratorFlag.InstanceSync | CodeGeneratorFlag.InstanceAsync | CodeGeneratorFlag.ExtensionSync | CodeGeneratorFlag.ExtensionAsync
-        | CodeGeneratorFlag.InterfaceSync | CodeGeneratorFlag.InterfaceAsync;
+        CodeGeneratorFlag.InstanceAsync | CodeGeneratorFlag.ExtensionAsync
+         | CodeGeneratorFlag.InterfaceAsync;
 
     /// <summary>
     /// 生成泛型方法的约束
@@ -85,11 +85,7 @@ public abstract class RpcAttribute : Attribute
     public virtual string GetDescription(RpcMethod rpcMethod)
     {
         var description = rpcMethod.GetDescription();
-        if (description.HasValue())
-        {
-            return this.ReplacePatterns(description);
-        }
-        return "无注释信息";
+        return description.HasValue() ? this.ReplacePatterns(description) : "无注释信息";
     }
 
     /// <summary>
@@ -105,56 +101,56 @@ public abstract class RpcAttribute : Attribute
 
         var parametersStr = this.GetParameters(rpcMethod, out var parameters);
         var InterfaceTypes = this.GetGenericConstraintTypes();
-        if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
-        {
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{description}");
-            codeString.AppendLine("///</summary>");
-            foreach (var item in this.Exceptions)
-            {
-                codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-            }
+        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
+        //{
+        //    codeString.AppendLine("///<summary>");
+        //    codeString.AppendLine($"///{description}");
+        //    codeString.AppendLine("///</summary>");
+        //    foreach (var item in this.Exceptions)
+        //    {
+        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+        //    }
 
-            codeString.AppendLine("[AsyncToSyncWarning]");
-            codeString.Append("public static ");
-            codeString.Append(this.GetReturn(rpcMethod, false));
-            codeString.Append(' ');
-            codeString.Append(this.GetMethodName(rpcMethod, false));
-            codeString.Append("<TClient>(");//方法参数
+        //    codeString.AppendLine("[AsyncToSyncWarning]");
+        //    codeString.Append("public static ");
+        //    codeString.Append(this.GetReturn(rpcMethod, false));
+        //    codeString.Append(' ');
+        //    codeString.Append(this.GetMethodName(rpcMethod, false));
+        //    codeString.Append("<TClient>(");//方法参数
 
-            codeString.Append($"this TClient client");
+        //    codeString.Append($"this TClient client");
 
-            codeString.Append(',');
-            for (var i = 0; i < parametersStr.Count; i++)
-            {
-                if (i > 0)
-                {
-                    codeString.Append(',');
-                }
+        //    codeString.Append(',');
+        //    for (var i = 0; i < parametersStr.Count; i++)
+        //    {
+        //        if (i > 0)
+        //        {
+        //            codeString.Append(',');
+        //        }
 
-                codeString.Append(parametersStr[i]);
-            }
-            if (parametersStr.Count > 0)
-            {
-                codeString.Append(',');
-            }
-            codeString.Append(this.GetInvokeOption());
-            codeString.AppendLine(") where TClient:");
+        //        codeString.Append(parametersStr[i]);
+        //    }
+        //    if (parametersStr.Count > 0)
+        //    {
+        //        codeString.Append(',');
+        //    }
+        //    codeString.Append(this.GetInvokeOption());
+        //    codeString.AppendLine(") where TClient:");
 
-            for (var i = 0; i < InterfaceTypes.Length; i++)
-            {
-                if (i > 0)
-                {
-                    codeString.Append(',');
-                }
+        //    for (var i = 0; i < InterfaceTypes.Length; i++)
+        //    {
+        //        if (i > 0)
+        //        {
+        //            codeString.Append(',');
+        //        }
 
-                codeString.Append(InterfaceTypes[i].FullName);
-            }
+        //        codeString.Append(InterfaceTypes[i].FullName);
+        //    }
 
-            codeString.AppendLine("{");//方法开始
-            codeString.AppendLine(this.GetExtensionInstanceMethod(rpcMethod, parametersStr, parameters, false));
-            codeString.AppendLine("}");
-        }
+        //    codeString.AppendLine("{");//方法开始
+        //    codeString.AppendLine(this.GetExtensionInstanceMethod(rpcMethod, parametersStr, parameters, false));
+        //    codeString.AppendLine("}");
+        //}
 
         //以下生成异步
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync))
@@ -232,43 +228,43 @@ public abstract class RpcAttribute : Attribute
 
         var description = this.GetDescription(rpcMethod);
         var parametersStr = this.GetParameters(rpcMethod, out var parameters);
-        if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
-        {
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{description}");
-            codeString.AppendLine("///</summary>");
-            foreach (var item in this.Exceptions)
-            {
-                codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-            }
-            codeString.AppendLine("[AsyncToSyncWarning]");
-            codeString.Append("public ");
-            codeString.Append(this.GetReturn(rpcMethod, false));
-            codeString.Append(' ');
-            codeString.Append(this.GetMethodName(rpcMethod, false));
-            codeString.Append('(');//方法参数
+        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
+        //{
+        //    codeString.AppendLine("///<summary>");
+        //    codeString.AppendLine($"///{description}");
+        //    codeString.AppendLine("///</summary>");
+        //    foreach (var item in this.Exceptions)
+        //    {
+        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+        //    }
+        //    codeString.AppendLine("[AsyncToSyncWarning]");
+        //    codeString.Append("public ");
+        //    codeString.Append(this.GetReturn(rpcMethod, false));
+        //    codeString.Append(' ');
+        //    codeString.Append(this.GetMethodName(rpcMethod, false));
+        //    codeString.Append('(');//方法参数
 
-            for (var i = 0; i < parametersStr.Count; i++)
-            {
-                if (i > 0)
-                {
-                    codeString.Append(',');
-                }
-                codeString.Append(parametersStr[i]);
-            }
-            if (parametersStr.Count > 0)
-            {
-                codeString.Append(',');
-            }
-            codeString.Append(this.GetInvokeOption());
-            codeString.AppendLine(")");
+        //    for (var i = 0; i < parametersStr.Count; i++)
+        //    {
+        //        if (i > 0)
+        //        {
+        //            codeString.Append(',');
+        //        }
+        //        codeString.Append(parametersStr[i]);
+        //    }
+        //    if (parametersStr.Count > 0)
+        //    {
+        //        codeString.Append(',');
+        //    }
+        //    codeString.Append(this.GetInvokeOption());
+        //    codeString.AppendLine(")");
 
-            codeString.AppendLine("{");//方法开始
+        //    codeString.AppendLine("{");//方法开始
 
-            codeString.AppendLine(this.GetInstanceMethod(rpcMethod, parametersStr, parameters, false));
+        //    codeString.AppendLine(this.GetInstanceMethod(rpcMethod, parametersStr, parameters, false));
 
-            codeString.AppendLine("}");
-        }
+        //    codeString.AppendLine("}");
+        //}
 
         //以下生成异步
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync))
@@ -324,36 +320,36 @@ public abstract class RpcAttribute : Attribute
         var codeString = new StringBuilder();
         var description = this.GetDescription(rpcMethod);
         var parameters = this.GetParameters(rpcMethod, out _);
-        if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
-        {
-            codeString.AppendLine("///<summary>");
-            codeString.AppendLine($"///{description}");
-            codeString.AppendLine("///</summary>");
-            foreach (var item in this.Exceptions)
-            {
-                codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-            }
+        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
+        //{
+        //    codeString.AppendLine("///<summary>");
+        //    codeString.AppendLine($"///{description}");
+        //    codeString.AppendLine("///</summary>");
+        //    foreach (var item in this.Exceptions)
+        //    {
+        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
+        //    }
 
-            codeString.AppendLine("[AsyncToSyncWarning]");
-            codeString.Append(this.GetReturn(rpcMethod, false));
-            codeString.Append(' ');
-            codeString.Append(this.GetMethodName(rpcMethod, false));
-            codeString.Append('(');//方法参数
-            for (var i = 0; i < parameters.Count; i++)
-            {
-                if (i > 0)
-                {
-                    codeString.Append(',');
-                }
-                codeString.Append(parameters[i]);
-            }
-            if (parameters.Count > 0)
-            {
-                codeString.Append(',');
-            }
-            codeString.Append(this.GetInvokeOption());
-            codeString.AppendLine(");");
-        }
+        //    codeString.AppendLine("[AsyncToSyncWarning]");
+        //    codeString.Append(this.GetReturn(rpcMethod, false));
+        //    codeString.Append(' ');
+        //    codeString.Append(this.GetMethodName(rpcMethod, false));
+        //    codeString.Append('(');//方法参数
+        //    for (var i = 0; i < parameters.Count; i++)
+        //    {
+        //        if (i > 0)
+        //        {
+        //            codeString.Append(',');
+        //        }
+        //        codeString.Append(parameters[i]);
+        //    }
+        //    if (parameters.Count > 0)
+        //    {
+        //        codeString.Append(',');
+        //    }
+        //    codeString.Append(this.GetInvokeOption());
+        //    codeString.AppendLine(");");
+        //}
 
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync))
         {
@@ -396,14 +392,9 @@ public abstract class RpcAttribute : Attribute
     /// <returns></returns>
     public virtual string GetInvokeKey(RpcMethod rpcMethod)
     {
-        if (this.MethodInvoke)
-        {
-            return this.GetMethodName(rpcMethod, false);
-        }
-        else
-        {
-            return !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{rpcMethod.ServerFromType.FullName}.{rpcMethod.Name}".ToLower();
-        }
+        return this.MethodInvoke
+            ? this.GetMethodName(rpcMethod, false)
+            : !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{rpcMethod.ServerFromType.FullName}.{rpcMethod.Name}".ToLower();
     }
 
     /// <summary>
@@ -424,32 +415,15 @@ public abstract class RpcAttribute : Attribute
     public virtual string GetMethodName(RpcMethod rpcMethod, bool isAsync)
     {
         var name = this.MethodName;
-        if (name.HasValue())
-        {
-            name = this.ReplacePatterns(name).Format(rpcMethod.Name);
-        }
-        else
-        {
-            name = rpcMethod.Name;
-        }
+        name = name.HasValue() ? this.ReplacePatterns(name).Format(rpcMethod.Name) : rpcMethod.Name;
 
         if (isAsync)
         {
-            if (name.EndsWith("Async"))
-            {
-                return name;
-            }
-
-            return $"{name}Async";
+            return name.EndsWith("Async") ? name : $"{name}Async";
         }
         else
         {
-            if (name.EndsWith("Async"))
-            {
-                return name.RemoveLastChars(5);
-            }
-
-            return name;
+            return name.EndsWith("Async") ? name.RemoveLastChars(5) : name;
         }
     }
 

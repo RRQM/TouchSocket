@@ -22,7 +22,7 @@ using System.Runtime.InteropServices;
 namespace TouchSocket.Core;
 
 /// <summary>
-/// 为System提供扩展。
+/// 为 <see cref="System"/> 提供扩展方法。
 /// </summary>
 public static class SystemExtension
 {
@@ -85,11 +85,11 @@ public static class SystemExtension
 
 
     /// <summary>
-    /// 获取枚举成员上绑定的指定类型的自定义属性
+    /// 获取枚举成员上绑定的指定类型的自定义属性。
     /// </summary>
-    /// <param name="enumObj">枚举对象</param>
-    /// <typeparam name="T">要获取的属性类型</typeparam>
-    /// <returns>指定类型的自定义属性</returns>
+    /// <typeparam name="T">要获取的属性类型。</typeparam>
+    /// <param name="enumObj">枚举对象。</param>
+    /// <returns>指定类型的自定义属性。</returns>
     public static T GetAttribute<T>(this Enum enumObj) where T : Attribute
     {
         // 获取枚举对象的类型
@@ -110,13 +110,12 @@ public static class SystemExtension
     #region SetBit
 
     /// <summary>
-    /// 对于给定的无符号长整型数值，设置指定索引位置的位值为指定的布尔值。
+    /// 设置无符号长整型数值的指定位。
     /// </summary>
     /// <param name="value">原始数值。</param>
-    /// <param name="index">位索引，范围为0到63。</param>
-    /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
+    /// <param name="index">位索引。</param>
+    /// <param name="bitvalue">要设置的位值。</param>
     /// <returns>修改后的数值。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
     public static ulong SetBit(this ulong value, int index, bool bitvalue)
     {
         var accessor = new BitAccessor<ulong>(ref value);
@@ -173,7 +172,7 @@ public static class SystemExtension
 
     #region GetBit
     /// <summary>
-    /// 获取无符号长整型数值中的指定位置的位是否为1。
+    /// 获取无符号长整型数值的指定位。
     /// </summary>
     /// <param name="value">要检查的无符号长整型数值。</param>
     /// <param name="index">要检查的位的位置，从0到63。</param>
@@ -228,13 +227,26 @@ public static class SystemExtension
     #region Byte[]
 
     /// <summary>
-    /// 字节数组转16进制字符
+    /// 将字节数组转换为十六进制字符串。
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="split"></param>
-    /// <returns></returns>
+    /// <param name="buffer">字节数组。</param>
+    /// <param name="split">分隔符。</param>
+    /// <returns>十六进制字符串。</returns>
+    public static string ByBytesToHexString(this byte[] buffer, string split = default)
+    {
+        return string.IsNullOrEmpty(split)
+            ? BitConverter.ToString(buffer).Replace("-", string.Empty)
+            : BitConverter.ToString(buffer).Replace("-", split);
+    }
+
+    /// <summary>
+    /// 将字节缓冲区转换为十六进制字符串。
+    /// </summary>
+    /// <param name="buffer">要转换的字节缓冲区。</param>
+    /// <param name="offset">缓冲区的起始索引。</param>
+    /// <param name="length">要转换的字节数。</param>
+    /// <param name="split">可选参数，用于指定分隔符，默认为空。</param>
+    /// <returns>转换后的十六进制字符串。</returns>
     public static string ByBytesToHexString(this byte[] buffer, int offset, int length, string split = default)
     {
         return string.IsNullOrEmpty(split)
@@ -242,17 +254,6 @@ public static class SystemExtension
             : BitConverter.ToString(buffer, offset, length).Replace("-", split);
     }
 
-
-    /// <summary>
-    /// 将字节缓冲区转换为十六进制字符串。
-    /// </summary>
-    /// <param name="buffer">要转换的字节缓冲区。</param>
-    /// <param name="split">可选参数，用于指定分隔符，默认为空。</param>
-    /// <returns>转换后的十六进制字符串。</returns>
-    public static string ByBytesToHexString(this byte[] buffer, string split = default)
-    {
-        return ByBytesToHexString(buffer, 0, buffer.Length, split);
-    }
     /// <summary>
     /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
     /// <para>如果目标数组为<see langword="null"/>或长度为0，则直接返回offset的值</para>
@@ -1000,6 +1001,12 @@ public static class SystemExtension
         }
     }
 
+    /// <summary>
+    /// 异步读取流中的所有字节。
+    /// </summary>
+    /// <param name="stream">流。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>字节数组。</returns>
     public static async Task<byte[]> ReadAllToByteArrayAsync(this Stream stream, CancellationToken cancellationToken)
     {
         using (var memoryStream = new MemoryStream())

@@ -17,6 +17,11 @@ public sealed class MqttClientActor : MqttActor
     private TaskCompletionSource<MqttConnAckMessage> m_waitForConnect;
     private readonly WaitDataAsync<MqttPingRespMessage> m_waitForPing = new();
 
+    /// <summary>
+    /// 异步断开连接。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>任务。</returns>
     public async Task DisconnectAsync(CancellationToken cancellationToken)
     {
         if (!this.Online)
@@ -36,6 +41,11 @@ public sealed class MqttClientActor : MqttActor
         }
     }
 
+    /// <summary>
+    /// 异步发送PING消息。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>操作结果。</returns>
     public async ValueTask<Result> PingAsync(CancellationToken cancellationToken)
     {
         var contentForAck = new MqttPingReqMessage();
@@ -54,8 +64,12 @@ public sealed class MqttClientActor : MqttActor
         };
     }
 
-    #region 连接
-
+    /// <summary>
+    /// 异步连接。
+    /// </summary>
+    /// <param name="message">连接消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>连接确认消息。</returns>
     public async Task<MqttConnAckMessage> ConnectAsync(MqttConnectMessage message, CancellationToken cancellationToken)
     {
         this.m_waitForConnect = new TaskCompletionSource<MqttConnAckMessage>();
@@ -66,32 +80,35 @@ public sealed class MqttClientActor : MqttActor
         return connAckMessage;
     }
 
-    #endregion 连接
-
     #region 重写
 
+    /// <inheritdoc/>
     protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message, CancellationToken cancellationToken)
     {
         this.m_waitForConnect?.SetResult(message);
         return EasyTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
     protected override Task InputMqttConnectMessageAsync(MqttConnectMessage message, CancellationToken cancellationToken)
     {
         throw ThrowHelper.CreateNotSupportedException($"遇到无法处理的数据报文,Message={message}");
     }
 
+    /// <inheritdoc/>
     protected override Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken)
     {
         this.m_waitForPing.Set(message);
         return EasyTask.CompletedTask;
     }
 
+    /// <inheritdoc/>
     protected override Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message, CancellationToken cancellationToken)
     {
         throw ThrowHelper.CreateNotSupportedException($"遇到无法处理的数据报文,Message={message}");
     }
 
+    /// <inheritdoc/>
     protected override Task InputMqttUnsubscribeMessageAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken)
     {
         throw ThrowHelper.CreateNotSupportedException($"遇到无法处理的数据报文,Message={message}");
@@ -99,6 +116,12 @@ public sealed class MqttClientActor : MqttActor
 
     #endregion 重写
 
+    /// <summary>
+    /// 异步订阅。
+    /// </summary>
+    /// <param name="message">订阅消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>订阅确认消息。</returns>
     public async Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken cancellationToken = default)
     {
         using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))
@@ -112,6 +135,12 @@ public sealed class MqttClientActor : MqttActor
         }
     }
 
+    /// <summary>
+    /// 异步取消订阅。
+    /// </summary>
+    /// <param name="message">取消订阅消息。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>取消订阅确认消息。</returns>
     public async Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken = default)
     {
         using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))

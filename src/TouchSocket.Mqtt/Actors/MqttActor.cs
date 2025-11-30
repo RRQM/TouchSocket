@@ -14,6 +14,7 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <inheritdoc/>
 public abstract class MqttActor : DisposableObject, IOnlineClient
 {
     #region 字段
@@ -24,11 +25,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #endregion 字段
 
-    public MqttActor()
-    {
-
-    }
-
+    /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (this.DisposedValue)
@@ -44,6 +41,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
+    /// <inheritdoc/>
     protected virtual Task PublishMessageArrivedAsync(MqttArrivedMessage message)
     {
         if (this.MessageArrived != null)
@@ -59,18 +57,23 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #region 属性
 
+    /// <inheritdoc/>
     public string Id { get; protected set; }
 
+    /// <inheritdoc/>
     public bool Online { get; protected set; }
 
+    /// <inheritdoc/>
     public CancellationTokenSource TokenSource => this.m_tokenSource;
 
+    /// <inheritdoc/>
     public WaitHandlePool<MqttIdentifierMessage> WaitHandlePool => this.m_waitHandlePool;
 
     #endregion 属性
 
     #region Publish
 
+    /// <inheritdoc/>
     public Task PublishAsync(MqttPublishMessage message, CancellationToken cancellationToken)
     {
         switch (message.QosLevel)
@@ -137,6 +140,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #region InputMqttMessage
 
+    /// <inheritdoc/>
     public async Task InputMqttMessageAsync(MqttMessage mqttMessage, CancellationToken cancellationToken)
     {
         switch (mqttMessage)
@@ -385,17 +389,24 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
     #region 委托
 
+    /// <inheritdoc/>
     public Func<MqttActor, MqttClosingEventArgs, Task> Closing { get; set; }
+    /// <inheritdoc/>
     public Func<MqttActor, MqttConnectedEventArgs, Task> Connected { get; set; }
+    /// <inheritdoc/>
     public Func<MqttActor, MqttConnectingEventArgs, Task> Connecting { get; set; }
+    /// <inheritdoc/>
     public Func<MqttActor, MqttReceivedEventArgs, Task> MessageArrived { get; set; }
+    /// <inheritdoc/>
     public Func<MqttActor, MqttMessage, CancellationToken, Task> OutputSendAsync { get; set; }
+    /// <inheritdoc/>
     public MqttProtocolVersion Version { get; protected set; }
 
     #endregion 委托
 
     #region 委托方法
 
+    /// <inheritdoc/>
     protected async Task ProtectedMqttOnClosing(MqttDisconnectMessage message)
     {
         if (this.Closing != null)
@@ -404,6 +415,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
+    /// <inheritdoc/>
     protected async Task ProtectedMqttOnConnected(MqttConnectedEventArgs e)
     {
         if (this.Connected != null)
@@ -412,6 +424,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
+    /// <inheritdoc/>
     protected async Task ProtectedMqttOnConnecting(MqttConnectingEventArgs e)
     {
         if (this.Connecting != null)
@@ -420,6 +433,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
     }
 
+    /// <inheritdoc/>
     protected Task ProtectedOutputSendAsync(MqttMessage message, CancellationToken cancellationToken)
     {
         if (message.MessageType == MqttMessageType.Connect)

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -133,11 +134,11 @@ public static class FastBinaryFormatter
     [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。如果已使用源生成上下文，可以忽略此警告。")]
     public static byte[] SerializeToBytes<[DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] T>(in T graph, FastSerializerContext serializerContext = null)
     {
-        var byteBlock = new ValueByteBlock(1024 * 64);
+        var byteBlock = new SegmentedBytesWriter();
         try
         {
             Serialize(ref byteBlock, graph, serializerContext);
-            return byteBlock.ToArray();
+            return byteBlock.Sequence.ToArray();
         }
         finally
         {
@@ -339,8 +340,8 @@ public static class FastBinaryFormatter
     [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。如果已使用源生成上下文，可以忽略此警告。")]
     public static T Deserialize<[DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] T>(byte[] bytes, FastSerializerContext serializerContext = null)
     {
-        var byteBlock = new ValueByteBlock(bytes);
-        return Deserialize<ValueByteBlock, T>(ref byteBlock, serializerContext);
+        var reader = new BytesReader(bytes);
+        return Deserialize<BytesReader, T>(ref reader, serializerContext);
     }
 
     /// <summary>
@@ -406,11 +407,9 @@ public static class FastBinaryFormatter
         // 复杂类型：先读体长度
         var len = ReaderExtension.ReadValue<TReader, int>(ref reader);
         var serializeObj = serializerContext.GetSerializeObject(type);
-        if (serializeObj.Converter != null)
-        {
-            return serializeObj.Converter.Read(ref reader, type);
-        }
-        return DeserializeClass(type, serializeObj, ref reader, len, serializerContext);
+        return serializeObj.Converter != null
+            ? serializeObj.Converter.Read(ref reader, type)
+            : DeserializeClass(type, serializeObj, ref reader, len, serializerContext);
     }
 
     [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "数组元素类型已通过DynamicallyAccessedMembers标记保证存在")]

@@ -13,10 +13,14 @@
 namespace TouchSocket.Core;
 
 /// <summary>
-/// Udp数据处理适配器测试
+/// Udp数据处理适配器测试。
 /// </summary>
 public class UdpDataAdapterTester : MultithreadingDataAdapterTester
 {
+    /// <summary>
+    /// 初始化 <see cref="UdpDataAdapterTester"/> 类的新实例。
+    /// </summary>
+    /// <param name="multiThread">多线程数量。</param>
     protected UdpDataAdapterTester(int multiThread) : base(multiThread)
     {
     }

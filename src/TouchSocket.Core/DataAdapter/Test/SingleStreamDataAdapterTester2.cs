@@ -16,8 +16,10 @@ using System.IO.Pipelines;
 namespace TouchSocket.Core;
 
 /// <summary>
-///单线程状况的流式数据处理适配器测试
+/// 单线程状况的流式数据处理适配器测试。
 /// </summary>
+/// <typeparam name="TAdapter">自定义数据处理适配器类型。</typeparam>
+/// <typeparam name="TRequest">请求信息类型。</typeparam>
 public class SingleStreamDataAdapterTester<TAdapter, TRequest>
     where TAdapter : CustomDataHandlingAdapter<TRequest>
     where TRequest : class, IRequestInfo
@@ -32,12 +34,23 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
     /// <summary>
     /// Tcp数据处理适配器测试
     /// </summary>
+    /// <param name="adapter">自定义数据处理适配器实例。</param>
+    /// <param name="receivedCallBack">接收回调委托。</param>
     public SingleStreamDataAdapterTester(TAdapter adapter, Action<TRequest> receivedCallBack = default)
     {
         this.m_adapter = adapter;
         this.m_receivedCallBack = receivedCallBack;
     }
 
+    /// <summary>
+    /// 异步运行测试。
+    /// </summary>
+    /// <param name="memory">要发送的数据内存块。</param>
+    /// <param name="testCount">测试发送次数。</param>
+    /// <param name="expectedCount">预期接收次数。</param>
+    /// <param name="bufferLength">每次写入的缓冲区长度。</param>
+    /// <param name="cancellationToken">取消操作的令牌。</param>
+    /// <returns>返回测试所用的时间。</returns>
     public async Task<TimeSpan> RunAsync(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int bufferLength, CancellationToken cancellationToken)
     {
         this.m_count = 0;

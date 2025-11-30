@@ -19,6 +19,7 @@ namespace TouchSocket.Core;
 /// </summary>
 /// <typeparam name="TState"></typeparam>
 [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+[RequiresDynamicCode("XML serializer relies on dynamic code generation which is not available with Ahead of Time compilation")]
 public class XmlStringToClassSerializerFormatter<TState> : ISerializerFormatter<string, TState>
 {
     /// <inheritdoc/>
