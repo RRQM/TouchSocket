@@ -357,33 +357,28 @@ module.exports =
         },
         {
           "type": "doc",
-          "id": "generateproxysourcegeneratordemo",
-          "label": "14.4 源生成代理推荐写法"
-        },
-        {
-          "type": "doc",
           "id": "rpcactionfilter",
-          "label": "14.5 Rpc服务AOP"
+          "label": "14.4 Rpc服务AOP"
         },
         {
           "type": "doc",
           "id": "rpcallcontext",
-          "label": "14.6 调用上下文"
+          "label": "14.5 调用上下文"
         },
         {
           "type": "doc",
           "id": "rpcratelimiting",
-          "label": "14.7 Rpc访问速率限制"
+          "label": "14.6 Rpc访问速率限制"
         },
         {
           "type": "doc",
           "id": "rpcdispatcher",
-          "label": "14.8 Rpc执行调度器"
+          "label": "14.7 Rpc执行调度器"
         },
         {
           "type": "doc",
           "id": "rpcauthorization",
-          "label": "14.9 Rpc鉴权授权策略"
+          "label": "14.8 Rpc鉴权授权策略"
         }
       ]
     },
