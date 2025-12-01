@@ -36,10 +36,10 @@ public class Startup
     {
         services.AddTcpService(config =>
         {
-            config.SetListenIPHosts(7789)
+            config.SetListenIPHosts("tcp://127.0.0.1:7789")
                .ConfigurePlugins(a =>
                {
-                   a.Add<MyTcpPlugin>();//�˲���Ϳ��Դ�����������
+                   a.Add<MyTcpPlugin>();//插件
                });
         });
 

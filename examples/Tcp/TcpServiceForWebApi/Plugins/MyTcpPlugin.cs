@@ -17,7 +17,7 @@ using TouchSocket.Sockets;
 
 namespace TcpServiceForWebApi.Plugins;
 
-public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin
+public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
 {
     private readonly ILogger<MyTcpPlugin> m_logger;
 
@@ -29,6 +29,12 @@ public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin
     public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
     {
         this.m_logger.LogInformation("客户端连接");
+        await e.InvokeNext();
+    }
+
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        this.m_logger.LogInformation($"收到数据：{e.Memory.Span.ToUtf8String()}");
         await e.InvokeNext();
     }
 }
