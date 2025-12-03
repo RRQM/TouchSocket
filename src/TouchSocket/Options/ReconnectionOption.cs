@@ -117,6 +117,9 @@ public class ReconnectionOption<TClient>
 
             while (this.MaxRetryCount < 0 || attempts < this.MaxRetryCount)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
                 if (client.PauseReconnection)
                 {
                     if (this.LogReconnection)
@@ -147,6 +150,9 @@ public class ReconnectionOption<TClient>
                 }
                 catch (Exception ex)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
                     this.OnFailed?.Invoke(client, attempts, ex);
 
                     if (this.LogReconnection)
