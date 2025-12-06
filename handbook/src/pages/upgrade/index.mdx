@@ -9,6 +9,48 @@ import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
 
 
+## v4.0.2
+
+**更新日期：** 2025.12.6
+
+**更新描述：**
+
+- 兼容性修复升级。
+- 性能优化与问题修复升级。
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>优化</Tag> `ConsoleAction` 移除帮助信息排序逻辑,保持原始顺序。
+- &nbsp;<Tag>新增</Tag> `StringPool` 字符串池类,用于高效管理和复用字符串,减少内存分配。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>优化</Tag> `Http` 解析HTTP头部性能,使用栈分配优化小数据解析。
+- &nbsp;<Tag>优化</Tag> `HttpClientBase` 移除不必要的 `TryComputeLength` 调用。
+- &nbsp;<Tag>调整</Tag> `HttpContent` 移除 `TryComputeLength` 方法,简化内容长度处理逻辑。
+- &nbsp;<Tag>调整</Tag> `ReadonlyMemoryHttpContent` 预缓存长度字符串,优化性能。
+
+#### TouchSocket
+
+- &nbsp;<Tag>修复</Tag> `TcpClientBase` SSL连接时 `TargetHost` 可能为空的问题。
+- &nbsp;<Tag>修复</Tag> `ReconnectionOption` 重连逻辑在客户端已释放时继续执行的问题。[PR](https://github.com/RRQM/TouchSocket/pull/97)
+- &nbsp;<Tag>优化</Tag> `TcpServiceBase` 优化 `Backlog` 配置处理逻辑。
+- &nbsp;<Tag>调整</Tag> `TouchSocketConfigExtension` 将 `BacklogProperty` 默认值从 `null` 改为 `100`。
+- &nbsp;<Tag>调整</Tag> `TcpListenOption` 将所有属性改为 `init` 访问器,增强不可变性。
+
+#### TouchSocket.Mqtt
+
+- &nbsp;<Tag>修复</Tag> `MqttTcpClient` 连接失败时未抛出异常的问题,现在会明确报告连接失败原因。
+- &nbsp;<Tag>修复</Tag> `MqttTcpClient` 关闭连接时未取消等待池中的所有等待操作。
+- &nbsp;<Tag>修复</Tag> `MqttActor` 释放时未取消令牌源和等待池的问题。
+- &nbsp;<Tag>修复</Tag> `MqttConnectMessage` (v5) 属性长度字段计算错误的问题。
+- &nbsp;<Tag>修复</Tag> `MqttSubscribeMessage` (v5) 订阅选项字节格式错误,现在正确包含 QoS、NoLocal、RetainAsPublished 和 RetainHandling。
+- &nbsp;<Tag>新增</Tag> `ReconnectionOptionsExtension` 提供 `UseMqttCheckAction` 扩展方法,支持基于Ping的MQTT连接健康检查。
+
+***
+
 ## v4.0.1
 
 **更新日期：** 2025.11.30
