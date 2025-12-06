@@ -221,13 +221,13 @@ internal class Program
             options.Password = "TestPassword";
             options.ProtocolName = "MQTT";
             options.Version = MqttProtocolVersion.V311;
-            options.KeepAlive = 60;
+            options.KeepAlive = 60;//此处的KeepAlive仅仅会将数值传递给服务器，客户端并不会发送心跳数据，如有需要请启用mqtt断线重连兼心跳插件
             options.CleanSession = true;
             options.UserProperties = new[]
             {
                     new MqttUserProperty("key1","value1"),
                     new MqttUserProperty("key2","value2")
-                };
+            };
         });
         #endregion
 
@@ -253,7 +253,18 @@ internal class Program
         #region Mqtt客户端自动重连配置
         config.ConfigurePlugins(a =>
         {
-            a.UseReconnection<MqttTcpClient>();
+            a.UseReconnection<MqttTcpClient>(options =>
+            {
+                options.PollingInterval = TimeSpan.FromSeconds(5);//轮询检验间隔为5秒
+
+                //启用断线重连兼心跳插件后，Mqtt客户端会自动发送心跳包以维持连接
+                //使用的大概逻辑是：
+                //1.每隔PollingInterval时间检验一次连接状态。
+                //2.如果连接断开，则执行重连操作。
+                //3.如果连接在线，则检查距离上次活动时间是否超过activeTimeSpan，如果超过，则发送ping包。
+                //4.如果ping包在pingTimeout时间内没有收到响应，则认为连接断开，执行重连操作。
+                options.UseMqttCheckAction(activeTimeSpan: TimeSpan.FromSeconds(10), pingTimeout: TimeSpan.FromSeconds(3));
+            });
         });
         #endregion
 
