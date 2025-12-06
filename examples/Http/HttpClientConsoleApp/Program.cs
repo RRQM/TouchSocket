@@ -319,8 +319,8 @@ internal class Program
 
 internal class BigDataHttpContent : HttpContent
 {
-    private readonly long count = 10000;
-    private readonly long bufferLength = 1000000;
+    private readonly long m_count = 10000;
+    private readonly long m_bufferLength = 1000000;
 
     protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
     {
@@ -329,20 +329,13 @@ internal class BigDataHttpContent : HttpContent
 
     protected override void OnBuildingHeader(IHttpHeader header)
     {
-        //header.Add(HttpHeaders.ContentLength, (this.count * this.bufferLength).ToString());
+        header.Add(HttpHeaders.ContentLength, (this.m_count * this.m_bufferLength).ToString());
     }
-
-    protected override bool TryComputeLength(out long length)
-    {
-        length = this.count * this.bufferLength;
-        return true;
-    }
-
 
     protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
-        var buffer = new byte[this.bufferLength];
-        for (var i = 0; i < this.count; i++)
+        var buffer = new byte[this.m_bufferLength];
+        for (var i = 0; i < this.m_count; i++)
         {
             await writer.WriteAsync(buffer, cancellationToken);
             //Console.WriteLine(i);
