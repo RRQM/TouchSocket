@@ -34,7 +34,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public TextValues(string value)
     {
-        m_values = value;
+        this.m_values = value;
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public TextValues(string[] values)
     {
-        m_values = values;
+        this.m_values = values;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            var value = m_values;
+            var value = this.m_values;
             if (value is null)
             {
                 return 0;
@@ -74,9 +74,17 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            object value = m_values;
-            if (value is null) return null;
-            if (value is string s) return s;
+            var value = this.m_values;
+            if (value is null)
+            {
+                return null;
+            }
+
+            if (value is string s)
+            {
+                return s;
+            }
+
             var arr = Unsafe.As<string[]>(value);
             return arr.Length > 0 ? arr[0] : null;
         }
@@ -85,7 +93,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// <summary>
     /// 指示是否为空集合。
     /// </summary>
-    public bool IsEmpty => Count == 0;
+    public bool IsEmpty => this.m_values is null;
 
     /// <summary>
     /// 通过索引获取指定值。
@@ -95,15 +103,10 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            object value = m_values;
-            if (value is null)
-            {
-                throw new IndexOutOfRangeException();
-            }
+            var value = this.m_values ?? throw new IndexOutOfRangeException();
             if (value is string s)
             {
-                if (index == 0) return s;
-                throw new IndexOutOfRangeException();
+                return index == 0 ? s : throw new IndexOutOfRangeException();
             }
             return Unsafe.As<string[]>(value)[index];
         }
@@ -153,7 +156,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         {
             return this;
         }
-        var current = m_values;
+        var current = this.m_values;
         if (current is null)
         {
             return new TextValues(value);
@@ -174,7 +177,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public bool Equals(string other, StringComparison comparison)
     {
-        return Equals(new TextValues(other));
+        return this.Equals(new TextValues(other));
     }
 
     /// <summary>
@@ -182,17 +185,17 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public bool Equals(TextValues other)
     {
-        if (ReferenceEquals(m_values, other.m_values)) return true;
-        int count = Count;
+        if (ReferenceEquals(this.m_values, other.m_values)) return true;
+        var count = this.Count;
         if (count != other.Count) return false;
         if (count == 0) return true;
         if (count == 1)
         {
-            return string.Equals(First, other.First, StringComparison.Ordinal);
+            return string.Equals(this.First, other.First, StringComparison.Ordinal);
         }
-        var a = ToArray();
+        var a = this.ToArray();
         var b = other.ToArray();
-        for (int i = 0; i < a.Length; i++)
+        for (var i = 0; i < a.Length; i++)
         {
             if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
         }
@@ -202,31 +205,31 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// <summary>
     /// 判断相等。
     /// </summary>
-    public override bool Equals(object obj) => obj is TextValues v && Equals(v);
+    public override bool Equals(object obj) => obj is TextValues v && this.Equals(v);
 
     /// <summary>
     /// 获取枚举器。
     /// </summary>
-    public Enumerator GetEnumerator() => new Enumerator(m_values);
+    public Enumerator GetEnumerator() => new Enumerator(this.m_values);
 
-    IEnumerator<string> IEnumerable<string>.GetEnumerator() => GetEnumerator();
+    IEnumerator<string> IEnumerable<string>.GetEnumerator() => this.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
     /// <summary>
     /// 获取哈希码。
     /// </summary>
     public override int GetHashCode()
     {
-        object value = m_values;
+        var value = this.m_values;
         if (value is null) return 0;
         if (value is string s)
         {
             return s?.GetHashCode() ?? 0;
         }
         var arr = Unsafe.As<string[]>(value);
-        int hash = 17;
-        for (int i = 0; i < arr.Length; i++)
+        var hash = 17;
+        for (var i = 0; i < arr.Length; i++)
         {
             hash = hash * 31 + (arr[i]?.GetHashCode() ?? 0);
         }
@@ -238,10 +241,10 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public string[] ToArray()
     {
-        object value = m_values;
+        var value = this.m_values;
         if (value is null)
         {
-            return Array.Empty<string>();
+            return [];
         }
         if (value is string s)
         {
@@ -255,7 +258,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public override string ToString()
     {
-        object value = m_values;
+        var value = this.m_values;
         if (value is null)
         {
             return string.Empty;
@@ -265,8 +268,16 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
             return s ?? string.Empty;
         }
         var arr = Unsafe.As<string[]>(value);
-        if (arr.Length == 0) return string.Empty;
-        if (arr.Length == 1) return arr[0] ?? string.Empty;
+        if (arr.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (arr.Length == 1)
+        {
+            return arr[0] ?? string.Empty;
+        }
+
         return string.Join(",", arr);
     }
 
@@ -281,22 +292,22 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
 
         internal Enumerator(object values)
         {
-            m_values = values;
-            m_index = -1;
-            m_current = null;
+            this.m_values = values;
+            this.m_index = -1;
+            this.m_current = null;
         }
 
         /// <summary>
         /// 当前值。
         /// </summary>
-        public string Current => m_current;
+        public readonly string Current => this.m_current;
 
-        object IEnumerator.Current => Current;
+        readonly object IEnumerator.Current => this.Current;
 
         /// <summary>
         /// 释放资源。
         /// </summary>
-        public void Dispose()
+        public readonly void Dispose()
         {
         }
 
@@ -305,26 +316,26 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         /// </summary>
         public bool MoveNext()
         {
-            if (m_values is null)
+            if (this.m_values is null)
             {
                 return false;
             }
-            if (m_values is string s)
+            if (this.m_values is string s)
             {
-                if (m_index < 0)
+                if (this.m_index < 0)
                 {
-                    m_index = 0;
-                    m_current = s;
+                    this.m_index = 0;
+                    this.m_current = s;
                     return true;
                 }
                 return false;
             }
-            var arr = Unsafe.As<string[]>(m_values);
-            int next = m_index + 1;
+            var arr = Unsafe.As<string[]>(this.m_values);
+            var next = this.m_index + 1;
             if ((uint)next < (uint)arr.Length)
             {
-                m_index = next;
-                m_current = arr[next];
+                this.m_index = next;
+                this.m_current = arr[next];
                 return true;
             }
             return false;
@@ -335,8 +346,8 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
         /// </summary>
         public void Reset()
         {
-            m_index = -1;
-            m_current = null;
+            this.m_index = -1;
+            this.m_current = null;
         }
     }
 

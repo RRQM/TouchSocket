@@ -75,10 +75,13 @@ public class StreamHttpContent : HttpContent
         {
             header.Add(HttpHeaders.TransferEncoding, "chunked");
         }
+        else if (TryComputeLength(out var length))
+        {
+            header.Add(HttpHeaders.ContentLength,length.ToString());
+        }
     }
 
-    /// <inheritdoc/>
-    protected override bool TryComputeLength(out long length)
+    private bool TryComputeLength(out long length)
     {
         try
         {

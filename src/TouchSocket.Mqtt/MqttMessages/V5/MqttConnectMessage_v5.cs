@@ -162,30 +162,43 @@ public partial class MqttConnectMessage
 
         #region Properties
 
-        MqttExtension.WriteSessionExpiryInterval(ref writer, this.SessionExpiryInterval);
-        MqttExtension.WriteAuthenticationMethod(ref writer, this.AuthenticationMethod);
-        MqttExtension.WriteAuthenticationData(ref writer, this.AuthenticationData.Span);
-        MqttExtension.WriteReceiveMaximum(ref writer, this.ReceiveMaximum);
-        MqttExtension.WriteTopicAliasMaximum(ref writer, this.TopicAliasMaximum);
-        MqttExtension.WriteMaximumPacketSize(ref writer, this.MaximumPacketSize);
-        MqttExtension.WriteRequestResponseInformation(ref writer, this.RequestResponseInformation);
-        MqttExtension.WriteRequestProblemInformation(ref writer, this.RequestProblemInformation);
-        MqttExtension.WriteUserProperties(ref writer, this.UserProperties);
+        // 写入属性长度字段与属性内容
+        var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
+        var propertiesWriter = this.CreateVariableWriter(ref writer);
+        variableByteIntegerRecorder.CheckOut(ref propertiesWriter);
+        MqttExtension.WriteSessionExpiryInterval(ref propertiesWriter, this.SessionExpiryInterval);
+        MqttExtension.WriteAuthenticationMethod(ref propertiesWriter, this.AuthenticationMethod);
+        MqttExtension.WriteAuthenticationData(ref propertiesWriter, this.AuthenticationData.Span);
+        MqttExtension.WriteReceiveMaximum(ref propertiesWriter, this.ReceiveMaximum);
+        MqttExtension.WriteTopicAliasMaximum(ref propertiesWriter, this.TopicAliasMaximum);
+        MqttExtension.WriteMaximumPacketSize(ref propertiesWriter, this.MaximumPacketSize);
+        MqttExtension.WriteRequestResponseInformation(ref propertiesWriter, this.RequestResponseInformation);
+        MqttExtension.WriteRequestProblemInformation(ref propertiesWriter, this.RequestProblemInformation);
+        MqttExtension.WriteUserProperties(ref propertiesWriter, this.UserProperties);
+        variableByteIntegerRecorder.CheckIn(ref propertiesWriter);
+        writer.Advance(propertiesWriter.Position);
 
         #endregion Properties
 
         MqttExtension.WriteMqttInt16String(ref writer, this.ClientId);
         if (this.WillFlag)
         {
-            MqttExtension.WritePayloadFormatIndicator(ref writer, this.WillPayloadFormatIndicator);
-            MqttExtension.WriteMessageExpiryInterval(ref writer, this.WillMessageExpiryInterval);
-            MqttExtension.WriteResponseTopic(ref writer, this.WillResponseTopic);
-            MqttExtension.WriteCorrelationData(ref writer, this.WillCorrelationData.Span);
-            MqttExtension.WriteContentType(ref writer, this.WillContentType);
-            MqttExtension.WriteWillDelayInterval(ref writer, this.WillDelayInterval);
+            // 写入遗嘱属性长度字段与属性内容
+            var willVariableByteIntegerRecorder = new VariableByteIntegerRecorder();
+            var willPropertiesWriter = this.CreateVariableWriter(ref writer);
+            willVariableByteIntegerRecorder.CheckOut(ref willPropertiesWriter);
+            MqttExtension.WritePayloadFormatIndicator(ref willPropertiesWriter, this.WillPayloadFormatIndicator);
+            MqttExtension.WriteMessageExpiryInterval(ref willPropertiesWriter, this.WillMessageExpiryInterval);
+            MqttExtension.WriteResponseTopic(ref willPropertiesWriter, this.WillResponseTopic);
+            MqttExtension.WriteCorrelationData(ref willPropertiesWriter, this.WillCorrelationData.Span);
+            MqttExtension.WriteContentType(ref willPropertiesWriter, this.WillContentType);
+            MqttExtension.WriteWillDelayInterval(ref willPropertiesWriter, this.WillDelayInterval);
+            MqttExtension.WriteUserProperties(ref willPropertiesWriter, this.WillUserProperties);
+            willVariableByteIntegerRecorder.CheckIn(ref willPropertiesWriter);
+            writer.Advance(willPropertiesWriter.Position);
+
             MqttExtension.WriteMqttInt16String(ref writer, this.WillTopic);
             MqttExtension.WriteMqttInt16Memory(ref writer, this.WillPayload);
-            MqttExtension.WriteUserProperties(ref writer, this.WillUserProperties);
         }
 
         if (this.UserNameFlag)
@@ -259,16 +272,6 @@ public partial class MqttConnectMessage
                     break;
             }
         }
-
-        //this.SessionExpiryInterval = propertiesReader.SessionExpiryInterval;
-        //this.AuthenticationMethod = propertiesReader.AuthenticationMethod;
-        //this.AuthenticationData = propertiesReader.AuthenticationData;
-        //this.ReceiveMaximum = propertiesReader.ReceiveMaximum;
-        //this.TopicAliasMaximum = propertiesReader.TopicAliasMaximum;
-        //this.MaximumPacketSize = propertiesReader.MaximumPacketSize;
-        //this.RequestResponseInformation = propertiesReader.RequestResponseInformation;
-        //this.RequestProblemInformation = propertiesReader.RequestProblemInformation;
-        //this.UserProperties = propertiesReader.UserProperties;
 
         #endregion Properties
 

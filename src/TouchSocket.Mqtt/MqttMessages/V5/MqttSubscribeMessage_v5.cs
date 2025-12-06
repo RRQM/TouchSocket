@@ -24,7 +24,10 @@ public partial class MqttSubscribeMessage
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
         var byteBlockWriter = this.CreateVariableWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
-        MqttExtension.WriteSubscriptionIdentifier(ref byteBlockWriter, this.SubscriptionIdentifier);
+        if (this.SubscriptionIdentifier > 0)
+        {
+            MqttExtension.WriteSubscriptionIdentifier(ref byteBlockWriter, this.SubscriptionIdentifier);
+        }
         MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
         variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);
         writer.Advance(byteBlockWriter.Position);
@@ -32,7 +35,13 @@ public partial class MqttSubscribeMessage
         foreach (var item in this.m_subscribeRequests)
         {
             MqttExtension.WriteMqttInt16String(ref writer, item.Topic);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)item.QosLevel);
+            // MQTT v5 订阅选项包含: QoS(bit 0-1), NL(bit 2), RAP(bit 3), Retain Handling(bit 4-5)
+            byte options = 0;
+            options = options.SetQosLevel(0, item.QosLevel);
+            options = options.SetBit(2, item.NoLocal);
+            options = options.SetBit(3, item.RetainAsPublished);
+            options = options.SetRetainHandling(4, item.RetainHandling);
+            WriterExtension.WriteValue<TWriter, byte>(ref writer, options);
         }
     }
 
@@ -40,7 +49,7 @@ public partial class MqttSubscribeMessage
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
         this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
-        this.MessageId = ReaderExtension.ReadValue<TReader, ushort>(ref reader, EndianType.Big);
+
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 
         while (propertiesReader.TryRead(ref reader, out var mqttPropertyId))
@@ -58,8 +67,7 @@ public partial class MqttSubscribeMessage
                     break;
             }
         }
-        //this.SubscriptionIdentifier = propertiesReader.SubscriptionIdentifier;
-        //this.UserProperties = propertiesReader.UserProperties;
+
         while (!this.EndOfByteBlock(reader))
         {
             var topic = MqttExtension.ReadMqttInt16String(ref reader);

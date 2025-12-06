@@ -14,160 +14,119 @@ using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Http;
 
-/// <summary>
-/// TouchSocketHttp辅助工具类
-/// </summary>
-public static class TouchSocketHttpUtility
+static class TouchSocketHttpUtility
 {
     public const int MaxReadSize = 1024 * 1024;
 
-    // HTTP头部解析相关常量
-    /// <summary>
-    /// 冒号字节值
-    /// </summary>
     public const byte COLON = (byte)':';
-
-    /// <summary>
-    /// 空格字节值
-    /// </summary>
     public const byte SPACE = (byte)' ';
-
-    /// <summary>
-    /// 制表符字节值
-    /// </summary>
     public const byte TAB = (byte)'\t';
 
-    /// <summary>
-    /// 获取一个只读的字节序列，表示回车换行(CRLF)。
-    /// </summary>
-    /// <value>
-    /// 一个包含回车和换行字节的只读字节序列。
-    /// </value>
     public static ReadOnlySpan<byte> CRLF => "\r\n"u8;
-
-    /// <summary>
-    /// 获取一个只读的字节序列，表示双回车换行(CRLFCRLF)。
-    /// </summary>
-    /// <value>
-    /// 一个包含双回车和换行字节的只读字节序列。
-    /// </value>
     public static ReadOnlySpan<byte> CRLFCRLF => "\r\n\r\n"u8;
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 "&amp;" 符号。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    private static readonly byte[] s_http11Response = "HTTP/1.1 "u8.ToArray();
+    private static readonly byte[] s_http10Response = "HTTP/1.0 "u8.ToArray();
+    
+    private static readonly string[] s_statusCodeCache = new string[600];
+    private static readonly byte[][] s_statusCodeBytesCache = new byte[600][];
+    
+    static TouchSocketHttpUtility()
+    {
+        for (var i = 0; i < 600; i++)
+        {
+            s_statusCodeCache[i] = i.ToString();
+            s_statusCodeBytesCache[i] = Encoding.UTF8.GetBytes(s_statusCodeCache[i]);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ReadOnlySpan<byte> GetStatusCodeBytes(int statusCode)
+    {
+        if (statusCode >= 0 && statusCode < 600)
+        {
+            return s_statusCodeBytesCache[statusCode];
+        }
+        return Encoding.UTF8.GetBytes(statusCode.ToString());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ReadOnlySpan<byte> GetHttpVersionBytes(string version)
+    {
+        if (version == "1.1")
+        {
+            return s_http11Response.AsSpan(0, 8);
+        }
+        if (version == "1.0")
+        {
+            return s_http10Response.AsSpan(0, 8);
+        }
+        return default;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendAnd<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write("&"u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 ":" 符号。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendColon<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write(":"u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 "=" 符号。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendEqual<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write("="u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 "HTTP" 字符串。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendHTTP<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write("HTTP"u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 "?" 符号。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendQuestionMark<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write("?"u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加回车换行符 "\r\n"。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendRn<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write(CRLF);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加 "/" 符号。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendSlash<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write("/"u8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加空格符。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendSpace<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
         writer.Write(StringExtension.DefaultSpaceUtf8Span);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加指定的 UTF-8 编码字符串。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
-    /// <param name="value">要追加的字符串。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendUtf8String<TWriter>(ref TWriter writer, string value) where TWriter : IBytesWriter
     {
         WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
     }
 
-    /// <summary>
-    /// 在 <see cref="IByteBlock"/> 中追加指定整数的十六进制表示。
-    /// </summary>
-    /// <typeparam name="TWriter">实现了 <see cref="IByteBlock"/> 的类型。</typeparam>
-    /// <param name="writer">字节块实例。</param>
-    /// <param name="value">要追加的整数值。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AppendHex<TWriter>(ref TWriter writer, int value) where TWriter : IBytesWriter
     {
         AppendUtf8String(ref writer, $"{value:X}");
     }
 
-    /// <summary>
-    /// 检查字节是否为HTTP规范允许的空白字符（空格或制表符）
-    /// </summary>
-    /// <param name="b">要检查的字节</param>
-    /// <returns>如果是空白字符返回true，否则返回false</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool IsWhitespace(byte b) => b == SPACE || b == TAB;
 
-    /// <summary>
-    /// 高效的空白字符去除，避免使用通用的Trim方法
-    /// </summary>
-    /// <param name="span">要处理的字节跨度</param>
-    /// <returns>去除前后空白字符后的字节跨度</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static ReadOnlySpan<byte> TrimWhitespace(ReadOnlySpan<byte> span)
     {
@@ -175,35 +134,35 @@ public static class TouchSocketHttpUtility
         var end = span.Length - 1;
 
         while (start <= end && IsWhitespace(span[start]))
+        {
             start++;
+        }
 
         while (end >= start && IsWhitespace(span[end]))
+        {
             end--;
-
-        return start > end ? ReadOnlySpan<byte>.Empty : span.Slice(start, end - start + 1);
+        }
+        return start > end ? [] : span[start..(end + 1)];
     }
 
     internal static string UnescapeDataString(ReadOnlySpan<byte> urlSpan)
     {
 #if NET9_0_OR_GREATER
-        // 直接处理字节的URL解码
         Span<char> charBuffer = stackalloc char[urlSpan.Length];
         var charCount = Encoding.UTF8.GetChars(urlSpan, charBuffer);
         return Uri.UnescapeDataString(charBuffer.Slice(0, charCount));
 #else
         return Uri.UnescapeDataString(urlSpan.ToString(Encoding.UTF8));
 #endif
-
     }
 
     internal static string UnescapeDataString(ReadOnlySpan<char> urlSpan)
     {
 #if NET9_0_OR_GREATER
-  return Uri.UnescapeDataString(urlSpan);
+        return Uri.UnescapeDataString(urlSpan);
 #else
         return Uri.UnescapeDataString(urlSpan.ToString());
 #endif
-
     }
 
     internal static int FindNextWhitespace(ReadOnlySpan<byte> span, int start)
@@ -224,7 +183,6 @@ public static class TouchSocketHttpUtility
         {
             start++;
         }
-
         return start;
     }
 
@@ -240,7 +198,6 @@ public static class TouchSocketHttpUtility
         }
         else
         {
-            // 处理没有值的键
             keySpan = kvSpan;
             valueSpan = [];
         }

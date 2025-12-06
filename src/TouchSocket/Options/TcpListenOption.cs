@@ -20,27 +20,27 @@ public class TcpListenOption
     /// <summary>
     /// 名称
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; init; }
 
     /// <summary>
     /// 监听地址
     /// </summary>
-    public IPHost IpHost { get; set; }
+    public IPHost IpHost { get; init; }
 
     /// <summary>
     /// 是否使用地址复用
     /// </summary>
-    public bool ReuseAddress { get; set; }
+    public bool ReuseAddress { get; init; }
 
     /// <summary>
     /// Tcp处理并发连接时最大半连接队列
     /// </summary>
-    public int Backlog { get; set; } = 100;
+    public int Backlog { get; init; } = 100;
 
     /// <summary>
     /// 禁用延迟发送
     /// </summary>
-    public bool NoDelay { get; set; } = true;
+    public bool NoDelay { get; init; } = true;
 
     /// <summary>
     /// 是否使用ssl加密
@@ -50,10 +50,10 @@ public class TcpListenOption
     /// <summary>
     /// 用于Ssl加密的证书
     /// </summary>
-    public ServiceSslOption ServiceSslOption { get; set; }
+    public ServiceSslOption ServiceSslOption { get; init; }
 
     /// <summary>
     /// 配置Tcp适配器
     /// </summary>
-    public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; }
+    public Func<SingleStreamDataHandlingAdapter> Adapter { get; init; }
 }

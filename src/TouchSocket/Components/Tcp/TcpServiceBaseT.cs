@@ -163,8 +163,8 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
                         NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
                         Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
+                        Backlog= this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty)
                     };
-                    option.Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty) ?? option.Backlog;
                     optionList.Add(option);
                 }
             }

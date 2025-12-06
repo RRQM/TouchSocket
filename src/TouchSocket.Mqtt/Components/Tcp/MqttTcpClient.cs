@@ -117,7 +117,10 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
         await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
+        if (connAckMessage.ReturnCode!= MqttReasonCode.ConnectionAccepted)
+        {
+            ThrowHelper.ThrowException($"Connection failed with reason: {connAckMessage.ReturnCode}，reasonString: {connAckMessage.ReasonString}");
+        }
         await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -149,6 +152,8 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
+        this.m_mqttActor.WaitHandlePool.CancelAll();
+
         await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Manual, e.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

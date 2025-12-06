@@ -101,9 +101,9 @@ public abstract class HttpResponse : HttpBase
         }
         else
         {
-            content.InternalTryComputeLength(out var contentLength);
-            var writer = new PipeBytesWriter(transport.Writer);
             content.InternalBuildingHeader(this.Headers);
+            
+            var writer = new PipeBytesWriter(transport.Writer);
             this.BuildHeader(ref writer);
 
             var result = content.InternalBuildingContent(ref writer);
@@ -213,7 +213,6 @@ public abstract class HttpResponse : HttpBase
         this.m_sentHeader = false;
         this.m_sentLength = 0;
         this.Responsed = false;
-        this.IsChunk = false;
         this.StatusCode = 200;
         this.StatusMessage = "Success";
         this.Content = default;
@@ -306,11 +305,23 @@ public abstract class HttpResponse : HttpBase
 
     private void BuildHeader<TWriter>(ref TWriter writer) where TWriter : IBytesWriter
     {
-        TouchSocketHttpUtility.AppendHTTP(ref writer);
-        TouchSocketHttpUtility.AppendSlash(ref writer);
-        TouchSocketHttpUtility.AppendUtf8String(ref writer, this.ProtocolVersion);
+        var versionBytes = TouchSocketHttpUtility.GetHttpVersionBytes(this.ProtocolVersion);
+        if (!versionBytes.IsEmpty)
+        {
+            writer.Write(versionBytes);
+        }
+        else
+        {
+            TouchSocketHttpUtility.AppendHTTP(ref writer);
+            TouchSocketHttpUtility.AppendSlash(ref writer);
+            TouchSocketHttpUtility.AppendUtf8String(ref writer, this.ProtocolVersion);
+        }
+        
         TouchSocketHttpUtility.AppendSpace(ref writer);
-        TouchSocketHttpUtility.AppendUtf8String(ref writer, this.StatusCode.ToString());
+        
+        var statusCodeBytes = TouchSocketHttpUtility.GetStatusCodeBytes(this.StatusCode);
+        writer.Write(statusCodeBytes);
+        
         TouchSocketHttpUtility.AppendSpace(ref writer);
         TouchSocketHttpUtility.AppendUtf8String(ref writer, this.StatusMessage);
         TouchSocketHttpUtility.AppendRn(ref writer);
@@ -322,11 +333,9 @@ public abstract class HttpResponse : HttpBase
             TouchSocketHttpUtility.AppendSpace(ref writer);
             TouchSocketHttpUtility.AppendUtf8String(ref writer, header.Value);
             TouchSocketHttpUtility.AppendRn(ref writer);
-
         }
 
         TouchSocketHttpUtility.AppendRn(ref writer);
-
     }
 
     private ITransport GetITransport()

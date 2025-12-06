@@ -193,28 +193,26 @@ public class HttpRequest : HttpBase
     {
         var start = 0;
 
-        // 解析 HTTP Method (GET/POST)
         var methodEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
         if (methodEnd == -1)
         {
             throw new Exception("Invalid HTTP request line: " + requestLineSpan.ToString(Encoding.UTF8));
         }
 
-        this.Method = new HttpMethod(requestLineSpan.Slice(start, methodEnd - start).ToString(Encoding.UTF8));
+        var methodSpan = requestLineSpan.Slice(start, methodEnd - start);
+        this.Method = ParseHttpMethodFast(methodSpan);
         start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, methodEnd + 1);
 
-        // 解析 URL
         var urlEnd = TouchSocketHttpUtility.FindNextWhitespace(requestLineSpan, start);
         if (urlEnd == -1)
         {
             this.URL = TouchSocketHttpUtility.UnescapeDataString(requestLineSpan.Slice(start));
-            return; // No protocol version
+            return;
         }
 
         this.URL = TouchSocketHttpUtility.UnescapeDataString(requestLineSpan.Slice(start, urlEnd - start));
         start = TouchSocketHttpUtility.SkipSpaces(requestLineSpan, urlEnd + 1);
 
-        // 解析 Protocol (HTTP/1.1)
         var protocolSpan = requestLineSpan.Slice(start);
         var slashIndex = protocolSpan.IndexOf((byte)'/');
         if (slashIndex > 0 && slashIndex < protocolSpan.Length - 1)
@@ -222,6 +220,53 @@ public class HttpRequest : HttpBase
             this.Protocols = new Protocol(protocolSpan.Slice(0, slashIndex).ToString(Encoding.UTF8));
             this.ProtocolVersion = protocolSpan.Slice(slashIndex + 1).ToString(Encoding.UTF8);
         }
+    }
+
+    private static HttpMethod ParseHttpMethodFast(ReadOnlySpan<byte> span)
+    {
+        switch (span.Length)
+        {
+            case 3:
+                if (EqualsIgnoreCaseAscii(span, "GET")) return HttpMethod.Get;
+                if (EqualsIgnoreCaseAscii(span, "PUT")) return HttpMethod.Put;
+                break;
+            case 4:
+                if (EqualsIgnoreCaseAscii(span, "POST")) return HttpMethod.Post;
+                break;
+            case 6:
+                if (EqualsIgnoreCaseAscii(span, "DELETE")) return HttpMethod.Delete;
+                break;
+            case 7:
+                if (EqualsIgnoreCaseAscii(span, "CONNECT")) return HttpMethod.Connect;
+                break;
+        }
+        return new HttpMethod(span.ToString(Encoding.UTF8));
+    }
+
+    private static bool EqualsIgnoreCaseAscii(ReadOnlySpan<byte> span, string token)
+    {
+        if (span.Length != token.Length)
+        {
+            return false;
+        }
+        for (var i = 0; i < span.Length; i++)
+        {
+            var b = span[i];
+            if (b >= (byte)'a' && b <= (byte)'z')
+            {
+                b = (byte)(b - 32);
+            }
+            var c = (byte)token[i];
+            if (c >= (byte)'a' && c <= (byte)'z')
+            {
+                c = (byte)(c - 32);
+            }
+            if (b != c)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static void GetParameters(ReadOnlySpan<char> querySpan, InternalHttpParams parameters)

@@ -36,16 +36,7 @@ public abstract class HttpContent
     /// <param name="header">HTTP头的接口实现</param>
     internal void InternalBuildingHeader(IHttpHeader header)
     {
-        if (this.TryComputeLength(out var length))
-        {
-            header.TryAdd(HttpHeaders.ContentLength, length.ToString());
-        }
         this.OnBuildingHeader(header);
-    }
-
-    internal bool InternalTryComputeLength(out long length)
-    {
-        return this.TryComputeLength(out length);
     }
 
     internal Task InternalWriteContent(PipeWriter writer, CancellationToken cancellationToken)
@@ -66,13 +57,6 @@ public abstract class HttpContent
     /// </summary>
     /// <param name="header">HTTP头的接口实现</param>
     protected abstract void OnBuildingHeader(IHttpHeader header);
-
-    /// <summary>
-    /// 尝试计算内容的长度。
-    /// </summary>
-    /// <param name="length">输出参数，表示内容的长度。</param>
-    /// <returns>如果成功计算长度，则返回 true；否则返回 false。</returns>
-    protected abstract bool TryComputeLength(out long length);
 
     protected abstract Task WriteContent(PipeWriter writer, CancellationToken cancellationToken);
 

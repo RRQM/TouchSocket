@@ -113,7 +113,7 @@ public static class TouchSocketConfigExtension
     /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
-    public static readonly DependencyProperty<int?> BacklogProperty = new("Backlog", null);
+    public static readonly DependencyProperty<int> BacklogProperty = new("Backlog", 100);
 
     /// <summary>
     /// 设置默认Id的获取方式，所需类型<see cref="Func{T, TResult}"/>

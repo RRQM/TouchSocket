@@ -107,6 +107,7 @@ internal sealed class TcpTransport : BaseTransport
         this.UseSsl = true;
     }
 
+   
     /// <inheritdoc/>
     public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {

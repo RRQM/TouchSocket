@@ -210,7 +210,6 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             return;
         }
 
-        content.InternalTryComputeLength(out var contentLength);
         content.InternalBuildingHeader(request.Headers);
         request.BuildHeader(ref writer);
 

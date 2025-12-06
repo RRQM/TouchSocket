@@ -36,8 +36,9 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
         if (disposing)
         {
-            this.m_tokenSource.Cancel();
-            this.m_tokenSource.Dispose();
+            this.m_tokenSource.SafeCancel();
+            this.m_tokenSource.SafeDispose();
+            this.m_waitHandlePool.CancelAll();
         }
     }
 

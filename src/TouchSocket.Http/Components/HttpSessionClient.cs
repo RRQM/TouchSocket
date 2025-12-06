@@ -20,21 +20,23 @@ namespace TouchSocket.Http;
 /// </summary>
 public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClient
 {
-    private HttpContext m_httpContext;
-
-    private ServerHttpResponse m_serverHttpResponse;
     private readonly HttpServerDataHandlingAdapter m_httpAdapter;
-    private WebSocketDataHandlingAdapter m_webSocketAdapter;
+    private readonly WebSocketDataHandlingAdapter m_webSocketAdapter;
+    private readonly HttpContext m_httpContext;
+    private readonly ServerHttpResponse m_serverHttpResponse;
+  
     /// <summary>
     /// 构造函数
     /// </summary>
     protected HttpSessionClient()
     {
         this.Protocol = Protocol.Http;
-        this.m_httpAdapter = new HttpServerDataHandlingAdapter(this.OnReceivingHttpRequest);
+       var serverHttpRequest = new ServerHttpRequest(this);
+        this.m_serverHttpResponse = new ServerHttpResponse(serverHttpRequest, this);
+        this.m_httpContext = new HttpContext(serverHttpRequest, this.m_serverHttpResponse);
+        this.m_httpAdapter = new HttpServerDataHandlingAdapter(serverHttpRequest,this.OnReceivingHttpRequest);
         this.m_webSocketAdapter = new WebSocketDataHandlingAdapter();
     }
-
 
     internal ITransport InternalTransport => this.Transport;
 
@@ -65,18 +67,6 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
         return base.OnTcpConnecting(e);
     }
 
-    private async Task OnReceivingHttpRequest(ServerHttpRequest request)
-    {
-        if (this.m_httpContext == null)
-        {
-            this.m_serverHttpResponse = new ServerHttpResponse(request, this);
-            this.m_httpContext = new HttpContext(request, this.m_serverHttpResponse);
-        }
-
-        await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        this.m_serverHttpResponse.Reset();
-    }
-
     /// <inheritdoc/>
     protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
@@ -102,5 +92,11 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
         }
 
         base.SafetyDispose(disposing);
+    }
+
+    private async Task OnReceivingHttpRequest(ServerHttpRequest request)
+    {
+        await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.m_serverHttpResponse.Reset();
     }
 }

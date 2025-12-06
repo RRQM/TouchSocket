@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -36,6 +37,11 @@ public abstract class HttpBase : IRequestInfo
     public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
+
+    private readonly StringPool m_stringPool = new StringPool(Encoding.UTF8,32);
+
+    private bool m_isChunk;
+    private long m_contentLength;
 
     /// <summary>
     /// 可接受MIME类型
@@ -70,13 +76,10 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public bool IsChunk
     {
-        get
-        {
-            var transferEncoding = this.Headers.Get(HttpHeaders.TransferEncoding);
-            return "chunked".Equals(transferEncoding, StringComparison.OrdinalIgnoreCase);
-        }
+        get => this.m_isChunk;
         set
         {
+            this.m_isChunk = value;
             if (value)
             {
                 this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
@@ -93,12 +96,12 @@ public abstract class HttpBase : IRequestInfo
     /// </summary>
     public long ContentLength
     {
-        get
+        get => this.m_contentLength;
+        set
         {
-            var contentLength = this.m_headers.Get(HttpHeaders.ContentLength);
-            return contentLength.IsEmpty ? 0 : long.TryParse(contentLength, out var value) ? value : 0;
+            this.m_contentLength = value;
+            this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
         }
-        set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
     }
 
     /// <summary>
@@ -133,7 +136,8 @@ public abstract class HttpBase : IRequestInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool ParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader
     {
-        var index = ReaderExtension.IndexOf(ref reader, TouchSocketHttpUtility.CRLFCRLF);
+        var sequence = reader.Sequence;
+        var index = sequence.IndexOf(TouchSocketHttpUtility.CRLFCRLF);
 
         if (index < 0)
         {
@@ -150,10 +154,21 @@ public abstract class HttpBase : IRequestInfo
         }
 
         // 一次性获取头部数据，减少多次调用GetSpan的开销
-        var headerSpan = reader.GetSpan(headerLength);
+        if (headerLength < 1024)
+        {
+            Span<byte> headerSpan = stackalloc byte[headerLength];
 
-        // 调用优化后的头部解析方法
-        this.ReadHeadersOptimized(headerSpan);
+            sequence.Slice(0, headerLength).CopyTo(headerSpan);
+
+            // 调用优化后的头部解析方法
+            this.ReadHeadersOptimized(headerSpan);
+        }
+        else
+        {
+            var headerSpan = reader.GetSpan(headerLength);
+            // 调用优化后的头部解析方法
+            this.ReadHeadersOptimized(headerSpan);
+        }
 
         // 跳过头部数据和 \r\n\r\n 分隔符
         reader.Advance(totalRequired);
@@ -164,6 +179,8 @@ public abstract class HttpBase : IRequestInfo
     {
         this.m_headers.Clear();
         this.ContentStatus = ContentCompletionStatus.Unknown;
+        this.m_isChunk = false;
+        this.m_contentLength = 0;
     }
 
     /// <summary>
@@ -178,10 +195,10 @@ public abstract class HttpBase : IRequestInfo
         var colonIndex = line.IndexOf(TouchSocketHttpUtility.COLON);
         if (colonIndex <= 0)
         {
-            return; // 无效格式，冒号必须存在且不能在第一位
+            return;
         }
 
-        var keySpan = TouchSocketHttpUtility.TrimWhitespace(line.Slice(0, colonIndex));
+        var keySpan = line.Slice(0, colonIndex);
         var valueSpan = TouchSocketHttpUtility.TrimWhitespace(line.Slice(colonIndex + 1));
 
         if (keySpan.IsEmpty || valueSpan.IsEmpty)
@@ -189,47 +206,164 @@ public abstract class HttpBase : IRequestInfo
             return;
         }
 
-        var key = keySpan.ToString(Encoding.UTF8).ToLowerInvariant();
-
-        // 检测是否包含英文逗号，按需分割
-        if (valueSpan.IndexOf((byte)',') < 0)
+        if (keySpan.Length == 14 && EqualsIgnoreCaseAscii(keySpan, "Content-Length"u8))
         {
-            var value = valueSpan.ToString(Encoding.UTF8);
-            this.m_headers.Add(key, value);
+            if (TryParseLong(valueSpan, out var length))
+            {
+                this.m_contentLength = length;
+            }
+            var value = this.m_stringPool.Get(valueSpan);
+            this.m_headers.AddInternal(HttpHeaders.ContentLength, value);
             return;
         }
 
-        // 多值处理
-        var values = new List<string>();
-        int start = 0;
+        if (keySpan.Length == 17 && EqualsIgnoreCaseAscii(keySpan, "Transfer-Encoding"u8))
+        {
+            this.m_isChunk = EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
+            var value = this.m_stringPool.Get(valueSpan);
+            this.m_headers.AddInternal(HttpHeaders.TransferEncoding, value);
+            return;
+        }
+        
+        var key = this.m_stringPool.Get(keySpan);
+
+        var commaCount = 0;
+        for (var i = 0; i < valueSpan.Length; i++)
+        {
+            if (valueSpan[i] == (byte)',')
+            {
+                commaCount++;
+            }
+        }
+
+        if (commaCount == 0)
+        {
+            var value = this.m_stringPool.Get(valueSpan);
+            this.m_headers.AddInternal(key, value);
+            return;
+        }
+
+        var values = new string[commaCount + 1];
+        var valueIndex = 0;
+        var start = 0;
+        
         while (start < valueSpan.Length)
         {
-            int commaIndex = valueSpan.Slice(start).IndexOf((byte)',');
+            var nextComma = valueSpan.Slice(start).IndexOf((byte)',');
             ReadOnlySpan<byte> segment;
-            if (commaIndex >= 0)
+            
+            if (nextComma >= 0)
             {
-                segment = valueSpan.Slice(start, commaIndex);
-                start += commaIndex + 1;
+                segment = valueSpan.Slice(start, nextComma);
+                start += nextComma + 1;
             }
             else
             {
                 segment = valueSpan.Slice(start);
                 start = valueSpan.Length;
             }
+
             segment = TouchSocketHttpUtility.TrimWhitespace(segment);
             if (!segment.IsEmpty)
             {
-                values.Add(segment.ToString(Encoding.UTF8));
+                values[valueIndex++] = this.m_stringPool.Get(segment);
             }
         }
-        if (values.Count == 1)
+
+        if (valueIndex == 0)
         {
-            this.m_headers.Add(key, values[0]);
+            return;
         }
-        else if (values.Count > 1)
+        
+        if (valueIndex == 1)
         {
-            this.m_headers.Add(key, values.ToArray());
+            this.m_headers.AddInternal(key, values[0]);
         }
+        else if (valueIndex < values.Length)
+        {
+            var trimmedValues = new string[valueIndex];
+            Array.Copy(values, trimmedValues, valueIndex);
+            this.m_headers.AddInternal(key, trimmedValues);
+        }
+        else
+        {
+            this.m_headers.AddInternal(key, values);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool EqualsIgnoreCaseAscii(ReadOnlySpan<byte> span1, ReadOnlySpan<byte> span2)
+    {
+        if (span1.Length != span2.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < span1.Length; i++)
+        {
+            var c1 = span1[i];
+            var c2 = span2[i];
+
+            if (c1 == c2)
+            {
+                continue;
+            }
+
+            if ((uint)(c1 - 'A') <= 'Z' - 'A')
+            {
+                c1 = (byte)(c1 | 0x20);
+            }
+
+            if ((uint)(c2 - 'A') <= 'Z' - 'A')
+            {
+                c2 = (byte)(c2 | 0x20);
+            }
+
+            if (c1 != c2)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryParseLong(ReadOnlySpan<byte> span, out long result)
+    {
+        result = 0;
+        if (span.IsEmpty)
+        {
+            return false;
+        }
+
+        var sign = 1;
+        var index = 0;
+        
+        if (span[0] == (byte)'-' || span[0] == (byte)'+')
+        {
+            sign = span[0] == (byte)'-' ? -1 : 1;
+            index++;
+            if (index >= span.Length)
+            {
+                return false;
+            }
+        }
+
+        for (var i = index; i < span.Length; i++)
+        {
+            var c = span[i];
+            if (c < (byte)'0' || c > (byte)'9')
+            {
+                return false;
+            }
+
+            var digit = c - '0';
+            result = result * 10 + digit;
+        }
+
+        result *= sign;
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

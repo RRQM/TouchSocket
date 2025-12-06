@@ -429,6 +429,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 TargetHost = iPHost.Host
             };
         }
+
+        sslOption.TargetHost ??= iPHost.Host;
         await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 

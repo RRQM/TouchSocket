@@ -137,7 +137,7 @@ public sealed class ConsoleAction
         var separator = new string('─', maxOrderLength + 4);
 
         var distinctActions = new List<string>();
-        foreach (var item in this.m_actions.OrderBy(a => a.Value.FullOrder))
+        foreach (var item in this.m_actions)
         {
             if (!distinctActions.Contains(item.Value.FullOrder.ToLower()))
             {

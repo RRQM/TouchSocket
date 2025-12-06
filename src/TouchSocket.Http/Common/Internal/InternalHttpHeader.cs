@@ -22,7 +22,7 @@ internal sealed class InternalHttpHeader : InternalHttpCollection, IHttpHeader
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
 
-        if (!TryGetValue(key, out var headerValue))
+        if (!this.TryGetValue(key, out var headerValue))
         {
             return false;
         }

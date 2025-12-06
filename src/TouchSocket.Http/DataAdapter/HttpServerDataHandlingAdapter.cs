@@ -14,12 +14,13 @@ namespace TouchSocket.Http;
 
 internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
 {
-    public HttpServerDataHandlingAdapter(Func<ServerHttpRequest, Task> func)
+    public HttpServerDataHandlingAdapter(ServerHttpRequest request, Func<ServerHttpRequest, Task> func)
     {
         this.m_func = func;
+        this.m_requestRoot = request;
     }
     private ServerHttpRequest m_currentRequest;
-    private ServerHttpRequest m_requestRoot;
+    private readonly ServerHttpRequest m_requestRoot;
     private long m_surLen;
     private Task m_task;
 
@@ -61,8 +62,6 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
         {
             throw new Exception($"此适配器必须适用于{nameof(IHttpService)}");
         }
-
-        this.m_requestRoot = new ServerHttpRequest(httpSessionClient);
         base.OnLoaded(owner);
     }
 
@@ -119,7 +118,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                         {
                             this.m_currentRequest.InternalSetContent(ReadOnlyMemory<byte>.Empty);
                         }
-                        await this.GoReceivedAsync(this.m_currentRequest);
+                        await this.GoReceivedAsync(this.m_currentRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         this.m_currentRequest = null;
                     }
                 }

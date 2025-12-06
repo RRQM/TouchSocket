@@ -30,9 +30,11 @@ public class ReadonlyMemoryHttpContent : HttpContent
     {
         this.m_memory = memory;
         this.m_contentType = contentType;
+        this.m_lengthString= this.m_memory.Length.ToString();
     }
 
     private readonly string m_contentType;
+    private readonly string m_lengthString;
 
     /// <summary>
     /// 获取封装的只读内存。
@@ -60,7 +62,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
     /// <inheritdoc/>
     protected override void OnBuildingHeader(IHttpHeader header)
     {
-        header.Add(HttpHeaders.ContentLength, this.m_memory.Length.ToString());
+        header.Add(HttpHeaders.ContentLength, this.m_lengthString);
         if (this.m_contentType != null)
         {
             header.Add(HttpHeaders.ContentType, this.m_contentType);
@@ -75,12 +77,5 @@ public class ReadonlyMemoryHttpContent : HttpContent
     protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
         await writer.WriteAsync(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
-
-    /// <inheritdoc/>
-    protected override bool TryComputeLength(out long length)
-    {
-        length = this.m_memory.Length;
-        return true;
     }
 }
