@@ -3,6 +3,8 @@ id: webapi-serialization
 title: WebAPI 数据序列化
 ---
 
+import CustomCodeBlock from './CodeBlocks/CustomCodeBlock';
+
 ## 一、数据序列化
 
 数据序列化用于将对象转换为传输格式（如 JSON、XML）。TouchSocket.WebApi 支持多种序列化格式。
@@ -19,80 +21,85 @@ title: WebAPI 数据序列化
 
 在添加 WebApi 插件时，可以配置序列化器：
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseWebApi()
-    .ConfigureConverter(converter =>
-    {
-        // 可选：清空现有所有格式化器
-        // converter.Clear();
-
-        // 添加 Json 格式化器（Newtonsoft.Json）
-        converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() 
-        { 
-            Formatting = Newtonsoft.Json.Formatting.None 
-        });
-
-        // 添加 Xml 格式化器
-        converter.AddXmlSerializerFormatter();
-    });
-})
-```
+<CustomCodeBlock region="WebApi配置序列化器"/>
 
 ### 1.3 使用 System.Text.Json
 
 对于需要 AOT 支持的场景，推荐使用 `System.Text.Json`：
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseWebApi()
-    .ConfigureConverter(converter =>
-    {
-        converter.Clear();
-        
-        converter.AddSystemTextJsonSerializerFormatter(options => 
-        {
-            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            options.WriteIndented = false;
-        });
-    });
-})
-```
+<CustomCodeBlock region="WebApi配置SystemTextJson序列化器"/>
 
 ### 1.4 自定义序列化器
 
 可以实现自定义的序列化器：
 
-```csharp showLineNumbers
-class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
-{
-    public int Order { get; set; }
+<CustomCodeBlock region="WebApi自定义序列化器"/>
 
-    public bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
-    {
-        // 实现反序列化逻辑
-        throw new NotImplementedException();
-    }
+## 二、AOT 支持
 
-    public bool TrySerialize(HttpContext state, in object target, out string source)
-    {
-        // 实现序列化逻辑
-        throw new NotImplementedException();
-    }
-}
+TouchSocket.WebApi 完整支持 Native AOT 编译。
+
+### 2.1 基础配置
+
+在项目文件中启用AOT：
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    ...
+    <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier> <!-- 根据目标平台选择 -->
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+  ...
+</Project>
 ```
 
-添加自定义格式化器：
+### 2.2 JSON 序列化上下文
 
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseWebApi()
-    .ConfigureConverter(converter =>
-    {
-        converter.Add(new MySerializerFormatter());
-    });
-})
+AOT 需要定义 JSON 序列化上下文：
+
+<CustomCodeBlock region="WebApiAOT序列化上下文"/>
+
+:::tip 提示
+
+一般情况下，建议为所有需要序列化的类型创建上下文以确保兼容性。包括Rpc方法的`返回类型`、`参数类型`以及类中类等，一切可能被序列化的类型都应包含在上下文中。
+
+:::  
+
+### 2.3 配置序列化器
+
+使用 System.Text.Json 并指定序列化上下文：
+
+<CustomCodeBlock region="WebApi配置SystemTextJson序列化器"/>
+
+### 2.4 服务注册
+
+使用源生成器注册服务：
+
+<CustomCodeBlock region="WebApiAOT服务注册"/>
+
+### 2.5 发布
+
+使用以下命令发布 AOT 应用：
+
+```bash
+dotnet publish -c Release
 ```
+
+生成的可执行文件体积小、启动快、无需运行时。
+
+## 三、注意事项
+
+### 3.1 序列化注意事项
+
+1. **格式化器顺序**：可以通过设置 `Order` 属性来控制格式化器的优先级
+2. **内容协商**：框架会根据请求的 `Accept` 头自动选择合适的格式化器
+3. **自定义格式化器**：实现 `ISerializerFormatter<string, HttpContext>` 接口即可添加自定义格式化器
+
+### 3.2 AOT 注意事项
+
+1. **避免反射**：使用源生成器而不是反射
+2. **序列化类型**：所有序列化类型必须添加到 `JsonSerializable` 特性
+3. **第三方库**：确保所有依赖库支持 AOT
+

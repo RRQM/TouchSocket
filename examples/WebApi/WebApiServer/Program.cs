@@ -74,17 +74,19 @@ internal class Program
                  {
                      options.ConfigureConverter(converter =>
                      {
+                         #region WebApi配置序列化器
                          //配置转换器
 
                          //converter.Clear();//可以选择性的清空现有所有格式化器
 
-                         //添加Json格式化器，可以自定义Json的一些设置
+                         //添加Json格式化器,可以自定义Json的一些设置
                          converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.None });
 
                          //添加Xml格式化器
                          //converter.AddXmlSerializerFormatter();
 
                          //converter.Add(new MySerializerFormatter());
+                         #endregion
                      });
                  });
 

@@ -11,6 +11,7 @@
 // ------------------------------------------------------------------------------
 
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -21,72 +22,71 @@ namespace WebApiConsoleApp
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var builder = Host.CreateApplicationBuilder(args);
+            HttpService service = new();
+            await service.SetupAsync(new TouchSocketConfig()
+                  .SetListenIPHosts(7789)
+                  .ConfigureContainer(a =>
+                  {
+                      //配置容器
+                      a.AddRpcStore(store =>
+                      {
+                          store.RegisterServer<ApiServer>();//注册服务
+                      });
+                      a.AddConsoleLogger();
+                  })
+                  .ConfigurePlugins(a =>
+                  {
+                      //配置插件
+                      a.UseTcpSessionCheckClear();
 
-            builder.Services.ConfigureContainer(a =>
+                      #region WebApi配置SystemTextJson序列化器
+                      a.UseWebApi(options =>
+                      {
+                          options.ConfigureConverter(converter =>
+                          {
+                              converter.Clear();
+                              converter.AddSystemTextJsonSerializerFormatter(options =>
+                              {
+                                  options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                              });
+                          });
+                      });
+                      #endregion
+
+                      //配置静态页面服务
+                      a.UseHttpStaticPage(options =>
+                      {
+                          options.AddFolder("api/");
+                      });
+
+                      //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+                      a.UseDefaultHttpServicePlugin();
+                  }));
+
+            await service.StartAsync();
+            service.Logger.Info("WebApiAOT服务已启动，监听端口：7789");
+            service.Logger.Info("示例地址：http://127.0.0.1:7789/index.html");
+
+            while (true)
             {
-                a.AddRpcStore(store =>
-                {
-                    store.RegisterServer<ApiServer>();//注册服务
-                });
-
-                a.AddAspNetCoreLogger();
-            });
-
-            builder.Services.AddServiceHostedService<IHttpService, HttpService>(config =>
-            {
-                config.SetListenIPHosts(7789)
-                .ConfigurePlugins(a =>
-                {
-                    a.UseTcpSessionCheckClear();
-
-                    a.UseWebApi(options =>
-                    {
-                        options.ConfigureConverter(converter =>
-                        {
-                            converter.Clear();
-                            converter.AddSystemTextJsonSerializerFormatter(options =>
-                            {
-                                options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                            });
-                        });
-                    });
-
-                    //a.UseSwagger()
-                    //.UseLaunchBrowser();
-
-                    //a.UseHttpStaticPage()
-                    //.SetNavigateAction(request =>
-                    //{
-                    //    //此处可以设置重定向
-                    //    return request.RelativeURL;
-                    //})
-                    //.SetResponseAction(response =>
-                    //{
-                    //    //可以设置响应头
-                    //})
-                    //.AddFolder("api/");//添加静态页面文件夹，可使用 http://127.0.0.1:7789/index.html 访问静态网页
-
-                    ////此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
-                    //a.UseDefaultHttpServicePlugin();
-                });
-            });
-
-            var host = builder.Build();
-            host.Run();
+                Console.ReadLine();
+            }
         }
     }
 
 
+    #region WebApiAOT序列化上下文
     [JsonSerializable(typeof(MyClass))]
     [JsonSerializable(typeof(MySum))]
     internal partial class AppJsonSerializerContext : JsonSerializerContext
     {
 
     }
+    #endregion
 
+    #region WebApiAOT服务注册
     public partial class ApiServer : SingletonRpcServer
     {
         private readonly ILog m_logger;
@@ -124,4 +124,5 @@ namespace WebApiConsoleApp
     {
         public int Sum { get; set; }
     }
+    #endregion
 }

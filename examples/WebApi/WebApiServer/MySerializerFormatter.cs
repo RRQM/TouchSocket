@@ -16,6 +16,7 @@ using TouchSocket.Http;
 
 namespace WebApiServerApp;
 
+#region WebApi自定义序列化器
 internal class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
 {
     public int Order { get; set; }
@@ -32,3 +33,4 @@ internal class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
         throw new NotImplementedException();
     }
 }
+#endregion

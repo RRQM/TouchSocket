@@ -480,7 +480,7 @@ module.exports =
         },
         {
           "type": "doc",
-          "label": "16.6 数据序列化",
+          "label": "16.6 数据序列化与AOT",
           "id": "webapi-serialization"
         },
         {
@@ -495,12 +495,7 @@ module.exports =
         },
         {
           "type": "doc",
-          "label": "16.9 AOT支持",
-          "id": "webapi-aot"
-        },
-        {
-          "type": "doc",
-          "label": "16.10 Swagger文档",
+          "label": "16.9 Swagger文档",
           "id": "webapi-swagger"
         }
       ]
