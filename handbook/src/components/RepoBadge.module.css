@@ -1,0 +1,81 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: #fff;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+}
+
+.badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 21, 36, 0.25);
+  opacity: 0.95;
+}
+
+.badge:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(15, 21, 36, 0.25);
+}
+
+.typePr {
+  background: linear-gradient(135deg, #1f883d, #22863a);
+}
+
+.typeIssue {
+  background: linear-gradient(135deg, #bf8700, #bc4c00);
+}
+
+.content {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.id {
+  font-variant-numeric: tabular-nums;
+}
+
+.platform {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platformIcon {
+  display: block;
+}
+
+.typeIcon {
+  display: block;
+}
+
+.author {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.16);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 21, 36, 0.15);
+  object-fit: cover;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.authorName {
+  white-space: nowrap;
+}

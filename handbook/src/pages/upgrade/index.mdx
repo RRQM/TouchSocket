@@ -7,6 +7,7 @@ title: 历史更新
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import Tag from "@site/src/components/Tag.js";
 import Highlight from '@site/src/components/Highlight.js';
+import RepoBadge from "@site/src/components/RepoBadge.js";
 
 
 ## v4.0.2
@@ -34,8 +35,8 @@ import Highlight from '@site/src/components/Highlight.js';
 
 #### TouchSocket
 
-- &nbsp;<Tag>修复</Tag> `TcpClientBase` SSL连接时 `TargetHost` 可能为空的问题。
-- &nbsp;<Tag>修复</Tag> `ReconnectionOption` 重连逻辑在客户端已释放时继续执行的问题。[PR](https://github.com/RRQM/TouchSocket/pull/97)
+- &nbsp;<Tag>修复</Tag> `TcpClientBase` SSL连接时 `TargetHost` 可能为空的问题。 
+- &nbsp;<Tag>修复</Tag> `ReconnectionOption` 重连逻辑在客户端已释放时继续执行的问题。 <RepoBadge id="97" type="pr" platform="github" />
 - &nbsp;<Tag>优化</Tag> `TcpServiceBase` 优化 `Backlog` 配置处理逻辑。
 - &nbsp;<Tag>调整</Tag> `TouchSocketConfigExtension` 将 `BacklogProperty` 默认值从 `null` 改为 `100`。
 - &nbsp;<Tag>调整</Tag> `TcpListenOption` 将所有属性改为 `init` 访问器,增强不可变性。

@@ -157,6 +157,13 @@
 		],
 		"description": "importCardLink"
 	},
+	"importRepoBadge": {
+		"prefix": "importRepoBadge",
+		"body": [
+			"import RepoBadge from \"@site/src/components/RepoBadge.js\";"
+		],
+		"description": "importRepoBadge"
+	},
 	"CardLink": {
 		"prefix": "CardLink",
 		"body": [
@@ -170,6 +177,13 @@
 			"<CustomCodeBlock region=\"$0\"/>"
 		],
 		"description": "CustomCodeBlock"
+	},
+	"RepoBadge": {
+		"prefix": "RepoBadge",
+		"body": [
+			"<RepoBadge id=\"$0\" type=\"issue\" platform=\"gitee\" />"
+		],
+		"description": "repoBadge"
 	},
 	"BilibiliCard": {
 		"prefix": "BilibiliCard",
