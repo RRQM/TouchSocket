@@ -140,7 +140,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <inheritdoc/>
-    public override async Task StartAsync()
+    public override async Task StartAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
         try

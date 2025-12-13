@@ -24,7 +24,7 @@ public abstract class ServiceBase : SetupConfigObject, IServiceBase
     public abstract ServerState ServerState { get; }
 
     /// <inheritdoc/>
-    public abstract Task StartAsync();
+    public abstract Task StartAsync(CancellationToken cancellationToken=default);
 
     /// <inheritdoc/>
     public abstract Task<Result> StopAsync(CancellationToken cancellationToken = default);

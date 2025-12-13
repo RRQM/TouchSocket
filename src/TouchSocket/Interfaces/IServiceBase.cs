@@ -31,7 +31,7 @@ public interface IServiceBase : ISetupConfigObject
     /// 异步启动
     /// </summary>
     /// <exception cref="Exception">可能启动时遇到的异常</exception>
-    Task StartAsync();
+    Task StartAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步停止服务器

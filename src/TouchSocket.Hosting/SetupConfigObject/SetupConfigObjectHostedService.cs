@@ -18,7 +18,7 @@ namespace TouchSocket.Hosting;
 /// <summary>
 /// SetupObjectHostedService
 /// </summary>
-public abstract class SetupConfigObjectHostedService<TConfigObject> : IHostedService where TConfigObject : ISetupConfigObject
+public class SetupConfigObjectHostedService<TConfigObject> : IHostedService where TConfigObject : ISetupConfigObject
 {
     private TouchSocketConfig m_config;
     private TConfigObject m_configObject;
@@ -81,5 +81,9 @@ public abstract class SetupConfigObjectHostedService<TConfigObject> : IHostedSer
     }
 
     /// <inheritdoc/>
-    public abstract Task StopAsync(CancellationToken cancellationToken);
+    public virtual Task StopAsync(CancellationToken cancellationToken)
+    {
+        this.m_configObject.Dispose();
+        return Task.CompletedTask;
+    }
 }

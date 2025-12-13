@@ -139,7 +139,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task StartAsync()
+    public override async Task StartAsync(CancellationToken cancellationToken=default)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();

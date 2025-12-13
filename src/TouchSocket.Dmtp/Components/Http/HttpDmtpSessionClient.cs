@@ -169,14 +169,22 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (this.m_dmtpActor!=null)
+        {
+            await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        
         await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (this.m_dmtpActor != null)
+        {
+            await this.PluginManager.RaiseIDmtpClosingPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+       
         await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -187,7 +195,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         {
             if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
-                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PluginManager.RaiseIDmtpReceivedPluginAsync(this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
         await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

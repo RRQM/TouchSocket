@@ -119,7 +119,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         }
     }
     /// <inheritdoc/>
-    public override async Task StartAsync()
+    public override async Task StartAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfConfigIsNull();
 

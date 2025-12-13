@@ -13,7 +13,7 @@
 using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
-using TouchSocket.Hosting.Sockets.HostService;
+using TouchSocket.Hosting.HostedServices;
 using TouchSocket.Sockets;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -141,6 +141,20 @@ public static class ServiceCollectionExtensions
      where TObjectImpService : class, TObjectService
     {
         return AddSetupConfigObjectHostedService<ServiceHost<TObjectService>, TObjectService, TObjectImpService>(services, actionConfig);
+    }
+
+    public static IServiceCollection AddClientHostedService<TObjectClient, [DynamicallyAccessedMembers(AOT.Container)] TClientImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TObjectClient : class, ISetupConfigObject, IConnectableClient,IClosableClient
+    where TClientImpService : class, TObjectClient
+    {
+        return AddSetupConfigObjectHostedService<ClientHost<TObjectClient>, TObjectClient, TClientImpService>(services, actionConfig);
+    }
+
+    public static IServiceCollection AddSetupConfigObjectHostedService<TObject, [DynamicallyAccessedMembers(AOT.Container)] TObjectImp>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TObject : class, ISetupConfigObject
+    where TObjectImp : class, TObject
+    {
+        return AddSetupConfigObjectHostedService<SetupConfigObjectHostedService<TObject>, TObject, TObjectImp>(services, actionConfig);
     }
 
     /// <summary>

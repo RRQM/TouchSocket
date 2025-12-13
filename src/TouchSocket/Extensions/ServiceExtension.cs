@@ -87,7 +87,7 @@ public static class ServiceExtension
     }
 
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
-    public static async Task StartAsync<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
+    public static async Task StartAsync<TService>(this TService service, IPHost iPHost, CancellationToken cancellationToken = default) where TService : IUdpSession
     {
         TouchSocketConfig config;
         if (service.Config == null)
@@ -101,7 +101,7 @@ public static class ServiceExtension
             config = service.Config;
             config.SetBindIPHost(iPHost);
         }
-        await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await service.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     #endregion Udp

@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Hosting.Sockets.HostService;
+namespace TouchSocket.Hosting.HostedServices;
 
 internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IServiceBase
 {
@@ -32,7 +32,7 @@ internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> 
         try
         {
             await base.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await this.ConfigObject.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ConfigObject.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_logger.LogInformation("{Message}", TouchSocketHostingResource.HostServerStarted);
         }
@@ -44,6 +44,7 @@ internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> 
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        await this.ConfigObject.StopAsync();
+        await this.ConfigObject.StopAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.StopAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 }

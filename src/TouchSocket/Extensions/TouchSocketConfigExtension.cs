@@ -184,11 +184,11 @@ public static class TouchSocketConfigExtension
     /// <typeparam name="TClient"></typeparam>
     /// <param name="config"></param>
     /// <returns></returns>
-    public static async Task<TClient> BuildClientAsync<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject, IConnectableClient, new()
+    public static async Task<TClient> BuildClientAsync<TClient>(this TouchSocketConfig config, CancellationToken cancellationToken = default) where TClient : ISetupConfigObject, IConnectableClient, new()
     {
         var client = new TClient();
         await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await client.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return client;
     }
 
@@ -198,11 +198,11 @@ public static class TouchSocketConfigExtension
     /// <typeparam name="TService"></typeparam>
     /// <param name="config"></param>
     /// <returns></returns>
-    public static async Task<TService> BuildServiceAsync<TService>(this TouchSocketConfig config) where TService : IServiceBase, new()
+    public static async Task<TService> BuildServiceAsync<TService>(this TouchSocketConfig config, CancellationToken cancellationToken = default) where TService : IServiceBase, new()
     {
         var service = new TService();
         await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await service.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         return service;
     }
     #endregion 创建
