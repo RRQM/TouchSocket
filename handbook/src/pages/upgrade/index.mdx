@@ -10,6 +10,51 @@ import Highlight from '@site/src/components/Highlight.js';
 import RepoBadge from "@site/src/components/RepoBadge.js";
 
 
+## v4.0.3
+
+**更新日期：** 2025.12.13
+
+**更新描述：**
+
+- 兼容性修复升级。
+- 新增客户端托管服务支持。
+- WebSocket心跳检查功能增强。
+
+**更新详情：**
+
+#### TouchSocket
+
+- &nbsp;<Tag>调整</Tag> `IServiceBase.StartAsync` 方法签名，添加 `CancellationToken` 参数支持，允许在启动过程中取消操作。
+- &nbsp;<Tag>调整</Tag> `ServiceBase.StartAsync` 方法同步添加 `CancellationToken` 参数。
+- &nbsp;<Tag>调整</Tag> `TcpServiceBase.StartAsync`、`UdpSessionBase.StartAsync`、`NamedPipeServiceBase.StartAsync` 方法签名统一添加 `CancellationToken` 参数。
+- &nbsp;<Tag>调整</Tag> `ServiceExtension.StartAsync` 扩展方法为 UDP 服务添加 `CancellationToken` 参数支持。
+- &nbsp;<Tag>调整</Tag> `TouchSocketConfigExtension.BuildClientAsync` 和 `BuildServiceAsync` 方法添加 `CancellationToken` 参数。
+
+#### TouchSocket.AspNetCore
+
+- &nbsp;<Tag>调整</Tag> `WebSocketDmtpService.StartAsync` 方法签名添加 `CancellationToken` 参数。
+
+#### TouchSocket.Dmtp
+
+- &nbsp;<Tag>修复</Tag> `HttpDmtpSessionClient` 在 `OnTcpClosed` 和 `OnTcpClosing` 事件中，当 `DmtpActor` 为空时可能导致的空引用异常。
+- &nbsp;<Tag>优化</Tag> `HttpDmtpSessionClient` 插件调用，使用强类型方法 `RaiseIDmtpClosingPluginAsync` 和 `RaiseIDmtpReceivedPluginAsync` 直接调用。
+
+#### TouchSocket.Hosting
+
+- &nbsp;<Tag>调整</Tag> `ServiceHost.StartAsync` 和 `StopAsync` 方法传递 `CancellationToken` 参数到服务对象。
+- &nbsp;<Tag>调整</Tag> `ServiceHost.StopAsync` 方法添加 `base.StopAsync` 调用，确保完整的停止流程。
+- &nbsp;<Tag>调整</Tag> `SetupConfigObjectHostedService` 类从 `abstract` 改为普通类，`StopAsync` 方法提供默认实现。
+- &nbsp;<Tag>新增</Tag> `ClientHost` 托管服务类，支持客户端类型（如 TCP 客户端）的托管服务注册和生命周期管理。
+- &nbsp;<Tag>新增</Tag> `ServiceCollectionExtensions.AddClientHostedService` 扩展方法，用于注册客户端托管服务。
+- &nbsp;<Tag>新增</Tag> `ServiceCollectionExtensions.AddSetupConfigObjectHostedService` 扩展方法，用于通用配置对象的托管服务注册。
+- &nbsp;<Tag>修复</Tag> `ServiceCollectionExtensions` 命名空间引用，从 `TouchSocket.Hosting.Sockets.HostService` 更正为 `TouchSocket.Hosting.HostedServices`。
+
+#### TouchSocket.Http
+
+- &nbsp;<Tag>新增</Tag> `ReconnectionOptionsExtension.UseWebSocketCheckAction` 扩展方法，为 WebSocket 客户端提供基于活动时间和 Ping 的智能心跳检查功能。该功能支持三级检查策略：在线状态检查、活动时间检查和主动 Ping 心跳检查，提高连接可靠性。 <RepoBadge id="98" type="issue" platform="github" />
+
+***
+
 ## v4.0.2
 
 **更新日期：** 2025.12.6
