@@ -68,12 +68,17 @@ internal class Program
         #region WebSocket断线重连
              .ConfigurePlugins(a =>
              {
-                 a.UseReconnection<WebSocketClient>();
-
-                 //使用健康插件进行绝对存活检测，默认10秒检测一次。
-                 a.UseCheckClear<WebSocketClient>(options =>
+                 a.UseReconnection<WebSocketClient>(options => 
                  {
-                     options.Tick = TimeSpan.FromSeconds(10);
+                     //设置在线状态轮询时间为5秒钟。
+                     options.PollingInterval = TimeSpan.FromSeconds(5);
+
+                     //使用websocket专门的心跳在线检测。基本逻辑如下：
+                     //由于设置的PollingInterval为5秒，所以每5秒会检查一下WebSocketClient在线状态。
+                     //如果在activeTimeSpan（30秒）内，有数据收发，则会跳过。
+                     //如果没有，则会发送ping报文。如果发送失败，则认定为离线，进行重连。
+                     //注意：pingTimeout表示发送ping报文超时时间，此处不检验Pong报文的接收。
+                     options.UseWebSocketCheckAction(activeTimeSpan:TimeSpan.FromSeconds(30),pingTimeout:TimeSpan.FromSeconds(5));
                  });
              })
         #endregion
