@@ -253,6 +253,8 @@ internal class Program
         #region Mqtt客户端自动重连配置
         config.ConfigurePlugins(a =>
         {
+            //此处如果是Tcp协议的Mqtt客户端，则使用MqttTcpClient
+            //如果是WebSocket协议的Mqtt客户端，则使用MqttWebSocketClient
             a.UseReconnection<MqttTcpClient>(options =>
             {
                 options.PollingInterval = TimeSpan.FromSeconds(5);//轮询检验间隔为5秒

@@ -364,6 +364,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcAopConsoleApp", "Rpc\Rpc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcCallContextConsoleApp", "Rpc\RpcCallContextConsoleApp\RpcCallContextConsoleApp.csproj", "{58069766-C855-4B2D-B547-6C256E725215}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MqttWebSocketConsoleApp", "Mqtt\MqttWebSocketConsoleApp\MqttWebSocketConsoleApp.csproj", "{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -850,6 +852,10 @@ Global
 		{58069766-C855-4B2D-B547-6C256E725215}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58069766-C855-4B2D-B547-6C256E725215}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58069766-C855-4B2D-B547-6C256E725215}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1007,6 +1013,7 @@ Global
 		{F72A1BA0-541A-40CD-89EB-24C4F010DAC0} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
 		{3F974BD3-A55A-4D13-AB83-C8FE94CE0041} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
 		{58069766-C855-4B2D-B547-6C256E725215} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
+		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC} = {C3E50032-382B-4BCF-8361-1C592A78CC06}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
