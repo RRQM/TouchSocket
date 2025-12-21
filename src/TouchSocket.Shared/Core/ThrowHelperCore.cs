@@ -58,6 +58,12 @@ internal static partial class ThrowHelper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowArgumentOutOfRangeException(string paramName)
+    {
+        throw new ArgumentOutOfRangeException(paramName);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowException(string message)
     {
         throw new Exception(message);
@@ -119,6 +125,12 @@ internal static partial class ThrowHelper
     public static void ThrowObjectDisposedException(object obj)
     {
         throw new ObjectDisposedException(TouchSocketCoreResource.ObjectDisposed.Format(obj.GetType().FullName, obj.GetHashCode()));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowObjectDisposedException(string objectName)
+    {
+        throw new ObjectDisposedException(objectName);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

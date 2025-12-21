@@ -50,19 +50,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     }
 
     /// <inheritdoc/>
-    public Task<Result> PingAsync(CancellationToken cancellationToken = default)
-    {
-        return this.m_webSocket.PingAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public Task<Result> PongAsync(CancellationToken cancellationToken = default)
-    {
-        return this.m_webSocket.PongAsync(cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
+    public ValueTask<WebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
     {
         return this.m_webSocket.ReadAsync(cancellationToken);
     }
@@ -71,18 +59,6 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         return this.m_webSocket.SendAsync(dataFrame, endOfMessage, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(string text, bool endOfMessage = true, CancellationToken cancellationToken = default)
-    {
-        return this.m_webSocket.SendAsync(text, endOfMessage, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken cancellationToken = default)
-    {
-        return this.m_webSocket.SendAsync(memory, endOfMessage, cancellationToken);
     }
 
     #region Connect

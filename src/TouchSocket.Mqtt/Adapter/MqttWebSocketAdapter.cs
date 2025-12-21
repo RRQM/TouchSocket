@@ -12,17 +12,13 @@
 
 namespace TouchSocket.Mqtt;
 
-internal class MqttAdapter : CustomDataHandlingAdapter<MqttMessage>
+internal class MqttWebSocketAdapter : CustomDataHandlingAdapter<MqttMessage>
 {
-    public MqttAdapter()
-    {
-    }
-
     public MqttProtocolVersion Version { get; set; } = MqttProtocolVersion.Unknown;
 
     protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref MqttMessage request)
     {
-        if (reader.BytesRemaining < 2)
+        if (reader.BytesRemaining < 1)
         {
             return FilterResult.Cache;
         }

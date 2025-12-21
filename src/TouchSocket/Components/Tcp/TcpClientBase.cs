@@ -200,7 +200,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect()
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return Result.Success;
         }
         catch (Exception ex)
@@ -218,9 +219,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
-            this.m_tcpCore.SafeDispose();
-            this.m_semaphoreForConnectAndClose.SafeDispose();
+            _ = EasyTask.SafeRun(async () =>
+            {
+                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.m_semaphoreForConnectAndClose.SafeDispose();
+            });
+            this.m_tcpCore.Dispose();
         }
 
         base.SafetyDispose(disposing);

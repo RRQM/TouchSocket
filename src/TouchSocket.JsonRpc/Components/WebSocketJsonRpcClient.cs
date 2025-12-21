@@ -105,4 +105,9 @@ public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcCli
         }
         base.SafetyDispose(disposing);
     }
+
+    public Task ConnectAsync(CancellationToken cancellationToken)
+    {
+        return base.WebSocketConnectAsync(cancellationToken);
+    }
 }

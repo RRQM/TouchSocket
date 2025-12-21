@@ -224,7 +224,7 @@ public abstract class HttpBase : IRequestInfo
             this.m_headers.AddInternal(HttpHeaders.TransferEncoding, value);
             return;
         }
-        
+
         var key = this.m_stringPool.Get(keySpan);
 
         var commaCount = 0;
@@ -246,12 +246,12 @@ public abstract class HttpBase : IRequestInfo
         var values = new string[commaCount + 1];
         var valueIndex = 0;
         var start = 0;
-        
+
         while (start < valueSpan.Length)
         {
             var nextComma = valueSpan.Slice(start).IndexOf((byte)',');
             ReadOnlySpan<byte> segment;
-            
+
             if (nextComma >= 0)
             {
                 segment = valueSpan.Slice(start, nextComma);
@@ -274,7 +274,7 @@ public abstract class HttpBase : IRequestInfo
         {
             return;
         }
-        
+
         if (valueIndex == 1)
         {
             this.m_headers.AddInternal(key, values[0]);
@@ -339,7 +339,7 @@ public abstract class HttpBase : IRequestInfo
 
         var sign = 1;
         var index = 0;
-        
+
         if (span[0] == (byte)'-' || span[0] == (byte)'+')
         {
             sign = span[0] == (byte)'-' ? -1 : 1;
@@ -373,6 +373,14 @@ public abstract class HttpBase : IRequestInfo
         var lineEnd = span.IndexOf(TouchSocketHttpUtility.CRLF);
         if (lineEnd == -1)
         {
+            // 整个span就是请求行，没有\r\n
+            this.ReadRequestLine(span);
+            return;
+        }
+
+        if (lineEnd == 0)
+        {
+            // 如果第一行就是空行，说明没有请求行，这是无效格式
             ThrowHelper.ThrowException("Invalid HTTP header format.");
         }
 

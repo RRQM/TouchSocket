@@ -10,10 +10,15 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
-public interface IMqttTcpService : ITcpServiceBase<MqttTcpSessionClient>, IMqttService
+public interface IMqttWebSocketClient: ISetupConfigObject, IMqttClient
 {
 }

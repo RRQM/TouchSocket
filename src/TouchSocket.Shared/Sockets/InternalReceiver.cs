@@ -31,7 +31,7 @@ internal class InternalReceiver : SafetyDisposableObject, IReceiver<IReceiverRes
         this.m_asyncExchange.Complete();
     }
 
-    public ValueTask InputReceiveAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken cancellationToken)
+    public ValueTask<bool> InputReceiveAsync(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
         return this.m_asyncExchange.WriteAsync((memory, requestInfo), cancellationToken);
     }

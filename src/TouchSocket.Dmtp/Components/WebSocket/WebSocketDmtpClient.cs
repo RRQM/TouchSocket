@@ -45,7 +45,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     #region 连接
 
     /// <inheritdoc/>
-    public override async Task ConnectAsync(CancellationToken cancellationToken)
+    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
     {
         await this.m_connectionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
@@ -57,7 +57,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
             if (!base.Online)
             {
-                await base.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.WebSocketConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
 
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)

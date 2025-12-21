@@ -38,8 +38,6 @@ internal sealed class TcpCore : SafetyDisposableObject
 
     #endregion 字段
 
-    public bool ReceiveRunContinuationsAsynchronously { get => this.m_socketReceiver.RunContinuationsAsynchronously; set => this.m_socketReceiver.RunContinuationsAsynchronously = value; }
-    public bool SendRunContinuationsAsynchronously { get => this.m_socketSender.RunContinuationsAsynchronously; set => this.m_socketSender.RunContinuationsAsynchronously = value; }
     public Socket Socket => this.m_socket;
 
 

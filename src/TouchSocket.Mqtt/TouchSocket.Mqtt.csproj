@@ -18,10 +18,6 @@
 	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
-	</ItemGroup>
-
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="System.Threading.Channels" Version="6.0.0" />
@@ -45,6 +41,10 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Http\TouchSocket.Http.csproj" />
 	</ItemGroup>
 
 </Project>

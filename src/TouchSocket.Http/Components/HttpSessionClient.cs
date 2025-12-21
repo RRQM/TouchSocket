@@ -73,7 +73,17 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
         if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
         {
             e.Handled = true;
-            await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            try
+            {
+                await this.PrivateWebSocketReceived(dataFrame)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+            catch (Exception ex)
+            {
+
+            }
+            
             return;
         }
     }

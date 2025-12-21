@@ -18,25 +18,20 @@ namespace TouchSocket.Sockets;
 internal abstract class SocketAwaitableEventArgs<TResult> : SocketAsyncEventArgs, IValueTaskSource<TResult>
     where TResult : struct
 {
-
 #if NET6_0_OR_GREATER
     public SocketAwaitableEventArgs()
        : base(true)
     {
-       
     }
 #else
+
     public SocketAwaitableEventArgs()
     {
-
     }
+
 #endif
 
-
-
-    protected ManualResetValueTaskSourceCore<TResult> m_core = new ManualResetValueTaskSourceCore<TResult>();
-
-    public bool RunContinuationsAsynchronously { get => this.m_core.RunContinuationsAsynchronously; set => this.m_core.RunContinuationsAsynchronously = value; }
+    protected ManualResetValueTaskSourceCore<TResult> m_core = new ManualResetValueTaskSourceCore<TResult>() { RunContinuationsAsynchronously = true };
 
     TResult IValueTaskSource<TResult>.GetResult(short cancellationToken)
     {

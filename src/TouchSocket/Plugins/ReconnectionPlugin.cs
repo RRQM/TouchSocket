@@ -40,14 +40,14 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     public CancellationToken CancellationToken => this.m_cts.Token;
 
     /// <summary>
-    /// 轮询时间间隔
-    /// </summary>
-    public TimeSpan PollingInterval => this.m_options.PollingInterval;
-
-    /// <summary>
     /// 重连选项
     /// </summary>
     public ReconnectionOption<TClient> Options => this.m_options;
+
+    /// <summary>
+    /// 轮询时间间隔
+    /// </summary>
+    public TimeSpan PollingInterval => this.m_options.PollingInterval;
 
     /// <inheritdoc/>
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
@@ -105,8 +105,15 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                         case ConnectionCheckResult.Skip:
                             continue;
                         case ConnectionCheckResult.Dead:
-                            await this.m_options.ConnectAction.Invoke(client, this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            break;
+                            {
+                                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
+                                {
+                                    cts.CancelAfter(this.m_options.ConnectTimeout);
+                                    await this.m_options.ConnectAction.Invoke(client, this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                }
+
+                                break;
+                            }
                         case ConnectionCheckResult.Alive:
                             break;
                     }

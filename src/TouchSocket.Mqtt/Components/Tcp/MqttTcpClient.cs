@@ -17,6 +17,7 @@ namespace TouchSocket.Mqtt;
 public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 {
     private readonly MqttClientActor m_mqttActor;
+    private readonly SemaphoreSlim m_semaphoreSlimConnect = new SemaphoreSlim(1, 1);
 
     private MqttAdapter m_mqttAdapter;
 
@@ -102,26 +103,34 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        if (this.Online)
+        await this.m_semaphoreSlimConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
         {
-            return;
+            if (this.Online)
+            {
+                return;
+            }
+
+            var mqttConnectOptions = this.Config.GetValue(MqttConfigExtension.MqttConnectOptionsProperty);
+            ThrowHelper.ThrowIfNull(mqttConnectOptions, nameof(mqttConnectOptions));
+
+            var connectMessage = new MqttConnectMessage(mqttConnectOptions);
+
+            await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
+
+            await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (connAckMessage.ReturnCode != MqttReasonCode.ConnectionAccepted)
+            {
+                ThrowHelper.ThrowException($"Connection failed with reason: {connAckMessage.ReturnCode}，reasonString: {connAckMessage.ReasonString}");
+            }
+            await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-
-        var mqttConnectOptions = this.Config.GetValue(MqttConfigExtension.MqttConnectOptionsProperty);
-        ThrowHelper.ThrowIfNull(mqttConnectOptions, nameof(mqttConnectOptions));
-
-        var connectMessage = new MqttConnectMessage(mqttConnectOptions);
-
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
-
-        await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        if (connAckMessage.ReturnCode!= MqttReasonCode.ConnectionAccepted)
+        finally
         {
-            ThrowHelper.ThrowException($"Connection failed with reason: {connAckMessage.ReturnCode}，reasonString: {connAckMessage.ReasonString}");
+            this.m_semaphoreSlimConnect.Release();
         }
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <inheritdoc/>

@@ -169,7 +169,7 @@ public static partial class WriterExtension
             {
                 fixed (byte* p1 = &span[0])
                 {
-                    var len = Encoding.UTF8.GetBytes(p, chars.Length, p1, maxSize);
+                    var len = encoding.GetBytes(p, chars.Length, p1, maxSize);
                     writer.Advance(len);
                 }
             }

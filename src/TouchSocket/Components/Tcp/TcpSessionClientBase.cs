@@ -64,6 +64,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
     private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
+    private readonly SemaphoreSlim m_closeSemaphore = new SemaphoreSlim(1, 1);
 
     #endregion 变量
 
@@ -286,6 +287,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+       await this.m_closeSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             if (!this.m_online)
@@ -293,7 +295,8 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
                 return Result.Success;
             }
 
-            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg))
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             var transport = this.m_transport;
             if (transport != null)
             {
@@ -305,6 +308,10 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         catch (Exception ex)
         {
             return Result.FromException(ex);
+        }
+        finally
+        {
+            this.m_closeSemaphore.Release();
         }
     }
 
@@ -425,7 +432,11 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            _ = EasyTask.SafeRun(async () =>
+            {
+                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.m_closeSemaphore.Dispose();
+            });
         }
         base.SafetyDispose(disposing);
     }

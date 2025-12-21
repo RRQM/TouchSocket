@@ -258,7 +258,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         //this.m_sendBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
     }
 
-    private async Task OnWebSocketReceived(WebSocketReceiveResult result, ReadOnlySequence<byte> sequence)
+    private async Task OnWebSocketReceived(System.Net.WebSockets.WebSocketReceiveResult result, ReadOnlySequence<byte> sequence)
     {
         try
         {

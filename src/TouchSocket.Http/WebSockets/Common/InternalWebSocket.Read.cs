@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net.WebSockets;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Http.WebSockets;
@@ -17,35 +18,31 @@ namespace TouchSocket.Http.WebSockets;
 internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSocket
 {
     private readonly AsyncExchange<WSDataFrame> m_asyncExchange = new();
-
-    private string msg;
+    private string m_completeMsg;
 
     public void Complete(string msg)
     {
         try
         {
+            this.m_completeMsg = msg;
             this.m_asyncExchange.Complete();
-            this.msg = msg;
         }
         catch
         {
         }
     }
 
-    public async ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
+    public async ValueTask<WebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfNotAllowAsyncRead();
-        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken)
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var frame = readLease.Value;
-        return new WebSocketReceiveBlockResult(readLease.Dispose)
-        {
-            IsCompleted = readLease.IsCompleted,
-            DataFrame = frame,
-            Message = this.msg
-        };
+        var message = readLease.IsCompleted ? this.m_completeMsg : null;
+        return new WebSocketReceiveResult(readLease,frame,message);
     }
 
-    internal ValueTask InputReceiveAsync(WSDataFrame dataFrame, CancellationToken cancellationToken)
+    internal ValueTask<bool> InputReceiveAsync(WSDataFrame dataFrame, CancellationToken cancellationToken)
     {
         return this.m_asyncExchange.WriteAsync(dataFrame, cancellationToken);
     }
@@ -57,35 +54,4 @@ internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSo
             ThrowHelper.ThrowNotSupportedException(TouchSocketHttpResource.NotAllowAsyncRead);
         }
     }
-
-    #region Class
-
-    private sealed class WebSocketReceiveBlockResult : IWebSocketReceiveResult
-    {
-        private readonly Action m_actionForDispose;
-
-        public WebSocketReceiveBlockResult(Action actionForDispose)
-        {
-            this.m_actionForDispose = actionForDispose;
-        }
-
-        public WSDataFrame DataFrame { get; set; }
-
-        /// <summary>
-        /// 获取表示内存处理是否完成的布尔值。
-        /// </summary>
-        public bool IsCompleted { get; set; }
-
-        /// <summary>
-        /// 获取处理结果的消息。
-        /// </summary>
-        public string Message { get; set; }
-
-        void IDisposable.Dispose()
-        {
-            this.m_actionForDispose.Invoke();
-        }
-    }
-
-    #endregion Class
 }

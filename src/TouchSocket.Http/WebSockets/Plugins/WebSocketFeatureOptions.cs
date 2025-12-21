@@ -79,10 +79,9 @@ public sealed class WebSocketFeatureOptions
     {
         ThrowHelper.ThrowIfNull(verifyConnection, nameof(verifyConnection));
 
-        this.VerifyConnection = async (client, context) =>
+        this.VerifyConnection = (client, context) =>
         {
-            await EasyTask.CompletedTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return verifyConnection.Invoke(client, context);
+            return Task.FromResult(verifyConnection.Invoke(client, context));
         };
     }
 

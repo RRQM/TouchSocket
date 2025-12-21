@@ -10,15 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net.WebSockets;
+
 namespace TouchSocket.Http.WebSockets;
 
-/// <summary>
-/// 定义WebSocket接收结果的接口，继承自IDisposable接口
-/// </summary>
-public interface IWebSocketReceiveResult : IBlockResult
+public readonly struct WebSocketReceiveResult:IDisposable
 {
-    /// <summary>
-    /// WebSocket数据帧
-    /// </summary>
-    WSDataFrame DataFrame { get; }
+    private readonly ReadLease<WSDataFrame> m_readLease;
+
+    public WebSocketReceiveResult(ReadLease<WSDataFrame> readLease, WSDataFrame dataFrame, string message)
+    {
+        this.m_readLease = readLease;
+        this.DataFrame = dataFrame;
+        this.Message = message;
+    }
+
+    public WSDataFrame DataFrame { get; }
+
+
+    public bool IsCompleted => this.m_readLease.IsCompleted;
+
+
+    public string Message { get; }
+
+    public void Dispose()
+    {
+        this.m_readLease.Dispose();
+    }
 }

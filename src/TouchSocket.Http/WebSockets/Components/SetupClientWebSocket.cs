@@ -20,7 +20,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 表示一个WebSocket客户端的设置配置对象。
 /// </summary>
-public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient, IOnlineClient
+public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient, IOnlineClient,IDependencyClient
 {
     /// <summary>
     /// 初始化 <see cref="SetupClientWebSocket"/> 类的新实例。
@@ -45,8 +45,8 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     #region 连接
 
-    /// <inheritdoc/>
-    public virtual async Task ConnectAsync(CancellationToken cancellationToken)
+   
+    protected async Task WebSocketConnectAsync(CancellationToken cancellationToken, Action<ClientWebSocketOptions> option = null)
     {
         this.ThrowIfDisposed();
         await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -62,21 +62,54 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                 this.m_client.SafeDispose();
                 this.m_client = new ClientWebSocket();
 
-                // 应用可配置的WebSocket保活间隔
-                var wsOption = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
-                if (wsOption != null)
+                try
                 {
-                    this.m_client.Options.KeepAliveInterval = wsOption.KeepAliveInterval;
+                    var wsOption = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
+                    var clientSslOption = this.Config.ClientSslOption;
+                    var proxy = this.Config.Proxy;
+
+                    if (wsOption != null && wsOption.KeepAliveInterval > TimeSpan.Zero)
+                    {
+                        this.m_client.Options.KeepAliveInterval = wsOption.KeepAliveInterval;
+                    }
+
+                    if (proxy != null)
+                    {
+                        this.m_client.Options.Proxy = proxy;
+                    }
+
+                    if (clientSslOption != null)
+                    {
+                        if (clientSslOption.ClientCertificates != null && clientSslOption.ClientCertificates.Count > 0)
+                        {
+                            this.m_client.Options.ClientCertificates = clientSslOption.ClientCertificates;
+                        }
+
+#if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                        if (clientSslOption.CertificateValidationCallback != null)
+                        {
+                            this.m_client.Options.RemoteCertificateValidationCallback = clientSslOption.CertificateValidationCallback;
+                        }
+#endif
+                    }
+
+                    option?.Invoke(this.m_client.Options);
+
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                    this.m_tokenSourceForOnline = new CancellationTokenSource();
+
+                    this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
+
+                    this.m_online = true;
+                }
+                catch
+                {
+                    this.m_client.SafeDispose();
+                    this.m_client = null;
+                    throw;
                 }
             }
-
-            await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            this.m_tokenSourceForOnline = new CancellationTokenSource();
-
-            this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
-
-            this.m_online = true;
         }
         finally
         {
@@ -126,6 +159,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     /// <inheritdoc/>
     public CancellationToken ClosedToken => this.m_tokenSourceForOnline.GetTokenOrCanceled();
+
+    /// <inheritdoc/>
+    public bool IsClient => true;
 
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)

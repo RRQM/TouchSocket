@@ -19,7 +19,7 @@ namespace TouchSocket.JsonRpc;
 /// <summary>
 /// 表示一个WebSocket Json RPC客户端接口。
 /// </summary>
-public interface IWebSocketJsonRpcClient : ISetupConfigObject, IJsonRpcClient, IOnlineClient, IClosableClient, IConnectableClient
+public interface IWebSocketJsonRpcClient : ISetupConfigObject, IJsonRpcClient, IOnlineClient, IClosableClient, IConnectableClient,IDependencyClient
 {
     /// <summary>
     /// 获取或设置动作映射。

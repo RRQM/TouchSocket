@@ -130,7 +130,7 @@ internal sealed class ServerHttpRequest : HttpRequest
         this.m_asyncExchange.Complete();
     }
 
-    internal ValueTask InternalInputAsync(in ReadOnlyMemory<byte> memory)
+    internal ValueTask<bool> InternalInputAsync(in ReadOnlyMemory<byte> memory)
     {
         return this.m_asyncExchange.WriteAsync(memory, CancellationToken.None);
     }

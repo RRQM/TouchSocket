@@ -10,12 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
@@ -102,6 +96,50 @@ public static class ReconnectionOptionsExtension
                 // 其他异常也认为连接不可用
                 return ConnectionCheckResult.Dead;
             }
+        };
+    }
+
+    /// <summary>
+    /// 为 <see cref="ReconnectionOption{TClient}"/> 设置一个基于活动时间与 Ping 的检查动作。
+    /// </summary>
+    /// <typeparam name="TClient">实现了 <see cref="SetupClientWebSocket"/></typeparam>
+    /// <param name="reconnectionOption">要配置的 <see cref="ReconnectionOption{TClient}"/> 实例。</param>
+    /// <param name="activeTimeSpan">在此时间范围内若有活动则跳过心跳检测，默认 3 秒。</param>
+    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 或 <paramref name="pingTimeout"/> 小于或等于零时抛出。</exception>
+    public static void UseWebSocketCheckAction<TClient>(
+        this ReconnectionOption<TClient> reconnectionOption,
+        TimeSpan? activeTimeSpan = null)
+  where TClient : SetupClientWebSocket, IConnectableClient, IOnlineClient, IDependencyClient
+    {
+        ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
+        var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
+      
+        // 验证时间参数的有效性
+        if (span <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(activeTimeSpan), "活动时间间隔必须大于零");
+        }
+
+        reconnectionOption.CheckAction = async (client) =>
+        {
+            // 第1步：快速在线状态检查
+            // 如果客户端已经离线，无需进一步检查，直接返回Dead状态
+            if (!client.Online)
+            {
+                return ConnectionCheckResult.Dead;
+            }
+
+            // 第2步：活动时间检查
+            // 如果客户端在指定时间内有活动，说明连接正常，跳过本次心跳检查
+            var lastActiveTime = client.GetLastActiveTime();
+            var timeSinceLastActivity = DateTimeOffset.UtcNow - lastActiveTime;
+
+            if (timeSinceLastActivity < span)
+            {
+                return ConnectionCheckResult.Skip;
+            }
+
+            return ConnectionCheckResult.Alive;
         };
     }
 }

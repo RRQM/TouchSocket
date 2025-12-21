@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics;
 using System.Net.WebSockets;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Resources;
@@ -38,7 +39,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     {
         return this.OnWebSocketConnected(webSocket, e);
     }
-
+   
     private async Task PrivateWebSocketReceived(WSDataFrame dataFrame)
     {
         if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
@@ -53,23 +54,28 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
             var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
 
-            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg))
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful")
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
         {
-            await this.m_webSocket.PongAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.PongAsync()
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.InputReceiveAsync(dataFrame, this.ClosedToken)
+              .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
-        await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame))
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private Task PrivateWebSocketClosing(ClosingEventArgs e)

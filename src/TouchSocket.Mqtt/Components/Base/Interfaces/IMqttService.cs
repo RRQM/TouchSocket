@@ -10,10 +10,9 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Sockets;
-
 namespace TouchSocket.Mqtt;
 
-public interface IMqttTcpService : ITcpServiceBase<MqttTcpSessionClient>, IMqttService
+public interface IMqttService
 {
+    MqttBroker MqttBroker { get; }
 }

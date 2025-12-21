@@ -87,14 +87,19 @@ internal sealed partial class InternalWebSocket : IWebSocket
                 byteBlock.Dispose();
             }
 
-            if (this.m_isServer)
+            //防止关闭递归死锁
+            _=EasyTask.SafeNewRun(async () => 
             {
-                await this.m_httpSocketClient.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
-            else
-            {
-                await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            }
+                if (this.m_isServer)
+                {
+                    await this.m_httpSocketClient.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+                else
+                {
+                    await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            });
+            
             return Result.Success;
         }
         catch (Exception ex)
@@ -103,55 +108,6 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    public async Task<Result> PingAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
-    }
-
-    public async Task<Result> PongAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
-    }
-
-    #region 发送
-
-    public async Task SendAsync(string text, bool endOfMessage = true, CancellationToken cancellationToken = default)
-    {
-        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(text, nameof(text));
-        var byteBlock = new ByteBlock(Encoding.UTF8.GetMaxByteCount(text.Length));
-        try
-        {
-            WriterExtension.WriteNormalString(ref byteBlock, text, Encoding.UTF8);
-            var frame = new WSDataFrame(byteBlock.Memory) { FIN = endOfMessage, Opcode = WSDataType.Text };
-            await this.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
-    }
-
-    public async Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken cancellationToken = default)
-    {
-        var frame = new WSDataFrame(memory) { FIN = endOfMessage, Opcode = WSDataType.Binary };
-        await this.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-    }
 
     public async Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
@@ -204,7 +160,6 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-    #endregion 发送
 
     protected override void SafetyDispose(bool disposing)
     {
@@ -216,5 +171,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
         {
             this.m_httpClientBase.SafeDispose();
         }
+
+        this.m_asyncExchange.Complete();
     }
 }
