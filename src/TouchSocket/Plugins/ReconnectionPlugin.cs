@@ -109,7 +109,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                                 using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
                                 {
                                     cts.CancelAfter(this.m_options.ConnectTimeout);
-                                    await this.m_options.ConnectAction.Invoke(client, this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
 
                                 break;
