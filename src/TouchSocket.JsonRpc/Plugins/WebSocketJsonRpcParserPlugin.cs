@@ -64,7 +64,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
         {
             e.Handled = true;
 
-            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client, client.Client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {

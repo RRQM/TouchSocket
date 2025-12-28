@@ -29,12 +29,9 @@ public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
         if (e.Context.Request.IsMethod("OPTIONS"))
         {
             response.SetStatus(204, "No Content");
-            response.Headers.TryAdd("Access-Control-Allow-Origin", "*");
-            response.Headers.TryAdd("Access-Control-Allow-Headers", "*");
-            response.Headers.TryAdd("Allow", "OPTIONS, GET, POST");
-            response.Headers.TryAdd("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-
-            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response
+                .AnswerAsync()
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else
         {

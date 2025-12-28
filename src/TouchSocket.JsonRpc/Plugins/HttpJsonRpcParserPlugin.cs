@@ -68,7 +68,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                     client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
                 }
 
-                await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context,client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
         }

@@ -56,7 +56,7 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 
     public ClosedEventArgs ClosedEventArgs => this.m_closedEventArgs ?? s_defaultClosedEventArgs;
 
-    public CancellationToken ClosedToken => this.m_tokenSource.Token;
+    public CancellationToken ClosedToken => this.DisposedValue ? new CancellationToken(true) : this.m_tokenSource.Token;
 
     /// <summary>
     /// 获取用于读取数据的管道读取器

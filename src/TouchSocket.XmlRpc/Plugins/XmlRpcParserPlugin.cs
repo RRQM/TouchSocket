@@ -72,7 +72,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
                     {
                         try
                         {
-                            callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver, e.Context, xmlstring);
+                            callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver, e.Context, xmlstring,client.ClosedToken);
 
                             ps = new object[rpcMethod.Parameters.Length];
                             var paramsNode = xml.SelectSingleNode("methodCall/params");

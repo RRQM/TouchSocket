@@ -20,6 +20,10 @@ namespace TouchSocket.Http;
 /// </summary>
 public abstract class HttpClientBase : TcpClientBase, IHttpSession
 {
+    private readonly SemaphoreSlim m_connectSemaphore = new SemaphoreSlim(1, 1);
+
+    private readonly ClientHttpResponse m_httpClientResponse;
+
     /// <summary>
     /// 初始化 <see cref="HttpClientBase"/> 类的新实例。
     /// </summary>
@@ -39,6 +43,19 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <param name="cancellationToken">用于取消操作的CancellationToken</param>
     /// <returns>返回一个任务，表示异步连接操作</returns>
     protected virtual async Task HttpConnectAsync(CancellationToken cancellationToken)
+    {
+        await this.m_connectSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            this.m_connectSemaphore.Release();
+        }
+    }
+
+    private async Task PrivateHttpConnectAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
 
@@ -71,6 +88,10 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
+        if (disposing)
+        {
+            this.m_connectSemaphore?.Dispose();
+        }
         base.SafetyDispose(disposing);
     }
 
@@ -174,29 +195,164 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
     #region Request
 
-    private readonly ClientHttpResponse m_httpClientResponse;
+    /// <summary>
+    /// 最大重定向次数
+    /// </summary>
+    public const int MaximumRedirectCount = 50;
 
     /// <summary>
-    /// 异步发送Http请求，并仅等待响应头
+    /// 异步发送Http请求,并仅等待响应头
     /// </summary>
     /// <param name="request">要发送的HttpRequest对象</param>
     /// <param name="cancellationToken">用于取消操作的CancellationToken</param>
-    /// <returns>返回HttpResponseResult对象，包含响应结果和释放锁的方法</returns>
+    /// <returns>返回HttpResponseResult对象,包含响应结果和释放锁的方法</returns>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>
     /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+    /// <exception cref="TooManyRedirectsException">当重定向次数超过最大限制时抛出</exception>
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
     protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken cancellationToken)
     {
-        // 设置Host头部
-        request.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
+        return await this.ProtectedRequestAsync(request, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
 
-        // 发送请求
-        await this.BuildAndSendAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    /// <summary>
+    /// 异步发送Http请求,并仅等待响应头
+    /// </summary>
+    /// <param name="request">要发送的HttpRequest对象</param>
+    /// <param name="allowRedirect">是否允许自动重定向</param>
+    /// <param name="cancellationToken">用于取消操作的CancellationToken</param>
+    /// <returns>返回HttpResponseResult对象,包含响应结果和释放锁的方法</returns>
+    /// <exception cref="TimeoutException">当操作超时时抛出</exception>
+    /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+    /// <exception cref="TooManyRedirectsException">当重定向次数超过最大限制时抛出</exception>
+    /// <exception cref="Exception">当发生其他异常时抛出</exception>
+    protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, bool allowRedirect, CancellationToken cancellationToken)
+    {
+        await this.m_connectSemaphore.WaitAsync(cancellationToken);
 
-        // 直接从Transport的Reader读取响应
-        var response = await this.ReadHttpResponseAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        try
+        {
+            var redirectCount = 0;
+            var currentRequest = request;
+            var originalHost = this.RemoteIPHost;
 
-        return new HttpResponseResult(response);
+            while (true)
+            {
+                currentRequest.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
+
+                await this.BuildAndSendAsync(currentRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                var response = await this.ReadHttpResponseAsync(cancellationToken)
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                if (!allowRedirect || !this.IsRedirectStatusCode(response.StatusCode))
+                {
+                    return new HttpResponseResult(response);
+                }
+
+                var location = response.Headers.Get(HttpHeaders.Location);
+                if (location.IsEmpty)
+                {
+                    return new HttpResponseResult(response);
+                }
+
+                redirectCount++;
+                if (redirectCount > MaximumRedirectCount)
+                {
+                    throw new TooManyRedirectsException($"重定向次数超过最大限制 {MaximumRedirectCount}");
+                }
+
+                var redirectUri = this.BuildRedirectUri(location.First);
+
+                await this.HandleRedirectConnectionAsync(redirectUri, originalHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                currentRequest = this.CreateRedirectRequest(currentRequest, response.StatusCode, redirectUri);
+
+                response.Reset();
+            }
+        }
+        finally
+        {
+            this.m_connectSemaphore.Release();
+        }
+    }
+
+    private bool IsRedirectStatusCode(int statusCode)
+    {
+        return statusCode == 301 || statusCode == 302 || statusCode == 303 ||
+               statusCode == 307 || statusCode == 308;
+    }
+
+    private Uri BuildRedirectUri(string location)
+    {
+        if (Uri.TryCreate(location, UriKind.Absolute, out var absoluteUri))
+        {
+            return absoluteUri;
+        }
+
+        var baseUri = new Uri($"{this.RemoteIPHost.Scheme}://{this.RemoteIPHost.Authority}");
+        return new Uri(baseUri, location);
+    }
+
+    private HttpRequest CreateRedirectRequest(HttpRequest originalRequest, int statusCode, Uri redirectUri)
+    {
+        var newRequest = new HttpRequest();
+        newRequest.URL = redirectUri.PathAndQuery;
+        newRequest.ProtocolVersion = originalRequest.ProtocolVersion;
+
+        foreach (var header in originalRequest.Headers)
+        {
+            if (!string.Equals(header.Key, HttpHeaders.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                newRequest.Headers.Add(header.Key, header.Value);
+            }
+        }
+
+        if (statusCode == 303)
+        {
+            newRequest.Method = HttpMethod.Get;
+            newRequest.Content = null;
+        }
+        else if (statusCode == 301 || statusCode == 302)
+        {
+            if (originalRequest.Method == HttpMethod.Post)
+            {
+                newRequest.Method = HttpMethod.Get;
+                newRequest.Content = null;
+            }
+            else
+            {
+                newRequest.Method = originalRequest.Method;
+                newRequest.Content = originalRequest.Content;
+            }
+        }
+        else
+        {
+            newRequest.Method = originalRequest.Method;
+            newRequest.Content = originalRequest.Content;
+        }
+
+        return newRequest;
+    }
+
+    private async Task HandleRedirectConnectionAsync(Uri redirectUri, IPHost originalHost, CancellationToken cancellationToken)
+    {
+        var newHost = redirectUri.Host;
+        var newPort = redirectUri.Port;
+        var newScheme = redirectUri.Scheme;
+
+        if (!string.Equals(newHost, originalHost.Host, StringComparison.OrdinalIgnoreCase) ||
+            newPort != originalHost.Port ||
+            !string.Equals(newScheme, originalHost.Scheme, StringComparison.OrdinalIgnoreCase))
+        {
+            var newIPHost = new IPHost($"{newScheme}://{newHost}:{newPort}");
+
+            await this.CloseAsync("重定向到不同主机",cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            this.Config.SetRemoteIPHost(newIPHost);
+
+            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
     }
 
     private async Task BuildAndSendAsync(HttpRequest request, CancellationToken cancellationToken)
@@ -206,7 +362,8 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         if (content == null)
         {
             request.BuildHeader(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
 
@@ -230,7 +387,6 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <returns>HTTP响应对象</returns>
     private async Task<ClientHttpResponse> ReadHttpResponseAsync(CancellationToken cancellationToken)
     {
-        this.m_httpClientResponse.Reset();
         await this.m_httpClientResponse.ReadHeader(cancellationToken);
         return this.m_httpClientResponse;
     }

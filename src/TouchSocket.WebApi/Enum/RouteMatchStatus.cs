@@ -34,5 +34,10 @@ public enum RouteMatchStatus
     /// <summary>
     /// 方法不允许
     /// </summary>
-    MethodNotAllowed
+    MethodNotAllowed,
+
+    /// <summary>
+    /// OPTIONS请求,返回允许的方法列表
+    /// </summary>
+    Options
 }

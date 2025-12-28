@@ -332,9 +332,7 @@ public partial class ServerWithCancellation : SingletonRpcServer
         //延迟后手动取消任务
         await Task.Delay(2000);
 
-        //手动取消任务
-        callContext.Cancel();
-
+       
         //后续操作将被取消
         await Task.Delay(1000, callContext.Token);
 

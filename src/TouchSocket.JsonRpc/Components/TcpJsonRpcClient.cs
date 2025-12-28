@@ -110,7 +110,7 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
         {
             return;
         }
-        var callContext = new TcpJsonRpcCallContext(this);
+        var callContext = new TcpJsonRpcCallContext(this,this.ClosedToken);
         await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);

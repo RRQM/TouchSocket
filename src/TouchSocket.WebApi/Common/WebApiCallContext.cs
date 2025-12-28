@@ -17,9 +17,11 @@ namespace TouchSocket.WebApi;
 
 internal sealed class WebApiCallContext : CallContext, IWebApiCallContext
 {
-    public WebApiCallContext(object caller, RpcMethod rpcMethod, HttpContext httpContext, IResolver resolver) : base(caller, rpcMethod, resolver)
+    public WebApiCallContext(object caller, RpcMethod rpcMethod, HttpContext httpContext, IResolver resolver,CancellationToken cancellationToken)
+        : base(caller, rpcMethod, resolver)
     {
         this.HttpContext = httpContext;
+        this.Token = cancellationToken;
     }
 
     public void SetParameters(object[] ps)
@@ -31,4 +33,6 @@ internal sealed class WebApiCallContext : CallContext, IWebApiCallContext
     public HttpContext HttpContext { get; }
 
     public Exception Exception { get; set; }
+
+    public override CancellationToken Token { get; }
 }

@@ -12,6 +12,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 using TouchSocket.Rpc;
 
@@ -121,7 +122,8 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     rpcPackage.UnpackageBody(ref reader);
                     //await this.InvokeThisAsync(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     //await EasyTask.Run(this.InvokeThisAsync, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync)
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
@@ -249,7 +251,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
     private async Task InvokeThisAsync(IDmtpRpcCallContext o)
     {
-        var callContext = (DmtpRpcCallContext)o;
+        var callContext =Unsafe.As<DmtpRpcCallContext>(o);
         var rpcRequestPackage = callContext.DmtpRpcPackage;
         callContext.SetParameters(rpcRequestPackage.Parameters);
         var rpcMethod = callContext.RpcMethod;
@@ -351,7 +353,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
         finally
         {
-            callContext.SafeDispose();
+            callContext.Dispose();
         }
     }
 

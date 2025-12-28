@@ -17,10 +17,6 @@ namespace TouchSocket.Rpc;
 /// </summary>
 public abstract class CallContext : DependencyObject, ICallContext
 {
-    private readonly Lock m_locker = new Lock();
-    private bool m_canceled;
-    private CancellationTokenSource m_tokenSource;
-
     /// <summary>
     /// 初始化CallContext对象。
     /// </summary>
@@ -54,36 +50,5 @@ public abstract class CallContext : DependencyObject, ICallContext
     public RpcMethod RpcMethod { get; protected set; }
 
     /// <inheritdoc/>
-    public CancellationToken Token
-    {
-        get
-        {
-            lock (this.m_locker)
-            {
-                if (this.m_canceled)
-                {
-                    return new CancellationToken(true);
-                }
-
-                this.m_tokenSource ??= new CancellationTokenSource();
-                return this.m_tokenSource.Token;
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Cancel()
-    {
-        lock (this.m_locker)
-        {
-            if (this.m_tokenSource != null)
-            {
-                this.m_tokenSource.Cancel();
-            }
-            else
-            {
-                this.m_canceled = true;
-            }
-        }
-    }
+    public abstract CancellationToken Token { get; }
 }

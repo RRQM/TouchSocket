@@ -114,32 +114,7 @@ namespace MqttWebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.AddMqttConnectingPlugin(async (mqttSession, e) =>
-                    {
-                        Console.WriteLine($"Client Connecting:{e.ConnectMessage.ClientId}");
-                        await e.InvokeNext();
-                    });
-
-                    a.AddMqttConnectedPlugin(async (mqttSession, e) =>
-                    {
-                        Console.WriteLine($"Client Connected:{e.ConnectMessage.ClientId}");
-                        await e.InvokeNext();
-                    });
-
-
-                    a.AddMqttClosingPlugin(async (mqttSession, e) =>
-                    {
-                        Console.WriteLine($"Client Closing:{e.MqttMessage.MessageType}");
-                        await e.InvokeNext();
-                    });
-
-                    a.AddMqttClosedPlugin(async (mqttSession, e) =>
-                    {
-                        Console.WriteLine($"Client Closed:{e.Message}");
-                        await e.InvokeNext();
-                    });
-
-
+                    //使用重连插件
                     a.UseReconnection<MqttWebSocketClient>(options =>
                     {
                         options.PollingInterval = TimeSpan.FromSeconds(10);
@@ -163,56 +138,15 @@ namespace MqttWebSocketConsoleApp
                  .SetListenIPHosts("tcp://127.0.0.1:1883")//可以同时监听两个地址
                  .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                  {
-                     //添加Mqtt服务容器，可以从IOC中通过IMqttWebSocketService接口获取服务实例
+                     //1).添加Mqtt服务容器，可以从IOC中通过IMqttWebSocketService接口获取服务实例
                      a.AddMqttWebSocketService();
 
                      a.AddConsoleLogger();
                  })
                  .ConfigurePlugins(a =>
                  {
-                     //使用MqttWebSocket协议
+                     //2).使用MqttWebSocket协议
                      a.UseMqttWebSocket("/mqtt");
-
-                     a.AddIdChangedPlugin(async (client, e) =>
-                     {
-                         Console.WriteLine($"IdChanged:{e.OldId}->{e.NewId}");
-                         await e.InvokeNext();
-                     });
-                     //a.AddMqttReceivingPlugin(async (client, e) =>
-                     //{
-                     //    Console.WriteLine("Reving:" + e.MqttMessage.MessageType);
-                     //    await e.InvokeNext();
-                     //});
-
-                     //a.AddMqttReceivedPlugin(async (client, e) =>
-                     //{
-                     //    Console.WriteLine("Reved:" + e.MqttMessage);
-                     //    await e.InvokeNext();
-                     //});
-
-                     a.AddMqttConnectingPlugin(async (client, e) =>
-                     {
-                         Console.WriteLine($"Server Connecting:{e.ConnectMessage.ClientId}");
-                         await e.InvokeNext();
-                     });
-
-                     a.AddMqttConnectedPlugin(async (client, e) =>
-                     {
-                         Console.WriteLine($"Server Connected:{e.ConnectMessage.ClientId}");
-                         await e.InvokeNext();
-                     });
-
-                     a.AddMqttClosingPlugin(async (client, e) =>
-                     {
-                         Console.WriteLine($"Server Closing:{e.MqttMessage.MessageType}");
-                         await e.InvokeNext();
-                     });
-
-                     a.AddMqttClosedPlugin(async (client, e) =>
-                     {
-                         Console.WriteLine($"Server Closed:{e.Message}");
-                         await e.InvokeNext();
-                     });
                  }));
 
             await service.StartAsync();//启动

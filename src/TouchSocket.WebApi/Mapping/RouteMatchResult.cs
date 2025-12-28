@@ -69,4 +69,12 @@ public readonly struct RouteMatchResult
     {
         return new RouteMatchResult(RouteMatchStatus.MethodNotAllowed, null, allowedMethods);
     }
+
+    /// <summary>
+    /// 创建OPTIONS请求的结果
+    /// </summary>
+    public static RouteMatchResult Options(IEnumerable<HttpMethod> allowedMethods)
+    {
+        return new RouteMatchResult(RouteMatchStatus.Options, null, allowedMethods);
+    }
 }

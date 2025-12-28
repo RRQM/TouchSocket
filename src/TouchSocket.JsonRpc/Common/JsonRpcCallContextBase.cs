@@ -19,15 +19,23 @@ namespace TouchSocket.JsonRpc;
 /// </summary>
 public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
 {
+    /// <summary>
+    /// 初始化JsonRpc调用上下文
+    /// </summary>
+    /// <param name="caller"></param>
+    /// <param name="cancellationToken"></param>
+    public JsonRpcCallContextBase(object caller,CancellationToken cancellationToken)
+    {
+        this.Token = cancellationToken;
+        this.Caller = caller;
+    }
     private IScopedResolver m_scopedResolver;
 
     /// <inheritdoc/>
     public int? JsonRpcId { get; protected set; }
 
-    ///// <summary>
-    ///// JsonRpc上下文
-    ///// </summary>
-    //public InternalJsonRpcRequest JsonRpcContext { get; internal set; }
+    /// <inheritdoc/>
+    public override CancellationToken Token { get; }
 
     internal void SetJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
     {
@@ -58,10 +66,6 @@ public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
         if (disposing)
         {
             this.m_scopedResolver.SafeDispose();

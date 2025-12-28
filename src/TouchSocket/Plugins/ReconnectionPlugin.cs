@@ -109,6 +109,8 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                                 using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
                                 {
                                     cts.CancelAfter(this.m_options.ConnectTimeout);
+
+                                    //https://github.com/RRQM/TouchSocket/pull/104
                                     await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
 

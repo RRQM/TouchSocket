@@ -14,20 +14,22 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
 
-/// <summary>
-/// DmtpRpcCallContext
-/// </summary>
 internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
 {
+    private readonly Lock m_locker = new Lock();
     private readonly IScopedResolver m_scopedResolver;
+    private bool m_canceled;
+    private CancellationTokenSource m_tokenSource;
 
-    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver) : base(caller, rpcMethod, scopedResolver.Resolver)
+    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver)
+        : base(caller, rpcMethod, scopedResolver.Resolver)
     {
         this.DmtpRpcPackage = dmtpRpcPackage;
         this.m_scopedResolver = scopedResolver;
     }
 
-    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
+    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver)
+        : base(caller, rpcMethod, resolver)
     {
         this.DmtpRpcPackage = dmtpRpcPackage;
         this.m_scopedResolver = default;
@@ -42,6 +44,43 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     /// <inheritdoc/>
     public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
 
+    public override CancellationToken Token
+    {
+        get
+        {
+            lock (this.m_locker)
+            {
+                if (this.m_canceled)
+                {
+                    return new CancellationToken(true);
+                }
+
+                if (this.m_tokenSource != null)
+                {
+                    return this.m_tokenSource.Token;
+                }
+                this.m_tokenSource = new CancellationTokenSource();
+                return this.m_tokenSource.Token;
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Cancel()
+    {
+        lock (this.m_locker)
+        {
+            if (this.m_tokenSource != null)
+            {
+                this.m_tokenSource.Cancel();
+            }
+            else
+            {
+                this.m_canceled = true;
+            }
+        }
+    }
+
     public void SetParameters(object[] ps)
     {
         base.Parameters = ps;
@@ -50,14 +89,13 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-
         if (disposing)
         {
             this.m_scopedResolver?.Dispose();
+            lock (this.m_locker)
+            {
+                this.m_tokenSource?.Dispose();
+            }
         }
         base.SafetyDispose(disposing);
     }

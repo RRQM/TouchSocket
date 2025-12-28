@@ -113,7 +113,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var adapter = this.m_dataHandlingAdapter;
         this.m_dataHandlingAdapter = default;
         adapter.SafeDispose();
-
         await this.OnTcpClosed(e_closed).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 

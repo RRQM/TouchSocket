@@ -15,45 +15,48 @@ using System.Diagnostics;
 namespace TouchSocket.Http;
 
 /// <summary>
-/// HttpMethod
+/// 表示HTTP方法的结构体。
 /// </summary>
 [DebuggerDisplay("{m_value}")]
 public readonly record struct HttpMethod
 {
-    /// <summary>
-    /// 值
-    /// </summary>
     private readonly string m_value;
 
     /// <summary>
-    /// Get
+    /// 表示HTTP GET方法。
     /// </summary>
     public static readonly HttpMethod Get = new HttpMethod("get");
 
     /// <summary>
-    /// Post
+    /// 表示HTTP POST方法。
     /// </summary>
     public static readonly HttpMethod Post = new HttpMethod("post");
 
     /// <summary>
-    /// Put
+    /// 表示HTTP PUT方法。
     /// </summary>
     public static readonly HttpMethod Put = new HttpMethod("put");
 
     /// <summary>
-    /// Delete
+    /// 表示HTTP DELETE方法。
     /// </summary>
     public static readonly HttpMethod Delete = new HttpMethod("delete");
 
     /// <summary>
-    /// Connect
+    /// 表示HTTP CONNECT方法。
     /// </summary>
     public static readonly HttpMethod Connect = new HttpMethod("connect");
 
     /// <summary>
-    /// 表示
+    /// 表示HTTP OPTIONS方法。
     /// </summary>
-    /// <param name="value">值</param>
+    public static readonly HttpMethod Options = new HttpMethod("options");
+
+    /// <summary>
+    /// 初始化<see cref="HttpMethod"/>结构体的新实例。
+    /// </summary>
+    /// <param name="value">HTTP方法的字符串表示。</param>
+    /// <exception cref="ArgumentNullException">当<paramref name="value"/>为<see langword="null"/>或空字符串时抛出。</exception>
     public HttpMethod(string value)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(value));
@@ -61,15 +64,15 @@ public readonly record struct HttpMethod
     }
 
     /// <summary>
-    /// 由字符串向<see cref="HttpMethod"/>转换
+    /// 将字符串隐式转换为<see cref="HttpMethod"/>。
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">HTTP方法的字符串表示。</param>
     public static implicit operator HttpMethod(string value) => new(value);
 
     /// <summary>
-    /// 转换为字符串
+    /// 返回HTTP方法的字符串表示。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>HTTP方法的字符串表示。</returns>
     public override string ToString()
     {
         return this.m_value;

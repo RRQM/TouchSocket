@@ -20,9 +20,8 @@ namespace TouchSocket.WebApi;
 /// WebApi解析器
 /// </summary>
 [PluginOption(Singleton = true)]
-public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlugin
+public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 {
-    private static readonly DependencyProperty<WebApiCallContext> s_webApiCallContextProperty = new DependencyProperty<WebApiCallContext>("WebApiCallContext", default);
     private readonly InternalWebApiMapping m_mapping = new InternalWebApiMapping();
     private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
     private readonly IRpcServerProvider m_rpcServerProvider;
@@ -64,6 +63,11 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 await this.ExecuteRpcMethodAsync(client, e, matchResult.RpcMethod).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
 
+            case RouteMatchStatus.Options:
+                // OPTIONS请求,返回允许的方法列表
+                await this.ResponseOptionsAsync(client, e.Context, matchResult.AllowedMethods).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return;
+
             case RouteMatchStatus.MethodNotAllowed:
                 // 路由匹配但方法不允许,返回405
                 await this.ResponseMethodNotAllowedAsync(client, e.Context, matchResult.AllowedMethods).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -75,91 +79,6 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
                 await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
         }
-    }
-
-    private async Task ExecuteRpcMethodAsync(IHttpSessionClient client, HttpContextEventArgs e, RpcMethod rpcMethod)
-    {
-        var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver);
-        try
-        {
-            client.SetValue(s_webApiCallContextProperty, callContext);
-            var invokeResult = new InvokeResult();
-            var ps = new object[rpcMethod.Parameters.Length];
-
-            try
-            {
-                for (var i = 0; i < rpcMethod.Parameters.Length; i++)
-                {
-                    var parameter = rpcMethod.Parameters[i];
-                    ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-            catch (Exception ex)
-            {
-                invokeResult.Status = InvokeStatus.Exception;
-                invokeResult.Message = ex.Message;
-                invokeResult.Exception = ex;
-            }
-
-            callContext.SetParameters(ps);
-            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-            if (e.Context.Response.Responsed)
-            {
-                return;
-            }
-
-            if (!client.Online)
-            {
-                return;
-            }
-
-            await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-        finally
-        {
-            callContext.Dispose();
-            client.RemoveValue(s_webApiCallContextProperty);
-        }
-    }
-
-    private async Task ResponseMethodNotAllowedAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
-    {
-        var httpResponse = httpContext.Response;
-
-        // 设置Allow头,列出允许的方法
-        if (allowedMethods != null)
-        {
-            var allowHeader = string.Join(", ", allowedMethods.Select(m => m.ToString()));
-            httpResponse.Headers.TryAdd("Allow", allowHeader);
-        }
-
-        var jsonString = this.Converter.Serialize(httpContext, new ActionResult()
-        {
-            Status = InvokeStatus.UnEnable,
-            Message = "HTTP方法不被允许"
-        });
-
-        await httpResponse
-            .SetContent(jsonString)
-            .SetStatus(405, "Method Not Allowed")
-            .AnswerAsync()
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
-        if (!httpContext.Request.KeepAlive)
-        {
-            await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
-    {
-        if (client.TryRemoveValue(s_webApiCallContextProperty, out var webApiCallContext))
-        {
-            webApiCallContext.Cancel();
-        }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     private static bool IsSimpleType(Type type)
@@ -189,6 +108,58 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
         }
 
         return default;
+    }
+
+    private void CloseClient(IHttpSessionClient client)
+    {
+        _ = client.CloseAsync("No keepalive close.");
+    }
+
+    private async Task ExecuteRpcMethodAsync(IHttpSessionClient client, HttpContextEventArgs e, RpcMethod rpcMethod)
+    {
+        var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver, client.ClosedToken);
+        try
+        {
+            var invokeResult = new InvokeResult();
+            var ps = new object[rpcMethod.Parameters.Length];
+
+            try
+            {
+                for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                {
+                    var parameter = rpcMethod.Parameters[i];
+                    ps[i] = await this.ParseParameterAsync(parameter, callContext)
+                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                invokeResult.Status = InvokeStatus.Exception;
+                invokeResult.Message = ex.Message;
+                invokeResult.Exception = ex;
+            }
+
+            callContext.SetParameters(ps);
+            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+            if (e.Context.Response.Responsed)
+            {
+                return;
+            }
+
+            if (!client.Online)
+            {
+                return;
+            }
+
+            await this.ResponseAsync(client, e.Context, invokeResult)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        }
+        finally
+        {
+            callContext.Dispose();
+        }
     }
 
     private WebApiParameterInfo GetParameterInfo(RpcParameter parameter)
@@ -362,7 +333,58 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin, ITcpClosedPlug
 
         if (!httpContext.Request.KeepAlive)
         {
-            await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.CloseClient(client);
+        }
+    }
+
+    private async Task ResponseMethodNotAllowedAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
+    {
+        var httpResponse = httpContext.Response;
+
+        // 设置Allow头,列出允许的方法
+        if (allowedMethods != null)
+        {
+            var allowHeader = string.Join(", ", allowedMethods.Select(m => m.ToString()));
+            httpResponse.Headers.TryAdd("Allow", allowHeader);
+        }
+
+        var jsonString = this.Converter.Serialize(httpContext, new ActionResult()
+        {
+            Status = InvokeStatus.UnEnable,
+            Message = "HTTP方法不被允许"
+        });
+
+        await httpResponse
+            .SetContent(jsonString)
+            .SetStatus(405, "Method Not Allowed")
+            .AnswerAsync()
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (!httpContext.Request.KeepAlive)
+        {
+            this.CloseClient(client);
+        }
+    }
+
+    private async Task ResponseOptionsAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
+    {
+        var httpResponse = httpContext.Response;
+
+        // 设置Allow头,列出允许的方法
+        if (allowedMethods != null)
+        {
+            var allowHeader = string.Join(", ", allowedMethods.Select(m => m.ToString()));
+            httpResponse.Headers.TryAdd("Allow", allowHeader);
+        }
+
+        await httpResponse
+            .SetStatus(204, "No Content")
+            .AnswerAsync()
+            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        if (!httpContext.Request.KeepAlive)
+        {
+            this.CloseClient(client);
         }
     }
 }

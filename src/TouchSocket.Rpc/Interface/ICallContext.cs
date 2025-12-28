@@ -39,12 +39,6 @@ public interface ICallContext : IResolverObject, IDependencyObject
     CancellationToken Token { get; }
 
     /// <summary>
-    /// 执行取消<see cref="ICallContext.Token"/>。
-    /// </summary>
-    /// <returns></returns>
-    void Cancel();
-
-    /// <summary>
     /// 调用参数
     /// </summary>
     object[] Parameters { get; }

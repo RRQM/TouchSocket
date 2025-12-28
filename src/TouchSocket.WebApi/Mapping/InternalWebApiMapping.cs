@@ -173,9 +173,17 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
     /// </summary>
     private RouteMatchResult TryMatchFrozen(string url, HttpMethod httpMethod)
     {
+        var isOptionsRequest = httpMethod == HttpMethod.Options;
+
         // 首先尝试精确匹配(冻结字典查询,性能最优)
         if (this.m_frozenMappingMethods.TryGetValue(url, out var pairs))
         {
+            // 如果是OPTIONS请求,返回该路由支持的所有方法
+            if (isOptionsRequest)
+            {
+                return RouteMatchResult.Options(pairs.Keys);
+            }
+
             // 找到路由,检查HTTP方法是否匹配
             if (pairs.TryGetValue(httpMethod, out var rpcMethod))
             {
@@ -200,6 +208,14 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
         // 如果正则路由有匹配
         if (matchedRegexRoutes.Count > 0)
         {
+            var allowedMethods = matchedRegexRoutes.Select(r => r.HttpMethod).Distinct();
+
+            // 如果是OPTIONS请求,返回该路由支持的所有方法
+            if (isOptionsRequest)
+            {
+                return RouteMatchResult.Options(allowedMethods);
+            }
+
             // 查找方法也匹配的路由
             var methodMatchedRoute = matchedRegexRoutes.FirstOrDefault(r => r.HttpMethod == httpMethod);
             if (methodMatchedRoute != null)
@@ -208,7 +224,6 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
             }
 
             // 路由匹配但方法不匹配
-            var allowedMethods = matchedRegexRoutes.Select(r => r.HttpMethod).Distinct();
             return RouteMatchResult.MethodNotAllowed(allowedMethods);
         }
 
@@ -221,9 +236,17 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
     /// </summary>
     private RouteMatchResult TryMatchMutable(string url, HttpMethod httpMethod)
     {
+        var isOptionsRequest = httpMethod == HttpMethod.Options;
+
         // 首先尝试精确匹配(字典查询,O(1)性能)
         if (this.m_mappingMethods.TryGetValue(url, out var pairs))
         {
+            // 如果是OPTIONS请求,返回该路由支持的所有方法
+            if (isOptionsRequest)
+            {
+                return RouteMatchResult.Options(pairs.Keys);
+            }
+
             // 找到路由,检查HTTP方法是否匹配
             if (pairs.TryGetValue(httpMethod, out var rpcMethod))
             {
@@ -248,6 +271,14 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
         // 如果正则路由有匹配
         if (matchedRegexRoutes.Count > 0)
         {
+            var allowedMethods = matchedRegexRoutes.Select(r => r.HttpMethod).Distinct();
+
+            // 如果是OPTIONS请求,返回该路由支持的所有方法
+            if (isOptionsRequest)
+            {
+                return RouteMatchResult.Options(allowedMethods);
+            }
+
             // 查找方法也匹配的路由
             var methodMatchedRoute = matchedRegexRoutes.FirstOrDefault(r => r.HttpMethod == httpMethod);
             if (methodMatchedRoute != null)
@@ -256,7 +287,6 @@ internal sealed class InternalWebApiMapping : IWebApiMapping
             }
 
             // 路由匹配但方法不匹配
-            var allowedMethods = matchedRegexRoutes.Select(r => r.HttpMethod).Distinct();
             return RouteMatchResult.MethodNotAllowed(allowedMethods);
         }
 

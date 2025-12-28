@@ -83,7 +83,7 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
             {
                 return;
             }
-            await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client, client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return;
         }
         await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);

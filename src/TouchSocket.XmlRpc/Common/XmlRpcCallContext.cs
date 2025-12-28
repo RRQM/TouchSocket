@@ -17,15 +17,18 @@ namespace TouchSocket.XmlRpc;
 
 internal sealed class XmlRpcCallContext : CallContext, IXmlRpcCallContext
 {
-    public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, rpcMethod, resolver)
+    public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString,CancellationToken cancellationToken) : base(caller, rpcMethod, resolver)
     {
         this.HttpContext = httpContext;
         this.XmlString = xmlString;
+        this.Token = cancellationToken;
     }
 
     public HttpContext HttpContext { get; }
 
     public string XmlString { get; }
+
+    public override CancellationToken Token { get; }
 
     public void SetParameters(object[] ps)
     {
