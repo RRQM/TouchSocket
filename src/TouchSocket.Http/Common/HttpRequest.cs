@@ -314,4 +314,194 @@ public class HttpRequest : HttpBase
             this.m_query.Clear();
         }
     }
+
+    #region SSE支持（客户端读取）
+
+    /// <summary>
+    /// 开始读取SSE事件流。
+    /// </summary>
+    /// <param name="onMessage">消息回调函数。</param>
+    /// <param name="onComment">注释回调函数（可选）。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>读取任务。</returns>
+    /// <exception cref="ArgumentNullException">当onMessage为null时抛出。</exception>
+    /// <exception cref="InvalidOperationException">当响应不是有效的SSE流时抛出。</exception>
+    public async Task ReadSSEAsync(Func<SseMessage, Task> onMessage, Func<string, Task> onComment = null, CancellationToken cancellationToken = default)
+    {
+        if (onMessage == null)
+            throw new ArgumentNullException(nameof(onMessage));
+
+        if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
+            throw new InvalidOperationException("内容已读取完成，无法读取SSE事件流");
+
+        // 验证是否为SSE响应
+        if (!this.IsSseResponse())
+        {
+            throw new InvalidOperationException("响应不是有效的SSE流（Content-Type应为text/event-stream）");
+        }
+
+        using var parser = new SseParser();
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                using var blockResult = await ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                if (blockResult.IsCompleted)
+                {
+                    // 处理最后的消息
+                    var finalMessages = parser.ProcessBytes(Array.Empty<byte>());
+                    await this.ProcessSseEventsAsync(finalMessages, onMessage, onComment, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
+                }
+
+                // 处理接收到的数据
+                var messages = parser.ProcessBytes(blockResult.Memory);
+                await this.ProcessSseEventsAsync(messages, onMessage, onComment, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 正常的取消操作
+        }
+        catch (Exception ex)
+        {
+            // 记录错误
+            System.Diagnostics.Debug.WriteLine($"读取SSE时出错: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 开始读取SSE事件流，支持按事件类型注册处理器。
+    /// </summary>
+    /// <param name="eventHandlers">事件处理器字典，key为事件类型，value为处理函数。</param>
+    /// <param name="onComment">注释回调函数（可选）。</param>
+    /// <param name="onDefaultMessage">默认消息处理器，用于处理没有指定处理器的事件（可选）。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>读取任务。</returns>
+    public async Task ReadSSEAsync(Dictionary<string, Func<SseMessage, Task>> eventHandlers, Func<string, Task> onComment = null, Func<SseMessage, Task> onDefaultMessage = null, CancellationToken cancellationToken = default)
+    {
+        if (eventHandlers == null)
+            throw new ArgumentNullException(nameof(eventHandlers));
+
+        if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
+            throw new InvalidOperationException("内容已读取完成，无法读取SSE事件流");
+
+        // 验证是否为SSE响应
+        if (!this.IsSseResponse())
+        {
+            throw new InvalidOperationException("响应不是有效的SSE流（Content-Type应为text/event-stream）");
+        }
+
+        using var parser = new SseParser();
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                using var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+                if (blockResult.IsCompleted)
+                {
+                    // 处理最后的消息
+                    var finalMessages = parser.ProcessBytes(Array.Empty<byte>());
+                    await this.ProcessSseEventsWithHandlersAsync(finalMessages, eventHandlers, onComment, onDefaultMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    break;
+                }
+
+                // 处理接收到的数据
+                var messages = parser.ProcessBytes(blockResult.Memory);
+                await this.ProcessSseEventsWithHandlersAsync(messages, eventHandlers, onComment, onDefaultMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 正常的取消操作
+        }
+        catch (Exception ex)
+        {
+            // 记录错误
+            System.Diagnostics.Debug.WriteLine($"读取SSE时出错: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 处理SSE事件。
+    /// </summary>
+    private async Task ProcessSseEventsAsync(List<SseMessage> events, Func<SseMessage, Task> onMessage, Func<string, Task> onComment, CancellationToken cancellationToken)
+    {
+        foreach (var evt in events)
+        {
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                if (evt.IsComment)
+                {
+                    if (onComment != null)
+                    {
+                        await onComment(evt.Data).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                }
+                else
+                {
+                    await onMessage(evt).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录回调中的异常，但不中断处理
+                System.Diagnostics.Debug.WriteLine($"处理SSE事件回调时出错: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 处理SSE事件，使用事件处理器字典。
+    /// </summary>
+    private async Task ProcessSseEventsWithHandlersAsync(List<SseMessage> events, Dictionary<string, Func<SseMessage, Task>> eventHandlers, Func<string, Task> onComment, Func<SseMessage, Task> onDefaultMessage, CancellationToken cancellationToken)
+    {
+        foreach (var evt in events)
+        {
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                if (evt.IsComment)
+                {
+                    if (onComment != null)
+                    {
+                        await onComment(evt.Data).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                }
+                else
+                {
+                    var eventType = evt.GetEventTypeOrDefault();
+
+                    // 查找对应的处理器
+                    if (eventHandlers.TryGetValue(eventType, out var handler))
+                    {
+                        await handler(evt).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                    else if (onDefaultMessage != null)
+                    {
+                        // 使用默认处理器
+                        await onDefaultMessage(evt).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录回调中的异常，但不中断处理
+                System.Diagnostics.Debug.WriteLine($"处理SSE事件回调时出错: {ex.Message}");
+            }
+        }
+    }
+
+    #endregion
 }
