@@ -476,4 +476,39 @@ public abstract class HttpBase : IRequestInfo
     }
 
     #endregion Read
+
+    #region SSE支持
+
+    /// <summary>
+    /// 检查是否为SSE响应。
+    /// </summary>
+    /// <returns>如果是SSE响应返回true，否则返回false。</returns>
+    public bool IsSseResponse()
+    {
+        string contentType = this.ContentType;
+        return !string.IsNullOrEmpty(contentType) && contentType.Contains("text/event-stream", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// 获取Last-Event-ID头值。
+    /// </summary>
+    /// <returns>Last-Event-ID值。</returns>
+    public string GetLastEventId()
+    {
+        return this.Headers.Get("Last-Event-ID");
+    }
+
+    /// <summary>
+    /// 设置Last-Event-ID头。
+    /// </summary>
+    /// <param name="eventId">事件ID。</param>
+    public void SetLastEventId(string eventId)
+    {
+        if (!string.IsNullOrEmpty(eventId))
+        {
+            this.Headers["Last-Event-ID"] = eventId;
+        }
+    }
+
+    #endregion
 }
