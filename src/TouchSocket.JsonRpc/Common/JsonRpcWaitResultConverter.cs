@@ -35,7 +35,7 @@ internal class JsonRpcWaitResultConverter : JsonConverter
         }
         if (jsonObject["result"] != null)
         {
-            jsonRpcWaitResult.Result = jsonObject["result"].ToString();
+            jsonRpcWaitResult.Result = jsonObject["result"].ToString(Formatting.None);
         }
 
         return jsonRpcWaitResult;

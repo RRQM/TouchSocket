@@ -69,10 +69,16 @@ internal class Program
               })
               .ConfigurePlugins(a =>
               {
-                  a.UseHttpJsonRpc(options =>
+                 var plugin= a.UseHttpJsonRpc(options =>
                   {
                       options.SetAllowJsonRpc("/jsonRpc");
                   });
+
+                  //可以获取到ActionMap，从而获知注册了哪些方法。
+                  //foreach (var item in plugin.ActionMap)
+                  //{
+                  //    Console.WriteLine(item.Key, item.Value);
+                  //}
               }));
         await service.StartAsync();
         #endregion

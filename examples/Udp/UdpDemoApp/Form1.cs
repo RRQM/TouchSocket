@@ -46,6 +46,7 @@ public partial class Form1 : Form
 
         await this.m_udpSession.SetupAsync(new TouchSocketConfig()
                .SetBindIPHost(new IPHost(this.textBox2.Text))
+               .SetUdpConnReset(true)
                .SetRemoteIPHost(new IPHost(this.textBox3.Text))
                .SetEnableBroadcast(true)
                .SetUdpDataHandlingAdapter(() =>

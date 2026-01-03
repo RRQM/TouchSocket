@@ -10,8 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics;
+
 namespace TouchSocket.Http;
 
+[DebuggerDisplay("Count = {Count}")]
+[DebuggerTypeProxy(typeof(InternalHttpCollection.InternalHttpCollectionDebugView))]
 internal abstract class InternalHttpCollection : IDictionary<string, TextValues>
 {
     private readonly IEqualityComparer<string> m_comparer;
@@ -242,5 +246,63 @@ internal abstract class InternalHttpCollection : IDictionary<string, TextValues>
         this.m_hasDuplicateKeys = false;
         this.m_hasNonPredefinedKeys = false;
         this.m_isDictionaryBuilt = true;
+    }
+
+    private sealed class InternalHttpCollectionDebugView
+    {
+        private readonly InternalHttpCollection m_collection;
+
+        public InternalHttpCollectionDebugView(InternalHttpCollection collection)
+        {
+            this.m_collection = collection ?? throw new ArgumentNullException(nameof(collection));
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public HttpHeaderDebugItem[] Items
+        {
+            get
+            {
+                this.m_collection.EnsureDictionaryBuilt();
+                if (this.m_collection.Count == 0)
+                {
+                    return [];
+                }
+
+                var items = new HttpHeaderDebugItem[this.m_collection.Count];
+                var index = 0;
+
+                foreach (var kvp in this.m_collection)
+                {
+                    items[index++] = new HttpHeaderDebugItem(kvp.Key, kvp.Value);
+                }
+
+                return items;
+            }
+        }
+
+        public int Count => this.m_collection.Count;
+
+        public bool IsDictionaryBuilt => this.m_collection.m_isDictionaryBuilt;
+    }
+
+    [DebuggerDisplay("{Key}: {Value}")]
+    private readonly struct HttpHeaderDebugItem
+    {
+        public HttpHeaderDebugItem(string key, TextValues value)
+        {
+            this.Key = key;
+            this.Value = value.ToString();
+            this.ValueCount = value.Count;
+            this.Values = value.ToArray();
+        }
+
+        public string Key { get; }
+
+        public string Value { get; }
+
+        public int ValueCount { get; }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+        public string[] Values { get; }
     }
 }

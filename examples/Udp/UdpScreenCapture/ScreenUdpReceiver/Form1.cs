@@ -68,6 +68,7 @@ public partial class Form1 : Form
             };
             this.udpSession.SetupAsync(new TouchSocketConfig()
            .SetBindIPHost(new IPHost("127.0.0.1:7790"))
+           .SetUdpConnReset(true)
            .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
             this.udpSession.StartAsync();
         }

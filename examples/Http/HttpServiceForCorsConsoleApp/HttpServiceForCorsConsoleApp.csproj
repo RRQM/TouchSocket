@@ -10,19 +10,4 @@
 	<ItemGroup>
 		<PackageReference Include="TouchSocket.Http" />
 	</ItemGroup>
-
-	<!--<ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Http">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Http.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
 </Project>

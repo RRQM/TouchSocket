@@ -38,10 +38,10 @@ public abstract class HttpBase : IRequestInfo
 
     private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
 
-    private readonly StringPool m_stringPool = new StringPool(Encoding.UTF8,32);
+    private readonly StringPool m_stringPool = new StringPool(Encoding.UTF8, 32);
 
-    private bool m_isChunk;
     private long m_contentLength;
+    private bool m_isChunk;
 
     /// <summary>
     /// 可接受MIME类型
@@ -67,9 +67,36 @@ public abstract class HttpBase : IRequestInfo
     public virtual HttpContent Content { get; set; }
 
     /// <summary>
+    /// 内容长度
+    /// </summary>
+    public long ContentLength
+    {
+        get => this.m_contentLength;
+        set
+        {
+            this.m_contentLength = value;
+            this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
+        }
+    }
+
+    /// <summary>
     /// 内容填充完成状态
     /// </summary>
     public ContentCompletionStatus ContentStatus { get; protected set; } = ContentCompletionStatus.Unknown;
+
+    /// <summary>
+    /// 内容类型
+    /// </summary>
+    public TextValues ContentType
+    {
+        get => this.m_headers.Get(HttpHeaders.ContentType);
+        set => this.m_headers.Add(HttpHeaders.ContentType, value);
+    }
+
+    /// <summary>
+    /// 请求头集合
+    /// </summary>
+    public IHttpHeader Headers => this.m_headers;
 
     /// <summary>
     /// 是否分块
@@ -90,33 +117,6 @@ public abstract class HttpBase : IRequestInfo
             }
         }
     }
-
-    /// <summary>
-    /// 内容长度
-    /// </summary>
-    public long ContentLength
-    {
-        get => this.m_contentLength;
-        set
-        {
-            this.m_contentLength = value;
-            this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
-        }
-    }
-
-    /// <summary>
-    /// 内容类型
-    /// </summary>
-    public TextValues ContentType
-    {
-        get => this.m_headers.Get(HttpHeaders.ContentType);
-        set => this.m_headers.Add(HttpHeaders.ContentType, value);
-    }
-
-    /// <summary>
-    /// 请求头集合
-    /// </summary>
-    public IHttpHeader Headers => this.m_headers;
 
     /// <summary>
     /// 是否在Server端工作
@@ -190,6 +190,44 @@ public abstract class HttpBase : IRequestInfo
     protected abstract void ReadRequestLine(ReadOnlySpan<byte> requestLineSpan);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryParseLong(ReadOnlySpan<byte> span, out long result)
+    {
+        result = 0;
+        if (span.IsEmpty)
+        {
+            return false;
+        }
+
+        var sign = 1;
+        var index = 0;
+
+        if (span[0] == (byte)'-' || span[0] == (byte)'+')
+        {
+            sign = span[0] == (byte)'-' ? -1 : 1;
+            index++;
+            if (index >= span.Length)
+            {
+                return false;
+            }
+        }
+
+        for (var i = index; i < span.Length; i++)
+        {
+            var c = span[i];
+            if (c < (byte)'0' || c > (byte)'9')
+            {
+                return false;
+            }
+
+            var digit = c - '0';
+            result = result * 10 + digit;
+        }
+
+        result *= sign;
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ParseHeaderLineOptimized(ReadOnlySpan<byte> line)
     {
         var colonIndex = line.IndexOf(TouchSocketHttpUtility.COLON);
@@ -206,7 +244,7 @@ public abstract class HttpBase : IRequestInfo
             return;
         }
 
-        if (keySpan.Length == 14 && EqualsIgnoreCaseAscii(keySpan, "Content-Length"u8))
+        if (keySpan.Length == 14 && TouchSocketHttpUtility.EqualsIgnoreCaseAscii(keySpan, "Content-Length"u8))
         {
             if (TryParseLong(valueSpan, out var length))
             {
@@ -217,15 +255,23 @@ public abstract class HttpBase : IRequestInfo
             return;
         }
 
-        if (keySpan.Length == 17 && EqualsIgnoreCaseAscii(keySpan, "Transfer-Encoding"u8))
+        if (keySpan.Length == 17 && TouchSocketHttpUtility.EqualsIgnoreCaseAscii(keySpan, "Transfer-Encoding"u8))
         {
-            this.m_isChunk = EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
+            this.m_isChunk = TouchSocketHttpUtility.EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
             var value = this.m_stringPool.Get(valueSpan);
             this.m_headers.AddInternal(HttpHeaders.TransferEncoding, value);
             return;
         }
 
         var key = this.m_stringPool.Get(keySpan);
+
+        // 只对支持多值的头进行逗号分割
+        if (!TouchSocketHttpUtility.SupportsMultipleValues(keySpan))
+        {
+            var value = this.m_stringPool.Get(valueSpan);
+            this.m_headers.AddInternal(key, value);
+            return;
+        }
 
         var commaCount = 0;
         for (var i = 0; i < valueSpan.Length; i++)
@@ -289,81 +335,6 @@ public abstract class HttpBase : IRequestInfo
         {
             this.m_headers.AddInternal(key, values);
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool EqualsIgnoreCaseAscii(ReadOnlySpan<byte> span1, ReadOnlySpan<byte> span2)
-    {
-        if (span1.Length != span2.Length)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < span1.Length; i++)
-        {
-            var c1 = span1[i];
-            var c2 = span2[i];
-
-            if (c1 == c2)
-            {
-                continue;
-            }
-
-            if ((uint)(c1 - 'A') <= 'Z' - 'A')
-            {
-                c1 = (byte)(c1 | 0x20);
-            }
-
-            if ((uint)(c2 - 'A') <= 'Z' - 'A')
-            {
-                c2 = (byte)(c2 | 0x20);
-            }
-
-            if (c1 != c2)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryParseLong(ReadOnlySpan<byte> span, out long result)
-    {
-        result = 0;
-        if (span.IsEmpty)
-        {
-            return false;
-        }
-
-        var sign = 1;
-        var index = 0;
-
-        if (span[0] == (byte)'-' || span[0] == (byte)'+')
-        {
-            sign = span[0] == (byte)'-' ? -1 : 1;
-            index++;
-            if (index >= span.Length)
-            {
-                return false;
-            }
-        }
-
-        for (var i = index; i < span.Length; i++)
-        {
-            var c = span[i];
-            if (c < (byte)'0' || c > (byte)'9')
-            {
-                return false;
-            }
-
-            var digit = c - '0';
-            result = result * 10 + digit;
-        }
-
-        result *= sign;
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -483,7 +454,6 @@ public abstract class HttpBase : IRequestInfo
                     Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
                     if (!memory.IsEmpty)
                     {
-
                         await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }

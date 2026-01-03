@@ -72,7 +72,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     {
         if (!base.Online)
         {
-            await this.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         var option = this.Config.WebSocketOption;
@@ -100,6 +100,12 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         this.InitWebSocket();
 
         _ = EasyTask.SafeRun(this.PrivateOnConnected, new HttpContextEventArgs(new HttpContext(request, response)));
+    }
+
+    [Obsolete("请使用ProtectedWebSocketConnectAsync方法进行连接。", true)]
+    protected sealed override Task HttpConnectAsync(CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException("请使用ProtectedWebSocketConnectAsync方法进行连接。");
     }
 
     #endregion Connect

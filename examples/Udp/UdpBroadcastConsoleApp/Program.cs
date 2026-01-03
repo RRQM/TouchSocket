@@ -26,6 +26,7 @@ internal class Program
         await udpService.SetupAsync(new TouchSocketConfig()
              .SetBindIPHost(new IPHost(7789))
              .SetEnableBroadcast(true)
+             .SetUdpConnReset(true)
              .ConfigurePlugins(a =>
              {
                  a.Add<MyPluginClass1>();

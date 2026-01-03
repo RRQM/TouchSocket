@@ -341,7 +341,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                     }
                     else if (obj.TryGetValue(parameter.Name, out var jToken))
                     {
-                        var str = jToken.ToString();
+                        var str = jToken.ToString(Formatting.None);
                         ps[i] = this.ResultParseToType(str, parameter.Type);
                     }
                     else if (parameter.ParameterInfo.HasDefaultValue)
@@ -370,7 +370,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                     }
                     else if (index < array.Count)
                     {
-                        var str = array[index++].ToString();
+                        var str = array[index++].ToString(Formatting.None);
 
                         ps[i] = this.ResultParseToType(str, parameter.Type);
                     }
@@ -443,10 +443,10 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             return default;
         }
 
-        if (returnType.IsPrimitive || returnType == typeof(string))
-        {
-            return result.ParseToType(returnType);
-        }
+        //if (returnType.IsPrimitive || returnType == typeof(string))
+        //{
+        //    return result.ParseToType(returnType);
+        //}
 
         return this.SerializerConverter.Deserialize(this, result, returnType);
     }

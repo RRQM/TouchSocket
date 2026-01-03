@@ -209,4 +209,96 @@ static class TouchSocketHttpUtility
             parameters.Add(key, value);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool EqualsIgnoreCaseAscii(ReadOnlySpan<byte> span1, ReadOnlySpan<byte> span2)
+    {
+        if (span1.Length != span2.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < span1.Length; i++)
+        {
+            var c1 = span1[i];
+            var c2 = span2[i];
+
+            if (c1 == c2)
+            {
+                continue;
+            }
+
+            if ((uint)(c1 - 'A') <= 'Z' - 'A')
+            {
+                c1 = (byte)(c1 | 0x20);
+            }
+
+            if ((uint)(c2 - 'A') <= 'Z' - 'A')
+            {
+                c2 = (byte)(c2 | 0x20);
+            }
+
+            if (c1 != c2)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool SupportsMultipleValues(ReadOnlySpan<byte> keySpan)
+    {
+        //issue:https://github.com/RRQM/TouchSocket/issues/108
+
+        // 根据 HTTP 规范，以下头支持使用逗号分隔多个值
+        // Accept, Accept-Charset, Accept-Encoding, Accept-Language
+        // Cache-Control, Connection, Content-Encoding, TE, Trailer, Transfer-Encoding, Upgrade, Via, Warning
+        // Allow, Vary
+
+        var length = keySpan.Length;
+        if (length == 0)
+        {
+            return false;
+        }
+
+        var firstChar = (byte)(keySpan[0] | 0x20); // 转换为小写
+
+        return firstChar switch
+        {
+            (byte)'a' => length switch
+            {
+                5 => EqualsIgnoreCaseAscii(keySpan, "Allow"u8),
+                6 => EqualsIgnoreCaseAscii(keySpan, "Accept"u8),
+                13 => EqualsIgnoreCaseAscii(keySpan, "Accept-Charset"u8),
+                14 => EqualsIgnoreCaseAscii(keySpan, "Accept-Encoding"u8),
+                15 => EqualsIgnoreCaseAscii(keySpan, "Accept-Langauge"u8) || EqualsIgnoreCaseAscii(keySpan, "Accept-Language"u8),
+                _ => false
+            },
+            (byte)'c' => length switch
+            {
+                10 => EqualsIgnoreCaseAscii(keySpan, "Connection"u8),
+                13 => EqualsIgnoreCaseAscii(keySpan, "Cache-Control"u8),
+                15 => EqualsIgnoreCaseAscii(keySpan, "Content-Encoding"u8),
+                _ => false
+            },
+            (byte)'t' => length switch
+            {
+                2 => EqualsIgnoreCaseAscii(keySpan, "TE"u8),
+                7 => EqualsIgnoreCaseAscii(keySpan, "Trailer"u8),
+                17 => EqualsIgnoreCaseAscii(keySpan, "Transfer-Encoding"u8),
+                _ => false
+            },
+            (byte)'u' => length == 7 && EqualsIgnoreCaseAscii(keySpan, "Upgrade"u8),
+            (byte)'v' => length switch
+            {
+                3 => EqualsIgnoreCaseAscii(keySpan, "Via"u8),
+                4 => EqualsIgnoreCaseAscii(keySpan, "Vary"u8),
+                _ => false
+            },
+            (byte)'w' => length == 7 && EqualsIgnoreCaseAscii(keySpan, "Warning"u8),
+            _ => false
+        };
+    }
 }
