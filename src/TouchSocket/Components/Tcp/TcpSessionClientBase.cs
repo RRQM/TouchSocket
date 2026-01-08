@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Diagnostics;
+using System.Net;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
@@ -48,27 +49,31 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_id;
-    private string m_iP;
     private TcpListenOption m_listenOption;
     private volatile bool m_online;
     private IPluginManager m_pluginManager;
-    private int m_port;
     private InternalReceiver m_receiver;
     private Task m_runTask;
     private IScopedResolver m_scopedResolver;
     private ITcpServiceBase m_service;
-    private string m_serviceIp;
-    private int m_servicePort;
     private TcpCore m_tcpCore;
     private TcpTransport m_transport;
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
     private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
+    private EndPoint m_localEndPoint;
+    private EndPoint m_remoteEndPoint;
     private readonly SemaphoreSlim m_closeSemaphore = new SemaphoreSlim(1, 1);
 
     #endregion 变量
 
     #region 属性
+
+    /// <inheritdoc/>
+    public EndPoint LocalEndPoint => this.m_localEndPoint;
+
+    /// <inheritdoc/>
+    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
 
     /// <inheritdoc/>
     public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
@@ -83,7 +88,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     public string Id => this.m_id;
 
     /// <inheritdoc/>
-    public string IP => this.m_iP;
+    public string IP => this.RemoteEndPoint.GetIP(); 
 
     /// <inheritdoc/>
     public bool IsClient => false;
@@ -104,7 +109,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     public override IPluginManager PluginManager => this.m_pluginManager;
 
     /// <inheritdoc/>
-    public int Port => this.m_port;
+    public int Port => this.RemoteEndPoint.GetPort();
 
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
@@ -116,10 +121,10 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     public ITcpServiceBase Service => this.m_service;
 
     /// <inheritdoc/>
-    public string ServiceIP => this.m_serviceIp;
+    public string ServiceIP => this.LocalEndPoint.GetIP();
 
     /// <inheritdoc/>
-    public int ServicePort => this.m_servicePort;
+    public int ServicePort => this.LocalEndPoint.GetPort();
 
     /// <inheritdoc/>
     public bool UseSsl => this.m_transport.UseSsl;
@@ -173,10 +178,8 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_listenOption = option;
 
         var socket = tcpCore.Socket;
-        this.m_iP = socket.RemoteEndPoint.GetIP();
-        this.m_port = socket.RemoteEndPoint.GetPort();
-        this.m_serviceIp = socket.LocalEndPoint.GetIP();
-        this.m_servicePort = socket.LocalEndPoint.GetPort();
+        this.m_localEndPoint = socket.LocalEndPoint;
+        this.m_remoteEndPoint = socket.RemoteEndPoint;
         this.m_tcpCore = tcpCore;
 
         this.m_pluginManager = pluginManager;

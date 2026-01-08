@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
@@ -36,13 +37,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     private readonly TcpCore m_tcpCore = new TcpCore();
     private readonly SemaphoreSlim m_semaphoreForConnectAndClose = new SemaphoreSlim(1, 1);
     private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
-    private string m_iP;
     private volatile bool m_online;
-    private int m_port;
     private InternalReceiver m_receiver;
     private Task m_runTask;
     private TcpTransport m_transport;
-
+    private EndPoint m_localEndPoint;
+    private EndPoint m_remoteEndPoint;
     #endregion 变量
 
     #region 事件
@@ -145,7 +145,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
 
     /// <inheritdoc/>
-    public string IP => this.m_iP;
+    public string IP => this.RemoteEndPoint.GetIP();
 
     /// <inheritdoc/>
     public bool IsClient => true;
@@ -160,7 +160,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
-    public int Port => this.m_port;
+    public int Port => this.RemoteEndPoint.GetPort();
 
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
@@ -177,6 +177,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// 获取当前TCP传输层对象。
     /// </summary>
     protected ITransport Transport => this.m_transport;
+
+    /// <inheritdoc/>
+    public EndPoint LocalEndPoint => this.m_localEndPoint;
+
+    /// <inheritdoc/>
+    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
 
     #endregion 属性
 
@@ -408,13 +414,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         if (socket == null)
         {
-            this.m_iP = null;
-            this.m_port = -1;
+            this.m_remoteEndPoint = default;
+            this.m_localEndPoint = default;
             return;
         }
-
-        this.m_iP = socket.RemoteEndPoint.GetIP();
-        this.m_port = socket.RemoteEndPoint.GetPort();
+        this.m_remoteEndPoint= socket.RemoteEndPoint;
+        this.m_localEndPoint= socket.LocalEndPoint;
         this.m_tcpCore.Reset(socket);
     }
 

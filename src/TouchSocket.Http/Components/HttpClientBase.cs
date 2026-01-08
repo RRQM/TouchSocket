@@ -44,6 +44,10 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <returns>返回一个任务，表示异步连接操作</returns>
     protected virtual async Task HttpConnectAsync(CancellationToken cancellationToken)
     {
+        // 重置响应对象状态。
+        // 修复在重连时，响应对象仍然保持上次状态的问题。
+        // issue:https://github.com/RRQM/TouchSocket/issues/110
+        this.m_httpClientResponse.Reset();
         await this.m_connectSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {

@@ -34,6 +34,7 @@ public static class ReconnectionOptionsExtension
         TimeSpan? pingTimeout = null)
   where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IWebSocket
     {
+        //PR:https://github.com/RRQM/TouchSocket/pull/112
         ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
         var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
         var timeout = pingTimeout ?? TimeSpan.FromSeconds(5);

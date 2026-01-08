@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -32,6 +34,9 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     /// 端口号
     /// </summary>
     int Port { get; }
+
+    EndPoint LocalEndPoint { get; }
+    EndPoint RemoteEndPoint { get; }
 
     /// <summary>
     /// 使用Ssl加密
