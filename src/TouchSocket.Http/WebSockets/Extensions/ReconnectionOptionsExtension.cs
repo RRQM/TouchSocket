@@ -32,7 +32,7 @@ public static class ReconnectionOptionsExtension
         this ReconnectionOption<TClient> reconnectionOption,
         TimeSpan? activeTimeSpan = null,
         TimeSpan? pingTimeout = null)
-  where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IWebSocketClient
+  where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IWebSocket
     {
         ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
         var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
