@@ -23,6 +23,8 @@ namespace TouchSocket.Core;
 /// </remarks>
 public static partial class WriterExtension
 {
+    private const int ChunkSize = 4096;
+
     /// <summary>
     /// 将布尔值数组写入字节写入器。
     /// </summary>
@@ -67,9 +69,20 @@ public static partial class WriterExtension
         else
         {
             WriteVarUInt32(ref writer, (uint)(byteBlock.Length + 1));
-            var span = writer.GetSpan(byteBlock.Length);
-            byteBlock.Span.CopyTo(span);
-            writer.Advance(byteBlock.Length);
+            
+            var remaining = byteBlock.Length;
+            var offset = 0;
+            
+            while (remaining > 0)
+            {
+                var bytesToWrite = Math.Min(remaining, ChunkSize);
+                var span = writer.GetSpan(bytesToWrite);
+                byteBlock.Span.Slice(offset, bytesToWrite).CopyTo(span);
+                writer.Advance(bytesToWrite);
+                
+                offset += bytesToWrite;
+                remaining -= bytesToWrite;
+            }
         }
     }
 
@@ -91,9 +104,72 @@ public static partial class WriterExtension
             return;
         }
 
-        var writerSpan = writer.GetSpan(span.Length);
-        span.CopyTo(writerSpan);
-        writer.Advance(span.Length);
+        var remaining = span.Length;
+        var offset = 0;
+        
+        while (remaining > 0)
+        {
+            var bytesToWrite = Math.Min(remaining, ChunkSize);
+            var writerSpan = writer.GetSpan(bytesToWrite);
+            span.Slice(offset, bytesToWrite).CopyTo(writerSpan);
+            writer.Advance(bytesToWrite);
+            
+            offset += bytesToWrite;
+            remaining -= bytesToWrite;
+        }
+    }
+
+    /// <summary>
+    /// 将枚举值写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的枚举值。</param>
+    /// <exception cref="NotSupportedException">当枚举的底层类型不受支持时抛出。</exception>
+    /// <remarks>
+    /// 支持的底层类型包括：<see cref="byte"/>、<see cref="sbyte"/>、<see cref="short"/>、
+    /// <see cref="ushort"/>、<see cref="int"/>、<see cref="uint"/>、<see cref="long"/>、<see cref="ulong"/>。
+    /// </remarks>
+    public static void WriteEnum<TWriter>(ref TWriter writer, Enum value)
+        where TWriter : IBytesWriter
+    {
+        var underlyingType = Enum.GetUnderlyingType(value.GetType());
+        if (underlyingType == typeof(byte))
+        {
+            WriteValue(ref writer, Convert.ToByte(value));
+        }
+        else if (underlyingType == typeof(sbyte))
+        {
+            WriteValue(ref writer, Convert.ToSByte(value));
+        }
+        else if (underlyingType == typeof(short))
+        {
+            WriteValue(ref writer, Convert.ToInt16(value));
+        }
+        else if (underlyingType == typeof(ushort))
+        {
+            WriteValue(ref writer, Convert.ToUInt16(value));
+        }
+        else if (underlyingType == typeof(int))
+        {
+            WriteValue(ref writer, Convert.ToInt32(value));
+        }
+        else if (underlyingType == typeof(uint))
+        {
+            WriteValue(ref writer, Convert.ToUInt32(value));
+        }
+        else if (underlyingType == typeof(long))
+        {
+            WriteValue(ref writer, Convert.ToInt64(value));
+        }
+        else if (underlyingType == typeof(ulong))
+        {
+            WriteValue(ref writer, Convert.ToUInt64(value));
+        }
+        else
+        {
+            ThrowHelper.ThrowNotSupportedException($"Unsupported enum underlying type: {underlyingType}");
+        }
     }
 
     /// <summary>
@@ -159,18 +235,34 @@ public static partial class WriterExtension
         where TWriter : IBytesWriter
     {
         ThrowHelper.ThrowIfNull(value, nameof(value));
-        var maxSize = encoding.GetMaxByteCount(value.Length);
-        var span = writer.GetSpan(maxSize);
-        var chars = value.AsSpan();
+
+        // issue https://gitee.com/RRQM_Home/TouchSocket/issues/IDK7W3
+        if (value.Length == 0)
+        {
+            return;
+        }
+
+        var remaining = value.Length;
+        var offset = 0;
 
         unsafe
         {
-            fixed (char* p = &chars[0])
+            fixed (char* p = value)
             {
-                fixed (byte* p1 = &span[0])
+                while (remaining > 0)
                 {
-                    var len = encoding.GetBytes(p, chars.Length, p1, maxSize);
-                    writer.Advance(len);
+                    var charsToProcess = Math.Min(remaining, ChunkSize);
+                    var maxByteCount = encoding.GetMaxByteCount(charsToProcess);
+                    var span = writer.GetSpan(maxByteCount);
+
+                    fixed (byte* p1 = &span[0])
+                    {
+                        var bytesWritten = encoding.GetBytes(p + offset, charsToProcess, p1, maxByteCount);
+                        writer.Advance(bytesWritten);
+                    }
+
+                    offset += charsToProcess;
+                    remaining -= charsToProcess;
                 }
             }
         }
@@ -283,8 +375,6 @@ public static partial class WriterExtension
         }
         else
         {
-            var maxSize = Encoding.UTF8.GetMaxByteCount(value.Length);
-
             var chars = value.AsSpan();
 
             var headerLength = headerType switch
@@ -295,52 +385,61 @@ public static partial class WriterExtension
             };
 
             var writerAnchor = new WriterAnchor<TWriter>(ref writer, headerLength);
-            //var headerSpan = writer.GetSpan(headerLength);
-            //writer.Advance(headerLength);
 
-            var bodySpan = writer.GetSpan(maxSize);
+            var totalLen = 0;
+            var remaining = chars.Length;
+            var offset = 0;
 
             unsafe
             {
                 fixed (char* p = &chars[0])
                 {
-                    fixed (byte* p1 = &bodySpan[0])
+                    while (remaining > 0)
                     {
-                        var len = Encoding.UTF8.GetBytes(p, chars.Length, p1, maxSize);
+                        var charsToProcess = Math.Min(remaining, ChunkSize);
+                        var maxByteCount = Encoding.UTF8.GetMaxByteCount(charsToProcess);
+                        var bodySpan = writer.GetSpan(maxByteCount);
 
-                        writer.Advance(len);
-
-                        var headerSpan = writerAnchor.Rewind(ref writer, out _);
-                        switch (headerType)
+                        fixed (byte* p1 = &bodySpan[0])
                         {
-                            case FixedHeaderType.Byte:
-                                if (len >= byte.MaxValue)
-                                {
-                                    ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, byte.MaxValue);
-                                }
-
-                                headerSpan.WriteValue((byte)len);
-                                break;
-
-                            case FixedHeaderType.Ushort:
-                                if (len >= ushort.MaxValue)
-                                {
-                                    ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, ushort.MaxValue);
-                                }
-                                headerSpan.WriteValue((ushort)len);
-                                break;
-
-                            case FixedHeaderType.Int:
-                            default:
-                                if (len >= int.MaxValue)
-                                {
-                                    ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, int.MaxValue);
-                                }
-                                headerSpan.WriteValue(len);
-                                break;
+                            var bytesWritten = Encoding.UTF8.GetBytes(p + offset, charsToProcess, p1, maxByteCount);
+                            writer.Advance(bytesWritten);
+                            totalLen += bytesWritten;
                         }
+
+                        offset += charsToProcess;
+                        remaining -= charsToProcess;
                     }
                 }
+            }
+
+            var headerSpan = writerAnchor.Rewind(ref writer, out _);
+            switch (headerType)
+            {
+                case FixedHeaderType.Byte:
+                    if (totalLen >= byte.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, byte.MaxValue);
+                    }
+                    headerSpan.WriteValue((byte)totalLen);
+                    break;
+
+                case FixedHeaderType.Ushort:
+                    if (totalLen >= ushort.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, ushort.MaxValue);
+                    }
+                    headerSpan.WriteValue((ushort)totalLen);
+                    break;
+
+                case FixedHeaderType.Int:
+                default:
+                    if (totalLen >= int.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, int.MaxValue);
+                    }
+                    headerSpan.WriteValue(totalLen);
+                    break;
             }
         }
     }
@@ -415,58 +514,5 @@ public static partial class WriterExtension
 
         writer.Advance(byteLength);
         return byteLength;
-    }
-
-    /// <summary>
-    /// 将枚举值写入字节写入器。
-    /// </summary>
-    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
-    /// <param name="writer">字节写入器实例。</param>
-    /// <param name="value">要写入的枚举值。</param>
-    /// <exception cref="NotSupportedException">当枚举的底层类型不受支持时抛出。</exception>
-    /// <remarks>
-    /// 支持的底层类型包括：<see cref="byte"/>、<see cref="sbyte"/>、<see cref="short"/>、
-    /// <see cref="ushort"/>、<see cref="int"/>、<see cref="uint"/>、<see cref="long"/>、<see cref="ulong"/>。
-    /// </remarks>
-    public static void WriteEnum<TWriter>(ref TWriter writer, Enum value)
-        where TWriter : IBytesWriter
-    {
-        var underlyingType = Enum.GetUnderlyingType(value.GetType());
-        if (underlyingType == typeof(byte))
-        {
-            WriteValue(ref writer, Convert.ToByte(value));
-        }
-        else if (underlyingType == typeof(sbyte))
-        {
-            WriteValue(ref writer, Convert.ToSByte(value));
-        }
-        else if (underlyingType == typeof(short))
-        {
-            WriteValue(ref writer, Convert.ToInt16(value));
-        }
-        else if (underlyingType == typeof(ushort))
-        {
-            WriteValue(ref writer, Convert.ToUInt16(value));
-        }
-        else if (underlyingType == typeof(int))
-        {
-            WriteValue(ref writer, Convert.ToInt32(value));
-        }
-        else if (underlyingType == typeof(uint))
-        {
-            WriteValue(ref writer, Convert.ToUInt32(value));
-        }
-        else if (underlyingType == typeof(long))
-        {
-            WriteValue(ref writer, Convert.ToInt64(value));
-        }
-        else if (underlyingType == typeof(ulong))
-        {
-            WriteValue(ref writer, Convert.ToUInt64(value));
-        }
-        else
-        {
-            ThrowHelper.ThrowNotSupportedException($"Unsupported enum underlying type: {underlyingType}");
-        }
     }
 }

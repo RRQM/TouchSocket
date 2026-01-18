@@ -246,6 +246,53 @@ static class TouchSocketHttpUtility
 
         return true;
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool SupportsMultipleValues(string key)
+    {
+        if (string.IsNullOrEmpty(key))
+        {
+            return false;
+        }
+
+        var length = key.Length;
+        var firstChar = char.ToLowerInvariant(key[0]);
+
+        return firstChar switch
+        {
+            'a' => length switch
+            {
+                5 => key.Equals("Allow", StringComparison.OrdinalIgnoreCase),
+                6 => key.Equals("Accept", StringComparison.OrdinalIgnoreCase),
+                13 => key.Equals("Accept-Charset", StringComparison.OrdinalIgnoreCase),
+                14 => key.Equals("Accept-Encoding", StringComparison.OrdinalIgnoreCase),
+                15 => key.Equals("Accept-Langauge", StringComparison.OrdinalIgnoreCase) || key.Equals("Accept-Language", StringComparison.OrdinalIgnoreCase),
+                _ => false
+            },
+            'c' => length switch
+            {
+                10 => key.Equals("Connection", StringComparison.OrdinalIgnoreCase),
+                13 => key.Equals("Cache-Control", StringComparison.OrdinalIgnoreCase),
+                15 => key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase),
+                _ => false
+            },
+            't' => length switch
+            {
+                2 => key.Equals("TE", StringComparison.OrdinalIgnoreCase),
+                7 => key.Equals("Trailer", StringComparison.OrdinalIgnoreCase),
+                17 => key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase),
+                _ => false
+            },
+            'u' => length == 7 && key.Equals("Upgrade", StringComparison.OrdinalIgnoreCase),
+            'v' => length switch
+            {
+                3 => key.Equals("Via", StringComparison.OrdinalIgnoreCase),
+                4 => key.Equals("Vary", StringComparison.OrdinalIgnoreCase),
+                _ => false
+            },
+            'w' => length == 7 && key.Equals("Warning", StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool SupportsMultipleValues(ReadOnlySpan<byte> keySpan)

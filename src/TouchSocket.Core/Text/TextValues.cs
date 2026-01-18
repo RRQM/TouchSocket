@@ -177,7 +177,57 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public bool Equals(string other, StringComparison comparison)
     {
-        return this.Equals(new TextValues(other));
+        // 如果自身为空
+        if (this.m_values is null)
+        {
+            return string.IsNullOrEmpty(other);
+        }
+
+        // 如果自身只有一个值
+        if (this.m_values is string s)
+        {
+            return string.Equals(s, other, comparison);
+        }
+
+        // 如果自身有多个值，则不与单个字符串相等
+        return false;
+    }
+
+    /// <summary>
+    /// 判断相等。
+    /// </summary>
+    public bool Equals(TextValues other, StringComparison comparison)
+    {
+        if (ReferenceEquals(this.m_values, other.m_values))
+        {
+            return true;
+        }
+
+        var count = this.Count;
+        if (count != other.Count)
+        {
+            return false;
+        }
+
+        if (count == 0)
+        {
+            return true;
+        }
+
+        if (count == 1)
+        {
+            return string.Equals(this.First, other.First, comparison);
+        }
+        var a = this.ToArray();
+        var b = other.ToArray();
+        for (var i = 0; i < a.Length; i++)
+        {
+            if (!string.Equals(a[i], b[i], comparison))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// <summary>
@@ -185,21 +235,7 @@ public readonly struct TextValues : IEnumerable<string>, IEquatable<TextValues>
     /// </summary>
     public bool Equals(TextValues other)
     {
-        if (ReferenceEquals(this.m_values, other.m_values)) return true;
-        var count = this.Count;
-        if (count != other.Count) return false;
-        if (count == 0) return true;
-        if (count == 1)
-        {
-            return string.Equals(this.First, other.First, StringComparison.Ordinal);
-        }
-        var a = this.ToArray();
-        var b = other.ToArray();
-        for (var i = 0; i < a.Length; i++)
-        {
-            if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
-        }
-        return true;
+        return this.Equals(other, StringComparison.Ordinal);
     }
 
     /// <summary>

@@ -10,19 +10,23 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Http;
 
 /// <summary>
 /// 服务器发送事件(SSE)读取器
 /// </summary>
-internal class InternalSseReader: SseReader
+internal class InternalSseReader : SseReader
 {
-    private readonly HttpResponse m_response;
     private readonly StringBuilder m_dataBuilder = new StringBuilder();
-    private string m_currentEvent;
-    private string m_currentId;
-    private TimeSpan? m_currentRetry;
+    private readonly HttpResponse m_response;
+    private readonly SegmentedPipe m_lineBuffer = new SegmentedPipe(256);
     private string m_currentComment;
+    private string m_currentEvent;
+    private string m_lastEventId;
+    private TimeSpan? m_retryInterval;
+    private bool m_hasData;
 
     /// <summary>
     /// 初始化SseReader
@@ -38,73 +42,54 @@ internal class InternalSseReader: SseReader
     /// </summary>
     public override HttpResponse Response => this.m_response;
 
-    
-    public override async Task<SseMessage> ReadAsync(CancellationToken cancellationToken = default)
+    public override async IAsyncEnumerable<SseMessage> ReadAllAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        this.m_dataBuilder.Clear();
-        this.m_currentEvent = null;
-        this.m_currentComment = null;
-        var hasData = false;
-
+        this.ResetMessageState();
         while (true)
         {
-            using (var blockResult = await this.m_response.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            var message = await this.ReadAsync(cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            if (message == null)
             {
-                if (blockResult.Memory.IsEmpty && blockResult.IsCompleted)
+                break;
+            }
+            yield return message;
+        }
+    }
+
+    public override async Task<SseMessage> ReadAsync(CancellationToken cancellationToken = default)
+    {
+        while (true)
+        {
+            var processResult = this.ProcessBuffer();
+            if (processResult != null)
+            {
+                this.ResetMessageState();
+                return processResult;
+            }
+
+            using (var blockResult = await this.m_response.ReadAsync(cancellationToken)
+                .ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            {
+                if (!blockResult.Memory.IsEmpty)
                 {
-                    if (hasData)
-                    {
-                        return this.CreateMessage();
-                    }
-                    return null;
-                }
-
-                var memory = blockResult.Memory;
-                var span = memory.Span;
-
-                var lineStart = 0;
-                for (var i = 0; i < span.Length; i++)
-                {
-                    if (span[i] == '\n')
-                    {
-                        var lineEnd = i;
-                        if (lineEnd > lineStart && span[lineEnd - 1] == '\r')
-                        {
-                            lineEnd--;
-                        }
-
-                        var lineSpan = span.Slice(lineStart, lineEnd - lineStart);
-                        if (lineSpan.IsEmpty)
-                        {
-                            if (hasData)
-                            {
-                                return this.CreateMessage();
-                            }
-                        }
-                        else
-                        {
-                            this.ParseLine(lineSpan);
-                            hasData = true;
-                        }
-
-                        lineStart = i + 1;
-                    }
-                }
-
-                if (lineStart < span.Length)
-                {
-                    var remaining = span.Slice(lineStart);
-                    if (remaining.IndexOf((byte)'\n') == -1)
-                    {
-                        continue;
-                    }
+                    this.m_lineBuffer.Writer.Write(blockResult.Memory.Span);
                 }
 
                 if (blockResult.IsCompleted)
                 {
-                    if (hasData)
+                    var readResult = this.m_lineBuffer.Reader.Read();
+                    if (!readResult.Buffer.IsEmpty)
                     {
-                        return this.CreateMessage();
+                        this.ParseLineFromSequence(readResult.Buffer);
+                        this.m_lineBuffer.Reader.AdvanceTo(readResult.Buffer.End);
+                    }
+
+                    if (this.m_hasData)
+                    {
+                        var message = this.CreateMessage();
+                        this.ResetMessageState();
+                        return message;
                     }
                     return null;
                 }
@@ -112,17 +97,45 @@ internal class InternalSseReader: SseReader
         }
     }
 
-   
-    public override async IAsyncEnumerable<SseMessage> ReadAllAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private void ResetMessageState()
     {
-        while (true)
+        this.m_dataBuilder.Clear();
+        this.m_currentEvent = null;
+        this.m_currentComment = null;
+        this.m_hasData = false;
+    }
+
+    private SseMessage CreateMessage()
+    {
+        if (this.m_dataBuilder.Length > 0 && this.m_dataBuilder[this.m_dataBuilder.Length - 1] == '\n')
         {
-            var message = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            if (message == null)
+            this.m_dataBuilder.Length--;
+        }
+
+        var message = new SseMessage
+        {
+            EventType = this.m_currentEvent,
+            Data = this.m_dataBuilder.ToString(),
+            EventId = this.m_lastEventId,
+            ReconnectionInterval = this.m_retryInterval,
+            Comment = this.m_currentComment
+        };
+
+        return message;
+    }
+
+    private void ParseLineFromSequence(ReadOnlySequence<byte> sequence)
+    {
+        if (sequence.IsSingleSegment)
+        {
+            this.ParseLine(sequence.First.Span);
+        }
+        else
+        {
+            using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
-                break;
+                this.ParseLine(buffer.Memory.Span);
             }
-            yield return message;
         }
     }
 
@@ -140,20 +153,21 @@ internal class InternalSseReader: SseReader
             {
                 commentStart = 2;
             }
-            this.m_currentComment = this.GetString(lineSpan.Slice(commentStart));
+            this.m_currentComment = lineSpan.Slice(commentStart).ToUtf8String();
+            this.m_hasData = true;
             return;
         }
 
         var colonIndex = lineSpan.IndexOf((byte)':');
         if (colonIndex == -1)
         {
-            var fieldName = this.GetString(lineSpan);
+            var fieldName = lineSpan.ToUtf8String();
             this.ProcessField(fieldName, string.Empty);
             return;
         }
 
         var fieldNameSpan = lineSpan.Slice(0, colonIndex);
-        var fieldName2 = this.GetString(fieldNameSpan);
+        var fieldName2 = fieldNameSpan.ToUtf8String();
 
         var valueStart = colonIndex + 1;
         if (valueStart < lineSpan.Length && lineSpan[valueStart] == (byte)' ')
@@ -162,7 +176,7 @@ internal class InternalSseReader: SseReader
         }
 
         var valueSpan = lineSpan.Slice(valueStart);
-        var value = this.GetString(valueSpan);
+        var value = valueSpan.ToUtf8String();
 
         this.ProcessField(fieldName2, value);
     }
@@ -174,45 +188,74 @@ internal class InternalSseReader: SseReader
             case "event":
                 this.m_currentEvent = value;
                 break;
+
             case "data":
                 if (this.m_dataBuilder.Length > 0)
                 {
                     this.m_dataBuilder.Append('\n');
                 }
                 this.m_dataBuilder.Append(value);
+                this.m_hasData = true;
                 break;
+
             case "id":
-                this.m_currentId = value;
-                break;
-            case "retry":
-                if (int.TryParse(value, out var retry))
+                if (!value.Contains('\0'))
                 {
-                    this.m_currentRetry = TimeSpan.FromMilliseconds(retry);
+                    this.m_lastEventId = value;
+                }
+                break;
+
+            case "retry":
+                if (int.TryParse(value, out var retry) && retry >= 0)
+                {
+                    this.m_retryInterval = TimeSpan.FromMilliseconds(retry);
                 }
                 break;
         }
     }
 
-    private SseMessage CreateMessage()
+    private SseMessage ProcessBuffer()
     {
-        var message = new SseMessage
+        while (true)
         {
-            EventType = this.m_currentEvent,
-            Data = this.m_dataBuilder.ToString(),
-            EventId = this.m_currentId,
-            ReconnectionInterval = this.m_currentRetry,
-            Comment = this.m_currentComment
-        };
+            var readResult = this.m_lineBuffer.Reader.Read();
+            if (readResult.Buffer.IsEmpty)
+            {
+                break;
+            }
 
-        this.m_dataBuilder.Clear();
-        this.m_currentEvent = null;
-        this.m_currentComment = null;
+            var position = readResult.Buffer.PositionOf((byte)'\n');
+            if (position == null)
+            {
+                break;
+            }
 
-        return message;
-    }
+            var lineSequence = readResult.Buffer.Slice(0, position.Value);
+            var lineLength = lineSequence.Length;
 
-    private string GetString(ReadOnlySpan<byte> span)
-    {
-        return span.ToUtf8String();
+            if (lineLength > 0)
+            {
+                var lastPosition = readResult.Buffer.GetPosition(lineLength - 1);
+                var lastByte = readResult.Buffer.Slice(lastPosition, 1).First.Span[0];
+                if (lastByte == '\r')
+                {
+                    lineSequence = readResult.Buffer.Slice(0, lastPosition);
+                }
+            }
+
+            this.ParseLineFromSequence(lineSequence);
+
+            var nextPosition = readResult.Buffer.GetPosition(1, position.Value);
+            this.m_lineBuffer.Reader.AdvanceTo(nextPosition);
+
+            if (lineSequence.Length == 0)
+            {
+                if (this.m_hasData)
+                {
+                    return this.CreateMessage();
+                }
+            }
+        }
+        return null;
     }
 }

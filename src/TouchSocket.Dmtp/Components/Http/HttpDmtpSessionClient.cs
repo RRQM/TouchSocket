@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Linq;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
@@ -153,15 +154,18 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         var response = httpContext.Response;
 
         if (request.IsMethod(DmtpUtility.Dmtp)
-            && request.IsUpgrade()
-            && request.Headers.Contains(HttpHeaders.Upgrade, DmtpUtility.Dmtp))
+            && request.IsUpgrade())
         {
-            this.InitDmtpActor();
+            var upgrade= request.Headers[HttpHeaders.Upgrade];
+            if (upgrade.Equals(DmtpUtility.Dmtp,StringComparison.OrdinalIgnoreCase))
+            {
+                this.InitDmtpActor();
 
-            await response.SetStatus(101, "Switching Protocols")
-                .AnswerAsync()
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            return;
+                await response.SetStatus(101, "Switching Protocols")
+                    .AnswerAsync()
+                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return;
+            }
         }
         await base.OnReceivedHttpRequest(httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }

@@ -16,21 +16,7 @@ namespace TouchSocket.Http;
 /// <summary>
 /// 表示HTTP头部的接口，继承自<see cref="IDictionary{TKey, TValue}"/>，用于管理HTTP头部键值对。
 /// </summary>
-public interface IHttpHeader : IDictionary<string, TextValues>
+public interface IHttpHeader : IHttpValues
 {
-    /// <summary>
-    /// 获取指定键的Header值。
-    /// </summary>
-    /// <param name="key">要获取的Header键。</param>
-    /// <returns>返回指定键的Header值，如果不存在则返回<see langword="null"/>。</returns>
-    TextValues Get(string key);
-
-    /// <summary>
-    /// 判断指定键的值是否等于指定值。
-    /// </summary>
-    /// <param name="key">要检查的键。</param>
-    /// <param name="value">要匹配的值。</param>
-    /// <param name="ignoreCase">是否忽略大小写，默认为<see langword="true"/>。</param>
-    /// <returns>如果存在指定键且值匹配则返回<see langword="true"/>，否则返回<see langword="false"/>。</returns>
-    bool Contains(string key, TextValues value, bool ignoreCase = true);
+    
 }

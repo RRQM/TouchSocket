@@ -143,11 +143,11 @@ public class HttpRequest : HttpBase
         {
             TouchSocketHttpUtility.AppendQuestionMark(ref writer);
             var i = 0;
-            foreach (var item in this.m_query.Keys)
+            foreach (var item in this.m_query)
             {
-                WriterExtension.WriteNormalString(ref writer, item, Encoding.UTF8);
+                WriterExtension.WriteNormalString(ref writer, item.Key, Encoding.UTF8);
                 TouchSocketHttpUtility.AppendEqual(ref writer);
-                var value = this.m_query[item];
+                var value = item.Value;
                 if (!value.IsEmpty)
                 {
                     WriterExtension.WriteNormalString(ref writer, Uri.EscapeDataString(value), Encoding.UTF8);
@@ -165,12 +165,12 @@ public class HttpRequest : HttpBase
         WriterExtension.WriteNormalString(ref writer, this.ProtocolVersion, Encoding.UTF8);//1.1
         TouchSocketHttpUtility.AppendRn(ref writer);//换行
 
-        foreach (var headerKey in this.Headers.Keys)
+        foreach (var header in this.Headers)
         {
-            WriterExtension.WriteNormalString(ref writer, headerKey, Encoding.UTF8);//key
+            WriterExtension.WriteNormalString(ref writer, header.Key, Encoding.UTF8);//key
             TouchSocketHttpUtility.AppendColon(ref writer);//冒号
             TouchSocketHttpUtility.AppendSpace(ref writer);//空格
-            WriterExtension.WriteNormalString(ref writer, this.Headers[headerKey], Encoding.UTF8);//value
+            WriterExtension.WriteNormalString(ref writer, header.Value, Encoding.UTF8);//value
             TouchSocketHttpUtility.AppendRn(ref writer);//换行
         }
 

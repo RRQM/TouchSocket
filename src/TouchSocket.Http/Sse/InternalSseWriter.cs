@@ -29,42 +29,48 @@ internal class InternalSseWriter : SseWriter
             return;
         }
 
-        var byteBlock = new ByteBlock(1024);
+        var writer = new SegmentedBytesWriter();
         try
         {
+            var hasContent = false;
+
             if (!string.IsNullOrEmpty(message.Comment))
             {
-                TouchSocketHttpUtility.AppendColon(ref byteBlock);
-                TouchSocketHttpUtility.AppendSpace(ref byteBlock);
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, message.Comment);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                TouchSocketHttpUtility.AppendColon(ref writer);
+                TouchSocketHttpUtility.AppendSpace(ref writer);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, message.Comment);
+                TouchSocketHttpUtility.AppendRn(ref writer);
+                hasContent = true;
             }
 
-            if (!string.IsNullOrEmpty(message.EventId))
+            if (!string.IsNullOrEmpty(message.EventId) && !message.EventId.Contains('\0'))
             {
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, "id");
-                TouchSocketHttpUtility.AppendColon(ref byteBlock);
-                TouchSocketHttpUtility.AppendSpace(ref byteBlock);
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, message.EventId);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, "id");
+                TouchSocketHttpUtility.AppendColon(ref writer);
+                TouchSocketHttpUtility.AppendSpace(ref writer);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, message.EventId);
+                TouchSocketHttpUtility.AppendRn(ref writer);
+                hasContent = true;
             }
 
             if (!string.IsNullOrEmpty(message.EventType) && message.EventType != "message")
             {
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, "event");
-                TouchSocketHttpUtility.AppendColon(ref byteBlock);
-                TouchSocketHttpUtility.AppendSpace(ref byteBlock);
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, message.EventType);
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, "event");
+                TouchSocketHttpUtility.AppendColon(ref writer);
+                TouchSocketHttpUtility.AppendSpace(ref writer);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, message.EventType);
+                TouchSocketHttpUtility.AppendRn(ref writer);
+                hasContent = true;
             }
 
             if (message.ReconnectionInterval.HasValue)
             {
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, "retry");
-                TouchSocketHttpUtility.AppendColon(ref byteBlock);
-                TouchSocketHttpUtility.AppendSpace(ref byteBlock);
-                TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, ((int)message.ReconnectionInterval.Value.TotalMilliseconds).ToString());
-                TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, "retry");
+                TouchSocketHttpUtility.AppendColon(ref writer);
+                TouchSocketHttpUtility.AppendSpace(ref writer);
+                TouchSocketHttpUtility.AppendUtf8String(ref writer, ((int)message.ReconnectionInterval.Value.TotalMilliseconds).ToString());
+                TouchSocketHttpUtility.AppendRn(ref writer);
+                hasContent = true;
             }
 
             if (!string.IsNullOrEmpty(message.Data))
@@ -72,21 +78,28 @@ internal class InternalSseWriter : SseWriter
                 var lines = message.Data.Split('\n');
                 foreach (var line in lines)
                 {
-                    TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, "data");
-                    TouchSocketHttpUtility.AppendColon(ref byteBlock);
-                    TouchSocketHttpUtility.AppendSpace(ref byteBlock);
-                    TouchSocketHttpUtility.AppendUtf8String(ref byteBlock, line.TrimEnd('\r'));
-                    TouchSocketHttpUtility.AppendRn(ref byteBlock);
+                    TouchSocketHttpUtility.AppendUtf8String(ref writer, "data");
+                    TouchSocketHttpUtility.AppendColon(ref writer);
+                    TouchSocketHttpUtility.AppendSpace(ref writer);
+                    TouchSocketHttpUtility.AppendUtf8String(ref writer, line.TrimEnd('\r'));
+                    TouchSocketHttpUtility.AppendRn(ref writer);
                 }
+                hasContent = true;
             }
 
-            TouchSocketHttpUtility.AppendRn(ref byteBlock);
+            if (hasContent)
+            {
+                TouchSocketHttpUtility.AppendRn(ref writer);
 
-            await this.m_response.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                foreach (var item in writer.Sequence)
+                {
+                    await this.m_response.WriteAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+            }
         }
         finally
         {
-            byteBlock.Dispose();
+            writer.Dispose();
         }
     }
 

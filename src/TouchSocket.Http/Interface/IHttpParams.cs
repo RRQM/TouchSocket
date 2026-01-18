@@ -15,12 +15,6 @@ namespace TouchSocket.Http;
 /// <summary>
 /// Http参数
 /// </summary>
-public interface IHttpParams : IDictionary<string, TextValues>
+public interface IHttpParams : IHttpValues
 {
-    /// <summary>
-    /// 获取参数
-    /// </summary>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    TextValues Get(string key);
 }

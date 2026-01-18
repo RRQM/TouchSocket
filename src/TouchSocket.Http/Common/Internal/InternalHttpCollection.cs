@@ -10,279 +10,254 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Collections;
 using System.Diagnostics;
 
 namespace TouchSocket.Http;
 
 [DebuggerDisplay("Count = {Count}")]
-[DebuggerTypeProxy(typeof(InternalHttpCollection.InternalHttpCollectionDebugView))]
-internal abstract class InternalHttpCollection : IDictionary<string, TextValues>
+[DebuggerTypeProxy(typeof(InternalHttpCollectionDebugView))]
+internal abstract class InternalHttpCollection : IHttpValues
 {
     private readonly IEqualityComparer<string> m_comparer;
-    private readonly Dictionary<string, TextValues> m_dictionary;
-    private readonly List<KeyValuePair<string, TextValues>> m_pendingItems = new List<KeyValuePair<string, TextValues>>();
-    private bool m_hasDuplicateKeys;
-    private bool m_hasNonPredefinedKeys;
-    private bool m_isDictionaryBuilt;
+    private readonly List<KeyValuePair<string, TextValues>> m_items = new List<KeyValuePair<string, TextValues>>();
 
     protected InternalHttpCollection(IEqualityComparer<string> comparer = null)
     {
         this.m_comparer = comparer ?? StringComparer.OrdinalIgnoreCase;
-        this.m_dictionary = new Dictionary<string, TextValues>(this.m_comparer);
     }
 
-    public int Count
-    {
-        get
-        {
-            this.EnsureDictionaryBuilt();
-            return this.m_dictionary.Count;
-        }
-    }
+    public int Count => this.m_items.Count;
 
-    public bool IsReadOnly => false;
-
-    public ICollection<string> Keys
-    {
-        get
-        {
-            this.EnsureDictionaryBuilt();
-            return this.m_dictionary.Keys;
-        }
-    }
-
-    public ICollection<TextValues> Values
-    {
-        get
-        {
-            this.EnsureDictionaryBuilt();
-            return this.m_dictionary.Values;
-        }
-    }
+    public KeyValuePair<string, TextValues> this[int index] => throw new NotImplementedException();
 
     public TextValues this[string key]
     {
         get
         {
             ThrowHelper.ThrowIfNull(key, nameof(key));
-            this.EnsureDictionaryBuilt();
-            return this.m_dictionary.TryGetValue(key, out var value) ? value : TextValues.Empty;
+            return this.Get(key);
         }
 
-        set => this.Add(key, value);
+        set
+        {
+            ThrowHelper.ThrowIfNull(key, nameof(key));
+            this.RemoveAll(key);
+            this.m_items.Add(new KeyValuePair<string, TextValues>(key, value));
+        }
     }
 
     public void Add(string key, TextValues value)
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
+        this.m_items.Add(new KeyValuePair<string, TextValues>(key, value));
+    }
 
-        if (this.m_isDictionaryBuilt)
+    public KeyValuePair<string, TextValues>[] GetAll(string key)
+    {
+        ThrowHelper.ThrowIfNull(key, nameof(key));
+
+        var results = new List<KeyValuePair<string, TextValues>>();
+        for (var i = 0; i < this.m_items.Count; i++)
         {
-            if (this.m_dictionary.TryGetValue(key, out var old))
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
             {
-                this.m_dictionary[key] = Merge(old, value);
+                results.Add(this.m_items[i]);
             }
-            else
+        }
+
+        return results.ToArray();
+    }
+
+    public void Append(string key, TextValues value)
+    {
+        ThrowHelper.ThrowIfNull(key, nameof(key));
+
+        var existingIndex = -1;
+        for (var i = this.m_items.Count - 1; i >= 0; i--)
+        {
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
             {
-                this.m_dictionary.Add(key, value);
+                existingIndex = i;
+                break;
             }
+        }
+
+        if (existingIndex >= 0)
+        {
+            var existingValue = this.m_items[existingIndex].Value;
+            var newValues = existingValue;
+
+            foreach (var val in value)
+            {
+                newValues = newValues.Add(val);
+            }
+
+            this.m_items[existingIndex] = new KeyValuePair<string, TextValues>(key, newValues);
         }
         else
         {
-            if (!this.m_hasNonPredefinedKeys && !HttpHeaders.IsPredefinedHeader(key))
-            {
-                this.m_hasNonPredefinedKeys = true;
-            }
-
-            if (!this.m_hasDuplicateKeys && this.m_pendingItems.Count > 0)
-            {
-                for (var i = 0; i < this.m_pendingItems.Count; i++)
-                {
-                    if (this.m_comparer.Equals(this.m_pendingItems[i].Key, key))
-                    {
-                        this.m_hasDuplicateKeys = true;
-                        break;
-                    }
-                }
-            }
-
-            this.m_pendingItems.Add(new KeyValuePair<string, TextValues>(key, value));
+            this.m_items.Add(new KeyValuePair<string, TextValues>(key, value));
         }
     }
 
-    public void Add(KeyValuePair<string, TextValues> item) => this.Add(item.Key, item.Value);
+    public bool TryAppend(string key, TextValues value)
+    {
+        ThrowHelper.ThrowIfNull(key, nameof(key));
+
+        var existingIndex = -1;
+        for (var i = this.m_items.Count - 1; i >= 0; i--)
+        {
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
+            {
+                existingIndex = i;
+                break;
+            }
+        }
+
+        if (existingIndex >= 0)
+        {
+            var existingValue = this.m_items[existingIndex].Value;
+            var existingArray = existingValue.ToArray();
+            var hasNewValue = false;
+            var newValues = existingValue;
+
+            foreach (var val in value)
+            {
+                var isDuplicate = false;
+                for (var i = 0; i < existingArray.Length; i++)
+                {
+                    if (string.Equals(existingArray[i], val, StringComparison.Ordinal))
+                    {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate)
+                {
+                    newValues = newValues.Add(val);
+                    hasNewValue = true;
+                }
+            }
+
+            if (hasNewValue)
+            {
+                this.m_items[existingIndex] = new KeyValuePair<string, TextValues>(key, newValues);
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
+    }
 
     public void Clear()
     {
-        this.m_dictionary.Clear();
-        this.m_pendingItems.Clear();
-        this.m_hasDuplicateKeys = false;
-        this.m_hasNonPredefinedKeys = false;
-        this.m_isDictionaryBuilt = false;
-    }
-
-    public bool Contains(KeyValuePair<string, TextValues> item)
-    {
-        this.EnsureDictionaryBuilt();
-        return ((IDictionary<string, TextValues>)this.m_dictionary).Contains(item);
+        this.m_items.Clear();
     }
 
     public bool ContainsKey(string key)
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
-        this.EnsureDictionaryBuilt();
-        return this.m_dictionary.ContainsKey(key);
-    }
 
-    public void CopyTo(KeyValuePair<string, TextValues>[] array, int arrayIndex)
-    {
-        this.EnsureDictionaryBuilt();
-        ((IDictionary<string, TextValues>)this.m_dictionary).CopyTo(array, arrayIndex);
+        for (var i = 0; i < this.m_items.Count; i++)
+        {
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public TextValues Get(string key)
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
-        this.EnsureDictionaryBuilt();
-        return this.m_dictionary.TryGetValue(key, out var value) ? value : TextValues.Empty;
+
+        for (var i = 0; i < this.m_items.Count; i++)
+        {
+            var item = this.m_items[i];
+            if (this.m_comparer.Equals(item.Key, key))
+            {
+                return item.Value;
+            }
+        }
+        return TextValues.Empty;
     }
 
     public IEnumerator<KeyValuePair<string, TextValues>> GetEnumerator()
     {
-        if (this.m_isDictionaryBuilt)
-        {
-            return this.m_dictionary.GetEnumerator();
-        }
-        else if (this.m_hasDuplicateKeys || this.m_hasNonPredefinedKeys)
-        {
-            this.EnsureDictionaryBuilt();
-            return this.m_dictionary.GetEnumerator();
-        }
-        else
-        {
-            return this.m_pendingItems.GetEnumerator();
-        }
+        return this.m_items.GetEnumerator();
     }
 
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return this.GetEnumerator();
+    }
 
     public bool Remove(string key)
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
-        this.EnsureDictionaryBuilt();
-        return this.m_dictionary.Remove(key);
+
+        for (var i = 0; i < this.m_items.Count; i++)
+        {
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
+            {
+                this.m_items.RemoveAt(i);
+                return true;
+            }
+        }
+        return false;
     }
 
-    public bool Remove(KeyValuePair<string, TextValues> item)
+    public bool RemoveAll(string key)
     {
-        this.EnsureDictionaryBuilt();
-        return ((IDictionary<string, TextValues>)this.m_dictionary).Remove(item);
+        ThrowHelper.ThrowIfNull(key, nameof(key));
+
+        var removed = false;
+        for (var i = this.m_items.Count - 1; i >= 0; i--)
+        {
+            if (this.m_comparer.Equals(this.m_items[i].Key, key))
+            {
+                this.m_items.RemoveAt(i);
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    public bool TryAdd(string key, TextValues value)
+    {
+        ThrowHelper.ThrowIfNull(key, nameof(key));
+        if (this.ContainsKey(key))
+        {
+            return false;
+        }
+        this.m_items.Add(new KeyValuePair<string, TextValues>(key, value));
+        return true;
     }
 
     public bool TryGetValue(string key, out TextValues value)
     {
         ThrowHelper.ThrowIfNull(key, nameof(key));
-        this.EnsureDictionaryBuilt();
-        return this.m_dictionary.TryGetValue(key, out value);
+        for (var i = 0; i < this.m_items.Count; i++)
+        {
+            var item = this.m_items[i];
+            if (this.m_comparer.Equals(item.Key, key))
+            {
+                value= item.Value;
+                return true;
+            }
+        }
+        value =TextValues.Empty;
+        return false;
     }
 
     internal void AddInternal(string key, TextValues value)
     {
-        this.m_pendingItems.Add(new KeyValuePair<string, TextValues>(key, value));
-    }
-
-    protected static TextValues Merge(TextValues a, TextValues b)
-    {
-        if (a.IsEmpty)
-        {
-            return b;
-        }
-
-        if (b.IsEmpty)
-        {
-            return a;
-        }
-
-        var arrA = a.ToArray();
-        var arrB = b.ToArray();
-        var ac = arrA.Length;
-        var bc = arrB.Length;
-
-        var newArr = new string[ac + bc];
-        Array.Copy(arrA, 0, newArr, 0, ac);
-        Array.Copy(arrB, 0, newArr, ac, bc);
-        return new TextValues(newArr);
-    }
-
-    private void EnsureDictionaryBuilt()
-    {
-        if (this.m_isDictionaryBuilt)
-        {
-            return;
-        }
-        if (!this.m_hasDuplicateKeys && !this.m_hasNonPredefinedKeys && this.m_dictionary.Count == 0)
-        {
-            foreach (var item in this.m_pendingItems)
-            {
-                this.m_dictionary.Add(item.Key, item.Value);
-            }
-        }
-        else
-        {
-            foreach (var item in this.m_pendingItems)
-            {
-                if (this.m_dictionary.TryGetValue(item.Key, out var old))
-                {
-                    this.m_dictionary[item.Key] = Merge(old, item.Value);
-                }
-                else
-                {
-                    this.m_dictionary.Add(item.Key, item.Value);
-                }
-            }
-        }
-
-        this.m_pendingItems.Clear();
-        this.m_hasDuplicateKeys = false;
-        this.m_hasNonPredefinedKeys = false;
-        this.m_isDictionaryBuilt = true;
-    }
-
-    private sealed class InternalHttpCollectionDebugView
-    {
-        private readonly InternalHttpCollection m_collection;
-
-        public InternalHttpCollectionDebugView(InternalHttpCollection collection)
-        {
-            this.m_collection = collection ?? throw new ArgumentNullException(nameof(collection));
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public HttpHeaderDebugItem[] Items
-        {
-            get
-            {
-                this.m_collection.EnsureDictionaryBuilt();
-                if (this.m_collection.Count == 0)
-                {
-                    return [];
-                }
-
-                var items = new HttpHeaderDebugItem[this.m_collection.Count];
-                var index = 0;
-
-                foreach (var kvp in this.m_collection)
-                {
-                    items[index++] = new HttpHeaderDebugItem(kvp.Key, kvp.Value);
-                }
-
-                return items;
-            }
-        }
-
-        public int Count => this.m_collection.Count;
-
-        public bool IsDictionaryBuilt => this.m_collection.m_isDictionaryBuilt;
+        this.m_items.Add(new KeyValuePair<string, TextValues>(key, value));
     }
 
     [DebuggerDisplay("{Key}: {Value}")]
@@ -304,5 +279,39 @@ internal abstract class InternalHttpCollection : IDictionary<string, TextValues>
 
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
         public string[] Values { get; }
+    }
+
+    private sealed class InternalHttpCollectionDebugView
+    {
+        private readonly InternalHttpCollection m_collection;
+
+        public InternalHttpCollectionDebugView(InternalHttpCollection collection)
+        {
+            this.m_collection = collection ?? throw new ArgumentNullException(nameof(collection));
+        }
+
+        public int Count => this.m_collection.Count;
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public HttpHeaderDebugItem[] Items
+        {
+            get
+            {
+                if (this.m_collection.Count == 0)
+                {
+                    return [];
+                }
+
+                var items = new HttpHeaderDebugItem[this.m_collection.Count];
+                var index = 0;
+
+                foreach (var kvp in this.m_collection)
+                {
+                    items[index++] = new HttpHeaderDebugItem(kvp.Key, kvp.Value);
+                }
+
+                return items;
+            }
+        }
     }
 }

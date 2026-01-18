@@ -476,6 +476,20 @@ public class SegmentedPipeReader
     }
 
     /// <summary>
+    /// 推进读取位置到末尾,消费所有可用数据
+    /// </summary>
+    public void AdvanceToEnd()
+    {
+        var buffer = this.m_pipe.GetReadBuffer();
+        if (buffer.IsEmpty)
+        {
+            return;
+        }
+
+        this.m_pipe.AdvanceReader((int)buffer.Length);
+    }
+
+    /// <summary>
     /// 完成读取操作
     /// </summary>
     public void Complete()
