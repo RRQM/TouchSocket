@@ -17,46 +17,7 @@ namespace TouchSocket.Sockets;
 /// </summary>
 public static class ServiceExtension
 {
-    #region IServiceBase
-
-    /// <summary>
-    /// 启动服务的扩展方法。
-    /// </summary>
-    /// <typeparam name="TService">服务的类型，必须继承自IServiceBase。</typeparam>
-    /// <param name="service">要启动的服务实例。</param>
-    /// <remarks>
-    /// 此方法使用了GetFalseAwaitResult方法来避免捕获异常，这在某些异步操作中可能是必要的，
-    /// 但在常规情况下，应该避免在生产代码中直接调用非await的异步方法结果。
-    /// </remarks>
-    [AsyncToSyncWarning]
-    public static void Start<TService>(this TService service) where TService : IServiceBase
-    {
-        service.StartAsync().GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 停止给定的服务。
-    /// </summary>
-    /// <typeparam name="TService">要停止的服务类型，必须实现IServiceBase接口。</typeparam>
-    /// <param name="service">要执行停止操作的服务实例。</param>
-    [AsyncToSyncWarning]
-    public static Result Stop<TService>(this TService service) where TService : IServiceBase
-    {
-        // 直接调用服务的StopAsync方法，并获取其FalseAwaitResult，确保异步操作被立即处理。
-        return service.StopAsync().GetFalseAwaitResult();
-    }
-
-    #endregion IServiceBase
-
     #region ITcpService
-
-    /// <inheritdoc cref="IServiceBase.StartAsync"/>
-    [AsyncToSyncWarning]
-    public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
-    {
-        StartAsync(service, iPHosts).GetFalseAwaitResult();
-    }
-
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
     public static async Task StartAsync<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
     {
@@ -78,13 +39,6 @@ public static class ServiceExtension
     #endregion ITcpService
 
     #region Udp
-
-    /// <inheritdoc cref="IServiceBase.StartAsync"/>
-    [AsyncToSyncWarning]
-    public static void Start<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
-    {
-        StartAsync(service, iPHost).GetFalseAwaitResult();
-    }
 
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
     public static async Task StartAsync<TService>(this TService service, IPHost iPHost, CancellationToken cancellationToken = default) where TService : IUdpSession

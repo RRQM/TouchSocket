@@ -18,22 +18,6 @@ namespace TouchSocket.Modbus;
 public static class ModbusIgnoreSlaveMasterExtension
 {
     #region ReadWrite 默认超时
-
-    /// <summary>
-    /// 读写多个寄存器（FC23），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddressForRead">读取位置（从0开始）</param>
-    /// <param name="quantityForRead">读取长度</param>
-    /// <param name="startingAddress">写入位置（从0开始）</param>
-    /// <param name="bytes">待写入数据</param>
-    /// <returns>响应值</returns>
-    [AsyncToSyncWarning]
-    public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, ReadOnlyMemory<byte> bytes)
-    {
-        return master.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
-    }
-
     /// <summary>
     /// 读写多个寄存器（FC23），默认超时时间为1000ms。
     /// </summary>
@@ -49,62 +33,6 @@ public static class ModbusIgnoreSlaveMasterExtension
     }
 
     #endregion ReadWrite 默认超时
-
-    #region Read 默认超时
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）读取线圈（FC1），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="quantity">读取数量</param>
-    /// <returns>读取到的值集合</returns>
-    [AsyncToSyncWarning]
-    public static ReadOnlyMemory<bool> ReadCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
-    {
-        return master.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）读离散输入状态（FC2），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="quantity">读取数量</param>
-    /// <returns>读取到的值集合</returns>
-    [AsyncToSyncWarning]
-    public static ReadOnlyMemory<bool> ReadDiscreteInputs(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
-    {
-        return master.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）读保持寄存器（FC3），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="quantity">读取数量</param>
-    /// <returns>响应值</returns>
-    [AsyncToSyncWarning]
-    public static IModbusResponse ReadHoldingRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
-    {
-        return master.ReadHoldingRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）读输入寄存器（FC4），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="quantity">读取数量</param>
-    /// <returns>响应值</returns>
-    [AsyncToSyncWarning]
-    public static IModbusResponse ReadInputRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
-    {
-        return master.ReadInputRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    #endregion Read 默认超时
 
     #region ReadAsync 默认超时
 
@@ -157,58 +85,6 @@ public static class ModbusIgnoreSlaveMasterExtension
     }
 
     #endregion ReadAsync 默认超时
-
-    #region Write 默认超时
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）写入多个线圈（FC15），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="values">待写入集合</param>
-    [AsyncToSyncWarning]
-    public static IModbusResponse WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<bool> values)
-    {
-        return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）写入多个寄存器（FC16），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="bytes">待写入集合</param>
-    [AsyncToSyncWarning]
-    public static IModbusResponse WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ReadOnlyMemory<byte> bytes)
-    {
-        return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）写入单个线圈（FC5），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="value">待写入数值</param>
-    [AsyncToSyncWarning]
-    public static IModbusResponse WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
-    {
-        return master.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    /// <summary>
-    /// 忽略站点（默认站号为1）写入单个寄存器（FC6），默认超时时间为1000ms。
-    /// </summary>
-    /// <param name="master">通讯客户端</param>
-    /// <param name="startingAddress">起始位置（从0开始）</param>
-    /// <param name="value">待写入数值</param>
-    [AsyncToSyncWarning]
-    public static IModbusResponse WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
-    {
-        return master.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None).GetFalseAwaitResult();
-    }
-
-    #endregion Write 默认超时
 
     #region WriteAsync 默认超时
 

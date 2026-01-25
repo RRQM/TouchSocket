@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using TouchSocket.Rpc;
@@ -24,17 +23,10 @@ public class DefaultSerializationSelector : ISerializationSelector
 {
     private JsonSerializerOptions m_jsonSerializerOptions;
 
-    private bool m_useSystemTextJson;
-
     /// <summary>
     /// 快速序列化上下文属性
     /// </summary>
     public FastSerializerContext FastSerializerContext { get; set; } = FastBinaryFormatter.DefaultFastSerializerContext;
-
-    /// <summary>
-    /// Json序列化配置
-    /// </summary>
-    public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
 
     /// <summary>
     /// 序列化绑定器属性
@@ -74,12 +66,7 @@ public class DefaultSerializationSelector : ISerializationSelector
                         return parameterType.GetDefault();
                     }
 
-                    if (this.m_useSystemTextJson)
-                    {
-                        return System.Text.Json.JsonSerializer.Deserialize(ReaderExtension.ReadString(ref reader), parameterType, this.m_jsonSerializerOptions);
-                    }
-
-                    return JsonConvert.DeserializeObject(ReaderExtension.ReadString(ref reader), parameterType, this.JsonSerializerSettings);
+                    return System.Text.Json.JsonSerializer.Deserialize(ReaderExtension.ReadString(ref reader), parameterType, this.m_jsonSerializerOptions);
                 }
             case SerializationType.Xml:
                 if (ReaderExtension.ReadIsNull(ref reader))
@@ -129,19 +116,6 @@ public class DefaultSerializationSelector : ISerializationSelector
                 }
             case SerializationType.Json:
                 {
-                    if (this.m_useSystemTextJson)
-                    {
-                        if (parameter is null)
-                        {
-                            WriterExtension.WriteNull(ref writer);
-                        }
-                        else
-                        {
-                            WriterExtension.WriteNotNull(ref writer);
-                            WriterExtension.WriteString(ref writer, System.Text.Json.JsonSerializer.Serialize(parameter, parameter.GetType(), this.m_jsonSerializerOptions));
-                        }
-                        return;
-                    }
                     if (parameter is null)
                     {
                         WriterExtension.WriteNull(ref writer);
@@ -149,7 +123,7 @@ public class DefaultSerializationSelector : ISerializationSelector
                     else
                     {
                         WriterExtension.WriteNotNull(ref writer);
-                        WriterExtension.WriteString(ref writer, JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
+                        WriterExtension.WriteString(ref writer, System.Text.Json.JsonSerializer.Serialize(parameter, parameter.GetType(), this.m_jsonSerializerOptions));
                     }
                     break;
                 }
@@ -179,7 +153,6 @@ public class DefaultSerializationSelector : ISerializationSelector
     {
         var serializerOptions = new JsonSerializerOptions();
         options.Invoke(serializerOptions);
-        this.m_useSystemTextJson = true;
         this.m_jsonSerializerOptions = serializerOptions;
     }
 }

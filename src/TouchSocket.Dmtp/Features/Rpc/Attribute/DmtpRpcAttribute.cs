@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Reflection;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
@@ -22,36 +23,21 @@ namespace TouchSocket.Dmtp.Rpc;
 public sealed class DmtpRpcAttribute : RpcAttribute
 {
     /// <summary>
-    ///  适用于DmtpRpc的标记.
-    ///  <para>是否仅以函数名调用，当为<see langword="true"/>是，调用时仅需要传入方法名即可。</para>
-    /// </summary>
-    /// <param name="methodInvoke">指示是否仅通过方法名进行调用的布尔值。</param>
-    [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-    public DmtpRpcAttribute(bool methodInvoke)
-    {
-        this.MethodInvoke = methodInvoke;
-    }
-
-    /// <summary>
     /// 适用于DmtpRpc的标记
     /// </summary>
     public DmtpRpcAttribute()
     {
     }
 
-    /// <summary>
-    /// 适用于DmtpRpc的标记.
-    /// </summary>
-    /// <param name="invokeKey">用于指定DmtpRpc调用的关键字</param>
-    [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
-    public DmtpRpcAttribute(string invokeKey)
-    {
-        this.InvokeKey = invokeKey;
-    }
-
     /// <inheritdoc/>
     public override Type[] GetGenericConstraintTypes()
     {
         return new Type[] { typeof(IDmtpRpcActor) };
+    }
+
+    /// <inheritdoc/>
+    protected override PropertyInfo[] GetPublicProperties()
+    {
+        return typeof(DmtpRpcAttribute).GetProperties(BindingFlags.Public | BindingFlags.Instance);
     }
 }

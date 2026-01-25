@@ -54,22 +54,6 @@ public static class DmtpFileTransferActorExtension
     }
 
     #region Id文件传输
-
-
-    /// <summary>
-    /// 同步拉取文件操作的同步封装方法。
-    /// </summary>
-    /// <param name="actor">参与文件传输操作的角色。</param>
-    /// <param name="targetId">目标文件的标识。</param>
-    /// <param name="fileOperator">文件操作对象，用于处理文件传输过程中的具体操作。</param>
-    /// <returns>返回文件拉取操作的结果。</returns>
-    [AsyncToSyncWarning]
-    public static Result PullFile(this IDmtpFileTransferActor actor, string targetId, FileOperator fileOperator)
-    {
-        return PullFileAsync(actor, targetId, fileOperator).GetFalseAwaitResult();
-    }
-
-
     /// <summary>
     /// 异步拉取文件
     /// </summary>
@@ -202,20 +186,6 @@ public static class DmtpFileTransferActorExtension
         }
     }
 
-
-    /// <summary>
-    /// 异步推送文件到指定目标
-    /// </summary>
-    /// <param name="actor">执行文件推送操作的演员</param>
-    /// <param name="targetId">目标标识符，标识文件推送的目的地</param>
-    /// <param name="fileOperator">文件操作对象，包含待推送的文件信息和操作方法</param>
-    /// <returns>返回文件推送操作的结果</returns>
-    [AsyncToSyncWarning]
-    public static Result PushFile(this IDmtpFileTransferActor actor, string targetId, FileOperator fileOperator)
-    {
-        return PushFileAsync(actor, targetId, fileOperator).GetFalseAwaitResult();
-    }
-
     /// <summary>
     /// 异步推送文件到指定目标。
     /// </summary>
@@ -327,19 +297,6 @@ public static class DmtpFileTransferActorExtension
     #region 文件传输
 
     /// <summary>
-    /// 从远程服务器拉取文件。
-    /// </summary>
-    /// <param name="actor">提供文件传输功能的actor。</param>
-    /// <param name="fileOperator">用于处理文件的文件操作器。</param>
-    /// <returns>返回一个<see cref="Result"/>类型的值，包含操作的结果信息。</returns>
-    [AsyncToSyncWarning]
-    public static Result PullFile(this IDmtpFileTransferActor actor, FileOperator fileOperator)
-    {
-        return PullFileAsync(actor, default, fileOperator).GetFalseAwaitResult();
-    }
-
-
-    /// <summary>
     /// 异步拉取文件
     /// </summary>
     /// <param name="actor">文件传输行为者</param>
@@ -350,20 +307,6 @@ public static class DmtpFileTransferActorExtension
         // 调用重载的PullFileAsync方法，使用默认值进行异步文件拉取操作
         return PullFileAsync(actor, default, fileOperator);
     }
-
-    /// <summary>
-    /// 扩展方法，用于推送文件。
-    /// </summary>
-    /// <param name="actor">实现文件传输操作的演员。</param>
-    /// <param name="fileOperator">文件操作对象，用于指定文件操作。</param>
-    /// <returns>返回文件推送操作的结果。</returns>
-    [AsyncToSyncWarning]
-    public static Result PushFile(this IDmtpFileTransferActor actor, FileOperator fileOperator)
-    {
-        // 调用重载的PushFile方法，使用默认值进行文件推送操作
-        return PushFileAsync(actor, default, fileOperator).GetFalseAwaitResult();
-    }
-
 
     /// <summary>
     /// 异步推送文件方法

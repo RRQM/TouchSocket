@@ -82,6 +82,25 @@ public static partial class ReaderExtension
     }
 
     /// <summary>
+    /// 从字节读取器中读取一个字节跨度。
+    /// </summary>
+    /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>
+    /// <param name="reader">字节读取器实例。</param>
+    /// <returns>读取的只读字节跨度。</returns>
+    /// <remarks>
+    /// 此方法首先读取长度信息，然后返回对应长度的字节跨度。
+    /// </remarks>
+    public static ReadOnlyMemory<byte> ReadByteSpanMemory<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+    {
+        //issue:https://gitee.com/RRQM_Home/TouchSocket/issues/IDL9IK
+        var length = (int)ReadVarUInt32(ref reader);
+        var span = reader.GetMemory(length).Slice(0, length);
+        reader.Advance(length);
+        return span;
+    }
+
+    /// <summary>
     /// 从字节读取器中读取指定类型的枚举值。
     /// </summary>
     /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>

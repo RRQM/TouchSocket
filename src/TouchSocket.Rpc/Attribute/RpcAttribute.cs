@@ -101,56 +101,7 @@ public abstract class RpcAttribute : Attribute
 
         var parametersStr = this.GetParameters(rpcMethod, out var parameters);
         var InterfaceTypes = this.GetGenericConstraintTypes();
-        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
-        //{
-        //    codeString.AppendLine("///<summary>");
-        //    codeString.AppendLine($"///{description}");
-        //    codeString.AppendLine("///</summary>");
-        //    foreach (var item in this.Exceptions)
-        //    {
-        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-        //    }
 
-        //    codeString.AppendLine("[AsyncToSyncWarning]");
-        //    codeString.Append("public static ");
-        //    codeString.Append(this.GetReturn(rpcMethod, false));
-        //    codeString.Append(' ');
-        //    codeString.Append(this.GetMethodName(rpcMethod, false));
-        //    codeString.Append("<TClient>(");//方法参数
-
-        //    codeString.Append($"this TClient client");
-
-        //    codeString.Append(',');
-        //    for (var i = 0; i < parametersStr.Count; i++)
-        //    {
-        //        if (i > 0)
-        //        {
-        //            codeString.Append(',');
-        //        }
-
-        //        codeString.Append(parametersStr[i]);
-        //    }
-        //    if (parametersStr.Count > 0)
-        //    {
-        //        codeString.Append(',');
-        //    }
-        //    codeString.Append(this.GetInvokeOption());
-        //    codeString.AppendLine(") where TClient:");
-
-        //    for (var i = 0; i < InterfaceTypes.Length; i++)
-        //    {
-        //        if (i > 0)
-        //        {
-        //            codeString.Append(',');
-        //        }
-
-        //        codeString.Append(InterfaceTypes[i].FullName);
-        //    }
-
-        //    codeString.AppendLine("{");//方法开始
-        //    codeString.AppendLine(this.GetExtensionInstanceMethod(rpcMethod, parametersStr, parameters, false));
-        //    codeString.AppendLine("}");
-        //}
 
         //以下生成异步
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync))
@@ -228,43 +179,6 @@ public abstract class RpcAttribute : Attribute
 
         var description = this.GetDescription(rpcMethod);
         var parametersStr = this.GetParameters(rpcMethod, out var parameters);
-        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
-        //{
-        //    codeString.AppendLine("///<summary>");
-        //    codeString.AppendLine($"///{description}");
-        //    codeString.AppendLine("///</summary>");
-        //    foreach (var item in this.Exceptions)
-        //    {
-        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-        //    }
-        //    codeString.AppendLine("[AsyncToSyncWarning]");
-        //    codeString.Append("public ");
-        //    codeString.Append(this.GetReturn(rpcMethod, false));
-        //    codeString.Append(' ');
-        //    codeString.Append(this.GetMethodName(rpcMethod, false));
-        //    codeString.Append('(');//方法参数
-
-        //    for (var i = 0; i < parametersStr.Count; i++)
-        //    {
-        //        if (i > 0)
-        //        {
-        //            codeString.Append(',');
-        //        }
-        //        codeString.Append(parametersStr[i]);
-        //    }
-        //    if (parametersStr.Count > 0)
-        //    {
-        //        codeString.Append(',');
-        //    }
-        //    codeString.Append(this.GetInvokeOption());
-        //    codeString.AppendLine(")");
-
-        //    codeString.AppendLine("{");//方法开始
-
-        //    codeString.AppendLine(this.GetInstanceMethod(rpcMethod, parametersStr, parameters, false));
-
-        //    codeString.AppendLine("}");
-        //}
 
         //以下生成异步
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync))
@@ -320,36 +234,6 @@ public abstract class RpcAttribute : Attribute
         var codeString = new StringBuilder();
         var description = this.GetDescription(rpcMethod);
         var parameters = this.GetParameters(rpcMethod, out _);
-        //if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
-        //{
-        //    codeString.AppendLine("///<summary>");
-        //    codeString.AppendLine($"///{description}");
-        //    codeString.AppendLine("///</summary>");
-        //    foreach (var item in this.Exceptions)
-        //    {
-        //        codeString.AppendLine($"/// <exception cref=\"{item.Key.FullName}\">{item.Value}</exception>");
-        //    }
-
-        //    codeString.AppendLine("[AsyncToSyncWarning]");
-        //    codeString.Append(this.GetReturn(rpcMethod, false));
-        //    codeString.Append(' ');
-        //    codeString.Append(this.GetMethodName(rpcMethod, false));
-        //    codeString.Append('(');//方法参数
-        //    for (var i = 0; i < parameters.Count; i++)
-        //    {
-        //        if (i > 0)
-        //        {
-        //            codeString.Append(',');
-        //        }
-        //        codeString.Append(parameters[i]);
-        //    }
-        //    if (parameters.Count > 0)
-        //    {
-        //        codeString.Append(',');
-        //    }
-        //    codeString.Append(this.GetInvokeOption());
-        //    codeString.AppendLine(");");
-        //}
 
         if (this.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync))
         {
@@ -507,12 +391,10 @@ public abstract class RpcAttribute : Attribute
         }
     }
 
-    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)
     {
         this.ClassCodeGenerator = classCodeGenerator;
-
-        this.PropertyNames = this.GetPublicPropertiesAsDictionary();
+        this.LoadPublicPropertiesAsDictionary();
     }
 
     /// <summary>
@@ -750,14 +632,17 @@ public abstract class RpcAttribute : Attribute
         return codeString.ToString();
     }
 
-    [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
-    private Dictionary<string, object> GetPublicPropertiesAsDictionary()
-    {
-        var propertiesDict = new Dictionary<string, object>();
-        var type = this.GetType();
+    protected abstract PropertyInfo[] GetPublicProperties();
 
-        // 获取当前类的所有公共实例属性
-        var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+    private void LoadPublicPropertiesAsDictionary()
+    {
+        if (this.PropertyNames is not null)
+        {
+            return;
+        }
+        this.PropertyNames = new Dictionary<string, object>() ;
+        var publicProperties = this.GetPublicProperties();
 
         // 遍历这些属性并将它们的值存储到字典中
         foreach (var propertyInfo in publicProperties)
@@ -765,15 +650,14 @@ public abstract class RpcAttribute : Attribute
             if (propertyInfo.CanRead)
             {
                 var value = propertyInfo.GetValue(this);
-                propertiesDict.Add(propertyInfo.Name, value);
+                this.PropertyNames.TryAdd(propertyInfo.Name, value);
             }
         }
-
-        return propertiesDict;
     }
 
     private string ReplacePatterns(string input)
     {
+        this.LoadPublicPropertiesAsDictionary();
         var pairs = this.PropertyNames;
 
         var sb = new StringBuilder();

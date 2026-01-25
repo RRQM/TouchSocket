@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiStringEnumConverter : StringEnumConverter
+internal class OpenApiStringEnumConverter : System.Text.Json.Serialization.JsonStringEnumConverter
 {
-    public OpenApiStringEnumConverter() : base(new CamelCaseNamingStrategy())
+    public OpenApiStringEnumConverter() : base(JsonNamingPolicy.CamelCase)
     {
     }
 }

@@ -32,7 +32,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     {
         this.Converter = new StringSerializerConverter<HttpRequestMessage>(
             new StringToPrimitiveSerializerFormatter<HttpRequestMessage>(),
-            new JsonStringToClassSerializerFormatter<HttpRequestMessage>());
+            new SystemTextJsonStringToClassSerializerFormatter<HttpRequestMessage>());
     }
 
     /// <summary>

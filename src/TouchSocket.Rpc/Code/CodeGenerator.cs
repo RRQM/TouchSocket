@@ -327,8 +327,6 @@ public static class CodeGenerator
             serverCellCode.ClassCellCodes.Add(item.Name, item);
         }
 
-        //ServerCodeGenerator serverCodeGenerator = new ServerCodeGenerator(classCodeGenerator);
-
         var first = true;
         foreach (var item in instances)
         {

@@ -386,7 +386,7 @@ public static partial class SerializeConvert
     /// <returns></returns>
     public static string ToJsonString(this object item)
     {
-        return Newtonsoft.Json.JsonConvert.SerializeObject(item);
+        return System.Text.Json.JsonSerializer.Serialize(item);
     }
 
     /// <summary>
@@ -397,7 +397,7 @@ public static partial class SerializeConvert
     /// <returns></returns>
     public static object FromJsonString(this string json, Type type)
     {
-        return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
+        return System.Text.Json.JsonSerializer.Deserialize(json, type);
     }
 
     /// <summary>

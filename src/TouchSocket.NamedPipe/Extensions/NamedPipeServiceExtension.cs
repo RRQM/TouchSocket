@@ -17,25 +17,7 @@ namespace TouchSocket.NamedPipe;
 /// </summary>
 public static class NamedPipeServiceExtension
 {
-    /// <inheritdoc cref="IServiceBase.StartAsync"/>
-    [AsyncToSyncWarning]
-    public static void Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
-    {
-        TouchSocketConfig config;
-        if (service.Config == null)
-        {
-            config = new TouchSocketConfig();
-            config.SetPipeName(pipeName);
-            service.SetupAsync(config).GetFalseAwaitResult();
-        }
-        else
-        {
-            config = service.Config;
-            config.SetPipeName(pipeName);
-        }
-        service.StartAsync().GetFalseAwaitResult();
-    }
-
+   
     /// <inheritdoc cref="IServiceBase.StartAsync"/>
     public static async Task StartAsync<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
     {

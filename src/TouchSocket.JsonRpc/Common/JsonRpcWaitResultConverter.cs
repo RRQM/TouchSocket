@@ -10,63 +10,105 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.JsonRpc;
 
-internal class JsonRpcWaitResultConverter : JsonConverter
+internal class JsonRpcWaitResultConverter : JsonConverter<JsonRpcWaitResult>
 {
-    public override bool CanConvert(Type objectType)
+    public override JsonRpcWaitResult Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return objectType == typeof(JsonRpcWaitResult);
-    }
-
-    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-    {
-        var jsonRpcWaitResult = new JsonRpcWaitResult();
-        var jsonObject = JObject.Load(reader);
-        jsonRpcWaitResult.Jsonrpc = (string)jsonObject["jsonrpc"];
-        jsonRpcWaitResult.Id = (int?)jsonObject["id"];
-        if (jsonObject["error"] != null)
+        if (reader.TokenType == JsonTokenType.Null)
         {
-            jsonRpcWaitResult.ErrorCode = (int)jsonObject["error"]["code"];
-            jsonRpcWaitResult.ErrorMessage = (string)jsonObject["error"]["message"];
+            return null;
         }
-        if (jsonObject["result"] != null)
+
+        if (reader.TokenType != JsonTokenType.StartObject)
         {
-            jsonRpcWaitResult.Result = jsonObject["result"].ToString(Formatting.None);
+            return default;
+        }
+
+        var jsonRpcWaitResult = new JsonRpcWaitResult();
+
+        using var doc = JsonDocument.ParseValue(ref reader);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("jsonrpc", out var jsonrpcProp))
+        {
+            jsonRpcWaitResult.Jsonrpc = jsonrpcProp.GetString();
+        }
+
+        if (root.TryGetProperty("id", out var idProp))
+        {
+            if (idProp.ValueKind == JsonValueKind.Number)
+            {
+                jsonRpcWaitResult.Id = idProp.GetInt32();
+            }
+            else if (idProp.ValueKind == JsonValueKind.Null)
+            {
+                jsonRpcWaitResult.Id = null;
+            }
+        }
+
+        if (root.TryGetProperty("error", out var errorProp))
+        {
+            if (errorProp.TryGetProperty("code", out var codeProp))
+            {
+                jsonRpcWaitResult.ErrorCode = codeProp.GetInt32();
+            }
+
+            if (errorProp.TryGetProperty("message", out var messageProp))
+            {
+                jsonRpcWaitResult.ErrorMessage = messageProp.GetString();
+            }
+        }
+
+        if (root.TryGetProperty("result", out var resultProp))
+        {
+            jsonRpcWaitResult.Result = resultProp.GetRawText();
         }
 
         return jsonRpcWaitResult;
     }
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    public override void Write(Utf8JsonWriter writer, JsonRpcWaitResult value, JsonSerializerOptions options)
     {
-        var jsonRpcWaitResult = (JsonRpcWaitResult)value;
         writer.WriteStartObject();
-        writer.WritePropertyName("jsonrpc");
-        writer.WriteValue(jsonRpcWaitResult.Jsonrpc);
-        writer.WritePropertyName("id");
-        writer.WriteValue(jsonRpcWaitResult.Id);
-        if (jsonRpcWaitResult.ErrorCode == 0)
+        
+        writer.WriteString("jsonrpc", value.Jsonrpc);
+        
+        if (value.Id.HasValue)
         {
-            // 成功
-            writer.WritePropertyName("result");
-            writer.WriteRawValue(jsonRpcWaitResult.Result);
+            writer.WriteNumber("id", value.Id.Value);
         }
         else
         {
-            // 失败
+            writer.WriteNull("id");
+        }
+        
+        if (value.ErrorCode == 0)
+        {
+            writer.WritePropertyName("result");
+            if (!string.IsNullOrEmpty(value.Result))
+            {
+                using var doc = JsonDocument.Parse(value.Result);
+                doc.WriteTo(writer);
+            }
+            else
+            {
+                writer.WriteNullValue();
+            }
+        }
+        else
+        {
             writer.WritePropertyName("error");
             writer.WriteStartObject();
-            writer.WritePropertyName("code");
-            writer.WriteValue(jsonRpcWaitResult.ErrorCode);
-            writer.WritePropertyName("message");
-            writer.WriteValue(jsonRpcWaitResult.ErrorMessage);
+            writer.WriteNumber("code", value.ErrorCode);
+            writer.WriteString("message", value.ErrorMessage);
             writer.WriteEndObject();
         }
-
+        
         writer.WriteEndObject();
     }
 }

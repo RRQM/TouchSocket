@@ -15,6 +15,14 @@ using System.Text.Json.Serialization;
 namespace TouchSocket.WebApi;
 
 [JsonSerializable(typeof(ActionResult))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(double))]
+[JsonSerializable(typeof(float))]
+[JsonSerializable(typeof(DateTime))]
+[JsonSerializable(typeof(DateTimeOffset))]
+[JsonSerializable(typeof(Version))]
 internal partial class WebApiSystemTextJsonSerializerContext : JsonSerializerContext
 {
 }

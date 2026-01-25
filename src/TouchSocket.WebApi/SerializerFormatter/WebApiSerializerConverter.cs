@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Http;
 
@@ -21,31 +20,33 @@ namespace TouchSocket.WebApi;
 /// </summary>
 public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, HttpContext>
 {
+    /// <summary>
+    /// 适用于WebApi的序列化器
+    /// </summary>
+    public WebApiSerializerConverter()
+    {
+        this.AddSystemTextJsonSerializerFormatter(options =>
+        {
+            options.TypeInfoResolverChain.Clear();
+            options.TypeInfoResolver = default;
+        });
+    }
     /// <inheritdoc/>
     public override string Serialize(HttpContext state, in object target)
     {
+        if (target == null)
+        {
+            return string.Empty;
+        }
         var accept = state.Request.Accept;
         if (accept.Equals("text/plain"))
         {
-            if (target == null)
-            {
-                return string.Empty;
-            }
             if ((target.GetType().IsPrimitive || target.GetType() == typeof(string)))
             {
                 return target.ToString();
             }
         }
         return base.Serialize(state, target);
-    }
-
-    /// <summary>
-    /// 添加Json序列化器
-    /// </summary>
-    /// <param name="settings"></param>
-    public void AddJsonSerializerFormatter(JsonSerializerSettings settings)
-    {
-        this.Add(new WebApiJsonSerializerFormatter() { JsonSettings = settings });
     }
 
     /// <summary>

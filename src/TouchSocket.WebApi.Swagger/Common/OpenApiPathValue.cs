@@ -10,30 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
 internal class OpenApiPathValue
 {
-    [JsonProperty("tags")]
+    [JsonPropertyName("tags")]
     public IEnumerable<string> Tags { get; set; }
 
-    [JsonProperty("summary")]
+    [JsonPropertyName("summary")]
     public string Summary { get; set; }
 
-    [JsonProperty("description")]
+    [JsonPropertyName("description")]
     public string Description { get; set; }
 
-    [JsonProperty("operationId")]
+    [JsonPropertyName("operationId")]
     public string OperationId { get; set; }
 
-    [JsonProperty("requestBody")]
+    [JsonPropertyName("requestBody")]
     public OpenApiRequestBody RequestBody { get; set; }
 
-    [JsonProperty("parameters")]
+    [JsonPropertyName("parameters")]
     public IEnumerable<OpenApiParameter> Parameters { get; set; }
 
-    [JsonProperty("responses")]
+    [JsonPropertyName("responses")]
     public Dictionary<string, OpenApiResponse> Responses { get; set; }
 }

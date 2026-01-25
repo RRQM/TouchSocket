@@ -10,8 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -288,7 +287,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <returns>Json字符串。</returns>
     private string BuildJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
     {
-        return JsonConvert.SerializeObject(jsonRpcRequest, this.m_jsonRpcRequestConverter);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(this.m_jsonRpcRequestConverter);
+        return JsonSerializer.Serialize(jsonRpcRequest, options);
     }
 
     /// <summary>
@@ -326,61 +327,62 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                     }
                 }
             }
-            if (jsonRpcRequest.ParamsObject is JObject obj)
+            if (jsonRpcRequest.ParamsObject is JsonElement element)
             {
-                for (var i = 0; i < ps.Length; i++)
+                if (element.ValueKind == JsonValueKind.Object)
                 {
-                    var parameter = rpcMethod.Parameters[i];
-                    if (parameter.IsCallContext)
+                    for (var i = 0; i < ps.Length; i++)
                     {
-                        ps[i] = callContext;
-                    }
-                    else if (parameter.IsFromServices)
-                    {
-                        ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                    }
-                    else if (obj.TryGetValue(parameter.Name, out var jToken))
-                    {
-                        var str = jToken.ToString(Formatting.None);
-                        ps[i] = this.ResultParseToType(str, parameter.Type);
-                    }
-                    else if (parameter.ParameterInfo.HasDefaultValue)
-                    {
-                        ps[i] = parameter.ParameterInfo.DefaultValue;
-                    }
-                    else
-                    {
-                        ps[i] = parameter.Type.GetDefault();
+                        var parameter = rpcMethod.Parameters[i];
+                        if (parameter.IsCallContext)
+                        {
+                            ps[i] = callContext;
+                        }
+                        else if (parameter.IsFromServices)
+                        {
+                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                        }
+                        else if (element.TryGetProperty(parameter.Name, out var property))
+                        {
+                            ps[i] = property.Deserialize(parameter.Type);
+                        }
+                        else if (parameter.ParameterInfo.HasDefaultValue)
+                        {
+                            ps[i] = parameter.ParameterInfo.DefaultValue;
+                        }
+                        else
+                        {
+                            ps[i] = parameter.Type.GetDefault();
+                        }
                     }
                 }
-            }
-            else if (jsonRpcRequest.ParamsObject is JArray array)
-            {
-                var index = 0;
-                for (var i = 0; i < ps.Length; i++)
+                else if (element.ValueKind == JsonValueKind.Array)
                 {
-                    var parameter = rpcMethod.Parameters[i];
-                    if (parameter.IsCallContext)
+                    var index = 0;
+                    var arrayLength = element.GetArrayLength();
+                    for (var i = 0; i < ps.Length; i++)
                     {
-                        ps[i] = callContext;
-                    }
-                    else if (parameter.IsFromServices)
-                    {
-                        ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                    }
-                    else if (index < array.Count)
-                    {
-                        var str = array[index++].ToString(Formatting.None);
-
-                        ps[i] = this.ResultParseToType(str, parameter.Type);
-                    }
-                    else if (parameter.ParameterInfo.HasDefaultValue)
-                    {
-                        ps[i] = parameter.ParameterInfo.DefaultValue;
-                    }
-                    else
-                    {
-                        ps[i] = parameter.Type.GetDefault();
+                        var parameter = rpcMethod.Parameters[i];
+                        if (parameter.IsCallContext)
+                        {
+                            ps[i] = callContext;
+                        }
+                        else if (parameter.IsFromServices)
+                        {
+                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                        }
+                        else if (index < arrayLength)
+                        {
+                            ps[i] = element[index++].Deserialize(parameter.Type);
+                        }
+                        else if (parameter.ParameterInfo.HasDefaultValue)
+                        {
+                            ps[i] = parameter.ParameterInfo.DefaultValue;
+                        }
+                        else
+                        {
+                            ps[i] = parameter.Type.GetDefault();
+                        }
                     }
                 }
             }
@@ -412,7 +414,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 Result = this.SerializerConverter.Serialize(this, result)
             };
 
-            var str = JsonConvert.SerializeObject(response, this.m_jsonRpcWaitResultConverter);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(this.m_jsonRpcWaitResultConverter);
+            var str = JsonSerializer.Serialize(response, options);
             var byteBlock = new ByteBlock(1024 * 64);
             try
             {
@@ -517,7 +521,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <returns>是否成功。</returns>
     private bool TryParseRequest(string str, out InternalJsonRpcRequest request)
     {
-        var jsonRpcRequest = JsonConvert.DeserializeObject<InternalJsonRpcRequest>(str, this.m_jsonRpcRequestConverter);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(this.m_jsonRpcRequestConverter);
+        var jsonRpcRequest = JsonSerializer.Deserialize<InternalJsonRpcRequest>(str, options);
 
         if (jsonRpcRequest == null)
         {
@@ -536,7 +542,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <returns>是否成功。</returns>
     private bool TryParseResponse(string str, out JsonRpcWaitResult response)
     {
-        var rpcWaitResult = JsonConvert.DeserializeObject<JsonRpcWaitResult>(str, this.m_jsonRpcWaitResultConverter);
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(this.m_jsonRpcWaitResultConverter);
+        var rpcWaitResult = JsonSerializer.Deserialize<JsonRpcWaitResult>(str, options);
 
         if (rpcWaitResult == null)
         {

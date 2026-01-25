@@ -10,75 +10,100 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.JsonRpc;
 
-internal class JsonRpcRequestConverter : JsonConverter
+internal class JsonRpcRequestConverter : JsonConverter<InternalJsonRpcRequest>
 {
-    public override bool CanConvert(Type objectType)
+    public override InternalJsonRpcRequest Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return objectType == typeof(InternalJsonRpcRequest);
-    }
-
-    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-    {
-        if (reader.TokenType == JsonToken.Null)
+        if (reader.TokenType == JsonTokenType.Null)
         {
             return null;
         }
 
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            return default;
+        }
+
         var jsonRpcRequest = new InternalJsonRpcRequest();
 
-        // Load the JObject from the reader
-        var jsonObject = JObject.Load(reader);
-        if (!jsonObject.TryGetValue("jsonrpc", StringComparison.OrdinalIgnoreCase, out var tokenJsonrpc))
+        using var doc = JsonDocument.ParseValue(ref reader);
+        var root = doc.RootElement;
+
+        if (!root.TryGetProperty("jsonrpc", out var jsonrpcProp))
         {
             return default;
         }
-        // Deserialize properties
-        jsonRpcRequest.Jsonrpc = tokenJsonrpc.Value<string>();
+        jsonRpcRequest.Jsonrpc = jsonrpcProp.GetString();
 
-        if (!jsonObject.TryGetValue("method", StringComparison.OrdinalIgnoreCase, out var tokenMethod))
+        if (!root.TryGetProperty("method", out var methodProp))
         {
             return default;
         }
-        jsonRpcRequest.Method = tokenMethod.Value<string>();
-        if (!jsonObject.TryGetValue("params", StringComparison.OrdinalIgnoreCase, out var tokenParams))
+        jsonRpcRequest.Method = methodProp.GetString();
+
+        if (!root.TryGetProperty("params", out var paramsProp))
+        {
+            return default;
+        }
+        jsonRpcRequest.ParamsObject = paramsProp.Clone();
+
+        if (!root.TryGetProperty("id", out var idProp))
         {
             return default;
         }
 
-        jsonRpcRequest.ParamsObject = tokenParams;
-
-        if (!jsonObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var tokenId))
+        if (idProp.ValueKind == JsonValueKind.Number)
         {
-            return default;
+            jsonRpcRequest.Id = idProp.GetInt32();
         }
-
-        jsonRpcRequest.Id = tokenId.Value<int?>();
+        else if (idProp.ValueKind == JsonValueKind.Null)
+        {
+            jsonRpcRequest.Id = null;
+        }
 
         return jsonRpcRequest;
     }
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    public override void Write(Utf8JsonWriter writer, InternalJsonRpcRequest value, JsonSerializerOptions options)
     {
-        var jsonRpcRequest = (InternalJsonRpcRequest)value;
         writer.WriteStartObject();
-        writer.WritePropertyName("jsonrpc");
-        writer.WriteValue(jsonRpcRequest.Jsonrpc);
-        writer.WritePropertyName("method");
-        writer.WriteValue(jsonRpcRequest.Method);
+        
+        writer.WriteString("jsonrpc", value.Jsonrpc);
+        writer.WriteString("method", value.Method);
+        
         writer.WritePropertyName("params");
         writer.WriteStartArray();
-        foreach (var item in jsonRpcRequest.ParamsStrings)
+        if (value.ParamsStrings != null)
         {
-            writer.WriteRawValue(item);
+            foreach (var item in value.ParamsStrings)
+            {
+                if (!string.IsNullOrEmpty(item))
+                {
+                    using var doc = JsonDocument.Parse(item);
+                    doc.WriteTo(writer);
+                }
+                else
+                {
+                    writer.WriteNullValue();
+                }
+            }
         }
         writer.WriteEndArray();
-        writer.WritePropertyName("id");
-        writer.WriteValue(jsonRpcRequest.Id);
+        
+        if (value.Id.HasValue)
+        {
+            writer.WriteNumber("id", value.Id.Value);
+        }
+        else
+        {
+            writer.WriteNull("id");
+        }
+        
         writer.WriteEndObject();
     }
 }

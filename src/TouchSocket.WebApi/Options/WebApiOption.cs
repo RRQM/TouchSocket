@@ -23,7 +23,6 @@ public class WebApiOption
     public WebApiOption()
     {
         this.Converter = new WebApiSerializerConverter();
-        this.Converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings());
     }
 
     /// <summary>

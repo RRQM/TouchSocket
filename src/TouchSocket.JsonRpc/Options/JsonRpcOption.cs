@@ -19,7 +19,7 @@ public class JsonRpcOption
 {
     public JsonRpcOption()
     {
-        this.m_serializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+        this.m_serializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>());
     }
     private readonly TouchSocketSerializerConverter<string, JsonRpcActor> m_serializerConverter = new TouchSocketSerializerConverter<string, JsonRpcActor>();
 
@@ -77,18 +77,7 @@ public class JsonRpcOption
     /// </summary>
     public void UseDefaultJsonFormatter()
     {
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
-    }
-
-    /// <summary>
-    /// 使用Newtonsoft.Json序列化格式化器，并配置Json设置
-    /// </summary>
-    /// <param name="configureSettings">配置Json设置的操作</param>
-    public void UseNewtonsoftJsonFormatter(Action<Newtonsoft.Json.JsonSerializerSettings> configureSettings = null)
-    {
-        var formatter = new JsonStringToClassSerializerFormatter<JsonRpcActor>();
-        configureSettings?.Invoke(formatter.JsonSettings);
-        this.SerializerConverter.Add(formatter);
+        this.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>());
     }
 
     /// <summary>

@@ -42,7 +42,7 @@ public abstract class JsonRpcParserPluginBase : PluginBase
     public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider, JsonRpcOption option)
     {
         this.SerializerConverter = option.SerializerConverter;
-        this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+        this.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>());
         if (rpcServerProvider is not null)
         {
             this.RpcServerProvider = rpcServerProvider;

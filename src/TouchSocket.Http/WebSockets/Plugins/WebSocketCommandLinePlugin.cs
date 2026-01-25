@@ -33,7 +33,7 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
     protected WebSocketCommandLinePlugin(ILog logger)
     {
         this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(), new JsonStringToClassSerializerFormatter<object>());
+        this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(), new SystemTextJsonStringToClassSerializerFormatter<object>());
         var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
         foreach (var item in ms)
         {

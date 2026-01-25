@@ -10,12 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
 internal class OpenApiContent
 {
-    [JsonProperty("schema")]
+    [JsonPropertyName("schema")]
     public OpenApiSchema Schema { get; set; }
 }

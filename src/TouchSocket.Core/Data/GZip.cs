@@ -128,6 +128,28 @@ public static partial class GZip
         }
     }
 
+    public static void Decompress<TWriter>(ref TWriter writer, ReadOnlyMemory<byte> memory)
+        where TWriter : IBytesWriter
+    {
+        using (var gZipStream = new GZipStream(new ReadOnlyMemoryStream(memory), CompressionMode.Decompress))
+        {
+            var bytes = ArrayPool<byte>.Shared.Rent(1024 * 64);
+            try
+            {
+                int r;
+                while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    writer.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
+                }
+                gZipStream.Close();
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+            }
+        }
+    }
+
     /// <summary>
     /// 解压缩字节跨度并返回解压缩后的数据。
     /// </summary>

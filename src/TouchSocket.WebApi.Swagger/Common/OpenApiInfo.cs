@@ -10,15 +10,15 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
 internal class OpenApiInfo
 {
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string Title { get; set; } = "API V1";
 
-    [JsonProperty("version")]
+    [JsonPropertyName("version")]
     public string Version { get; set; } = "1.0";
 }

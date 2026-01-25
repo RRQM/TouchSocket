@@ -28,7 +28,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     {
         this.Converter = new StringSerializerConverter<HttpRequest>(
             new StringToPrimitiveSerializerFormatter<HttpRequest>(),
-            new JsonStringToClassSerializerFormatter<HttpRequest>());
+            new SystemTextJsonStringToClassSerializerFormatter<HttpRequest>());
     }
 
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
