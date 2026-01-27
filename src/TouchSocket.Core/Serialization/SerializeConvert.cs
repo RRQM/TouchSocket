@@ -13,6 +13,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using System.Xml.Serialization;
 
 namespace TouchSocket.Core;
@@ -380,13 +381,18 @@ public static partial class SerializeConvert
     #region Json序列化和反序列化
 
     /// <summary>
+    /// 全局默认Json序列化选项
+    /// </summary>
+    public static JsonSerializerOptions DefaultJsonSerializerOptions { set; get; } = null;
+
+    /// <summary>
     /// 转换为Json
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
     public static string ToJsonString(this object item)
     {
-        return System.Text.Json.JsonSerializer.Serialize(item);
+        return System.Text.Json.JsonSerializer.Serialize(item, DefaultJsonSerializerOptions);
     }
 
     /// <summary>
@@ -394,10 +400,11 @@ public static partial class SerializeConvert
     /// </summary>
     /// <param name="json"></param>
     /// <param name="type"></param>
+    /// <param name="jsonSerializerOptions"></param>
     /// <returns></returns>
-    public static object FromJsonString(this string json, Type type)
+    public static object FromJsonString(this string json, Type type, JsonSerializerOptions jsonSerializerOptions = null)
     {
-        return System.Text.Json.JsonSerializer.Deserialize(json, type);
+        return System.Text.Json.JsonSerializer.Deserialize(json, type, jsonSerializerOptions ?? DefaultJsonSerializerOptions);
     }
 
     /// <summary>
@@ -406,9 +413,9 @@ public static partial class SerializeConvert
     /// <typeparam name="T"></typeparam>
     /// <param name="json"></param>
     /// <returns></returns>
-    public static T FromJsonString<T>(this string json)
+    public static T FromJsonString<T>(this string json, JsonSerializerOptions jsonSerializerOptions = null)
     {
-        return (T)FromJsonString(json, typeof(T));
+        return (T)FromJsonString(json, typeof(T), jsonSerializerOptions);
     }
 
     /// <summary>
