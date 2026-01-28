@@ -1,6 +1,5 @@
-using Newtonsoft.Json;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -117,10 +116,10 @@ class MyAdapter : CustomDataHandlingAdapter<MyPackBase>
         switch (type)
         {
             case 1:
-                request = JsonConvert.DeserializeObject<MyPack1>(json);
+                request = JsonSerializer.Deserialize<MyPack1>(json);
                 break;
             case 2:
-                request = JsonConvert.DeserializeObject<MyPack2>(json);
+                request = JsonSerializer.Deserialize<MyPack2>(json);
                 break;
             default:
                 request = null;
@@ -139,7 +138,7 @@ class MyAdapter : CustomDataHandlingAdapter<MyPackBase>
             case MyPack1 pack1:
                 {
                     WriterExtension.WriteValue(ref writer, (byte)1);
-                    var data = JsonConvert.SerializeObject(pack1);
+                    var data = JsonSerializer.Serialize(pack1);
                     WriterAnchor<TWriter> writerAnchor = new WriterAnchor<TWriter>(ref writer, 4);
                     WriterExtension.WriteNormalString(ref writer, data, Encoding.UTF8);
                     var span = writerAnchor.Rewind(ref writer, out var length);
@@ -149,7 +148,7 @@ class MyAdapter : CustomDataHandlingAdapter<MyPackBase>
             case MyPack2 pack2:
                 {
                     WriterExtension.WriteValue(ref writer, (byte)2);
-                    var data = JsonConvert.SerializeObject(pack2);
+                    var data = JsonSerializer.Serialize(pack2);
                     WriterAnchor<TWriter> writerAnchor = new WriterAnchor<TWriter>(ref writer, 4);
                     WriterExtension.WriteNormalString(ref writer, data, Encoding.UTF8);
                     var span = writerAnchor.Rewind(ref writer, out var length);

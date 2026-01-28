@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using RpcProxy;
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -39,18 +39,18 @@ public partial class Form1 : Form
         MessageBox.Show(result.ToString());
     }
 
-    private void button2_Click(object sender, EventArgs e)
+    private async void button2_Click(object sender, EventArgs e)
     {
         var myRpcServer = new RpcProxy.MyRpcServer(this.m_client.GetDmtpRpcActor());//MyRpcServer类是由代码工具生成的类。
 
         //代理调用时，基本和本地调用一样。只是会多一个调用配置参数。
-        var result = myRpcServer.Login(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
+        var result =await  myRpcServer.LoginAsync(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
     }
 
     private void button3_Click(object sender, EventArgs e)
     {
         //扩展调用时，首先要保证本地已有代理文件，然后调用和和本地调用一样。只是会多一个调用配置参数。
-        var result = this.m_client.GetDmtpRpcActor().Login(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
+        //var result = this.m_client.GetDmtpRpcActor().Login(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
     }
 
     private void Form1_Load(object sender, EventArgs e)

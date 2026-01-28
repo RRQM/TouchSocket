@@ -64,7 +64,7 @@ internal class Program
         #region 简单调用示例
         var method = new Method(typeof(MyClass), nameof(MyClass.Run));
         var instance = new MyClass();
-        method.Invoke(instance);
+        method.InvokeAsync(instance);
         #endregion
 
         Console.WriteLine("调用完成！");
@@ -85,7 +85,7 @@ internal class Program
 
         for (var i = 0; i < 10_000_000; i++)
         {
-            method.Invoke(myClass);
+            method.InvokeAsync(myClass);
         }
 
         stopwatch.Stop();
@@ -123,7 +123,7 @@ internal class Program
         var instance = new MyClass();
 
         var parameters = new object[] { "hello", 0, 200 };
-        method.Invoke(instance, parameters);
+        method.InvokeAsync(instance, parameters);
 
         Console.WriteLine($"out参数b={parameters[1]}"); // 输出: out参数b=10
         Console.WriteLine($"ref参数c={parameters[2]}"); // 输出: ref参数c=201
@@ -155,7 +155,7 @@ internal class Program
         #region 自定义特性调用
         var method = new Method(typeof(MyClass), nameof(MyClass.CustomDynamicMethod));
         var instance = new MyClass();
-        method.Invoke(instance);
+        method.InvokeAsync(instance);
         #endregion
 
         try
@@ -351,6 +351,6 @@ public static class MethodCache
     public static readonly Method RunMethod = new Method(typeof(MyClass), nameof(MyClass.Run));
 
     // 使用示例：
-    // MethodCache.RunMethod.Invoke(instance);
+    // MethodCache.RunMethod.InvokeAsync(instance);
 }
 #endregion

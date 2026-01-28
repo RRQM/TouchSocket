@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Text;
@@ -159,13 +158,6 @@ internal class Program
                     return true;
                 });
 
-                #region JsonRpcNewtonsoftJson配置
-                optiosn.UseNewtonsoftJsonFormatter(jsonOptions =>
-                {
-                    jsonOptions.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                });
-                #endregion
-
                 #region JsonRpcSystemTextJson配置
                 optiosn.UseSystemTextJsonFormatter(jsonOptions =>
                 {
@@ -223,12 +215,7 @@ public partial class JsonRpcServer : SingletonRpcServer
         return "RRQM" + str;
     }
 
-    [JsonRpc(MethodInvoke = true)]
-    public JObject TestJObject(JObject obj)
-    {
-        return obj;
-    }
-
+   
     [JsonRpc(MethodInvoke = true)]
     public string TestJsonRpc(string str)
     {

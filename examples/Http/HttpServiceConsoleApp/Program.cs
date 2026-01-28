@@ -10,13 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -562,7 +561,7 @@ public class MyHttpPlug11 : PluginBase, IHttpPlugin
                 Author = "若汝棋茗",
                 Blog = "https://blog.csdn.net/qq_40374647"
             };
-            e.Context.Response.FromJson(JsonConvert.SerializeObject(obj));
+            e.Context.Response.FromJson(JsonSerializer.Serialize(obj));
             #endregion
 
             #region Http服务器设置响应Xml内容

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Reflection;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
@@ -108,6 +109,11 @@ internal class MyRpcAttribute : RpcAttribute
     public override string GetDescription(RpcMethod methodInstance)
     {
         return base.GetDescription(methodInstance);
+    }
+
+    protected override PropertyInfo[] GetPublicProperties()
+    {
+        return [];
     }
 }
 

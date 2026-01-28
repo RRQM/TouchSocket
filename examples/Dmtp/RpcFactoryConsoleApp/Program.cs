@@ -28,7 +28,7 @@ internal class Program
         {
             //这里可以让得到的通讯单体进行业务交流
             var client = clientFactoryResult.Client;
-            // client.GetDmtpRpcActor().Invoke();
+            // client.GetDmtpRpcActor().InvokeAsync();
         }
         ;
     }

@@ -41,13 +41,13 @@ internal static class Program
     private static async Task<TcpDmtpService> CreateTcpDmtpService(int port)
     {
         var service = new TcpDmtpService();
-        var config = new TouchSocketConfig()//����
+        var config = new TouchSocketConfig()//配置
                .SetListenIPHosts(port)
                .ConfigureContainer(a =>
                {
                    a.AddRpcStore(store =>
                    {
-                       store.RegisterServer<MyRpcServer>();//ע�����
+                       store.RegisterServer<MyRpcServer>();//注册服务
 #if DEBUG
                        File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
 #endif
@@ -78,22 +78,22 @@ internal static class Program
         await service.SetupAsync(config);
         await service.StartAsync();
 
-        service.Logger.Info($"{service.GetType().Name}�������������˿ڣ�{port}");
+        service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
         return service;
     }
 }
 
 public partial class MyRpcServer : TransientRpcServer
 {
-    [Description("��¼")]
-    [DmtpRpc(MethodInvoke = true)]//ʹ�õ����ϲ���
+    [Description("登录")]
+    [DmtpRpc(MethodInvoke = true)]//使用调用上下文
     [MyRpcActionFilter]
     public bool Login(ICallContext callContext, string account, string password)
     {
         if (callContext.Caller is TcpDmtpSessionClient socketClient)
         {
-            Console.WriteLine(socketClient.IP);//���Ի�ȡ��IP
-            Console.WriteLine("Tcp Rpc����");
+            Console.WriteLine(socketClient.IP);//可以获取IP
+            Console.WriteLine("Tcp Rpc调用");
         }
         if (account == "123" && password == "abc")
         {
@@ -103,7 +103,7 @@ public partial class MyRpcServer : TransientRpcServer
         return false;
     }
 
-    [Description("ע��")]
+    [Description("注册")]
     [DmtpRpc(MethodInvoke = true)]
     [MyRpcActionFilter]
     public bool Register(RegisterModel register)
@@ -111,7 +111,7 @@ public partial class MyRpcServer : TransientRpcServer
         return true;
     }
 
-    [Description("���ܲ���")]
+    [Description("性能测试")]
     [DmtpRpc(MethodInvoke = true)]
     [MyRpcActionFilter]
     public int Performance(int a)
@@ -156,12 +156,12 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
         //invokeResult = new InvokeResult()
         //{
         //    Status = InvokeStatus.UnEnable,
-        //    Message = "������ִ��",
+        //    Message = "不允许执行",
         //    Result = default
         //};
         if (callContext.Caller is ISessionClient client)
         {
-            client.Logger.Info($"����ִ��Rpc-{callContext.RpcMethod.Name}");
+            client.Logger.Info($"准备执行Rpc-{callContext.RpcMethod.Name}");
         }
         return Task.FromResult(invokeResult);
     }
@@ -172,11 +172,11 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
         {
             if (exception == null)
             {
-                client.Logger.Info($"ִ��RPC-{callContext.RpcMethod.Name}��ɣ�״̬={invokeResult.Status}");
+                client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}完成，状态={invokeResult.Status}");
             }
             else
             {
-                client.Logger.Info($"ִ��RPC-{callContext.RpcMethod.Name}�쳣����Ϣ={invokeResult.Message}");
+                client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}异常，消息={invokeResult.Message}");
             }
 
         }

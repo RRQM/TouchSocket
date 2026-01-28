@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using JsonRpcProxy;
-using Newtonsoft.Json.Linq;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.JsonRpc;
@@ -91,13 +90,6 @@ internal class Program
 
         result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"Http返回结果:{result}");
-
-        var obj = new JObject();
-        obj.Add("A", "A");
-        obj.Add("B", 10);
-        obj.Add("C", 100.1);
-        var newObj = await jsonRpcClient.TestJObjectAsync(obj);
-        Console.WriteLine($"Http返回结果:{newObj}");
     }
 
     private static async Task JsonRpcClientInvokeByTcp()
@@ -113,13 +105,6 @@ internal class Program
 
         result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"Tcp返回结果:{result}");
-
-        var obj = new JObject();
-        obj.Add("A", "A");
-        obj.Add("B", 10);
-        obj.Add("C", 100.1);
-        var newObj = await jsonRpcClient.TestJObjectAsync(obj);
-        Console.WriteLine($"Tcp返回结果:{newObj}");
     }
 
     private static async Task JsonRpcClientInvokeByWebSocket()
@@ -135,13 +120,6 @@ internal class Program
 
         result = await jsonRpcClient.TestGetContextAsync("RRQM");
         Console.WriteLine($"WebSocket返回结果:{result}");
-
-        var obj = new JObject();
-        obj.Add("A", "A");
-        obj.Add("B", 10);
-        obj.Add("C", 100.1);
-        var newObj = await jsonRpcClient.TestJObjectAsync(obj);
-        Console.WriteLine($"WebSocket返回结果:{newObj}");
     }
 
     private static async Task Main(string[] args)

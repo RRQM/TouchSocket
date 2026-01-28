@@ -393,7 +393,6 @@ internal class ConfigureSerializationSelectorExample
                 {
                     options.ConfigureDefaultSerializationSelector(selector =>
                     {
-                        selector.JsonSerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
                         selector.FastSerializerContext = default;
                     });
                 });

@@ -14,14 +14,7 @@ namespace UnityRpcProxy_HttpDmtp
 {
 public interface IUnityRpcStore:TouchSocket.Rpc.IRemoteServer
 {
-///<summary>
-///登录
-///</summary>
-/// <exception cref="System.TimeoutException">调用超时</exception>
-/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-/// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-LoginModelResult DmtpRpc_Login(LoginModel model,InvokeOption invokeOption = default);
+
 ///<summary>
 ///登录
 ///</summary>
@@ -30,14 +23,6 @@ LoginModelResult DmtpRpc_Login(LoginModel model,InvokeOption invokeOption = defa
 /// <exception cref="System.Exception">其他异常</exception>
 Task<LoginModelResult> DmtpRpc_LoginAsync(LoginModel model,InvokeOption invokeOption = default);
 
-///<summary>
-///性能测试
-///</summary>
-/// <exception cref="System.TimeoutException">调用超时</exception>
-/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-/// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-System.Int32 DmtpRpc_Performance(System.Int32 i,InvokeOption invokeOption = default);
 ///<summary>
 ///性能测试
 ///</summary>
@@ -60,18 +45,8 @@ public IRpcClient Client{get;private set; }
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-public LoginModelResult DmtpRpc_Login(LoginModel model,InvokeOption invokeOption = default)
-{
-if(this.Client==null)
-{
-throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
-}
-object[] @_parameters = new object[]{model};
-LoginModelResult returnData=(LoginModelResult)this.Client.Invoke("DmtpRpc_Login",typeof(LoginModelResult),invokeOption, @_parameters);
-return returnData;
 
-}
+
 ///<summary>
 ///登录
 ///</summary>
@@ -86,24 +61,7 @@ return (LoginModelResult) await this.Client.InvokeAsync("DmtpRpc_Login",typeof(L
 
 }
 
-///<summary>
-///性能测试
-///</summary>
-/// <exception cref="System.TimeoutException">调用超时</exception>
-/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-/// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-public System.Int32 DmtpRpc_Performance(System.Int32 i,InvokeOption invokeOption = default)
-{
-if(this.Client==null)
-{
-throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
-}
-object[] @_parameters = new object[]{i};
-System.Int32 returnData=(System.Int32)this.Client.Invoke("DmtpRpc_Performance",typeof(System.Int32),invokeOption, @_parameters);
-return returnData;
 
-}
 ///<summary>
 ///性能测试
 ///</summary>
@@ -127,14 +85,7 @@ public static class UnityRpcStoreExtensions
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-public static LoginModelResult DmtpRpc_Login<TClient>(this TClient client,LoginModel model,InvokeOption invokeOption = default) where TClient:
-TouchSocket.Dmtp.Rpc.IDmtpRpcActor{
-object[] @_parameters = new object[]{model};
-LoginModelResult returnData=(LoginModelResult)client.Invoke("DmtpRpc_Login",typeof(LoginModelResult),invokeOption, @_parameters);
-return returnData;
 
-}
 ///<summary>
 ///登录
 ///</summary>
@@ -145,20 +96,6 @@ return (LoginModelResult) await client.InvokeAsync("DmtpRpc_Login",typeof(LoginM
 
 }
 
-///<summary>
-///性能测试
-///</summary>
-/// <exception cref="System.TimeoutException">调用超时</exception>
-/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-/// <exception cref="System.Exception">其他异常</exception>
-[AsyncToSyncWarning]
-public static System.Int32 DmtpRpc_Performance<TClient>(this TClient client,System.Int32 i,InvokeOption invokeOption = default) where TClient:
-TouchSocket.Dmtp.Rpc.IDmtpRpcActor{
-object[] @_parameters = new object[]{i};
-System.Int32 returnData=(System.Int32)client.Invoke("DmtpRpc_Performance",typeof(System.Int32),invokeOption, @_parameters);
-return returnData;
-
-}
 ///<summary>
 ///性能测试
 ///</summary>

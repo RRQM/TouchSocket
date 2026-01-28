@@ -10,6 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Core;
 
 namespace FastBinaryFormatterConsoleApp;
@@ -251,5 +252,23 @@ public partial class MyClass6 : PackageBase
 {
     public int P1 { get; set; }
     public int P2 { get; set; }
+}
+#endregion
+
+#region FastBinary自定义转换器内存实现
+class MyListFastBinaryConverter : FastBinaryConverter<List<int>>
+{
+    protected override List<int> Read<TReader>(ref TReader reader, Type type)
+    {
+        var span=ReaderExtension.ReadByteSpan(ref reader);
+        var json=span.ToUtf8String();
+        return JsonSerializer.Deserialize<List<int>>(json);
+    }
+
+    protected override void Write<TWriter>(ref TWriter writer, in List<int> obj)
+    {
+        var data= JsonSerializer.Serialize(obj).ToUtf8Bytes();
+        WriterExtension.WriteByteSpan(ref writer, data.Span);
+    }
 }
 #endregion

@@ -68,8 +68,6 @@ internal class Program
 
                  a.UseTcpSessionCheckClear();
 
-                 a.Add<AuthenticationPlugin>();
-
                  a.UseWebApi(options =>
                  {
                      options.ConfigureConverter(converter =>
@@ -80,7 +78,10 @@ internal class Program
                          //converter.Clear();//可以选择性的清空现有所有格式化器
 
                          //添加Json格式化器,可以自定义Json的一些设置
-                         converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.None });
+                         converter.AddSystemTextJsonSerializerFormatter(jsonOptions => 
+                         {
+                         
+                         });
 
                          //添加Xml格式化器
                          //converter.AddXmlSerializerFormatter();

@@ -28,14 +28,6 @@ Task<System.String> TestGetContextAsync(System.String str,InvokeOption invokeOpt
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj,InvokeOption invokeOption = default);
-
-///<summary>
-///无注释信息
-///</summary>
-/// <exception cref="System.TimeoutException">调用超时</exception>
-/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
-/// <exception cref="System.Exception">其他异常</exception>
 Task<System.String> TestJsonRpcAsync(System.String str,InvokeOption invokeOption = default);
 
 ///<summary>
@@ -65,20 +57,6 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{str};
 return (System.String) await this.Client.InvokeAsync("TestGetContext",typeof(System.String),invokeOption, parameters);
-
-}
-
-///<summary>
-///无注释信息
-///</summary>
-public async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj,InvokeOption invokeOption = default)
-{
-if(this.Client==null)
-{
-throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
-}
-object[] parameters = new object[]{obj};
-return (Newtonsoft.Json.Linq.JObject) await this.Client.InvokeAsync("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, parameters);
 
 }
 
@@ -120,16 +98,6 @@ public static async Task<System.String> TestGetContextAsync<TClient>(this TClien
 TouchSocket.JsonRpc.IJsonRpcClient{
 object[] parameters = new object[]{str};
 return (System.String) await client.InvokeAsync("TestGetContext",typeof(System.String),invokeOption, parameters);
-
-}
-
-///<summary>
-///无注释信息
-///</summary>
-public static async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync<TClient>(this TClient client,Newtonsoft.Json.Linq.JObject obj,InvokeOption invokeOption = default) where TClient:
-TouchSocket.JsonRpc.IJsonRpcClient{
-object[] parameters = new object[]{obj};
-return (Newtonsoft.Json.Linq.JObject) await client.InvokeAsync("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, parameters);
 
 }
 

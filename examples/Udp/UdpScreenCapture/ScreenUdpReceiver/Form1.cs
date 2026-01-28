@@ -46,7 +46,7 @@ public partial class Form1 : Form
                     using var stream = new ReadOnlyMemoryStream(e.Memory);
 
                     // Update UI on the main thread
-                    this.Invoke(() =>
+                    this.InvokeAsync(() =>
                     {
                         try
                         {
