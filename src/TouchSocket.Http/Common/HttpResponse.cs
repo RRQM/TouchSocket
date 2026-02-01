@@ -28,7 +28,6 @@ public abstract class HttpResponse : HttpBase
 
     private bool m_sentHeader;
     private long m_sentLength;
-
     #endregion 字段
 
     /// <summary>
@@ -95,6 +94,8 @@ public abstract class HttpResponse : HttpBase
         var content = this.Content;
         if (content == null)
         {
+            //issue：https://github.com/RRQM/TouchSocket/issues/117
+            this.Headers.TryAdd(HttpHeaders.ContentLength, "0");
             var writer = new PipeBytesWriter(transport.Writer);
             this.BuildHeader(ref writer);
             await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
@@ -183,16 +184,19 @@ public abstract class HttpResponse : HttpBase
         }
         else
         {
-            if (this.m_sentLength + count <= this.ContentLength)
+            //issue：https://github.com/RRQM/TouchSocket/issues/118
+            if (this.m_sentLength + count > this.ContentLength)
             {
-                writer.Write(memory.Span);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                this.m_sentLength += count;
-                if (this.m_sentLength == this.ContentLength)
-                {
-                    this.m_canWrite = false;
-                    this.Responsed = true;
-                }
+                ThrowHelper.ThrowInvalidOperationException($"尝试写入的数据长度（{count}）超过了剩余可写入的内容长度（{this.ContentLength - this.m_sentLength}）。");
+            }
+
+            writer.Write(memory.Span);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            this.m_sentLength += count;
+            if (this.m_sentLength == this.ContentLength)
+            {
+                this.m_canWrite = false;
+                this.Responsed = true;
             }
         }
     }

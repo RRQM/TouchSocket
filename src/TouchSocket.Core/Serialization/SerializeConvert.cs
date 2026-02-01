@@ -383,6 +383,9 @@ public static partial class SerializeConvert
     /// <summary>
     /// 全局默认Json序列化选项
     /// </summary>
+    /// <remarks>
+    /// PR:https://github.com/RRQM/TouchSocket/pull/116
+    /// </remarks>
     public static JsonSerializerOptions DefaultJsonSerializerOptions { set; get; } = null;
 
     /// <summary>

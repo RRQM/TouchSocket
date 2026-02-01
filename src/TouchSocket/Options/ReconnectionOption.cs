@@ -32,71 +32,7 @@ public class ReconnectionOption<TClient>
             return Task.FromResult(result);
         };
 
-        this.ConnectAction = async (client, cancellationToken) =>
-        {
-            var attempts = 0;
-            var currentInterval = this.BaseInterval;
-
-            while (this.MaxRetryCount < 0 || attempts < this.MaxRetryCount)
-            {
-                if (client.DisposedValue || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-                if (client.PauseReconnection)
-                {
-                    if (this.LogReconnection)
-                    {
-                        client.Logger?.Debug(this, TouchSocketResource.PauseReconnection);
-                    }
-                    continue;
-                }
-
-                attempts++;
-
-                try
-                {
-                    if (client.Online)
-                    {
-                        this.OnSuccessed?.Invoke(client);
-                        return;
-                    }
-
-                    await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                    this.OnSuccessed?.Invoke(client);
-
-                    if (this.LogReconnection)
-                    {
-                        client.Logger?.Info(this, $"重连成功，尝试次数: {attempts}");
-                    }
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    this.OnFailed?.Invoke(client, attempts, ex);
-
-                    if (this.LogReconnection)
-                    {
-                        client.Logger?.Warning(this, $"重连失败，尝试次数: {attempts}，错误: {ex.Message}");
-                    }
-
-                    if (this.MaxRetryCount > 0 && attempts >= this.MaxRetryCount)
-                    {
-                        this.OnGiveUp?.Invoke(client, attempts);
-                        if (this.LogReconnection)
-                        {
-                            client.Logger?.Error(this, $"达到最大重连次数 {this.MaxRetryCount}，放弃重连");
-                        }
-                        return;
-                    }
-
-                    // 计算下次重连间隔
-                    currentInterval = this.CalculateNextInterval(attempts, currentInterval);
-
-                    await Task.Delay(currentInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                }
-            }
-        };
+        this.ConnectAction = async (client, cancellationToken) => await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
     /// <summary>
@@ -244,24 +180,4 @@ public class ReconnectionOption<TClient>
         this.MaxRetryCount = maxRetryCount;
     }
 
-    /// <summary>
-    /// 计算下次重连间隔
-    /// </summary>
-    /// <param name="attemptCount">当前尝试次数</param>
-    /// <param name="currentInterval">当前间隔</param>
-    /// <returns>下次重连间隔</returns>
-    private TimeSpan CalculateNextInterval(int attemptCount, TimeSpan currentInterval)
-    {
-        return this.Strategy switch
-        {
-            ReconnectionStrategy.Simple => this.BaseInterval,
-            ReconnectionStrategy.ExponentialBackoff => TimeSpan.FromMilliseconds(Math.Min(
-                this.BaseInterval.TotalMilliseconds * Math.Pow(this.BackoffMultiplier, attemptCount - 1),
-                this.MaxInterval.TotalMilliseconds)),
-            ReconnectionStrategy.LinearBackoff => TimeSpan.FromMilliseconds(Math.Min(
-                this.BaseInterval.TotalMilliseconds + (attemptCount - 1) * this.BackoffMultiplier,
-                this.MaxInterval.TotalMilliseconds)),
-            _ => this.BaseInterval
-        };
-    }
 }

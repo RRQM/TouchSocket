@@ -203,10 +203,12 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        // 检查是否已初始化IDmtpActor接口
+        
         if (this.m_dmtpActor != null)
         {
-            // 如果已初始化，则调用IDmtpActor的CloseAsync方法发送关闭消息
+            //issue：https://gitee.com/RRQM_Home/TouchSocket/issues/IDND2L
+            await this.m_dmtpActor.SendCloseAsync(msg,cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+           
             await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 

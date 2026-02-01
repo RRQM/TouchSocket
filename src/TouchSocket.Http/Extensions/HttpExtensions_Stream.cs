@@ -76,7 +76,7 @@ public static partial class HttpExtensions
 
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count),cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
@@ -253,12 +252,7 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
 
         openApiRoot.Components = this.GetComponents(schemaTypeList);
 
-        var jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        };
-        return JsonSerializer.Serialize(openApiRoot, jsonOptions).ToUtf8Bytes();
+        return JsonSerializer.Serialize(openApiRoot, SwaggerJsonSerializerContext.Default.OpenApiRoot).ToUtf8Bytes();
     }
 
     private void BuildHttpMethod(string url, HttpMethod httpMethod, RpcMethod rpcMethod, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)

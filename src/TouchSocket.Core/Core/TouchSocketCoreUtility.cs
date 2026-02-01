@@ -74,9 +74,13 @@ public class TouchSocketCoreUtility
     /// <returns></returns>
     public static bool IsUrl(string input)
     {
-        var pattern = @"^[a-zA-Z]+://(\w+(-\w+)*)(\.(\w+(-\w+)*))*(\?\S*)?$?";
-        var regex = new Regex(pattern);
-        return regex.IsMatch(input);
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        return Uri.TryCreate(input, UriKind.Absolute, out var uriResult) 
+            && !string.IsNullOrEmpty(uriResult.Scheme);
     }
 
     /// <summary>

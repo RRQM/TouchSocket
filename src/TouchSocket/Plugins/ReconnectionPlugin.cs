@@ -23,6 +23,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
 {
     private readonly CancellationTokenSource m_cts = new CancellationTokenSource();
     private readonly ReconnectionOption<TClient> m_options;
+    private bool m_hasGivenUp;
 
     /// <summary>
     /// 重连插件
@@ -85,7 +86,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
         {
             while (!this.DisposedValue && !this.m_cts.Token.IsCancellationRequested)
             {
-                await Task.Delay(this.PollingInterval, this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(this.PollingInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 if (client.PauseReconnection)
                 {
@@ -106,17 +107,14 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                             continue;
                         case ConnectionCheckResult.Dead:
                             {
-                                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
+                                if (!this.m_hasGivenUp)
                                 {
-                                    cts.CancelAfter(this.m_options.ConnectTimeout);
-
-                                    //https://github.com/RRQM/TouchSocket/pull/104
-                                    await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await this.TryReconnectWithRetry(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
-
                                 break;
                             }
                         case ConnectionCheckResult.Alive:
+                            this.m_hasGivenUp = false;
                             break;
                     }
                 }
@@ -147,5 +145,86 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 client.Logger?.Debug(this, TouchSocketResource.PollingEnd);
             }
         }
+    }
+
+    private async Task TryReconnectWithRetry(TClient client)
+    {
+        var attempts = 0;
+
+        while (this.m_options.MaxRetryCount < 0 || attempts < this.m_options.MaxRetryCount)
+        {
+            if (client.DisposedValue)
+            {
+                return;
+            }
+
+            if (client.PauseReconnection)
+            {
+                if (this.m_options.LogReconnection)
+                {
+                    client.Logger?.Debug(this, TouchSocketResource.PauseReconnection);
+                }
+                await Task.Delay(this.m_options.BaseInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                continue;
+            }
+
+            attempts++;
+
+            try
+            {
+                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
+                {
+                    cts.CancelAfter(this.m_options.ConnectTimeout);
+                    await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                }
+
+                this.m_hasGivenUp = false;
+                this.m_options.OnSuccessed?.Invoke(client);
+
+                if (this.m_options.LogReconnection)
+                {
+                    client.Logger?.Info(this, $"重连成功，尝试次数: {attempts}");
+                }
+                return;
+            }
+            catch (Exception ex)
+            {
+                this.m_options.OnFailed?.Invoke(client, attempts, ex);
+
+                if (this.m_options.LogReconnection)
+                {
+                    client.Logger?.Warning(this, $"重连失败，尝试次数: {attempts}，错误: {ex.Message}");
+                }
+
+                if (this.m_options.MaxRetryCount > 0 && attempts >= this.m_options.MaxRetryCount)
+                {
+                    this.m_hasGivenUp = true;
+                    this.m_options.OnGiveUp?.Invoke(client, attempts);
+                    if (this.m_options.LogReconnection)
+                    {
+                        client.Logger?.Error(this, $"达到最大重连次数 {this.m_options.MaxRetryCount}，放弃重连");
+                    }
+                    return;
+                }
+
+                var nextInterval = this.CalculateNextInterval(attempts);
+                await Task.Delay(nextInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
+        }
+    }
+
+    private TimeSpan CalculateNextInterval(int attemptCount)
+    {
+        return this.m_options.Strategy switch
+        {
+            ReconnectionStrategy.Simple => this.m_options.BaseInterval,
+            ReconnectionStrategy.ExponentialBackoff => TimeSpan.FromMilliseconds(Math.Min(
+                this.m_options.BaseInterval.TotalMilliseconds * Math.Pow(this.m_options.BackoffMultiplier, attemptCount - 1),
+                this.m_options.MaxInterval.TotalMilliseconds)),
+            ReconnectionStrategy.LinearBackoff => TimeSpan.FromMilliseconds(Math.Min(
+                this.m_options.BaseInterval.TotalMilliseconds + (attemptCount - 1) * this.m_options.BackoffMultiplier,
+                this.m_options.MaxInterval.TotalMilliseconds)),
+            _ => this.m_options.BaseInterval
+        };
     }
 }
