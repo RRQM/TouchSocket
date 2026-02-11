@@ -29,24 +29,26 @@ internal class Program
             Console.WriteLine(ex.Message);
         }
 
+        #region Plc桥接基本使用
         //1.初始化PLC桥接服务
         var plcBridge = new PlcBridgeService();
 
         //2.简单配置
         await plcBridge.SetupAsync(new TouchSocketConfig());
 
-        //3.添加PLC驱动，事实上，您可以在任意时刻继续多个PLC驱动
-        // 这里添加一个内存PLC驱动，模拟short类型的PLC数据。
+        //3.添加PLC驱动,事实上,您可以在任意时刻继续多个PLC驱动
+        // 这里添加一个内存PLC驱动,模拟short类型的PLC数据。
         await plcBridge.AddDriveAsync(new MemoryPlcDrive<short>(CreatePlcDriveOption()));
 
         //4.启动PLC桥接服务
         await plcBridge.StartAsync();
 
-        //5.在启动后，继续添加另一个PLC驱动，模拟short类型的PLC数据。
+        //5.在启动后,继续添加另一个PLC驱动,模拟short类型的PLC数据。
         await plcBridge.AddDriveAsync(new MemoryPlcDrive<short>(new PlcDriveOption() { Name = "DeviceB", Start = 10, Count = 10 }));
 
-        //可以再添加一个bool类型的PLC驱动，模拟bool类型的PLC数据。
+        //可以再添加一个bool类型的PLC驱动,模拟bool类型的PLC数据。
         await plcBridge.AddDriveAsync(new MemoryPlcDrive<bool>(new PlcDriveOption() { Name = "DeviceC", Start = 0, Count = 10 }));
+        #endregion
 
         //不同类型的PLC驱动地址互不影响。例如：short类型的PLC驱动地址从0开始，bool类型的PLC驱动地址也是从0开始。
 
@@ -57,11 +59,83 @@ internal class Program
         await NormalReadWrite(plcBridge);
 
         await PlcObjectReadWrite(plcBridge);
+        
+        await RequestMergeExample(plcBridge);
+        
+        await MultiDriveExample();
+        
+        await PerformanceOptimizationExample();
+        
         Console.ReadKey();
     }
 
+    #region Plc桥接请求合并优化
+    private static async Task RequestMergeExample(PlcBridgeService plcBridge)
+    {
+        // 配置写入间隙为1，有效窗口500ms
+        var driveOption = new PlcDriveOption
+        {
+            MaxWriteGap = 1,
+            WriteGapValidityWindow = TimeSpan.FromMilliseconds(500)
+        };
+
+        // 写入操作会自动合并相邻请求
+        var plcOperator = plcBridge.CreateOperator<byte>();
+        var writeResult = await plcOperator.WriteAsync(
+            new WritableValueCollection<byte>(
+                new WritableValue<byte>(0, new byte[] {0,1,2,3}),
+                new WritableValue<byte>(5, new byte[] {5,6})
+            ));
+    }
+    #endregion
+
+    #region Plc桥接多驱动器协同工作
+    private static async Task MultiDriveExample()
+    {
+        var plcBridge = new PlcBridgeService();
+        await plcBridge.SetupAsync(new TouchSocketConfig());
+        
+        // 添加两个驱动器
+        var memoryPlcDrive_1 = new MemoryPlcDrive<short>(
+            new PlcDriveOption() { Start = 0, Count = 5 });
+        var memoryPlcDrive_2 = new MemoryPlcDrive<short>(
+            new PlcDriveOption() { Start = 5, Count = 5 });
+
+        await plcBridge.AddDriveAsync(memoryPlcDrive_1);
+        await plcBridge.AddDriveAsync(memoryPlcDrive_2);
+
+        // 写入跨越两个驱动器的数据
+        var plcOperator = plcBridge.CreateOperator<short>();
+        var writeResult = await plcOperator.WriteAsync(
+            new WritableValueCollection<short>(
+                new WritableValue<short>(0, new short[] {0,1,2,3,4,5,6,7,8,9})
+            ));
+    }
+    #endregion
+
+    #region Plc桥接性能优化建议
+    private static async Task PerformanceOptimizationExample()
+    {
+        var driveOption = new PlcDriveOption();
+        
+        // 1. 合理设置MaxGap参数
+        // 增大间隙值可提高合并率
+        driveOption.MaxReadGap = 20;
+        driveOption.MaxWriteGap = 5;
+        
+        // 2. 使用分组控制执行顺序
+        // 相同分组的驱动器串行执行
+        driveOption.Group = "CriticalGroup";
+        
+        // 3. 调整延迟时间平衡实时性与性能
+        // 适当增加延迟时间提高合并率
+        driveOption.DelayTime = TimeSpan.FromMilliseconds(100);
+    }
+    #endregion
+
     private static async Task NormalReadWrite(PlcBridgeService plcBridge)
     {
+        #region Plc桥接写入数据
         // 我们现在假设需要写入：
         // DeviceA=>地址为0，长度为5，值为1,2,3,4,5
         // DeviceA=>地址为6，长度为1，值为6
@@ -87,7 +161,9 @@ internal class Program
         {
             Console.WriteLine($"短整型数据写入失败：{writeResult.Message}");
         }
+        #endregion
 
+        #region Plc桥接读取数据
         // 我们现在假设需要读取：
         // DeviceA=>地址为0，长度为5
         // DeviceA=>地址为6，长度为1
@@ -115,11 +191,13 @@ internal class Program
         {
             Console.WriteLine($"短整型数据读取失败：{readResult.Message}");
         }
+        #endregion
 
     }
 
     private static PlcDriveOption CreatePlcDriveOption()
     {
+        #region Plc桥接配置示例
         //驱动器配置
         var driveOption = new PlcDriveOption();
 
@@ -154,12 +232,14 @@ internal class Program
 
         // 驱动器的轮询延迟时间，默认TimeSpan.Zero。时间越长，批量处理合并的可能性越大。但是，延迟时间过长会导致实时性降低。
         driveOption.DelayTime = TimeSpan.FromMilliseconds(100);
+        #endregion
 
         return driveOption;
     }
 
     private static async Task PlcObjectReadWrite(PlcBridgeService plcBridge)
     {
+        #region Plc桥接使用PlcObject
         var myPlcObject = new MyPlcObject(plcBridge);
 
         await myPlcObject.SetMyShortValueAsync(10);
@@ -173,9 +253,11 @@ internal class Program
         await myPlcObject.SetMyShortValuesAsync(new short[] { 20, 21 });
         myShortValues = await myPlcObject.GetMyShortValuesAsync();
         Console.WriteLine($"MyShortValues after write: {myShortValues.Value.ToArray().ToJsonString()}");
+        #endregion
     }
 }
 
+#region Plc桥接定义PlcObject
 public partial class MyPlcObject : PlcObject
 {
     public MyPlcObject(IPlcBridgeService bridgeService) : base(bridgeService)
@@ -188,3 +270,4 @@ public partial class MyPlcObject : PlcObject
     [PlcField<short>(Start = 1, Quantity = 2)]
     private ReadOnlyMemory<short> m_myShortValues;
 }
+#endregion

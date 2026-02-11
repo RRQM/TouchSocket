@@ -10,6 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+using System.Collections.Concurrent;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
@@ -19,7 +22,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 {
     #region 字段
 
-    private readonly Dictionary<ushort, MqttArrivedMessage> m_qos2MqttArrivedMessage = new();
+    private readonly ConcurrentDictionary<ushort, PooledArrivedMessage> m_qos2MqttArrivedMessage = new();
     private readonly CancellationTokenSource m_tokenSource = new();
     private readonly WaitHandlePool<MqttIdentifierMessage> m_waitHandlePool = new(1, ushort.MaxValue);
 
@@ -308,11 +311,11 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
 
         if (message.QosLevel == QosLevel.AtMostOnce)
         {
-            await this.PublishMessageArrivedAsync(new MqttArrivedMessage(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PublishMessageArrivedAsync(CreateArrivedMessage(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
         else if (message.QosLevel == QosLevel.AtLeastOnce)
         {
-            await this.PublishMessageArrivedAsync(new MqttArrivedMessage(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PublishMessageArrivedAsync(CreateArrivedMessage(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             var pubAckMessage = new MqttPubAckMessage()
             {
                 MessageId = message.MessageId
@@ -321,13 +324,18 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
         }
         else if (message.QosLevel == QosLevel.ExactlyOnce)
         {
-            this.m_qos2MqttArrivedMessage.Add(message.MessageId, new MqttArrivedMessage(message));
+            this.m_qos2MqttArrivedMessage.TryAdd(message.MessageId, new PooledArrivedMessage(message));
             var pubRecMessage = new MqttPubRecMessage()
             {
                 MessageId = message.MessageId
             };
             await this.ProtectedOutputSendAsync(pubRecMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
+    }
+
+    private static MqttArrivedMessage CreateArrivedMessage(MqttPublishMessage message)
+    {
+        return new MqttArrivedMessage(message.TopicName, message.QosLevel, message.Retain, message.Payload);
     }
 
     /// <summary>
@@ -350,10 +358,13 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <returns>任务</returns>
     private async Task InputMqttPubRelMessageAsync(MqttPubRelMessage message, CancellationToken cancellationToken)
     {
-        if (this.m_qos2MqttArrivedMessage.TryGetValue(message.MessageId, out var mqttArrivedMessage))
+        if (this.m_qos2MqttArrivedMessage.TryRemove(message.MessageId, out var pooledArrivedMessage))
         {
-            this.m_qos2MqttArrivedMessage.Remove(message.MessageId);
-            await this.PublishMessageArrivedAsync(mqttArrivedMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            using (pooledArrivedMessage)
+            {
+                await this.PublishMessageArrivedAsync(new MqttArrivedMessage(pooledArrivedMessage.TopicName,pooledArrivedMessage.QosLevel,pooledArrivedMessage.Retain,pooledArrivedMessage.Payload))
+               .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }
             var pubCompMessage = new MqttPubCompMessage()
             {
                 MessageId = message.MessageId
@@ -449,4 +460,43 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     }
 
     #endregion 委托方法
+
+    #region Class
+    readonly struct PooledArrivedMessage : IDisposable
+    {
+        public PooledArrivedMessage(MqttPublishMessage message)
+        {
+            this.TopicName = message.TopicName;
+            this.QosLevel = message.QosLevel;
+            this.Retain = message.Retain;
+
+            var payload = message.Payload;
+            if (payload.IsEmpty)
+            {
+                this.m_bytes = default;
+                return;
+            }
+
+            var length = (int)payload.Length;
+
+            var bytes = ArrayPool<byte>.Shared.Rent(length);
+            payload.CopyTo(bytes);
+            this.m_bytes = bytes;
+            this.Payload = new ReadOnlySequence<byte>(bytes, 0, length);
+        }
+        private readonly byte[] m_bytes;
+        public ReadOnlySequence<byte> Payload { get; }
+        public string TopicName { get; }
+        public QosLevel QosLevel { get; }
+        public bool Retain { get; }
+
+        public void Dispose()
+        {
+            if (this.m_bytes != null)
+            {
+                ArrayPool<byte>.Shared.Return(this.m_bytes);
+            }
+        }
+    }
+    #endregion
 }

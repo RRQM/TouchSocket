@@ -142,7 +142,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         this.m_online = true;
         this.m_transport = transport;
-        this.m_runTask = EasyTask.SafeRun(this.PrivateConnected, transport);
+        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, transport);
         await this.m_runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
@@ -196,12 +196,11 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_id = id;
     }
 
-    private async Task PrivateConnected(TcpTransport transport)
+    private async Task PrivateOnConnected(TcpTransport transport)
     {
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-
         var e_connected = new ConnectedEventArgs();
         await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         transport.SafeDispose();

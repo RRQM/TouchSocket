@@ -139,9 +139,10 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
 
     private async Task PrivateConnected(ITransport transport)
     {
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         var e_connected = new ConnectedEventArgs();
         await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         var e_closed = transport.ClosedEventArgs;
         this.m_online = false;

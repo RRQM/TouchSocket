@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -24,10 +26,24 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
     /// <param name="retain">是否保留消息。</param>
     /// <param name="qosLevel">服务质量级别。</param>
     /// <param name="payload">消息负载。</param>
-    public MqttPublishMessage(string topicName, bool retain, QosLevel qosLevel, ReadOnlyMemory<byte> payload)
+    public MqttPublishMessage(string topicName, bool retain, QosLevel qosLevel, ReadOnlySequence<byte> payload)
     {
         this.TopicName = topicName;
         this.Payload = payload;
+        this.SetFlags(retain, qosLevel, false);
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="MqttPublishMessage"/> 类的新实例。
+    /// </summary>
+    /// <param name="topicName">主题名称。</param>
+    /// <param name="retain">是否保留消息。</param>
+    /// <param name="qosLevel">服务质量级别。</param>
+    /// <param name="payload">消息负载。</param>
+    public MqttPublishMessage(string topicName, bool retain, QosLevel qosLevel, ReadOnlyMemory<byte> payload)
+    {
+        this.TopicName = topicName;
+        this.Payload = new ReadOnlySequence<byte>(payload);
         this.SetFlags(retain, qosLevel, false);
     }
 
@@ -38,15 +54,17 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
     {
     }
 
-    /// <summary>
-    /// 初始化 <see cref="MqttPublishMessage"/> 类的新实例。
-    /// </summary>
-    /// <param name="topicName">主题名称。</param>
-    /// <param name="payload">消息负载。</param>
-    internal MqttPublishMessage(string topicName, ReadOnlyMemory<byte> payload)
+    
+    internal MqttPublishMessage(string topicName, ReadOnlySequence<byte> payload)
     {
         this.TopicName = topicName;
         this.Payload = payload;
+    }
+
+    internal MqttPublishMessage(string topicName, ReadOnlyMemory<byte> payload)
+    {
+        this.TopicName = topicName;
+        this.Payload = new ReadOnlySequence<byte>(payload);
     }
 
     /// <summary>
@@ -62,7 +80,7 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
     /// <summary>
     /// 获取消息负载。
     /// </summary>
-    public ReadOnlyMemory<byte> Payload { get; private set; }
+    public ReadOnlySequence<byte> Payload { get; private set; }
 
     /// <summary>
     /// 获取服务质量级别。
@@ -91,16 +109,13 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
         this.Payload = this.ReadPayload(ref reader);
     }
 
-    private ReadOnlyMemory<byte> ReadPayload<TReader>(ref TReader reader)
+    private ReadOnlySequence<byte> ReadPayload<TReader>(ref TReader reader)
         where TReader : IBytesReader
     {
         var payloadLength = (int)(this.EndPosition - reader.BytesRead);
-        var payloadArray = new byte[payloadLength];
-        var span = reader.GetSpan(payloadLength).Slice(0, payloadLength);
-        span.CopyTo(payloadArray);
+        var sequence = reader.Sequence.Slice(0,payloadLength);
         reader.Advance(payloadLength);
-
-        return payloadArray;
+        return sequence;
     }
 
 
@@ -121,12 +136,15 @@ public sealed partial class MqttPublishMessage : MqttIdentifierMessage
         {
             WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
         }
-        writer.Write(this.Payload.Span);
+        foreach (var item in this.Payload)
+        {
+            writer.Write(item.Span);
+        }
     }
 
     /// <inheritdoc/>
     protected override int GetMinimumRemainingLength()
     {
-        return this.Payload.Length;
+        return (int)this.Payload.Length;
     }
 }

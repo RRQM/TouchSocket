@@ -76,7 +76,7 @@ public class MqttSessionActor : MqttActor
         this.m_mqttWillMessage = null;
         if (willMessage != null)
         {
-            await this.m_mqttBroker.ForwardMessageAsync(new MqttArrivedMessage(willMessage));
+            await this.m_mqttBroker.ForwardMessageAsync(new MqttArrivedMessage(willMessage.TopicName, willMessage.QosLevel, willMessage.Retain, willMessage.Payload));
         }
     }
 
@@ -92,11 +92,12 @@ public class MqttSessionActor : MqttActor
     /// 异步分发消息。
     /// </summary>
     /// <param name="message">要分发的消息。</param>
-    public async Task PostDistributeMessageAsync(DistributeMessage message)
+    internal async Task PostDistributeMessageAsync(DistributeMessage message)
     {
         var tokenClosed = this.TokenSource.Token;
         if (tokenClosed.IsCancellationRequested)
         {
+            message.Dispose();
             return;
         }
 
@@ -104,9 +105,9 @@ public class MqttSessionActor : MqttActor
         {
             await this.m_mqttArrivedMessageQueue.Writer.WriteAsync(message, tokenClosed).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine("DistributeMessagesAsync:" + ex.Message);
+            message.Dispose();
         }
     }
 
@@ -116,7 +117,13 @@ public class MqttSessionActor : MqttActor
         if (disposing)
         {
             this.m_asyncResetEvent.Set();
-            //this.m_mqttArrivedMessageQueue.Reader.();
+            
+            this.m_mqttArrivedMessageQueue.Writer.Complete();
+            
+            while (this.m_mqttArrivedMessageQueue.Reader.TryRead(out var message))
+            {
+                message.Dispose();
+            }
         }
         base.Dispose(disposing);
     }
@@ -213,28 +220,25 @@ public class MqttSessionActor : MqttActor
         await base.PublishMessageArrivedAsync(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
 
-    private async Task<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage, CancellationToken cancellationToken)
+    private async ValueTask<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return false;
-        }
-
-        var message = distributeMessage.Message;
-        var qosLevel = distributeMessage.QosLevel;
-
-        var publishMessage = new MqttPublishMessage(message.TopicName, message.Retain, qosLevel, message.Payload);
-
-        await this.m_asyncResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-
+        
         try
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            var publishMessage = new MqttPublishMessage(distributeMessage.TopicName, distributeMessage.Retain, distributeMessage.QosLevel, distributeMessage.SharedPayload.Payload);
+
+            await this.m_asyncResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+
             await this.PublishAsync(publishMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return true;
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine("PublishDistributeMessageAsync:" + ex);
             return false;
         }
     }
@@ -267,7 +271,10 @@ public class MqttSessionActor : MqttActor
                 var published = await this.PublishDistributeMessageAsync(distributeMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (published)
                 {
-                    reader.TryRead(out _);
+                    if (reader.TryRead(out var readMessage))
+                    {
+                        readMessage.Dispose();
+                    }
                 }
             }
             catch (OperationCanceledException)

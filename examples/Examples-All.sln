@@ -370,6 +370,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpSseConsoleApp", "Http\H
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiAuthenticationConsoleApp", "WebApi\WebApiAuthenticationConsoleApp\WebApiAuthenticationConsoleApp.csproj", "{3D2D3999-3D70-47CD-A126-CEF441B8F7F9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "内网穿透", "内网穿透", "{E1C37CC4-0CDF-4E05-832E-9CFC88CA40F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RelayConsoleApp", "Dmtp\RelayConsoleApp\RelayConsoleApp.csproj", "{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -868,6 +872,10 @@ Global
 		{3D2D3999-3D70-47CD-A126-CEF441B8F7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D2D3999-3D70-47CD-A126-CEF441B8F7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D2D3999-3D70-47CD-A126-CEF441B8F7F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1028,6 +1036,8 @@ Global
 		{78493D86-33E6-4B16-93A5-DC5A2DEEFAFC} = {C3E50032-382B-4BCF-8361-1C592A78CC06}
 		{7B16F042-50E4-4D7D-9E24-00E5A96B194C} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{3D2D3999-3D70-47CD-A126-CEF441B8F7F9} = {5836A018-B0F3-4D6F-8C45-FC1E9C85D51A}
+		{E1C37CC4-0CDF-4E05-832E-9CFC88CA40F9} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
+		{B2759C5E-DF91-BCD6-262B-CD59BD2A4A58} = {E1C37CC4-0CDF-4E05-832E-9CFC88CA40F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

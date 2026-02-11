@@ -15,26 +15,46 @@ namespace TouchSocket.Mqtt;
 /// <summary>
 /// 表示一个分发消息的类。
 /// </summary>
-public sealed class DistributeMessage
+sealed class DistributeMessage : IDisposable
 {
     /// <summary>
     /// 初始化 <see cref="DistributeMessage"/> 类的新实例。
     /// </summary>
-    /// <param name="message">Mqtt 到达的消息。</param>
+    /// <param name="topicName">主题名称。</param>
+    /// <param name="retain">是否保留消息。</param>
     /// <param name="qosLevel">服务质量级别。</param>
-    public DistributeMessage(MqttArrivedMessage message, QosLevel qosLevel)
+    /// <param name="sharedPayload">共享的有效负载。</param>
+    public DistributeMessage(string topicName, bool retain, QosLevel qosLevel, SharedPayload sharedPayload)
     {
-        this.Message = message;
+        this.TopicName = topicName;
+        this.Retain = retain;
         this.QosLevel = qosLevel;
+        this.SharedPayload = sharedPayload;
     }
 
     /// <summary>
-    /// 获取 Mqtt 到达的消息。
+    /// 获取主题名称。
     /// </summary>
-    public MqttArrivedMessage Message { get; }
+    public string TopicName { get; }
+
+    /// <summary>
+    /// 获取一个值，该值指示消息是否被保留。
+    /// </summary>
+    public bool Retain { get; }
 
     /// <summary>
     /// 获取服务质量级别。
     /// </summary>
     public QosLevel QosLevel { get; }
+
+    /// <summary>
+    /// 获取共享的有效负载。
+    /// </summary>
+    public SharedPayload SharedPayload { get; }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        this.SharedPayload.Dispose();
+    }
 }

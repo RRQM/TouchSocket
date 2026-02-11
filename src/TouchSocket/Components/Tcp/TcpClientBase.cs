@@ -101,9 +101,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     private async Task PrivateOnConnected(TcpTransport transport)
     {
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         var e_connected = new ConnectedEventArgs();
         await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         transport.SafeDispose();

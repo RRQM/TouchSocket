@@ -88,6 +88,17 @@ internal class Program
 
                          //converter.Add(new MySerializerFormatter());
                          #endregion
+
+                         #region 添加NewtonsoftJson序列化器
+                         converter.Clear();
+                         converter.Add(new WebApiNewtonsoftJsonSerializerFormatter()
+                            {
+                                JsonSettings = new Newtonsoft.Json.JsonSerializerSettings()
+                                {
+                                    Formatting = Newtonsoft.Json.Formatting.Indented
+                                }
+                            });
+                         #endregion
                      });
                  });
 

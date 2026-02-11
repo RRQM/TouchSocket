@@ -288,9 +288,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
-    private async Task PrivateOnConnected(DmtpVerifyEventArgs e)
+    private Task PrivateOnConnected(DmtpVerifyEventArgs e)
     {
-        await this.OnConnected(e);
+        return this.OnConnected(e);
     }
 
     private async Task PrivateOnCreatedChannel(object obj)

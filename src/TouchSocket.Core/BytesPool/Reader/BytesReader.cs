@@ -64,7 +64,7 @@ public struct BytesReader : IDisposable, IBytesReader
     public readonly ReadOnlySequence<byte> TotalSequence => this.m_sequence;
 
     /// <inheritdoc/>
-    public readonly ReadOnlySequence<byte> Sequence => this.TotalSequence.Slice(this.BytesRead);
+    public readonly ReadOnlySequence<byte> Sequence => this.TotalSequence.Slice(this.m_position);
 
     /// <inheritdoc/>
     public void Advance(int count)
@@ -78,7 +78,7 @@ public struct BytesReader : IDisposable, IBytesReader
     /// <remarks>
     /// 主要用于释放内部缓存的内存池资源。
     /// </remarks>
-    public void Dispose() => this.m_memoryOwner?.Dispose();
+    public readonly void Dispose() => this.m_memoryOwner?.Dispose();
 
     /// <inheritdoc/>
     public ReadOnlyMemory<byte> GetMemory(int count)

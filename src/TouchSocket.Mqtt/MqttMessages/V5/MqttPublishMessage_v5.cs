@@ -62,7 +62,11 @@ public partial class MqttPublishMessage
 
         #endregion properties
 
-        writer.Write(this.Payload.Span);
+        foreach (var item in this.Payload)
+        {
+            writer.Write(item.Span);
+        }
+
     }
 
     /// <inheritdoc/>

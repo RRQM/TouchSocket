@@ -82,10 +82,9 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
 
     private async Task PrivateConnected(NamedPipeTransport transport)
     {
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-
         var e_connected = new ConnectedEventArgs();
         await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
         await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
         transport.SafeDispose();
