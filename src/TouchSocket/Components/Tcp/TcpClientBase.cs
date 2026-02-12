@@ -282,17 +282,15 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         using var reader = new PooledBytesReader();
         var cancellationToken = transport.ClosedToken;
-
-        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        if (transport.ReadLocker.CurrentCount < 1)
+        {
+            return;
+        }
+        await transport.ReadLocker.WaitAsync(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         try
         {
             while (true)
             {
-                if (this.DisposedValue || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
                 //不使用取消令箭进行读取，安全退出
                 var readTask = transport.Reader.ReadAsync(CancellationToken.None);
 
@@ -359,6 +357,14 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                     await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     break; // 关闭连接后退出循环
                 }
+
+                //为应对短链接场景，把取消令箭的检查放在最后，确保即使在取消请求发出后，当前正在处理的数据也能被正确处理完毕。
+                //issue：https://github.com/RRQM/TouchSocket/issues/119
+                if (this.DisposedValue || cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
             }
         }
         catch (Exception ex)
@@ -418,8 +424,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             this.m_localEndPoint = default;
             return;
         }
-        this.m_remoteEndPoint= socket.RemoteEndPoint;
-        this.m_localEndPoint= socket.LocalEndPoint;
+        this.m_remoteEndPoint = socket.RemoteEndPoint;
+        this.m_localEndPoint = socket.LocalEndPoint;
         this.m_tcpCore.Reset(socket);
     }
 

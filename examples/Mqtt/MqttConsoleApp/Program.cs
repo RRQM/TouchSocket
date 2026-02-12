@@ -104,6 +104,11 @@ internal class Program
             Console.ReadKey();
         }
 
+        #region Mqtt服务器向所有客户端发布消息
+        var broker = service.MqttBroker;
+        await broker.ForwardMessageAsync(new MqttArrivedMessage("topicName", QosLevel.AtLeastOnce, false, new System.Buffers.ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("hello"))));
+        #endregion
+
         #region Mqtt客户端断开连接
         await client.CloseAsync("close msg");
         #endregion

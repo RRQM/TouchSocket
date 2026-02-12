@@ -27,6 +27,11 @@ public sealed class MqttArrivedMessage
         this.TopicName = topicName;
     }
 
+    public MqttArrivedMessage(string topicName, QosLevel qosLevel, bool retain, ReadOnlyMemory<byte> payload)
+        :this(topicName, qosLevel, retain, new ReadOnlySequence<byte>(payload))
+    {
+    }
+
     /// <summary>
     /// 获取消息的服务质量级别。
     /// </summary>

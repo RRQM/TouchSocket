@@ -85,6 +85,12 @@ namespace MqttWebSocketConsoleApp
                 //Console.WriteLine($"WaitForReadCount={MqttSessionActor.WaitForReadCount}");
             }
 
+            #region WebSocket协议的Mqtt服务器获取IMqttService实例
+            var mqttService = service.Resolver.Resolve<IMqttWebSocketService>();
+            var mqttBroker = mqttService.MqttBroker;
+            #endregion
+
+
             while (true)
             {
                 Console.ReadKey();
