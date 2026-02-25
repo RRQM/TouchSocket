@@ -486,6 +486,60 @@ public static partial class WriterExtension
     }
 
     /// <summary>
+    /// 将可变长度编码的字符串写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的字符串。</param>
+    /// <remarks>
+    /// 此方法使用<see cref="WriteVarUInt32{TWriter}(ref TWriter, uint)"/>写入UTF-8字节长度（长度+1），
+    /// 然后写入UTF-8编码的字符串内容。当<paramref name="value"/>为<see langword="null"/>时，长度字段写入0。
+    /// </remarks>
+    public static void WriteVarString<TWriter>(ref TWriter writer, string value)
+        where TWriter : IBytesWriter
+    {
+        if (value is null)
+        {
+            WriteVarUInt32(ref writer, 0);
+            return;
+        }
+
+        if (value.Length == 0)
+        {
+            WriteVarUInt32(ref writer, 1);
+            return;
+        }
+
+        var byteCount = Encoding.UTF8.GetByteCount(value);
+        WriteVarUInt32(ref writer, (uint)(byteCount + 1));
+
+        var remaining = value.Length;
+        var offset = 0;
+
+        unsafe
+        {
+            fixed (char* p = value)
+            {
+                while (remaining > 0)
+                {
+                    var charsToProcess = Math.Min(remaining, ChunkSize);
+                    var maxByteCount = Encoding.UTF8.GetMaxByteCount(charsToProcess);
+                    var span = writer.GetSpan(maxByteCount);
+
+                    fixed (byte* p1 = &span[0])
+                    {
+                        var bytesWritten = Encoding.UTF8.GetBytes(p + offset, charsToProcess, p1, maxByteCount);
+                        writer.Advance(bytesWritten);
+                    }
+
+                    offset += charsToProcess;
+                    remaining -= charsToProcess;
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// 将可变长度编码的无符号32位整数写入字节写入器。
     /// </summary>
     /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>

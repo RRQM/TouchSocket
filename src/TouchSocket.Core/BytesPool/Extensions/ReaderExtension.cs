@@ -316,6 +316,35 @@ public static partial class ReaderExtension
     }
 
     /// <summary>
+    /// 从字节读取器中读取可变长度编码的字符串。
+    /// </summary>
+    /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>
+    /// <param name="reader">字节读取器实例。</param>
+    /// <returns>读取的字符串，如果数据标识为空则返回 <see langword="null"/>。</returns>
+    /// <remarks>
+    /// 此方法与<see cref="WriterExtension.WriteVarString{TWriter}(ref TWriter, string)"/>对应，
+    /// 使用<see cref="ReadVarUInt32{TReader}(ref TReader)"/>读取UTF-8字节长度（长度+1），然后解码为字符串。
+    /// 当长度字段为0时，表示字符串为 <see langword="null"/>。
+    /// </remarks>
+    public static string ReadVarString<TReader>(ref TReader reader)
+        where TReader : IBytesReader
+    {
+        var len = (int)ReadVarUInt32(ref reader) - 1;
+        if (len < 0)
+        {
+            return null;
+        }
+        if (len == 0)
+        {
+            return string.Empty;
+        }
+        var span = reader.GetSpan(len).Slice(0, len);
+        var str = span.ToString(Encoding.UTF8);
+        reader.Advance(len);
+        return str;
+    }
+
+    /// <summary>
     /// 从字节读取器中读取可变长度编码的无符号32位整数。
     /// </summary>
     /// <typeparam name="TReader">实现<see cref="IBytesReader"/>接口的读取器类型。</typeparam>

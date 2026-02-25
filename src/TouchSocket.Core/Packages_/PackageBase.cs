@@ -22,17 +22,13 @@ public abstract class PackageBase : IPackage
     /// <inheritdoc/>
     public abstract void Package<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-, allows ref struct
-#endif
+
         ;
 
     /// <inheritdoc/>
     public abstract void Unpackage<TReader>(ref TReader reader)
         where TReader : IBytesReader
-#if AllowsRefStruct
-, allows ref struct
-#endif
+
         ;
 
 }

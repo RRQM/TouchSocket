@@ -49,9 +49,6 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <param name="writer"></param>
     public virtual void PackageBody<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-#if AllowsRefStruct
-, allows ref struct
-#endif
     {
     }
 
@@ -61,7 +58,6 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// </summary>
     public virtual void PackageRouter<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-
     {
         WriterExtension.WriteString(ref writer, this.SourceId, FixedHeaderType.Byte);
         WriterExtension.WriteString(ref writer, this.TargetId, FixedHeaderType.Byte);
