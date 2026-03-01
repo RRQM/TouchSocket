@@ -38,7 +38,7 @@
 //        {
 //            if (this.TryGetClient(id, out var client))
 //            {
-//                await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//                await client.CloseAsync().ConfigureDefaultAwait();
 //            }
 //        }
 //    }

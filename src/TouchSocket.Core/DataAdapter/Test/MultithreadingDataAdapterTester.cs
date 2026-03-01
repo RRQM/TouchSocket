@@ -94,7 +94,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
         this.m_stopwatch.Start();
         for (var i = 0; i < testCount; i++)
         {
-            await this.m_adapter.SendInputAsync(null, memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_adapter.SendInputAsync(null, memory, CancellationToken.None).ConfigureDefaultAwait();
         }
         if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_millisecondsTimeout))
         {
@@ -120,7 +120,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
                 {
                     try
                     {
-                        await this.m_adapter.ReceivedInputAsync(null, block.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_adapter.ReceivedInputAsync(null, block.Memory).ConfigureDefaultAwait();
                     }
                     finally
                     {
@@ -130,7 +130,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
             }
             else
             {
-                await Task.Delay(1).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(1).ConfigureDefaultAwait();
             }
         }
     }
@@ -139,7 +139,7 @@ public class MultithreadingDataAdapterTester : SafetyDisposableObject
     {
         if (this.m_receivedCallBack != null)
         {
-            await this.m_receivedCallBack(memory, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_receivedCallBack(memory, requestInfo).ConfigureDefaultAwait();
         }
         Interlocked.Increment(ref this.m_count);
     }

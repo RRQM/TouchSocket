@@ -51,7 +51,7 @@ public class MqttBroker
             }
             var qosLevel = MqttExtension.MinQosLevel(subscription.QosLevel, message.QosLevel);
             var distributeMessage = new DistributeMessage(message.TopicName, message.Retain, qosLevel, sharedPayload);
-            await actorTarget.PostDistributeMessageAsync(distributeMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await actorTarget.PostDistributeMessageAsync(distributeMessage).ConfigureDefaultAwait();
             deliveredCount++;
         }
         return deliveredCount;

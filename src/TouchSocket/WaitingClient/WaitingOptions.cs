@@ -33,7 +33,7 @@ public class WaitingOptions
                 Task<bool> FilterFuncValue(ResponsedData data)
                 {
                     var task = Task.FromResult(value.Invoke(data));
-                    task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    task.ConfigureDefaultAwait();
                     return task;
                 }
 

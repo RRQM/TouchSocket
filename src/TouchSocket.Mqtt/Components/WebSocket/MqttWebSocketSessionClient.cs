@@ -122,9 +122,9 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
             this.m_mqttActor = actor;
         }
 
-        await this.PluginManager.RaiseIMqttReceivingPluginAsync(this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIMqttReceivingPluginAsync(this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureDefaultAwait();
 
-        await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureDefaultAwait();
     }
 
     #region MqttActor
@@ -138,27 +138,27 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnected(MqttActor mqttActor, MqttConnectedEventArgs args)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, args).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnecting(MqttActor mqttActor, MqttConnectingEventArgs e)
     {
         if (e.ConnAckMessage.ReturnCode == MqttReasonCode.ConnectionAccepted)
         {
-            await this.m_client.ResetIdAsync(e.ConnectMessage.ClientId, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_client.ResetIdAsync(e.ConnectMessage.ClientId, CancellationToken.None).ConfigureDefaultAwait();
         }
 
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnMessageArrived(MqttActor actor, MqttReceivedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)

@@ -161,7 +161,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadCoils, startingAddress, quantity);
 
-        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
 
         return TouchSocketBitConverter.Default.ToValues<bool>(response.Data.Span).Slice(0, quantity);
     }
@@ -180,7 +180,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadDiscreteInputs, startingAddress, quantity);
 
-        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
 
         return TouchSocketBitConverter.Default.ToValues<bool>(response.Data.Span).Slice(0, quantity);
     }
@@ -199,7 +199,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadHoldingRegisters, startingAddress, quantity);
 
-        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
         return response;
     }
 
@@ -217,7 +217,7 @@ public static class ModbusMasterExtension
     {
         var request = new ModbusRequest(slaveId, FunctionCode.ReadInputRegisters, startingAddress, quantity);
 
-        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
         return response;
     }
 
@@ -240,7 +240,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(values.Span);
 
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -258,7 +258,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(bytes);
 
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -276,7 +276,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -294,7 +294,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -312,7 +312,7 @@ public static class ModbusMasterExtension
         request.StartingAddress = startingAddress;
         request.SetValue(value);
 
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     #endregion WriteAsync
@@ -360,7 +360,7 @@ public static class ModbusMasterExtension
         request.ReadStartAddress = startingAddressForRead;
         request.ReadQuantity = quantityForRead;
         request.SetValue(bytes);
-        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await master.SendModbusRequestAsync(request, millisecondsTimeout, cancellationToken).ConfigureDefaultAwait();
     }
 
     #endregion ReadWrite
@@ -370,7 +370,7 @@ public static class ModbusMasterExtension
     {
         if (millisecondsTimeout == Timeout.Infinite)
         {
-            return await master.SendModbusRequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await master.SendModbusRequestAsync(request, cancellationToken).ConfigureDefaultAwait();
         }
 
         using (var timeoutCts = new CancellationTokenSource(millisecondsTimeout))
@@ -379,7 +379,7 @@ public static class ModbusMasterExtension
             {
                 try
                 {
-                    return await master.SendModbusRequestAsync(request, linkedCts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return await master.SendModbusRequestAsync(request, linkedCts.Token).ConfigureDefaultAwait();
                 }
                 catch (OperationCanceledException)
                 {

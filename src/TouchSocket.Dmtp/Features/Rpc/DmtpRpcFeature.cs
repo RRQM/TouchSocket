@@ -108,7 +108,7 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, I
         dmtpRpcActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpRpcActor>(dmtpRpcActor);
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -117,13 +117,13 @@ public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpConnectingPlugin, I
         var dmtpRpcActor = client.DmtpActor.GetActor<DmtpRpcActor>();
         if (dmtpRpcActor != null)
         {
-            if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureDefaultAwait())
             {
                 e.Handled = true;
                 return;
             }
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     #endregion Config

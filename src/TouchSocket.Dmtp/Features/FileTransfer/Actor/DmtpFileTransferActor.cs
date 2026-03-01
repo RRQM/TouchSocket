@@ -77,11 +77,11 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 fileTransferRouterPackage.Unpackage(ref reader);
                 if (fileTransferRouterPackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)).ConfigureDefaultAwait())
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_pullFileResourceInfo_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await actor.SendAsync(this.m_pullFileResourceInfo_Request, message.Memory).ConfigureDefaultAwait();
                             return true;
                         }
                         else
@@ -95,7 +95,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     }
                     fileTransferRouterPackage.SwitchId();
 
-                    await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, fileTransferRouterPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, fileTransferRouterPackage).ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -119,9 +119,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileResource.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileResource.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pullFileResourceInfo_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pullFileResourceInfo_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -145,22 +145,22 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileSection.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileSection.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pullFileSection_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pullFileSection_Request, message.Memory).ConfigureDefaultAwait();
                     }
                     else
                     {
                         waitFileSection.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                         waitFileSection.SwitchId();
 
-                        await this.DmtpActor.SendAsync(this.m_pullFileSection_Response, waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.DmtpActor.SendAsync(this.m_pullFileSection_Response, waitFileSection).ConfigureDefaultAwait();
                     }
                 }
                 else
                 {
                     waitFileSection.UnpackageBody(ref reader);
-                    await this.RequestPullFileSection(waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.RequestPullFileSection(waitFileSection).ConfigureDefaultAwait();
                     //EasyTask.Run(this.RequestPullFileSection, waitFileSection);
                 }
             }
@@ -179,9 +179,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileSection.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileSection.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pullFileSection_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pullFileSection_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -205,11 +205,11 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 fileTransferRouterPackage.Unpackage(ref reader);
                 if (fileTransferRouterPackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)).ConfigureDefaultAwait())
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_pushFileResourceInfo_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await actor.SendAsync(this.m_pushFileResourceInfo_Request, message.Memory).ConfigureDefaultAwait();
                             return true;
                         }
                         else
@@ -223,7 +223,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     }
                     fileTransferRouterPackage.SwitchId();
 
-                    await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Response, fileTransferRouterPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Response, fileTransferRouterPackage).ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -246,9 +246,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileResource.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileResource.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pushFileResourceInfo_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pushFileResourceInfo_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -272,15 +272,15 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileSection.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileSection.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pushFileSection_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pushFileSection_Request, message.Memory).ConfigureDefaultAwait();
                     }
                     else
                     {
                         waitFileSection.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                         waitFileSection.SwitchId();
-                        await this.DmtpActor.SendAsync(this.m_pushFileSection_Response, waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.DmtpActor.SendAsync(this.m_pushFileSection_Response, waitFileSection).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -288,7 +288,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     waitFileSection.UnpackageBody(ref reader);
                     //this.RequestPushFileSection(waitFileSection);
                     //EasyTask.Run(this.RequestPushFileSection, waitFileSection);
-                    await this.RequestPushFileSection(waitFileSection).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.RequestPushFileSection(waitFileSection).ConfigureDefaultAwait();
                 }
             }
             catch (Exception ex)
@@ -306,9 +306,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileSection.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFileSection.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFileSection.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pushFileSection_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pushFileSection_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -332,15 +332,15 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFinishedPackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFinishedPackage.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFinishedPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFinishedPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_finishedFileResourceInfo_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_finishedFileResourceInfo_Request, message.Memory).ConfigureDefaultAwait();
                     }
                     else
                     {
                         waitFinishedPackage.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                         waitFinishedPackage.SwitchId();
-                        await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Response, waitFinishedPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Response, waitFinishedPackage).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -363,9 +363,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFinishedPackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitFinishedPackage.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitFinishedPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitFinishedPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_finishedFileResourceInfo_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_finishedFileResourceInfo_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -389,11 +389,11 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitSmallFilePackage.UnpackageRouter(ref reader);
                 if (waitSmallFilePackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, waitSmallFilePackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, waitSmallFilePackage)).ConfigureDefaultAwait())
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_pullSmallFile_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await actor.SendAsync(this.m_pullSmallFile_Request, message.Memory).ConfigureDefaultAwait();
                             return true;
                         }
                         else
@@ -406,7 +406,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                         waitSmallFilePackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                     }
                     waitSmallFilePackage.SwitchId();
-                    await this.DmtpActor.SendAsync(this.m_pullSmallFile_Response, waitSmallFilePackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_pullSmallFile_Response, waitSmallFilePackage).ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -429,9 +429,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitSmallFilePackage.UnpackageRouter(ref reader);
                 if (this.DmtpActor.AllowRoute && waitSmallFilePackage.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pullSmallFile_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pullSmallFile_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -455,11 +455,11 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitSmallFilePackage.UnpackageRouter(ref reader);
                 if (waitSmallFilePackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, waitSmallFilePackage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.PullFile, waitSmallFilePackage)).ConfigureDefaultAwait())
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_pushSmallFile_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await actor.SendAsync(this.m_pushSmallFile_Request, message.Memory).ConfigureDefaultAwait();
                             return true;
                         }
                         else
@@ -473,7 +473,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     }
 
                     waitSmallFilePackage.SwitchId();
-                    await this.DmtpActor.SendAsync(this.m_pushSmallFile_Response, waitSmallFilePackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_pushSmallFile_Response, waitSmallFilePackage).ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -497,9 +497,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
 
                 if (this.DmtpActor.AllowRoute && waitSmallFilePackage.Route)
                 {
-                    if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                    if (await this.DmtpActor.TryFindDmtpActor(waitSmallFilePackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                     {
-                        await actor.SendAsync(this.m_pushSmallFile_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await actor.SendAsync(this.m_pushSmallFile_Response, message.Memory).ConfigureDefaultAwait();
                     }
                 }
                 else
@@ -576,7 +576,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             return this;
         }
-        if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor dmtpActor)
+        if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureDefaultAwait() is DmtpActor dmtpActor)
         {
             if (dmtpActor.GetDmtpFileTransferActor() is DmtpFileTransferActor newActor)
             {
@@ -692,9 +692,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFinishedPackage.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
 
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -761,8 +761,8 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileResource.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -827,9 +827,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileSection.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pullFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pullFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
 
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -904,9 +904,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileResource.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
 
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -978,9 +978,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
         {
             var block = byteBlock;
             waitFileSection.Package(ref block);
-            await this.DmtpActor.SendAsync(this.m_pushFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pushFileSection_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
 
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -1125,14 +1125,14 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             };
 
             //触发事件的时机调到SendAsync前面，目的是保证调用方在收到回复时，响应方已经完成事件处理。
-            await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureDefaultAwait();
 
             using (var byteBlock = new ByteBlock(1024 * 64))
             {
                 waitFinishedPackage.SwitchId();
                 var block = byteBlock;
                 waitFinishedPackage.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
         }
         catch (Exception ex)
@@ -1162,7 +1162,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     ResourcePath = waitFileResource.Path
                 };
 
-                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureDefaultAwait();
 
                 var fullPath = this.GetFullPath(args.ResourcePath);
 
@@ -1197,7 +1197,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileResource.SwitchId();
                 var block = byteBlock;
                 waitFileResource.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
         }
         catch
@@ -1245,7 +1245,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     waitFileSection.SwitchId();
                     var block = byteBlock;
                     waitFileSection.Package(ref block);
-                    await this.DmtpActor.SendAsync(this.m_pullFileSection_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.DmtpActor.SendAsync(this.m_pullFileSection_Response, byteBlock.Memory).ConfigureDefaultAwait();
                 }
             }
             finally
@@ -1277,7 +1277,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     SavePath = waitFileResource.Path
                 };
 
-                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureDefaultAwait();
 
                 var savePath = this.GetFullPath(args.SavePath);
 
@@ -1321,7 +1321,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileResource.SwitchId();
                 var block = byteBlock;
                 waitFileResource.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
         }
         catch
@@ -1380,7 +1380,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitFileSection.SwitchId();
                 var block = byteBlock;
                 waitFileSection.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pushFileSection_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pushFileSection_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
         }
         catch
@@ -1438,10 +1438,10 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
 
-            var status = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var status = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (status)
             {
@@ -1524,9 +1524,9 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
 
             waitSmallFilePackage.Package(ref byteBlock);
 
-            await this.DmtpActor.SendAsync(this.m_pushSmallFile_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.DmtpActor.SendAsync(this.m_pushSmallFile_Request, byteBlock.Memory).ConfigureDefaultAwait();
 
-            await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
             switch (waitData.Status)
             {
@@ -1593,7 +1593,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     ResourcePath = waitSmallFilePackage.Path
                 };
 
-                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureDefaultAwait();
 
                 var fullPath = this.GetFullPath(args.ResourcePath);
                 waitSmallFilePackage.Path = fullPath;
@@ -1648,7 +1648,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                 waitSmallFilePackage.SwitchId();
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pullSmallFile_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
 
             var resultArgs = new FileTransferredEventArgs(
@@ -1656,7 +1656,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             {
                 ResourcePath = waitSmallFilePackage.Path
             };
-            await this.OnFileTransferred.Invoke(this.DmtpActor, resultArgs).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnFileTransferred.Invoke(this.DmtpActor, resultArgs).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -1685,7 +1685,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
                     SavePath = waitSmallFilePackage.Path
                 };
 
-                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.OnFileTransferring.Invoke(this.DmtpActor, args).ConfigureDefaultAwait();
 
                 var fullPath = this.GetFullPath(args.SavePath);
                 waitSmallFilePackage.Path = fullPath;
@@ -1713,7 +1713,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             {
                 var block = byteBlock;
                 waitSmallFilePackage.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_pushSmallFile_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_pushSmallFile_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
 
             var resultArgs = new FileTransferredEventArgs(
@@ -1721,7 +1721,7 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
             {
                 SavePath = waitSmallFilePackage.Path
             };
-            await this.OnFileTransferred.Invoke(this.DmtpActor, resultArgs).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnFileTransferred.Invoke(this.DmtpActor, resultArgs).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {

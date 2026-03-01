@@ -66,7 +66,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         {
             if (this.TryGetClient(id, out var client))
             {
-                await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync().ConfigureDefaultAwait();
                 client.SafeDispose();
             }
         }
@@ -111,7 +111,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
@@ -164,13 +164,13 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             }
 
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             throw;
         }
     }
@@ -180,15 +180,15 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
     {
         try
         {
-            await this.ClearAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ClearAsync().ConfigureDefaultAwait();
             this.m_serverState = ServerState.Stopped;
-            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
-            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             return Result.FromException(ex);
         }
         finally
@@ -220,13 +220,13 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 this,
                 this.TryAdd,
                 this.TryRemove,
-                this.TryGet).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                this.TryGet).ConfigureDefaultAwait();
 
             var args = new ConnectingEventArgs()
             {
                 Id = this.GetNextNewId(client)
             };
-            await client.InternalNamedPipeConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
+            await client.InternalNamedPipeConnecting(args).ConfigureDefaultAwait();//Connecting
             if (!args.IsPermitOperation)
             {
                 return;
@@ -238,7 +238,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 this.Logger?.Error(this, TouchSocketResource.IdAlreadyExists.Format(args.Id));
                 return;
             }
-            await client.InternalNamedPipeConnected(new NamedPipeTransport(namedPipe, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty))).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.InternalNamedPipeConnected(new NamedPipeTransport(namedPipe, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty))).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -264,7 +264,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 }
                 var namedPipe = new NamedPipeServerStream(option.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
 
-                await namedPipe.WaitForConnectionAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await namedPipe.WaitForConnectionAsync(cancellationToken).ConfigureDefaultAwait();
 
                 _ = EasyTask.SafeRun(this.OnClientSocketInit, namedPipe, monitor);
             }

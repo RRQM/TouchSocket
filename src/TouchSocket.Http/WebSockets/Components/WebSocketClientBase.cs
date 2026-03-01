@@ -72,7 +72,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     {
         if (!base.Online)
         {
-            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
 
         var option = this.Config.WebSocketOption;
@@ -80,12 +80,12 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
         await this.OnWebSocketConnecting(new HttpContextEventArgs(new HttpContext(request, default)))
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
 
         //这里不要释放responseResult，主要是这是http最后一次请求，后续不会再用到http了。
         //如果释放了，会导致响应数据在PrivateOnConnected中失效。
         var responseResult = await this.ProtectedRequestAsync(request, cancellationToken)
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
         var response = responseResult.Response;
         if (response.StatusCode != 101)
         {
@@ -94,7 +94,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         var accept = response.Headers.Get("sec-websocket-accept");
         if (accept.IsEmpty || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            await base.CloseAsync("WS服务器返回的应答3码不正确", cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync("WS服务器返回的应答3码不正确", cancellationToken).ConfigureDefaultAwait();
             throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
         }
         this.InitWebSocket();
@@ -125,7 +125,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个 <see cref="Task"/> 对象，表示异步操作的完成。</returns>
     protected virtual async Task OnWebSocketClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>A <see cref="Task"/> 表示事件处理的异步操作。</returns>
     protected virtual async Task OnWebSocketClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个表示任务已完成的Task对象。</returns>
     protected virtual async Task OnWebSocketConnected(HttpContextEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketConnectedPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个表示异步操作完成的任务</returns>
     protected virtual async Task OnWebSocketConnecting(HttpContextEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketConnectingPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnConnected(HttpContextEventArgs e)
@@ -170,7 +170,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         {
             this.m_webSocket.Complete(e.Message);
         }
-        await this.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketClosed(e).ConfigureDefaultAwait();
     }
 
     private Task PrivateWebSocketClosing(ClosingEventArgs e)
@@ -192,18 +192,18 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
 
             var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
 
-            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
 
-            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful").ConfigureDefaultAwait();
             return;
         }
         if (this.m_webSocket.AllowAsyncRead)
         {
-            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_webSocket.InputReceiveAsync(dataFrame, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
 
-        await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureDefaultAwait();
     }
 
     #endregion 事件
@@ -215,7 +215,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个Task对象，表示异步操作</returns>
     protected virtual async Task OnWebSocketReceived(WSDataFrameEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private void InitWebSocket()
@@ -244,7 +244,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     {
         var cancellationToken = transport.ClosedToken;
         using var reader = new PooledBytesReader();
-        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await transport.ReadLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             while (true)
@@ -253,7 +253,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
                 {
                     return;
                 }
-                var result = await transport.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await transport.Reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
                 if (result.Buffer.Length == 0)
                 {
                     break;
@@ -263,9 +263,9 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
                 {
                     reader.Reset(result.Buffer);
 
-                    if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (!await this.OnTcpReceiving(reader).ConfigureDefaultAwait())
                     {
-                        await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureDefaultAwait();
                     }
                     var position = result.Buffer.GetPosition(reader.BytesRead);
                     transport.Reader.AdvanceTo(position, result.Buffer.End);
@@ -279,7 +279,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
                 catch (Exception ex)
                 {
                     this.Logger?.Exception(this, ex);
-                    await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await transport.CloseAsync(ex.Message).ConfigureDefaultAwait();
                 }
             }
         }
@@ -300,8 +300,8 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PrivateWebSocketClosed(e).ConfigureDefaultAwait();
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -311,16 +311,16 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         {
             var dataFrame = (WSDataFrame)e.RequestInfo;
 
-            await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateWebSocketReceived(dataFrame).ConfigureDefaultAwait();
         }
         else
         {
             if (e.RequestInfo is HttpResponse)
             {
-                await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.OnTcpReceived(e).ConfigureDefaultAwait();
             }
         }
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
 
     #endregion Override

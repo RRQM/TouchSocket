@@ -46,14 +46,14 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnSerialClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnSerialClosed(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -71,14 +71,14 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnSerialClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnSerialClosing(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -96,13 +96,13 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
         {
             if (this.Connected != null)
             {
-                await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Connected.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnSerialConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnSerialConnected(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -120,14 +120,14 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
         {
             if (this.Connecting != null)
             {
-                await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Connecting.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnSerialConnecting(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -140,14 +140,14 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     {
         if (this.Received != null)
         {
-            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnSerialReceived(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件

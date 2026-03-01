@@ -46,13 +46,13 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnNamedPipeClosed(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -68,13 +68,13 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     {
         if (this.Closing != null)
         {
-            await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
-        await base.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeClosing(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -87,13 +87,13 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
         {
             if (this.Connected != null)
             {
-                await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Connected.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnNamedPipeConnected(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -111,14 +111,14 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
         {
             if (this.Connecting != null)
             {
-                await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Connecting.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await base.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -131,13 +131,13 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     {
         if (this.Received != null)
         {
-            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
-        await base.OnNamedPipeReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeReceived(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件

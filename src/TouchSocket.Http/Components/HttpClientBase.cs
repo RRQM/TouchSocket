@@ -48,10 +48,10 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         // 修复在重连时，响应对象仍然保持上次状态的问题。
         // issue:https://github.com/RRQM/TouchSocket/issues/110
         this.m_httpClientResponse.Reset();
-        await this.m_connectSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_connectSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -68,11 +68,11 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         var proxy = this.Config.Proxy;
         if (proxy != null)
         {
-            await this.ConnectThroughProxyAsync(proxy, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ConnectThroughProxyAsync(proxy, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -107,7 +107,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         if (proxyUri == null || proxyUri.Equals(targetHost))
         {
             // 代理返回原始URI或null，直接连接
-            await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(cancellationToken).ConfigureDefaultAwait();
             return;
         }
 
@@ -122,12 +122,12 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             config.SetRemoteIPHost(proxyIPHost);
 
             // 连接到代理服务器
-            await base.TcpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.TcpConnectAsync(cancellationToken).ConfigureDefaultAwait();
 
             // 发送 CONNECT 请求建立隧道
-            await this.EstablishProxyTunnelAsync(proxy, targetHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.EstablishProxyTunnelAsync(proxy, targetHost, cancellationToken).ConfigureDefaultAwait();
 
-            await this.TryAuthenticateAsync(originalRemoteIPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.TryAuthenticateAsync(originalRemoteIPHost).ConfigureDefaultAwait();
         }
         finally
         {
@@ -150,7 +150,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
                 TargetHost = iPHost.Host
             };
         }
-        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.AuthenticateAsync(sslOption).ConfigureDefaultAwait();
     }
 
     private async Task EstablishProxyTunnelAsync(IWebProxy proxy, IPHost targetHost, CancellationToken cancellationToken)
@@ -175,7 +175,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
         // 发送 CONNECT 请求
         // 接收代理响应
-        using (var responseResult = await this.ProtectedRequestAsync(connectRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await this.ProtectedRequestAsync(connectRequest, cancellationToken).ConfigureDefaultAwait())
         {
             var response = responseResult.Response;
             // 检查响应状态
@@ -216,7 +216,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
     protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, CancellationToken cancellationToken)
     {
-        return await this.ProtectedRequestAsync(request, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.ProtectedRequestAsync(request, true, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -244,10 +244,10 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
             {
                 currentRequest.Headers.TryAdd(HttpHeaders.Host, this.RemoteIPHost.Authority);
 
-                await this.BuildAndSendAsync(currentRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.BuildAndSendAsync(currentRequest, cancellationToken).ConfigureDefaultAwait();
 
                 var response = await this.ReadHttpResponseAsync(cancellationToken)
-                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    .ConfigureDefaultAwait();
 
                 if (!allowRedirect || !this.IsRedirectStatusCode(response.StatusCode))
                 {
@@ -268,7 +268,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
                 var redirectUri = this.BuildRedirectUri(location.First);
 
-                await this.HandleRedirectConnectionAsync(redirectUri, originalHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.HandleRedirectConnectionAsync(redirectUri, originalHost, cancellationToken).ConfigureDefaultAwait();
 
                 currentRequest = this.CreateRedirectRequest(currentRequest, response.StatusCode, redirectUri);
 
@@ -351,11 +351,11 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         {
             var newIPHost = new IPHost($"{newScheme}://{newHost}:{newPort}");
 
-            await this.CloseAsync("重定向到不同主机",cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.CloseAsync("重定向到不同主机",cancellationToken).ConfigureDefaultAwait();
 
             this.Config.SetRemoteIPHost(newIPHost);
 
-            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateHttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -367,7 +367,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         {
             request.BuildHeader(ref writer);
             await writer.FlushAsync(cancellationToken)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             return;
         }
 
@@ -376,11 +376,11 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
 
         var result = content.InternalBuildingContent(ref writer);
 
-        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
 
         if (!result)
         {
-            await content.InternalWriteContent(this.Transport.Writer, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await content.InternalWriteContent(this.Transport.Writer, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -402,7 +402,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -410,7 +410,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     {
         this.Protocol = Protocol.Http;
 
-        await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnecting(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>

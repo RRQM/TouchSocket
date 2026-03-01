@@ -120,7 +120,7 @@ public class StreamHttpContent : HttpContent
                 {
                     while (true)
                     {
-                        var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureDefaultAwait();
                         if (r == 0)
                         {
                             break;
@@ -133,8 +133,8 @@ public class StreamHttpContent : HttpContent
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
                         byteBlock.Write(target.Span);
                         TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                        await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
+                        await this.m_flowOperator.AddFlowAsync(r).ConfigureDefaultAwait();
                     }
 
                     byteBlock.Reset();
@@ -142,7 +142,7 @@ public class StreamHttpContent : HttpContent
                     TouchSocketHttpUtility.AppendHex(ref byteBlock, 0);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
                     TouchSocketHttpUtility.AppendRn(ref byteBlock);
-                    await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writer.WriteAsync(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
                 }
                 finally
                 {
@@ -153,14 +153,14 @@ public class StreamHttpContent : HttpContent
             {
                 while (true)
                 {
-                    var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var r = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureDefaultAwait();
                     if (r == 0)
                     {
                         break;
                     }
-                    await writer.WriteAsync(memory.Slice(0, r), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await writer.WriteAsync(memory.Slice(0, r), cancellationToken).ConfigureDefaultAwait();
 
-                    await this.m_flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_flowOperator.AddFlowAsync(r).ConfigureDefaultAwait();
                 }
             }
 

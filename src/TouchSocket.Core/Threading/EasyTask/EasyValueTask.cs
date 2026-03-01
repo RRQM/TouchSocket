@@ -63,7 +63,7 @@ public static class EasyValueTask
         }
         try
         {
-            await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await task.ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -87,7 +87,7 @@ public static class EasyValueTask
         }
         try
         {
-            return new Result<T>(await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            return new Result<T>(await task.ConfigureDefaultAwait());
         }
         catch (Exception ex)
         {

@@ -22,11 +22,11 @@ public class HttpClient : HttpClientBase, IHttpClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
-            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

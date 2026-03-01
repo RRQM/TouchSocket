@@ -72,7 +72,7 @@ internal sealed class TcpTransport : BaseTransport
 
         await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
             , sslOption.SslProtocols
-            , sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            , sslOption.CheckCertificateRevocation).ConfigureDefaultAwait();
 
         this.m_reader = PipeReader.Create(sslStream);
         this.m_writer = PipeWriter.Create(sslStream);
@@ -100,7 +100,7 @@ internal sealed class TcpTransport : BaseTransport
             sslStream = new SslStream(sourceStream, false);
         }
 
-        await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureDefaultAwait();
 
         this.m_reader = PipeReader.Create(sslStream);
         this.m_writer = PipeWriter.Create(sslStream);
@@ -124,7 +124,7 @@ internal sealed class TcpTransport : BaseTransport
                 // 等待发送管道读取器完成
                 await this.m_reader.CompleteAsync().SafeWaitAsync(cancellationToken);
             }
-            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             this.Close();
             return Result.Success;
         }

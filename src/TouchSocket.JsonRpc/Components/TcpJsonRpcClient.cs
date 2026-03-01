@@ -111,8 +111,8 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
             return;
         }
         var callContext = new TcpJsonRpcCallContext(this,this.ClosedToken);
-        await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureDefaultAwait();
 
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
 }

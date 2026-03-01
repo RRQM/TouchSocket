@@ -49,7 +49,7 @@ internal sealed class InternalUdpReceiver : SafetyDisposableObject, IReceiver<IU
     /// <inheritdoc/>
     public async ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken cancellationToken)
     {
-        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken).ConfigureDefaultAwait();
         var (memory, requestInfo, endpoint) = readLease.Value;
         return new UdpReceiverResult(readLease.Dispose)
         {

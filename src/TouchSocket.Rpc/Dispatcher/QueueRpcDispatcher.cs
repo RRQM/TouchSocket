@@ -67,7 +67,7 @@ public class QueueRpcDispatcher<TRpcActor, TCallContext> : DisposableObject, IRp
             var func = invokeContext.Func;
             try
             {
-                await func(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await func(callContext).ConfigureDefaultAwait();
             }
             catch
             {

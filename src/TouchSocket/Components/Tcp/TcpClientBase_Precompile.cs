@@ -32,7 +32,7 @@ public partial class TcpClientBase
 
         this.ThrowIfConfigIsNull();
 
-        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (this.m_online)
@@ -47,16 +47,16 @@ public partial class TcpClientBase
             var socket = this.CreateSocket(iPHost);
 
             var args = new ConnectingEventArgs();
-            await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnTcpConnecting(args).ConfigureDefaultAwait();
 
             try
             {
 #if NET6_0_OR_GREATER
-                await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureDefaultAwait();
 #else
                 var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
 
-                await task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await task.WithCancellation(cancellationToken).ConfigureDefaultAwait();
 #endif
             }
             catch
@@ -69,10 +69,10 @@ public partial class TcpClientBase
 
             this.SetSocket(socket);
 
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
 
             this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-            await this.TryAuthenticateAsync(iPHost).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.TryAuthenticateAsync(iPHost).ConfigureDefaultAwait();
             this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
         }
         finally
@@ -90,7 +90,7 @@ public partial class TcpClientBase
         var runTask = this.m_runTask;
         if (runTask != null)
         {
-            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await runTask.ConfigureDefaultAwait();
         }
     }
 

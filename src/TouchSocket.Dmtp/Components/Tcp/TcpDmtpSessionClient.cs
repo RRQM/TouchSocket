@@ -78,7 +78,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             e.Message = "Token不受理";
         }
 
-        await this.OnConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnConnecting(e).ConfigureDefaultAwait();
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -104,7 +104,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
         }
 
         // 异步调用所有IDmtpCreatedChannelPlugin类型的插件，并传递当前实例和事件参数
-        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             return;
         }
         // 通知插件管理器，Dmtp已经关闭
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             return;
         }
         // 通知插件管理器，Dmtp即将被关闭
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -173,7 +173,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             return;
         }
         // 异步调用插件管理器，执行握手验证插件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             return;
         }
         // 异步调用插件管理器，执行路由转发插件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     #endregion 事件
@@ -207,13 +207,13 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
         if (this.m_dmtpActor != null)
         {
             //issue：https://gitee.com/RRQM_Home/TouchSocket/issues/IDND2L
-            await this.m_dmtpActor.SendCloseAsync(msg,cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.SendCloseAsync(msg,cancellationToken).ConfigureDefaultAwait();
            
-            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
         }
 
         // 调用基类的CloseAsync方法发送关闭消息
-        return await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -252,7 +252,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             {
                 if (findDmtpActor != null)
                 {
-                    return await findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return await findDmtpActor.Invoke(id).ConfigureDefaultAwait();
                 }
                 if (this.ProtectedTryGetClient(id, out var client) && client is IDmtpActorObject dmtpActorObject)
                 {
@@ -297,7 +297,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     private async Task ThisOnResetId(DmtpActor rpcActor, IdChangedEventArgs e)
     {
-        await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedResetIdAsync(e.NewId).ConfigureDefaultAwait();
     }
 
     #region Override
@@ -305,15 +305,15 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnDmtpClosed(e).ConfigureDefaultAwait();
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -321,20 +321,20 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     {
         _ = EasyTask.SafeRun(async () =>
         {
-            await Task.Delay(this.VerifyTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await Task.Delay(this.VerifyTimeout).ConfigureDefaultAwait();
             if (!this.Online)
             {
-                await base.CloseAsync("握手验证超时").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.CloseAsync("握手验证超时").ConfigureDefaultAwait();
             }
         });
 
-        await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnected(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
-        await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnecting(e).ConfigureDefaultAwait();
         this.InitDmtpActor(e.Id);
     }
 
@@ -342,9 +342,9 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     //protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
     //{
     //    var message = (DmtpMessage)e.RequestInfo;
-    //    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+    //    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
     //    {
-    //        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
     //    }
     //}
 
@@ -355,9 +355,9 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
         {
             if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
             {
-                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
                 }
             }
             else

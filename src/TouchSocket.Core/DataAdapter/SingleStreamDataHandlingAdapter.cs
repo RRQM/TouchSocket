@@ -52,7 +52,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
         where TReader : class, IBytesReader
     {
         this.CacheVerify(ref reader);
-        await this.PreviewReceivedAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PreviewReceivedAsync(reader).ConfigureDefaultAwait();
         this.m_cacheSize = reader.BytesRemaining;
         this.LastCacheTime = DateTimeOffset.UtcNow;
     }

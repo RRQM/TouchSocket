@@ -34,7 +34,7 @@ public static class SenderExtension
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            await client.SendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.SendAsync(byteBlock.Memory).ConfigureDefaultAwait();
         }
         finally
         {
@@ -78,7 +78,7 @@ public static class SenderExtension
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            await client.SendAsync(endPoint, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.SendAsync(endPoint, byteBlock.Memory).ConfigureDefaultAwait();
         }
         finally
         {

@@ -32,7 +32,7 @@ public class ReconnectionOption<TClient>
             return Task.FromResult(result);
         };
 
-        this.ConnectAction = async (client, cancellationToken) => await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        this.ConnectAction = async (client, cancellationToken) => await client.ConnectAsync(cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>

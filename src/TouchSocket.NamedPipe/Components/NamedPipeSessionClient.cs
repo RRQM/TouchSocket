@@ -58,13 +58,13 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// <param name="e"></param>
     protected override async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
-        await this.m_onClientConnected(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_onClientConnected(this, e).ConfigureDefaultAwait();
         if (e.Handled)
         {
             return;
         }
 
-        await base.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeConnected(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -72,13 +72,13 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// </summary>
     protected override async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.m_onClientConnecting(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_onClientConnecting(this, e).ConfigureDefaultAwait();
         if (e.Handled)
         {
             return;
         }
 
-        await base.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -89,21 +89,21 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     {
         if (this.Closed != null)
         {
-            await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await this.m_onClientDisconnected(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_onClientDisconnected(this, e).ConfigureDefaultAwait();
 
         if (e.Handled)
         {
             return;
         }
 
-        await base.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeClosed(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -116,19 +116,19 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.m_onClientClosing(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientClosing(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
-            await base.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.OnNamedPipeClosing(e).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -160,12 +160,12 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// </summary>
     protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
-        await this.m_onClientReceivedData(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_onClientReceivedData(this, e).ConfigureDefaultAwait();
         if (e.Handled)
         {
             return;
         }
-        await base.OnNamedPipeReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnNamedPipeReceived(e).ConfigureDefaultAwait();
     }
 
     #region 异步发送

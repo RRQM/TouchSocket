@@ -76,7 +76,7 @@ public class WaitDataAsync<T> : DisposableObject
     {
         try
         {
-            await this.m_asyncWaitHandle.WaitOneAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_asyncWaitHandle.WaitOneAsync(cancellationToken).ConfigureDefaultAwait();
             return this.m_status;
         }
         catch (OperationCanceledException)

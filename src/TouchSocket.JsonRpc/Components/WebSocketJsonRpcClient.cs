@@ -58,11 +58,11 @@ public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClie
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
         await this.m_semaphoreConnect.WaitAsync(cancellationToken)
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext); ;
+            .ConfigureDefaultAwait(); ;
         try
         {
             await base.ProtectedWebSocketConnectAsync(cancellationToken)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext); ;
+                .ConfigureDefaultAwait(); ;
         }
         finally
         {
@@ -109,10 +109,10 @@ public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClie
 
             var callContext = new WebSocketJsonRpcCallContext(this, this.ClosedToken);
             await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
         }
         await base.OnWebSocketReceived(e)
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>

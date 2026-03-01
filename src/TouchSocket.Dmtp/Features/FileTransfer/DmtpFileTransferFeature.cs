@@ -62,7 +62,7 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpConnectingPlugin,
         };
         dmtpFileTransferActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpFileTransferActor>(dmtpFileTransferActor);
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -70,23 +70,23 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpConnectingPlugin,
     {
         if (client.DmtpActor.GetDmtpFileTransferActor() is DmtpFileTransferActor dmtpFileTransferActor)
         {
-            if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureDefaultAwait())
             {
                 e.Handled = true;
                 return;
             }
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)
     {
-        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
     }
 
     private async Task OnFileTransfering(IDmtpActor actor, FileTransferringEventArgs e)
     {
-        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
     }
 }

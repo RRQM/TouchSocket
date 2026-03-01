@@ -80,7 +80,7 @@ public static class ClientExtension
         {
             return Result.FromFail(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(client)));
         }
-        return await client.CloseAsync(string.Empty).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await client.CloseAsync(string.Empty).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public static class ClientExtension
             else
             {
                 // 异步调用CloseAsync方法关闭客户端，传递关闭消息，并指定ConfigureAwait为<see langword="false"/>以避免同步上下文。
-                await client.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync(msg).ConfigureDefaultAwait();
             }
         }
         catch
@@ -138,7 +138,7 @@ public static class ClientExtension
         {
             try
             {
-                await client.ConnectAsync(cancellationTokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.ConnectAsync(cancellationTokenSource.Token).ConfigureDefaultAwait();
             }
             catch (OperationCanceledException)
             {
@@ -156,14 +156,14 @@ public static class ClientExtension
         {
             config = new TouchSocketConfig();
             config.SetRemoteIPHost(ipHost);
-            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.SetupAsync(config).ConfigureDefaultAwait();
         }
         else
         {
             config = client.Config;
             config.SetRemoteIPHost(ipHost);
         }
-        await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.ConnectAsync(millisecondsTimeout).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public static class ClientExtension
         // 尝试进行连接操作
         try
         {
-            await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ConnectAsync(millisecondsTimeout).ConfigureDefaultAwait();
             return new Result(ResultCode.Success);
         }
         // 捕获连接过程中可能抛出的任何异常
@@ -199,7 +199,7 @@ public static class ClientExtension
         try
         {
             // 尝试连接操作，如果超时或发生其他异常，将捕获异常并返回相应的结果。
-            await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ConnectAsync(millisecondsTimeout).ConfigureDefaultAwait();
             return new Result(ResultCode.Success);
         }
         catch (Exception ex)

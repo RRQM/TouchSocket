@@ -85,7 +85,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         {
             if (this.TryGetClient(id, out var client))
             {
-                await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync().ConfigureDefaultAwait();
                 client.SafeDispose();
             }
         }
@@ -130,7 +130,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         if (this.m_clients.TryGetClient(sourceId, out var client))
         {
-            await client.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ResetIdAsync(targetId, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
@@ -189,13 +189,13 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             }
             this.m_serverState = ServerState.Running;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             throw;
         }
     }
@@ -213,12 +213,12 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
             this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
                                                      //无条件释放
-            await this.ReleaseAllAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ReleaseAllAsync().ConfigureDefaultAwait();
 
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
-                await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
             }
             return Result.Success;
         }
@@ -382,13 +382,13 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                 this.TryRemove,
                 this.TryGet
                 )
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
 
             var args = new ConnectingEventArgs()
             {
                 Id = this.GetNextNewId(client)
             };
-            await client.InternalConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
+            await client.InternalConnecting(args).ConfigureDefaultAwait();//Connecting
             if (args.IsPermitOperation)
             {
                 client.InternalSetId(args.Id);
@@ -405,7 +405,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                     try
                     {
                         await transport.AuthenticateAsync(monitor.Option.ServiceSslOption)
-                            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            .ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
@@ -416,7 +416,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                 if (this.m_clients.TryAdd(client))
                 {
                     await client.InternalConnected(transport).SafeWaitAsync()
-                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        .ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -446,7 +446,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
 
         this.m_monitors.Clear();
 
-        await this.ClearAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ClearAsync().ConfigureDefaultAwait();
     }
 
     private bool TryAdd(TcpSessionClientBase client)

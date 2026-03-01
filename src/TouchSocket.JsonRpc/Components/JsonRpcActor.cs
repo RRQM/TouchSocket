@@ -106,7 +106,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
 
                 this.BuildRequestContext(callContext, jsonRpcRequest);
 
-                await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeAsync).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeAsync).ConfigureDefaultAwait();
             }
             else if (this.TryParseResponse(str, out var internalJsonRpcWaitResult))
             {
@@ -168,7 +168,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             {
                 var str = this.BuildJsonRpcRequest(jsonRpcRequest);
                 WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
-                await this.SendAction(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAction(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
@@ -185,7 +185,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                 case FeedbackType.WaitInvoke:
                 default:
                     {
-                        switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
                         {
                             case WaitDataStatus.Success:
                                 {
@@ -421,7 +421,7 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
             try
             {
                 WriterExtension.WriteNormalString(ref byteBlock, str, this.Encoding);
-                await this.SendAction(byteBlock.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAction(byteBlock.Memory, CancellationToken.None).ConfigureDefaultAwait();
             }
             finally
             {
@@ -465,14 +465,14 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
         var callContext = (JsonRpcCallContextBase)obj;
         try
         {
-            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureDefaultAwait();
 
             if (!callContext.JsonRpcId.HasValue)
             {
                 return;
             }
             var error = GetJsonRpcError(invokeResult);
-            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {

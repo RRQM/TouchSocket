@@ -38,9 +38,9 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
         {
             var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureDefaultAwait();
 
-            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.CompletedData;
@@ -68,6 +68,6 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
         {
             this.m_waitHandlePool.Set(response);
         }
-        await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnUdpReceived(e).ConfigureDefaultAwait();
     }
 }

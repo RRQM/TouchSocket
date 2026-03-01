@@ -77,7 +77,7 @@ public static class DmtpFileTransferActorExtension
 
         try
         {
-            var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, fileOperator.Token).ConfigureDefaultAwait();
             if (!resourceInfoResult.IsSuccess)
             {
                 return fileOperator.SetResult(new Result(resourceInfoResult.ResultCode, resourceInfoResult.Message));
@@ -128,7 +128,7 @@ public static class DmtpFileTransferActorExtension
                      }
                      try
                      {
-                         using (var result = await actor.PullFileSectionAsync(targetId, fileSection, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                         using (var result = await actor.PullFileSectionAsync(targetId, fileSection, fileOperator.Token).ConfigureDefaultAwait())
                          {
                              if (result.IsSuccess)
                              {
@@ -137,7 +137,7 @@ public static class DmtpFileTransferActorExtension
                                      var res = locator.WriteFileSection(result);
                                      if (res.IsSuccess)
                                      {
-                                         await fileOperator.AddFlowAsync(fileSection.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                         await fileOperator.AddFlowAsync(fileSection.Length).ConfigureDefaultAwait();
                                          failed = 0;
                                          break;
                                      }
@@ -152,7 +152,7 @@ public static class DmtpFileTransferActorExtension
                                  }
                                  failed++;
                                  sections.Push(fileSection);
-                                 await Task.Delay(500).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                 await Task.Delay(500).ConfigureDefaultAwait();
                              }
                          }
                      }
@@ -160,22 +160,22 @@ public static class DmtpFileTransferActorExtension
                      {
                          failed++;
                          failResult = new Result(ex);
-                         await Task.Delay(500).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                         await Task.Delay(500).ConfigureDefaultAwait();
                      }
                  }
-             }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+             }).ConfigureDefaultAwait();
             if (fileOperator.Token.IsCancellationRequested)
             {
                 if (actor.DmtpActor.Online)
                 {
-                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, fileOperator.Token).ConfigureDefaultAwait();
                 }
                 return fileOperator.SetResult(Result.Canceled);
             }
             var result1 = locator.TryFinished();
             if (actor.DmtpActor.Online)
             {
-                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, fileOperator.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, fileOperator.Token).ConfigureDefaultAwait();
             }
 
             return result1.IsSuccess ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);

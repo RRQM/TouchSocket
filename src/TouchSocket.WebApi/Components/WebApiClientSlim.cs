@@ -78,11 +78,11 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
 
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureDefaultAwait();
 
-        var response = await this.HttpClient.SendAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var response = await this.HttpClient.SendAsync(request, invokeOption.Token).ConfigureDefaultAwait();
 
-        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureDefaultAwait();
 
         if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
         {
@@ -93,13 +93,13 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
         {
             if (returnType != null)
             {
-                return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), returnType);
+                return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureDefaultAwait(), returnType);
             }
             return default;
         }
         else if ((int)response.StatusCode == 422)
         {
-            throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
+            throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureDefaultAwait(), typeof(ActionResult))).Message);
         }
         else
         {

@@ -49,7 +49,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     protected async Task WebSocketConnectAsync(CancellationToken cancellationToken, Action<ClientWebSocketOptions> option = null)
     {
         this.ThrowIfDisposed();
-        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (this.m_online)
@@ -95,7 +95,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
                     option?.Invoke(this.m_client.Options);
 
-                    await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureDefaultAwait();
 
                     this.m_tokenSourceForOnline = new CancellationTokenSource();
 
@@ -121,9 +121,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     {
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, cancellationToken);
 
-        await receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.ConfigureDefaultAwait();
         this.m_online = false;
-        await this.OnWebSocketClosed(this.m_closedEventArgs).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketClosed(this.m_closedEventArgs).ConfigureDefaultAwait();
     }
 
     private async Task WaitClearConnect()
@@ -132,7 +132,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         var runTask = this.m_runTask;
         if (runTask != null)
         {
-            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await runTask.ConfigureDefaultAwait();
         }
     }
     #endregion 连接
@@ -174,9 +174,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
             }
 
             this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
-            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
             this.CancelReceive();
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -203,7 +203,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait());
         }
 
         base.SafetyDispose(disposing);
@@ -231,10 +231,10 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
     {
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-        await this.m_client.SendAsync(memory, messageType, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(memory, messageType, endOfMessage, cancellationToken).ConfigureDefaultAwait();
 #else
         var array = memory.GetArray();
-        await this.m_client.SendAsync(array, messageType, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_client.SendAsync(array, messageType, endOfMessage, cancellationToken).ConfigureDefaultAwait();
 #endif
 
         this.m_sendCounter.Increment(memory.Length);
@@ -257,9 +257,9 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     }
                     var segment = writer.GetMemory(1024);
 #if NET6_0_OR_GREATER
-                    var result = await client.ReceiveAsync(segment, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await client.ReceiveAsync(segment, cancellationToken).ConfigureDefaultAwait();
 #else
-                    var result = await client.ReceiveAsync(segment.GetArray(), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await client.ReceiveAsync(segment.GetArray(), cancellationToken).ConfigureDefaultAwait();
 #endif
 
 
@@ -269,7 +269,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await client.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken).ConfigureDefaultAwait();
                             }
                         }
                         catch
@@ -287,7 +287,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     if (result.EndOfMessage)
                     {
                         //处理数据
-                        await this.OnWebSocketReceived(result.MessageType, writer.Sequence).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnWebSocketReceived(result.MessageType, writer.Sequence).ConfigureDefaultAwait();
                         writer.Clear();
                     }
                 }

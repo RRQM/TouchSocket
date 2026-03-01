@@ -42,14 +42,14 @@ public class TcpClient : TcpClientBase, ITcpClient
     {
         if (this.Closed != null)
         {
-            await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -57,14 +57,14 @@ public class TcpClient : TcpClientBase, ITcpClient
     {
         if (this.Closing != null)
         {
-            await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -72,14 +72,14 @@ public class TcpClient : TcpClientBase, ITcpClient
     {
         if (this.Connected != null)
         {
-            await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connected.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnected(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -90,14 +90,14 @@ public class TcpClient : TcpClientBase, ITcpClient
     {
         if (this.Connecting != null)
         {
-            await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connecting.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnecting(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件
@@ -136,14 +136,14 @@ public class TcpClient : TcpClientBase, ITcpClient
     {
         if (this.Received != null)
         {
-            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
 
     #region 异步发送

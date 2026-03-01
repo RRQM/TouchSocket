@@ -76,7 +76,7 @@ public sealed class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     /// <inheritdoc/>
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
-        var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureDefaultAwait();
         if (this.m_filesPool.TryFindEntry(url, out var staticEntry))
         {
             var request = e.Context.Request;
@@ -113,22 +113,22 @@ public sealed class HttpStaticPagePlugin : PluginBase, IHttpPlugin
             }
             if (this.ResponseAction != null)
             {
-                await this.ResponseAction.Invoke(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ResponseAction.Invoke(e.Context).ConfigureDefaultAwait();
             }
 
             if (staticEntry.IsCacheBytes)
             {
-                await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await response.AnswerAsync().ConfigureDefaultAwait();
             }
             else
             {
-                await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureDefaultAwait();
             }
             e.Handled = true;
         }
         else
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
         }
     }
 

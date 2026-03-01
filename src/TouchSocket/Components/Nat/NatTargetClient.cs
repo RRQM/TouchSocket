@@ -69,9 +69,9 @@ public sealed class NatTargetClient : TcpClientBase, ITcpConnectableClient, ICli
     {
         if (this.m_internalClosed != null)
         {
-            await this.m_internalClosed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_internalClosed.Invoke(this, e).ConfigureDefaultAwait();
         }
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -79,8 +79,8 @@ public sealed class NatTargetClient : TcpClientBase, ITcpConnectableClient, ICli
     {
         if (this.m_internalReceived != null)
         {
-            await this.m_internalReceived.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_internalReceived.Invoke(this, e).ConfigureDefaultAwait();
         }
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
 }

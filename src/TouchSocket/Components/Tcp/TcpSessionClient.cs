@@ -63,7 +63,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         if (this.Closed != null)
         {
             // 异步调用Closed事件处理程序，并等待它完成
-            await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
             // 如果事件已被处理，则直接返回
             if (e.Handled)
             {
@@ -74,7 +74,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         // 调用自定义的客户端断开连接处理逻辑
         if (this.m_onClientDisconnected != null)
         {
-            await this.m_onClientDisconnected(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientDisconnected(this, e).ConfigureDefaultAwait();
             // 再次检查事件是否已被处理
             if (e.Handled)
             {
@@ -83,7 +83,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         }
 
         // 调用基类的OnTcpClosed方法，传递事件参数
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         if (this.Closing != null)
         {
             // 调用注册的事件处理程序
-            await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
             // 如果事件已被处理，则直接返回
             if (e.Handled)
             {
@@ -107,7 +107,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         // 调用内部的客户端断开连接处理方法
         if (this.m_onClientDisconnecting != null)
         {
-            await this.m_onClientDisconnecting(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientDisconnecting(this, e).ConfigureDefaultAwait();
             // 再次检查事件是否已被处理
             if (e.Handled)
             {
@@ -117,7 +117,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
 
 
         // 调用基类的即将断开连接方法
-        await base.OnTcpClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         // 触发客户端连接事件，允许派生类处理连接逻辑。
         if (this.m_onClientConnected != null)
         {
-            await this.m_onClientConnected(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientConnected(this, e).ConfigureDefaultAwait();
             // 再次检查事件是否已被处理
             if (e.Handled)
             {
@@ -138,7 +138,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         }
 
         // 执行基类的OnTcpConnected方法，继续默认的连接处理流程。
-        await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnected(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -151,7 +151,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         // 触发客户端连接事件，允许派生类处理连接逻辑
         if (this.m_onClientConnecting != null)
         {
-            await this.m_onClientConnecting(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientConnecting(this, e).ConfigureDefaultAwait();
             // 如果事件已经被处理，则不再继续父类的连接逻辑
             if (e.Handled)
             {
@@ -160,7 +160,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         }
 
         // 调用基类的连接逻辑继续处理连接
-        await base.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnecting(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件&委托
@@ -174,7 +174,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         // 调用注册的事件处理程序来处理接收到的数据
         if (this.m_onClientReceivedData != null)
         {
-            await this.m_onClientReceivedData(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_onClientReceivedData(this, e).ConfigureDefaultAwait();
             // 如果数据已经被处理，则不再向下传递
             if (e.Handled)
             {
@@ -183,7 +183,7 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
         }
 
         // 调用基类的相应方法继续处理数据
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
 
     #region 异步发送

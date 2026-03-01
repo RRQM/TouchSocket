@@ -58,14 +58,14 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
         switch (type)
         {
             case CheckClearType.OnlyReceive:
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureDefaultAwait();
                 break;
             case CheckClearType.OnlySend:
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureDefaultAwait();
                 break;
             case CheckClearType.All:
             default:
-                await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureDefaultAwait();
                 break;
         }
     }
@@ -84,7 +84,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
     {
         _ = EasyTask.SafeRun(this.Polling, sender);
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     private void CheckWithSessionClient(TClient client)
@@ -109,12 +109,12 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             {
                 if (first)
                 {
-                    await Task.Delay(this.m_tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await Task.Delay(this.m_tick).ConfigureDefaultAwait();
                     first = false;
                 }
                 else
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureDefaultAwait();
                 }
 
                 if (client is IOnlineClient onlineClient && !onlineClient.Online)
@@ -128,7 +128,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     if (DateTimeOffset.UtcNow - client.LastReceivedTime > this.m_tick)
                     {
                         this.m_logger.Debug(this, $"客户端 {client} 接收超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                         return;
                     }
                 }
@@ -137,7 +137,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     if (DateTimeOffset.UtcNow - client.LastSentTime > this.m_tick)
                     {
                         this.m_logger.Debug(this, $"客户端 {client} 发送超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                         return;
                     }
                 }
@@ -146,7 +146,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     if (DateTimeOffset.UtcNow - client.GetLastActiveTime() > this.m_tick)
                     {
                         this.m_logger.Debug(this, $"客户端 {client} 活动超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                         return;
                     }
                 }
@@ -167,7 +167,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.LastReceivedTime > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 接收超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                 return;
             }
         }
@@ -176,7 +176,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.LastSentTime > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 发送超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                 return;
             }
         }
@@ -185,7 +185,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.GetLastActiveTime() > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 活动超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
                 return;
             }
         }
@@ -198,7 +198,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             try
             {
                 this.m_logger.Debug(this, $"正在关闭客户端 {client}，原因: {checkClearType}");
-                await this.m_onClose.Invoke(client, checkClearType).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_onClose.Invoke(client, checkClearType).ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
@@ -223,7 +223,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
 
                     if (sender is IConnectableService connectableService)
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureDefaultAwait();
                         foreach (var client in connectableService.GetClients())
                         {
                             var typedClient = client as TClient;
@@ -237,8 +237,8 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                     }
                     else if (sender is TClient client)
                     {
-                        await Task.Delay(this.m_tick).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await this.CheckWithClient(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await Task.Delay(this.m_tick).ConfigureDefaultAwait();
+                        await this.CheckWithClient(client).ConfigureDefaultAwait();
                     }
                     else
                     {

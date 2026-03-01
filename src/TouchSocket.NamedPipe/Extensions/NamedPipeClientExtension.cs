@@ -41,7 +41,7 @@ public static class NamedPipeClientExtension
             // 客户端未配置时，创建新的配置对象
             config = new TouchSocketConfig();
             config.SetPipeName(pipeName);
-            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.SetupAsync(config).ConfigureDefaultAwait();
         }
         else
         {
@@ -56,7 +56,7 @@ public static class NamedPipeClientExtension
         try
         {
             // 执行异步连接操作
-            await client.ConnectAsync(timeoutTokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ConnectAsync(timeoutTokenSource.Token).ConfigureDefaultAwait();
         }
         catch (OperationCanceledException ex)
         {

@@ -47,7 +47,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     /// <inheritdoc/>
     public virtual async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_connectionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_connectionSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (this.Online)
@@ -57,7 +57,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
             if (!base.Online)
             {
-                await base.WebSocketConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await base.WebSocketConnectAsync(cancellationToken).ConfigureDefaultAwait();
             }
 
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
@@ -80,7 +80,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
             ThrowHelper.ThrowIfNull(dmtpOption, nameof(dmtpOption));
 
-            await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -108,19 +108,19 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     {
         try
         {
-            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
 
             var dmtpActor = this.m_dmtpActor;
             if (dmtpActor != null)
             {
                 // 向IDmtpActor对象发送关闭消息
-                await dmtpActor.SendCloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await dmtpActor.SendCloseAsync(msg).ConfigureDefaultAwait();
 
                 // 关闭IDmtpActor对象
-                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
 
-            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
 
             return Result.Success;
         }
@@ -155,9 +155,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
                 var message = DmtpMessage.CreateFrom(buffer.Memory);
-                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
                 }
             }
         }
@@ -177,7 +177,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
     private async Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -202,7 +202,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
     private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
-        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.ProtectedSendAsync(memory, WebSocketMessageType.Binary, true, cancellationToken).ConfigureDefaultAwait();
     }
 
     #endregion 内部委托绑定
@@ -222,7 +222,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         }
 
         // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件处理通道创建事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -237,7 +237,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 异步触发插件管理器中的 IDmtpClosedPlugin 接口的事件，并传递相关参数
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -260,7 +260,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -275,7 +275,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 触发插件管理器中的握手完成插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -290,7 +290,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 触发握手过程的插件事件
-        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -305,12 +305,12 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             return;
         }
         // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包
-        await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateOnDmtpClosed(ClosedEventArgs e)
     {
-        await this.OnDmtpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnDmtpClosed(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件触发

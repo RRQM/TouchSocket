@@ -60,23 +60,23 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         {
             case RouteMatchStatus.Success:
                 // 路由和方法都匹配,执行RPC调用
-                await this.ExecuteRpcMethodAsync(client, e, matchResult.RpcMethod).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ExecuteRpcMethodAsync(client, e, matchResult.RpcMethod).ConfigureDefaultAwait();
                 return;
 
             case RouteMatchStatus.Options:
                 // OPTIONS请求,返回允许的方法列表
-                await this.ResponseOptionsAsync(client, e.Context, matchResult.AllowedMethods).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ResponseOptionsAsync(client, e.Context, matchResult.AllowedMethods).ConfigureDefaultAwait();
                 return;
 
             case RouteMatchStatus.MethodNotAllowed:
                 // 路由匹配但方法不允许,返回405
-                await this.ResponseMethodNotAllowedAsync(client, e.Context, matchResult.AllowedMethods).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ResponseMethodNotAllowedAsync(client, e.Context, matchResult.AllowedMethods).ConfigureDefaultAwait();
                 return;
 
             case RouteMatchStatus.NotFound:
             default:
                 // 路由未找到,继续执行后续插件
-                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await e.InvokeNext().ConfigureDefaultAwait();
                 return;
         }
     }
@@ -129,7 +129,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
                 {
                     var parameter = rpcMethod.Parameters[i];
                     ps[i] = await this.ParseParameterAsync(parameter, callContext)
-                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        .ConfigureDefaultAwait();
                 }
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
             callContext.SetParameters(ps);
             invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
 
             if (e.Context.Response.Responsed)
             {
@@ -154,7 +154,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             }
 
             await this.ResponseAsync(client, e.Context, invokeResult)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
         }
         finally
         {
@@ -196,7 +196,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             var parameterInfo = this.GetParameterInfo(parameter);
             if (parameterInfo.IsFromBody)
             {
-                var body = await request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var body = await request.GetBodyAsync().ConfigureDefaultAwait();
                 if (body.HasValue())
                 {
                     return WebApiParserPlugin.ParseSimpleType(body, parameter.Type);
@@ -228,7 +228,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             }
             else if (parameterInfo.IsFromForm)
             {
-                var value = (await request.GetFormCollectionAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext)).Get(parameterInfo.FromFormName);
+                var value = (await request.GetFormCollectionAsync().ConfigureDefaultAwait()).Get(parameterInfo.FromFormName);
                 if (value.HasValue())
                 {
                     return WebApiParserPlugin.ParseSimpleType(value, parameter.Type);
@@ -261,7 +261,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         }
         else
         {
-            var str = await request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var str = await request.GetBodyAsync().ConfigureDefaultAwait();
             return this.Converter.Deserialize(callContext.HttpContext, str, parameter.Type);
         }
     }
@@ -329,7 +329,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
                 }
         }
 
-        await httpResponse.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await httpResponse.AnswerAsync().ConfigureDefaultAwait();
 
         if (!httpContext.Request.KeepAlive)
         {
@@ -358,7 +358,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             .SetContent(jsonString)
             .SetStatus(405, "Method Not Allowed")
             .AnswerAsync()
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
 
         if (!httpContext.Request.KeepAlive)
         {
@@ -380,7 +380,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         await httpResponse
             .SetStatus(204, "No Content")
             .AnswerAsync()
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
 
         if (!httpContext.Request.KeepAlive)
         {

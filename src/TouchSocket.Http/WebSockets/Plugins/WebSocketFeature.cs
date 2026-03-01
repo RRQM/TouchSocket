@@ -56,10 +56,10 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
         {
             var verifyConnection = this.m_options.VerifyConnection;
 
-            if (await verifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await verifyConnection.Invoke(client, e.Context).ConfigureDefaultAwait())
             {
                 e.Handled = true;
-                var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureDefaultAwait();
 
                 if (!result.IsSuccess)
                 {
@@ -78,6 +78,6 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
                 return;
             }
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

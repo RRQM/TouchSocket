@@ -156,7 +156,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         this.m_handshakeFinished.Reset();
 
-        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnConnecting(args).ConfigureDefaultAwait();
 
         var waitVerify = new WaitVerify()
         {
@@ -167,8 +167,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify))
         {
-            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, cancellationToken).ConfigureDefaultAwait();
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -229,7 +229,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             return;
         }
-        await this.Closing.Invoke(this, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.Closing.Invoke(this, msg).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -387,7 +387,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             case P0_Close:
                 {
-                    await this.OnClosed(false, message.GetBodyString()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.OnClosed(false, message.GetBodyString()).ConfigureDefaultAwait();
                     return true;
                 }
             case P1_Handshake_Request:
@@ -402,11 +402,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             Metadata = waitVerify.Metadata,
                             Id = waitVerify.Id,
                         };
-                        await this.OnConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnConnecting(args).ConfigureDefaultAwait();
 
                         if (args.Id.HasValue())
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureDefaultAwait();
                             this.m_id = args.Id;
                         }
 
@@ -416,7 +416,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitVerify.Status = 1;
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = args.Message ?? TouchSocketCoreResource.OperationSuccessful;
-                            await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureDefaultAwait();
                             this.m_online = true;
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                             this.m_cancellationTokenSource = new CancellationTokenSource();
@@ -427,14 +427,14 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitVerify.Status = 2;
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = TouchSocketDmtpResource.RemoteRefuse.Format(args.Message);
-                            await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                            await this.OnClosed(false, args.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureDefaultAwait();
+                            await this.OnClosed(false, args.Message).ConfigureDefaultAwait();
                         }
                     }
                     catch (Exception ex)
                     {
                         this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
-                        await this.OnClosed(false, ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnClosed(false, ex.Message).ConfigureDefaultAwait();
                     }
                     return true;
                 }
@@ -444,7 +444,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     {
                         var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
                         this.WaitHandlePool.Set(waitVerify);
-                        await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
@@ -460,7 +460,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         var waitSetId = ResolveJsonObject<WaitSetId>(message.GetBodyString());
                         try
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureDefaultAwait();
                             this.m_id = waitSetId.NewId;
                             waitSetId.Status = 1;
                         }
@@ -469,7 +469,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitSetId.Status = 2;
                             waitSetId.Message = ex.Message;
                         }
-                        await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
@@ -497,11 +497,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
                         if (this.AllowRoute && waitPing.Route)
                         {
-                            if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                            if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureDefaultAwait())
                             {
-                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P5_Ping_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await actor.SendAsync(P5_Ping_Request, message.Memory).ConfigureDefaultAwait();
                                     return true;
                                 }
                                 else
@@ -519,7 +519,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitPing.Status = TouchSocketDmtpStatus.Success.ToValue();
                         }
                         waitPing.SwitchId();
-                        await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
@@ -535,9 +535,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
                         if (this.AllowRoute && waitPing.Route)
                         {
-                            if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                            if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                             {
-                                await actor.SendAsync(P6_Ping_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P6_Ping_Response, message.Memory).ConfigureDefaultAwait();
                             }
                         }
                         else
@@ -560,11 +560,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         waitCreateChannel.UnpackageRouter(ref reader);
                         if (this.AllowRoute && waitCreateChannel.Route)
                         {
-                            if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                            if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureDefaultAwait())
                             {
-                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P7_CreateChannel_Request, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await actor.SendAsync(P7_CreateChannel_Request, message.Memory).ConfigureDefaultAwait();
                                     return true;
                                 }
                                 else
@@ -604,7 +604,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         }
                         waitCreateChannel.SwitchId();
 
-                        await this.SendAsync(P8_CreateChannel_Response, waitCreateChannel).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.SendAsync(P8_CreateChannel_Response, waitCreateChannel).ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
@@ -621,9 +621,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         waitCreateChannel.UnpackageRouter(ref reader);
                         if (this.AllowRoute && waitCreateChannel.Route)
                         {
-                            if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                            if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                             {
-                                await actor.SendAsync(P8_CreateChannel_Response, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P8_CreateChannel_Response, message.Memory).ConfigureDefaultAwait();
                                 return true;
                             }
                         }
@@ -648,9 +648,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         channelPackage.UnpackageRouter(ref reader);
                         if (this.AllowRoute && channelPackage.Route)
                         {
-                            if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+                            if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                             {
-                                await actor.SendAsync(P9_ChannelPackage, message.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await actor.SendAsync(P9_ChannelPackage, message.Memory).ConfigureDefaultAwait();
                             }
                             else
                             {
@@ -658,7 +658,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                                 channelPackage.Message = TouchSocketDmtpStatus.ClientNotFind.GetDescription(channelPackage.TargetId);
                                 channelPackage.SwitchId();
                                 channelPackage.DataType = ChannelDataType.Canceled;
-                                await this.SendAsync(P9_ChannelPackage, channelPackage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await this.SendAsync(P9_ChannelPackage, channelPackage).ConfigureDefaultAwait();
                             }
                         }
                         else
@@ -693,13 +693,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <inheritdoc/>
     public virtual async Task<Result> PingAsync(string targetId, CancellationToken cancellationToken = default)
     {
-        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureDefaultAwait() is DmtpActor actor)
         {
-            return await actor.PingAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.PingAsync(cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            return await this.PrivatePingAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivatePingAsync(targetId, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -710,15 +710,15 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
         var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
-        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId, cancellationToken).ConfigureDefaultAwait();
 
-        switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
         {
             case WaitDataStatus.Success:
                 {
                     if (waitData.CompletedData.Status == 1)
                     {
-                        await this.OnIdChanged(new IdChangedEventArgs(this.m_id, newId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.OnIdChanged(new IdChangedEventArgs(this.m_id, newId)).ConfigureDefaultAwait();
                         this.m_id = newId;
                     }
                     else
@@ -747,7 +747,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         if (this.FindDmtpActor != null)
         {
-            if (await this.FindDmtpActor.Invoke(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor newActor)
+            if (await this.FindDmtpActor.Invoke(targetId).ConfigureDefaultAwait() is DmtpActor newActor)
             {
                 return newActor;
             }
@@ -763,7 +763,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             if (this.Routing != null)
             {
-                await this.Routing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.Routing.Invoke(this, e).ConfigureDefaultAwait();
                 return e.IsPermitOperation;
             }
             return false;
@@ -792,8 +792,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         };
         using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing))
         {
-            await this.SendJsonObjectAsync(P5_Ping_Request, waitPing, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            await this.SendJsonObjectAsync(P5_Ping_Request, waitPing, cancellationToken).ConfigureDefaultAwait();
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -864,7 +864,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     {
         try
         {
-            await this.OnClosed(true, msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.OnClosed(true, msg).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -887,7 +887,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
         try
         {
-            await this.SendAsync(0, msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(0, msg, cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -937,7 +937,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
     //        var lengthSpan = writerAnchor.Rewind(ref writer, out var length);
     //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
     //        this.LastActiveTime = DateTimeOffset.UtcNow;
     //    }
     //    finally
@@ -959,7 +959,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
             foreach (var item in writer.Sequence)
             {
-                await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureDefaultAwait();
             }
         }
         finally
@@ -972,7 +972,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     ///// <inheritdoc/>
     //public async Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default)
     //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
     public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
         where TPackage : IPackage
     {
@@ -980,7 +980,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         try
         {
             package.Package(ref byteBlock);
-            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -996,7 +996,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //        package.Package(ref writer);
     //        var lengthSpan=writerAnchor.Rewind(ref writer, out var length);
     //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
     //        this.LastActiveTime = DateTimeOffset.UtcNow;
     //    }
     //    finally
@@ -1011,7 +1011,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -1028,7 +1028,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     ///// <inheritdoc/>
     //public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
 
     //    try
     //    {
@@ -1036,7 +1036,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
     //        WriterExtension.WriteValue(ref writer, memory.Length, EndianType.Big);
     //        writer.Write(memory.Span);
-    //        await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
     //        this.LastActiveTime = DateTimeOffset.UtcNow;
     //    }
     //    finally
@@ -1048,7 +1048,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     //public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
     //    where TPackage:IPackage
     //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
 
     #endregion 协议异步发送
 
@@ -1080,13 +1080,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
         }
-        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureDefaultAwait() is DmtpActor actor)
         {
-            return await actor.CreateChannelAsync(id, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.CreateChannelAsync(id, metadata, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, false, id, metadata, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -1098,13 +1098,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
         }
 
-        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext) is DmtpActor actor)
+        if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureDefaultAwait() is DmtpActor actor)
         {
-            return await actor.CreateChannelAsync(metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await actor.CreateChannelAsync(metadata, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -1137,7 +1137,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         {
             var block = byteBlock;
             channelPackage.Package(ref block);
-            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(P9_ChannelPackage, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -1180,8 +1180,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             {
                 waitCreateChannel.Package(ref byteBlock);
 
-                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
+                switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
                 {
                     case WaitDataStatus.Success:
                         {

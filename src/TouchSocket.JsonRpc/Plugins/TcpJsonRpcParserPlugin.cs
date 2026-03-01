@@ -41,7 +41,7 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
             if (this.m_option.AllowJsonRpc != null)
             {
                 if (await this.m_option.AllowJsonRpc.Invoke(client)
-                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    .ConfigureDefaultAwait())
                 {
                     var jsonRpcActor = new JsonRpcActor()
                     {
@@ -57,7 +57,7 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
             }
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -83,9 +83,9 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
             {
                 return;
             }
-            await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client, client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client, client.ClosedToken)).ConfigureDefaultAwait();
             return;
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

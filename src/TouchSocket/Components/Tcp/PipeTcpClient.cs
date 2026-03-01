@@ -35,6 +35,6 @@ public class PipeTcpClient : TcpClientBase, IPipeTcpClient
     protected sealed override async Task ReceiveLoopAsync(ITransport transport)
     {
         var cancellationToken = transport.ClosedToken;
-        await Task.Delay(-1, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await Task.Delay(-1, cancellationToken).ConfigureDefaultAwait();
     }
 }

@@ -80,7 +80,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
             {
                 this.m_adapter.SendInput(ref valueByteBlock, memory);
 
-                await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
@@ -141,7 +141,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
         this.m_count++;
         if (this.m_receivedCallBack != null)
         {
-            await this.m_receivedCallBack.Invoke(memory, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_receivedCallBack.Invoke(memory, requestInfo).ConfigureDefaultAwait();
         }
     }
 
@@ -153,7 +153,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
             var readResult = await this.m_pipe.Reader.ReadAsync(cancellationToken);
             var sequence = readResult.Buffer;
             reader.Reset(sequence);
-            await this.m_adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_adapter.ReceivedInputAsync(reader).ConfigureDefaultAwait();
 
 
             var position = sequence.GetPosition(reader.BytesRead);
@@ -184,7 +184,7 @@ public class SingleStreamDataAdapterTester : DisposableObject
                 break;
             }
             var sliceMemory = memory.Slice(offset, Math.Min(remainingLength, this.m_bufferLength));
-            await this.m_pipe.Writer.WriteAsync(sliceMemory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_pipe.Writer.WriteAsync(sliceMemory, cancellationToken).ConfigureDefaultAwait();
             offset += sliceMemory.Length;
         }
 

@@ -143,12 +143,12 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_online = true;
         this.m_transport = transport;
         this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, transport);
-        await this.m_runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_runTask.ConfigureDefaultAwait();
     }
 
     internal async Task InternalConnecting(ConnectingEventArgs e)
     {
-        await this.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
             var adapter = this.m_listenOption.Adapter?.Invoke();
@@ -187,7 +187,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_tryAddAction = tryAddAction;
         this.m_tryRemoveAction = tryRemoveAction;
         this.m_tryGet = tryGet;
-        await this.OnInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnInitialized().ConfigureDefaultAwait();
     }
 
     internal void InternalSetId(string id)
@@ -199,9 +199,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     private async Task PrivateOnConnected(TcpTransport transport)
     {
         var e_connected = new ConnectedEventArgs();
-        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
 
         transport.SafeDispose();
 
@@ -211,7 +211,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_dataHandlingAdapter = default;
         adapter.SafeDispose();
 
-        await this.OnTcpClosed(e_closed).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
         this.m_tryRemoveAction.Invoke(this.m_id, out var _);
     }
 
@@ -238,7 +238,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpClosed(ClosedEventArgs e)
     {
         // 调用插件管理器，通知所有实现ITcpClosedPlugin接口的插件客户端已断开连接
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpClosing(ClosingEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
     {
         // 调用插件管理器，异步触发所有实现ITcpConnectedPlugin接口的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -276,7 +276,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         // 调用插件管理器，异步触发所有ITcpConnectingPlugin插件的对应事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -289,7 +289,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-       await this.m_closeSemaphore.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+       await this.m_closeSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (!this.m_online)
@@ -298,13 +298,13 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             }
 
             await this.PrivateOnTcpClosing(new ClosingEventArgs(msg))
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
             {
-                await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -331,7 +331,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     /// <returns>异步任务</returns>
     protected virtual async Task IdChanged(string sourceId, string targetId)
     {
-        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -342,7 +342,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         // 提供适配器处理的数据给所有相关的插件处理
-        await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -402,7 +402,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             if (this.m_tryAddAction(sessionClient))
             {
                 // 如果添加成功，触发Id更改事件，并等待所有更改完成。
-                await this.IdChanged(oldId, targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.IdChanged(oldId, targetId).ConfigureDefaultAwait();
             }
             else
             {
@@ -436,7 +436,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         {
             _ = EasyTask.SafeRun(async () =>
             {
-                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
                 this.m_closeSemaphore.Dispose();
             });
         }
@@ -476,10 +476,10 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     private async Task WaitClearConnect()
@@ -488,7 +488,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         var runTask = this.m_runTask;
         if (runTask != null)
         {
-            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await runTask.ConfigureDefaultAwait();
         }
     }
 
@@ -529,25 +529,25 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
 
-        await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
             }
             else
             {
                 var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             }
         }
         finally
@@ -577,12 +577,12 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

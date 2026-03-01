@@ -58,7 +58,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             _ = EasyTask.SafeRun(this.StartReconnectionLoop, client);
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -86,7 +86,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
         {
             while (!this.DisposedValue && !this.m_cts.Token.IsCancellationRequested)
             {
-                await Task.Delay(this.PollingInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(this.PollingInterval, CancellationToken.None).ConfigureDefaultAwait();
 
                 if (client.PauseReconnection)
                 {
@@ -99,7 +99,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
 
                 try
                 {
-                    var checkResult = await this.m_options.CheckAction.Invoke(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var checkResult = await this.m_options.CheckAction.Invoke(client).ConfigureDefaultAwait();
 
                     switch (checkResult)
                     {
@@ -109,7 +109,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                             {
                                 if (!this.m_hasGivenUp)
                                 {
-                                    await this.TryReconnectWithRetry(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await this.TryReconnectWithRetry(client).ConfigureDefaultAwait();
                                 }
                                 break;
                             }
@@ -164,7 +164,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 {
                     client.Logger?.Debug(this, TouchSocketResource.PauseReconnection);
                 }
-                await Task.Delay(this.m_options.BaseInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(this.m_options.BaseInterval, CancellationToken.None).ConfigureDefaultAwait();
                 continue;
             }
 
@@ -175,7 +175,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 using (var cts = CancellationTokenSource.CreateLinkedTokenSource(this.m_cts.Token))
                 {
                     cts.CancelAfter(this.m_options.ConnectTimeout);
-                    await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_options.ConnectAction.Invoke(client, cts.Token).ConfigureDefaultAwait();
                 }
 
                 this.m_hasGivenUp = false;
@@ -208,7 +208,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 }
 
                 var nextInterval = this.CalculateNextInterval(attempts);
-                await Task.Delay(nextInterval, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(nextInterval, CancellationToken.None).ConfigureDefaultAwait();
             }
         }
     }

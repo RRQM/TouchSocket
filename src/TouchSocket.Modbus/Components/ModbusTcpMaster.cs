@@ -41,7 +41,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
@@ -51,14 +51,14 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
             try
             {
                 modbusTcpRequest.Build(ref valueByteBlock);
-                await this.ProtectedSendAsync(valueByteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(valueByteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
                 valueByteBlock.Dispose();
             }
 
-            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.CompletedData;

@@ -120,7 +120,7 @@ public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHand
             {
                 case FilterResult.Success:
                     {
-                        await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureDefaultAwait();
                         this.m_tempRequest = default;
                         break;
                     }

@@ -89,7 +89,7 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
                 this.m_swagger.Add(key, bytes);
             }
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
 
         if (this.LaunchBrowser)
         {
@@ -742,10 +742,10 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
                 .SetStatusWithSuccess()
                 .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                 .SetContent(bytes);
-            await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response.AnswerAsync().ConfigureDefaultAwait();
             return;
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
 }

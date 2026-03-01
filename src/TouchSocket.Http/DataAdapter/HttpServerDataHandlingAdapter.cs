@@ -79,7 +79,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
             {
                 if (this.m_task != null)
                 {
-                    await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_task.ConfigureDefaultAwait();
                     this.m_task = null;
                 }
 
@@ -118,7 +118,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                         {
                             this.m_currentRequest.InternalSetContent(ReadOnlyMemory<byte>.Empty);
                         }
-                        await this.GoReceivedAsync(this.m_currentRequest).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.GoReceivedAsync(this.m_currentRequest).ConfigureDefaultAwait();
                         this.m_currentRequest = null;
                     }
                 }
@@ -131,7 +131,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
             else if (this.m_isChunked)
             {
                 // 处理 chunked 数据
-                var result = await this.ProcessChunkedDataAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.ProcessChunkedDataAsync(reader).ConfigureDefaultAwait();
                 if (result == ChunkedProcessResult.NeedMoreData)
                 {
                     return; // 需要更多数据
@@ -150,7 +150,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
                 {
                     var len = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
 
-                    await this.m_currentRequest.InternalInputAsync(reader.GetMemory(len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_currentRequest.InternalInputAsync(reader.GetMemory(len)).ConfigureDefaultAwait();
                     this.m_surLen -= len;
                     reader.Advance(len);
                     if (this.m_surLen == 0)
@@ -202,10 +202,10 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
         switch (this.m_chunkedState)
         {
             case ChunkedState.WaitingChunkSize:
-                return await this.ProcessChunkSizeAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return await this.ProcessChunkSizeAsync(reader).ConfigureDefaultAwait();
 
             case ChunkedState.WaitingChunkData:
-                return await this.ProcessChunkDataAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return await this.ProcessChunkDataAsync(reader).ConfigureDefaultAwait();
 
             case ChunkedState.WaitingChunkEnd:
                 return this.ProcessChunkEnd(reader);
@@ -274,7 +274,7 @@ internal sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAd
 
         // 读取块数据
         var chunkData = reader.GetMemory((int)this.m_expectedChunkSize);
-        await this.m_currentRequest.InternalInputAsync(chunkData).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_currentRequest.InternalInputAsync(chunkData).ConfigureDefaultAwait();
         reader.Advance((int)this.m_expectedChunkSize);
 
         this.m_chunkedState = ChunkedState.WaitingChunkEnd;

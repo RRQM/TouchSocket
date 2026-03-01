@@ -69,7 +69,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
             {
                 this.m_adapter.SendInput(ref valueByteBlock, memory);
 
-                await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
@@ -166,7 +166,7 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
                 break;
             }
             var sliceMemory = memory.Slice(offset, Math.Min(remainingLength, this.m_bufferLength));
-            await this.m_pipe.Writer.WriteAsync(sliceMemory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_pipe.Writer.WriteAsync(sliceMemory, cancellationToken).ConfigureDefaultAwait();
             offset += sliceMemory.Length;
         }
     }

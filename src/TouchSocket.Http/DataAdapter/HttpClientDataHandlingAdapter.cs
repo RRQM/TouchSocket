@@ -60,21 +60,21 @@
 //            var adapter = this.WarpAdapter;
 //            if (adapter != null)
 //            {
-//                await adapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//                await adapter.ReceivedInputAsync(reader).ConfigureDefaultAwait();
 //                return;
 //            }
 
 //            // 优化：使用状态标记减少条件判断
 //            if (this.m_httpResponse == null)
 //            {
-//                if (!await this.ProcessNewResponseAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+//                if (!await this.ProcessNewResponseAsync(reader).ConfigureDefaultAwait())
 //                {
 //                    return;
 //                }
 //            }
 //            else
 //            {
-//                if (!await this.ProcessExistingResponseAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+//                if (!await this.ProcessExistingResponseAsync(reader).ConfigureDefaultAwait())
 //                {
 //                    return;
 //                }
@@ -110,8 +110,8 @@
 //            // 优化：等待之前的任务完成
 //            if (this.m_task != null)
 //            {
-//                await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-//                await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//                await this.m_task.ConfigureDefaultAwait();
+//                await this.m_resetEvent.WaitOneAsync().ConfigureDefaultAwait();
 //                this.m_task = null;
 //            }
 //            return false;
@@ -130,7 +130,7 @@
 //        else
 //        {
 //            // 优化：直接读取内容，避免数组分配
-//            await this.ProcessCompleteContentAsync(reader, contentLength).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            await this.ProcessCompleteContentAsync(reader, contentLength).ConfigureDefaultAwait();
 //        }
 
 //        return true;
@@ -144,15 +144,15 @@
 //    {
 //        if (this.m_isProcessingChunk)
 //        {
-//            return await this.ProcessChunkedContentAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            return await this.ProcessChunkedContentAsync(reader).ConfigureDefaultAwait();
 //        }
 //        else if (this.m_surLen > 0)
 //        {
-//            return await this.ProcessRemainingContentAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            return await this.ProcessRemainingContentAsync(reader).ConfigureDefaultAwait();
 //        }
 //        else
 //        {
-//            await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            await this.CompleteResponseAsync().ConfigureDefaultAwait();
 //            return true;
 //        }
 //    }
@@ -169,8 +169,8 @@
 //        this.m_httpResponse.InternalSetContent(content);
 
 //        this.m_httpResponse.CompleteInput();
-//        await this.GoReceivedAsync(ReadOnlyMemory<byte>.Empty, this.m_httpResponse).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-//        await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//        await this.GoReceivedAsync(ReadOnlyMemory<byte>.Empty, this.m_httpResponse).ConfigureDefaultAwait();
+//        await this.m_resetEvent.WaitOneAsync().ConfigureDefaultAwait();
 //        this.m_httpResponse = null;
 //        this.m_isProcessingChunk = false;
 //        this.m_isWaitingForContent = false;
@@ -182,7 +182,7 @@
 //    private async ValueTask<bool> ProcessChunkedContentAsync<TReader>(TReader reader)
 //        where TReader : class, IBytesReader
 //    {
-//        var result = await this.ReadChunk(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//        var result = await this.ReadChunk(reader).ConfigureDefaultAwait();
 
 //        switch (result)
 //        {
@@ -191,7 +191,7 @@
 
 //            case FilterResult.Success:
 //                this.m_httpResponse.CompleteInput();
-//                await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//                await this.CompleteResponseAsync().ConfigureDefaultAwait();
 //                break;
 
 //            case FilterResult.GoOn:
@@ -214,14 +214,14 @@
 //        }
 
 //        var len = (int)Math.Min(this.m_surLen, reader.BytesRemaining);
-//        await this.m_httpResponse.InternalInputAsync(reader.GetMemory(len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//        await this.m_httpResponse.InternalInputAsync(reader.GetMemory(len)).ConfigureDefaultAwait();
 //        this.m_surLen -= len;
 //        reader.Advance(len);
 
 //        if (this.m_surLen == 0)
 //        {
 //            this.m_httpResponse.CompleteInput();
-//            await this.CompleteResponseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            await this.CompleteResponseAsync().ConfigureDefaultAwait();
 //        }
 
 //        return true;
@@ -238,11 +238,11 @@
 
 //        if (this.m_task != null)
 //        {
-//            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            await this.m_task.ConfigureDefaultAwait();
 //            this.m_task = null;
 //        }
 
-//        await this.m_resetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//        await this.m_resetEvent.WaitOneAsync().ConfigureDefaultAwait();
 //    }
 
 //    private async ValueTask<FilterResult> ReadChunk<TReader>(TReader reader)
@@ -277,7 +277,7 @@
 //                return FilterResult.Cache;
 //            }
 
-//            await this.m_httpResponse.InternalInputAsync(reader.GetMemory(count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+//            await this.m_httpResponse.InternalInputAsync(reader.GetMemory(count)).ConfigureDefaultAwait();
 //            reader.Advance(count + 2); // 跳过内容和结尾CRLF
 //            return FilterResult.GoOn;
 //        }

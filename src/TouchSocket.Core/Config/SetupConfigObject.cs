@@ -39,9 +39,9 @@ public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObje
 
         this.BuildConfig(config);
 
-        await this.PluginManager.RaiseILoadingConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseILoadingConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureDefaultAwait();
         this.LoadConfig(config);
-        await this.PluginManager.RaiseILoadedConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseILoadedConfigPluginAsync(this.Resolver, this, new ConfigEventArgs(config)).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>

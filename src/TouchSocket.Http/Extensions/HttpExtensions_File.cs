@@ -108,17 +108,17 @@ public static partial class HttpExtensions
                             {
                                 while (true)
                                 {
-                                    var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureDefaultAwait();
                                     if (r == 0)
                                     {
                                         gzip.Close();
-                                        await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                        await response.CompleteChunkAsync().ConfigureDefaultAwait();
                                         break;
                                     }
 
-                                    await flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await flowOperator.AddFlowAsync(r).ConfigureDefaultAwait();
 
-                                    await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                    await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureDefaultAwait();
                                 }
                             }
                         }
@@ -128,21 +128,21 @@ public static partial class HttpExtensions
                         var surLen = httpRange.Length;
                         while (surLen > 0)
                         {
-                            var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureDefaultAwait();
                             if (r == 0)
                             {
                                 break;
                             }
 
-                            await flowOperator.AddFlowAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await flowOperator.AddFlowAsync(r).ConfigureDefaultAwait();
 
-                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureDefaultAwait();
                             surLen -= r;
                         }
 
                         if (response.IsChunk)
                         {
-                            await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await response.CompleteChunkAsync().ConfigureDefaultAwait();
                         }
                     }
                 }
@@ -178,7 +178,7 @@ public static partial class HttpExtensions
     public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
         var flowOperator = new HttpFlowOperator { BlockSize = bufferLen, MaxSpeed = maxSpeed };
-        var result = await FromFileAsync(response, fileInfo, flowOperator, request, fileName, autoGzip).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var result = await FromFileAsync(response, fileInfo, flowOperator, request, fileName, autoGzip).ConfigureDefaultAwait();
         if (!result.IsSuccess)
         {
             throw new Exception(result.Message);
@@ -201,7 +201,7 @@ public static partial class HttpExtensions
     /// <returns></returns>
     public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
-        await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip).ConfigureDefaultAwait();
     }
 
 }

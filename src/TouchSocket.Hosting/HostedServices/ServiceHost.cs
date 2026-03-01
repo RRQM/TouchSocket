@@ -31,8 +31,8 @@ internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> 
     {
         try
         {
-            await base.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-            await this.ConfigObject.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.StartAsync(cancellationToken).ConfigureDefaultAwait();
+            await this.ConfigObject.StartAsync(cancellationToken).ConfigureDefaultAwait();
 
             this.m_logger.LogInformation("{Message}", TouchSocketHostingResource.HostServerStarted);
         }
@@ -44,7 +44,7 @@ internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> 
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        await this.ConfigObject.StopAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await base.StopAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ConfigObject.StopAsync(cancellationToken).ConfigureDefaultAwait();
+        await base.StopAsync(cancellationToken).ConfigureDefaultAwait();
     }
 }

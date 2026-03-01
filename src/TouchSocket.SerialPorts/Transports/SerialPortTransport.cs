@@ -42,18 +42,18 @@ internal sealed class SerialPortTransport : BaseTransport
             while (!cancellationToken.IsCancellationRequested)
             {
                 var memory = this.m_pipeReceive.Writer.GetMemory(this.ReceiveBufferSize);
-                var result = await this.m_serialCore.ReceiveAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_serialCore.ReceiveAsync(memory, cancellationToken).ConfigureDefaultAwait();
                 if (result.BytesTransferred == 0)
                 {
                     this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                    await this.m_pipeReceive.Writer.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_pipeReceive.Writer.CompleteAsync().ConfigureDefaultAwait();
                     return;
                 }
 
                 this.m_receiveCounter.Increment(result.BytesTransferred);
 
                 this.m_pipeReceive.Writer.Advance(result.BytesTransferred);
-                var flushResult = await this.m_pipeReceive.Writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var flushResult = await this.m_pipeReceive.Writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
                 if (flushResult.IsCompleted)
                 {
                     break;
@@ -63,7 +63,7 @@ internal sealed class SerialPortTransport : BaseTransport
         catch (Exception ex)
         {
             this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
-            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureDefaultAwait();
         }
         finally
         {
@@ -78,7 +78,7 @@ internal sealed class SerialPortTransport : BaseTransport
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
                 if (readResult.IsCanceled)
                 {
                     break;
@@ -93,7 +93,7 @@ internal sealed class SerialPortTransport : BaseTransport
                 {
                     foreach (var item in readResult.Buffer)
                     {
-                        await this.m_serialCore.SendAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_serialCore.SendAsync(item, cancellationToken).ConfigureDefaultAwait();
                     }
                     
                     this.m_pipeSend.Reader.AdvanceTo(readResult.Buffer.End);

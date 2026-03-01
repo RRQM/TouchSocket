@@ -32,7 +32,7 @@ public static partial class EasyTask
 
         try
         {
-            await func().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func().ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -61,7 +61,7 @@ public static partial class EasyTask
 
         try
         {
-            await func(ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(ct).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -89,7 +89,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func().ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (Exception ex)
@@ -119,7 +119,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func(ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func(ct).ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -148,7 +148,7 @@ public static partial class EasyTask
 
         try
         {
-            await func(status).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(status).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -179,7 +179,7 @@ public static partial class EasyTask
 
         try
         {
-            await func(status, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(status, ct).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -209,7 +209,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func(status).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func(status).ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (Exception ex)
@@ -241,7 +241,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func(status, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func(status, ct).ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -272,7 +272,7 @@ public static partial class EasyTask
 
         try
         {
-            await func(status1, status2).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(status1, status2).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -305,7 +305,7 @@ public static partial class EasyTask
 
         try
         {
-            await func(status1, status2, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await func(status1, status2, ct).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -337,7 +337,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func(status1, status2).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func(status1, status2).ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (Exception ex)
@@ -371,7 +371,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await func(status1, status2, ct).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await func(status1, status2, ct).ConfigureDefaultAwait();
             return new Result<TResult>(result);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -400,7 +400,7 @@ public static partial class EasyTask
 
         try
         {
-            await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await task.ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -424,7 +424,7 @@ public static partial class EasyTask
 
         try
         {
-            var result = await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await task.ConfigureDefaultAwait();
             return new Result<T>(result);
         }
         catch (Exception ex)

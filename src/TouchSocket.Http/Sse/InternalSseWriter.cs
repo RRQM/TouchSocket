@@ -93,7 +93,7 @@ internal class InternalSseWriter : SseWriter
 
                 foreach (var item in writer.Sequence)
                 {
-                    await this.m_response.WriteAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_response.WriteAsync(item, cancellationToken).ConfigureDefaultAwait();
                 }
             }
         }

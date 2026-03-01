@@ -58,7 +58,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
     public async Task<IUdpDmtpClient> GetUdpDmtpClientAsync(EndPoint endPoint)
     {
         // 调用内部私有方法来获取 UDP DMTP 客户端实例，且不在调用上下文中等待结果。
-        return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureDefaultAwait();
     }
 
     internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
@@ -83,18 +83,18 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
     /// <inheritdoc/>
     protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
     {
-        var client = await this.PrivateGetUdpDmtpClientAsync(e.EndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var client = await this.PrivateGetUdpDmtpClientAsync(e.EndPoint).ConfigureDefaultAwait();
         if (client == null)
         {
             return;
         }
 
         var message = DmtpMessage.CreateFrom(e.Memory);
-        if (!await client.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        if (!await client.InputReceivedData(message).ConfigureDefaultAwait())
         {
             if (this.PluginManager.Enable)
             {
-                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
             }
         }
     }
@@ -107,7 +107,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
             {
                 Client = this,
             };
-            if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureDefaultAwait())
             {
                 this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
             }

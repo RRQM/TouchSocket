@@ -150,7 +150,7 @@ public sealed class LoopAction : SafetyDisposableObject
     {
         this.ThrowIfDisposed();
         this.RunStatus = RunStatus.None;
-        await this.RunAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.RunAsync().ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -172,13 +172,13 @@ public sealed class LoopAction : SafetyDisposableObject
                      {
                          return;
                      }
-                     await this.m_executeAction.Invoke(this).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                     await this.m_executeAction.Invoke(this).ConfigureDefaultAwait();
                      this.ExecutedCount++;
                      if (this.RunStatus == RunStatus.Paused)
                      {
-                         await this.m_waitHandle.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                         await this.m_waitHandle.WaitOneAsync().ConfigureDefaultAwait();
                      }
-                     await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                     await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureDefaultAwait();
                  }
              }
              else
@@ -189,13 +189,13 @@ public sealed class LoopAction : SafetyDisposableObject
                      {
                          return;
                      }
-                     await this.m_executeAction.Invoke(this).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                     await this.m_executeAction.Invoke(this).ConfigureDefaultAwait();
                      this.ExecutedCount++;
                      if (this.RunStatus == RunStatus.Paused)
                      {
-                         await this.m_waitHandle.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                         await this.m_waitHandle.WaitOneAsync().ConfigureDefaultAwait();
                      }
-                     await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                     await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureDefaultAwait();
                  }
              }
              this.RunStatus = RunStatus.Completed;

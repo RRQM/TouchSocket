@@ -54,7 +54,7 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
         if (this.Closed != null)
         {
             // 如果已注册，则异步调用事件处理程序，并防止等待结果
-            await this.Closed.Invoke(sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closed.Invoke(sessionClient, e).ConfigureDefaultAwait();
         }
     }
 
@@ -69,7 +69,7 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
         if (this.Closing != null)
         {
             // 异步调用断开连接事件处理程序，并防止等待其完成
-            await this.Closing.Invoke(sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closing.Invoke(sessionClient, e).ConfigureDefaultAwait();
         }
     }
 
@@ -85,7 +85,7 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
         if (this.Connected != null)
         {
             // 如果已注册事件处理程序，则异步调用该处理程序，并使用ConfigureAwait(false)以避免上下文切换
-            await this.Connected.Invoke(sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connected.Invoke(sessionClient, e).ConfigureDefaultAwait();
         }
     }
 
@@ -100,7 +100,7 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
         if (this.Connecting != null)
         {
             // 如果已注册，则调用事件处理程序并等待操作完成
-            await this.Connecting.Invoke(sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connecting.Invoke(sessionClient, e).ConfigureDefaultAwait();
         }
     }
 
@@ -120,7 +120,7 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
         if (this.Received != null)
         {
             // 如果有，异步调用事件处理程序，并且不会等待调用完成
-            await this.Received.Invoke(sessionClient, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(sessionClient, e).ConfigureDefaultAwait();
         }
     }
 

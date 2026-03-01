@@ -299,13 +299,13 @@ public sealed class PluginManager : DisposableObject, IPluginManager
         if (resolver == null)
         {
             e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, this.Resolver);
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
             return e.Handled;
         }
         else
         {
             e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, resolver);
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
             return e.Handled;
         }
     }

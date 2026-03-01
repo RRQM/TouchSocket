@@ -89,7 +89,7 @@ public sealed class ConsoleAction
         {
             try
             {
-                await vAction.Action.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await vAction.Action.Invoke().ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
@@ -118,7 +118,7 @@ public sealed class ConsoleAction
                 continue;
             }
 
-            if (!await this.RunAsync(str).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (!await this.RunAsync(str).ConfigureDefaultAwait())
             {
                 this.WriteWarning($"没有找到命令 '{str}'，输入 '{this.HelpOrder.Split('|')[0]}' 查看帮助信息。");
             }

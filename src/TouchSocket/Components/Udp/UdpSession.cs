@@ -31,14 +31,14 @@ public class UdpSession : UdpSessionBase, IUdpSession
     {
         if (this.Received != null)
         {
-            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnUdpReceived(e).ConfigureDefaultAwait();
     }
 
     #region 向默认远程异步发送

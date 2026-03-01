@@ -425,7 +425,7 @@ public abstract class HttpBase : IRequestInfo
             Token = cancellationToken,
             MaxSpeed = int.MaxValue
         };
-        return await this.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.ReadCopyToAsync(stream, flowOperator).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -443,7 +443,7 @@ public abstract class HttpBase : IRequestInfo
 
             while (true)
             {
-                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -454,8 +454,8 @@ public abstract class HttpBase : IRequestInfo
                     Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
                     if (!memory.IsEmpty)
                     {
-                        await stream.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-                        await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await stream.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
+                        await flowOperator.AddFlowAsync(memory.Length).ConfigureDefaultAwait();
                     }
                     if (blockResult.IsCompleted)
                     {

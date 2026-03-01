@@ -156,7 +156,7 @@ public class AppMessenger
                     clear.Add(item);
                     continue;
                 }
-                await item.InvokeAsync(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await item.InvokeAsync(item.MessageObject, parameters).ConfigureDefaultAwait();
             }
 
             foreach (var item in clear)
@@ -194,11 +194,11 @@ public class AppMessenger
 
                 if (i == list.Count - 1)
                 {
-                    result = await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    result = await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureDefaultAwait();
                 }
                 else
                 {
-                    await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureDefaultAwait();
                 }
             }
 

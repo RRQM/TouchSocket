@@ -41,10 +41,10 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -95,7 +95,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
 
         await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
 
-        using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureDefaultAwait())
         {
             var response = responseResult.Response;
             await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
@@ -109,7 +109,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
             {
                 if (returnType != null)
                 {
-                    var body = await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var body = await response.GetBodyAsync().ConfigureDefaultAwait();
                     return this.Converter.Deserialize(request, body, returnType);
                 }
                 else
@@ -120,7 +120,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
             }
             else if (response.StatusCode == 422)
             {
-                throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
+                throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureDefaultAwait(), typeof(ActionResult))).Message);
             }
             else
             {

@@ -25,10 +25,10 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -45,7 +45,7 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
         {
             var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
 
-            using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureDefaultAwait())
             {
                 var response = responseResult.Response;
 
@@ -64,7 +64,7 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
                     if (returnType != null)
                     {
                         var xml = new XmlDocument();
-                        xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                        xml.LoadXml(await response.GetBodyAsync().ConfigureDefaultAwait());
                         var paramNode = xml.SelectSingleNode("methodResponse/params/param");
                         return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
                     }

@@ -61,7 +61,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
                 try
                 {
                     var xml = new XmlDocument();
-                    var xmlstring = await e.Context.Request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var xmlstring = await e.Context.Request.GetBodyAsync().ConfigureDefaultAwait();
                     xml.LoadXml(xmlstring);
                     var methodName = xml.SelectSingleNode("methodCall/methodName");
                     var actionKey = methodName.InnerText;
@@ -117,7 +117,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
                     }
 
                     callContext.SetParameters(ps);
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureDefaultAwait();
 
                     var httpResponse = e.Context.Response;
 
@@ -134,7 +134,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
                     }
                     try
                     {
-                        await httpResponse.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await httpResponse.AnswerAsync().ConfigureDefaultAwait();
                     }
                     finally
                     {
@@ -143,7 +143,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
 
                     if (!e.Context.Request.KeepAlive)
                     {
-                        await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await client.CloseAsync().ConfigureDefaultAwait();
                     }
                 }
                 finally
@@ -154,7 +154,7 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
             }
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     private void RegisterServer(RpcMethod[] rpcMethods)

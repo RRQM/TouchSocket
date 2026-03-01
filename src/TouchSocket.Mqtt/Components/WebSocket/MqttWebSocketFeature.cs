@@ -39,13 +39,13 @@ internal sealed class MqttWebSocketFeature : PluginBase, IHttpPlugin
     {
         var verifyConnection = this.m_options.VerifyConnection;
 
-        if (verifyConnection != null && !await verifyConnection.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        if (verifyConnection != null && !await verifyConnection.Invoke(client, e.Context).ConfigureDefaultAwait())
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
             return;
         }
         e.Context.Response.Headers.Add("Sec-WebSocket-Protocol", "mqtt");
-        var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureDefaultAwait();
 
         if (!result.IsSuccess)
         {

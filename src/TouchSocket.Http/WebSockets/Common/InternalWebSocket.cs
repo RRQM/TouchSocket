@@ -80,7 +80,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
                     WriterExtension.WriteNormalString(ref byteBlock, statusDescription, Encoding.UTF8);
                 }
                 var frame = new WSDataFrame(byteBlock.Memory) { FIN = true, Opcode = WSDataType.Close };
-                await this.SendAsync(frame, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.SendAsync(frame, true, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
@@ -92,11 +92,11 @@ internal sealed partial class InternalWebSocket : IWebSocket
             {
                 if (this.m_isServer)
                 {
-                    await this.m_httpSocketClient.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_httpSocketClient.CloseAsync(statusDescription, cancellationToken).ConfigureDefaultAwait();
                 }
                 else
                 {
-                    await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureDefaultAwait();
                 }
             });
             
@@ -146,13 +146,13 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
         var transport = this.m_isServer ? this.m_httpSocketClient.InternalTransport : this.m_httpClientBase.InternalTransport;
 
-        await transport.WriteLocker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await transport.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
 
             dataFrame.Build(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

@@ -58,7 +58,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                             var response = e.Context.Response;
                             response.SetContent(data);
                             response.SetStatusWithSuccess();
-                            await response.AnswerAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await response.AnswerAsync(cancellationToken).ConfigureDefaultAwait();
                         },
                         SerializerConverter = this.SerializerConverter,
                         RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()
@@ -68,10 +68,10 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                     client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
                 }
 
-                await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context,client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureDefaultAwait(), new HttpJsonRpcCallContext(client, e.Context,client.ClosedToken)).ConfigureDefaultAwait();
                 return;
             }
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

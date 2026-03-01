@@ -60,7 +60,7 @@ internal abstract class DynamicMethodInfoBase : IDynamicMethodInfo
     {
         if (result is Task task)
         {
-            await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await task.ConfigureDefaultAwait();
             return this.ReturnKind == MethodReturnKind.AwaitableObject
                 ? MemberAccessor.StaticGetValue(task, nameof(Task<object>.Result))
                 : null;

@@ -29,8 +29,8 @@ public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
     protected override async Task<TcpClient> CreateClient(TouchSocketConfig config, CancellationToken cancellationToken)
     {
         var client = new TcpClient();
-        await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await client.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.SetupAsync(config).ConfigureDefaultAwait();
+        await client.ConnectAsync(cancellationToken).ConfigureDefaultAwait();
         return client;
     }
 }

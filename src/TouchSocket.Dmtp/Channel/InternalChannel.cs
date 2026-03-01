@@ -68,7 +68,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             throw new ObjectDisposedException(nameof(InternalChannel), "通道已被释放");
         }
 
-        var channelPackage = await this.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var channelPackage = await this.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -130,7 +130,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
@@ -158,7 +158,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
@@ -186,7 +186,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
                 SourceId = this.m_actor.Id,
                 TargetId = this.TargetId
             };
-            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
             return Result.Success;
         }
@@ -212,7 +212,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             TargetId = this.TargetId,
             Data = memory
         };
-        await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
         this.m_lastOperationTime = DateTimeOffset.UtcNow;
     }
 
@@ -257,7 +257,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     private async Task<ChannelPackage> WaitAsync(CancellationToken cancellationToken)
     {
-        await this.m_dataAvailable.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_dataAvailable.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         lock (this.m_dataQueue)
         {
             if (this.m_dataQueue.Count > 0)

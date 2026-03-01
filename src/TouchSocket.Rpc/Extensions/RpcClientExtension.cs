@@ -21,7 +21,7 @@ public static class RpcClientExtension
     /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, InvokeOption, object[])"/>
     public static async Task<T> InvokeTAsync<T>(this IRpcClient client, string invokeKey, InvokeOption invokeOption, params object[] parameters)
     {
-        return (T)(await client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+        return (T)(await client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).ConfigureDefaultAwait());
     }
 
     #endregion RpcClient

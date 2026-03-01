@@ -39,7 +39,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -49,7 +49,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             try
             {
                 modbusRequest.Build(ref byteBlock);
-                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {
@@ -57,7 +57,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
             }
 
             this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureDefaultAwait();
 
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
 
@@ -75,7 +75,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     protected override async Task OnSerialConnecting(ConnectingEventArgs e)
     {
         this.SetAdapter(new ModbusRtuAdapter());
-        await base.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnSerialConnecting(e).ConfigureDefaultAwait();
     }
 
     #region 字段
@@ -96,7 +96,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
                 this.m_waitDataAsync?.TrySetResult(response);
             }
         }
-        await base.OnSerialReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnSerialReceived(e).ConfigureDefaultAwait();
     }
 
     /// <summary>

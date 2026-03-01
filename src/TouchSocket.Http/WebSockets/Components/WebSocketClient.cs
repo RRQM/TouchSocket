@@ -47,14 +47,14 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
         if (this.Closed != null)
         {
             // 如果已注册，则调用处理程序并传递事件参数
-            await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closed.Invoke(this, e).ConfigureDefaultAwait();
             // 如果事件已被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
         }
-        await base.OnWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketClosed(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -68,14 +68,14 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
         if (this.Closing != null)
         {
             // 如果已注册，调用处理程序并传递事件参数
-            await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Closing.Invoke(this, e).ConfigureDefaultAwait();
             // 如果事件已被处理，则直接返回，不再执行后续代码
             if (e.Handled)
             {
                 return;
             }
         }
-        await base.OnWebSocketClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketClosing(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -83,14 +83,14 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     {
         if (this.Connected != null)
         {
-            await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connected.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnWebSocketConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketConnected(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -98,14 +98,14 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     {
         if (this.Connecting != null)
         {
-            await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Connecting.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
 
-        await base.OnWebSocketConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketConnecting(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -113,13 +113,13 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     {
         if (this.Received != null)
         {
-            await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.Received.Invoke(this, e).ConfigureDefaultAwait();
             if (e.Handled)
             {
                 return;
             }
         }
-        await base.OnWebSocketReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnWebSocketReceived(e).ConfigureDefaultAwait();
     }
 
     #endregion 事件
@@ -129,10 +129,10 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await this.ProtectedWebSocketConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedWebSocketConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

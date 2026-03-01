@@ -122,7 +122,7 @@ public static class WaitingClientExtension
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            return await client.SendThenResponseAsync(byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await client.SendThenResponseAsync(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -150,7 +150,7 @@ public static class WaitingClientExtension
         try
         {
             WriterExtension.WriteNormalString(ref byteBlock, value, Encoding.UTF8);
-            return await client.SendThenResponseAsync(byteBlock.Memory, millisecondsTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await client.SendThenResponseAsync(byteBlock.Memory, millisecondsTimeout).ConfigureDefaultAwait();
         }
         finally
         {
@@ -179,7 +179,7 @@ public static class WaitingClientExtension
             // 尝试发送数据并等待响应
             try
             {
-                return await client.SendThenResponseAsync(memory, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return await client.SendThenResponseAsync(memory, tokenSource.Token).ConfigureDefaultAwait();
             }
             // 捕获操作取消异常，并将其转换为超时异常
             catch (OperationCanceledException)
@@ -209,7 +209,7 @@ public static class WaitingClientExtension
             // 尝试发送数据并等待响应
             try
             {
-                return await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                return await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureDefaultAwait();
             }
             // 捕获操作取消异常，并将其转换为超时异常
             catch (OperationCanceledException)

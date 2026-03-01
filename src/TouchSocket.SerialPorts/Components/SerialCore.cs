@@ -48,11 +48,11 @@ internal sealed class SerialCore : SafetyDisposableObject
 
         if (this.m_streamAsync)
         {
-            return await this.ReceiveFromStreamAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.ReceiveFromStreamAsync(memory, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            return await this.ReceiveFromEventAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.ReceiveFromEventAsync(memory, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -74,7 +74,7 @@ internal sealed class SerialCore : SafetyDisposableObject
                     this.m_cancellationTokenSource.Token);
 
                 var stream = this.m_serialPort.BaseStream;
-                await stream.WriteAsync(memory, linkedCts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await stream.WriteAsync(memory, linkedCts.Token).ConfigureDefaultAwait();
             }
             else
             {
@@ -135,7 +135,7 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            var bytesRead = await stream.ReadAsync(memory, linkedCts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var bytesRead = await stream.ReadAsync(memory, linkedCts.Token).ConfigureDefaultAwait();
             return new SerialOperationResult(bytesRead, SerialData.Chars);
         }
         catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
@@ -169,7 +169,7 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureDefaultAwait();
 
             lock (this.m_lock)
             {

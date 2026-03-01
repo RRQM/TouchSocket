@@ -49,7 +49,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
         }
         if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
         {
-            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await sessionClient.ResetIdAsync(targetId, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
@@ -72,7 +72,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
     {
         if (context.WebSockets.IsWebSocketRequest)
         {
-            var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureDefaultAwait();
            
             var client = new WebSocketDmtpSessionClient();
 
@@ -104,7 +104,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
                 {
                     if (findDmtpActor != null)
                     {
-                        return await findDmtpActor.Invoke(id).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        return await findDmtpActor.Invoke(id).ConfigureDefaultAwait();
                     }
                     if (this.Clients.TryGetClient(id, out var client) && client is IDmtpActorObject dmtpActorObject)
                     {
@@ -119,7 +119,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
             }
 
             client.InitDmtpActor(allowRoute, FindDmtpActor);
-            await client.Start(webSocket, context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.Start(webSocket, context).ConfigureDefaultAwait();
         }
         else
         {
@@ -170,7 +170,7 @@ public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClien
         {
             if (this.TryGetClient(id, out var client))
             {
-                await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await client.CloseAsync().ConfigureDefaultAwait();
                 client.SafeDispose();
             }
         }

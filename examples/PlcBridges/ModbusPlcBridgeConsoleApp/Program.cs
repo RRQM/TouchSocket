@@ -232,7 +232,7 @@ internal class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
     {
     }
 
-    protected override async Task<Result> ExecuteReadAsync(ExecuteReadableValue<short> readableValue, CancellationToken token)
+    protected override async ValueTask<Result> ExecuteReadAsync(ExecuteReadableValue<short> readableValue, CancellationToken token)
     {
         // 在这里可以添加一些自定义的逻辑，例如日志记录、异常处理等。
 
@@ -242,7 +242,7 @@ internal class MyModbusHoldingRegistersDrive : ModbusHoldingRegistersDrive
         return result;
     }
 
-    protected override async Task<Result> ExecuteWriteAsync(WritableValue<short> writableValue, CancellationToken token)
+    protected override async ValueTask<Result> ExecuteWriteAsync(WritableValue<short> writableValue, CancellationToken token)
     {
         var result = await base.ExecuteWriteAsync(writableValue, token);
 

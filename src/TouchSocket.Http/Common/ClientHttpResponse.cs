@@ -52,7 +52,7 @@ internal sealed class ClientHttpResponse : HttpResponse
 
                 while (true)
                 {
-                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                     {
                         byteBlock.Write(blockResult.Memory.Span);
                         if (blockResult.IsCompleted)
@@ -111,11 +111,11 @@ internal sealed class ClientHttpResponse : HttpResponse
         // 根据传输类型处理内容
         if (this.IsChunk)
         {
-            return await this.ReadChunkedContentAsync(reader, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.ReadChunkedContentAsync(reader, cancellationToken).ConfigureDefaultAwait();
         }
         else if (this.ContentLength > 0)
         {
-            return await this.ReadFixedLengthContentAsync(reader, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await this.ReadFixedLengthContentAsync(reader, cancellationToken).ConfigureDefaultAwait();
         }
 
         return HttpReadOnlyMemoryBlockResult.Completed;
@@ -127,7 +127,7 @@ internal sealed class ClientHttpResponse : HttpResponse
         // 解析HTTP响应头
         while (true)
         {
-            var readResult = await reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
             var buffer = readResult.Buffer;
             var bytesReader = new BytesReader(buffer);
             try
@@ -261,7 +261,7 @@ internal sealed class ClientHttpResponse : HttpResponse
     {
         while (true)
         {
-            var readResult = await reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
             var buffer = readResult.Buffer;
 
             try
@@ -360,7 +360,7 @@ internal sealed class ClientHttpResponse : HttpResponse
             return HttpReadOnlyMemoryBlockResult.Completed;
         }
 
-        var readResult = await reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
         var buffer = readResult.Buffer;
 
         if (buffer.IsEmpty && readResult.IsCompleted)

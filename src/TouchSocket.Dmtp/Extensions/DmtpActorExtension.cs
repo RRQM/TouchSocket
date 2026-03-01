@@ -87,7 +87,7 @@ public static class DmtpActorExtension
         try
         {
             // 调用客户端的SendAsync方法发送数据，不等待任务完成后再继续执行下面的代码。
-            await client.DmtpActor.SendAsync(protocol, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, memory).ConfigureDefaultAwait();
             return true;
         }
         catch
@@ -108,7 +108,7 @@ public static class DmtpActorExtension
         try
         {
             // 使用空的内存数据发送协议命令。
-            await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureDefaultAwait();
             return true;
         }
         catch
@@ -142,7 +142,7 @@ public static class DmtpActorExtension
             // 准备数据包，将数据写入到block中。
             package.Package(ref block);
             // 使用异步方法发送数据包和协议。
-            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.DmtpActor.SendAsync(protocol, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -180,7 +180,7 @@ public static class DmtpActorExtension
         try
         {
             // 实际执行发送操作。
-            await SendAsync(client, protocol, package, maxSize).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await SendAsync(client, protocol, package, maxSize).ConfigureDefaultAwait();
             // 发送成功，返回<see langword="true"/>。
             return true;
         }
@@ -204,7 +204,7 @@ public static class DmtpActorExtension
         try
         {
             // 实际执行发送操作，64KB是根据业务需求预设的限制
-            await SendAsync(client, protocol, package, 1024 * 64).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await SendAsync(client, protocol, package, 1024 * 64).ConfigureDefaultAwait();
             return true;
         }
         catch

@@ -98,7 +98,7 @@ public abstract class HttpResponse : HttpBase
             this.Headers.TryAdd(HttpHeaders.ContentLength, "0");
             var writer = new PipeBytesWriter(transport.Writer);
             this.BuildHeader(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
@@ -109,11 +109,11 @@ public abstract class HttpResponse : HttpBase
 
             var result = content.InternalBuildingContent(ref writer);
 
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
 
             if (!result)
             {
-                await content.InternalWriteContent(transport.Writer, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await content.InternalWriteContent(transport.Writer, cancellationToken).ConfigureDefaultAwait();
             }
         }
 
@@ -144,7 +144,7 @@ public abstract class HttpResponse : HttpBase
             TouchSocketHttpUtility.AppendHex(ref writer, 0);
             TouchSocketHttpUtility.AppendRn(ref writer);
             TouchSocketHttpUtility.AppendRn(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             this.Responsed = true;
         }
     }
@@ -167,7 +167,7 @@ public abstract class HttpResponse : HttpBase
         if (!this.m_sentHeader)
         {
             this.BuildHeader(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             this.m_sentHeader = true;
         }
 
@@ -179,7 +179,7 @@ public abstract class HttpResponse : HttpBase
             TouchSocketHttpUtility.AppendRn(ref writer);
             writer.Write(memory.Span);
             TouchSocketHttpUtility.AppendRn(ref writer);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             this.m_sentLength += count;
         }
         else
@@ -191,7 +191,7 @@ public abstract class HttpResponse : HttpBase
             }
 
             writer.Write(memory.Span);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             this.m_sentLength += count;
             if (this.m_sentLength == this.ContentLength)
             {

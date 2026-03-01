@@ -64,7 +64,7 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
     private async Task DelayGo()
     {
-        await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await Task.Delay(this.CacheTimeout).ConfigureDefaultAwait();
         if (Interlocked.Decrement(ref this.m_fireCount) == 0)
         {
             using (var byteBlock = new ValueByteBlock(this.m_dataCount))
@@ -80,10 +80,10 @@ public class PeriodPackageAdapter : SingleStreamDataHandlingAdapter
 
                 byteBlock.SeekToStart();
 
-                await this.m_semaphoreSlim.WaitAsync(this.m_cts.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_semaphoreSlim.WaitAsync(this.m_cts.Token).ConfigureDefaultAwait();
                 try
                 {
-                    await this.GoReceivedAsync(byteBlock.Memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.GoReceivedAsync(byteBlock.Memory, default).ConfigureDefaultAwait();
                 }
                 catch (Exception ex)
                 {

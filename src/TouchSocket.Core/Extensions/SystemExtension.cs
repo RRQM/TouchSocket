@@ -896,7 +896,7 @@ public static class SystemExtension
         // 获取内存区域对应的数组
         var bytes = memory.GetArray();
         // 调用异步方法读取数据到指定的数组区域
-        return await stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -943,7 +943,7 @@ public static class SystemExtension
     public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
     {
         var segment = memory.GetArray();
-        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>

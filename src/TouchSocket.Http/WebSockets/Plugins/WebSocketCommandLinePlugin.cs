@@ -66,13 +66,13 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
     {
         if (e.DataFrame.Opcode != WSDataType.Text)
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
             return;
         }
         var strs = e.DataFrame.ToText().Split(' ');
         if (!this.m_pairs.TryGetValue(strs[0], out var method))
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
             return;
         }
         var ps = method.Info.GetParameters();
@@ -102,17 +102,17 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
 
         try
         {
-            var result = await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await method.InvokeAsync(this, os).ConfigureDefaultAwait();
             if (method.HasReturn)
             {
-                await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureDefaultAwait();
             }
         }
         catch (Exception ex)
         {
             if (this.ReturnException)
             {
-                await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureDefaultAwait();
             }
         }
     }

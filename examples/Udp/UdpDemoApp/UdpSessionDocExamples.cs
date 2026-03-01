@@ -27,7 +27,7 @@ internal class UdpSessionServerExample
         var udpService = new UdpSession();
         udpService.Received = (c, e) =>
         {
-            Console.WriteLine(e.Memory.ToString());
+            Console.WriteLine(e.Memory.Span.ToUtf8String());
             return EasyTask.CompletedTask;
         };
         await udpService.SetupAsync(new TouchSocketConfig()
@@ -74,7 +74,7 @@ internal class UdpSessionDelegateReceiveExample
         var udpService = new UdpSession();
         udpService.Received = (c, e) =>
         {
-            Console.WriteLine(e.Memory.ToString());
+            Console.WriteLine(e.Memory.Span.ToUtf8String());
             return EasyTask.CompletedTask;
         };
         await udpService.StartAsync(7789);
@@ -87,7 +87,7 @@ internal class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
 {
     public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
     {
-        var msg = e.Memory.ToString();
+        var msg = e.Memory.Span.ToUtf8String();
         if (msg == "hello")
         {
             Console.WriteLine("已处理Hello");
@@ -106,7 +106,7 @@ internal class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
 {
     public async Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e)
     {
-        var msg = e.Memory.ToString();
+        var msg = e.Memory.Span.ToUtf8String();
         if (msg == "hi")
         {
             Console.WriteLine("已处理Hi");
@@ -147,7 +147,7 @@ internal class UdpSessionMulticastServerExample
         var udpService = new UdpSession();
         udpService.Received = (remote, e) =>
         {
-            Console.WriteLine(e.Memory.ToString());
+            Console.WriteLine(e.Memory.Span.ToUtf8String());
             return EasyTask.CompletedTask;
         };
         await udpService.SetupAsync(new TouchSocketConfig()
@@ -185,7 +185,7 @@ internal class UdpSessionBroadcastServerExample
         var udpService = new UdpSession();
         udpService.Received = (remote, e) =>
         {
-            Console.WriteLine(e.Memory.ToString());
+            Console.WriteLine(e.Memory.Span.ToUtf8String());
             return EasyTask.CompletedTask;
         };
         await udpService.SetupAsync(new TouchSocketConfig()

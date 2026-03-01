@@ -82,7 +82,7 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
             {
                 memory = memory.Slice(0, (int)index);
             }
-            await this.GoReceivedAsync(memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoReceivedAsync(memory, default).ConfigureDefaultAwait();
             reader.Advance(length);
         }
     }

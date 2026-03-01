@@ -30,7 +30,7 @@ internal class StreamTransport : BaseTransport
     {
         try
         {
-            await base.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             this.m_stream.Close();
             return Result.Success;
         }
@@ -49,19 +49,19 @@ internal class StreamTransport : BaseTransport
             {
                 var memory = pipeWriter.GetMemory(this.ReceiveBufferSize);
                 Debug.WriteLine($"StreamTransport RunReceive GetMemory Size:{memory.Length}");
-                var result = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var result = await this.m_stream.ReadAsync(memory, cancellationToken).ConfigureDefaultAwait();
 
                 if (result == 0)
                 {
                     this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                    await pipeWriter.CompleteAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await pipeWriter.CompleteAsync().ConfigureDefaultAwait();
                     return;
                 }
 
                 this.m_receiveCounter.Increment(result);
 
                 pipeWriter.Advance(result);
-                var flushResult = await pipeWriter.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var flushResult = await pipeWriter.FlushAsync(cancellationToken).ConfigureDefaultAwait();
                 if (flushResult.IsCompleted)
                 {
                     break;
@@ -71,7 +71,7 @@ internal class StreamTransport : BaseTransport
         catch (Exception ex)
         {
             this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
-            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureDefaultAwait();
         }
     }
 
@@ -81,7 +81,7 @@ internal class StreamTransport : BaseTransport
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var readResult = await this.m_pipeSend.Reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
                 if (readResult.IsCanceled)
                 {
                     break;
@@ -96,7 +96,7 @@ internal class StreamTransport : BaseTransport
                 {
                     foreach (var item in readResult.Buffer)
                     {
-                        await this.m_stream.WriteAsync(item, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.m_stream.WriteAsync(item, cancellationToken).ConfigureDefaultAwait();
                     }
 
                     this.m_pipeSend.Reader.AdvanceTo(readResult.Buffer.End);

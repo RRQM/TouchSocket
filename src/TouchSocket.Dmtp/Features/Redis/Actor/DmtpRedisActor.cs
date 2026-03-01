@@ -49,13 +49,13 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
         {
             cache.Value = this.Converter.Serialize(null, value);
         }
-        return await this.AddCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.AddCacheAsync(cache, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     public async Task<bool> AddCacheAsync(ICacheEntry<string, ReadOnlyMemory<byte>> entity, CancellationToken cancellationToken)
     {
-        return !await this.ContainsCacheAsync(entity.Key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext) && await this.SetCacheAsync(entity, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return !await this.ContainsCacheAsync(entity.Key, cancellationToken).ConfigureDefaultAwait() && await this.SetCacheAsync(entity, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -73,9 +73,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureDefaultAwait();
             }
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -123,9 +123,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureDefaultAwait();
             }
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -150,7 +150,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     /// <inheritdoc/>
     public async Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken = default)
     {
-        var cache = await this.GetCacheAsync(key, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var cache = await this.GetCacheAsync(key, cancellationToken).ConfigureDefaultAwait();
 
         if (cache != null)
         {
@@ -189,9 +189,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureDefaultAwait();
             }
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -294,7 +294,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 waitResult.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Response, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Response, byteBlock.Memory).ConfigureDefaultAwait();
             }
             return true;
         }
@@ -330,9 +330,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {
@@ -362,7 +362,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             Duration = TimeSpan.FromSeconds(duration),
             Value = value is ReadOnlyMemory<byte> bytes ? bytes : this.Converter.Serialize(null, value)
         };
-        return await this.SetCacheAsync(cache, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await this.SetCacheAsync(cache, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -393,9 +393,9 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureDefaultAwait();
             }
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
             {
                 case WaitDataStatus.Success:
                     {

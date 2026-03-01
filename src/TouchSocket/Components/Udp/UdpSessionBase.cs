@@ -167,14 +167,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             }
 
             await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default))
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
 
             await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message })
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             throw;
         }
     }
@@ -187,11 +187,11 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             this.m_monitor?.Socket.Dispose();
             this.m_monitor = null;
             this.m_serverState = ServerState.Stopped;
-            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureDefaultAwait();
             this.m_receiveTasks.Clear();
 
             this.m_receiver?.Complete(default);
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
 
             return Result.Success;
         }
@@ -225,7 +225,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
     {
         // 触发所有实现了IUdpReceivedPlugin接口的插件的处理方法，并传递接收到的数据事件参数。
-        await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -359,11 +359,11 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                         return;
                     }
                     var result = await udpSocketReceiver.ReceiveAsync(this.m_monitor.Socket, this.m_monitor.IPHost.EndPoint, memory)
-                        .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        .ConfigureDefaultAwait();
 
                     if (result.BytesTransferred > 0)
                     {
-                        await this.HandleReceivingData(memory.Slice(0, result.BytesTransferred), result.RemoteEndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await this.HandleReceivingData(memory.Slice(0, result.BytesTransferred), result.RemoteEndPoint).ConfigureDefaultAwait();
                     }
                     else if (result.SocketError != SocketError.Success)
                     {
@@ -396,18 +396,18 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
             this.m_lastReceivedTime = DateTimeOffset.UtcNow;
 
-            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, memory)).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.OnUdpReceiving(new UdpReceiveingEventArgs(remoteEndPoint, memory)).ConfigureDefaultAwait())
             {
                 return;
             }
 
             if (this.m_dataHandlingAdapter == null)
             {
-                await this.PrivateHandleReceivedData(remoteEndPoint, memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateHandleReceivedData(remoteEndPoint, memory, default).ConfigureDefaultAwait();
             }
             else
             {
-                await this.m_dataHandlingAdapter.ReceivedInputAsync(remoteEndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_dataHandlingAdapter.ReceivedInputAsync(remoteEndPoint, memory).ConfigureDefaultAwait();
             }
         }
         catch (Exception ex)
@@ -434,10 +434,10 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         if (this.m_receiver != null)
         {
-            await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureDefaultAwait();
             try
             {
-                await this.m_receiver.InputReceive(remoteEndPoint, memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_receiver.InputReceive(remoteEndPoint, memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
                 return;
             }
             finally
@@ -445,7 +445,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                 this.m_semaphoreSlimForReceiver.Release();
             }
         }
-        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     #region Throw
@@ -557,7 +557,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         // 如果远程IP主机为空，则抛出异常。
         this.ThrowIfRemoteIPHostNull();
         // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
-        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory, cancellationToken).ConfigureDefaultAwait();
     }
 
 #if NET6_0_OR_GREATER
@@ -583,7 +583,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         this.ThrowIfDisposed();
         this.ThrowIfCannotSend();
-        await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnUdpSending(endPoint, memory).ConfigureDefaultAwait();
         await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint, cancellationToken);
         this.m_lastSendTime = DateTimeOffset.UtcNow;
     }
@@ -608,7 +608,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         this.ThrowIfDisposed();
 
         // 触发发送前的事件，允许修改数据或执行其他操作。
-        await this.OnUdpSending(endPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnUdpSending(endPoint, memory).ConfigureDefaultAwait();
         // 尝试将只读内存转换为数组形式，以便发送。
         if (MemoryMarshal.TryGetArray(memory, out var segment))
         {

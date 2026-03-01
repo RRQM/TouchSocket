@@ -57,7 +57,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpClosed(ClosedEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosedPlugin类型的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpClosing(ClosingEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
     {
         // 调用插件管理器，异步触发所有ITcpConnectedPlugin类型的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -96,15 +96,15 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         // 调用插件管理器，触发ITcpConnectingPlugin类型的插件进行相应操作
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateOnConnected(TcpTransport transport)
     {
         var e_connected = new ConnectedEventArgs();
-        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
 
         transport.SafeDispose();
 
@@ -113,7 +113,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var adapter = this.m_dataHandlingAdapter;
         this.m_dataHandlingAdapter = default;
         adapter.SafeDispose();
-        await this.OnTcpClosed(e_closed).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpClosed(e_closed).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -123,7 +123,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     private async Task PrivateOnTcpConnecting(ConnectingEventArgs e)
     {
-        await this.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
             var adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty)?.Invoke();
@@ -191,7 +191,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (!this.m_online)
@@ -199,14 +199,14 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 return Result.Success;
             }
 
-            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
             {
-                await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
             await this.WaitClearConnect()
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -226,7 +226,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         {
             _ = EasyTask.SafeRun(async () =>
             {
-                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
                 this.m_semaphoreForConnectAndClose.SafeDispose();
             });
             this.m_tcpCore.Dispose();
@@ -248,7 +248,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <param name="e">包含接收到的数据事件的相关信息。</param>
     protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseITcpReceivedPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseITcpReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -286,7 +286,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         {
             return;
         }
-        await transport.ReadLocker.WaitAsync(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await transport.ReadLocker.WaitAsync(CancellationToken.None).ConfigureDefaultAwait();
         try
         {
             while (true)
@@ -315,19 +315,19 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 try
                 {
                     reader.Reset(result.Buffer);
-                    if (!await this.OnTcpReceiving(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                    if (!await this.OnTcpReceiving(reader).ConfigureDefaultAwait())
                     {
                         if (this.m_dataHandlingAdapter == null)
                         {
                             foreach (var item in reader.Sequence)
                             {
-                                await this.PrivateHandleReceivedData(item, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                await this.PrivateHandleReceivedData(item, default).ConfigureDefaultAwait();
                                 reader.Advance(item.Length);
                             }
                         }
                         else
                         {
-                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.m_dataHandlingAdapter.ReceivedInputAsync(reader).ConfigureDefaultAwait();
                         }
                     }
 
@@ -354,7 +354,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                     this.Logger?.Exception(this, ex);
 
                     // 处理数据出现异常时，关闭连接并退出循环
-                    await transport.CloseAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await transport.CloseAsync(ex.Message).ConfigureDefaultAwait();
                     break; // 关闭连接后退出循环
                 }
 
@@ -410,10 +410,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     private void SetSocket(Socket socket)
@@ -445,7 +445,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
 
         sslOption.TargetHost ??= iPHost.Host;
-        await this.AuthenticateAsync(sslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.AuthenticateAsync(sslOption).ConfigureDefaultAwait();
     }
 
     #region Receiver
@@ -510,25 +510,25 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
 
-        await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTcpSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
             }
             else
             {
                 var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             }
         }
         finally
@@ -558,12 +558,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

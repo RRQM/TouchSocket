@@ -69,7 +69,7 @@ public class FlowGate : Counter
                 // 将等待时间小于0的情况调整为0
                 waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
                 // 异步延迟等待，不阻塞主线程
-                await Task.Delay(waitTime).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(waitTime).ConfigureDefaultAwait();
             }
         }
     }

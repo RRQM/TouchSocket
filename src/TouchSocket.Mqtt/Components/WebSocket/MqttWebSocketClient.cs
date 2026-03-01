@@ -40,7 +40,7 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimConnect.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (this.Online)
@@ -58,14 +58,14 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
             await base.WebSocketConnectAsync(cancellationToken, option =>
             {
                 option.AddSubProtocol("mqtt");
-            }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            }).ConfigureDefaultAwait();
 
-            var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var connAckMessage = await this.m_mqttActor.ConnectAsync(connectMessage, cancellationToken).ConfigureDefaultAwait();
             if (connAckMessage.ReturnCode != MqttReasonCode.ConnectionAccepted)
             {
                 ThrowHelper.ThrowException($"Connection failed with reason: {connAckMessage.ReturnCode}，reasonString: {connAckMessage.ReasonString}");
             }
-            await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureDefaultAwait();
         }
         finally
         {
@@ -132,9 +132,9 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
 
     private async Task ProcessMqttMessage(MqttMessage mqttMessage)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivingPlugin), this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttReceivingPlugin), this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureDefaultAwait();
 
-        await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureDefaultAwait();
     }
 
     #region MqttActor
@@ -143,22 +143,22 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnected(MqttActor mqttActor, MqttConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnecting(MqttActor mqttActor, MqttConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnMessageArrived(MqttActor actor, MqttReceivedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)
@@ -168,12 +168,12 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
             this.m_mqttAdapter.Version = message.Version;
         }
         var locker = m_semaphoreSlimSend;
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         var writer = new SegmentedBytesWriter();
         try
         {
             message.Build(ref writer);
-            await this.SendAsync(writer.Sequence, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.SendAsync(writer.Sequence, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -188,7 +188,7 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
     {
         if (sequence.IsSingleSegment)
         {
-            await this.ProtectedSendAsync(sequence.First, WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(sequence.First, WebSocketMessageType.Binary, true, cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
@@ -198,7 +198,7 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
             {
                 var current = enumerator.Current;
                 hasNext = enumerator.MoveNext();
-                await this.ProtectedSendAsync(current, WebSocketMessageType.Binary, !hasNext, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(current, WebSocketMessageType.Binary, !hasNext, cancellationToken).ConfigureDefaultAwait();
             }
         }
     }

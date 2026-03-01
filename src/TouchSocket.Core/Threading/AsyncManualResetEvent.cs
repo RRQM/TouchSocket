@@ -130,7 +130,7 @@ public class AsyncManualResetEvent
         {
             using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
             {
-                await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.WaitOneAsync(timeoutSource.Token).ConfigureDefaultAwait();
                 return true;
             }
         }

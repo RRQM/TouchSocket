@@ -84,7 +84,7 @@ internal sealed class TcpCore : SafetyDisposableObject
         var length = buffer.Length;
         try
         {
-            var result = await this.m_socketSender.SendAsync(this.m_socket, buffer).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var result = await this.m_socketSender.SendAsync(this.m_socket, buffer).ConfigureDefaultAwait();
             if (result.SocketError != SocketError.Success)
             {
                 ThrowHelper.ThrowSocketException((int)result.SocketError);

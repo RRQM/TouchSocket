@@ -49,7 +49,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <param name="e"></param>
     protected virtual async Task OnSerialClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <param name="e"></param>
     protected virtual async Task OnSerialClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <param name="e"></param>
     protected virtual async Task OnSerialConnected(ConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <param name="e"></param>
     protected virtual async Task OnSerialConnecting(ConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -119,9 +119,9 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     private async Task PrivateConnected(SerialPortTransport transport)
     {
         var e_connected = new ConnectedEventArgs();
-        await this.OnSerialConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
 
         transport.SafeDispose();
 
@@ -131,7 +131,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         this.m_dataHandlingAdapter = default;
         adapter.SafeDispose();
 
-        await this.OnSerialClosed(e_closed).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
     }
 
     private Task PrivateOnClosing(ClosingEventArgs e)
@@ -141,7 +141,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
     private async Task PrivateOnSerialConnecting(ConnectingEventArgs e)
     {
-        await this.OnSerialConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
             var adapter = this.Config.GetValue(SerialPortConfigExtension.SerialDataHandlingAdapterProperty)?.Invoke();
@@ -191,13 +191,13 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
                 return Result.Success;
             }
 
-            await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
             {
-                await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -211,7 +211,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait());
         }
         base.SafetyDispose(disposing);
     }
@@ -229,7 +229,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
-        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -238,13 +238,13 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
                 return;
             }
 
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
 
             var serialPortOption = this.Config.GetValue(SerialPortConfigExtension.SerialPortOptionProperty);
             ThrowHelper.ThrowIfNull(serialPortOption, nameof(serialPortOption));
 
             var serialPort = CreateSerial(serialPortOption);
-            await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureDefaultAwait();
 
             this.m_transport = new SerialPortTransport(serialPort, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
             this.m_online = true;
@@ -308,10 +308,10 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnSerialReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     private async Task WaitClearConnect()
@@ -320,7 +320,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         var runTask = this.m_runTask;
         if (runTask != null)
         {
-            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await runTask.ConfigureDefaultAwait();
         }
     }
 
@@ -392,25 +392,25 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         this.ThrowIfClientNotConnected();
 
 
-        await this.OnSerialSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnSerialSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
             }
             else
             {
                 var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             }
         }
         finally
@@ -440,12 +440,12 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

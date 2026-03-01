@@ -39,7 +39,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
     {
         if (this.m_option.AllowJsonRpc != null)
         {
-            if (await this.m_option.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await this.m_option.AllowJsonRpc.Invoke(client, e.Context).ConfigureDefaultAwait())
             {
                 var jsonRpcActor = new JsonRpcActor()
                 {
@@ -53,7 +53,7 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
             }
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -64,11 +64,11 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
         {
             e.Handled = true;
 
-            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client, client.Client.ClosedToken)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData, new WebSocketJsonRpcCallContext(client.Client, client.Client.ClosedToken)).ConfigureDefaultAwait();
         }
         else
         {
-            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await e.InvokeNext().ConfigureDefaultAwait();
         }
     }
 }

@@ -37,7 +37,7 @@ public static class HttpClientExtension
         request.URL = (url);
 
         // 使用指定的超时时间和取消令牌发起HTTP请求
-        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureDefaultAwait())
         {
             // 获取HTTP响应
             var response = responseResult.Response;
@@ -79,13 +79,13 @@ public static class HttpClientExtension
     public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, CancellationToken cancellationToken)
     {
         // 使用using语句确保响应对象正确地被释放
-        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureDefaultAwait())
         {
             // 提取HTTP响应
             var response = responseResult.Response;
 
             // 将响应内容异步读取并复制到指定的流中
-            await response.ReadCopyToAsync(stream, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response.ReadCopyToAsync(stream, cancellationToken).ConfigureDefaultAwait();
         }
     }
 
@@ -102,13 +102,13 @@ public static class HttpClientExtension
         var cancellationToken = flowOperator.Token;
 
         // 使用using语句确保响应对象正确地被释放
-        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await httpClient.RequestAsync(request, cancellationToken).ConfigureDefaultAwait())
         {
             // 提取HTTP响应
             var response = responseResult.Response;
 
             // 将响应内容异步读取并复制到指定的流中
-            return await response.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            return await response.ReadCopyToAsync(stream, flowOperator).ConfigureDefaultAwait();
         }
     }
 
@@ -176,7 +176,7 @@ public static class HttpClientExtension
             request.SetHost(client.RemoteIPHost.Host);
             request.AsPost();
 
-            using (var responseResult = await client.RequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await client.RequestAsync(request, cancellationToken).ConfigureDefaultAwait())
             {
                 var response = responseResult.Response;
                 if (response.IsSuccess())
@@ -207,7 +207,7 @@ public static class HttpClientExtension
             //创建一个请求
             request.SetContent(new StreamHttpContent(stream, flowOperator));
 
-            using (var responseResult = await client.RequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            using (var responseResult = await client.RequestAsync(request, cancellationToken).ConfigureDefaultAwait())
             {
                 var response = responseResult.Response;
                 if (response.IsSuccess())

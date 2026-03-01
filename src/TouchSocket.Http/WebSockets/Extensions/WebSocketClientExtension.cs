@@ -30,7 +30,7 @@ public static class WebSocketClientExtension
     {
         try
         {
-            await webSocket.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await webSocket.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }, cancellationToken: cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -49,7 +49,7 @@ public static class WebSocketClientExtension
     {
         try
         {
-            await webSocket.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, cancellationToken: cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await webSocket.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }, cancellationToken: cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -70,7 +70,7 @@ public static class WebSocketClientExtension
     public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         var frame = new WSDataFrame(memory) { FIN = endOfMessage, Opcode = dataType };
-        await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ public static class WebSocketClientExtension
         {
             WriterExtension.WriteNormalString(ref byteBlock, text, Encoding.UTF8);
             var frame = new WSDataFrame(byteBlock.Memory) { FIN = endOfMessage, Opcode = WSDataType.Text };
-            await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -108,7 +108,7 @@ public static class WebSocketClientExtension
     public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
         var frame = new WSDataFrame(memory) { FIN = endOfMessage, Opcode = WSDataType.Binary };
-        await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await webSocket.SendAsync(frame, endOfMessage, cancellationToken).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public static class WebSocketClientExtension
         if (sequence.IsSingleSegment)
         {
             var frame = new WSDataFrame(sequence.First) { FIN = true, Opcode = dataType };
-            await webSocket.SendAsync(frame, true, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await webSocket.SendAsync(frame, true, cancellationToken).ConfigureDefaultAwait();
             return;
         }
 
@@ -145,7 +145,7 @@ public static class WebSocketClientExtension
                 Opcode = isFirst ? dataType : WSDataType.Cont
             };
 
-            await webSocket.SendAsync(frame, isLast, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await webSocket.SendAsync(frame, isLast, cancellationToken).ConfigureDefaultAwait();
             isFirst = false;
         }
     }

@@ -55,27 +55,27 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
             var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
 
             await this.PrivateWebSocketClosing(new ClosingEventArgs(msg))
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful")
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             return;
         }
         if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
         {
             await this.m_webSocket.PongAsync()
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             return;
         }
 
         if (this.m_webSocket.AllowAsyncRead)
         {
             await this.m_webSocket.InputReceiveAsync(dataFrame, this.ClosedToken)
-              .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+              .ConfigureDefaultAwait();
             return;
         }
 
         await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame))
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
     }
 
     private Task PrivateWebSocketClosing(ClosingEventArgs e)
@@ -90,7 +90,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
         {
             this.m_webSocket.Complete(e.Message);
         }
-        await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     protected virtual async Task OnWebSocketConnecting(IWebSocket webSocket, HttpContextEventArgs e)
     {
         // 提前WebSocket握手过程中的插件执行
-        await this.PluginManager.RaiseIWebSocketConnectingPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketConnectingPluginAsync(this.Resolver, webSocket, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     protected virtual async Task OnWebSocketConnected(IWebSocket webSocket, HttpContextEventArgs e)
     {
         await this.PluginManager.RaiseIWebSocketConnectedPluginAsync(this.Resolver, webSocket, e)
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// </remarks>
     protected virtual async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketReceivedPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketReceivedPluginAsync(this.Resolver, webSocket, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
     {
         // 提前通知所有IWebSocketClosingPlugin插件，WebSocket即将关闭
-        await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, webSocket, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -153,7 +153,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// </remarks>
     protected virtual async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIWebSocketClosedPluginAsync(this.Resolver, webSocket, e).ConfigureDefaultAwait();
     }
 
     #endregion 事件
@@ -182,7 +182,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
                 var webSocket = new InternalWebSocket(this);
 
-                await this.PrivateWebSocketConnecting(webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.PrivateWebSocketConnecting(webSocket, e).ConfigureDefaultAwait();
 
                 if (response.Responsed)
                 {
@@ -193,7 +193,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
                 {
                     this.InitWebSocket(webSocket);
 
-                    await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await response.AnswerAsync().ConfigureDefaultAwait();
 
                     _ = EasyTask.SafeRun(this.PrivateWebSocketConnected, webSocket, new HttpContextEventArgs(httpContext));
 
@@ -205,13 +205,13 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
                     await response.AnswerAsync();
 
                     var msg = TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message);
-                    await this.CloseAsync(msg).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.CloseAsync(msg).ConfigureDefaultAwait();
                     return Result.FromFail(msg);
                 }
             }
             else
             {
-                await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureDefaultAwait();
                 return Result.FromFail(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect);
             }
         }

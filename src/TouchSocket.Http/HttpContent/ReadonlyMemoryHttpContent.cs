@@ -76,6 +76,6 @@ public class ReadonlyMemoryHttpContent : HttpContent
     /// <inheritdoc/>
     protected override async Task WriteContent(PipeWriter writer, CancellationToken cancellationToken)
     {
-        await writer.WriteAsync(this.m_memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await writer.WriteAsync(this.m_memory, cancellationToken).ConfigureDefaultAwait();
     }
 }

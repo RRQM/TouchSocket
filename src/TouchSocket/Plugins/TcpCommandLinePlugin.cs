@@ -101,17 +101,17 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
 
                 try
                 {
-                    var result = await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    var result = await method.InvokeAsync(this, os).ConfigureDefaultAwait();
                     if (method.HasReturn)
                     {
-                        await clientSender.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await clientSender.SendAsync(this.Converter.Serialize(null, result)).ConfigureDefaultAwait();
                     }
                 }
                 catch (Exception ex)
                 {
                     if (this.ReturnException)
                     {
-                        await clientSender.SendAsync(ex.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                        await clientSender.SendAsync(ex.Message).ConfigureDefaultAwait();
                     }
                 }
             }
@@ -121,6 +121,6 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
             this.m_logger.Log(LogLevel.Error, this, ex.Message, ex);
         }
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

@@ -120,7 +120,7 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
             if (recedSurPlusLength >= length)
             {
                 var memory = reader.GetMemory(index + length).Slice(index, length);
-                await this.GoReceivedAsync(memory, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.GoReceivedAsync(memory, null).ConfigureDefaultAwait();
                 reader.Advance(index + length);
             }
             else //半包

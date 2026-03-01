@@ -58,7 +58,7 @@ public class RedisFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlug
         dmtpRedisActor.SetProtocolFlags(this.m_option.StartProtocol);
         client.DmtpActor.TryAddActor<DmtpRedisActor>(dmtpRedisActor);
 
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -66,12 +66,12 @@ public class RedisFeature : PluginBase, IDmtpConnectingPlugin, IDmtpReceivedPlug
     {
         if (client.DmtpActor.GetDmtpRedisActor() is DmtpRedisActor redisClient)
         {
-            if (await redisClient.InputReceivedData(e.DmtpMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+            if (await redisClient.InputReceivedData(e.DmtpMessage).ConfigureDefaultAwait())
             {
                 e.Handled = true;
                 return;
             }
         }
-        await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

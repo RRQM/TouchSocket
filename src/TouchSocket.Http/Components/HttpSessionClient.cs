@@ -47,7 +47,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     {
         var e = new HttpContextEventArgs(httpContext);
 
-        await this.PluginManager.RaiseIHttpPluginAsync(this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseIHttpPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -55,9 +55,9 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     {
         if (this.m_webSocket != null)
         {
-            await this.PrivateWebSocketClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateWebSocketClosed(e).ConfigureDefaultAwait();
         }
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -77,7 +77,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
             try
             {
                 await this.PrivateWebSocketReceived(dataFrame)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
@@ -106,7 +106,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     private async Task OnReceivingHttpRequest(ServerHttpRequest request)
     {
-        await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureDefaultAwait();
         this.m_serverHttpResponse.Reset();
     }
 }

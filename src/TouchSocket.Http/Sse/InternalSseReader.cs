@@ -48,7 +48,7 @@ internal class InternalSseReader : SseReader
         while (true)
         {
             var message = await this.ReadAsync(cancellationToken)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
             if (message == null)
             {
                 break;
@@ -69,7 +69,7 @@ internal class InternalSseReader : SseReader
             }
 
             using (var blockResult = await this.m_response.ReadAsync(cancellationToken)
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                .ConfigureDefaultAwait())
             {
                 if (!blockResult.Memory.IsEmpty)
                 {

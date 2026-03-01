@@ -66,7 +66,7 @@ public static partial class HttpExtensions
     public static async Task<string> GetBodyAsync(this HttpBase httpBase, Encoding encoding, CancellationToken cancellationToken = default)
     {
         // 异步获取 HTTP 响应的内容作为字节数组
-        var bytes = await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var bytes = await httpBase.GetContentAsync(cancellationToken).ConfigureDefaultAwait();
         // 如果字节数组为空，则返回 null，否则使用 UTF-8 编码将字节数组转换为字符串并返回
         return bytes.IsEmpty ? null : bytes.Span.ToString(encoding);
     }
@@ -273,7 +273,7 @@ public static partial class HttpExtensions
             if (CheckFormBody(contentType, out var encoding))
             {
                 return new InternalFormCollection(
-                    await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), encoding);
+                    await request.GetContentAsync().ConfigureDefaultAwait(), encoding);
             }
 
             return new InternalFormCollection();
@@ -287,7 +287,7 @@ public static partial class HttpExtensions
             try
             {
                 WriterExtension.WriteNormalString(ref valueByteBlock, boundaryString, Encoding.UTF8);
-                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), valueByteBlock.Span);
+                return new InternalFormCollection(await request.GetContentAsync().ConfigureDefaultAwait(), valueByteBlock.Span);
             }
             finally
             {

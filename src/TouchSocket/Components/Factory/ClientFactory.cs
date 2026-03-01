@@ -124,15 +124,15 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!this.FreeClients.IsEmpty)
                 {
-                    return await this.RentClient(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    return await this.RentClient(cancellationToken).ConfigureDefaultAwait();
                 }
 
-                await Task.Delay(10, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await Task.Delay(10, cancellationToken).ConfigureDefaultAwait();
             }
         }
 
         // 创建一个新的客户端
-        var clientRes = await this.CreateClient(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var clientRes = await this.CreateClient(cancellationToken).ConfigureDefaultAwait();
         // 将新创建的客户端添加到已创建的客户端列表中
         this.m_createdClients.Add(clientRes);
         // 返回新创建的客户端
@@ -183,7 +183,7 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
             var clients = new List<TClient>();
             while (this.CreatedCount < this.MinCount)
             {
-                var client = await this.RentClient(CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                var client = await this.RentClient(CancellationToken.None).ConfigureDefaultAwait();
 
                 clients.Add(client);
             }
@@ -203,8 +203,8 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     {
         while (!this.m_cts.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(EasyTask.ContinueOnCapturedContext); // 每秒执行
-            await this.ExecuteAsyncTask().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureDefaultAwait(); // 每秒执行
+            await this.ExecuteAsyncTask().ConfigureDefaultAwait();
         }
     }
 
@@ -266,7 +266,7 @@ public abstract class ClientFactory<TClient> : DependencyObject where TClient : 
     public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(CancellationToken cancellationToken = default)
     {
         // 租用客户端，并配置不等待主线程
-        return new ClientFactoryResult<TClient>(await this.RentClient(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), this.ReturnClient);
+        return new ClientFactoryResult<TClient>(await this.RentClient(cancellationToken).ConfigureDefaultAwait(), this.ReturnClient);
     }
     #endregion GetClient
 }

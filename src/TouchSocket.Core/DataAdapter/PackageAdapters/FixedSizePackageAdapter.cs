@@ -48,7 +48,7 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
             }
 
             var memory = reader.GetMemory(this.FixedSize);
-            await this.GoReceivedAsync(memory, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoReceivedAsync(memory, null).ConfigureDefaultAwait();
             reader.Advance(this.FixedSize);
         }
     }

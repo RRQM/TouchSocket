@@ -38,7 +38,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
 
         if (!client.Online)
         {
-            await client.ConnectAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ConnectAsync().ConfigureDefaultAwait();
         }
 
         // 将新的TcpClient添加到目标客户端列表中。
@@ -53,8 +53,8 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         var config = new TouchSocketConfig();
         setupAction.Invoke(config);
 
-        await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.AddTargetClientAsync(client).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await client.SetupAsync(config).ConfigureDefaultAwait();
+        await this.AddTargetClientAsync(client).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -127,7 +127,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
 
                 try
                 {
-                    await client.SendAsync(e.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await client.SendAsync(e.Memory).ConfigureDefaultAwait();
                 }
                 catch (Exception ex)
                 {
@@ -140,7 +140,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
                 // 转发数据到目标客户端
                 try
                 {
-                    await client.SendAsync(e.RequestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await client.SendAsync(e.RequestInfo).ConfigureDefaultAwait();
                 }
                 catch (Exception ex)
                 {
@@ -177,7 +177,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
 
             try
             {
-                await this.ProtectedSendAsync(e.Memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.Memory, CancellationToken.None).ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
@@ -190,7 +190,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
             // 转发数据到当前客户端
             try
             {
-                await this.ProtectedSendAsync(e.RequestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.ProtectedSendAsync(e.RequestInfo, CancellationToken.None).ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
@@ -202,24 +202,24 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
     /// <inheritdoc/>
     protected sealed override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.OnNatClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNatClosed(e).ConfigureDefaultAwait();
 
         // 调用基类的事件处理程序。
-        await base.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpConnected(ConnectedEventArgs e)
     {
-        await base.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.OnNatConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpConnected(e).ConfigureDefaultAwait();
+        await this.OnNatConnected(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
-        await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        await this.OnNatReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnTcpReceived(e).ConfigureDefaultAwait();
+        await this.OnNatReceived(e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -229,7 +229,7 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
     /// <param name="e">包含断开连接信息的事件参数。</param>
     private async Task NatTargetClient_Closed(ITcpSession client, ClosedEventArgs e)
     {
-        await this.OnTargetClientClosed((NatTargetClient)client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTargetClientClosed((NatTargetClient)client, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -246,6 +246,6 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
         }
 
         // 调用接收数据的委托方法处理数据。
-        await this.OnTargetClientReceived(client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnTargetClientReceived(client, e).ConfigureDefaultAwait();
     }
 }

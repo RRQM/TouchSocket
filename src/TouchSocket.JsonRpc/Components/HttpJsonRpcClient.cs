@@ -51,13 +51,13 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
         };
         request.SetContent(memory);
 
-        using (var responseResult = await base.ProtectedRequestAsync(request, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        using (var responseResult = await base.ProtectedRequestAsync(request, cancellationToken).ConfigureDefaultAwait())
         {
             var response = responseResult.Response;
 
             if (response.IsSuccess())
             {
-                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
+                await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync(cancellationToken).ConfigureDefaultAwait(), default);
             }
         }
     }
@@ -67,10 +67,10 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await base.HttpConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

@@ -56,7 +56,7 @@ public class TimeMeasurer
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        await func.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await func.Invoke().ConfigureDefaultAwait();
         stopwatch.Stop();
         return stopwatch.Elapsed;
     }

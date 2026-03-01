@@ -127,7 +127,7 @@ public class Method
     /// <returns>异步任务，包含方法返回值。</returns>
     public async Task<TResult> InvokeAsync<TResult>(object instance, params object[] parameters)
     {
-        return (TResult)await this.InvokeAsync(instance, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return (TResult)await this.InvokeAsync(instance, parameters).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -150,13 +150,13 @@ public class Method
             case MethodReturnKind.Awaitable:
                 {
                     var rawResult = this.Invoke(instance, parameters);
-                    await this.m_dynamicMethodInfo.GetResultAsync(rawResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.m_dynamicMethodInfo.GetResultAsync(rawResult).ConfigureDefaultAwait();
                     return default;
                 }
             case MethodReturnKind.AwaitableObject:
                 {
                     var rawResult = this.Invoke(instance, parameters);
-                    return (await this.m_dynamicMethodInfo.GetResultAsync(rawResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+                    return (await this.m_dynamicMethodInfo.GetResultAsync(rawResult).ConfigureDefaultAwait());
                 }
             default:
                 ThrowHelper.ThrowInvalidEnumArgumentException(this.ReturnKind);

@@ -32,7 +32,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
 
     public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -40,11 +40,11 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
             {
                 using (var receiver = session.CreateReceiver())
                 {
-                    await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureDefaultAwait();
 
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                         {
                             var byteBlock = receiverResult.Memory;
 
@@ -57,7 +57,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             }
                             else
                             {
-                                if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                                if (await filterFunc.Invoke(response).ConfigureDefaultAwait())
                                 {
                                     return response;
                                 }
@@ -70,10 +70,10 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
             {
                 using (var receiver = this.Client.CreateReceiver())
                 {
-                    await this.Client.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.Client.SendAsync(memory).ConfigureDefaultAwait();
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                         {
                             if (receiverResult.IsCompleted)
                             {
@@ -91,7 +91,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             }
                             else
                             {
-                                if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                                if (await filterFunc.Invoke(response).ConfigureDefaultAwait())
                                 {
                                     return response;
                                 }
@@ -109,7 +109,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
 
     public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -117,11 +117,11 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
             {
                 using (var receiver = session.CreateReceiver())
                 {
-                    await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureDefaultAwait();
 
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                         {
                             var response = new ResponsedData(receiverResult.Memory, receiverResult.RequestInfo);
 
@@ -132,7 +132,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             }
                             else
                             {
-                                if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                                if (await filterFunc.Invoke(response).ConfigureDefaultAwait())
                                 {
                                     return response;
                                 }
@@ -145,10 +145,10 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
             {
                 using (var receiver = this.Client.CreateReceiver())
                 {
-                    await this.Client.SendAsync(requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    await this.Client.SendAsync(requestInfo).ConfigureDefaultAwait();
                     while (true)
                     {
-                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                        using (var receiverResult = await receiver.ReadAsync(cancellationToken).ConfigureDefaultAwait())
                         {
                             if (receiverResult.IsCompleted)
                             {
@@ -163,7 +163,7 @@ internal sealed class InternalWaitingClient<TClient, TResult> : IWaitingClient<T
                             }
                             else
                             {
-                                if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+                                if (await filterFunc.Invoke(response).ConfigureDefaultAwait())
                                 {
                                     return response;
                                 }

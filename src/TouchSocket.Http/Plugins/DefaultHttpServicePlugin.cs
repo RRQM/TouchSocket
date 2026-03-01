@@ -31,11 +31,11 @@ public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
             response.SetStatus(204, "No Content");
             await response
                 .AnswerAsync()
-                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                .ConfigureDefaultAwait();
         }
         else
         {
-            await response.UrlNotFind().AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await response.UrlNotFind().AnswerAsync().ConfigureDefaultAwait();
         }
     }
 }

@@ -45,7 +45,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             for (var i = 0; i < filters.Count; i++)
             {
                 invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    .ConfigureDefaultAwait();
             }
 
             if (invokeResult.Status == InvokeStatus.Ready)
@@ -55,7 +55,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
                 if (method.IsAwaitable)
                 {
                     invokeResult.Result = await callContext.RpcMethod.InvokeAsync(rpcServer, ps)
-                                .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                                .ConfigureDefaultAwait();
                 }
                 else
                 {
@@ -81,7 +81,7 @@ internal sealed class InternalRpcServerProvider : IRpcServerProvider
             for (var i = 0; i < filters.Count; i++)
             {
                 invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
-                    .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                    .ConfigureDefaultAwait();
             }
 
             rpcCallContextAccessor?.CallContext = default;

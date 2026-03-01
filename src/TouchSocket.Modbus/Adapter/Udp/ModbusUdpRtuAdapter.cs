@@ -51,7 +51,7 @@ internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
         var crc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcLen));
         if (crc == (response.Crc))
         {
-            await base.GoReceived(remoteEndPoint, null, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
         }
     }
 }

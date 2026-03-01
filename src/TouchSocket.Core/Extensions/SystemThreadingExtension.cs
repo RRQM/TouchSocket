@@ -74,7 +74,7 @@ public static class SystemThreadingExtension
     /// </remarks>
     public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
+        if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, cancellationToken).ConfigureDefaultAwait())
         {
             ThrowHelper.ThrowTimeoutException();
         }
@@ -90,7 +90,7 @@ public static class SystemThreadingExtension
     {
         try
         {
-            await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (OperationCanceledException)
@@ -108,6 +108,52 @@ public static class SystemThreadingExtension
     }
 
     #endregion SemaphoreSlim
+
+    #region ValueTask
+    /// <summary>
+    /// 配置ConfigureAwait为<see langword="false"/>。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="task"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredValueTaskAwaitable<T> ConfigureFalseAwait<T>(this ValueTask<T> task)
+    {
+        return task.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 配置ConfigureAwait为<see langword="false"/>。
+    /// </summary>
+    /// <param name="task"></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredValueTaskAwaitable ConfigureFalseAwait(this ValueTask task)
+    {
+        return task.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="task"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredValueTaskAwaitable<T> ConfigureDefaultAwait<T>(this ValueTask<T> task)
+    {
+        return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    /// <summary>
+    /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
+    /// </summary>
+    /// <param name="task"></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredValueTaskAwaitable ConfigureDefaultAwait(this ValueTask task)
+    {
+        return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+    #endregion
 
     #region Task
 
@@ -187,7 +233,7 @@ public static class SystemThreadingExtension
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable<T> ConfigureFalseAwait<T>(this Task<T> task)
     {
-        return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return task.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -196,6 +242,28 @@ public static class SystemThreadingExtension
     /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
+    {
+        return task.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="task"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredTaskAwaitable<T> ConfigureDefaultAwait<T>(this Task<T> task)
+    {
+        return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+    }
+
+    /// <summary>
+    /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
+    /// </summary>
+    /// <param name="task"></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConfiguredTaskAwaitable ConfigureDefaultAwait(this Task task)
     {
         return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     }
@@ -233,7 +301,7 @@ public static class SystemThreadingExtension
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GetFalseAwaitResult<T>(this Task<T> task)
     {
-        return task.ConfigureAwait(EasyTask.ContinueOnCapturedContext).GetAwaiter().GetResult();
+        return task.ConfigureDefaultAwait().GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -243,7 +311,7 @@ public static class SystemThreadingExtension
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetFalseAwaitResult(this Task task)
     {
-        task.ConfigureAwait(EasyTask.ContinueOnCapturedContext).GetAwaiter().GetResult();
+        task.ConfigureDefaultAwait().GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -285,7 +353,7 @@ public static class SystemThreadingExtension
 
         var delayTask = Task.Delay(timeout, linkedCts.Token);
 
-        var completedTask = await Task.WhenAny(task, delayTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var completedTask = await Task.WhenAny(task, delayTask).ConfigureDefaultAwait();
 
         if (completedTask == delayTask)
         {
@@ -295,7 +363,7 @@ public static class SystemThreadingExtension
         }
 
         // 确保所有任务异常被传播
-        return await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        return await task.ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -315,7 +383,7 @@ public static class SystemThreadingExtension
 
         var delayTask = Task.Delay(timeout, linkedCts.Token);
 
-        var completedTask = await Task.WhenAny(task, delayTask).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        var completedTask = await Task.WhenAny(task, delayTask).ConfigureDefaultAwait();
 
         if (completedTask == delayTask)
         {
@@ -325,7 +393,7 @@ public static class SystemThreadingExtension
         }
 
         // 确保所有任务异常被传播
-        await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await task.ConfigureDefaultAwait();
     }
 #endif
     #endregion Task

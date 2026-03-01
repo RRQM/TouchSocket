@@ -91,7 +91,7 @@ public class ClientWebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJson
                 }
 
                 var callContext = new WebSocketJsonRpcCallContext(this, this.ClosedToken);
-                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureDefaultAwait();
             }
         }
     }

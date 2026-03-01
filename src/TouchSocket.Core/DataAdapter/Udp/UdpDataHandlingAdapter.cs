@@ -97,7 +97,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <param name="memory">接收到的数据。</param>
     protected virtual async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
-        await this.GoReceived(remoteEndPoint, memory, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.GoReceived(remoteEndPoint, memory, default).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
         try
         {
             requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

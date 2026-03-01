@@ -27,7 +27,7 @@ internal class ModbusUdpAdapter : UdpDataHandlingAdapter
         {
             if (((IFixedHeaderRequestInfo)response).OnParsingBody(memory.Span.Slice(8)))
             {
-                await this.GoReceived(remoteEndPoint, default, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.GoReceived(remoteEndPoint, default, response).ConfigureDefaultAwait();
             }
         }
     }

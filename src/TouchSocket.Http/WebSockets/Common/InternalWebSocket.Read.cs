@@ -36,7 +36,7 @@ internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSo
     {
         this.ThrowIfNotAllowAsyncRead();
         var readLease = await this.m_asyncExchange.ReadAsync(cancellationToken)
-            .ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            .ConfigureDefaultAwait();
         var frame = readLease.Value;
         var message = readLease.IsCompleted ? this.m_completeMsg : null;
         return new WebSocketReceiveResult(readLease,frame,message);

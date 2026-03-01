@@ -26,14 +26,14 @@ public static class ServiceExtension
         {
             config = new TouchSocketConfig();
             config.SetListenIPHosts(iPHosts);
-            await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await service.SetupAsync(config).ConfigureDefaultAwait();
         }
         else
         {
             config = service.Config;
             config.SetListenIPHosts(iPHosts);
         }
-        await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await service.StartAsync().ConfigureDefaultAwait();
     }
 
     #endregion ITcpService
@@ -48,14 +48,14 @@ public static class ServiceExtension
         {
             config = new TouchSocketConfig();
             config.SetBindIPHost(iPHost);
-            await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await service.SetupAsync(config).ConfigureDefaultAwait();
         }
         else
         {
             config = service.Config;
             config.SetBindIPHost(iPHost);
         }
-        await service.StartAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await service.StartAsync(cancellationToken).ConfigureDefaultAwait();
     }
 
     #endregion Udp

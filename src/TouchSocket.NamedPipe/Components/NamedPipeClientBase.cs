@@ -50,7 +50,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <param name="e"></param>
     protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -77,15 +77,15 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <param name="e"></param>
     protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateConnected(NamedPipeTransport transport)
     {
         var e_connected = new ConnectedEventArgs();
-        await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
 
         transport.SafeDispose();
 
@@ -95,17 +95,17 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         this.m_dataHandlingAdapter = default;
         adapter.SafeDispose();
 
-        await this.OnNamedPipeClosed(e_closed).SafeWaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
     }
 
     private async Task PrivateOnNamedPipeClosing(ClosingEventArgs e)
     {
-        await this.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeClosing(e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateOnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
             var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
@@ -155,13 +155,13 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
                 return Result.Success;
             }
 
-            await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
             {
-                await transport.CloseAsync(msg, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -175,7 +175,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureAwait(EasyTask.ContinueOnCapturedContext));
+            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait());
         }
         base.SafetyDispose(disposing);
     }
@@ -194,7 +194,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <exception cref="TimeoutException"></exception>
     protected async Task PipeConnectAsync(CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForConnect.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForConnect.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (this.m_online)
@@ -204,7 +204,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
             this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
 
-            await this.WaitClearConnect().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.WaitClearConnect().ConfigureDefaultAwait();
 
             var pipeName = this.Config.GetValue(NamedPipeConfigExtension.PipeNameProperty);
             ThrowHelper.ThrowIfNull(pipeName, nameof(pipeName));
@@ -212,9 +212,9 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
             var serverName = this.Config.GetValue(NamedPipeConfigExtension.PipeServerNameProperty);
 
             var namedPipe = CreatePipeClient(serverName, pipeName);
-            await this.PrivateOnNamedPipeConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.PrivateOnNamedPipeConnecting(new ConnectingEventArgs()).ConfigureDefaultAwait();
 
-            await namedPipe.ConnectAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await namedPipe.ConnectAsync(cancellationToken).ConfigureDefaultAwait();
 
             if (!namedPipe.IsConnected)
             {
@@ -238,7 +238,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         var runTask = this.m_runTask;
         if (runTask != null)
         {
-            await runTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await runTask.ConfigureDefaultAwait();
         }
     }
 
@@ -268,7 +268,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -328,10 +328,10 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         var receiver = this.m_receiver;
         if (receiver != null)
         {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnNamedPipeReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     #region Throw
@@ -371,25 +371,25 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
 
-        await this.OnNamedPipeSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.OnNamedPipeSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
-                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
             }
             else
             {
                 var writer = new PipeBytesWriter(transport.Writer);
                 adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             }
         }
         finally
@@ -419,12 +419,12 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
-        await locker.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var writer = new PipeBytesWriter(transport.Writer);
             adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

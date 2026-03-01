@@ -112,7 +112,7 @@ internal sealed class ServerHttpRequest : HttpRequest
         }
         else
         {
-            readLease = await readLeaseTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            readLease = await readLeaseTask.ConfigureDefaultAwait();
         }
 
         var memory = readLease.Value;

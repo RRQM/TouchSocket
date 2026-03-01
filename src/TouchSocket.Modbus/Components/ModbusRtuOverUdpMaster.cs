@@ -44,17 +44,17 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
-        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.m_semaphoreSlimForRequest.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
             var modbusTcpRequest = new ModbusRtuRequest(request);
 
-            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureDefaultAwait();
 
             this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             response.Request = request;
             TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
@@ -72,6 +72,6 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
         {
             this.m_waitDataAsync?.TrySetResult(response);
         }
-        await base.OnUdpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await base.OnUdpReceived(e).ConfigureDefaultAwait();
     }
 }

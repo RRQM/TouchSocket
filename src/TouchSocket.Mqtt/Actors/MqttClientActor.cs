@@ -30,7 +30,7 @@ public sealed class MqttClientActor : MqttActor
         }
         try
         {
-            await this.ProtectedOutputSendAsync(new MqttDisconnectMessage(), cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(new MqttDisconnectMessage(), cancellationToken).ConfigureDefaultAwait();
         }
         catch
         {
@@ -50,8 +50,8 @@ public sealed class MqttClientActor : MqttActor
     {
         var contentForAck = new MqttPingReqMessage();
         this.m_waitForPing.Reset();
-        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
-        var waitDataStatus = await this.m_waitForPing.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureDefaultAwait();
+        var waitDataStatus = await this.m_waitForPing.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         return waitDataStatus switch
         {
@@ -74,7 +74,7 @@ public sealed class MqttClientActor : MqttActor
     {
         this.m_waitForConnect = new TaskCompletionSource<MqttConnAckMessage>();
 
-        await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+        await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureDefaultAwait();
         var connAckMessage = await this.m_waitForConnect.Task.WithCancellation(cancellationToken);
         this.Online = true;
         return connAckMessage;
@@ -126,9 +126,9 @@ public sealed class MqttClientActor : MqttActor
     {
         using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))
         {
-            await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureDefaultAwait();
 
-            var waitDataStatus = await waitDataAsync.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitDataAsync.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             waitDataStatus.ThrowIfNotRunning();
             var subAckMessage = (MqttSubAckMessage)waitDataAsync.CompletedData;
             return subAckMessage;
@@ -145,9 +145,9 @@ public sealed class MqttClientActor : MqttActor
     {
         using (var waitDataAsync = this.WaitHandlePool.GetWaitDataAsync(message))
         {
-            await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureDefaultAwait();
 
-            var waitDataStatus = await waitDataAsync.WaitAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            var waitDataStatus = await waitDataAsync.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             waitDataStatus.ThrowIfNotRunning();
             var subAckMessage = (MqttUnsubAckMessage)waitDataAsync.CompletedData;
             return subAckMessage;

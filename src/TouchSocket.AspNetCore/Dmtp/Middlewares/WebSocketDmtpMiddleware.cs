@@ -52,11 +52,11 @@ public class WebSocketDmtpMiddleware
     {
         if (context.Request.Path.Equals(this.Url, StringComparison.OrdinalIgnoreCase))
         {
-            await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureDefaultAwait();
         }
         else
         {
-            await this.m_next(context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await this.m_next(context).ConfigureDefaultAwait();
         }
     }
 }
