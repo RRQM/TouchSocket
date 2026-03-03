@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -727,6 +729,25 @@ public static partial class HttpExtensions
         response.FromHtml("<html><body><h1>404 -Not Found</h1></body></html>");
         response.SetStatus(404, "Not Found");
         return response;
+    }
+
+    /// <summary>
+    /// 将字符串消息以UTF-8编码写入HTTP响应的内容中。
+    /// </summary>
+    /// <param name="response">要写入消息的HTTP响应对象</param>
+    /// <param name="message">要写入响应的字符串消息</param>
+    /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse</typeparam>
+    public static async ValueTask WriteAsync<TResponse>(this TResponse response, string message) where TResponse : HttpResponse
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        var maxByteCount = Encoding.UTF8.GetMaxByteCount(message.Length);
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(maxByteCount);
+        var actualByteCount = Encoding.UTF8.GetBytes(message, memoryOwner.Memory.Span);
+        await response.WriteAsync(memoryOwner.Memory[..actualByteCount]);
+#else
+        Memory<byte> memory = Encoding.UTF8.GetBytes(message);
+        await response.WriteAsync(memory);
+#endif
     }
 
     #endregion HttpResponse
