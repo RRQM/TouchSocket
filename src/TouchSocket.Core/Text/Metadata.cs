@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections;
+using System.Text.Json.Serialization;
 
 namespace TouchSocket.Core;
 
@@ -18,6 +19,7 @@ namespace TouchSocket.Core;
 /// 元数据键值对。
 /// </summary>
 [FastConverter(typeof(MetadataFastBinaryConverter))]
+[JsonConverter(typeof(MetadataJsonConverter))]
 public sealed class Metadata : IEnumerable<KeyValuePair<string, string>>, IPackage
 {
     private const int MaxValueByteLength = 254;

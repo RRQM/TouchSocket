@@ -205,13 +205,20 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
                     await response.AnswerAsync();
 
                     var msg = TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message);
-                    await this.CloseAsync(msg).ConfigureDefaultAwait();
+                    _=EasyTask.SafeNewRun(async() => 
+                    {
+                        await this.CloseAsync(msg).ConfigureDefaultAwait();
+                    });
                     return Result.FromFail(msg);
                 }
             }
             else
             {
-                await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureDefaultAwait();
+                _ = EasyTask.SafeNewRun(async () =>
+                {
+                    await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureDefaultAwait();
+                });
+                
                 return Result.FromFail(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect);
             }
         }

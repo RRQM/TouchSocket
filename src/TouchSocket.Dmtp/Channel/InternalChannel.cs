@@ -10,7 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Dmtp;
 
@@ -18,27 +21,24 @@ namespace TouchSocket.Dmtp;
 internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpChannel
 {
     private readonly DmtpActor m_actor;
-    private readonly SemaphoreSlim m_dataAvailable;
-    private readonly Queue<ChannelPackage> m_dataQueue;
     private DateTimeOffset m_lastOperationTime;
     private bool m_using;
 
-    public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
+    internal void SetId(int id)
     {
-        this.m_actor = client;
-        this.m_lastOperationTime = DateTimeOffset.UtcNow;
-        this.TargetId = targetId;
-        this.Status = ChannelStatus.Default;
-        this.m_dataQueue = new Queue<ChannelPackage>();
-        this.m_dataAvailable = new SemaphoreSlim(0);
-        this.Metadata = metadata;
+        this.Id = id;
     }
 
-    /// <inheritdoc/>
+    internal void MakeUsing()
+    {
+        this.m_using = true;
+    }
+
     public bool CanRead => this.Status == ChannelStatus.Default ||
-                                   this.Status == ChannelStatus.HoldOn;
+                           this.Status == ChannelStatus.HoldOn;
 
     public bool CanWrite => this.m_actor.Online && (byte)this.Status <= 1;
+
     public int Id { get; private set; }
 
     public string LastOperationMes { get; private set; }
@@ -55,7 +55,6 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     #region 读取
 
-    /// <inheritdoc/>
     public async Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (!this.CanRead)
@@ -77,25 +76,21 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
                 case ChannelDataType.Data:
                     this.Status = ChannelStatus.Default;
                     this.LastOperationMes = string.Empty;
-                    var data = channelPackage.Data;
-                    return data;
+                    return channelPackage.Data;
 
                 case ChannelDataType.Completed:
                     this.Status = ChannelStatus.Completed;
                     this.LastOperationMes = channelPackage.Message;
-                    // 通道正常完成，返回空数据表示没有更多数据
                     return ReadOnlyMemory<byte>.Empty;
 
                 case ChannelDataType.Canceled:
                     this.Status = ChannelStatus.Cancel;
                     this.LastOperationMes = channelPackage.Message;
-                    // 通道被取消，返回空数据，调用者可以检查状态决定是否继续
                     return ReadOnlyMemory<byte>.Empty;
 
                 case ChannelDataType.HoldOn:
                     this.Status = ChannelStatus.HoldOn;
                     this.LastOperationMes = channelPackage.Message;
-                    // 通道暂停，返回空数据，调用者可以检查状态决定是否继续
                     return ReadOnlyMemory<byte>.Empty;
 
                 default:
@@ -202,7 +197,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
     {
         if ((byte)this.Status > 1)
         {
-            throw new Exception($"通道已{this.Status}");
+            throw new InvalidOperationException($"通道已{this.Status}");
         }
         var channelPackage = new ChannelPackage()
         {
@@ -214,58 +209,5 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         };
         await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
         this.m_lastOperationTime = DateTimeOffset.UtcNow;
-    }
-
-    internal void MakeUsing()
-    {
-        this.m_using = true;
-    }
-
-    internal void ReceivedData(ChannelPackage channelPackage)
-    {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-        this.m_lastOperationTime = DateTimeOffset.UtcNow;
-        lock (this.m_dataQueue)
-        {
-            this.m_dataQueue.Enqueue(channelPackage);
-        }
-        this.m_dataAvailable.Release();
-    }
-
-    internal void SetId(int id)
-    {
-        this.Id = id;
-    }
-
-    protected override void SafetyDispose(bool disposing)
-    {
-        if (disposing)
-        {
-            this.m_dataAvailable.SafeDispose();
-            lock (this.m_dataQueue)
-            {
-                while (this.m_dataQueue.Count > 0)
-                {
-                    this.m_dataQueue.Dequeue().SafeDispose();
-                }
-            }
-        }
-    }
-
-    private async Task<ChannelPackage> WaitAsync(CancellationToken cancellationToken)
-    {
-        await this.m_dataAvailable.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-        lock (this.m_dataQueue)
-        {
-            if (this.m_dataQueue.Count > 0)
-            {
-                return this.m_dataQueue.Dequeue();
-            }
-        }
-        // 理论上不会走到这里
-        throw new InvalidOperationException("信号量与队列不同步");
     }
 }

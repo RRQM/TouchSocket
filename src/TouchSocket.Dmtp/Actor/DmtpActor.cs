@@ -664,7 +664,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         else
                         {
                             channelPackage.UnpackageBody(ref reader);
-                            this.QueueChannelPackage(channelPackage);
+                            await this.QueueChannelPackageAsync(channelPackage).ConfigureDefaultAwait();
                         }
                     }
                     catch (Exception ex)
@@ -1230,12 +1230,19 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private void QueueChannelPackage(ChannelPackage channelPackage)
+    private ValueTask QueueChannelPackageAsync(ChannelPackage channelPackage)
     {
         if (this.m_userChannels.TryGetValue(channelPackage.ChannelId, out var channel))
         {
+#if NET6_0_OR_GREATER
+            return channel.ReceivedDataAsync(channelPackage);
+#else
             channel.ReceivedData(channelPackage);
+            return default;
+#endif
         }
+        channelPackage.SafeDispose();
+        return default;
     }
 
     private bool RequestCreateChannel(int id, string targetId, Metadata metadata)

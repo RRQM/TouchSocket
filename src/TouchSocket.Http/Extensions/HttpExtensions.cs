@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Buffers;
-
 namespace TouchSocket.Http;
 
 /// <summary>
@@ -736,19 +734,25 @@ public static partial class HttpExtensions
     /// </summary>
     /// <param name="response">要写入消息的HTTP响应对象</param>
     /// <param name="message">要写入响应的字符串消息</param>
+    /// <param name="cancellationToken">可取消令箭</param>
     /// <typeparam name="TResponse">响应类型，必须继承自HttpResponse</typeparam>
-    public static async ValueTask WriteAsync<TResponse>(this TResponse response, string message) where TResponse : HttpResponse
+    public static async ValueTask WriteAsync<TResponse>(this TResponse response, string message, CancellationToken cancellationToken = default) where TResponse : HttpResponse
     {
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-        var maxByteCount = Encoding.UTF8.GetMaxByteCount(message.Length);
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(maxByteCount);
-        var actualByteCount = Encoding.UTF8.GetBytes(message, memoryOwner.Memory.Span);
-        await response.WriteAsync(memoryOwner.Memory[..actualByteCount]);
-#else
-        Memory<byte> memory = Encoding.UTF8.GetBytes(message);
-        await response.WriteAsync(memory);
-#endif
+        //PR:https://github.com/RRQM/TouchSocket/pull/121
+        //此处使用分段写入的方式，避免一次性将整个字符串转换为字节数组，减少内存占用和GC压力。
+        var writer = new SegmentedBytesWriter();
+        try
+        {
+            WriterExtension.WriteNormalString(ref writer, message, Encoding.UTF8);
+            foreach (var memory in writer.Sequence)
+            {
+                await response.WriteAsync(memory, cancellationToken);
+            }
+        }
+        finally
+        {
+            writer.Dispose();
+        }
     }
-
     #endregion HttpResponse
 }
