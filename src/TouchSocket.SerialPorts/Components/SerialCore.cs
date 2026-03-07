@@ -21,11 +21,12 @@ internal sealed class SerialCore : SafetyDisposableObject
 {
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
     private readonly CircularBuffer<byte> m_circularBuffer = new CircularBuffer<byte>(1024 * 4);
-    private readonly Lock m_lock = new Lock();
+    private readonly Lock m_eventlock = new Lock();
+    private readonly Lock m_bufferlock = new Lock();
     private readonly SerialPort m_serialPort;
     private readonly bool m_streamAsync;
     private readonly SemaphoreSlim m_readSemaphore = new SemaphoreSlim(0, 1);
-
+    private int m_readSemaphoreSignal = 0;
     /// <summary>
     /// Serial核心
     /// </summary>
@@ -135,7 +136,16 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            var bytesRead = await stream.ReadAsync(memory, linkedCts.Token).ConfigureDefaultAwait();
+            if (memory.IsEmpty)
+            {
+            return new SerialOperationResult(0, SerialData.Chars);
+            }
+            var bytes = memory.GetArray();
+            var bytesRead = await stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count).ConfigureDefaultAwait();
+            //判断是否还有数据，部分串口驱动在ReadAsync时，没有及时更新
+            if (m_serialPort.BytesToRead > 0)
+                bytesRead += await stream.ReadAsync(bytes.Array, bytes.Offset + bytesRead, bytes.Count - bytesRead).ConfigureDefaultAwait();
+
             return new SerialOperationResult(bytesRead, SerialData.Chars);
         }
         catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
@@ -154,14 +164,15 @@ internal sealed class SerialCore : SafetyDisposableObject
     {
         this.ThrowIfDisposed();
 
-        lock (this.m_lock)
-        {
-            if (!this.m_circularBuffer.IsEmpty)
-            {
-                var bytesRead = this.m_circularBuffer.Read(memory.Span);
-                return new SerialOperationResult(bytesRead, SerialData.Chars);
-            }
-        }
+        //read后，m_readSemaphore可能已经被释放了，导致跳过等待读到数量0
+        //lock (this.m_bufferlock)
+        //{
+        //    if (!this.m_circularBuffer.IsEmpty)
+        //    {
+        //        var bytesRead = this.m_circularBuffer.Read(memory.Span);
+        //        return new SerialOperationResult(bytesRead, SerialData.Chars);
+        //    }
+        //}
 
         try
         {
@@ -169,20 +180,44 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureDefaultAwait();
-
-            lock (this.m_lock)
+            //循环等待，直到有数据可读或取消
+            while (true)
             {
-                this.ThrowIfDisposed();
-
-                if (!this.m_circularBuffer.IsEmpty)
+                //缓冲区中有数据，直接读取
+                lock (this.m_bufferlock)
                 {
-                    var bytesRead = this.m_circularBuffer.Read(memory.Span);
-                    return new SerialOperationResult(bytesRead, SerialData.Chars);
+                    this.ThrowIfDisposed();
+
+                    if (!this.m_circularBuffer.IsEmpty)
+                    {
+                        var bytesRead = this.m_circularBuffer.Read(memory.Span);
+                        return new SerialOperationResult(bytesRead, SerialData.Chars);
+                    }
                 }
 
-                return new SerialOperationResult(0, SerialData.Chars);
+                await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureDefaultAwait();
+
+                //再次检查缓冲区中是否有数据
+                try
+                {
+                    lock (this.m_bufferlock)
+                    {
+                        this.ThrowIfDisposed();
+
+                        if (!this.m_circularBuffer.IsEmpty)
+                        {
+                            var bytesRead = this.m_circularBuffer.Read(memory.Span);
+                            return new SerialOperationResult(bytesRead, SerialData.Chars);
+                        }
+                    }
+                }
+                finally
+                {
+                    //无条件重置信号，下次执行时再次检查是否有数据
+                    Interlocked.Exchange(ref m_readSemaphoreSignal, 0);
+                }
             }
+
         }
         catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
         {
@@ -200,7 +235,7 @@ internal sealed class SerialCore : SafetyDisposableObject
 
         try
         {
-            lock (this.m_lock)
+            lock (this.m_eventlock)
             {
                 if (this.DisposedValue)
                 {
@@ -220,23 +255,38 @@ internal sealed class SerialCore : SafetyDisposableObject
                     {
                         return;
                     }
-
-                    var buffer = this.m_circularBuffer.GetWriteMemory();
-                    if (!buffer.IsEmpty)
+                    Memory<byte> buffer = default;
+                    //区分事件触发和数据读写锁，防止事件频繁触发时，出现锁饥饿现象导致无法正常读取数据的情况
+                    lock (this.m_bufferlock)
                     {
-                        var toRead = Math.Min(buffer.Length, bytesToRead);
-                        var read = this.m_serialPort.Read(buffer.Slice(0, toRead));
-                        this.m_circularBuffer.AdvanceWrite(read);
-                        break;
+                        buffer = this.m_circularBuffer.GetWriteMemory();
+                        if (!buffer.IsEmpty)
+                        {
+                            var toRead = Math.Min(buffer.Length, bytesToRead);
+                            var read = this.m_serialPort.Read(buffer.Slice(0, toRead));
+                            this.m_circularBuffer.AdvanceWrite(read);
+
+                            break;
+                        }
+                        else
+                        {
+                            if (Interlocked.Exchange(ref m_readSemaphoreSignal, 1) == 0)
+                            {
+                                this.m_readSemaphore.Release();
+                            }
+                        }
                     }
+
 
                     spinWait.SpinOnce();
                 }
 
-                if (this.m_readSemaphore.CurrentCount == 0)
+                if (Interlocked.Exchange(ref m_readSemaphoreSignal, 1) == 0)
                 {
                     this.m_readSemaphore.Release();
                 }
+
+                spinWait.SpinOnce();
             }
         }
         catch (Exception)
