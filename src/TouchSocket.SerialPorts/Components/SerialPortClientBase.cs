@@ -291,7 +291,9 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         {
             Handshake = option.Handshake,
             RtsEnable = option.RtsEnable,
-            DtrEnable = option.DtrEnable
+            DtrEnable = option.DtrEnable,
+            ReadBufferSize = option.ReadBufferSize,
+            WriteBufferSize = option.WriteBufferSize
         };
 
         serialPort.Open();
