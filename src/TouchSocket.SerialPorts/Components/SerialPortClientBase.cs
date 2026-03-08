@@ -292,6 +292,8 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             Handshake = option.Handshake,
             RtsEnable = option.RtsEnable,
             DtrEnable = option.DtrEnable,
+
+            //pr:https://github.com/RRQM/TouchSocket/pull/123
             ReadBufferSize = option.ReadBufferSize,
             WriteBufferSize = option.WriteBufferSize
         };
