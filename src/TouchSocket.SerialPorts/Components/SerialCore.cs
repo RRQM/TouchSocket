@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Buffers;
 using System.IO.Ports;
 
 namespace TouchSocket.SerialPorts;
@@ -21,12 +20,10 @@ namespace TouchSocket.SerialPorts;
 internal sealed class SerialCore : SafetyDisposableObject
 {
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
-    private readonly SegmentedPipe m_eventPipe = new SegmentedPipe();
-    private readonly Lock m_lock = new Lock();
     private readonly SerialPort m_serialPort;
     private readonly bool m_streamAsync;
     private readonly SemaphoreSlim m_readSemaphore = new SemaphoreSlim(0, 1);
-
+    private int m_readSemaphoreSignal = 0;
     /// <summary>
     /// Serial核心
     /// </summary>
@@ -114,7 +111,6 @@ internal sealed class SerialCore : SafetyDisposableObject
                 this.m_serialPort.SafeDispose();
                 this.m_cancellationTokenSource.SafeDispose();
                 this.m_readSemaphore.SafeDispose();
-                this.m_eventPipe.SafeDispose();
             }
             catch
             {
@@ -137,7 +133,24 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            var bytesRead = await stream.ReadAsync(memory, linkedCts.Token).ConfigureDefaultAwait();
+            if (memory.IsEmpty)
+            {
+                return new SerialOperationResult(0, SerialData.Chars);
+            }
+            var token = linkedCts.Token;
+            var bytes = memory.GetArray();
+            var bytesRead = await stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count, token).ConfigureDefaultAwait();
+            //判断是否还有数据，部分串口驱动在ReadAsync时，没有及时更新
+
+            if (m_serialPort.BytesToRead > 0)
+            {
+                var len = bytes.Count - bytesRead;
+                if (len > 0)
+                {
+                    bytesRead += await stream.ReadAsync(bytes.Array, bytes.Offset + bytesRead, len, token).ConfigureDefaultAwait();
+                }
+            }
+
             return new SerialOperationResult(bytesRead, SerialData.Chars);
         }
         catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
@@ -154,17 +167,7 @@ internal sealed class SerialCore : SafetyDisposableObject
 
     private async ValueTask<SerialOperationResult> ReceiveFromEventAsync(Memory<byte> memory, CancellationToken cancellationToken)
     {
-        //pr:https://github.com/RRQM/TouchSocket/pull/122
-        //结合pr，使用SegmentedPipe修复。
         this.ThrowIfDisposed();
-
-        lock (this.m_lock)
-        {
-            if (this.m_eventPipe.Count > 0)
-            {
-                return this.DequeueFromEventPipe(memory);
-            }
-        }
 
         try
         {
@@ -172,19 +175,40 @@ internal sealed class SerialCore : SafetyDisposableObject
                 cancellationToken,
                 this.m_cancellationTokenSource.Token);
 
-            await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureDefaultAwait();
-
-            lock (this.m_lock)
+            //循环等待，直到有数据可读或取消
+            while (true)
             {
-                this.ThrowIfDisposed();
-
-                if (this.m_eventPipe.Count > 0)
+                //存在数据可读，直接读取
+                var bytesToRead = Math.Min(this.m_serialPort.BytesToRead, memory.Length);
+                if (bytesToRead > 0)
                 {
-                    return this.DequeueFromEventPipe(memory);
+                    var count = this.m_serialPort.Read(memory.Slice(0, bytesToRead));
+                    return new SerialOperationResult(count, SerialData.Chars);
+                }
+                linkedCts.Token.ThrowIfCancellationRequested();
+                
+                //等待接收事件触发，触发时会释放信号
+                await this.m_readSemaphore.WaitAsync(linkedCts.Token).ConfigureDefaultAwait();
+
+                linkedCts.Token.ThrowIfCancellationRequested();
+
+                //再次检查缓冲区中是否有数据
+                try
+                {
+                    bytesToRead = Math.Min(this.m_serialPort.BytesToRead, memory.Length);
+                    if (bytesToRead > 0)
+                    {
+                        var count = this.m_serialPort.Read(memory.Slice(0, bytesToRead));
+                        return new SerialOperationResult(count, SerialData.Chars);
+                    }
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref m_readSemaphoreSignal, 0);
                 }
 
-                return new SerialOperationResult(0, SerialData.Chars);
             }
+
         }
         catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
         {
@@ -193,21 +217,12 @@ internal sealed class SerialCore : SafetyDisposableObject
         }
     }
 
-    /// <summary>
-    /// 从事件管道中读取数据，调用方须持有 <see cref="m_lock"/>。
-    /// </summary>
-    private SerialOperationResult DequeueFromEventPipe(Memory<byte> memory)
-    {
-        var result = this.m_eventPipe.Reader.Read();
-        var buffer = result.Buffer;
-        var toRead = (int)Math.Min(memory.Length, buffer.Length);
-        buffer.Slice(0, toRead).CopyTo(memory.Span);
-        this.m_eventPipe.Reader.AdvanceTo(buffer.GetPosition(toRead));
-        return new SerialOperationResult(toRead, SerialData.Chars);
-    }
-
     private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
+        //重构相关方法，当串口不间断接收数据时，内部类由ThreadPool.QueueUserWorkItem将DataReceived触发方法加入线程池队列，并且触发方法带有lock，所以是串行执行的，但如果执行过于频繁并且事件执行耗时过长，会导致整个线程池爆满
+
+        //改为事件触发时仅释放信号，等待ReceiveFromEventAsync方法去读取数据
+
         if (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
         {
             return;
@@ -215,38 +230,15 @@ internal sealed class SerialCore : SafetyDisposableObject
 
         try
         {
-            lock (this.m_lock)
+            var bytesToRead = this.m_serialPort.BytesToRead;
+            if (bytesToRead <= 0)
             {
-                if (this.DisposedValue)
-                {
-                    return;
-                }
-
-                var bytesToRead = this.m_serialPort.BytesToRead;
-                if (bytesToRead <= 0)
-                {
-                    return;
-                }
-
-                var mem = this.m_eventPipe.Writer.GetMemory(bytesToRead);
-                var read = this.m_serialPort.Read(mem.Slice(0, bytesToRead));
-                if (read <= 0)
-                {
-                    return;
-                }
-
-                this.m_eventPipe.Writer.Advance(read);
+                return;
             }
 
-            // 在锁外释放信号量，避免唤醒的接收方立即争锁；
-            // 用 try/catch 代替 CurrentCount 判断，消除竞态。
-            try
+            if (Interlocked.Exchange(ref m_readSemaphoreSignal, 1) == 0)
             {
                 this.m_readSemaphore.Release();
-            }
-            catch (SemaphoreFullException)
-            {
-                // 接收方尚未消费上次信号，队列数据不丢失，下次 ReceiveFromEventAsync 快速路径可读取。
             }
         }
         catch (Exception)
