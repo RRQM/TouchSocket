@@ -13,33 +13,19 @@
 using System.IO.Pipelines;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
 
 internal sealed class TcpTransport : BaseTransport
 {
-    private readonly TcpCore m_tcpCore;
-    private readonly Socket m_socket;
     private readonly bool m_bufferOnDemand;
+    private readonly object m_closeTaskLock = new object();
+    private readonly Socket m_socket;
+    private readonly TcpCore m_tcpCore;
     private PipeReader m_reader;
+    private Task m_shutdownTask;
     private PipeWriter m_writer;
-
-    /// <summary>
-    /// 获取用于读取数据的管道读取器
-    /// </summary>
-    public override PipeReader Reader => this.m_reader ?? base.Reader;
-
-    /// <summary>
-    /// 获取用于写入数据的管道写入器
-    /// </summary>
-    public override PipeWriter Writer => this.m_writer ?? base.Writer;
-
-    /// <summary>
-    /// 获取是否使用SSL
-    /// </summary>
-    public bool UseSsl { get; private set; }
 
     public TcpTransport(TcpCore tcpCore, TransportOption option) : base(option)
     {
@@ -48,6 +34,21 @@ internal sealed class TcpTransport : BaseTransport
         this.m_bufferOnDemand = option.BufferOnDemand;
         this.Start();
     }
+
+    /// <summary>
+    /// 获取用于读取数据的管道读取器
+    /// </summary>
+    public override PipeReader Reader => this.m_reader ?? base.Reader;
+
+    /// <summary>
+    /// 获取是否使用SSL
+    /// </summary>
+    public bool UseSsl { get; private set; }
+
+    /// <summary>
+    /// 获取用于写入数据的管道写入器
+    /// </summary>
+    public override PipeWriter Writer => this.m_writer ?? base.Writer;
 
     /// <summary>
     /// 服务端SSL认证
@@ -107,33 +108,6 @@ internal sealed class TcpTransport : BaseTransport
         this.UseSsl = true;
     }
 
-   
-    /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (this.m_writer != null)
-            {
-                // 完成发送管道
-                await this.m_writer.CompleteAsync().SafeWaitAsync(cancellationToken);
-            }
-
-            if (this.m_reader != null)
-            {
-                // 等待发送管道读取器完成
-                await this.m_reader.CompleteAsync().SafeWaitAsync(cancellationToken);
-            }
-            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-            this.Close();
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex.Message);
-        }
-    }
-
     /// <summary>
     /// 同步关闭连接
     /// </summary>
@@ -148,7 +122,6 @@ internal sealed class TcpTransport : BaseTransport
                 return Result.Success;
             }
 
-
             try
             {
                 if (socket.Connected)
@@ -156,16 +129,48 @@ internal sealed class TcpTransport : BaseTransport
                     socket.Shutdown(SocketShutdown.Both);
                 }
             }
-            catch (SocketException)
+            catch (Exception)
             {
                 // Socket已经断开或未连接,忽略此异常
             }
-            catch (ObjectDisposedException)
+            socket.Close(0);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (this.TryBeginClose(msg))
             {
-                // Socket已经被释放,忽略此异常
+                // 先发出关闭信号，解除所有基于 Pipe 的等待，再关闭底层 Socket。
+                // 这样 SSL 包装层在 CompleteAsync 时不会继续等待底层管道读写自然结束。
+                this.SignalClose();
+                this.Close();
             }
 
-            socket.Close();
+            Task shutdownTask;
+            lock (this.m_closeTaskLock)
+            {
+                this.m_shutdownTask ??= this.ShutdownAsync();
+                shutdownTask = this.m_shutdownTask;
+            }
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                await shutdownTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            }
+            else
+            {
+                await shutdownTask.ConfigureDefaultAwait();
+            }
+
             return Result.Success;
         }
         catch (Exception ex)
@@ -181,29 +186,28 @@ internal sealed class TcpTransport : BaseTransport
     protected override async Task RunReceive(CancellationToken cancellationToken)
     {
         var pipeWriter = this.m_pipeReceive.Writer;
+        Exception error = null;
 
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                TcpOperationResult result;
                 if (this.m_bufferOnDemand)
                 {
-                    result = await this.m_tcpCore.WaitForDataAsync();
+                    var waitResult = await this.m_tcpCore.WaitForDataAsync().ConfigureDefaultAwait();
 
-                    if (result.SocketError != SocketError.Success)
+                    if (waitResult.SocketError != SocketError.Success)
                     {
-                        // 处理接收失败的情况
                         this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                        var socketException = new SocketException((int)result.SocketError);
-                        await CompleteReceivePipeAsync(pipeWriter, socketException).ConfigureAwait(false);
+                        error = new SocketException((int)waitResult.SocketError);
                         break;
                     }
                 }
+
                 var memory = pipeWriter.GetMemory(this.ReceiveBufferSize);
                 var receiveTask = this.m_tcpCore.ReceiveAsync(memory);
 
-
+                TcpOperationResult result;
 
                 // 快速路径：如果操作同步完成，避免异步机制的开销
                 if (receiveTask.IsCompleted)
@@ -213,17 +217,16 @@ internal sealed class TcpTransport : BaseTransport
                 else
                 {
                     // 慢速路径：异步等待
-                    result = await receiveTask.ConfigureAwait(false);
+                    result = await receiveTask.ConfigureDefaultAwait();
                 }
 
                 if (result.SocketError == SocketError.Success)
                 {
                     if (result.BytesTransferred == 0)
                     {
-                        // 远程连接已断开
+                        // 远程连接已断开（收到 FIN）
                         this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                        await CompleteReceivePipeAsync(pipeWriter, null).ConfigureAwait(false);
-                        return;
+                        break;
                     }
 
                     // 更新接收计数器
@@ -245,10 +248,10 @@ internal sealed class TcpTransport : BaseTransport
                     else
                     {
                         // 慢速路径：异步等待刷新
-                        flushResult = await flushTask.ConfigureAwait(false);
+                        flushResult = await flushTask.ConfigureDefaultAwait();
                     }
 
-                    if (flushResult.IsCompleted)
+                    if (flushResult.IsCompleted || flushResult.IsCanceled)
                     {
                         break;
                     }
@@ -257,8 +260,7 @@ internal sealed class TcpTransport : BaseTransport
                 {
                     // 处理接收失败的情况
                     this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
-                    var socketException = new SocketException((int)result.SocketError);
-                    await CompleteReceivePipeAsync(pipeWriter, socketException).ConfigureAwait(false);
+                    error = new SocketException((int)result.SocketError);
                     break;
                 }
             }
@@ -266,10 +268,16 @@ internal sealed class TcpTransport : BaseTransport
         catch (Exception ex)
         {
             this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
-            await CompleteReceivePipeAsync(pipeWriter, ex).ConfigureAwait(false);
+            error = ex;
         }
         finally
         {
+            // 无论以何种方式退出（break、return、异常），始终完成管道写入器。
+            // 这确保 ReceiveLoopAsync 中的 ReadAsync(CancellationToken.None) 不会永久阻塞：
+            // 当 FlushAsync 因 CancelPendingFlush() 返回 IsCanceled=true 而 break 退出时，
+            // 若不在此处 Complete，而 CancelPendingRead() 标志已被消费，则 ReceiveLoopAsync 将死锁。
+            await CompleteReceivePipeAsync(pipeWriter, error).ConfigureDefaultAwait();
+
             // 取消内置接收和发送任务
             base.m_tokenSource.SafeCancel();
         }
@@ -300,7 +308,7 @@ internal sealed class TcpTransport : BaseTransport
                 else
                 {
                     // 慢速路径：异步等待
-                    readResult = await readTask.ConfigureAwait(false);
+                    readResult = await readTask.ConfigureDefaultAwait();
                 }
 
                 if (readResult.IsCanceled)
@@ -316,7 +324,7 @@ internal sealed class TcpTransport : BaseTransport
                 try
                 {
                     // 发送数据
-                    await this.m_tcpCore.SendAsync(readResult.Buffer).ConfigureAwait(false);
+                    await this.m_tcpCore.SendAsync(readResult.Buffer).ConfigureDefaultAwait();
 
                     // 推进读取位置
                     pipeReader.AdvanceTo(readResult.Buffer.End);
@@ -344,6 +352,9 @@ internal sealed class TcpTransport : BaseTransport
         finally
         {
             pipeReader.Complete();
+            // 发送循环退出时取消接收管道的挂起 Flush，
+            // 确保 RunReceive 在背压场景（消费方慢导致 FlushAsync 阻塞）下也能立即解除阻塞。
+            this.m_pipeReceive.Writer.CancelPendingFlush();
         }
     }
 
@@ -352,16 +363,30 @@ internal sealed class TcpTransport : BaseTransport
     /// </summary>
     /// <param name="pipeWriter">管道写入器</param>
     /// <param name="exception">可选的异常</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static async ValueTask CompleteReceivePipeAsync(PipeWriter pipeWriter, Exception exception)
     {
         if (exception == null)
         {
-            await pipeWriter.CompleteAsync().SafeWaitAsync().ConfigureAwait(false);
+            await pipeWriter.CompleteAsync().ConfigureDefaultAwait();
         }
         else
         {
-            await pipeWriter.CompleteAsync(exception).SafeWaitAsync().ConfigureAwait(false);
+            await pipeWriter.CompleteAsync(exception).ConfigureDefaultAwait();
+        }
+    }
+
+    private async Task ShutdownAsync()
+    {
+        await this.WaitForTransportClosedAsync().ConfigureDefaultAwait();
+
+        if (this.m_writer != null)
+        {
+            await this.m_writer.CompleteAsync().ConfigureDefaultAwait();
+        }
+
+        if (this.m_reader != null)
+        {
+            await this.m_reader.CompleteAsync().ConfigureDefaultAwait();
         }
     }
 }

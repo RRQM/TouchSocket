@@ -45,7 +45,7 @@ public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnec
                 {
                     var jsonRpcActor = new JsonRpcActor()
                     {
-                        SerializerConverter = this.SerializerConverter,
+                        SerializerOptions = this.SerializerOptions,
                         Resolver = client.Resolver,
                         SendAction = clientSender.SendAsync,
                         Logger = client.Logger

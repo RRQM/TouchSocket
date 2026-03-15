@@ -17,5 +17,4 @@ internal class InternalJsonRpcRequest : JsonRpcBase
     public string Method { get; set; }
 
     public object ParamsObject { get; set; }
-    public string[] ParamsStrings { get; set; }
 }

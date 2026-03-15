@@ -43,7 +43,8 @@ public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWeb
             {
                 var jsonRpcActor = new JsonRpcActor()
                 {
-                    SerializerConverter = this.SerializerConverter,
+                    Logger = client.Logger,
+                    SerializerOptions = this.SerializerOptions,
                     Resolver = client.Client.Resolver,
                     SendAction = (data, cancellationToken) => client.SendAsync(data, WSDataType.Text, true, cancellationToken)
                 };

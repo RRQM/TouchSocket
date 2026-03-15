@@ -52,6 +52,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                 {
                     jsonRpcActor = new JsonRpcActor()
                     {
+                        Logger = client.Logger,
                         Resolver = client.Resolver,
                         SendAction = async (data, cancellationToken) =>
                         {
@@ -60,7 +61,7 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                             response.SetStatusWithSuccess();
                             await response.AnswerAsync(cancellationToken).ConfigureDefaultAwait();
                         },
-                        SerializerConverter = this.SerializerConverter,
+                        SerializerOptions = this.SerializerOptions,
                         RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()
                     };
 

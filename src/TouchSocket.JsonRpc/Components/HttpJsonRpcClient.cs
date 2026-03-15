@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -36,9 +37,9 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     }
 
     /// <summary>
-    /// 获取序列化转换器。
+    /// 获取或设置序列化选项。
     /// </summary>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
+    public JsonSerializerOptions SerializerOptions { get => this.m_jsonRpcActor.SerializerOptions; set => this.m_jsonRpcActor.SerializerOptions = value; }
 
     #region JsonRpcActor
 
@@ -102,7 +103,7 @@ public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
 
         var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
 
-        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
+        this.m_jsonRpcActor.SerializerOptions = jsonRpcOption.SerializerOptions;
     }
 
     /// <inheritdoc/>

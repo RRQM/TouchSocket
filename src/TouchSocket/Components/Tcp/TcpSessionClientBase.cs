@@ -47,7 +47,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     #region 变量
 
-    private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+    private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_id;
     private TcpListenOption m_listenOption;
     private volatile bool m_online;
@@ -56,14 +56,13 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     private Task m_runTask;
     private IScopedResolver m_scopedResolver;
     private ITcpServiceBase m_service;
-    private TcpCore m_tcpCore;
     private TcpTransport m_transport;
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
     private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
     private EndPoint m_localEndPoint;
     private EndPoint m_remoteEndPoint;
-    private readonly SemaphoreSlim m_closeSemaphore = new SemaphoreSlim(1, 1);
+    private int m_closeFlag;
 
     #endregion 变量
 
@@ -88,7 +87,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     public string Id => this.m_id;
 
     /// <inheritdoc/>
-    public string IP => this.RemoteEndPoint.GetIP(); 
+    public string IP => this.RemoteEndPoint.GetIP();
 
     /// <inheritdoc/>
     public bool IsClient => false;
@@ -141,8 +140,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     internal async Task InternalConnected(TcpTransport transport)
     {
         this.m_online = true;
+        Interlocked.Exchange(ref this.m_closeFlag, 0);
         this.m_transport = transport;
-        this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, transport);
+        this.m_runTask = this.RunSessionAsync(transport);
         await this.m_runTask.ConfigureDefaultAwait();
     }
 
@@ -180,10 +180,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         var socket = tcpCore.Socket;
         this.m_localEndPoint = socket.LocalEndPoint;
         this.m_remoteEndPoint = socket.RemoteEndPoint;
-        this.m_tcpCore = tcpCore;
-
         this.m_pluginManager = pluginManager;
-
         this.m_tryAddAction = tryAddAction;
         this.m_tryRemoveAction = tryRemoveAction;
         this.m_tryGet = tryGet;
@@ -196,23 +193,29 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         this.m_id = id;
     }
 
-    private async Task PrivateOnConnected(TcpTransport transport)
+    private async Task RunSessionAsync(TcpTransport transport)
     {
-        var e_connected = new ConnectedEventArgs();
-        await this.OnTcpConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
+        try
+        {
+            await this.OnTcpConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
+            await this.ReceiveLoopAsync(transport).ConfigureDefaultAwait();
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.SafeDispose();
 
-        transport.SafeDispose();
+            this.m_online = false;
+            var adapter = this.m_dataHandlingAdapter;
+            this.m_dataHandlingAdapter = default;
+            adapter.SafeDispose();
 
-        var e_closed = transport.ClosedEventArgs;
-        this.m_online = false;
-        var adapter = this.m_dataHandlingAdapter;
-        this.m_dataHandlingAdapter = default;
-        adapter.SafeDispose();
-
-        await this.OnTcpClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
-        this.m_tryRemoveAction.Invoke(this.m_id, out var _);
+            await this.OnTcpClosed(transport.ClosedEventArgs).SafeWaitAsync().ConfigureDefaultAwait();
+            this.m_tryRemoveAction.Invoke(this.m_id, out _);
+        }
     }
 
     #endregion Internal
@@ -289,31 +292,40 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-       await this.m_closeSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        if (!this.m_online)
+        {
+            return Result.Success;
+        }
+
+        if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
+        {
+            // 已有其他调用方正在关闭，等待会话彻底结束后返回
+            var waitTask = this.m_runTask;
+            if (waitTask != null)
+            {
+                await waitTask.ConfigureDefaultAwait();
+            }
+            return Result.Success;
+        }
+
         try
         {
-            if (!this.m_online)
-            {
-                return Result.Success;
-            }
-
-            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg))
-                .ConfigureDefaultAwait();
+            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureDefaultAwait();
+            var runTask = this.m_runTask;
+            if (runTask != null)
+            {
+                await runTask.ConfigureDefaultAwait();
+            }
             return Result.Success;
         }
         catch (Exception ex)
         {
             return Result.FromException(ex);
-        }
-        finally
-        {
-            this.m_closeSemaphore.Release();
         }
     }
 
@@ -434,11 +446,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () =>
-            {
-                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
-                this.m_closeSemaphore.Dispose();
-            });
+            _ = EasyTask.SafeRun(() => this.CloseAsync(TouchSocketResource.DisposeClose));
         }
         base.SafetyDispose(disposing);
     }
@@ -480,16 +488,6 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             return;
         }
         await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
-    }
-
-    private async Task WaitClearConnect()
-    {
-        // 确保上次接收任务已经结束
-        var runTask = this.m_runTask;
-        if (runTask != null)
-        {
-            await runTask.ConfigureDefaultAwait();
-        }
     }
 
     #region Throw

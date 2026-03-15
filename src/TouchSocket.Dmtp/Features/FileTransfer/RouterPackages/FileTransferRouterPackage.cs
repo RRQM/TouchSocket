@@ -15,7 +15,7 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// <summary>
 /// 文件传输请求包
 /// </summary>
-public class FileTransferRouterPackage : WaitRouterPackage
+class FileTransferRouterPackage : WaitRouterPackage
 {
     /// <summary>
     /// 续传索引

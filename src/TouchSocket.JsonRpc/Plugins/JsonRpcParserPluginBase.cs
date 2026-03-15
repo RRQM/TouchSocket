@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -30,9 +31,9 @@ public abstract class JsonRpcParserPluginBase : PluginBase
     public ActionMap ActionMap { get; } = new ActionMap(true);
 
     /// <summary>
-    /// 获取序列化转换器。
+    /// 获取序列化选项。
     /// </summary>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; }
+    public JsonSerializerOptions SerializerOptions { get; }
 
     /// <summary>
     /// 初始化 <see cref="JsonRpcParserPluginBase"/> 类的新实例。
@@ -41,8 +42,7 @@ public abstract class JsonRpcParserPluginBase : PluginBase
     /// <param name="option">JsonRpc配置选项</param>
     public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider, JsonRpcOption option)
     {
-        this.SerializerConverter = option.SerializerConverter;
-        this.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>());
+        this.SerializerOptions = option.SerializerOptions;
         if (rpcServerProvider is not null)
         {
             this.RpcServerProvider = rpcServerProvider;

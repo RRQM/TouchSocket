@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core;
+namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 具有目标id和源id的路由包
@@ -36,7 +36,7 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter{TByteBlock}(ref TByteBlock)"/>，然后<see cref="PackageBody{TByteBlock}(ref TByteBlock)"/>
     /// </summary>
     /// <param name="writer"></param>
-    public sealed override void Package<TWriter>(ref TWriter writer)
+    public override sealed void Package<TWriter>(ref TWriter writer)
     {
         this.PackageRouter(ref writer);
         this.PackageBody(ref writer);
@@ -74,7 +74,7 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     }
 
     /// <inheritdoc/>
-    public sealed override void Unpackage<TReader>(ref TReader reader)
+    public override sealed void Unpackage<TReader>(ref TReader reader)
     {
         this.UnpackageRouter(ref reader);
         this.UnpackageBody(ref reader);
@@ -87,7 +87,6 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <param name="reader"></param>
     public virtual void UnpackageBody<TReader>(ref TReader reader)
         where TReader : IBytesReader
-
     {
     }
 
@@ -98,7 +97,6 @@ public class RouterPackage : PackageBase, IReadonlyRouterPackage
     /// <param name="reader"></param>
     public virtual void UnpackageRouter<TReader>(ref TReader reader)
         where TReader : IBytesReader
-
     {
         this.SourceId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
         this.TargetId = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);

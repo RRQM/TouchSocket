@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
@@ -48,7 +49,7 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
+    public JsonSerializerOptions SerializerOptions { get => this.m_jsonRpcActor.SerializerOptions; set => this.m_jsonRpcActor.SerializerOptions = value; }
 
     /// <inheritdoc/>
     public Task ConnectAsync(CancellationToken cancellationToken)
@@ -86,7 +87,7 @@ public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
 
         var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
 
-        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
+        this.m_jsonRpcActor.SerializerOptions = jsonRpcOption.SerializerOptions;
     }
 
     /// <inheritdoc/>

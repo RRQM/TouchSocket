@@ -20,17 +20,21 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 {
     protected readonly Pipe m_pipeReceive;
     protected readonly Pipe m_pipeSend;
+    protected readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
     protected ClosedEventArgs m_closedEventArgs;
     protected ValueCounter m_receiveCounter;
     protected ValueCounter m_sentCounter;
     private static readonly ClosedEventArgs s_defaultClosedEventArgs = new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+    private readonly object m_closeLock = new object();
     private readonly int m_maxBufferSize;
     private readonly int m_minBufferSize;
     private readonly SemaphoreSlim m_readLocker = new SemaphoreSlim(1, 1);
-    protected readonly CancellationTokenSource m_tokenSource = new CancellationTokenSource();
     private readonly SemaphoreSlim m_writeLocker = new SemaphoreSlim(1, 1);
     private int m_cachedReceiveBufferSize = 1024 * 2;
-
+    private int m_closeSignaled;
+    private Task m_receiveTask = Task.CompletedTask;
+    private Task m_sendTask = Task.CompletedTask;
+    private Task m_transportClosedTask = Task.CompletedTask;
 
     public BaseTransport(TransportOption option)
     {
@@ -48,10 +52,8 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
         this.m_minBufferSize = minBufferSize;
 
         // 初始化缓存的缓冲区大小
-        // 参考ASP.NET Core的做法，默认使用2KB作为起始值
         // 这是一个在内存占用和性能之间很好的平衡点
         this.m_cachedReceiveBufferSize = this.ClampBufferSize(1024 * 2);
-
     }
 
     public ClosedEventArgs ClosedEventArgs => this.m_closedEventArgs ?? s_defaultClosedEventArgs;
@@ -75,7 +77,6 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// </summary>
     public ValueCounter ReceiveCounter => this.m_receiveCounter;
 
-
     /// <summary>
     /// 发送计数器
     /// </summary>
@@ -88,38 +89,21 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     /// </summary>
     public virtual PipeWriter Writer => this.m_pipeSend.Writer;
 
-
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         try
         {
-            if (this.m_tokenSource.IsCancellationRequested)
+            if (this.TryBeginClose(msg))
             {
-                return Result.Success;
+                this.SignalClose();
             }
-            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
 
-            // 完成发送管道
-            await this.m_pipeSend.Writer.CompleteAsync().SafeWaitAsync(cancellationToken);
-
-            // 等待发送管道读取器完成
-            await this.m_pipeSend.Reader.CompleteAsync().SafeWaitAsync(cancellationToken);
-
-            // 完成接收管道
-            await this.m_pipeReceive.Writer.CompleteAsync().SafeWaitAsync(cancellationToken);
-
-            // 等待接收管道读取器完成
-            await this.m_pipeReceive.Reader.CompleteAsync().SafeWaitAsync(cancellationToken);
+            await this.WaitForTransportClosedAsync(cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
         {
-            return Result.FromException(ex.Message);
-        }
-        finally
-        {
-            // 停止所有后台任务
-            this.m_tokenSource.SafeCancel();
+            return Result.FromException(ex);
         }
     }
 
@@ -131,34 +115,60 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     {
         if (disposing)
         {
+            this.SignalClose();
             this.m_tokenSource.SafeCancel();
             this.m_tokenSource.SafeDispose();
         }
     }
 
+    protected void SignalClose()
+    {
+        // 取消令牌，停止所有后台循环
+        this.m_tokenSource.SafeCancel();
+
+        // 使用 CancelPendingRead/CancelPendingFlush 立即解除所有挂起的管道操作阻塞，
+        // 而不是直接 Complete 管道——Complete 有时序竞态风险，可能导致双重完成异常。
+        // ReceiveLoopAsync 中的 ReadAsync(CancellationToken.None) 会因此立即返回 IsCanceled=true。
+        this.m_pipeReceive.Reader.CancelPendingRead();
+        this.m_pipeSend.Reader.CancelPendingRead();
+
+        // 取消挂起的 Flush（背压场景：消费方慢时，RunReceive 可能阻塞在 FlushAsync）
+        this.m_pipeReceive.Writer.CancelPendingFlush();
+        this.m_pipeSend.Writer.CancelPendingFlush();
+    }
+
     protected void Start()
     {
-        _ = EasyTask.SafeRun(this.RunReceive, this.m_tokenSource.Token);
-        _ = EasyTask.SafeRun(this.RunSend, this.m_tokenSource.Token);
+        this.m_receiveTask = EasyTask.SafeRun(this.RunReceive, this.m_tokenSource.Token);
+        this.m_sendTask = EasyTask.SafeRun(this.RunSend, this.m_tokenSource.Token);
+        this.m_transportClosedTask = Task.WhenAll(this.m_receiveTask, this.m_sendTask);
     }
 
-    /// <summary>
-    /// 将缓冲区大小限制在最小值和最大值之间
-    /// </summary>
-    /// <param name="size">原始缓冲区大小</param>
-    /// <returns>限制后的缓冲区大小</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int ClampBufferSize(int size)
+    protected bool TryBeginClose(string msg)
     {
-        return Math.Min(Math.Max(size, this.m_minBufferSize), this.m_maxBufferSize);
+        lock (this.m_closeLock)
+        {
+            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
+
+            if (Interlocked.CompareExchange(ref this.m_closeSignaled, 1, 0) != 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
-    private void OnReceivePeriod(long value)
+    protected Task WaitForTransportClosedAsync(CancellationToken cancellationToken = default)
     {
-        var newSize = CalculateOptimalBufferSize(value);
-        this.m_cachedReceiveBufferSize = this.ClampBufferSize(newSize);
-    }
+        var closedTask = this.m_transportClosedTask;
+        if (!cancellationToken.CanBeCanceled)
+        {
+            return closedTask;
+        }
 
+        return closedTask.WithCancellation(cancellationToken);
+    }
 
     /// <summary>
     /// 根据数据流量计算最优缓冲区大小
@@ -194,5 +204,22 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
             // >=100MB/s: 128KB缓冲区，适用于超高速传输
             _ => 128 * KB
         };
+    }
+
+    /// <summary>
+    /// 将缓冲区大小限制在最小值和最大值之间
+    /// </summary>
+    /// <param name="size">原始缓冲区大小</param>
+    /// <returns>限制后的缓冲区大小</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int ClampBufferSize(int size)
+    {
+        return Math.Min(Math.Max(size, this.m_minBufferSize), this.m_maxBufferSize);
+    }
+
+    private void OnReceivePeriod(long value)
+    {
+        var newSize = CalculateOptimalBufferSize(value);
+        this.m_cachedReceiveBufferSize = this.ClampBufferSize(newSize);
     }
 }

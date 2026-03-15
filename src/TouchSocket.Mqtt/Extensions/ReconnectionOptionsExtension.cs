@@ -73,7 +73,7 @@ public static class ReconnectionOptionsExtension
             try
             {
                 using var pingCts = new CancellationTokenSource(timeout);
-                var pingResult = await client.PingAsync(pingCts.Token).ConfigureAwait(false);
+                var pingResult = await client.PingAsync(pingCts.Token).ConfigureDefaultAwait();
 
                 if (pingResult.IsSuccess)
                 {
@@ -82,7 +82,7 @@ public static class ReconnectionOptionsExtension
 
                 using var closeCts = new CancellationTokenSource(timeout);
 
-                var closeResult = await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureAwait(false);
+                var closeResult = await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureDefaultAwait();
 
                 return ConnectionCheckResult.Dead;
             }

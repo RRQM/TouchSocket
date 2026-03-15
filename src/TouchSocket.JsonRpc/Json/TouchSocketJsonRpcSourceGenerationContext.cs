@@ -10,15 +10,4 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Text.Json.Serialization;
-
-namespace TouchSocket.JsonRpc;
-
-/// <summary>
-/// TouchSocketJsonRpcSourceGenerationContext
-/// </summary>
-[JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(object))]
-internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
-{
-}
+// 此文件已移除，序列化逻辑已迁移至 JsonRpcConverter，使用 Utf8JsonReader/Utf8JsonWriter 直接读写，支持 AOT。

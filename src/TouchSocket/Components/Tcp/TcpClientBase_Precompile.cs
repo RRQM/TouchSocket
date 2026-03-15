@@ -16,8 +16,6 @@ namespace TouchSocket.Sockets;
 
 public partial class TcpClientBase
 {
-    #region Connect
-
     /// <summary>
     /// 异步连接服务器
     /// </summary>
@@ -44,13 +42,16 @@ public partial class TcpClientBase
             var iPHost = this.RemoteIPHost;
             ThrowHelper.ThrowIfNull(iPHost, nameof(this.RemoteIPHost));
 
-            var socket = this.CreateSocket(iPHost);
-
-            var args = new ConnectingEventArgs();
-            await this.PrivateOnTcpConnecting(args).ConfigureDefaultAwait();
+            Socket socket = null;
+            TcpTransport transport = null;
 
             try
             {
+                socket = this.CreateSocket(iPHost);
+
+                var args = new ConnectingEventArgs();
+                await this.PrivateOnTcpConnecting(args).ConfigureDefaultAwait();
+
 #if NET6_0_OR_GREATER
                 await socket.ConnectAsync(iPHost.Host, iPHost.Port, cancellationToken).ConfigureDefaultAwait();
 #else
@@ -58,39 +59,41 @@ public partial class TcpClientBase
 
                 await task.WithCancellation(cancellationToken).ConfigureDefaultAwait();
 #endif
+
+                // 确保上次接收任务已经结束
+                var runTask = this.m_runTask;
+                if (runTask != null)
+                {
+                    await runTask.ConfigureDefaultAwait();
+                }
+
+                this.SetSocket(socket);
+
+                transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+                this.m_transport = transport;
+                await this.TryAuthenticateAsync(iPHost).ConfigureDefaultAwait();
+
+                this.m_online = true;
+                Interlocked.Exchange(ref this.m_closeFlag, 0);
+                this.m_runTask = this.RunSessionAsync(transport);
             }
             catch
             {
-                socket.Dispose();
+                transport.SafeDispose();
+                if (transport == null)
+                {
+                    socket.SafeDispose();
+                }
+
+                this.m_transport = default;
+                this.m_online = false;
+                this.SetSocket(null);
                 throw;
             }
-
-            this.m_online = true;
-
-            this.SetSocket(socket);
-
-            await this.WaitClearConnect().ConfigureDefaultAwait();
-
-            this.m_transport = new TcpTransport(this.m_tcpCore, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-            await this.TryAuthenticateAsync(iPHost).ConfigureDefaultAwait();
-            this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_transport);
         }
         finally
         {
             this.m_semaphoreForConnectAndClose.Release();
-        }
-    }
-
-    #endregion Connect
-
-
-    private async Task WaitClearConnect()
-    {
-        // 确保上次接收任务已经结束
-        var runTask = this.m_runTask;
-        if (runTask != null)
-        {
-            await runTask.ConfigureDefaultAwait();
         }
     }
 

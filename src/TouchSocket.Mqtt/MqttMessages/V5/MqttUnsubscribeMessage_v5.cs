@@ -20,7 +20,7 @@ public partial class MqttUnsubscribeMessage
         WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
         MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);
         variableByteIntegerRecorder.CheckIn(ref byteBlockWriter);

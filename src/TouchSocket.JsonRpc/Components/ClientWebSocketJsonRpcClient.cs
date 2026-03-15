@@ -12,6 +12,7 @@
 
 using System.Buffers;
 using System.Net.WebSockets;
+using System.Text.Json;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
 
@@ -41,7 +42,7 @@ public class ClientWebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJson
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
+    public JsonSerializerOptions SerializerOptions { get => this.m_jsonRpcActor.SerializerOptions; set => this.m_jsonRpcActor.SerializerOptions = value; }
 
     #region JsonRpcActor
 
@@ -73,7 +74,7 @@ public class ClientWebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJson
 
         var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
 
-        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
+        this.m_jsonRpcActor.SerializerOptions = jsonRpcOption.SerializerOptions;
     }
 
     /// <inheritdoc/>

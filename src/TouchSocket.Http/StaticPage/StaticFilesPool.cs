@@ -29,16 +29,7 @@ public class StaticFilesPool : DisposableObject
     /// </summary>
     public StaticFilesPool()
     {
-        this.m_timer = new SingleTimer(1000, () =>
-        {
-            var folderEntry = this.m_foldersByKey.Values.Where(a => a.Changed);
-
-            foreach (var item in folderEntry)
-            {
-                this.RemoveFolder(item.Path);
-                this.AddFolder(item.Path, item.Prefix, item.Filter, item.Timespan);
-            }
-        });
+        this.m_timer = new SingleTimer(1000, this.ProcessChangedDirectories);
     }
 
     #region 属性
@@ -63,24 +54,18 @@ public class StaticFilesPool : DisposableObject
     #endregion 属性
 
     /// <summary>
-    /// 清除缓存。
-    /// 该方法通过停止文件监视器并清除缓存项，来释放资源。
+    /// 清除所有文件夹监控及缓存。
     /// </summary>
     public void Clear()
     {
-        // 使用写锁保护访问共享资源，防止并发访问时的一致性问题。
         using (new WriteLock(this.m_lockSlim))
         {
-            // 遍历所有缓存项，停止文件系统监视器并清除缓存内容。
-            foreach (var fileCacheEntry in this.m_foldersByKey)
+            foreach (var entry in this.m_foldersByKey.Values)
             {
-                fileCacheEntry.Value.StopWatcher();
-                fileCacheEntry.Value.Clear();
+                entry.Dispose();
             }
-
-            // 清空缓存项映射，确保没有悬挂的引用。
-            this.m_entriesByKey.Clear();
             this.m_foldersByKey.Clear();
+            this.m_entriesByKey.Clear();
         }
     }
 
@@ -91,16 +76,13 @@ public class StaticFilesPool : DisposableObject
     /// </summary>
     /// <param name="key">缓存键</param>
     /// <param name="value">缓存值，以字节数组形式存储</param>
-    /// <param name="millisecondsTimeout">缓存条目的超时时间，以毫秒为单位</param>
+    /// <param name="millisecondsTimeout">缓存条目的超时时间</param>
     /// <returns>始终返回<see langword="true"/>，表示添加操作已完成</returns>
     public bool AddEntry(string key, byte[] value, TimeSpan millisecondsTimeout)
     {
-        // 使用WriteLock确保在添加缓存条目时数据的一致性
         using (new WriteLock(this.m_lockSlim))
         {
-            // 格式化键以保持一致性
             key = FileUtility.PathFormat(key);
-            // 添加或更新缓存条目
             this.m_entriesByKey.AddOrUpdate(key, new StaticEntry(value, millisecondsTimeout));
             return true;
         }
@@ -111,16 +93,13 @@ public class StaticFilesPool : DisposableObject
     /// </summary>
     /// <param name="key">要添加的条目的键。</param>
     /// <param name="value">要添加的条目的值，包含文件信息。</param>
-    /// <param name="millisecondsTimeout">条目过期的时间段，以毫秒为单位。</param>
+    /// <param name="millisecondsTimeout">条目过期的时间段。</param>
     /// <returns>总是返回<see langword="true"/>，表示条目已成功添加。</returns>
     public bool AddEntry(string key, FileInfo value, TimeSpan millisecondsTimeout)
     {
-        // 使用WriteLock确保在添加条目时数据的一致性
         using (new WriteLock(this.m_lockSlim))
         {
-            // 格式化键值，确保路径格式正确
             key = FileUtility.PathFormat(key);
-            // 添加或更新条目
             this.m_entriesByKey.AddOrUpdate(key, new StaticEntry(value, millisecondsTimeout));
             return true;
         }
@@ -131,22 +110,15 @@ public class StaticFilesPool : DisposableObject
     /// </summary>
     /// <param name="key">要检查的键。</param>
     /// <returns>如果键存在于条目中，则返回 true；否则返回 false。</returns>
-    /// <remarks>
-    /// 此方法用于确定是否已经存在具有给定键的条目。
-    /// 它首先对键应用路径格式化，然后检查是否存在与格式化后的键相对应的条目。
-    /// 使用 ReadLock 确保在读取操作期间数据的一致性。
-    /// </remarks>
     public bool ContainsEntry(string key)
     {
-        // 使用 ReadLock 以确保读取操作期间数据的一致性
         using (new ReadLock(this.m_lockSlim))
         {
-            // 对键应用路径格式化以保持一致性
             key = FileUtility.PathFormat(key);
-            // 检查键是否存在
             return this.m_entriesByKey.ContainsKey(key);
         }
     }
+
     /// <summary>
     /// 移除指定键的条目。
     /// </summary>
@@ -154,12 +126,9 @@ public class StaticFilesPool : DisposableObject
     /// <returns>如果成功移除，则返回 true；否则返回 false。</returns>
     public bool RemoveEntry(string key)
     {
-        // 使用写锁保护对共享资源的访问
         using (new WriteLock(this.m_lockSlim))
         {
-            // 格式化键值以确保一致性
             key = FileUtility.PathFormat(key);
-            // 从键集合中移除指定的键
             return this.m_entriesByKey.Remove(key);
         }
     }
@@ -172,12 +141,9 @@ public class StaticFilesPool : DisposableObject
     /// <returns>如果找到缓存项则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool TryFindEntry(string key, out StaticEntry cacheEntry)
     {
-        // 使用读锁来确保并发访问时的一致性
         using (new ReadLock(this.m_lockSlim))
         {
-            // 格式化键，以确保键的一致性和正确性
             key = FileUtility.PathFormat(key);
-            // 尝试根据键查找缓存项
             return this.m_entriesByKey.TryGetValue(key, out cacheEntry);
         }
     }
@@ -196,35 +162,23 @@ public class StaticFilesPool : DisposableObject
     /// <returns>添加的文件数量。</returns>
     public int AddFolder(string path, string prefix = "/", string filter = "*.*", TimeSpan? timeout = default)
     {
-        // 检查路径参数是否为空或无效
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(path, nameof(path));
 
-        // 格式化路径，确保路径格式正确
         path = FileUtility.PathFormat(path);
-        // 如果路径不以"/"结尾，添加之
         path = path.EndsWith("/") ? path : path + "/";
-
-        // 设置默认超时时间为1小时
         timeout ??= TimeSpan.FromHours(1);
 
-        // 移除已存在的同名文件夹，确保不重复添加
         this.RemoveFolder(path);
 
-        // 创建一个新的文件夹条目
-        var folderEntry = new FolderEntry(this, prefix, path, filter, timeout.Value);
+        var folderEntry = new FolderEntry(path, prefix, filter, timeout.Value);
 
-        // 使用写锁保护文件夹集合，确保线程安全
         using (new WriteLock(this.m_lockSlim))
         {
-            // 将新的文件夹条目添加到字典中
             this.m_foldersByKey.Add(path, folderEntry);
         }
 
-        // 初始化计数器，用于记录添加的文件数量
         var count = 0;
-        // 私有方法，实际执行添加文件夹操作
-        this.PrivateAddFolder(folderEntry, ref count, path, path, prefix, timeout.Value);
-        // 返回添加的文件数量
+        this.PrivateLoadDirectory(folderEntry, ref count, path, prefix, timeout.Value);
         return count;
     }
 
@@ -235,15 +189,10 @@ public class StaticFilesPool : DisposableObject
     /// <returns>如果文件夹存在于集合中，则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool ContainsFolder(string path)
     {
-        // 使用读取锁确保线程安全
         using (new ReadLock(this.m_lockSlim))
         {
-            // 格式化路径，确保一致性
             path = FileUtility.PathFormat(path);
-            // 确保路径以斜杠结尾，以便于后续的比较
             path = path.EndsWith("/") ? path : path + "/";
-
-            // 检查格式化后的路径是否存在于集合中
             return this.m_foldersByKey.ContainsKey(path);
         }
     }
@@ -255,69 +204,29 @@ public class StaticFilesPool : DisposableObject
     /// <returns>如果成功移除文件夹，则返回 true；如果指定路径不存在于文件夹集合中，则返回 false。</returns>
     public bool RemoveFolder(string path)
     {
-        // 使用写锁来确保线程安全
         using (new WriteLock(this.m_lockSlim))
         {
-            // 格式化路径，确保一致性
             path = FileUtility.PathFormat(path);
-            // 确保路径以斜杠结尾，以便于后续处理
             path = path.EndsWith("/") ? path : path + "/";
 
-            // 尝试从文件夹字典中获取指定路径的文件夹条目
             if (!this.m_foldersByKey.TryGetValue(path, out var folderEntry))
             {
-                // 如果找不到指定路径的文件夹条目，则返回 false
                 return false;
             }
 
-            // 停止文件夹条目的监视器，以防止进一步的资源监视
-            folderEntry.StopWatcher();
+            folderEntry.Dispose();
 
-            // 遍历文件夹条目中的所有子项，并从子项字典中移除
-            foreach (var entryKey in folderEntry)
+            foreach (var key in folderEntry.GetAllUrlKeys())
             {
-                this.m_entriesByKey.Remove(entryKey);
+                this.m_entriesByKey.Remove(key);
             }
 
-            // 从文件夹字典中移除该文件夹条目
             this.m_foldersByKey.Remove(path);
-
-            // 成功移除文件夹条目，返回 true
             return true;
         }
     }
 
     #endregion Folder
-
-    internal bool InternalAddFile(string file, string key, TimeSpan millisecondsTimeout)
-    {
-        try
-        {
-            key = FileUtility.PathFormat(key);
-
-            var fileInfo = new FileInfo(file);
-            if (fileInfo.Length < this.MaxCacheSize)
-            {
-                var content = File.ReadAllBytes(file);
-                if (!this.AddEntry(key, content, millisecondsTimeout))
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (!this.AddEntry(key, fileInfo, millisecondsTimeout))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
 
     internal bool InternalRemoveFile(string path, string key)
     {
@@ -337,48 +246,178 @@ public class StaticFilesPool : DisposableObject
     {
         if (disposing)
         {
-            using (new WriteLock(this.m_lockSlim))
-            {
-                this.Clear();
-            }
+            this.m_timer.Dispose();
+            this.Clear();
         }
 
         base.Dispose(disposing);
     }
 
-    private void PrivateAddFolder(FolderEntry folderEntry, ref int count, string root, string path, string prefix, TimeSpan timeout)
+    /// <summary>
+    /// 计算物理目录对应的 URL 前缀。
+    /// </summary>
+    private static string ComputeUrlPrefix(string rootPath, string rootPrefix, string normalizedPhysicalDir)
+    {
+        var rel = normalizedPhysicalDir.Length > rootPath.Length
+            ? normalizedPhysicalDir.Substring(rootPath.Length).Trim('/')
+            : string.Empty;
+
+        var basePrefix = string.IsNullOrEmpty(rootPrefix) || rootPrefix == "/"
+            ? string.Empty
+            : rootPrefix.TrimEnd('/');
+
+        return string.IsNullOrEmpty(rel)
+            ? (string.IsNullOrEmpty(basePrefix) ? "/" : basePrefix)
+            : basePrefix + "/" + rel;
+    }
+
+    /// <summary>
+    /// 对待重载目录列表去重：若父目录已在列表中，则跳过其子目录。
+    /// </summary>
+    private static List<string> DeduplicateParentDirs(List<string> dirs)
+    {
+        if (dirs.Count <= 1)
+        {
+            return dirs;
+        }
+
+        dirs.Sort((a, b) => a.Length.CompareTo(b.Length));
+        var result = new List<string>();
+        foreach (var dir in dirs)
+        {
+            if (!result.Exists(r => dir.StartsWith(r, StringComparison.OrdinalIgnoreCase)))
+            {
+                result.Add(dir);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// 定时器回调：扫描所有有变更的文件夹，按子目录粒度精准重载。
+    /// </summary>
+    private void ProcessChangedDirectories()
+    {
+        List<(FolderEntry folder, List<string> changedDirs)> workItems;
+
+        using (new ReadLock(this.m_lockSlim))
+        {
+            workItems = this.m_foldersByKey.Values
+                .Where(f => f.HasChanges)
+                .Select(f => (f, f.DequeueChangedDirs()))
+                .Where(x => x.Item2.Count > 0)
+                .ToList();
+        }
+
+        foreach (var (folder, changedDirs) in workItems)
+        {
+            var deduped = DeduplicateParentDirs(changedDirs);
+            foreach (var dir in deduped)
+            {
+                this.ReloadDirectory(folder, dir);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 重载指定物理目录（含子目录树）的缓存。
+    /// </summary>
+    private void ReloadDirectory(FolderEntry folder, string normalizedPhysicalDir)
+    {
+        using (new WriteLock(this.m_lockSlim))
+        {
+            if (!this.m_foldersByKey.ContainsValue(folder))
+            {
+                return;
+            }
+
+            var removedKeys = folder.RemoveDirectoryTree(normalizedPhysicalDir);
+            foreach (var key in removedKeys)
+            {
+                this.m_entriesByKey.Remove(key);
+            }
+        }
+
+        var physicalPath = normalizedPhysicalDir.TrimEnd('/');
+        if (!Directory.Exists(physicalPath))
+        {
+            return;
+        }
+
+        var urlPrefix = ComputeUrlPrefix(folder.RootPath, folder.Prefix, normalizedPhysicalDir);
+        var count = 0;
+        this.PrivateLoadDirectory(folder, ref count, normalizedPhysicalDir, urlPrefix, folder.Timespan);
+    }
+
+    /// <summary>
+    /// 递归加载物理目录下的所有文件至缓存，并向 <see cref="FolderEntry"/> 注册目录跟踪信息。
+    /// </summary>
+    private void PrivateLoadDirectory(FolderEntry folderEntry, ref int count, string normalizedPhysicalDir, string urlPrefix, TimeSpan timeout)
     {
         try
         {
-            var keyPrefix = (string.IsNullOrEmpty(prefix) || (prefix == "/")) ? "/" : (prefix + "/");
+            var physicalPath = normalizedPhysicalDir.TrimEnd('/');
+            var keyPrefix = string.IsNullOrEmpty(urlPrefix) || urlPrefix == "/"
+                ? "/"
+                : urlPrefix.TrimEnd('/') + "/";
 
-            foreach (var item in Directory.GetDirectories(path))
-            {
-                var key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
-
-                this.PrivateAddFolder(folderEntry, ref count, root, item, key, timeout);
-            }
-
-            foreach (var item in Directory.GetFiles(path))
+            // 在锁外读取文件内容，避免IO操作持锁
+            var fileEntries = new List<(string key, StaticEntry entry)>();
+            foreach (var file in Directory.GetFiles(physicalPath))
             {
                 count++;
-
-                var key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
-
-                if (!this.InternalAddFile(item, key, timeout))
+                var fileName = HttpUtility.UrlDecode(Path.GetFileName(file));
+                var key = FileUtility.PathFormat(keyPrefix + fileName);
+                if (this.TryCreateEntry(file, timeout, out var entry))
                 {
-                    continue;
+                    fileEntries.Add((key, entry));
                 }
+            }
 
-                using (new WriteLock(this.m_lockSlim))
+            // 批量写入缓存，减少锁竞争
+            using (new WriteLock(this.m_lockSlim))
+            {
+                var keys = new List<string>(fileEntries.Count);
+                foreach (var (key, entry) in fileEntries)
                 {
-                    folderEntry.Add(key);
+                    this.m_entriesByKey.AddOrUpdate(key, entry);
+                    keys.Add(key);
                 }
+                folderEntry.TrackDirectory(normalizedPhysicalDir, keys);
+            }
+
+            // 递归处理子目录
+            foreach (var subDir in Directory.GetDirectories(physicalPath))
+            {
+                var subDirName = HttpUtility.UrlDecode(Path.GetFileName(subDir));
+                var subPrefix = keyPrefix + subDirName;
+                var normalizedSubDir = FileUtility.PathFormat(subDir) + "/";
+                this.PrivateLoadDirectory(folderEntry, ref count, normalizedSubDir, subPrefix, timeout);
             }
         }
         catch
         {
             // ignored
+        }
+    }
+
+    /// <summary>
+    /// 尝试根据文件路径创建 <see cref="StaticEntry"/>。
+    /// </summary>
+    private bool TryCreateEntry(string file, TimeSpan timeout, out StaticEntry entry)
+    {
+        try
+        {
+            var fileInfo = new FileInfo(file);
+            entry = fileInfo.Length < this.MaxCacheSize
+                ? new StaticEntry(File.ReadAllBytes(file), timeout)
+                : new StaticEntry(fileInfo, timeout);
+            return true;
+        }
+        catch
+        {
+            entry = null;
+            return false;
         }
     }
 }

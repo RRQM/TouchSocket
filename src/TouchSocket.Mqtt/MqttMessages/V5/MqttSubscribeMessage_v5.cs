@@ -22,7 +22,7 @@ public partial class MqttSubscribeMessage
         WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.MessageId, EndianType.Big);
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
         if (this.SubscriptionIdentifier > 0)
         {

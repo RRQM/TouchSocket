@@ -97,9 +97,6 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     public string Id => this.m_dmtpActor?.Id;
 
     /// <inheritdoc/>
-    public bool IsClient => true;
-
-    /// <inheritdoc/>
     public override bool Online => base.Online && this.m_dmtpActor != null && this.m_dmtpActor.Online;
 
 

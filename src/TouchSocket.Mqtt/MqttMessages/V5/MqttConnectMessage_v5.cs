@@ -164,7 +164,7 @@ public partial class MqttConnectMessage
 
         // 写入属性长度字段与属性内容
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        var propertiesWriter = this.CreateVariableWriter(ref writer);
+        var propertiesWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref propertiesWriter);
         MqttExtension.WriteSessionExpiryInterval(ref propertiesWriter, this.SessionExpiryInterval);
         MqttExtension.WriteAuthenticationMethod(ref propertiesWriter, this.AuthenticationMethod);
@@ -185,7 +185,7 @@ public partial class MqttConnectMessage
         {
             // 写入遗嘱属性长度字段与属性内容
             var willVariableByteIntegerRecorder = new VariableByteIntegerRecorder();
-            var willPropertiesWriter = this.CreateVariableWriter(ref writer);
+            var willPropertiesWriter = this.CreatePropertiesWriter(ref writer);
             willVariableByteIntegerRecorder.CheckOut(ref willPropertiesWriter);
             MqttExtension.WritePayloadFormatIndicator(ref willPropertiesWriter, this.WillPayloadFormatIndicator);
             MqttExtension.WriteMessageExpiryInterval(ref willPropertiesWriter, this.WillMessageExpiryInterval);

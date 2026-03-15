@@ -166,7 +166,7 @@ internal sealed partial class FileStorageStream
     {
         this.ThrowIfDisposed();
         var memory = buffer.AsMemory(offset, count);
-        var readCount = await this.m_storage.ReadAsync(this.m_position, memory, cancellationToken).ConfigureAwait(false);
+        var readCount = await this.m_storage.ReadAsync(this.m_position, memory, cancellationToken).ConfigureDefaultAwait();
         this.m_position += readCount;
         return readCount;
     }
@@ -175,7 +175,7 @@ internal sealed partial class FileStorageStream
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
-        var count = await this.m_storage.ReadAsync(this.m_position, buffer, cancellationToken).ConfigureAwait(false);
+        var count = await this.m_storage.ReadAsync(this.m_position, buffer, cancellationToken).ConfigureDefaultAwait();
         this.m_position += count;
         return count;
     }
@@ -185,7 +185,7 @@ internal sealed partial class FileStorageStream
     {
         this.ThrowIfDisposed();
         var memory = buffer.AsMemory(offset, count);
-        await this.m_storage.WriteAsync(this.m_position, memory, cancellationToken).ConfigureAwait(false);
+        await this.m_storage.WriteAsync(this.m_position, memory, cancellationToken).ConfigureDefaultAwait();
         this.m_position += count;
     }
 
@@ -193,7 +193,7 @@ internal sealed partial class FileStorageStream
     public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
     {
         this.ThrowIfDisposed();
-        await this.m_storage.WriteAsync(this.m_position, buffer, cancellationToken).ConfigureAwait(false);
+        await this.m_storage.WriteAsync(this.m_position, buffer, cancellationToken).ConfigureDefaultAwait();
         this.m_position += buffer.Length;
     }
 }
@@ -229,7 +229,7 @@ internal sealed partial class FileStorageStream
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
-        var readCount = await this.m_storage.ReadAsync(this.m_position, new Memory<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+        var readCount = await this.m_storage.ReadAsync(this.m_position, new Memory<byte>(buffer, offset, count), cancellationToken).ConfigureDefaultAwait();
         this.m_position += readCount;
         return readCount;
     }
@@ -238,7 +238,7 @@ internal sealed partial class FileStorageStream
     public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
-        await this.m_storage.WriteAsync(this.m_position, new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+        await this.m_storage.WriteAsync(this.m_position, new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).ConfigureDefaultAwait();
         this.m_position += count;
     }
 }

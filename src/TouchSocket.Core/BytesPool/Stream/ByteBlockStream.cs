@@ -306,7 +306,7 @@ internal sealed partial class ByteBlockStream : Stream
 
         if (cancellationToken.IsCancellationRequested)
         {
-            await CreateCanceledTask(cancellationToken).ConfigureAwait(false);
+            await CreateCanceledTask(cancellationToken).ConfigureDefaultAwait();
         }
 
         if (!destination.CanWrite)
@@ -319,7 +319,7 @@ internal sealed partial class ByteBlockStream : Stream
         if (remainingLength > 0)
         {
             var remainingData = this.m_byteBlock.Memory.Slice(this.m_byteBlock.Position, remainingLength);
-            await WriteAsyncPlatformOptimized(destination, remainingData, cancellationToken).ConfigureAwait(false);
+            await WriteAsyncPlatformOptimized(destination, remainingData, cancellationToken).ConfigureDefaultAwait();
             this.m_byteBlock.Position = this.m_byteBlock.Length;
         }
     }

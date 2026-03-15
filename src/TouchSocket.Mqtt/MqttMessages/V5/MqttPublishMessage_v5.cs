@@ -41,7 +41,7 @@ public partial class MqttPublishMessage
 
         #region properties
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
         MqttExtension.WritePayloadFormatIndicator(ref byteBlockWriter, this.PayloadFormatIndicator);

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core;
+namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 只读的路由包接口

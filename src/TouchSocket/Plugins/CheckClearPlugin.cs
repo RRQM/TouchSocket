@@ -21,8 +21,7 @@ namespace TouchSocket.Sockets;
 public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     where TClient : class, IDependencyClient, IClosableClient
 {
-    private static readonly DependencyProperty<bool> s_checkClearProperty =
-        new("CheckClear", false);
+    private static readonly DependencyProperty<bool> s_isClosingProperty =new("IsCheckClearClosing", false);
 
     private readonly ILog m_logger;
     private readonly CheckClearType m_checkClearType;
@@ -87,78 +86,10 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
         await e.InvokeNext().ConfigureDefaultAwait();
     }
 
-    private void CheckWithSessionClient(TClient client)
-    {
-        if (client is null)
-        {
-            this.m_logger.Warning(this, $"客户端为null，无法进行检查清理操作");
-            return;
-        }
-        if (client.GetValue(s_checkClearProperty))
-        {
-            return;
-        }
-
-        this.m_logger.Debug(this, $"开始为客户端 {client} 启动检查清理任务");
-        client.SetValue(s_checkClearProperty, true);
-
-        _ = EasyTask.SafeRun(async () =>
-        {
-            var first = true;
-            while (true)
-            {
-                if (first)
-                {
-                    await Task.Delay(this.m_tick).ConfigureDefaultAwait();
-                    first = false;
-                }
-                else
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureDefaultAwait();
-                }
-
-                if (client is IOnlineClient onlineClient && !onlineClient.Online)
-                {
-                    this.m_logger.Debug(this, $"客户端 {client} 已离线，退出检查清理任务");
-                    return;
-                }
-
-                if (this.m_checkClearType == CheckClearType.OnlyReceive)
-                {
-                    if (DateTimeOffset.UtcNow - client.LastReceivedTime > this.m_tick)
-                    {
-                        this.m_logger.Debug(this, $"客户端 {client} 接收超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                        return;
-                    }
-                }
-                else if (this.m_checkClearType == CheckClearType.OnlySend)
-                {
-                    if (DateTimeOffset.UtcNow - client.LastSentTime > this.m_tick)
-                    {
-                        this.m_logger.Debug(this, $"客户端 {client} 发送超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                        return;
-                    }
-                }
-                else
-                {
-                    if (DateTimeOffset.UtcNow - client.GetLastActiveTime() > this.m_tick)
-                    {
-                        this.m_logger.Debug(this, $"客户端 {client} 活动超时，准备关闭连接");
-                        await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                        return;
-                    }
-                }
-            }
-        });
-    }
-
-    private async Task CheckWithClient(TClient client)
+    private void CheckWithClient(TClient client)
     {
         if (client is IOnlineClient onlineClient && !onlineClient.Online)
         {
-            this.m_logger.Debug(this, $"客户端 {client} 已离线，跳过检查");
             return;
         }
 
@@ -167,8 +98,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.LastReceivedTime > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 接收超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                return;
+                this.CloseClient(client, this.m_checkClearType);
             }
         }
         else if (this.m_checkClearType == CheckClearType.OnlySend)
@@ -176,8 +106,7 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.LastSentTime > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 发送超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                return;
+                this.CloseClient(client, this.m_checkClearType);
             }
         }
         else
@@ -185,26 +114,30 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             if (DateTimeOffset.UtcNow - client.GetLastActiveTime() > this.m_tick)
             {
                 this.m_logger.Debug(this, $"客户端 {client} 活动超时，准备关闭连接");
-                await this.CloseClientAsync(client, this.m_checkClearType).ConfigureDefaultAwait();
-                return;
+                this.CloseClient(client, this.m_checkClearType);
             }
         }
     }
 
-    private async Task CloseClientAsync(TClient client, CheckClearType checkClearType)
+    private void CloseClient(TClient client, CheckClearType checkClearType)
     {
-        if (this.m_onClose != null)
+        if (client.GetValue(s_isClosingProperty))
+        {
+            return;
+        }
+        client.SetValue(s_isClosingProperty, true);
+
+        _ = EasyTask.SafeRun(async () =>
         {
             try
             {
-                this.m_logger.Debug(this, $"正在关闭客户端 {client}，原因: {checkClearType}");
                 await this.m_onClose.Invoke(client, checkClearType).ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
                 this.m_logger.Debug(this, ex.Message);
             }
-        }
+        });
     }
 
     private async Task Polling(IConfigObject sender)
@@ -220,25 +153,16 @@ public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 }
                 try
                 {
-
                     if (sender is IConnectableService connectableService)
                     {
                         await Task.Delay(TimeSpan.FromMilliseconds(this.m_tick.TotalMilliseconds / 10.0)).ConfigureDefaultAwait();
                         foreach (var client in connectableService.GetClients())
                         {
-                            var typedClient = client as TClient;
-                            if (typedClient == null)
+                            if (client is TClient typedClient)
                             {
-                                this.m_logger.Warning(this, $"客户端类型转换失败，期望类型: {typeof(TClient).Name}，实际类型: {client?.GetType().Name ?? "null"}");
-                                continue;
+                                this.CheckWithClient(typedClient);
                             }
-                            this.CheckWithSessionClient(typedClient);
                         }
-                    }
-                    else if (sender is TClient client)
-                    {
-                        await Task.Delay(this.m_tick).ConfigureDefaultAwait();
-                        await this.CheckWithClient(client).ConfigureDefaultAwait();
                     }
                     else
                     {

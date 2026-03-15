@@ -18,17 +18,11 @@ namespace TouchSocket.Core;
 [Serializable]
 public abstract class PackageBase : IPackage
 {
-
     /// <inheritdoc/>
     public abstract void Package<TWriter>(ref TWriter writer)
-        where TWriter : IBytesWriter
-
-        ;
+        where TWriter : IBytesWriter;
 
     /// <inheritdoc/>
     public abstract void Unpackage<TReader>(ref TReader reader)
-        where TReader : IBytesReader
-
-        ;
-
+        where TReader : IBytesReader;
 }

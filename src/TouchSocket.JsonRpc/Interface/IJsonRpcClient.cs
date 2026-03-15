@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -20,7 +21,7 @@ namespace TouchSocket.JsonRpc;
 public interface IJsonRpcClient : IRpcClient, IDisposableObject
 {
     /// <summary>
-    /// 获取用于 JSON-RPC 的序列化转换器。
+    /// 获取或设置用于 JSON-RPC 参数与返回值序列化的选项。
     /// </summary>
-    TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; }
+    JsonSerializerOptions SerializerOptions { get; set; }
 }

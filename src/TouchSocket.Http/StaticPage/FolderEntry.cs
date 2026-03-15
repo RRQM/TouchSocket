@@ -10,74 +10,211 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Collections.Concurrent;
+
 namespace TouchSocket.Http;
 
-internal class FolderEntry : HashSet<string>
+/// <summary>
+/// 表示一个受监控的文件夹条目，支持按子目录粒度跟踪文件系统变更。
+/// </summary>
+internal sealed class FolderEntry : IDisposable
 {
-    public const int Timeout = 1000 * 5;
+    // 物理目录路径（已规范化，使用'/'并带尾部'/'） → 该目录下的 URL 键集合（非递归）
+    // 仅在 StaticFilesPool 的写锁下访问
+    private readonly Dictionary<string, HashSet<string>> m_dirToKeys = new(StringComparer.OrdinalIgnoreCase);
 
+    // 已知的物理目录路径集合，供事件处理器无锁读取
+    private readonly ConcurrentDictionary<string, byte> m_knownDirs = new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly string m_path;
-    private readonly string m_prefix;
-    private readonly StaticFilesPool m_staticFileCachePool;
-    private readonly TimeSpan m_timespan;
+    // 待重载的物理目录路径队列（线程安全）
+    private readonly ConcurrentDictionary<string, byte> m_changedDirs = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly FileSystemWatcher m_watcher;
-    private volatile bool m_changed;
+    private bool m_disposed;
 
-    public bool Changed => this.m_changed;
-
-    public string Path => this.m_path;
-
-    public string Prefix => this.m_prefix;
-
-    public string Filter { get; }
-
-    public TimeSpan Timespan => this.m_timespan;
-
-    public FolderEntry(StaticFilesPool staticFileCachePool, string prefix, string path, string filter, TimeSpan timespan)
+    /// <summary>
+    /// 初始化 <see cref="FolderEntry"/>。
+    /// </summary>
+    /// <param name="rootPath">根物理路径（已规范化，带尾部'/'）。</param>
+    /// <param name="prefix">URL 前缀。</param>
+    /// <param name="filter">文件过滤器。</param>
+    /// <param name="timespan">缓存超时时长。</param>
+    public FolderEntry(string rootPath, string prefix, string filter, TimeSpan timespan)
     {
-        this.m_staticFileCachePool = staticFileCachePool;
-        this.m_prefix = prefix;
-        this.m_path = path;
+        this.RootPath = rootPath;
+        this.Prefix = prefix;
         this.Filter = filter;
-        this.m_timespan = timespan;
-        this.m_watcher = new FileSystemWatcher(path, filter);
+        this.Timespan = timespan;
 
-        this.m_watcher.EnableRaisingEvents = true;
+        this.m_watcher = new FileSystemWatcher(rootPath.TrimEnd('/'), filter)
+        {
+            EnableRaisingEvents = true,
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+        };
         this.m_watcher.Created += this.OnCreated;
         this.m_watcher.Deleted += this.OnDeleted;
-        this.m_watcher.Renamed += this.OnRenamed;
         this.m_watcher.Changed += this.OnChanged;
-        this.m_watcher.IncludeSubdirectories = true;
-        this.m_watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
+        this.m_watcher.Renamed += this.OnRenamed;
     }
 
-    public void StopWatcher()
+    /// <summary>根物理路径（带尾部'/'，使用'/'分隔符）。</summary>
+    public string RootPath { get; }
+
+    /// <summary>URL 前缀。</summary>
+    public string Prefix { get; }
+
+    /// <summary>文件过滤器。</summary>
+    public string Filter { get; }
+
+    /// <summary>缓存超时时长。</summary>
+    public TimeSpan Timespan { get; }
+
+    /// <summary>是否存在待处理的变更目录。</summary>
+    public bool HasChanges => !this.m_changedDirs.IsEmpty;
+
+    /// <summary>
+    /// 注册某物理目录及其对应的 URL 键列表。在 <see cref="StaticFilesPool"/> 写锁下调用。
+    /// </summary>
+    public void TrackDirectory(string normalizedDirPath, IReadOnlyList<string> urlKeys)
     {
-        this.m_watcher.Dispose();
+        this.m_dirToKeys[normalizedDirPath] = new HashSet<string>(urlKeys);
+        this.m_knownDirs.TryAdd(normalizedDirPath, 0);
+    }
+
+    /// <summary>
+    /// 返回所有已跟踪目录下的全部 URL 键。在 <see cref="StaticFilesPool"/> 读/写锁下调用。
+    /// </summary>
+    public IEnumerable<string> GetAllUrlKeys()
+    {
+        foreach (var set in this.m_dirToKeys.Values)
+        {
+            foreach (var key in set)
+            {
+                yield return key;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 移除指定物理目录及其所有子目录的跟踪信息，返回被移除的 URL 键列表。在写锁下调用。
+    /// </summary>
+    public List<string> RemoveDirectoryTree(string normalizedDirPath)
+    {
+        var result = new List<string>();
+        foreach (var kvp in this.m_dirToKeys.ToList())
+        {
+            if (IsSubpathOrSame(kvp.Key, normalizedDirPath))
+            {
+                result.AddRange(kvp.Value);
+                this.m_dirToKeys.Remove(kvp.Key);
+                this.m_knownDirs.TryRemove(kvp.Key, out _);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// 取出并清除所有待重载的目录列表。
+    /// </summary>
+    public List<string> DequeueChangedDirs()
+    {
+        var dirs = this.m_changedDirs.Keys.ToList();
+        foreach (var d in dirs)
+        {
+            this.m_changedDirs.TryRemove(d, out _);
+        }
+        return dirs;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (!this.m_disposed)
+        {
+            this.m_disposed = true;
+            this.m_watcher.Dispose();
+        }
+    }
+
+    private static string NormalizeDirPath(string path)
+    {
+        var s = path.Replace('\\', '/');
+        return s.EndsWith("/") ? s : s + '/';
+    }
+
+    private static bool IsSubpathOrSame(string candidate, string parentWithTrailingSlash)
+    {
+        return candidate.Equals(parentWithTrailingSlash, StringComparison.OrdinalIgnoreCase)
+            || candidate.StartsWith(parentWithTrailingSlash, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void MarkDirChanged(string physicalPath)
+    {
+        this.m_changedDirs.TryAdd(NormalizeDirPath(physicalPath), 0);
     }
 
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
-        this.m_changed = true;
-        return;
-    }
-
-    private void OnDeleted(object sender, FileSystemEventArgs e)
-    {
-        this.m_changed = true;
-        return;
+        try
+        {
+            // 新建的若为目录则标记该目录，否则标记其父目录
+            if (Directory.Exists(e.FullPath))
+                this.MarkDirChanged(e.FullPath);
+            else
+                this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
+        catch
+        {
+            this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
     }
 
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
-        this.m_changed = true;
-        return;
+        try
+        {
+            if (Directory.Exists(e.FullPath))
+                this.MarkDirChanged(e.FullPath);
+            else
+                this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
+        catch
+        {
+            this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
+    }
+
+    private void OnDeleted(object sender, FileSystemEventArgs e)
+    {
+        // 被删除的路径已不存在，通过 m_knownDirs 判断它是否为目录
+        var normalized = NormalizeDirPath(e.FullPath);
+        if (this.m_knownDirs.ContainsKey(normalized))
+            this.m_changedDirs.TryAdd(normalized, 0);
+        else
+            this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
-        this.m_changed = true;
-        return;
+        // 标记旧路径
+        var oldNorm = NormalizeDirPath(e.OldFullPath);
+        if (this.m_knownDirs.ContainsKey(oldNorm))
+            this.m_changedDirs.TryAdd(oldNorm, 0);
+        else
+            this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.OldFullPath) ?? this.RootPath);
+
+        // 标记新路径
+        try
+        {
+            if (Directory.Exists(e.FullPath))
+                this.MarkDirChanged(e.FullPath);
+            else
+                this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
+        catch
+        {
+            this.MarkDirChanged(System.IO.Path.GetDirectoryName(e.FullPath) ?? this.RootPath);
+        }
     }
 }

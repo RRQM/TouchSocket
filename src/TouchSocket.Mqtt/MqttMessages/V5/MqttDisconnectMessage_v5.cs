@@ -44,7 +44,7 @@ public partial class MqttDisconnectMessage
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
 
-        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
         MqttExtension.WriteServerReference(ref byteBlockWriter, this.ServerReference);

@@ -84,6 +84,12 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         return new BytesWriter(writer.GetMemory(this.GetMinimumRemainingLength() + 1024));
     }
 
+    protected BytesWriter CreatePropertiesWriter<TWriter>(ref TWriter writer)
+        where TWriter : IBytesWriter
+    {
+        return new BytesWriter(writer.GetMemory(1024));
+    }
+
     #region Build
 
     /// <summary>

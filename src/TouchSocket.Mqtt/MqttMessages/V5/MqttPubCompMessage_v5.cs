@@ -27,7 +27,7 @@ public partial class MqttPubCompMessage
             WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.ReasonCode);
 
             var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
-            var byteBlockWriter = this.CreateVariableWriter(ref writer);
+            var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
             variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
             MqttExtension.WriteReasonString(ref byteBlockWriter, this.ReasonString);
             MqttExtension.WriteUserProperties(ref byteBlockWriter, this.UserProperties);

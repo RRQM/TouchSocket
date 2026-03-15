@@ -107,7 +107,7 @@ public partial class MqttConnAckMessage
 
         var variableByteIntegerRecorder = new VariableByteIntegerRecorder();
 
-        var byteBlockWriter = this.CreateVariableWriter(ref writer);
+        var byteBlockWriter = this.CreatePropertiesWriter(ref writer);
         variableByteIntegerRecorder.CheckOut(ref byteBlockWriter);
 
         MqttExtension.WriteSessionExpiryInterval(ref byteBlockWriter, this.SessionExpiryInterval);

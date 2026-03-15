@@ -210,12 +210,12 @@ public sealed partial class FileStorage : IDisposable
     /// <returns>实际读取的字节数。</returns>
     public async Task<int> ReadAsync(long position, Memory<byte> memory, CancellationToken cancellationToken = default)
     {
-        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             this.ThrowIfDisposed();
             this.m_fileStream.Position = position;
-            return await this.m_fileStream.ReadAsync(memory, cancellationToken).ConfigureAwait(false);
+            return await this.m_fileStream.ReadAsync(memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -231,12 +231,12 @@ public sealed partial class FileStorage : IDisposable
     /// <param name="cancellationToken">取消令牌。</param>
     public async Task WriteAsync(long position, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             this.ThrowIfDisposed();
             this.m_fileStream.Position = position;
-            await this.m_fileStream.WriteAsync(memory, cancellationToken).ConfigureAwait(false);
+            await this.m_fileStream.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {
@@ -250,11 +250,11 @@ public sealed partial class FileStorage : IDisposable
     /// <param name="cancellationToken">取消令牌。</param>
     public async Task FlushAsync(CancellationToken cancellationToken = default)
     {
-        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await this.m_semaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             this.ThrowIfDisposed();
-            await this.m_fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await this.m_fileStream.FlushAsync(cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

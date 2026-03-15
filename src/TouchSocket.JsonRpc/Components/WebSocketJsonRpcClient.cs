@@ -10,6 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Text.Json;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
 
@@ -38,7 +39,7 @@ public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClie
     public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
     /// <inheritdoc/>
-    public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter => this.m_jsonRpcActor.SerializerConverter;
+    public JsonSerializerOptions SerializerOptions { get => this.m_jsonRpcActor.SerializerOptions; set => this.m_jsonRpcActor.SerializerOptions = value; }
 
     #region JsonRpcActor
 
@@ -91,7 +92,7 @@ public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClie
 
         var jsonRpcOption = config.GetValue(JsonRpcConfigExtension.JsonRpcOptionProperty) ?? new JsonRpcOption();
 
-        this.m_jsonRpcActor.SerializerConverter = jsonRpcOption.SerializerConverter;
+        this.m_jsonRpcActor.SerializerOptions = jsonRpcOption.SerializerOptions;
     }
 
     /// <inheritdoc/>
