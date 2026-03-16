@@ -365,9 +365,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(reader));
+        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
     }
-
+    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
     /// <summary>
     /// 在数据即将通过TCP发送时触发，此方法用于通过插件机制拦截发送行为。
     /// 如果子类覆盖了此方法，则不会触发插件。
@@ -378,8 +378,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         // 通过PluginManager委托调用ITcpSendingPlugin接口，传递当前实例和待发送的数据事件。
         // 这里使用RaiseAsync方法异步触发相关插件，以实现对发送行为的扩展或拦截。
-        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
+        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
     }
+    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     /// <summary>
     /// 直接重置内部Id。
@@ -487,8 +488,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
+        await this.OnTcpReceived( ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
     }
+    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
 
     #region Throw
 

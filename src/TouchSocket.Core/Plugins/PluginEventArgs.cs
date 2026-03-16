@@ -42,7 +42,7 @@ public class PluginEventArgs : TouchSocketEventArgs
     /// <summary>
     /// 执行的插件数量。
     /// </summary>
-    public int Count { get; private set; }
+    public int Count { get; protected set; }
 
     /// <summary>
     /// 调用下一个插件。

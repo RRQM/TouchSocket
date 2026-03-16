@@ -294,8 +294,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// </returns>
     protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
-        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, new BytesReaderEventArgs(reader));
+        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
     }
+    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
@@ -304,8 +305,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <returns>返回值意义：表示是否继续发送数据的指示，true为继续，false为取消发送。</returns>
     protected virtual ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this, new SendingEventArgs(memory));
+        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this,  SendingEventArgs.SetData(memory));
     }
+    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     #region ReceiveLoopAsync
     /// <summary>
@@ -454,8 +456,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
+        await this.OnTcpReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
     }
+    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
 
     private void SetSocket(Socket socket)
     {
@@ -552,13 +555,13 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
 
-        await this.OnTcpSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
         await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        await this.OnTcpSending(memory).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。

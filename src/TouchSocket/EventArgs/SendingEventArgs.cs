@@ -21,8 +21,9 @@ public class SendingEventArgs : MemoryEventArgs
     /// 初始化 SendingEventArgs 类的新实例。
     /// </summary>
     /// <param name="memory">待发送数据的只读内存块。</param>
-    public SendingEventArgs(in ReadOnlyMemory<byte> memory) : base(memory)
+    public SendingEventArgs SetData(in ReadOnlyMemory<byte> memory)
     {
-
+        base.SetData(memory);
+        return this;
     }
 }
