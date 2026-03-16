@@ -99,8 +99,10 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </returns>
     protected virtual ValueTask<bool> OnSerialReceiving(IBytesReader byteBlock)
     {
-        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(byteBlock));
+        // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
+        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, BytesReaderEventArgs.ReSetData(byteBlock));
     }
+    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 在序列化发送前调用的虚拟方法。
@@ -113,8 +115,9 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </remarks>
     protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
+        return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
     }
+    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     private async Task PrivateConnected(SerialPortTransport transport)
     {
@@ -315,8 +318,9 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnSerialReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
+        await this.OnSerialReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
     }
+    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
 
     private async Task WaitClearConnect()
     {
@@ -396,13 +400,13 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         this.ThrowIfClientNotConnected();
 
 
-        await this.OnSerialSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
         await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        await this.OnSerialSending(memory).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。

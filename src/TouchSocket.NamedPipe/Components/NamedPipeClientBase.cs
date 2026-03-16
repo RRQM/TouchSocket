@@ -278,8 +278,10 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new BytesReaderEventArgs(reader));
+        // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
+        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
     }
+    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 触发命名管道发送事件的异步方法。
@@ -289,8 +291,9 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
     {
         // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
+        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
     }
+    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     /// <summary>
     /// 设置适配器
@@ -331,9 +334,9 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnNamedPipeReceived(new ReceivedDataEventArgs(memory, requestInfo)).ConfigureDefaultAwait();
+    await this.OnNamedPipeReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
     }
-
+    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
     #region Throw
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -371,13 +374,13 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
 
-        await this.OnNamedPipeSending(memory).ConfigureDefaultAwait();
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
         var locker = transport.WriteLocker;
 
         await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        await this.OnNamedPipeSending(memory).ConfigureDefaultAwait();
         try
         {
             // 如果数据处理适配器未设置，则使用默认发送方式。

@@ -28,8 +28,9 @@ public class UdpSendingEventArgs : SendingEventArgs
     /// </summary>
     /// <param name="memory">要发送的数据内存区块。</param>
     /// <param name="endPoint">数据发送的目的端点。</param>
-    public UdpSendingEventArgs(in ReadOnlyMemory<byte> memory, EndPoint endPoint) : base(memory)
+    public UdpSendingEventArgs(in ReadOnlyMemory<byte> memory, EndPoint endPoint)
     {
+        SetData(memory);
         this.EndPoint = endPoint;
     }
 

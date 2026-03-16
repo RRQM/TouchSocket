@@ -26,8 +26,9 @@ public class UdpReceiveingEventArgs : MemoryEventArgs
     /// </summary>
     /// <param name="endPoint">接收数据的终结点</param>
     /// <param name="memory">接收到的内存块</param>
-    public UdpReceiveingEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory) : base(memory)
+    public UdpReceiveingEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory)
     {
+        SetData(memory);
         this.EndPoint = endPoint;
     }
 

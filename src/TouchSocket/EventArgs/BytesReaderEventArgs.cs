@@ -21,13 +21,17 @@ public class BytesReaderEventArgs : PluginEventArgs
     /// 初始化字节事件参数对象
     /// </summary>
     /// <param name="reader">需要传递的字节块数据</param>
-    public BytesReaderEventArgs(IBytesReader reader)
+    public BytesReaderEventArgs ReSetData(IBytesReader reader)
     {
         this.Reader = reader;
+        this.Handled = false;
+        this.Count = default;
+        this.State = default;
+        return this;
     }
 
     /// <summary>
     /// 获取字节块数据
     /// </summary>
-    public IBytesReader Reader { get; }
+    public IBytesReader Reader { get; private set; }
 }
