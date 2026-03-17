@@ -246,6 +246,7 @@ public struct ValueByteBlock : IByteBlock
             long lend = this.Capacity;
             while (need > lend)
             {
+                if (lend == 0) return; //防止释放后死循环
                 lend *= 2;
             }
 
