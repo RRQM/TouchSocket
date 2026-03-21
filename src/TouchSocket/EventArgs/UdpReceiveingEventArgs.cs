@@ -15,26 +15,43 @@ using System.Net;
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// UdpReceiveingEventArgs 类，继承自 ByteBlockEventArgs 类
+/// UdpReceiveingEventArgs 类，继承自 <see cref="MemoryEventArgs"/> 类
 /// 用于封装 UDP 接收到的数据及相关信息
 /// </summary>
 public class UdpReceiveingEventArgs : MemoryEventArgs
 {
     /// <summary>
-    /// 构造函数
-    /// 初始化 UdpReceivedDataEventArgs 对象
+    /// 初始化 <see cref="UdpReceiveingEventArgs"/> 类的新实例。
     /// </summary>
     /// <param name="endPoint">接收数据的终结点</param>
     /// <param name="memory">接收到的内存块</param>
-    public UdpReceiveingEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    public UdpReceiveingEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory) : base(memory)
     {
-        SetData(memory);
         this.EndPoint = endPoint;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="UdpReceiveingEventArgs"/> 类的新实例。
+    /// </summary>
+    public UdpReceiveingEventArgs()
+    {
     }
 
     /// <summary>
     /// 接收终结点
     /// 表示数据是从哪个终结点接收的
     /// </summary>
-    public EndPoint EndPoint { get; }
+    public EndPoint EndPoint { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置接收终结点和内存数据。
+    /// </summary>
+    /// <param name="endPoint">接收数据的终结点</param>
+    /// <param name="memory">接收到的内存块</param>
+    public UdpReceiveingEventArgs Reset(EndPoint endPoint, ReadOnlyMemory<byte> memory)
+    {
+        this.EndPoint = endPoint;
+        base.Reset(memory);
+        return this;
+    }
 }

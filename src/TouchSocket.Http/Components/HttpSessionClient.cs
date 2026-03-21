@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.IO.Pipelines;
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -20,22 +22,24 @@ namespace TouchSocket.Http;
 /// </summary>
 public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClient
 {
-    private readonly HttpServerDataHandlingAdapter m_httpAdapter;
-    private readonly WebSocketDataHandlingAdapter m_webSocketAdapter;
     private readonly HttpContext m_httpContext;
+    private readonly HttpContextEventArgs m_httpContextEventArgs;
+    private readonly ServerHttpRequest m_requestRoot;
     private readonly ServerHttpResponse m_serverHttpResponse;
-  
+    private readonly WSDataFrameEventArgs m_wsDataFrameEventArgs;
+    private bool m_isCustomProtocol;
+
     /// <summary>
     /// 构造函数
     /// </summary>
     protected HttpSessionClient()
     {
         this.Protocol = Protocol.Http;
-       var serverHttpRequest = new ServerHttpRequest(this);
-        this.m_serverHttpResponse = new ServerHttpResponse(serverHttpRequest, this);
-        this.m_httpContext = new HttpContext(serverHttpRequest, this.m_serverHttpResponse);
-        this.m_httpAdapter = new HttpServerDataHandlingAdapter(serverHttpRequest,this.OnReceivingHttpRequest);
-        this.m_webSocketAdapter = new WebSocketDataHandlingAdapter();
+        this.m_requestRoot = new ServerHttpRequest(this);
+        this.m_serverHttpResponse = new ServerHttpResponse(this.m_requestRoot, this);
+        this.m_httpContext = new HttpContext(this.m_requestRoot, this.m_serverHttpResponse);
+        this.m_httpContextEventArgs = new HttpContextEventArgs(this.m_httpContext);
+        this.m_wsDataFrameEventArgs = new WSDataFrameEventArgs();
     }
 
     internal ITransport InternalTransport => this.Transport;
@@ -45,9 +49,8 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     /// </summary>
     protected virtual async Task OnReceivedHttpRequest(HttpContext httpContext)
     {
-        var e = new HttpContextEventArgs(httpContext);
-
-        await this.PluginManager.RaiseIHttpPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
+        this.m_httpContextEventArgs.Reset(this.m_httpContext);
+        await this.PluginManager.RaiseIHttpPluginAsync(this.Resolver, this, this.m_httpContextEventArgs).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
@@ -61,52 +64,124 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
     }
 
     /// <inheritdoc/>
-    protected override Task OnTcpConnecting(ConnectingEventArgs e)
+    /// <remarks>此处直接从 <see cref="ITransport"/> 的 <see cref="PipeReader"/> 读取数据，不再使用适配器机制。</remarks>
+    protected override sealed async Task ReceiveLoopAsync(ITransport transport)
     {
-        this.SetAdapter(this.m_httpAdapter);
-        return base.OnTcpConnecting(e);
-    }
-
-    /// <inheritdoc/>
-    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    {
-        if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
+        if (!await transport.ReadLocker.WaitAsync(0).ConfigureDefaultAwait())
         {
-            e.Handled = true;
+            return;
+        }
+        try
+        {
+            await this.HttpPipelineLoopAsync(transport.Reader, transport.ClosedToken).ConfigureDefaultAwait();
+        }
+        finally
+        {
+            transport.ReadLocker.Release();
+        }
 
+        if (this.m_isCustomProtocol && !transport.ClosedToken.IsCancellationRequested)
+        {
             try
             {
-                await this.PrivateWebSocketReceived(dataFrame)
-                .ConfigureDefaultAwait();
+                await Task.Delay(-1, transport.ClosedToken).ConfigureDefaultAwait();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+    }
+
+    private async Task HttpPipelineLoopAsync(PipeReader reader, CancellationToken closedToken)
+    {
+        while (!closedToken.IsCancellationRequested && !this.DisposedValue)
+        {
+            // 阶段一：解析 HTTP 请求头部
+            this.m_requestRoot.Reset();
+            while (true)
+            {
+                var readResult = await reader.ReadAsync(CancellationToken.None).ConfigureDefaultAwait();
+                var buffer = readResult.Buffer;
+
+                if (readResult.IsCanceled || (readResult.IsCompleted && buffer.Length == 0))
+                {
+                    return;
+                }
+
+                var bytesReader = new BytesReader(buffer);
+                bool parsed;
+                long headerBytesRead;
+                try
+                {
+                    parsed = this.m_requestRoot.ParsingHeader(ref bytesReader);
+                    headerBytesRead = bytesReader.BytesRead;
+                }
+                finally
+                {
+                    bytesReader.Dispose();
+                }
+
+                if (parsed)
+                {
+                    var contentLength = this.m_requestRoot.ContentLength;
+                    var isChunked = contentLength == 0 && this.m_requestRoot.IsChunk;
+
+                    if (!isChunked && contentLength > 0)
+                    {
+                        // 尝试内联读取：如果 body 已全部在当前缓冲区，直接推进头部让 PipeReader 流式提供 body
+                        var bodySlice = buffer.Slice(buffer.GetPosition(headerBytesRead));
+                        if (bodySlice.Length >= contentLength)
+                        {
+                            reader.AdvanceTo(buffer.GetPosition(headerBytesRead));
+                            this.m_requestRoot.InternalSetForPipeReading(reader, contentLength, false);
+                            break;
+                        }
+                    }
+
+                    // 仅推进头部，body 由 PipeReader 流式读取
+                    reader.AdvanceTo(buffer.GetPosition(headerBytesRead));
+
+                    this.m_requestRoot.InternalSetForPipeReading(reader, contentLength, isChunked);
+                    break;
+                }
+                else
+                {
+                    if (readResult.IsCompleted)
+                    {
+                        return;
+                    }
+                    reader.AdvanceTo(buffer.Start, buffer.End);
+                }
+            }
+
+            // 阶段二：调度 handler
+            try
+            {
+                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureDefaultAwait();
             }
             catch (Exception ex)
             {
-
+                this.Logger?.Exception(this, ex);
             }
-            
-            return;
+            finally
+            {
+                this.m_serverHttpResponse.Reset();
+            }
+
+            // 阶段三：丢弃未读取的 body
+            try
+            {
+                await this.m_requestRoot.InternalDrainBodyAsync(closedToken).ConfigureDefaultAwait();
+            }
+            catch
+            {
+                return;
+            }
+
+            if (this.m_isCustomProtocol)
+            {
+                return;
+            }
         }
-    }
-
-    /// <inheritdoc/>
-    protected override void SafetyDispose(bool disposing)
-    {
-        if (this.DisposedValue)
-        {
-            return;
-        }
-
-        if (disposing && this.m_webSocket != null)
-        {
-            this.m_webSocket.Dispose();
-        }
-
-        base.SafetyDispose(disposing);
-    }
-
-    private async Task OnReceivingHttpRequest(ServerHttpRequest request)
-    {
-        await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureDefaultAwait();
-        this.m_serverHttpResponse.Reset();
     }
 }

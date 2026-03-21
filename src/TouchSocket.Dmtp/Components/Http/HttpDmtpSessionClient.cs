@@ -21,6 +21,7 @@ namespace TouchSocket.Dmtp;
 /// </summary>
 public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessionClient
 {
+    private readonly DmtpAdapter m_dmtpAdapter = new();
     private SealedDmtpActor m_dmtpActor;
 
     /// <inheritdoc/>
@@ -124,6 +125,8 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             Id = this.Id,
             FindDmtpActor = FindDmtpActor,
             IdChanged = this.OnDmtpIdChanged,
+            TransportWriter = this.Transport,
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
@@ -137,7 +140,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         this.m_dmtpActor = actor;
 
         this.Protocol = DmtpUtility.DmtpProtocol;
-        this.SetAdapter(new DmtpAdapter());
+        this.SetAdapter(this.m_dmtpAdapter);
     }
 
     private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
@@ -153,18 +156,24 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
         var request = httpContext.Request;
         var response = httpContext.Response;
 
-        if (request.IsMethod(DmtpUtility.Dmtp)
-            && request.IsUpgrade())
+        if (request.IsMethod(DmtpUtility.Dmtp)&& request.IsUpgrade())
         {
             var upgrade= request.Headers[HttpHeaders.Upgrade];
             if (upgrade.Equals(DmtpUtility.Dmtp,StringComparison.OrdinalIgnoreCase))
             {
-                this.InitDmtpActor();
+                var switchResult = await this.SwitchProtocolAsync().ConfigureDefaultAwait();
+                if (switchResult.IsSuccess)
+                {
+                    this.InitDmtpActor();
+                    response.SetStatus(101, "Switching Protocols");
+                    response.Headers.TryAdd(HttpHeaders.Connection, "Upgrade");
+                    response.Headers.TryAdd(HttpHeaders.Upgrade, DmtpUtility.Dmtp);
 
-                await response.SetStatus(101, "Switching Protocols")
-                    .AnswerAsync()
-                    .ConfigureDefaultAwait();
-                return;
+                    await response.AnswerAsync().ConfigureDefaultAwait();
+
+                    _ = EasyTask.SafeNewRun(() => this.DmtpPipelineLoopAsync(switchResult.Value));
+                    return;
+                }
             }
         }
         await base.OnReceivedHttpRequest(httpContext).ConfigureDefaultAwait();
@@ -197,10 +206,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     {
         if (this.Protocol == DmtpUtility.DmtpProtocol && e.RequestInfo is DmtpMessage message)
         {
-            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
-            {
-                await this.PluginManager.RaiseIDmtpReceivedPluginAsync(this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
-            }
+            await this.HandleDmtpMessageAsync(message).ConfigureDefaultAwait();
         }
         await base.OnTcpReceived(e).ConfigureDefaultAwait();
     }
@@ -208,6 +214,76 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #endregion Override
 
     #region 内部委托绑定
+
+    private async Task DmtpPipelineLoopAsync(ITransport transport)
+    {
+        var closedToken = transport.ClosedToken;
+        var reader = new PooledBytesReader();
+
+        await transport.ReadLocker.WaitAsync(closedToken).ConfigureDefaultAwait();
+        try
+        {
+            while (!closedToken.IsCancellationRequested && !this.DisposedValue)
+            {
+                var result = await transport.Reader.ReadAsync(closedToken).ConfigureDefaultAwait();
+
+                if (result.IsCanceled || (result.IsCompleted && result.Buffer.Length == 0))
+                {
+                    return;
+                }
+
+                try
+                {
+                    reader.Reset(result.Buffer);
+                    while (reader.BytesRemaining > 0)
+                    {
+                        if (!this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
+                        {
+                            break;
+                        }
+
+                        await this.HandleDmtpMessageAsync(message).ConfigureDefaultAwait();
+                    }
+
+                    var position = result.Buffer.GetPosition(reader.BytesRead);
+                    transport.Reader.AdvanceTo(position, result.Buffer.End);
+
+                    if (result.IsCompleted)
+                    {
+                        return;
+                    }
+
+                    reader.Clear();
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    await transport.CloseAsync(ex.Message).ConfigureDefaultAwait();
+                    return;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is OperationCanceledException || ex is ObjectDisposedException)
+        {
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            reader.Dispose();
+            transport.ReadLocker.Release();
+        }
+    }
+
+    private async Task HandleDmtpMessageAsync(DmtpMessage message)
+    {
+        if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
+        {
+            await this.PluginManager.RaiseIDmtpReceivedPluginAsync(this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
+        }
+    }
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {

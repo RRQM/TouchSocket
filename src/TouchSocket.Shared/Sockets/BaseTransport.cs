@@ -93,7 +93,8 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     {
         try
         {
-            if (this.TryBeginClose(msg))
+            var began = this.TryBeginClose(msg);
+            if (began)
             {
                 this.SignalClose();
             }

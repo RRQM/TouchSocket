@@ -26,10 +26,10 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     #region 字段
 
     private TouchSocketConfig m_config;
-    private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+    private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_id;
     private NamedPipeListenOption m_listenOption;
-    private bool m_online;
+    private volatile bool m_online;
     private IPluginManager m_pluginManager;
     private InternalReceiver m_receiver;
     private Task m_runTask;
@@ -39,13 +39,14 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     private Func<NamedPipeSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<NamedPipeSessionClientBase> m_tryGet;
     private TryOutEventHandler<NamedPipeSessionClientBase> m_tryRemoveAction;
+    private int m_closeFlag;
 
     #endregion 字段
 
     /// <summary>
     /// 命名管道服务器辅助客户端类
     /// </summary>
-    public NamedPipeSessionClientBase()
+    protected NamedPipeSessionClientBase()
     {
         this.Protocol = Protocol.NamedPipe;
     }
@@ -54,7 +55,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
 
     /// <inheritdoc/>
-    public override TouchSocketConfig Config => this.m_config;
+    public override TouchSocketConfig Config => this.Service?.Config ?? this.m_config;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -89,7 +90,35 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <inheritdoc/>
     public INamedPipeServiceBase Service => this.m_service;
 
+    /// <summary>
+    /// <summary>
+    /// 获取命名管道的底层传输层对象。
+    /// </summary>
+    protected ITransport Transport => this.m_transport;
+
     #region Internal
+
+    internal async Task InternalConnected(NamedPipeTransport transport)
+    {
+        this.m_online = true;
+        Interlocked.Exchange(ref this.m_closeFlag, 0);
+        this.m_transport = transport;
+        this.m_runTask = this.RunSessionAsync(transport);
+        await this.m_runTask.ConfigureDefaultAwait();
+    }
+
+    internal async Task InternalConnecting(ConnectingEventArgs e)
+    {
+        await this.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
+        if (this.m_dataHandlingAdapter == null)
+        {
+            var adapter = this.m_listenOption.Adapter?.Invoke();
+            if (adapter != null)
+            {
+                this.SetAdapter(adapter);
+            }
+        }
+    }
 
     internal async Task InternalInitialized(TouchSocketConfig config, NamedPipeListenOption option, IResolver resolver, IPluginManager pluginManager, INamedPipeServiceBase serviceBase, Func<NamedPipeSessionClientBase, bool> tryAddAction, TryOutEventHandler<NamedPipeSessionClientBase> tryRemoveAction, TryOutEventHandler<NamedPipeSessionClientBase> tryGet)
     {
@@ -109,26 +138,14 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
         await this.OnInitialized().ConfigureDefaultAwait();
     }
 
-    internal async Task InternalNamedPipeConnected(NamedPipeTransport transport)
+    internal Task InternalNamedPipeConnected(NamedPipeTransport transport)
     {
-        this.m_online = true;
-        this.m_transport = transport;
-        this.m_runTask = EasyTask.SafeRun(this.PrivateConnected, transport);
-        await this.m_runTask.ConfigureDefaultAwait();
-        transport.SafeDispose();
+        return this.InternalConnected(transport);
     }
 
-    internal async Task InternalNamedPipeConnecting(ConnectingEventArgs e)
+    internal Task InternalNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
-        if (this.m_dataHandlingAdapter == null)
-        {
-            var adapter = this.m_listenOption.Adapter?.Invoke();
-            if (adapter != null)
-            {
-                this.SetAdapter(adapter);
-            }
-        }
+        return this.InternalConnecting(e);
     }
 
     internal void InternalSetId(string id)
@@ -137,21 +154,29 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
         this.m_id = id;
     }
 
-    private async Task PrivateConnected(ITransport transport)
+    private async Task RunSessionAsync(NamedPipeTransport transport)
     {
-        var e_connected = new ConnectedEventArgs();
-        await this.OnNamedPipeConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
+        try
+        {
+            await this.OnNamedPipeConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
+            await this.ReceiveLoopAsync(transport).ConfigureDefaultAwait();
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.SafeDispose();
 
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
-        var e_closed = transport.ClosedEventArgs;
-        this.m_online = false;
-        var adapter = this.m_dataHandlingAdapter;
-        this.m_dataHandlingAdapter = default;
-        adapter.SafeDispose();
+            this.m_online = false;
+            var adapter = this.m_dataHandlingAdapter;
+            this.m_dataHandlingAdapter = default;
+            adapter.SafeDispose();
 
-        await this.OnNamedPipeClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
-        this.m_tryRemoveAction.Invoke(this.m_id, out var _);
+            await this.OnNamedPipeClosed(transport.ClosedEventArgs).SafeWaitAsync().ConfigureDefaultAwait();
+            this.m_tryRemoveAction.Invoke(this.m_id, out _);
+        }
     }
 
     #endregion Internal
@@ -159,10 +184,20 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+        if (!this.m_online)
+        {
+            return Result.Success;
+        }
+
         try
         {
-            if (!this.m_online)
+            if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
             {
+                var waitTask = this.m_runTask;
+                if (waitTask != null)
+                {
+                    await waitTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+                }
                 return Result.Success;
             }
 
@@ -172,7 +207,11 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureDefaultAwait();
+            var runTask = this.m_runTask;
+            if (runTask != null)
+            {
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            }
             return Result.Success;
         }
         catch (Exception ex)
@@ -185,6 +224,17 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     public virtual Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
         return this.ProtectedResetIdAsync(newId);
+    }
+
+    /// <summary>
+    /// 当 Id 发生更改时触发。
+    /// </summary>
+    /// <param name="sourceId">原始 Id。</param>
+    /// <param name="targetId">目标 Id。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    protected virtual async Task IdChanged(string sourceId, string targetId)
+    {
+        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -204,9 +254,8 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
+        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
     }
-    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 触发命名管道发送事件的异步方法。
@@ -216,9 +265,8 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
     {
         // 将发送事件委托给插件管理器处理，异步调用相关插件的发送逻辑
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
+        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
-    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     /// <summary>
     /// 直接重置内部Id。
@@ -226,6 +274,8 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <param name="newId">新的Id值。</param>
     protected async Task ProtectedResetIdAsync(string newId)
     {
+        this.ThrowIfDisposed();
+
         // 检查新Id是否为空或null
         if (string.IsNullOrEmpty(newId))
         {
@@ -251,11 +301,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
             if (this.m_tryAddAction(sessionClient))
             {
                 // 如果插件管理器已启用，通知相关插件Id已更改
-                if (this.PluginManager.Enable)
-                {
-                    var e = new IdChangedEventArgs(sourceId, newId);
-                    await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, sessionClient, e).ConfigureDefaultAwait();
-                }
+                await this.IdChanged(sourceId, newId).ConfigureDefaultAwait();
                 return;
             }
             else
@@ -266,7 +312,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
                 // 再次尝试添加，如果失败，则抛出异常
                 if (this.m_tryAddAction(sessionClient))
                 {
-                    throw new Exception("Id重复");
+                    ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(newId));
                 }
                 else
                 {
@@ -278,7 +324,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
         else
         {
             // 如果无法找到对应的Socket客户端，则抛出异常
-            throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(sourceId));
+            ThrowHelper.ThrowClientNotFindException(sourceId);
         }
     }
 
@@ -339,21 +385,16 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnNamedPipeReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
-    }
-    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
-
-    private async Task WaitClearConnect()
-    {
-        // 确保上次接收任务已经结束
-        var runTask = this.m_runTask;
-        if (runTask != null)
-        {
-            await runTask.ConfigureDefaultAwait();
-        }
+        await this.OnNamedPipeReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     #region 事件&委托
+
+    private readonly BytesReaderEventArgs m_bytesReaderEventArgs = new BytesReaderEventArgs();
+
+    private readonly ReceivedDataEventArgs m_receivedDataEventArgs = new ReceivedDataEventArgs();
+
+    private readonly SendingEventArgs m_sendingEventArgs = new SendingEventArgs();
 
     /// <summary>
     /// 当初始化完成时，执行在<see cref="OnNamedPipeConnecting(ConnectingEventArgs)"/>之前。
@@ -428,7 +469,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     {
         if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
         {
-            throw new NotSupportedException($"当前适配器为空或者不支持对象发送。");
+            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
         }
     }
 
@@ -447,7 +488,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
 
     #region 发送
 
-
     /// <summary>
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
@@ -458,8 +498,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
-
-
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
@@ -520,5 +558,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
             locker.Release();
         }
     }
+
     #endregion 发送
 }

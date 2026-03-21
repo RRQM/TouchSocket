@@ -132,7 +132,7 @@ public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
         await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
-            await this.ProtectedWebSocketConnectAsync(cancellationToken).ConfigureDefaultAwait();
+            await this.ProtectedWebSocketConnectAsync(true, cancellationToken).ConfigureDefaultAwait();
         }
         finally
         {

@@ -59,7 +59,7 @@ public sealed class WebSocketFeature : PluginBase, IHttpPlugin
             if (await verifyConnection.Invoke(client, e.Context).ConfigureDefaultAwait())
             {
                 e.Handled = true;
-                var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureDefaultAwait();
+                var result = await client.SwitchProtocolToWebSocketAsync(true).ConfigureDefaultAwait();
 
                 if (!result.IsSuccess)
                 {

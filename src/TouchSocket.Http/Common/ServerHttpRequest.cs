@@ -10,25 +10,34 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+using System.IO.Pipelines;
+
 namespace TouchSocket.Http;
 
 internal sealed class ServerHttpRequest : HttpRequest
 {
-    private readonly AsyncExchange<ReadOnlyMemory<byte>> m_asyncExchange;
-
     private ReadOnlyMemory<byte> m_contentMemory;
+    private PipeReader m_pipeReader;
+    private long m_bodyBytesRemaining;
+    private bool m_isChunkedBody;
+    private int m_contentReadPosition = 0;
+    private long m_chunkDataRemaining = 0;
+    private bool m_needSkipCRLF = false;
 
     public ServerHttpRequest(HttpSessionClient httpSessionClient) : base(httpSessionClient)
     {
-        this.m_asyncExchange = new AsyncExchange<ReadOnlyMemory<byte>>();
     }
 
     protected internal override void Reset()
     {
-        if (this.m_asyncExchange.IsCompleted)
-        {
-            this.m_asyncExchange.Reset();
-        }
+        this.m_contentMemory = default;
+        this.m_pipeReader = null;
+        this.m_bodyBytesRemaining = 0;
+        this.m_isChunkedBody = false;
+        this.m_contentReadPosition = 0;
+        this.m_chunkDataRemaining = 0;
+        this.m_needSkipCRLF = false;
         base.Reset();
     }
 
@@ -51,32 +60,27 @@ internal sealed class ServerHttpRequest : HttpRequest
 
             try
             {
-                using (var memoryStream = new MemoryStream((int)this.ContentLength))
+                using var memoryStream = new MemoryStream((int)this.ContentLength);
+                using var bufferOwner = MemoryPool<byte>.Shared.Rent(8192);
+                var rentedBuffer = bufferOwner.Memory;
+
+                while (true)
                 {
-                    while (true)
+                    var read = await this.ReadAsync(rentedBuffer, cancellationToken).ConfigureDefaultAwait();
+                    if (read == 0)
                     {
-                        using (var blockResult = await this.ReadAsync(cancellationToken))
-                        {
-                            var segment = blockResult.Memory.GetArray();
-                            if (blockResult.IsCompleted)
-                            {
-                                break;
-                            }
-                            memoryStream.Write(segment.Array, segment.Offset, segment.Count);
-                        }
+                        break;
                     }
-                    this.ContentStatus = ContentCompletionStatus.ContentCompleted;
-                    this.m_contentMemory = memoryStream.ToArray();
-                    return this.m_contentMemory;
+                    memoryStream.Write(rentedBuffer.Slice(0, read).Span);
                 }
+                this.ContentStatus = ContentCompletionStatus.ContentCompleted;
+                this.m_contentMemory = memoryStream.ToArray();
+                return this.m_contentMemory;
             }
             catch
             {
                 this.ContentStatus = ContentCompletionStatus.Incomplete;
                 return default;
-            }
-            finally
-            {
             }
         }
         else
@@ -86,59 +90,317 @@ internal sealed class ServerHttpRequest : HttpRequest
     }
 
     /// <inheritdoc/>
-    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
+        if (buffer.IsEmpty)
+        {
+            return EasyValueTask.FromResult(0);
+        }
+
         if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
         {
-            // 已经完成读取
-            return new HttpReadOnlyMemoryBlockResult(default, this.m_contentMemory, true);
+            var remaining = this.m_contentMemory.Length - this.m_contentReadPosition;
+            if (remaining <= 0)
+            {
+                return EasyValueTask.FromResult(0);
+            }
+            var toCopy = Math.Min(buffer.Length, remaining);
+            this.m_contentMemory.Slice(this.m_contentReadPosition, toCopy).CopyTo(buffer);
+            this.m_contentReadPosition += toCopy;
+            return EasyValueTask.FromResult(toCopy);
         }
+
         if (this.ContentStatus == ContentCompletionStatus.ReadCompleted)
         {
-            ThrowHelper.ThrowInvalidOperationException("内容已读取完毕。");
+            return EasyValueTask.FromResult(0);
         }
+
         if (this.ContentLength == 0 && !this.IsChunk)
         {
-            return HttpReadOnlyMemoryBlockResult.Completed;
+            return EasyValueTask.FromResult(0);
         }
 
-
-        var readLeaseTask = this.m_asyncExchange.ReadAsync(cancellationToken);
-
-        ReadLease<ReadOnlyMemory<byte>> readLease;
-        if (readLeaseTask.IsCompleted)
+        if (this.m_pipeReader == null)
         {
-            readLease = readLeaseTask.Result;
+            return EasyValueTask.FromResult(0);
+        }
+
+        return this.m_isChunkedBody
+            ? this.ReadChunkedBlockAsync(buffer, cancellationToken)
+            : this.ReadFixedLengthBlockAsync(buffer, cancellationToken);
+    }
+
+    internal void InternalSetForPipeReading(PipeReader pipeReader, long contentLength, bool isChunked)
+    {
+        this.m_pipeReader = pipeReader;
+        this.m_bodyBytesRemaining = contentLength;
+        this.m_isChunkedBody = isChunked;
+    }
+
+    internal async Task InternalDrainBodyAsync(CancellationToken cancellationToken)
+    {
+        if (this.ContentStatus == ContentCompletionStatus.ContentCompleted ||
+            this.ContentStatus == ContentCompletionStatus.ReadCompleted ||
+            this.m_pipeReader == null)
+        {
+            return;
+        }
+        if (this.m_isChunkedBody)
+        {
+            await this.DrainChunkedAsync(cancellationToken).ConfigureDefaultAwait();
         }
         else
         {
-            readLease = await readLeaseTask.ConfigureDefaultAwait();
+            await this.DrainFixedLengthAsync(cancellationToken).ConfigureDefaultAwait();
         }
+    }
 
-        var memory = readLease.Value;
-
-        if (readLease.IsCompleted)
+    private async ValueTask<int> ReadFixedLengthBlockAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        if (this.m_bodyBytesRemaining <= 0)
         {
             this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+            return 0;
         }
 
-        return new HttpReadOnlyMemoryBlockResult(readLease.Dispose, memory, readLease.IsCompleted);
+        while (true)
+        {
+            var readResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+            var pipeBuffer = readResult.Buffer;
+
+            if (pipeBuffer.Length == 0 && readResult.IsCompleted)
+            {
+                this.ContentStatus = ContentCompletionStatus.Incomplete;
+                return 0;
+            }
+
+            var toRead = (int)Math.Min(Math.Min(this.m_bodyBytesRemaining, pipeBuffer.Length), buffer.Length);
+            if (toRead == 0)
+            {
+                this.m_pipeReader.AdvanceTo(pipeBuffer.Start, pipeBuffer.End);
+                continue;
+            }
+
+            pipeBuffer.Slice(0, toRead).CopyTo(buffer.Span);
+            this.m_bodyBytesRemaining -= toRead;
+            this.m_pipeReader.AdvanceTo(pipeBuffer.GetPosition(toRead));
+
+            if (this.m_bodyBytesRemaining == 0)
+            {
+                this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+            }
+
+            return toRead;
+        }
     }
 
-    internal void CompleteInput()
+    private async ValueTask<int> ReadChunkedBlockAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
-        this.m_asyncExchange.Complete();
+        while (true)
+        {
+            if (this.m_chunkDataRemaining > 0)
+            {
+                var readResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var pipeBuffer = readResult.Buffer;
+
+                if (pipeBuffer.IsEmpty && readResult.IsCompleted)
+                {
+                    this.ContentStatus = ContentCompletionStatus.Incomplete;
+                    return 0;
+                }
+
+                if (pipeBuffer.IsEmpty)
+                {
+                    this.m_pipeReader.AdvanceTo(pipeBuffer.Start, pipeBuffer.End);
+                    continue;
+                }
+
+                var toRead = (int)Math.Min(Math.Min(this.m_chunkDataRemaining, pipeBuffer.Length), buffer.Length);
+                pipeBuffer.Slice(0, toRead).CopyTo(buffer.Span);
+                this.m_chunkDataRemaining -= toRead;
+
+                if (this.m_chunkDataRemaining == 0)
+                {
+                    var afterData = pipeBuffer.Slice(toRead);
+                    if (afterData.Length >= 2)
+                    {
+                        this.m_pipeReader.AdvanceTo(pipeBuffer.GetPosition(toRead + 2));
+                    }
+                    else
+                    {
+                        this.m_pipeReader.AdvanceTo(pipeBuffer.GetPosition(toRead));
+                        this.m_needSkipCRLF = true;
+                    }
+                }
+                else
+                {
+                    this.m_pipeReader.AdvanceTo(pipeBuffer.GetPosition(toRead));
+                }
+
+                return toRead;
+            }
+
+            if (this.m_needSkipCRLF)
+            {
+                var crlfResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var crlfBuffer = crlfResult.Buffer;
+
+                if (crlfBuffer.Length < 2)
+                {
+                    if (crlfResult.IsCompleted)
+                    {
+                        this.ContentStatus = ContentCompletionStatus.Incomplete;
+                        return 0;
+                    }
+                    this.m_pipeReader.AdvanceTo(crlfBuffer.Start, crlfBuffer.End);
+                    continue;
+                }
+
+                this.m_pipeReader.AdvanceTo(crlfBuffer.GetPosition(2));
+                this.m_needSkipCRLF = false;
+                continue;
+            }
+
+            var headerResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+            var headerBuffer = headerResult.Buffer;
+
+            if (headerBuffer.Length == 0 && headerResult.IsCompleted)
+            {
+                this.ContentStatus = ContentCompletionStatus.Incomplete;
+                return 0;
+            }
+
+            var crlfIndex = headerBuffer.IndexOf(TouchSocketHttpUtility.CRLF);
+            if (crlfIndex < 0)
+            {
+                if (headerResult.IsCompleted)
+                {
+                    this.ContentStatus = ContentCompletionStatus.Incomplete;
+                    return 0;
+                }
+                this.m_pipeReader.AdvanceTo(headerBuffer.Start, headerBuffer.End);
+                continue;
+            }
+
+            var chunkSizeSlice = headerBuffer.Slice(0, crlfIndex);
+            using var tempBuffer = new ContiguousMemoryBuffer(chunkSizeSlice);
+            if (!TryParseChunkSize(tempBuffer.Memory.Span, out var chunkSize))
+            {
+                ThrowHelper.ThrowInvalidOperationException("无效的 chunk 大小格式");
+            }
+
+            var afterSizePos = headerBuffer.GetPosition(crlfIndex + 2);
+            var remaining = headerBuffer.Slice(afterSizePos);
+
+            if (chunkSize == 0)
+            {
+                var consumed = remaining.Length >= 2 ? headerBuffer.GetPosition(2, afterSizePos) : afterSizePos;
+                this.m_pipeReader.AdvanceTo(consumed);
+                this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+                return 0;
+            }
+
+            this.m_pipeReader.AdvanceTo(headerBuffer.GetPosition(crlfIndex + 2));
+            this.m_chunkDataRemaining = chunkSize;
+        }
     }
 
-    internal ValueTask<bool> InternalInputAsync(in ReadOnlyMemory<byte> memory)
+    private async Task DrainFixedLengthAsync(CancellationToken cancellationToken)
     {
-        return this.m_asyncExchange.WriteAsync(memory, CancellationToken.None);
+        while (this.m_bodyBytesRemaining > 0)
+        {
+            var readResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+            var buffer = readResult.Buffer;
+            if (buffer.Length == 0 && readResult.IsCompleted)
+            {
+                this.m_bodyBytesRemaining = 0;
+                return;
+            }
+            var toSkip = Math.Min(this.m_bodyBytesRemaining, buffer.Length);
+            this.m_bodyBytesRemaining -= toSkip;
+            this.m_pipeReader.AdvanceTo(buffer.GetPosition(toSkip));
+        }
     }
 
-    /// <inheritdoc/>
-    internal void InternalSetContent(ReadOnlyMemory<byte> content)
+    private async Task DrainChunkedAsync(CancellationToken cancellationToken)
     {
-        this.m_contentMemory = content;
-        this.ContentStatus = ContentCompletionStatus.ContentCompleted;
+        while (true)
+        {
+            var readResult = await this.m_pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+            var buffer = readResult.Buffer;
+
+            if (buffer.Length == 0 && readResult.IsCompleted)
+            {
+                return;
+            }
+
+            var crlfIndex = buffer.IndexOf(TouchSocketHttpUtility.CRLF);
+            if (crlfIndex < 0)
+            {
+                if (readResult.IsCompleted)
+                {
+                    return;
+                }
+                this.m_pipeReader.AdvanceTo(buffer.Start, buffer.End);
+                continue;
+            }
+
+            var chunkSizeSlice = buffer.Slice(0, crlfIndex);
+            using var tempBuffer = new ContiguousMemoryBuffer(chunkSizeSlice);
+            if (!TryParseChunkSize(tempBuffer.Memory.Span, out var chunkSize))
+            {
+                return;
+            }
+
+            var afterSizePos = buffer.GetPosition(crlfIndex + 2);
+            var remaining = buffer.Slice(afterSizePos);
+
+            if (chunkSize == 0)
+            {
+                var consumed = remaining.Length >= 2 ? buffer.GetPosition(2, afterSizePos) : afterSizePos;
+                this.m_pipeReader.AdvanceTo(consumed);
+                return;
+            }
+
+            if (remaining.Length < chunkSize + 2)
+            {
+                if (readResult.IsCompleted)
+                {
+                    return;
+                }
+                this.m_pipeReader.AdvanceTo(buffer.Start, buffer.End);
+                continue;
+            }
+
+            this.m_pipeReader.AdvanceTo(buffer.GetPosition(chunkSize + 2, afterSizePos));
+        }
+    }
+
+    private static bool TryParseChunkSize(ReadOnlySpan<byte> hexBytes, out long chunkSize)
+    {
+        chunkSize = 0;
+        if (hexBytes.Length == 0)
+        {
+            return false;
+        }
+        for (var i = 0; i < hexBytes.Length; i++)
+        {
+            var b = hexBytes[i];
+            if (b == ';' || b == ' ' || b == '\t')
+            {
+                break;
+            }
+            int digit;
+            if (b >= '0' && b <= '9') { digit = b - '0'; }
+            else if (b >= 'A' && b <= 'F') { digit = b - 'A' + 10; }
+            else if (b >= 'a' && b <= 'f') { digit = b - 'a' + 10; }
+            else { return false; }
+            if (chunkSize > (long.MaxValue - digit) / 16)
+            {
+                return false;
+            }
+            chunkSize = chunkSize * 16 + digit;
+        }
+        return true;
     }
 }

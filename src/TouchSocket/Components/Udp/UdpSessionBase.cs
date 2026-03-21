@@ -184,9 +184,13 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         try
         {
+            // 必须先置为 Stopped，再 Dispose Socket。
+            // 否则 Socket.Dispose() 会触发 ReceiveFromAsync 以 SocketError 失败返回，
+            // 而此时 m_serverState 仍为 Running，RunReceive 无法感知停止状态，
+            // 将继续下一次循环访问已被置 null 的 m_monitor，导致 NullReferenceException。
+            this.m_serverState = ServerState.Stopped;
             this.m_monitor?.Socket.Dispose();
             this.m_monitor = null;
-            this.m_serverState = ServerState.Stopped;
             await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureDefaultAwait();
             this.m_receiveTasks.Clear();
 
@@ -367,19 +371,35 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
                     }
                     else if (result.SocketError != SocketError.Success)
                     {
+                        // 服务器已停止，Socket 被 Dispose，属于正常退出
+                        if (this.m_serverState != ServerState.Running)
+                        {
+                            return;
+                        }
+                        // 非致命的 Socket 错误（如 Windows ICMP 端口不可达导致的 ConnectionReset），
+                        // 仅记录日志后继续循环，不能退出接收任务
                         this.Logger?.Debug(this, result.SocketError.ToString());
-                        return;
                     }
                     else
                     {
+                        // 0 字节且无错误，属于偶发情况，继续循环即可
                         this.Logger?.Debug(this, TouchSocketCoreResource.UnknownError);
-                        return;
                     }
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Socket 已被释放，为 StopAsync 时的正常流程，直接退出
+                    return;
                 }
                 catch (Exception ex)
                 {
+                    // 服务器已停止，退出接收循环
+                    if (this.m_serverState != ServerState.Running)
+                    {
+                        return;
+                    }
+                    // 记录非致命异常后继续循环，避免因瞬时错误导致接收任务永久退出
                     this.Logger?.Exception(this, ex);
-                    return;
                 }
             }
         }

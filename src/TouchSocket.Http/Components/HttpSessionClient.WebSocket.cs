@@ -39,44 +39,6 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     {
         return this.OnWebSocketConnected(webSocket, e);
     }
-   
-    private async Task PrivateWebSocketReceived(WSDataFrame dataFrame)
-    {
-        if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
-        {
-            var payloadMemory = dataFrame.PayloadData;
-            var payloadSpan = payloadMemory.Span;
-            if (payloadSpan.Length >= 2)
-            {
-                var closeStatus = (WebSocketCloseStatus)payloadSpan.ReadValue<ushort>(EndianType.Big);
-                this.m_webSocket.CloseStatus = closeStatus;
-            }
-
-            var msg = payloadSpan.ToString(System.Text.Encoding.UTF8);
-
-            await this.PrivateWebSocketClosing(new ClosingEventArgs(msg))
-                .ConfigureDefaultAwait();
-            await this.m_webSocket.CloseAsync(msg ?? "Auto closed successful")
-                .ConfigureDefaultAwait();
-            return;
-        }
-        if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
-        {
-            await this.m_webSocket.PongAsync()
-                .ConfigureDefaultAwait();
-            return;
-        }
-
-        if (this.m_webSocket.AllowAsyncRead)
-        {
-            await this.m_webSocket.InputReceiveAsync(dataFrame, this.ClosedToken)
-              .ConfigureDefaultAwait();
-            return;
-        }
-
-        await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame))
-            .ConfigureDefaultAwait();
-    }
 
     private Task PrivateWebSocketClosing(ClosingEventArgs e)
     {
@@ -86,10 +48,6 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     private async Task PrivateWebSocketClosed(ClosedEventArgs e)
     {
         this.m_webSocket.Online = false;
-        if (this.m_webSocket.AllowAsyncRead)
-        {
-            this.m_webSocket.Complete(e.Message);
-        }
         await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureDefaultAwait();
     }
 
@@ -139,7 +97,6 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     /// <returns>异步任务</returns>
     protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
     {
-        // 提前通知所有IWebSocketClosingPlugin插件，WebSocket即将关闭
         await this.PluginManager.RaiseIWebSocketClosingPluginAsync(this.Resolver, webSocket, e).ConfigureDefaultAwait();
     }
 
@@ -159,15 +116,12 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
     #endregion 事件
 
     /// <inheritdoc/>
-    public async Task<Result> SwitchProtocolToWebSocketAsync(HttpContext httpContext)
+    public async Task<Result> SwitchProtocolToWebSocketAsync(bool autoReceive)
     {
+        var httpContext = this.m_httpContext;
         if (this.m_webSocket is not null)
         {
             return Result.Success;
-        }
-        if (this.Protocol != Protocol.Http)
-        {
-            return Result.FromFail(TouchSocketHttpResource.ProtocolIsIncorrect);
         }
 
         var response = httpContext.Response;
@@ -175,12 +129,19 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
         {
             if (WSTools.TryGetResponse(httpContext.Request, response))
             {
+                var switchResult = await this.SwitchProtocolAsync().ConfigureDefaultAwait();
+                if (!switchResult.IsSuccess)
+                {
+                    return switchResult;
+                }
+                var transport = switchResult.Value;
+
                 var e = new HttpContextEventArgs(this.m_httpContext)
                 {
                     IsPermitOperation = true
                 };
 
-                var webSocket = new InternalWebSocket(this);
+                var webSocket = new InternalWebSocket(this, transport, autoReceive);
 
                 await this.PrivateWebSocketConnecting(webSocket, e).ConfigureDefaultAwait();
 
@@ -191,11 +152,18 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
                 if (e.IsPermitOperation)
                 {
-                    this.InitWebSocket(webSocket);
+
+                    this.m_webSocket = webSocket;
+                    webSocket.Online = true;
 
                     await response.AnswerAsync().ConfigureDefaultAwait();
 
-                    _ = EasyTask.SafeRun(this.PrivateWebSocketConnected, webSocket, new HttpContextEventArgs(httpContext));
+                    await this.PrivateWebSocketConnected(webSocket, new HttpContextEventArgs(httpContext)).ConfigureDefaultAwait();
+
+                    if (autoReceive)
+                    {
+                        _ = EasyTask.SafeNewRun(() => this.WebSocketPipelineLoopAsync(transport));
+                    }
 
                     return Result.Success;
                 }
@@ -205,7 +173,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
                     await response.AnswerAsync();
 
                     var msg = TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message);
-                    _=EasyTask.SafeNewRun(async() => 
+                    _ = EasyTask.SafeNewRun(async () =>
                     {
                         await this.CloseAsync(msg).ConfigureDefaultAwait();
                     });
@@ -218,7 +186,7 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
                 {
                     await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureDefaultAwait();
                 });
-                
+
                 return Result.FromFail(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect);
             }
         }
@@ -229,11 +197,48 @@ public partial class HttpSessionClient : TcpSessionClientBase, IHttpSessionClien
 
     }
 
-    private void InitWebSocket(InternalWebSocket webSocket)
+    private async Task WebSocketPipelineLoopAsync(ITransport transport)
     {
-        this.SetAdapter(this.m_webSocketAdapter);
-        this.Protocol = Protocol.WebSocket;
-        this.m_webSocket = webSocket;
-        webSocket.Online = true;
+        await transport.ReadLocker.WaitAsync(transport.ClosedToken).ConfigureDefaultAwait();
+        var closedToken = transport.ClosedToken;
+        try
+        {
+            while (!closedToken.IsCancellationRequested && !this.DisposedValue)
+            {
+                using var result = await this.m_webSocket.InternalReadAsync(closedToken).ConfigureDefaultAwait();
+                if (result.IsCompleted)
+                {
+                    if (this.GetValue(WebSocketFeature.AutoCloseProperty))
+                    {
+                        await this.m_webSocket.CloseAsync(result.Message ?? string.Empty).ConfigureDefaultAwait();
+                    }
+                    return;
+                }
+
+                if (result.DataFrame.IsPing)
+                {
+                    if (this.GetValue(WebSocketFeature.AutoPongProperty))
+                    {
+                        await this.m_webSocket.PongAsync().ConfigureDefaultAwait();
+                        continue;
+                    }
+                }
+
+                this.m_wsDataFrameEventArgs.Reset(result.DataFrame);
+                try
+                {
+                    await this.OnWebSocketReceived(this.m_webSocket, this.m_wsDataFrameEventArgs).ConfigureDefaultAwait();
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(this, ex);
+                    return;
+                }
+            }
+        }
+        finally
+        {
+            transport.ReadLocker.Release();
+        }
     }
 }

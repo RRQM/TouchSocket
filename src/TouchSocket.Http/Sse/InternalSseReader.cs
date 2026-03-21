@@ -59,6 +59,8 @@ internal class InternalSseReader : SseReader
 
     public override async Task<SseMessage> ReadAsync(CancellationToken cancellationToken = default)
     {
+        using var bufferOwner = MemoryPool<byte>.Shared.Rent(8192);
+        var buffer = bufferOwner.Memory;
         while (true)
         {
             var processResult = this.ProcessBuffer();
@@ -68,31 +70,30 @@ internal class InternalSseReader : SseReader
                 return processResult;
             }
 
-            using (var blockResult = await this.m_response.ReadAsync(cancellationToken)
-                .ConfigureDefaultAwait())
+            var read = await this.m_response.ReadAsync(buffer, cancellationToken)
+                .ConfigureDefaultAwait();
+
+            if (read > 0)
             {
-                if (!blockResult.Memory.IsEmpty)
+                this.m_lineBuffer.Writer.Write(buffer.Slice(0, read).Span);
+            }
+
+            if (read == 0)
+            {
+                var readResult = this.m_lineBuffer.Reader.Read();
+                if (!readResult.Buffer.IsEmpty)
                 {
-                    this.m_lineBuffer.Writer.Write(blockResult.Memory.Span);
+                    this.ParseLineFromSequence(readResult.Buffer);
+                    this.m_lineBuffer.Reader.AdvanceTo(readResult.Buffer.End);
                 }
 
-                if (blockResult.IsCompleted)
+                if (this.m_hasData)
                 {
-                    var readResult = this.m_lineBuffer.Reader.Read();
-                    if (!readResult.Buffer.IsEmpty)
-                    {
-                        this.ParseLineFromSequence(readResult.Buffer);
-                        this.m_lineBuffer.Reader.AdvanceTo(readResult.Buffer.End);
-                    }
-
-                    if (this.m_hasData)
-                    {
-                        var message = this.CreateMessage();
-                        this.ResetMessageState();
-                        return message;
-                    }
-                    return null;
+                    var message = this.CreateMessage();
+                    this.ResetMessageState();
+                    return message;
                 }
+                return null;
             }
         }
     }

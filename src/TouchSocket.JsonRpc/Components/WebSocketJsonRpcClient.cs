@@ -62,7 +62,7 @@ public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClie
             .ConfigureDefaultAwait(); ;
         try
         {
-            await base.ProtectedWebSocketConnectAsync(cancellationToken)
+            await base.ProtectedWebSocketConnectAsync(true,cancellationToken)
                 .ConfigureDefaultAwait(); ;
         }
         finally

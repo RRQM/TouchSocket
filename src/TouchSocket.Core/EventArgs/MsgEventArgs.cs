@@ -40,4 +40,11 @@ public class MsgEventArgs : PluginEventArgs
     /// 该属性用于存储和检索事件期间的消息内容。
     /// </summary>
     public string Message { get; set; }
+
+    /// <inheritdoc/>
+    protected override void Reset()
+    {
+        this.Message = null;
+        base.Reset();
+    }
 }

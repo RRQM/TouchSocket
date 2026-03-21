@@ -13,25 +13,41 @@
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// 字节事件参数类，用于在插件之间传递字节块数据
+/// 表示用于在插件之间传递字节读取器的事件参数。
 /// </summary>
 public class BytesReaderEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 初始化字节事件参数对象
+    /// 使用指定的 <see cref="IBytesReader"/> 初始化一个新的 <see cref="BytesReaderEventArgs"/> 实例。
     /// </summary>
-    /// <param name="reader">需要传递的字节块数据</param>
-    public BytesReaderEventArgs ReSetData(IBytesReader reader)
+    /// <param name="reader">要传递的字节读取器。</param>
+    public BytesReaderEventArgs(IBytesReader reader)
     {
         this.Reader = reader;
-        this.Handled = false;
-        this.Count = default;
-        this.State = default;
+    }
+
+    /// <summary>
+    /// 初始化一个新的 <see cref="BytesReaderEventArgs"/> 实例。
+    /// </summary>
+    public BytesReaderEventArgs()
+    {
+
+    }
+
+    /// <summary>
+    /// 重置事件参数并设置要传递的字节读取器。
+    /// </summary>
+    /// <param name="reader">要传递的字节读取器。</param>
+    /// <returns>返回当前 <see cref="BytesReaderEventArgs"/> 实例以便链式调用。</returns>
+    public BytesReaderEventArgs Reset(IBytesReader reader)
+    {
+        this.Reader = reader;
+        base.Reset();
         return this;
     }
 
     /// <summary>
-    /// 获取字节块数据
+    /// 获取要传递的字节读取器。
     /// </summary>
     public IBytesReader Reader { get; private set; }
 }

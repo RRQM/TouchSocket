@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -28,6 +29,12 @@ public interface IHttpSessionClient : IHttpSession, ISessionClient, ITcpListenab
     /// <summary>
     /// 转化Protocol协议标识为<see cref="Protocol.WebSocket"/>
     /// </summary>
-    /// <param name="httpContext">Http上下文</param>
-    Task<Result> SwitchProtocolToWebSocketAsync(HttpContext httpContext);
+    /// <param name="autoReceive">是否启用自动接收。为<see langword="true"/>时，框架将自动驱动WebSocket数据接收循环；为<see langword="false"/>时，需调用者自行从<see cref="IWebSocket"/>读取数据。</param>
+    Task<Result> SwitchProtocolToWebSocketAsync(bool autoReceive);
+
+    /// <summary>
+    /// 检验当前HTTP请求是否包含升级协议，若包含则退出HTTP解析并返回<see cref="ITransport"/>以供自定义协议直接读写。
+    /// </summary>
+    /// <returns>若请求包含升级协议头，则返回成功结果，<see cref="Result{T}.Value"/>为当前传输对象；否则返回失败结果。</returns>
+    Task<Result<ITransport>> SwitchProtocolAsync();
 }

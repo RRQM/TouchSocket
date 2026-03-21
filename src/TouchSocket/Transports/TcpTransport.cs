@@ -33,6 +33,7 @@ internal sealed class TcpTransport : BaseTransport
         this.m_socket = tcpCore.Socket;
         this.m_bufferOnDemand = option.BufferOnDemand;
         this.Start();
+        // 注意：DebugLog 在 Start() 之后由外部注入，Start() 内的日志不会记录
     }
 
     /// <summary>
@@ -129,7 +130,7 @@ internal sealed class TcpTransport : BaseTransport
                     socket.Shutdown(SocketShutdown.Both);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Socket已经断开或未连接,忽略此异常
             }
@@ -147,12 +148,16 @@ internal sealed class TcpTransport : BaseTransport
     {
         try
         {
-            if (this.TryBeginClose(msg))
+            var began = this.TryBeginClose(msg);
+            if (began)
             {
                 // 先发出关闭信号，解除所有基于 Pipe 的等待，再关闭底层 Socket。
                 // 这样 SSL 包装层在 CompleteAsync 时不会继续等待底层管道读写自然结束。
                 this.SignalClose();
                 this.Close();
+
+                this.m_reader?.CancelPendingRead();
+                this.m_writer?.CancelPendingFlush();
             }
 
             Task shutdownTask;
@@ -162,15 +167,7 @@ internal sealed class TcpTransport : BaseTransport
                 shutdownTask = this.m_shutdownTask;
             }
 
-            if (cancellationToken.CanBeCanceled)
-            {
-                await shutdownTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
-            }
-            else
-            {
-                await shutdownTask.ConfigureDefaultAwait();
-            }
-
+            await shutdownTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -185,13 +182,17 @@ internal sealed class TcpTransport : BaseTransport
     /// <param name="cancellationToken">取消令牌</param>
     protected override async Task RunReceive(CancellationToken cancellationToken)
     {
+        var transportHash = this.GetHashCode();
         var pipeWriter = this.m_pipeReceive.Writer;
         Exception error = null;
+        var loopCount = 0;
 
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                loopCount++;
+
                 if (this.m_bufferOnDemand)
                 {
                     var waitResult = await this.m_tcpCore.WaitForDataAsync().ConfigureDefaultAwait();
@@ -377,6 +378,7 @@ internal sealed class TcpTransport : BaseTransport
 
     private async Task ShutdownAsync()
     {
+        var transportHash = this.GetHashCode();
         await this.WaitForTransportClosedAsync().ConfigureDefaultAwait();
 
         if (this.m_writer != null)
@@ -388,5 +390,6 @@ internal sealed class TcpTransport : BaseTransport
         {
             await this.m_reader.CompleteAsync().ConfigureDefaultAwait();
         }
+
     }
 }

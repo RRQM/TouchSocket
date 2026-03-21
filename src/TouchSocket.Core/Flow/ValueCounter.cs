@@ -24,10 +24,7 @@ public struct ValueCounter
 {
     private long m_count;
 
-    /// <summary>
-    /// 最后一次递增时间。
-    /// </summary>
-    private DateTimeOffset m_lastIncrement;
+    private DateTimeOffset m_lastIncrement= DateTimeOffset.UtcNow;
 
     private long m_totalCount;
 

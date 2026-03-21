@@ -271,6 +271,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             Id = id,
             FindDmtpActor = FindDmtpActor,
             IdChanged = this.ThisOnResetId,
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
@@ -319,6 +320,8 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async Task OnTcpConnected(ConnectedEventArgs e)
     {
+        this.m_dmtpActor.TransportWriter = this.Transport;
+
         _ = EasyTask.SafeRun(async () =>
         {
             await Task.Delay(this.VerifyTimeout).ConfigureDefaultAwait();

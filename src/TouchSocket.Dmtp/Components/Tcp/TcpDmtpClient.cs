@@ -91,6 +91,8 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
                 await base.TcpConnectAsync(cancellationToken).ConfigureDefaultAwait();
             }
 
+            this.m_dmtpActor.TransportWriter = this.Transport;
+
             var dmtpOption = this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty);
             ThrowHelper.ThrowIfNull(dmtpOption, nameof(dmtpOption));
 
@@ -126,6 +128,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         }
         this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
         {
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
             OutputSendAsync = this.DmtpActorSendAsync,
             Routing = this.OnDmtpActorRouting,
             Connecting = this.OnDmtpActorConnecting,

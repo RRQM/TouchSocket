@@ -139,7 +139,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
     }
 
     /// <inheritdoc/>
-    public override async Task StartAsync(CancellationToken cancellationToken = default)
+    public override async Task StartAsync(CancellationToken cancellationToken=default)
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
@@ -163,7 +163,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
                         NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
                         Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
-                        Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty)
+                        Backlog= this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty)
                     };
                     optionList.Add(option);
                 }
@@ -351,14 +351,15 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
         {
             return;
         }
-
         var socket = tuple.Item1;
         var monitor = tuple.Item2;
-        if (m_serverState != ServerState.Running)
+
+        if (this.m_serverState != ServerState.Running)
         {
             socket.SafeDispose();
             return;
         }
+
         var tcpCore = this.RentTcpCore();
 
         TClient client = default;

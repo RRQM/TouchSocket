@@ -226,7 +226,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             {
                 Id = this.GetNextNewId(client)
             };
-            await client.InternalNamedPipeConnecting(args).ConfigureDefaultAwait();//Connecting
+            await client.InternalConnecting(args).ConfigureDefaultAwait();//Connecting
             if (!args.IsPermitOperation)
             {
                 return;
@@ -238,7 +238,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
                 this.Logger?.Error(this, TouchSocketResource.IdAlreadyExists.Format(args.Id));
                 return;
             }
-            await client.InternalNamedPipeConnected(new NamedPipeTransport(namedPipe, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty))).ConfigureDefaultAwait();
+            await client.InternalConnected(new NamedPipeTransport(namedPipe, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty))).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {

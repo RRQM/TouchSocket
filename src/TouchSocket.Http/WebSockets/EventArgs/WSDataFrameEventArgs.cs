@@ -18,16 +18,34 @@ namespace TouchSocket.Http.WebSockets;
 public class WSDataFrameEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 构造函数
+    /// 初始化 <see cref="WSDataFrameEventArgs"/> 类的新实例。
     /// </summary>
-    /// <param name="dataFrame"></param>
+    /// <param name="dataFrame">WS数据帧。</param>
     public WSDataFrameEventArgs(WSDataFrame dataFrame)
     {
         this.DataFrame = dataFrame;
     }
 
     /// <summary>
+    /// 初始化 <see cref="WSDataFrameEventArgs"/> 类的新实例。
+    /// </summary>
+    public WSDataFrameEventArgs()
+    {
+    }
+
+    /// <summary>
     /// WS数据帧。
     /// </summary>
-    public WSDataFrame DataFrame { get; }
+    public WSDataFrame DataFrame { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置 WS 数据帧。
+    /// </summary>
+    /// <param name="dataFrame">WS数据帧。</param>
+    public WSDataFrameEventArgs Reset(WSDataFrame dataFrame)
+    {
+        this.DataFrame = dataFrame;
+        base.Reset();
+        return this;
+    }
 }

@@ -28,14 +28,32 @@ public class UdpSendingEventArgs : SendingEventArgs
     /// </summary>
     /// <param name="memory">要发送的数据内存区块。</param>
     /// <param name="endPoint">数据发送的目的端点。</param>
-    public UdpSendingEventArgs(in ReadOnlyMemory<byte> memory, EndPoint endPoint)
+    public UdpSendingEventArgs(in ReadOnlyMemory<byte> memory, EndPoint endPoint) : base(memory)
     {
-        SetData(memory);
         this.EndPoint = endPoint;
+    }
+
+    /// <summary>
+    /// 初始化<see cref="UdpSendingEventArgs"/>类的新实例。
+    /// </summary>
+    public UdpSendingEventArgs()
+    {
     }
 
     /// <summary>
     /// 获取发送数据的目的端点。
     /// </summary>
-    public EndPoint EndPoint { get; }
+    public EndPoint EndPoint { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置发送数据和目的端点。
+    /// </summary>
+    /// <param name="memory">要发送的数据内存区块。</param>
+    /// <param name="endPoint">数据发送的目的端点。</param>
+    public UdpSendingEventArgs Reset(in ReadOnlyMemory<byte> memory, EndPoint endPoint)
+    {
+        this.EndPoint = endPoint;
+        base.Reset(memory);
+        return this;
+    }
 }

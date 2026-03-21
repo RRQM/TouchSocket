@@ -17,15 +17,19 @@ namespace TouchSocket.Sockets;
 public class MemoryEventArgs : PluginEventArgs
 {
     /// <summary>
-    /// 使用指定的内存数据初始化 <see cref="MemoryEventArgs"/> 类的新实例。
+    /// 初始化 <see cref="MemoryEventArgs"/> 类的新实例。
     /// </summary>
     /// <param name="memory">事件中包含的只读内存数据。</param>
-    public void SetData(ReadOnlyMemory<byte> memory)
+    public MemoryEventArgs(ReadOnlyMemory<byte> memory)
     {
-        this.Handled = false;
-        this.Count = default;
-        this.State = default;
         this.Memory = memory;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="MemoryEventArgs"/> 类的新实例。
+    /// </summary>
+    public MemoryEventArgs()
+    {
     }
 
     /// <summary>
@@ -35,4 +39,15 @@ public class MemoryEventArgs : PluginEventArgs
     /// 在使用时，不要脱离 <see cref="Memory"/> 的生命周期。
     /// </remarks>
     public ReadOnlyMemory<byte> Memory { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置内存数据。
+    /// </summary>
+    /// <param name="memory">事件中包含的只读内存数据。</param>
+    public MemoryEventArgs Reset(ReadOnlyMemory<byte> memory)
+    {
+        this.Memory = memory;
+        base.Reset();
+        return this;
+    }
 }

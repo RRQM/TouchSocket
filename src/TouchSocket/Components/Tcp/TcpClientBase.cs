@@ -34,19 +34,26 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #region 变量
 
-    private readonly TcpCore m_tcpCore = new TcpCore();
     private readonly SemaphoreSlim m_semaphoreForConnectAndClose = new SemaphoreSlim(1, 1);
-    private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+    private readonly TcpCore m_tcpCore = new TcpCore();
+    private int m_closeFlag;
+    private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+    private EndPoint m_localEndPoint;
     private volatile bool m_online;
     private InternalReceiver m_receiver;
+    private EndPoint m_remoteEndPoint;
     private Task m_runTask;
     private TcpTransport m_transport;
-    private EndPoint m_localEndPoint;
-    private EndPoint m_remoteEndPoint;
-    private int m_closeFlag;
+
     #endregion 变量
 
     #region 事件
+
+    private readonly BytesReaderEventArgs m_bytesReaderEventArgs = new BytesReaderEventArgs();
+
+    private readonly ReceivedDataEventArgs m_receivedDataEventArgs = new ReceivedDataEventArgs();
+
+    private readonly SendingEventArgs m_sendingEventArgs = new SendingEventArgs();
 
     /// <summary>
     /// 在连接断开时触发。
@@ -100,30 +107,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
-    private async Task RunSessionAsync(TcpTransport transport)
-    {
-        try
-        {
-            await this.OnTcpConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
-            await this.ReceiveLoopAsync(transport).ConfigureDefaultAwait();
-        }
-        catch (Exception ex)
-        {
-            this.Logger?.Debug(this, ex);
-        }
-        finally
-        {
-            transport.SafeDispose();
-
-            this.m_online = false;
-            var adapter = this.m_dataHandlingAdapter;
-            this.m_dataHandlingAdapter = default;
-            adapter.SafeDispose();
-
-            await this.OnTcpClosed(transport.ClosedEventArgs).SafeWaitAsync().ConfigureDefaultAwait();
-        }
-    }
-
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
     {
         return this.OnTcpClosing(e);
@@ -139,6 +122,36 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             {
                 this.SetAdapter(adapter);
             }
+        }
+    }
+
+    private async Task RunSessionAsync(TcpTransport transport)
+    {
+        this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync 进入，TransportHash={transport.GetHashCode()}，ClosedToken.IsCancellationRequested={transport.ClosedToken.IsCancellationRequested}");
+        try
+        {
+            await this.OnTcpConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
+            this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync 即将调用 ReceiveLoopAsync，TransportHash={transport.GetHashCode()}");
+            await this.ReceiveLoopAsync(transport).ConfigureDefaultAwait();
+            this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync ReceiveLoopAsync 已正常返回，TransportHash={transport.GetHashCode()}");
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync 捕获到异常，TransportHash={transport.GetHashCode()}，ExceptionType={ex.GetType().Name}，Message={ex.Message}");
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync finally 开始清理，TransportHash={transport.GetHashCode()}，ClosedEventArgs.Message={transport.ClosedEventArgs.Message}");
+            transport.SafeDispose();
+
+            this.m_online = false;
+            var adapter = this.m_dataHandlingAdapter;
+            this.m_dataHandlingAdapter = default;
+            adapter.SafeDispose();
+
+            await this.OnTcpClosed(transport.ClosedEventArgs).SafeWaitAsync().ConfigureDefaultAwait();
+            this.Logger?.Debug(this, $"[TcpDebug] RunSessionAsync finally 清理完成，TransportHash={transport.GetHashCode()}");
         }
     }
 
@@ -165,6 +178,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     public DateTimeOffset LastSentTime => this.m_transport == null ? default : this.m_transport.SendCounter.LastIncrement;
 
     /// <inheritdoc/>
+    public EndPoint LocalEndPoint => this.m_localEndPoint;
+
+    /// <inheritdoc/>
     public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
@@ -172,6 +188,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
+
+    /// <inheritdoc/>
+    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
 
     /// <summary>
     /// 远程IPHost
@@ -186,12 +205,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// </summary>
     protected ITransport Transport => this.m_transport;
 
-    /// <inheritdoc/>
-    public EndPoint LocalEndPoint => this.m_localEndPoint;
-
-    /// <inheritdoc/>
-    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
-
     #endregion 属性
 
     #region 断开操作
@@ -199,6 +212,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+        this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 调用，msg={msg}，当前 TransportHash={this.m_transport?.GetHashCode().ToString() ?? "null"}，m_online={this.m_online}");
         TcpTransport transport = null;
         Task runTask;
 
@@ -210,11 +224,13 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 runTask = this.m_runTask;
                 if (runTask == null)
                 {
+                    this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 已离线且无 runTask，直接返回 Success，TransportHash={this.m_transport?.GetHashCode().ToString() ?? "null"}");
                     return Result.Success;
                 }
             }
             else if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
             {
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 检测到已有关闭操作在进行（closeFlag!=0），TransportHash={this.m_transport?.GetHashCode().ToString() ?? "null"}");
                 runTask = this.m_runTask;
             }
             else
@@ -222,6 +238,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
                 transport = this.m_transport;
                 runTask = this.m_runTask;
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 准备执行关闭，TransportHash={transport?.GetHashCode().ToString() ?? "null"}");
             }
         }
         catch (Exception ex)
@@ -237,12 +254,16 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         {
             if (transport != null)
             {
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 调用 transport.CloseAsync，TransportHash={transport.GetHashCode()}");
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync transport.CloseAsync 完成，TransportHash={transport.GetHashCode()}");
             }
 
             if (runTask != null)
             {
-                await runTask.ConfigureDefaultAwait();
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync 等待 runTask 结束，TransportHash={transport?.GetHashCode().ToString() ?? "null"}");
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+                this.Logger?.Debug(this, $"[TcpDebug] CloseAsync runTask 已结束，TransportHash={transport?.GetHashCode().ToString() ?? "null"}");
             }
 
             return Result.Success;
@@ -294,9 +315,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// </returns>
     protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
-        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
+        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
     }
-    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
@@ -305,28 +325,35 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <returns>返回值意义：表示是否继续发送数据的指示，true为继续，false为取消发送。</returns>
     protected virtual ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this,  SendingEventArgs.SetData(memory));
+        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
-    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     #region ReceiveLoopAsync
+
     /// <summary>
     /// 数据接收主循环，负责从传输层读取数据并分发给适配器或插件。
     /// </summary>
     /// <param name="transport">传输层对象</param>
     protected virtual async Task ReceiveLoopAsync(ITransport transport)
     {
+        var transportHash = transport.GetHashCode();
+
         using var reader = new PooledBytesReader();
         var cancellationToken = transport.ClosedToken;
         if (!await transport.ReadLocker.WaitAsync(0).ConfigureDefaultAwait())
         {
             return;
         }
+
         try
         {
+            var loopCount = 0;
             while (true)
             {
+                loopCount++;
+
                 //不使用取消令箭进行读取，安全退出
+
                 var readTask = transport.Reader.ReadAsync(CancellationToken.None);
 
                 System.IO.Pipelines.ReadResult result;
@@ -338,7 +365,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 }
                 else
                 {
-                    // 慢速路径：异步等待
+                    // 慢速路径：
                     result = await readTask.ConfigureDefaultAwait();
                 }
 
@@ -394,7 +421,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 catch (Exception ex)
                 {
                     this.Logger?.Exception(this, ex);
-
                     // 处理数据出现异常时，关闭连接并退出循环
                     await transport.CloseAsync(ex.Message).ConfigureDefaultAwait();
                     break; // 关闭连接后退出循环
@@ -406,7 +432,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 {
                     return;
                 }
-
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException || ex is ObjectDisposedException)
@@ -422,7 +447,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             transport.ReadLocker.Release();
         }
     }
-    #endregion
+
+    #endregion ReceiveLoopAsync
 
     /// <summary>
     /// 设置适配器。
@@ -456,9 +482,8 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
+        await this.OnTcpReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
-    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
 
     private void SetSocket(Socket socket)
     {
@@ -554,7 +579,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
-
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;

@@ -14,6 +14,12 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+	  <Compile Remove="Enum\**" />
+	  <EmbeddedResource Remove="Enum\**" />
+	  <None Remove="Enum\**" />
+	</ItemGroup>
+	
+	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="RefShared\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="RefShared\ThrowHelperSockets.cs" />
 	</ItemGroup>
@@ -23,7 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Enum\" />
 	  <Folder Include="RefShared\" />
 	</ItemGroup>
 

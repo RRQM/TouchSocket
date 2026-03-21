@@ -18,12 +18,27 @@ namespace TouchSocket.Sockets;
 public class SendingEventArgs : MemoryEventArgs
 {
     /// <summary>
-    /// 初始化 SendingEventArgs 类的新实例。
+    /// 初始化 <see cref="SendingEventArgs"/> 类的新实例。
     /// </summary>
     /// <param name="memory">待发送数据的只读内存块。</param>
-    public SendingEventArgs SetData(in ReadOnlyMemory<byte> memory)
+    public SendingEventArgs(in ReadOnlyMemory<byte> memory) : base(memory)
     {
-        base.SetData(memory);
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="SendingEventArgs"/> 类的新实例。
+    /// </summary>
+    public SendingEventArgs()
+    {
+    }
+
+    /// <summary>
+    /// 重置事件参数并设置发送的内存数据。
+    /// </summary>
+    /// <param name="memory">待发送数据的只读内存块。</param>
+    public SendingEventArgs Reset(in ReadOnlyMemory<byte> memory)
+    {
+        base.Reset(memory);
         return this;
     }
 }

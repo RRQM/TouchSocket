@@ -15,27 +15,31 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets;
 
-internal sealed partial class InternalWebSocket : IWebSocket
+internal sealed partial class InternalWebSocket : SafetyDisposableObject, IWebSocket
 {
+    private readonly bool m_autoReceive;
     private readonly HttpClientBase m_httpClientBase;
     private readonly HttpSessionClient m_httpSocketClient;
     private readonly bool m_isServer;
-    private bool m_allowAsyncRead;
+    private readonly ITransport m_transport;
     private bool m_isCont;
 
-    public InternalWebSocket(HttpClientBase httpClientBase)
+    public InternalWebSocket(HttpClientBase httpClientBase, ITransport transport, bool autoReceive)
     {
         this.m_isServer = false;
         this.m_httpClientBase = httpClientBase;
+        this.m_transport = transport;
+        this.m_autoReceive = autoReceive;
     }
 
-    public InternalWebSocket(HttpSessionClient httpSocketClient)
+    public InternalWebSocket(HttpSessionClient httpSocketClient, ITransport transport, bool autoReceive)
     {
         this.m_isServer = true;
         this.m_httpSocketClient = httpSocketClient;
+        this.m_transport = transport;
+        this.m_autoReceive = autoReceive;
     }
 
-    public bool AllowAsyncRead { get => this.m_allowAsyncRead; set => this.m_allowAsyncRead = value; }
     public IHttpSession Client => this.m_isServer ? this.m_httpSocketClient : this.m_httpClientBase;
     public CancellationToken ClosedToken => this.m_isServer ? this.m_httpSocketClient.ClosedToken : this.m_httpClientBase.ClosedToken;
     public WebSocketCloseStatus CloseStatus { get; set; }
@@ -48,16 +52,9 @@ internal sealed partial class InternalWebSocket : IWebSocket
     public IResolver Resolver => this.m_isServer ? this.m_httpSocketClient.Resolver : this.m_httpClientBase.Resolver;
     public string Version { get; set; }
 
-    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
+        return this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
     }
 
     public async Task<Result> CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription, CancellationToken cancellationToken = default)
@@ -88,7 +85,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
             }
 
             //防止关闭递归死锁
-            _=EasyTask.SafeNewRun(async () => 
+            _ = EasyTask.SafeNewRun(async () =>
             {
                 if (this.m_isServer)
                 {
@@ -99,7 +96,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
                     await this.m_httpClientBase.CloseAsync(statusDescription, cancellationToken).ConfigureDefaultAwait();
                 }
             });
-            
+
             return Result.Success;
         }
         catch (Exception ex)
@@ -108,6 +105,119 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
+    public async ValueTask<WebSocketReceiveResult> InternalReadAsync(CancellationToken cancellationToken)
+    {
+        var transport = this.m_transport;
+
+        var pipeReader = transport.Reader;
+
+        while (!this.DisposedValue)
+        {
+            if (!this.Online)
+            {
+                return new WebSocketReceiveResult(null, null, true);
+            }
+
+            var frame = new WSDataFrame();
+            IBigUnfixedHeaderRequestInfo frameInfo = frame;
+
+            // 阶段一：解析帧头部
+            var headerParsed = false;
+            while (!headerParsed)
+            {
+                var readResult = await pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var buffer = readResult.Buffer;
+                if (readResult.IsCanceled || (readResult.IsCompleted && buffer.Length == 0))
+                {
+                    frame.Dispose();
+                    return new WebSocketReceiveResult(null, null, true);
+                }
+
+                var bytesReader = new BytesReader(buffer);
+                bool parsed;
+                long headerBytesRead;
+                try
+                {
+                    parsed = frameInfo.OnParsingHeader(ref bytesReader);
+                    headerBytesRead = bytesReader.BytesRead;
+                }
+                finally
+                {
+                    bytesReader.Dispose();
+                }
+
+                if (parsed)
+                {
+                    pipeReader.AdvanceTo(buffer.GetPosition(headerBytesRead));
+                    headerParsed = true;
+                }
+                else
+                {
+                    if (readResult.IsCompleted)
+                    {
+                        frame.Dispose();
+                        return new WebSocketReceiveResult(null, null, true);
+                    }
+                    pipeReader.AdvanceTo(buffer.Start, buffer.End);
+                }
+            }
+
+            // 阶段二：读取 payload
+            var remaining = frameInfo.BodyLength;
+            while (remaining > 0)
+            {
+                var readResult = await pipeReader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var buffer = readResult.Buffer;
+                if (readResult.IsCanceled || (readResult.IsCompleted && buffer.Length == 0))
+                {
+                    frame.Dispose();
+                    return new WebSocketReceiveResult(null, null, true);
+                }
+
+                var toRead = Math.Min(remaining, buffer.Length);
+                foreach (var segment in buffer.Slice(0, toRead))
+                {
+                    frameInfo.OnAppendBody(segment.Span);
+                }
+                remaining -= toRead;
+                pipeReader.AdvanceTo(buffer.GetPosition(toRead));
+            }
+
+            // 阶段三：完成帧
+            if (!frameInfo.OnFinished())
+            {
+                frame.Dispose();
+                continue;
+            }
+
+            // 处理控制帧
+            if (frame.IsClose)
+            {
+                var payloadSpan = frame.PayloadData.Span;
+                if (payloadSpan.Length >= 2)
+                {
+                    this.CloseStatus = (WebSocketCloseStatus)payloadSpan.ReadValue<ushort>(EndianType.Big);
+                }
+                var msg = payloadSpan.ToString(Encoding.UTF8);
+                return new WebSocketReceiveResult(null, msg, true);
+            }
+
+            return new WebSocketReceiveResult(frame, null, false);
+        }
+
+        return new WebSocketReceiveResult(null, null, true);
+    }
+
+    /// <inheritdoc/>
+    public ValueTask<WebSocketReceiveResult> ReadAsync(CancellationToken cancellationToken)
+    {
+        if (this.m_autoReceive)
+        {
+            ThrowHelper.ThrowInvalidOperationException("在自动接收模式下不能调用ReadAsync");
+        }
+
+        return this.InternalReadAsync(cancellationToken);
+    }
 
     public async Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true, CancellationToken cancellationToken = default)
     {
@@ -144,7 +254,7 @@ internal sealed partial class InternalWebSocket : IWebSocket
 
         dataFrame.Mask = !this.m_isServer;
 
-        var transport = this.m_isServer ? this.m_httpSocketClient.InternalTransport : this.m_httpClientBase.InternalTransport;
+        var transport = this.m_transport;
 
         await transport.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
@@ -160,18 +270,15 @@ internal sealed partial class InternalWebSocket : IWebSocket
         }
     }
 
-
     protected override void SafetyDispose(bool disposing)
     {
         if (this.m_isServer)
         {
-            this.m_httpSocketClient.SafeDispose();
+            this.m_httpSocketClient.Dispose();
         }
         else
         {
-            this.m_httpClientBase.SafeDispose();
+            this.m_httpClientBase.Dispose();
         }
-
-        this.m_asyncExchange.Complete();
     }
 }

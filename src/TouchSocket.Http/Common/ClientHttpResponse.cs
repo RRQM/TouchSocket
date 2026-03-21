@@ -23,6 +23,9 @@ internal sealed class ClientHttpResponse : HttpResponse
     private ByteBlock m_contentByteBlock;
     private ReadOnlyMemory<byte> m_contentMemory;
     private bool m_isContentReadingStarted = false;
+    private int m_contentReadPosition = 0;
+    private long m_chunkDataRemaining = 0;
+    private bool m_needSkipCRLF = false;
 
     internal ClientHttpResponse(HttpClientBase httpClientBase) : base(httpClientBase)
     {
@@ -49,17 +52,18 @@ internal sealed class ClientHttpResponse : HttpResponse
             try
             {
                 var byteBlock = new ByteBlock((int)contentLength);
+                using var bufferOwner = MemoryPool<byte>.Shared.Rent(8192);
+                var rentedBuffer = bufferOwner.Memory;
 
                 while (true)
                 {
-                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureDefaultAwait())
+                    var read = await this.ReadAsync(rentedBuffer, cancellationToken).ConfigureDefaultAwait();
+                    if (read == 0)
                     {
-                        byteBlock.Write(blockResult.Memory.Span);
-                        if (blockResult.IsCompleted)
-                        {
-                            break;
-                        }
+                        break;
                     }
+
+                    byteBlock.Write(rentedBuffer.Slice(0, read).Span);
 
                     if (byteBlock.Length > MaxCacheSize)
                     {
@@ -82,43 +86,56 @@ internal sealed class ClientHttpResponse : HttpResponse
         }
     }
 
-    public override async ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
-        if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
+        if (buffer.IsEmpty)
         {
-            // 已经完成读取
-            return new HttpReadOnlyMemoryBlockResult(default, this.m_contentMemory, true);
-        }
-        if (this.ContentStatus == ContentCompletionStatus.ReadCompleted)
-        {
-            ThrowHelper.ThrowInvalidOperationException("内容已读取完毕。");
-        }
-        if (this.ContentLength == 0 && !this.IsChunk)
-        {
-            return HttpReadOnlyMemoryBlockResult.Completed;
+            return EasyValueTask.FromResult(0);
         }
 
-        // 获取Transport和Reader
+        if (this.ContentStatus == ContentCompletionStatus.ContentCompleted)
+        {
+            var remaining = this.m_contentMemory.Length - this.m_contentReadPosition;
+            if (remaining <= 0)
+            {
+                return EasyValueTask.FromResult(0);
+            }
+            var toCopy = Math.Min(buffer.Length, remaining);
+            this.m_contentMemory.Slice(this.m_contentReadPosition, toCopy).CopyTo(buffer);
+            this.m_contentReadPosition += toCopy;
+            return EasyValueTask.FromResult(toCopy);
+        }
+
+        if (this.ContentStatus == ContentCompletionStatus.ReadCompleted)
+        {
+            return EasyValueTask.FromResult(0);
+        }
+
+        if (this.ContentLength == 0 && !this.IsChunk)
+        {
+            this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+            return EasyValueTask.FromResult(0);
+        }
+
         var transport = this.m_httpClientBase.InternalTransport;
         var reader = transport.Reader;
 
-        // 如果尚未开始读取内容，首先需要处理可能在头部解析过程中缓存的数据
         if (!this.m_isContentReadingStarted)
         {
             this.m_isContentReadingStarted = true;
         }
 
-        // 根据传输类型处理内容
         if (this.IsChunk)
         {
-            return await this.ReadChunkedContentAsync(reader, cancellationToken).ConfigureDefaultAwait();
+            return this.ReadChunkedContentAsync(reader, buffer, cancellationToken);
         }
         else if (this.ContentLength > 0)
         {
-            return await this.ReadFixedLengthContentAsync(reader, cancellationToken).ConfigureDefaultAwait();
+            return this.ReadFixedLengthContentAsync(reader, buffer, cancellationToken);
         }
 
-        return HttpReadOnlyMemoryBlockResult.Completed;
+        this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+        return EasyValueTask.FromResult(0);
     }
 
     public async ValueTask<bool> ReadHeader(CancellationToken cancellationToken)
@@ -194,6 +211,9 @@ internal sealed class ClientHttpResponse : HttpResponse
         this.m_contentMemory = null;
         this.m_bytesRead = 0;
         this.m_isContentReadingStarted = false;
+        this.m_contentReadPosition = 0;
+        this.m_chunkDataRemaining = 0;
+        this.m_needSkipCRLF = false;
         base.Reset();
     }
 
@@ -257,90 +277,109 @@ internal sealed class ClientHttpResponse : HttpResponse
     /// <param name="reader">管道读取器</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>HTTP读取结果</returns>
-    private async ValueTask<HttpReadOnlyMemoryBlockResult> ReadChunkedContentAsync(PipeReader reader, CancellationToken cancellationToken)
+    private async ValueTask<int> ReadChunkedContentAsync(PipeReader reader, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         while (true)
         {
-            var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
-            var buffer = readResult.Buffer;
-
-            try
+            if (this.m_chunkDataRemaining > 0)
             {
-                var examined = buffer.Start;
-                var consumed = buffer.Start;
+                var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var pipeBuffer = readResult.Buffer;
 
-                // 查找块大小行结束符
-                var crlfIndex = buffer.IndexOf(TouchSocketHttpUtility.CRLF);
-                if (crlfIndex < 0)
+                if (pipeBuffer.IsEmpty && readResult.IsCompleted)
                 {
-                    // 没有找到CRLF，需要更多数据
-                    if (readResult.IsCompleted)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException("连接意外关闭，分块传输不完整");
-                    }
-                    reader.AdvanceTo(consumed, buffer.End);
+                    ThrowHelper.ThrowInvalidOperationException("连接意外关闭，分块传输不完整");
+                }
+
+                if (pipeBuffer.IsEmpty)
+                {
+                    reader.AdvanceTo(pipeBuffer.Start, pipeBuffer.End);
                     continue;
                 }
 
-                // 解析块大小
-                var chunkSizeSlice = buffer.Slice(0, crlfIndex);
+                var toRead = (int)Math.Min(Math.Min(this.m_chunkDataRemaining, pipeBuffer.Length), buffer.Length);
+                pipeBuffer.Slice(0, toRead).CopyTo(buffer.Span);
+                this.m_chunkDataRemaining -= toRead;
 
-                using var memoryBuffer = new ContiguousMemoryBuffer(chunkSizeSlice);
-                var chunkSizeSpan = memoryBuffer.Memory.Span;
-
-                if (!TryParseChunkSize(chunkSizeSpan, out var chunkSize))
+                if (this.m_chunkDataRemaining == 0)
                 {
-                    ThrowHelper.ThrowInvalidOperationException("无效的块大小格式");
-                }
-
-                // 跳过块大小和第一个CRLF
-                var afterChunkSizePosition = buffer.GetPosition(crlfIndex + 2);
-                var remainingBuffer = buffer.Slice(afterChunkSizePosition);
-
-                if (chunkSize == 0)
-                {
-                    // 最后一个块，跳过可能的尾部CRLF
-                    if (remainingBuffer.Length >= 2)
+                    var afterData = pipeBuffer.Slice(toRead);
+                    if (afterData.Length >= 2)
                     {
-                        consumed = buffer.GetPosition(2, afterChunkSizePosition);
+                        reader.AdvanceTo(pipeBuffer.GetPosition(toRead + 2));
                     }
                     else
                     {
-                        consumed = afterChunkSizePosition;
+                        reader.AdvanceTo(pipeBuffer.GetPosition(toRead));
+                        this.m_needSkipCRLF = true;
                     }
-                    reader.AdvanceTo(consumed);
-                    this.ContentStatus = ContentCompletionStatus.ReadCompleted;
-                    return HttpReadOnlyMemoryBlockResult.Completed;
+                }
+                else
+                {
+                    reader.AdvanceTo(pipeBuffer.GetPosition(toRead));
                 }
 
-                // 检查是否有足够的数据读取完整块（块数据 + 尾部CRLF）
-                if (remainingBuffer.Length < chunkSize + 2) // +2 for trailing CRLF
+                return toRead;
+            }
+
+            if (this.m_needSkipCRLF)
+            {
+                var crlfResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+                var crlfBuffer = crlfResult.Buffer;
+
+                if (crlfBuffer.Length < 2)
                 {
-                    // 数据不足，需要等待更多数据
-                    if (readResult.IsCompleted)
+                    if (crlfResult.IsCompleted)
                     {
                         ThrowHelper.ThrowInvalidOperationException("连接意外关闭，分块传输不完整");
                     }
-                    reader.AdvanceTo(consumed, buffer.End);
+                    reader.AdvanceTo(crlfBuffer.Start, crlfBuffer.End);
                     continue;
                 }
 
-                // 读取块数据
-                var chunkDataSlice = remainingBuffer.Slice(0, chunkSize);
-
-                var result = new HttpReadOnlyMemoryBlockResult(chunkDataSlice, false);
-
-                // 计算消费位置（块大小行 + 第一个CRLF + 块数据 + 尾部CRLF）
-                consumed = buffer.GetPosition(chunkSize + 2, afterChunkSizePosition);
-                reader.AdvanceTo(consumed);
-
-                return result;
+                reader.AdvanceTo(crlfBuffer.GetPosition(2));
+                this.m_needSkipCRLF = false;
+                continue;
             }
-            catch
+
+            var headerResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
+            var headerBuffer = headerResult.Buffer;
+
+            var crlfIndex = headerBuffer.IndexOf(TouchSocketHttpUtility.CRLF);
+            if (crlfIndex < 0)
             {
-                reader.AdvanceTo(buffer.Start);
-                throw;
+                if (headerResult.IsCompleted)
+                {
+                    ThrowHelper.ThrowInvalidOperationException("连接意外关闭，分块传输不完整");
+                }
+                reader.AdvanceTo(headerBuffer.Start, headerBuffer.End);
+                continue;
             }
+
+            var chunkSizeSlice = headerBuffer.Slice(0, crlfIndex);
+            using var memoryBuffer = new ContiguousMemoryBuffer(chunkSizeSlice);
+            if (!TryParseChunkSize(memoryBuffer.Memory.Span, out var chunkSize))
+            {
+                ThrowHelper.ThrowInvalidOperationException("无效的块大小格式");
+            }
+
+            if (chunkSize == 0)
+            {
+                var afterHeader = headerBuffer.Slice(crlfIndex + 2);
+                if (afterHeader.Length >= 2)
+                {
+                    reader.AdvanceTo(headerBuffer.GetPosition(crlfIndex + 2 + 2));
+                }
+                else
+                {
+                    reader.AdvanceTo(headerBuffer.GetPosition(crlfIndex + 2));
+                }
+                this.ContentStatus = ContentCompletionStatus.ReadCompleted;
+                return 0;
+            }
+
+            reader.AdvanceTo(headerBuffer.GetPosition(crlfIndex + 2));
+            this.m_chunkDataRemaining = chunkSize;
         }
     }
 
@@ -350,44 +389,37 @@ internal sealed class ClientHttpResponse : HttpResponse
     /// <param name="reader">管道读取器</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>HTTP读取结果</returns>
-    private async ValueTask<HttpReadOnlyMemoryBlockResult> ReadFixedLengthContentAsync(PipeReader reader, CancellationToken cancellationToken)
+    private async ValueTask<int> ReadFixedLengthContentAsync(PipeReader reader, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         var totalBytesToRead = this.ContentLength;
 
         if (this.m_bytesRead >= totalBytesToRead)
         {
             this.ContentStatus = ContentCompletionStatus.ReadCompleted;
-            return HttpReadOnlyMemoryBlockResult.Completed;
+            return 0;
         }
 
         var readResult = await reader.ReadAsync(cancellationToken).ConfigureDefaultAwait();
-        var buffer = readResult.Buffer;
+        var pipeBuffer = readResult.Buffer;
 
-        if (buffer.IsEmpty && readResult.IsCompleted)
+        if (pipeBuffer.IsEmpty && readResult.IsCompleted)
         {
             ThrowHelper.ThrowInvalidOperationException("连接意外关闭，内容读取不完整");
         }
 
         var remainingBytes = totalBytesToRead - this.m_bytesRead;
-        var bytesToRead = Math.Min(Math.Min(remainingBytes, buffer.Length), TouchSocketHttpUtility.MaxReadSize);
+        var bytesToRead = (int)Math.Min(Math.Min(remainingBytes, pipeBuffer.Length), buffer.Length);
 
-        var contentSlice = buffer.Slice(0, bytesToRead);
-
+        pipeBuffer.Slice(0, bytesToRead).CopyTo(buffer.Span);
         this.m_bytesRead += bytesToRead;
-        HttpReadOnlyMemoryBlockResult result;
-        // 检查是否已读取完所有内容
+        reader.AdvanceTo(pipeBuffer.GetPosition(bytesToRead));
+
         if (this.m_bytesRead >= totalBytesToRead)
         {
             this.ContentStatus = ContentCompletionStatus.ReadCompleted;
-            result = new HttpReadOnlyMemoryBlockResult(contentSlice, true);
         }
-        else
-        {
-            result = new HttpReadOnlyMemoryBlockResult(contentSlice, false);
-        }
-        reader.AdvanceTo(buffer.GetPosition(bytesToRead));
 
-        return result;
+        return bytesToRead;
     }
 
     internal void InternalSetContent(ReadOnlySequence<byte> content)

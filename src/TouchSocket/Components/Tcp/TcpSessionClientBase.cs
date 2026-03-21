@@ -47,12 +47,15 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     #region 变量
 
+    private int m_closeFlag;
     private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private string m_id;
     private TcpListenOption m_listenOption;
+    private EndPoint m_localEndPoint;
     private volatile bool m_online;
     private IPluginManager m_pluginManager;
     private InternalReceiver m_receiver;
+    private EndPoint m_remoteEndPoint;
     private Task m_runTask;
     private IScopedResolver m_scopedResolver;
     private ITcpServiceBase m_service;
@@ -60,25 +63,16 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     private Func<TcpSessionClientBase, bool> m_tryAddAction;
     private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
     private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
-    private EndPoint m_localEndPoint;
-    private EndPoint m_remoteEndPoint;
-    private int m_closeFlag;
 
     #endregion 变量
 
     #region 属性
 
     /// <inheritdoc/>
-    public EndPoint LocalEndPoint => this.m_localEndPoint;
-
-    /// <inheritdoc/>
-    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
-
-    /// <inheritdoc/>
     public CancellationToken ClosedToken => this.m_transport == null ? new CancellationToken(true) : this.m_transport.ClosedToken;
 
     /// <inheritdoc/>
-    public sealed override TouchSocketConfig Config => this.Service?.Config;
+    public override sealed TouchSocketConfig Config => this.Service?.Config;
 
     /// <inheritdoc/>
     public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -102,6 +96,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     public TcpListenOption ListenOption => this.m_listenOption;
 
     /// <inheritdoc/>
+    public EndPoint LocalEndPoint => this.m_localEndPoint;
+
+    /// <inheritdoc/>
     public virtual bool Online => this.m_online;
 
     /// <inheritdoc/>
@@ -112,6 +109,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
+
+    /// <inheritdoc/>
+    public EndPoint RemoteEndPoint => this.m_remoteEndPoint;
 
     /// <inheritdoc/>
     public override IResolver Resolver => this.m_scopedResolver.Resolver;
@@ -289,6 +289,12 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     #endregion 事件&委托
 
+    private readonly BytesReaderEventArgs m_bytesReaderEventArgs = new BytesReaderEventArgs();
+
+    private readonly ReceivedDataEventArgs m_receivedDataEventArgs = new ReceivedDataEventArgs();
+
+    private readonly SendingEventArgs m_sendingEventArgs = new SendingEventArgs();
+
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
@@ -297,19 +303,19 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             return Result.Success;
         }
 
-        if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
-        {
-            // 已有其他调用方正在关闭，等待会话彻底结束后返回
-            var waitTask = this.m_runTask;
-            if (waitTask != null)
-            {
-                await waitTask.ConfigureDefaultAwait();
-            }
-            return Result.Success;
-        }
-
         try
         {
+            if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
+            {
+                // 已有其他调用方正在关闭，等待会话彻底结束后返回
+                var waitTask = this.m_runTask;
+                if (waitTask != null)
+                {
+                    await waitTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+                }
+                return Result.Success;
+            }
+
             await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
             if (transport != null)
@@ -319,7 +325,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             var runTask = this.m_runTask;
             if (runTask != null)
             {
-                await runTask.ConfigureDefaultAwait();
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
             return Result.Success;
         }
@@ -365,9 +371,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, BytesReaderEventArgs.ReSetData(reader));
+        return this.PluginManager.RaiseITcpReceivingPluginAsync(this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
     }
-    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
+
     /// <summary>
     /// 在数据即将通过TCP发送时触发，此方法用于通过插件机制拦截发送行为。
     /// 如果子类覆盖了此方法，则不会触发插件。
@@ -378,9 +384,8 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         // 通过PluginManager委托调用ITcpSendingPlugin接口，传递当前实例和待发送的数据事件。
         // 这里使用RaiseAsync方法异步触发相关插件，以实现对发送行为的扩展或拦截。
-        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
+        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
-    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
 
     /// <summary>
     /// 直接重置内部Id。
@@ -488,9 +493,8 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnTcpReceived( ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
+        await this.OnTcpReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
-    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
 
     #region Throw
 

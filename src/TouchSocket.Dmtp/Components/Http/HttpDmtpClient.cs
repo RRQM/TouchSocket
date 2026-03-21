@@ -204,6 +204,8 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
         this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
         {
             //OutputSend = this.DmtpActorSend,
+            TransportWriter = base.Transport,
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
             OutputSendAsync = this.DmtpActorSendAsync,
             Routing = this.OnDmtpActorRouting,
             Connecting = this.OnDmtpActorConnecting,

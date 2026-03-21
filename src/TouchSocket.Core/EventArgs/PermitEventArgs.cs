@@ -21,4 +21,11 @@ public class PermitEventArgs : PluginEventArgs
     /// 是否允许操作
     /// </summary>
     public bool IsPermitOperation { get; set; }
+
+    /// <inheritdoc/>
+    protected override void Reset()
+    {
+        this.IsPermitOperation = false;
+        base.Reset();
+    }
 }

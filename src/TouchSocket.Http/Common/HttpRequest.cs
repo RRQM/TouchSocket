@@ -116,7 +116,7 @@ public class HttpRequest : HttpBase
     }
 
     /// <inheritdoc/>
-    public override ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

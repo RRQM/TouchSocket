@@ -13,22 +13,26 @@
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// 接收数据事件参数类，继承自ByteBlockEventArgs
+/// 接收数据事件参数类，继承自 <see cref="MemoryEventArgs"/>
 /// 用于封装接收到的数据和相关的请求信息
 /// </summary>
 public class ReceivedDataEventArgs : MemoryEventArgs
 {
-
     /// <summary>
-    /// 构造函数，初始化接收到的数据和请求信息
+    /// 初始化 <see cref="ReceivedDataEventArgs"/> 类的新实例。
     /// </summary>
     /// <param name="memory">接收到的数据块</param>
     /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
-    public ReceivedDataEventArgs SetData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
+    public ReceivedDataEventArgs(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo) : base(memory)
     {
-        SetData(memory);
         this.RequestInfo = requestInfo;
-        return this;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="ReceivedDataEventArgs"/> 类的新实例。
+    /// </summary>
+    public ReceivedDataEventArgs()
+    {
     }
 
     /// <summary>
@@ -38,4 +42,16 @@ public class ReceivedDataEventArgs : MemoryEventArgs
     /// 该属性只读，用于提供接收数据时的请求上下文信息
     /// </remarks>
     public IRequestInfo RequestInfo { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置接收数据和请求信息。
+    /// </summary>
+    /// <param name="memory">接收到的数据块</param>
+    /// <param name="requestInfo">请求信息，描述了数据接收的上下文</param>
+    public ReceivedDataEventArgs Reset(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
+    {
+        this.RequestInfo = requestInfo;
+        base.Reset(memory);
+        return this;
+    }
 }

@@ -65,7 +65,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
             case RouteMatchStatus.Options:
                 // OPTIONS请求,返回允许的方法列表
-                await this.ResponseOptionsAsync(client, e.Context, matchResult.AllowedMethods).ConfigureDefaultAwait();
+                await ResponseOptionsAsync(client, e.Context, matchResult.AllowedMethods).ConfigureDefaultAwait();
                 return;
 
             case RouteMatchStatus.MethodNotAllowed:
@@ -110,9 +110,12 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         return default;
     }
 
-    private void CloseClient(IHttpSessionClient client)
+    private static void CloseClient(IHttpSessionClient client)
     {
-        _ = client.CloseAsync("No keepalive close.");
+        _ = EasyTask.SafeNewRun(async () =>
+        {
+            await client.CloseAsync("No keepalive close.").ConfigureDefaultAwait();
+        });
     }
 
     private async Task ExecuteRpcMethodAsync(IHttpSessionClient client, HttpContextEventArgs e, RpcMethod rpcMethod)
@@ -333,7 +336,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
         if (!httpContext.Request.KeepAlive)
         {
-            this.CloseClient(client);
+            CloseClient(client);
         }
     }
 
@@ -362,11 +365,11 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
         if (!httpContext.Request.KeepAlive)
         {
-            this.CloseClient(client);
+            CloseClient(client);
         }
     }
 
-    private async Task ResponseOptionsAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
+    private static async Task ResponseOptionsAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
     {
         var httpResponse = httpContext.Response;
 
@@ -384,7 +387,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
         if (!httpContext.Request.KeepAlive)
         {
-            this.CloseClient(client);
+            CloseClient(client);
         }
     }
 }

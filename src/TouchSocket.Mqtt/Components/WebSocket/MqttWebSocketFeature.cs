@@ -45,7 +45,7 @@ internal sealed class MqttWebSocketFeature : PluginBase, IHttpPlugin
             return;
         }
         e.Context.Response.Headers.Add("Sec-WebSocket-Protocol", "mqtt");
-        var result = await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureDefaultAwait();
+        var result = await client.SwitchProtocolToWebSocketAsync(false).ConfigureDefaultAwait();
 
         if (!result.IsSuccess)
         {

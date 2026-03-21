@@ -38,4 +38,11 @@ public class MsgPermitEventArgs : PermitEventArgs
     /// 获取或设置此许可事件关联的消息
     /// </summary>
     public string Message { get; set; }
+
+    /// <inheritdoc/>
+    protected override void Reset()
+    {
+        this.Message = null;
+        base.Reset();
+    }
 }

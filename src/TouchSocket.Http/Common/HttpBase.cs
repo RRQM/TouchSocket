@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TouchSocket.Sockets;
@@ -406,11 +405,12 @@ public abstract class HttpBase : IRequestInfo
     #region Read
 
     /// <summary>
-    /// 异步读取HTTP块段的内容。
+    /// 异步读取HTTP内容数据到指定缓冲区。
     /// </summary>
+    /// <param name="buffer">接收数据的缓冲区。</param>
     /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
-    /// <returns>返回一个<see cref="IReadOnlyMemoryBlockResult"/>，表示异步读取操作的结果。</returns>
-    public abstract ValueTask<HttpReadOnlyMemoryBlockResult> ReadAsync(CancellationToken cancellationToken = default);
+    /// <returns>实际读取的字节数。返回 <see langword="0"/> 表示内容已读取完毕。</returns>
+    public abstract ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 异步读取并复制流数据
@@ -441,27 +441,24 @@ public abstract class HttpBase : IRequestInfo
         {
             flowOperator.SetLength(this.ContentLength);
 
+            using var bufferOwner = MemoryPool<byte>.Shared.Rent(81920);
+            var buffer = bufferOwner.Memory;
             while (true)
             {
-                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureDefaultAwait())
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return flowOperator.SetResult(Result.Canceled);
-                    }
-
-                    var memory = blockResult.Memory;
-                    Debug.WriteLine($"读取块大小：{memory.Length}，时间：{DateTime.Now:HH:mm:ss ffff}");
-                    if (!memory.IsEmpty)
-                    {
-                        await stream.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
-                        await flowOperator.AddFlowAsync(memory.Length).ConfigureDefaultAwait();
-                    }
-                    if (blockResult.IsCompleted)
-                    {
-                        break;
-                    }
+                    return flowOperator.SetResult(Result.Canceled);
                 }
+
+                var read = await this.ReadAsync(buffer, cancellationToken).ConfigureDefaultAwait();
+                if (read == 0)
+                {
+                    break;
+                }
+
+                var memory = buffer.Slice(0, read);
+                await stream.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
+                await flowOperator.AddFlowAsync(read).ConfigureDefaultAwait();
             }
             return flowOperator.SetResult(Result.Success);
         }

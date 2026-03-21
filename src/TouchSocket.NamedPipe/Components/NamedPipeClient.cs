@@ -151,7 +151,7 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     /// <inheritdoc/>
     public virtual Task ConnectAsync(CancellationToken cancellationToken)
     {
-        return this.PipeConnectAsync(cancellationToken);
+        return this.NamedPipeConnectAsync(cancellationToken);
     }
 
     #endregion Connect

@@ -18,16 +18,34 @@ namespace TouchSocket.Http;
 public class HttpContextEventArgs : MsgPermitEventArgs
 {
     /// <summary>
-    /// Http上下文
+    /// 初始化 <see cref="HttpContextEventArgs"/> 类的新实例。
     /// </summary>
-    public HttpContext Context { get; }
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="context"></param>
+    /// <param name="context">Http上下文。</param>
     public HttpContextEventArgs(HttpContext context)
     {
         this.Context = context;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="HttpContextEventArgs"/> 类的新实例。
+    /// </summary>
+    public HttpContextEventArgs()
+    {
+    }
+
+    /// <summary>
+    /// Http上下文
+    /// </summary>
+    public HttpContext Context { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置 Http 上下文。
+    /// </summary>
+    /// <param name="context">Http上下文。</param>
+    public HttpContextEventArgs Reset(HttpContext context)
+    {
+        this.Context = context;
+        base.Reset();
+        return this;
     }
 }

@@ -15,27 +15,45 @@ using System.Net;
 namespace TouchSocket.Sockets;
 
 /// <summary>
-/// UdpReceivedDataEventArgs 类，继承自 ReceivedDataEventArgs 类
+/// UdpReceivedDataEventArgs 类，继承自 <see cref="ReceivedDataEventArgs"/> 类
 /// 用于封装 UDP 接收到的数据及相关信息
 /// </summary>
 public class UdpReceivedDataEventArgs : ReceivedDataEventArgs
 {
     /// <summary>
-    /// 构造函数
-    /// 初始化 UdpReceivedDataEventArgs 对象
+    /// 初始化 <see cref="UdpReceivedDataEventArgs"/> 类的新实例。
     /// </summary>
     /// <param name="endPoint">接收数据的终结点</param>
     /// <param name="memory">接收到的内存数据</param>
     /// <param name="requestInfo">请求信息，提供关于此次接收请求的元数据</param>
-    public UdpReceivedDataEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)  
+    public UdpReceivedDataEventArgs(EndPoint endPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo) : base(memory, requestInfo)
     {
-        SetData(memory, requestInfo);
         this.EndPoint = endPoint;
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="UdpReceivedDataEventArgs"/> 类的新实例。
+    /// </summary>
+    public UdpReceivedDataEventArgs()
+    {
     }
 
     /// <summary>
     /// 接收终结点
     /// 表示数据是从哪个终结点接收的
     /// </summary>
-    public EndPoint EndPoint { get; }
+    public EndPoint EndPoint { get; private set; }
+
+    /// <summary>
+    /// 重置事件参数并设置接收终结点、内存数据和请求信息。
+    /// </summary>
+    /// <param name="endPoint">接收数据的终结点</param>
+    /// <param name="memory">接收到的内存数据</param>
+    /// <param name="requestInfo">请求信息</param>
+    public UdpReceivedDataEventArgs Reset(EndPoint endPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
+    {
+        this.EndPoint = endPoint;
+        base.Reset(memory, requestInfo);
+        return this;
+    }
 }

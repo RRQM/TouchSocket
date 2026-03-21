@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
 	<Import Project="$../../../TouchSocketVersion.props" />
 	<Import Project="Props\*.props" />
@@ -57,34 +57,19 @@
 		<DefineConstants></DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
-		<DefineConstants>
-
-			AsyncEnumerable;
-		</DefineConstants>
+		<DefineConstants>AsyncEnumerable;</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-		<DefineConstants>
-
-			AsyncEnumerable;DefaultInterfaceMethods;
-		</DefineConstants>
+		<DefineConstants>AsyncEnumerable;DefaultInterfaceMethods;</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-		<DefineConstants>
-
-			AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal
-		</DefineConstants>
+		<DefineConstants>AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0'">
-		<DefineConstants>
-
-			AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal
-		</DefineConstants>
+		<DefineConstants>AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<DefineConstants>
-
-			AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal
-		</DefineConstants>
+		<DefineConstants>AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods;CollectionsMarshal</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(IsSourceGenerator)'!='True'">
@@ -122,11 +107,13 @@
 		<PackageLicenseFile>$(LicenseFile)</PackageLicenseFile>
 	</PropertyGroup>
 
-	<!--Release-开源版-发布配置相关-->
+	<!--Release-开源版-发布配置相关，调试符号和源码生成独立符号包（snupkg）-->
 	<PropertyGroup Condition="'$(IsPro)'!='True' And '$(Configuration)' == 'Release' And '$(IsSourceGenerator)'!='True'">
 		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
+		<DebugType>portable</DebugType>
 		<EmbedAllSources>True</EmbedAllSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<!--Debug-开源版-发布配置相关，此处不嵌入源码主要为了直接调试开发源码-->

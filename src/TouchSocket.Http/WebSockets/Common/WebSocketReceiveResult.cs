@@ -10,31 +10,46 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.WebSockets;
-
 namespace TouchSocket.Http.WebSockets;
 
-public readonly struct WebSocketReceiveResult:IDisposable
+/// <summary>
+/// 表示 WebSocket 异步读取的结果。
+/// </summary>
+public readonly struct WebSocketReceiveResult : IDisposable
 {
-    private readonly ReadLease<WSDataFrame> m_readLease;
+    private readonly WSDataFrame m_dataFrame;
 
-    public WebSocketReceiveResult(ReadLease<WSDataFrame> readLease, WSDataFrame dataFrame, string message)
+    /// <summary>
+    /// 初始化 <see cref="WebSocketReceiveResult"/>。
+    /// </summary>
+    /// <param name="dataFrame">接收到的数据帧，连接关闭时为 <see langword="null"/>。</param>
+    /// <param name="message">关闭消息，仅在 <see cref="IsCompleted"/> 为 <see langword="true"/> 时有效。</param>
+    /// <param name="isCompleted">是否已完成（连接已关闭）。</param>
+    public WebSocketReceiveResult(WSDataFrame dataFrame, string message, bool isCompleted)
     {
-        this.m_readLease = readLease;
-        this.DataFrame = dataFrame;
+        this.m_dataFrame = dataFrame;
         this.Message = message;
+        this.IsCompleted = isCompleted;
     }
 
-    public WSDataFrame DataFrame { get; }
+    /// <summary>
+    /// 获取接收到的 WebSocket 数据帧。
+    /// </summary>
+    public WSDataFrame DataFrame => this.m_dataFrame;
 
+    /// <summary>
+    /// 获取一个值，指示连接是否已关闭。
+    /// </summary>
+    public bool IsCompleted { get; }
 
-    public bool IsCompleted => this.m_readLease.IsCompleted;
-
-
+    /// <summary>
+    /// 获取关闭消息。
+    /// </summary>
     public string Message { get; }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
-        this.m_readLease.Dispose();
+        this.m_dataFrame?.Dispose();
     }
 }

@@ -32,9 +32,10 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
     #region 变量
 
-    private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
-    private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
-    private bool m_online;
+    private readonly SemaphoreSlim m_semaphoreForConnectAndClose = new SemaphoreSlim(1, 1);
+    private int m_closeFlag;
+    private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+    private volatile bool m_online;
     private InternalReceiver m_receiver;
     private Task m_runTask;
     private SerialPortTransport m_transport;
@@ -42,6 +43,10 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     #endregion 变量
 
     #region 事件
+
+    private readonly BytesReaderEventArgs m_bytesReaderEventArgs = new BytesReaderEventArgs();
+    private readonly ReceivedDataEventArgs m_receivedDataEventArgs = new ReceivedDataEventArgs();
+    private readonly SendingEventArgs m_sendingEventArgs = new SendingEventArgs();
 
     /// <summary>
     /// 断开连接。在客户端未设置连接状态时，不会触发
@@ -100,9 +105,8 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     protected virtual ValueTask<bool> OnSerialReceiving(IBytesReader byteBlock)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, BytesReaderEventArgs.ReSetData(byteBlock));
+        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, m_bytesReaderEventArgs.Reset(byteBlock));
     }
-    protected virtual BytesReaderEventArgs BytesReaderEventArgs { get; } = new BytesReaderEventArgs();
 
     /// <summary>
     /// 在序列化发送前调用的虚拟方法。
@@ -115,26 +119,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </remarks>
     protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, SendingEventArgs.SetData(memory));
-    }
-    protected virtual SendingEventArgs SendingEventArgs { get; } = new SendingEventArgs();
-
-    private async Task PrivateConnected(SerialPortTransport transport)
-    {
-        var e_connected = new ConnectedEventArgs();
-        await this.OnSerialConnected(e_connected).SafeWaitAsync().ConfigureDefaultAwait();
-        var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, transport);
-        await receiveTask.SafeWaitAsync().ConfigureDefaultAwait();
-
-        transport.SafeDispose();
-
-        var e_closed = transport.ClosedEventArgs;
-        this.m_online = false;
-        var adapter = this.m_dataHandlingAdapter;
-        this.m_dataHandlingAdapter = default;
-        adapter.SafeDispose();
-
-        await this.OnSerialClosed(e_closed).SafeWaitAsync().ConfigureDefaultAwait();
+        return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
 
     private Task PrivateOnClosing(ClosingEventArgs e)
@@ -152,6 +137,30 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             {
                 this.SetAdapter(adapter);
             }
+        }
+    }
+
+    private async Task RunSessionAsync(SerialPortTransport transport)
+    {
+        try
+        {
+            await this.OnSerialConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
+            await this.ReceiveLoopAsync(transport).ConfigureDefaultAwait();
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            transport.SafeDispose();
+
+            this.m_online = false;
+            var adapter = this.m_dataHandlingAdapter;
+            this.m_dataHandlingAdapter = default;
+            adapter.SafeDispose();
+
+            await this.OnSerialClosed(transport.ClosedEventArgs).SafeWaitAsync().ConfigureDefaultAwait();
         }
     }
 
@@ -180,6 +189,11 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <inheritdoc/>
     protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
 
+    /// <summary>
+    /// 获取底层传输层对象。
+    /// </summary>
+    protected ITransport Transport => this.m_transport;
+
     #endregion 属性
 
     #region 断开操作
@@ -187,20 +201,52 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <inheritdoc/>
     public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+        SerialPortTransport transport = null;
+        Task runTask;
+
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             if (!this.m_online)
             {
-                return Result.Success;
+                runTask = this.m_runTask;
+                if (runTask == null)
+                {
+                    return Result.Success;
+                }
             }
+            else if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
+            {
+                runTask = this.m_runTask;
+            }
+            else
+            {
+                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+                transport = this.m_transport;
+                runTask = this.m_runTask;
+            }
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+        finally
+        {
+            this.m_semaphoreForConnectAndClose.Release();
+        }
 
-            await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
-            var transport = this.m_transport;
+        try
+        {
             if (transport != null)
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
-            await this.WaitClearConnect().ConfigureDefaultAwait();
+
+            if (runTask != null)
+            {
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            }
+
             return Result.Success;
         }
         catch (Exception ex)
@@ -214,7 +260,11 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait());
+            _ = EasyTask.SafeRun(async () =>
+            {
+                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
+                this.m_semaphoreForConnectAndClose.SafeDispose();
+            });
         }
         base.SafetyDispose(disposing);
     }
@@ -232,7 +282,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         this.ThrowIfDisposed();
         this.ThrowIfConfigIsNull();
-        await this.m_semaphoreForConnect.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        await this.m_semaphoreForConnectAndClose.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
         try
         {
@@ -241,22 +291,46 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
                 return;
             }
 
-            await this.WaitClearConnect().ConfigureDefaultAwait();
+            // 确保上次接收任务已经结束
+            var runTask = this.m_runTask;
+            if (runTask != null)
+            {
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            }
 
             var serialPortOption = this.Config.GetValue(SerialPortConfigExtension.SerialPortOptionProperty);
             ThrowHelper.ThrowIfNull(serialPortOption, nameof(serialPortOption));
 
-            var serialPort = CreateSerial(serialPortOption);
-            await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureDefaultAwait();
+            SerialCore serialPort = null;
+            SerialPortTransport transport = null;
 
-            this.m_transport = new SerialPortTransport(serialPort, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
-            this.m_online = true;
-            // 启动新任务，处理连接后的操作
-            this.m_runTask = EasyTask.SafeRun(this.PrivateConnected, this.m_transport);
+            try
+            {
+                serialPort = CreateSerial(serialPortOption);
+                await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureDefaultAwait();
+
+                transport = new SerialPortTransport(serialPort, this.Config.GetValue(TouchSocketConfigExtension.TransportOptionProperty));
+                this.m_transport = transport;
+                this.m_online = true;
+                Interlocked.Exchange(ref this.m_closeFlag, 0);
+                this.m_runTask = this.RunSessionAsync(transport);
+            }
+            catch
+            {
+                transport.SafeDispose();
+                if (transport == null)
+                {
+                    serialPort.SafeDispose();
+                }
+
+                this.m_transport = default;
+                this.m_online = false;
+                throw;
+            }
         }
         finally
         {
-            this.m_semaphoreForConnect.Release();
+            this.m_semaphoreForConnectAndClose.Release();
         }
     }
 
@@ -269,7 +343,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <exception cref="ArgumentNullException">如果提供的适配器实例为<see langword="null"/>，则抛出此异常。</exception>
     protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
     {
-
         this.ThrowIfDisposed();
 
         if (adapter is null)
@@ -318,18 +391,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
             return;
         }
-        await this.OnSerialReceived(ReceivedDataEventArgs.SetData(memory, requestInfo)).ConfigureDefaultAwait();
-    }
-    protected virtual ReceivedDataEventArgs ReceivedDataEventArgs { get; } = new ReceivedDataEventArgs();
-
-    private async Task WaitClearConnect()
-    {
-        // 确保上次接收任务已经结束
-        var runTask = this.m_runTask;
-        if (runTask != null)
-        {
-            await runTask.ConfigureDefaultAwait();
-        }
+        await this.OnSerialReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
     #region Receiver
@@ -368,7 +430,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
         {
-            throw new NotSupportedException($"当前适配器为空或者不支持对象发送。");
+            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
         }
     }
 
@@ -387,7 +449,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
     #region 发送
 
-
     /// <summary>
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
     /// </summary>
@@ -398,8 +459,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();
-
-
 
         var transport = this.m_transport;
         var adapter = this.m_dataHandlingAdapter;
@@ -460,5 +519,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             locker.Release();
         }
     }
+
     #endregion 发送
 }

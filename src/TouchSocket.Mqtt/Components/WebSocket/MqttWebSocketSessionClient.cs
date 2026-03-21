@@ -32,7 +32,6 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
         this.m_mqttBroker = mqttBroker;
         this.m_adapter.Config(this.m_client.Config);
         this.m_webSocket = this.m_client.WebSocket;
-        this.m_webSocket.AllowAsyncRead = true;
     }
 
     public IHttpSessionClient Client => this.m_client;

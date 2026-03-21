@@ -63,7 +63,15 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     public Func<DmtpActor, PackageRouterEventArgs, Task> Routing { get; init; }
 
-    public ITransportWriter TransportWriter { get; init; }
+    /// <summary>
+    /// 指定的传输写入器
+    /// </summary>
+    public ITransportWriter TransportWriter { get; set; }
+
+    /// <summary>
+    /// 最大包大小
+    /// </summary>
+    public long MaxPackageSize { get; set; }
 
     #endregion 委托
 
@@ -929,50 +937,79 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
-    //    try
-    //    {
-    //        writer.Write(DmtpMessage.Head);
-    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
-    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer, 4);
-    //        WriterExtension.WriteNormalString(ref writer, value, Encoding.UTF8);
-    //        var lengthSpan = writerAnchor.Rewind(ref writer, out var length);
-    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-    //        this.LastActiveTime = DateTimeOffset.UtcNow;
-    //    }
-    //    finally
-    //    {
-    //        writer.Dispose();
-    //    }
-    //}
+    private static void BuildPackage<TWriter>(ref TWriter writer, ushort protocol, ReadOnlyMemory<byte> memory)
+        where TWriter : IBytesWriter
+    {
+        writer.Write(DmtpMessage.Head);
+        WriterExtension.WriteValue<TWriter, ushort>(ref writer, protocol, EndianType.Big);
+        WriterExtension.WriteValue<TWriter, int>(ref writer, memory.Length, EndianType.Big);
+        writer.Write(memory.Span);
+    }
+
+    private void CheckMaxPackageSize(int bodyLength)
+    {
+        var maxPackageSize = this.MaxPackageSize;
+        if (maxPackageSize <= 0)
+        {
+            return;
+        }
+
+        var packageLength = bodyLength + 8L;
+        if (packageLength > maxPackageSize)
+        {
+            ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan("memory.Length", packageLength, maxPackageSize);
+        }
+    }
+
     /// <inheritdoc/>
     public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        var writer = new SegmentedBytesWriter(memory.Length + 8);
+        this.CheckMaxPackageSize(memory.Length);
+
+        var transportWriter = this.TransportWriter;
+        if (transportWriter != null)
+        {
+            await transportWriter.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+            try
+            {
+                var pipeWriter = new PipeBytesWriter(transportWriter.Writer);
+                BuildPackage(ref pipeWriter, protocol, memory);
+                await pipeWriter.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+            }
+            finally
+            {
+                transportWriter.WriteLocker.Release();
+            }
+
+            return;
+        }
+
+        ThrowHelper.ThrowIfNull(this.OutputSendAsync, nameof(this.OutputSendAsync));
         await this.m_semaphoreSlim.WaitAsync(cancellationToken);
         try
         {
-            writer.Write(DmtpMessage.Head);
-            writer.WriteValue(protocol, EndianType.Big);
-            WriterExtension.WriteValue<SegmentedBytesWriter, int>(ref writer, memory.Length, EndianType.Big);
-            writer.Write(memory.Span);
-
-            foreach (var item in writer.Sequence)
+            var segmentedWriter = new SegmentedBytesWriter(memory.Length + 8);
+            try
             {
-                await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureDefaultAwait();
+                BuildPackage(ref segmentedWriter, protocol, memory);
+                foreach (var item in segmentedWriter.Sequence)
+                {
+                    await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureDefaultAwait();
+                }
+            }
+            finally
+            {
+                segmentedWriter.Dispose();
             }
         }
         finally
         {
-            writer.Dispose();
             this.m_semaphoreSlim.Release();
         }
     }
 
-    ///// <inheritdoc/>
-    //public async Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default)
-    //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
+  
+    /// <inheritdoc/>
     public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
         where TPackage : IPackage
     {
@@ -988,22 +1025,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    //    try
-    //    {
-    //        writer.Write(DmtpMessage.Head);
-    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
-    //        var writerAnchor = new WriterAnchor<PipeBytesWriter>(ref writer,4);
-    //        package.Package(ref writer);
-    //        var lengthSpan=writerAnchor.Rewind(ref writer, out var length);
-    //        lengthSpan.WriteValue<int>(length, EndianType.Big);
-    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-    //        this.LastActiveTime = DateTimeOffset.UtcNow;
-    //    }
-    //    finally
-    //    {
-    //        writer.Dispose();
-    //    }
-    //}
+    
     /// <inheritdoc/>
     public async Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default)
     {
@@ -1024,31 +1046,6 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
         return this.SendAsync(protocol, bytes, cancellationToken);
     }
-
-    ///// <inheritdoc/>
-    //public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
-    //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
-
-    //    try
-    //    {
-    //        writer.Write(DmtpMessage.Head);
-    //        WriterExtension.WriteValue(ref writer, protocol, EndianType.Big);
-    //        WriterExtension.WriteValue(ref writer, memory.Length, EndianType.Big);
-    //        writer.Write(memory.Span);
-    //        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-    //        this.LastActiveTime = DateTimeOffset.UtcNow;
-    //    }
-    //    finally
-    //    {
-    //        writer.Dispose();
-    //    }
-    //}
-
-    //public async Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default)
-    //    where TPackage:IPackage
-    //{
-    //    var writer = await this.Transport.CreateWriter(cancellationToken).ConfigureDefaultAwait();
 
     #endregion 协议异步发送
 

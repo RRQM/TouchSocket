@@ -18,13 +18,8 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 定义WebSocket服务的接口。
 /// </summary>
-public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject, IClient
+public interface IWebSocket : IOnlineClient, IClosableClient, IResolverObject, IClient
 {
-    /// <summary>
-    /// 允许异步Read读取
-    /// </summary>
-    bool AllowAsyncRead { get; set; }
-
     /// <summary>
     /// 使用的Http客户端
     /// </summary>
