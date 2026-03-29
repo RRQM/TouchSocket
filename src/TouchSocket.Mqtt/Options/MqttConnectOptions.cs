@@ -88,6 +88,9 @@ public class MqttConnectOptions
 
     #region Mqtt Properties
 
+    /// <summary>
+    /// 获取或设置用户属性列表。
+    /// </summary>
     [NotNull]
     public IReadOnlyList<MqttUserProperty> UserProperties { get; set; }
 
@@ -214,7 +217,13 @@ public class MqttConnectOptions
     /// Mqtt 5.0.0以上
     /// </remarks>
     public IReadOnlyList<MqttUserProperty> WillUserProperties { get; set; }
+    /// <summary>
+    /// 获取或设置遗嘱消息有效载荷。
+    /// </summary>
     public ReadOnlyMemory<byte> WillPayload { get; set; }
+    /// <summary>
+    /// 获取或设置遗嘱主题。
+    /// </summary>
     public string WillTopic { get; set; }
 
     #endregion Will Properties

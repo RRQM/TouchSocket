@@ -47,4 +47,18 @@ public static class PluginManagerExtension
             options.SetUrl(url);
         });
     }
+
+    /// <summary>
+    /// 使用Mqtt主题路由处理插件，连接成功后自动订阅配置的主题，并将收到的消息路由到对应的处理器。
+    /// </summary>
+    /// <typeparam name="TClient">客户端类型，需实现 <see cref="IMqttClient"/>。</typeparam>
+    /// <param name="pluginManager">插件管理器。</param>
+    /// <param name="configure">用于配置主题订阅与处理器的委托。</param>
+    public static void UseMqttTopicHandler<TClient>(this IPluginManager pluginManager, Action<SubscriptionManagementOption<TClient>> configure)
+        where TClient : class, IMqttClient
+    {
+        var option = new SubscriptionManagementOption<TClient>();
+        configure?.Invoke(option);
+        pluginManager.Add(new MqttSubscriptionManagementPlugin<TClient>(option));
+    }
 }

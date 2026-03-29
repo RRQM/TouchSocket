@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -37,7 +37,6 @@ public class IPHost : Uri
     /// </list>
     /// </para>
     /// </summary>
-    /// <param name="uriString"></param>
     public IPHost(string uriString) : base(VerifyUri(uriString))
     {
         var port = GetPortFromUrl(uriString);
@@ -50,7 +49,6 @@ public class IPHost : Uri
     /// <summary>
     /// 从端口号创建IPv4的Any地址。
     /// </summary>
-    /// <param name="port"></param>
     public IPHost(int port) : this($"0.0.0.0:{port}")
     {
     }
@@ -58,8 +56,6 @@ public class IPHost : Uri
     /// <summary>
     /// 从<see cref="IPAddress"/>
     /// </summary>
-    /// <param name="address"></param>
-    /// <param name="port"></param>
     public IPHost(IPAddress address, int port)
         : this(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? $"[{address}]:{port}" : $"{address}:{port}")
     {
@@ -68,8 +64,6 @@ public class IPHost : Uri
     /// <summary>
     /// 获取终结点。
     /// </summary>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     public EndPoint EndPoint
     {
         get
@@ -175,13 +169,11 @@ public class IPHost : Uri
     /// <summary>
     /// 由字符串向<see cref="IPHost"/>转换
     /// </summary>
-    /// <param name="value"></param>
     public static implicit operator IPHost(string value) => new IPHost(value);
 
     /// <summary>
     /// 由端口向<see cref="IPHost"/>转换
     /// </summary>
-    /// <param name="value"></param>
     public static implicit operator IPHost(int value) => new IPHost(value);
 
     #endregion Implicit
@@ -189,8 +181,6 @@ public class IPHost : Uri
     /// <summary>
     /// 解析一个组的地址。
     /// </summary>
-    /// <param name="ipHostStrings"></param>
-    /// <returns></returns>
     public static IPHost[] ParseIPHosts(string[] ipHostStrings)
     {
         var iPs = new List<IPHost>();

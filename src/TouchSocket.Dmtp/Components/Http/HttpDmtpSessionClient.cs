@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -130,6 +130,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -182,22 +183,21 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor!=null)
+        if (this.m_dmtpActor != null)
         {
-            await this.OnDmtpClosed(e).ConfigureDefaultAwait();
+            if (this.m_dmtpActor.ClosedMessage.HasValue())
+            {
+                e.Message = this.m_dmtpActor.ClosedMessage;
+            }
+            await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
         }
-        
+
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosing(ClosingEventArgs e)
     {
-        if (this.m_dmtpActor != null)
-        {
-            await this.PluginManager.RaiseIDmtpClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
-        }
-       
         await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
@@ -287,8 +287,12 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        //base.Abort(false, msg);
-        return EasyTask.CompletedTask;
+        return this.OnDmtpClosing(new ClosingEventArgs(msg));
+    }
+
+    private Task OnDmtpActorClosed(DmtpActor actor, ClosedEventArgs e)
+    {
+        return this.OnDmtpClosed(e);
     }
 
     private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -344,7 +348,6 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// 当Dmtp关闭以后。
     /// </summary>
     /// <param name="e">事件参数</param>
-    /// <returns></returns>
     protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
     {
         //如果事件已经被处理，则直接返回
@@ -359,11 +362,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// <summary>
     /// 当Dmtp即将被关闭时触发。
     /// <para>
-    /// 该触发条件有2种：
-    /// <list type="number">
-    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
-    /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
-    /// </list>
+    /// 仅在终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>时触发。
     /// </para>
     /// </summary>
     /// <param name="e">提供了关闭事件的相关信息。</param>

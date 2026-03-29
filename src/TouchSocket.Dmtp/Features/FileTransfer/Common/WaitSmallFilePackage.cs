@@ -14,27 +14,16 @@ namespace TouchSocket.Dmtp.FileTransfer;
 
 internal class WaitSmallFilePackage : WaitRouterPackage
 {
-    protected override bool IncludedRouter => true;
+    
     public byte[] Data { get; set; }
     public RemoteFileInfo FileInfo { get; set; }
     public int Len { get; set; }
-    public Metadata Metadata { get; set; }
     public string Path { get; set; }
 
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
         base.PackageBody(ref writer);
         WriterExtension.WriteString(ref writer, this.Path);
-        if (this.Metadata is null)
-        {
-            WriterExtension.WriteNull(ref writer);
-        }
-        else
-        {
-            WriterExtension.WriteNotNull(ref writer);
-            this.Metadata.Package(ref writer);
-        }
-
         if (this.FileInfo is null)
         {
             WriterExtension.WriteNull(ref writer);
@@ -52,16 +41,6 @@ internal class WaitSmallFilePackage : WaitRouterPackage
     {
         base.UnpackageBody(ref reader);
         this.Path = ReaderExtension.ReadString(ref reader);
-        if (ReaderExtension.ReadIsNull(ref reader))
-        {
-            this.Metadata = null;
-        }
-        else
-        {
-            this.Metadata = new Metadata();
-            this.Metadata.Unpackage(ref reader);
-        }
-
         if (ReaderExtension.ReadIsNull(ref reader))
         {
             this.FileInfo = null;

@@ -10,10 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace TouchSocket.WebApi.Swagger;
 
+[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Swagger内部使用，相信动态代码是有效的")]
 internal class OpenApiStringEnumConverter : System.Text.Json.Serialization.JsonStringEnumConverter
 {
     public OpenApiStringEnumConverter() : base(JsonNamingPolicy.CamelCase)

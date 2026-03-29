@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -29,7 +29,6 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 实例化一个Rpc调用函数，并在方法声明的类上操作
     /// </summary>
-    /// <param name="methodInfo"></param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public RpcMethod(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType, methodInfo.DeclaringType)
     {
@@ -38,9 +37,6 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 实例化一个Rpc调用函数，并在指定类上操作
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="serverFromType"></param>
-    /// <param name="serverToType"></param>
     public RpcMethod(MethodInfo method, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverFromType, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverToType) : base(method)
     {
         this.ServerFromType = serverFromType;
@@ -128,7 +124,6 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 获取常规Rpc参数。
     /// </summary>
-    /// <returns></returns>
     public IEnumerable<RpcParameter> GetNormalParameters()
     {
         return this.Parameters.Where(a =>
@@ -203,7 +198,6 @@ public sealed class RpcMethod : Method
     /// 获取指定类型属性标签
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
     public T GetAttribute<T>()
     {
         var attribute = this.GetAttribute(typeof(T));
@@ -213,8 +207,6 @@ public sealed class RpcMethod : Method
     /// <summary>
     /// 获取指定类型属性标签
     /// </summary>
-    /// <param name="attributeType"></param>
-    /// <returns></returns>
     public object GetAttribute(Type attributeType)
     {
         attributeType.GetCustomAttributesData();
@@ -240,8 +232,7 @@ public sealed class RpcMethod : Method
     /// 筛选器
     /// </summary>
     /// <param name="filters">全局筛选器</param>
-    /// <param name="resolver"></param>
-    /// <returns></returns>
+    /// <param name="resolver">IoC解析器。</param>
     public IReadOnlyList<IRpcActionFilter> GetFilters(IReadOnlyList<Type> filters, IResolver resolver)
     {
         if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3] || filters.Count > 0)

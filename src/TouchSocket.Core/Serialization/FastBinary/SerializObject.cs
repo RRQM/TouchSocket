@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -34,8 +34,6 @@ public sealed class SerializObject
     /// <summary>
     /// 从转换器初始化
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="converter"></param>
     public SerializObject(Type type, IFastBinaryConverter converter)
     {
         this.Type = type;
@@ -45,8 +43,6 @@ public sealed class SerializObject
     /// <summary>
     /// 从类型创建序列化器
     /// </summary>
-    /// <param name="type"></param>
-    /// <exception cref="Exception"></exception>
     [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
     public SerializObject([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {

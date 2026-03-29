@@ -15,22 +15,12 @@ namespace TouchSocket.Dmtp.FileTransfer;
 internal class WaitFinishedPackage : WaitRouterPackage
 {
     public ResultCode Code { get; set; }
-    public Metadata Metadata { get; set; }
     public int ResourceHandle { get; set; }
 
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
         base.PackageBody(ref writer);
         WriterExtension.WriteValue<TWriter, int>(ref writer, this.ResourceHandle);
-        if (this.Metadata is null)
-        {
-            WriterExtension.WriteNull(ref writer);
-        }
-        else
-        {
-            WriterExtension.WriteNotNull(ref writer);
-            this.Metadata.Package(ref writer);
-        }
         WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Code);
     }
 
@@ -38,15 +28,6 @@ internal class WaitFinishedPackage : WaitRouterPackage
     {
         base.UnpackageBody(ref reader);
         this.ResourceHandle = ReaderExtension.ReadValue<TReader, int>(ref reader);
-        if (ReaderExtension.ReadIsNull(ref reader))
-        {
-            this.Metadata = null;
-        }
-        else
-        {
-            this.Metadata = new Metadata();
-            this.Metadata.Unpackage(ref reader);
-        }
         this.Code = (ResultCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 }

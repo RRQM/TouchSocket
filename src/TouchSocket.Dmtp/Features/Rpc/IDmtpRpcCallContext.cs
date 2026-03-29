@@ -15,17 +15,26 @@ using TouchSocket.Rpc;
 namespace TouchSocket.Dmtp.Rpc;
 
 /// <summary>
-/// IDmtpRpcCallContext
+/// Dmtp RPC 调用上下文接口。
+/// 该接口继承自 <see cref="ICallContext"/>，用于表示一次 Dmtp RPC 调用过程中的上下文信息。
 /// </summary>
 public interface IDmtpRpcCallContext : ICallContext
 {
     /// <summary>
-    /// 序列化类型
+    /// 获取用于本次调用的序列化类型。
     /// </summary>
+    /// <value>当前调用使用的 <see cref="SerializationType"/>。</value>
     SerializationType SerializationType { get; }
 
     /// <summary>
-    /// 调用元数据
+    /// 获取调用相关的元数据信息。
     /// </summary>
+    /// <value>包含调用键值对信息的 <see cref="Metadata"/> 实例。</value>
     Metadata Metadata { get; }
+
+    /// <summary>
+    /// 获取当前调用对应的 Dmtp RPC 请求包。
+    /// </summary>
+    /// <value>表示请求包的 <see cref="IDmtpRpcRequestPackage"/> 实例。</value>
+    IDmtpRpcRequestPackage DmtpRpcPackage { get; }
 }

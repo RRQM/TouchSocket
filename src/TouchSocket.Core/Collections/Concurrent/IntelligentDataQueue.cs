@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -33,9 +33,6 @@ public class QueueDataBytes : IQueueData
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
     public QueueDataBytes(byte[] buffer, int offset, int length)
     {
         this.Offset = offset;
@@ -47,10 +44,6 @@ public class QueueDataBytes : IQueueData
     /// <summary>
     /// 从指定内存创建一个新对象，且内存也为新创建。
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
     public static QueueDataBytes CreateNew(byte[] buffer, int offset, int length)
     {
         var buf = new byte[length];
@@ -62,7 +55,6 @@ public class QueueDataBytes : IQueueData
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="buffer"></param>
     public QueueDataBytes(byte[] buffer) : this(buffer, 0, buffer.Length)
     {
     }
@@ -100,7 +92,6 @@ public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
     /// <summary>
     /// 智能数据安全队列
     /// </summary>
-    /// <param name="maxSize"></param>
     public IntelligentDataQueue(long maxSize)
     {
         this.Free = true;
@@ -170,7 +161,6 @@ public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
     /// <summary>
     /// 入队
     /// </summary>
-    /// <param name="item"></param>
     public new void Enqueue(T item)
     {
         lock (this.m_lock)
@@ -195,8 +185,6 @@ public class IntelligentDataQueue<T> : ConcurrentQueue<T> where T : IQueueData
     /// <summary>
     /// 出队
     /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
     public new bool TryDequeue(out T result)
     {
         if (base.TryDequeue(out result))

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -31,7 +31,6 @@ internal class MemberGetter
     /// 表示属性的Getter
     /// </summary>
     /// <param name="property">属性</param>
-    /// <exception cref="ArgumentNullException"></exception>
     public MemberGetter(PropertyInfo property)
     {
         var getMethod = property.GetGetMethod(true);
@@ -42,7 +41,6 @@ internal class MemberGetter
     /// <summary>
     /// 表示类型字段或属性的Getter
     /// </summary>
-    /// <exception cref="ArgumentNullException"></exception>
     public MemberGetter(FieldInfo fieldInfo)
     {
         this.m_isStatic = fieldInfo.IsStatic;
@@ -53,7 +51,6 @@ internal class MemberGetter
     /// 获取属性的值
     /// </summary>
     /// <param name="instance">实例</param>
-    /// <returns></returns>
     public object Invoke(object instance)
     {
         return this.m_getFunc.Invoke(instance);

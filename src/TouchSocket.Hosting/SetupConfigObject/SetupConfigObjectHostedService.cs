@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -63,7 +63,6 @@ public class SetupConfigObjectHostedService<TConfigObject> : IHostedService wher
     /// <summary>
     /// 在设置完成<see cref="IResolver"/>时调用。
     /// </summary>
-    /// <param name="resolver"></param>
     protected virtual void OnSetResolver(IResolver resolver)
     {
     }
@@ -71,8 +70,6 @@ public class SetupConfigObjectHostedService<TConfigObject> : IHostedService wher
     /// <summary>
     /// 启动Host。并且调用<see cref="ISetupConfigObject.SetupAsync(TouchSocketConfig)"/>
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public virtual async Task StartAsync(CancellationToken cancellationToken)
     {
         this.m_config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);

@@ -174,6 +174,9 @@ public abstract class HttpBase : IRequestInfo
         return true;
     }
 
+    /// <summary>
+    /// 重置 HTTP 请求状态。
+    /// </summary>
     protected internal virtual void Reset()
     {
         this.m_headers.Clear();

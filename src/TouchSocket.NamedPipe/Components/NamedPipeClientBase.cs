@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -54,7 +54,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <summary>
     /// 断开连接。在客户端未设置连接状态时，不会触发
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -63,7 +62,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -72,7 +70,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <summary>
     /// 已经建立管道连接
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -81,7 +78,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <summary>
     /// 准备连接的时候
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -154,7 +150,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <inheritdoc/>
     public Protocol Protocol { get; protected set; }
 
-    /// <summary>
     /// <summary>
     /// 获取命名管道的底层传输层对象。
     /// </summary>
@@ -243,10 +238,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// 建立管道的连接。
     /// </summary>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <exception cref="ObjectDisposedException"></exception>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="TimeoutException"></exception>
     protected virtual async Task NamedPipeConnectAsync(CancellationToken cancellationToken)
     {
         this.ThrowIfDisposed();
@@ -349,7 +340,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// 处理已接收到的数据。
     /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
     /// </summary>
-    /// <param name="e"></param>
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
@@ -359,7 +349,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <summary>
     /// 当收到原始数据
     /// </summary>
-    /// <param name="reader"></param>
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {

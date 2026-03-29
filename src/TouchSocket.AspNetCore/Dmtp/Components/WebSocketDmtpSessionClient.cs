@@ -103,15 +103,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             {
                 return Result.Success;
             }
-            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
 
             var dmtpActor = this.m_dmtpActor;
             if (dmtpActor != null)
             {
-                // 向IDmtpActor对象发送关闭消息
-                await dmtpActor.SendCloseAsync(msg).ConfigureDefaultAwait();
-
-                // 关闭IDmtpActor对象
                 await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
 
@@ -180,6 +175,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             OutputSendAsync = this.OnDmtpActorSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -196,6 +192,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         this.m_client = client;
         this.m_httpContext = context;
         await this.ReceiveLoopAsync(client, cancellationToken).ConfigureDefaultAwait();
+
+        var closedArgs = this.m_closedEventArgs ?? new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
+        await this.m_dmtpActor.FinalizeAsync(closedArgs.Message, closedArgs.Exception).ConfigureDefaultAwait();
+
         this.m_service.TryRemove(this.m_id, out _);
     }
 
@@ -338,20 +338,25 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
                     break;
                 }
             }
-            this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+            this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs = new ClosedEventArgs(false, ex.Message);
+            this.m_closedEventArgs = new ClosedEventArgs(ex.Message, ex);
             this.Logger?.Debug(this, ex);
         }
     }
 
     #region 内部委托绑定
 
-    private async Task OnDmtpActorClose(DmtpActor actor, string msg)
+    private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        await this.CloseAsync(msg, CancellationToken.None);
+        return this.OnDmtpClosing(new ClosingEventArgs(msg));
+    }
+
+    private Task OnDmtpActorClosed(DmtpActor actor, ClosedEventArgs e)
+    {
+        return this.OnDmtpClosed(e);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)

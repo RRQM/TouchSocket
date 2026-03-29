@@ -19,6 +19,13 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public sealed class MqttArrivedMessage
 {
+    /// <summary>
+    /// 初始化 <see cref="MqttArrivedMessage"/> 类的新实例。
+    /// </summary>
+    /// <param name="topicName">主题名。</param>
+    /// <param name="qosLevel">服务质量等级。</param>
+    /// <param name="retain">是否保留消息。</param>
+    /// <param name="payload">消息有效载荷。</param>
     public MqttArrivedMessage(string topicName,QosLevel qosLevel, bool retain, ReadOnlySequence<byte> payload)
     {
         this.QosLevel = qosLevel;
@@ -27,6 +34,13 @@ public sealed class MqttArrivedMessage
         this.TopicName = topicName;
     }
 
+    /// <summary>
+    /// 初始化 <see cref="MqttArrivedMessage"/> 类的新实例。
+    /// </summary>
+    /// <param name="topicName">主题名。</param>
+    /// <param name="qosLevel">服务质量等级。</param>
+    /// <param name="retain">是否保留消息。</param>
+    /// <param name="payload">消息有效载荷。</param>
     public MqttArrivedMessage(string topicName, QosLevel qosLevel, bool retain, ReadOnlyMemory<byte> payload)
         :this(topicName, qosLevel, retain, new ReadOnlySequence<byte>(payload))
     {

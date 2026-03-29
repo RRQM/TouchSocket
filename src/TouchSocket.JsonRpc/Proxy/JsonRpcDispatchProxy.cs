@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
@@ -18,6 +19,8 @@ namespace TouchSocket.JsonRpc;
 /// JsonRpcDispatchProxy
 /// </summary>
 /// <typeparam name="TClient"></typeparam>
+[UnconditionalSuppressMessage("Trimming", "IL2109", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
 public abstract class JsonRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
 {
 
@@ -26,6 +29,8 @@ public abstract class JsonRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, 
 /// <summary>
 /// JsonRpcDispatchProxy
 /// </summary>
+[UnconditionalSuppressMessage("Trimming", "IL2109", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
 public abstract class JsonRpcDispatchProxy : JsonRpcDispatchProxy<IJsonRpcClient>
 {
 

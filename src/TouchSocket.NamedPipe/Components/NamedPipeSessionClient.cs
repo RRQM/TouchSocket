@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -55,7 +55,6 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// <summary>
     /// 当客户端完整建立Tcp连接。
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
         await this.m_onClientConnected(this, e).ConfigureDefaultAwait();
@@ -84,7 +83,6 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// <summary>
     /// 客户端已断开连接。
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
         if (this.Closed != null)
@@ -109,7 +107,6 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
         try

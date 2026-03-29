@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
@@ -49,12 +50,14 @@ internal class TargetDmtpRpcActor : IDmtpRpcActor
         return this.m_rpcActor.InputReceivedData(message);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "RPC基础设施相信动态代码是有效的")]
     public Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, returnType, invokeOption, parameters);
     }
 
-    public Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "RPC基础设施相信动态代码是有效的")]
+    public Task<object> InvokeAsync(string targetId, string invokeKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         return this.m_rpcActor.InvokeAsync(targetId, invokeKey, returnType, invokeOption, parameters);
     }

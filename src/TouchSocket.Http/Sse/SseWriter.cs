@@ -18,9 +18,21 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Http;
 
+/// <summary>
+/// SSE 消息写入器的抽象基类。
+/// </summary>
 public abstract class SseWriter
 {
+    /// <summary>
+    /// 异步写入一个 SSE 消息。
+    /// </summary>
+    /// <param name="message">SSE 消息对象。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     public abstract Task WriteAsync(SseMessage message, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// 异步完成 SSE 消息流的写入。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
     public abstract Task CompleteAsync(CancellationToken cancellationToken = default);
 }

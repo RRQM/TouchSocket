@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -24,8 +24,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 创建一个可释放的读取锁
     /// </summary>
-    /// <param name="lockSlim"></param>
-    /// <returns></returns>
     public static ReadLock CreateReadLock(this ReaderWriterLockSlim lockSlim)
     {
         return new ReadLock(lockSlim);
@@ -34,8 +32,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 创建一个可释放的写入锁
     /// </summary>
-    /// <param name="lockSlim"></param>
-    /// <returns></returns>
     public static WriteLock CreateWriteLock(this ReaderWriterLockSlim lockSlim)
     {
         return new WriteLock(lockSlim);
@@ -114,8 +110,6 @@ public static class SystemThreadingExtension
     /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="task"></param>
-    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable<T> ConfigureFalseAwait<T>(this ValueTask<T> task)
     {
@@ -125,7 +119,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
-    /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable ConfigureFalseAwait(this ValueTask task)
     {
@@ -136,8 +129,6 @@ public static class SystemThreadingExtension
     /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="task"></param>
-    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable<T> ConfigureDefaultAwait<T>(this ValueTask<T> task)
     {
@@ -147,7 +138,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
     /// </summary>
-    /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredValueTaskAwaitable ConfigureDefaultAwait(this ValueTask task)
     {
@@ -228,8 +218,6 @@ public static class SystemThreadingExtension
     /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="task"></param>
-    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable<T> ConfigureFalseAwait<T>(this Task<T> task)
     {
@@ -239,7 +227,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 配置ConfigureAwait为<see langword="false"/>。
     /// </summary>
-    /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
     {
@@ -250,8 +237,6 @@ public static class SystemThreadingExtension
     /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="task"></param>
-    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable<T> ConfigureDefaultAwait<T>(this Task<T> task)
     {
@@ -261,7 +246,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 配置ConfigureAwait为<see cref="EasyTask.ContinueOnCapturedContext"/>。
     /// </summary>
-    /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConfiguredTaskAwaitable ConfigureDefaultAwait(this Task task)
     {
@@ -296,8 +280,6 @@ public static class SystemThreadingExtension
     /// 同步获取配置ConfigureAwait为<see langword="false"/>时的结果。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="task"></param>
-    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GetFalseAwaitResult<T>(this Task<T> task)
     {
@@ -307,7 +289,6 @@ public static class SystemThreadingExtension
     /// <summary>
     /// 同步配置ConfigureAwait为<see langword="false"/>时的执行。
     /// </summary>
-    /// <param name="task"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetFalseAwaitResult(this Task task)
     {

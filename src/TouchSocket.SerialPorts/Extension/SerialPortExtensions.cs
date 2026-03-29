@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -22,7 +22,6 @@ public static class SerialPortExtensions
     /// <summary>
     /// 尝试关闭<see cref="SerialPort"/>。不会抛出异常。
     /// </summary>
-    /// <param name="serialPort"></param>
     public static Result TryClose(this SerialPort serialPort)
     {
         try
@@ -40,6 +39,12 @@ public static class SerialPortExtensions
         }
     }
 
+    /// <summary>
+    /// 从串口读取数据到 <see cref="Memory{T}"/>。
+    /// </summary>
+    /// <param name="serialPort">串口实例。</param>
+    /// <param name="memory">接收数据的内存缓冲。</param>
+    /// <returns>实际读取的字节数。</returns>
     public static int Read(this SerialPort serialPort, Memory<byte> memory)
     {
         var bytes = memory.GetArray();

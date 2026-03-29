@@ -14,6 +14,9 @@ namespace TouchSocket.Mqtt;
 
 public partial class MqttSubAckMessage
 {
+    /// <summary>
+    /// 获取或设置原因符串。
+    /// </summary>
     public string ReasonString { get; set; }
 
     /// <inheritdoc/>

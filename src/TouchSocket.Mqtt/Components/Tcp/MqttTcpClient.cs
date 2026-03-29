@@ -14,6 +14,9 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 TCP 的 Mqtt 客户端。
+/// </summary>
 public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 {
     private readonly MqttClientActor m_mqttActor;
@@ -21,6 +24,9 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 
     private MqttAdapter m_mqttAdapter;
 
+    /// <summary>
+    /// 初始化 <see cref="MqttTcpClient"/> 类的新实例。
+    /// </summary>
     public MqttTcpClient()
     {
         var actor = new MqttClientActor
@@ -163,7 +169,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     {
         this.m_mqttActor.WaitHandlePool.CancelAll();
 
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Manual, e.Message)).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 

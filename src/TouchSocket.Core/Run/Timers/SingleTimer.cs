@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -37,8 +37,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="period"></param>
     public SingleTimer(int period, Action action)
     {
         this.m_timer = new Timer(this.OnTimer, null, 0, period);
@@ -49,8 +47,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="period"></param>
     public SingleTimer(TimeSpan period, Action action)
     {
         this.m_timer = new Timer(this.OnTimer, null, TimeSpan.Zero, period);
@@ -61,8 +57,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="period"></param>
     public SingleTimer(int period, Action<SingleTimer> action)
     {
         this.m_timer = new Timer(this.OnTimer, null, 0, period);
@@ -73,8 +67,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="period"></param>
     public SingleTimer(int period, Action<SingleTimer, object> action)
     {
         this.m_timer = new Timer(this.OnTimer, null, 0, period);
@@ -85,9 +77,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="state"></param>
-    /// <param name="period"></param>
     public SingleTimer(object state, TimeSpan period, Action<SingleTimer> action)
     {
         this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
@@ -98,9 +87,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="state"></param>
-    /// <param name="period"></param>
     public SingleTimer(object state, TimeSpan period, Action<SingleTimer, object> action)
     {
         this.m_timer = new Timer(this.OnTimer, state, TimeSpan.Zero, period);
@@ -111,9 +97,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="state"></param>
-    /// <param name="period"></param>
     public SingleTimer(object state, int period, Action<SingleTimer> action)
     {
         this.m_timer = new Timer(this.OnTimer, state, 0, period);
@@ -124,9 +107,6 @@ public class SingleTimer : SafetyDisposableObject
     /// <summary>
     /// 不可重入的Timer
     /// </summary>
-    /// <param name="action"></param>
-    /// <param name="state"></param>
-    /// <param name="period"></param>
     public SingleTimer(object state, int period, Action<SingleTimer, object> action)
     {
         this.m_timer = new Timer(this.OnTimer, state, 0, period);
@@ -160,7 +140,6 @@ public class SingleTimer : SafetyDisposableObject
     }
 
     /// <inheritdoc/>
-    /// <param name="disposing"></param>
     protected override void SafetyDispose(bool disposing)
     {
         this.m_timer.SafeDispose();

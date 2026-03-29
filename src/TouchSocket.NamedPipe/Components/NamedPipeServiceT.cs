@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -45,8 +45,6 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <summary>
     /// 客户端连接完成，覆盖父类方法将不会触发事件。
     /// </summary>
-    /// <param name="sessionClient"></param>
-    /// <param name="e"></param>
     protected virtual Task OnNamedPipeConnected(TClient sessionClient, ConnectedEventArgs e)
     {
         if (this.Connected != null)
@@ -59,8 +57,6 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <summary>
     /// 客户端请求连接，覆盖父类方法将不会触发事件。
     /// </summary>
-    /// <param name="sessionClient"></param>
-    /// <param name="e"></param>
     protected virtual Task OnNamedPipeConnecting(TClient sessionClient, ConnectingEventArgs e)
     {
         if (this.Connecting != null)
@@ -73,8 +69,6 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <summary>
     /// 客户端断开连接，覆盖父类方法将不会触发事件。
     /// </summary>
-    /// <param name="sessionClient"></param>
-    /// <param name="e"></param>
     protected virtual Task OnNamedPipeClosed(TClient sessionClient, ClosedEventArgs e)
     {
         if (this.Closed != null)
@@ -87,8 +81,6 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="sessionClient"></param>
-    /// <param name="e"></param>
     protected virtual Task OnNamedPipeClosing(TClient sessionClient, ClosingEventArgs e)
     {
         if (this.Closing != null)
@@ -101,8 +93,6 @@ public abstract class NamedPipeService<TClient> : NamedPipeServiceBase<TClient>,
     /// <summary>
     /// 当收到适配器数据。
     /// </summary>
-    /// <param name="sessionClient"></param>
-    /// <param name="e"></param>
     protected virtual Task OnNamedPipeReceived(TClient sessionClient, ReceivedDataEventArgs e)
     {
         if (this.Received != null)

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -23,7 +23,6 @@ public static partial class FileUtility
     /// <summary>
     /// 删除路径文件
     /// </summary>
-    /// <param name="path"></param>
     public static void Delete(string path)
     {
         if (File.Exists(path))
@@ -37,8 +36,6 @@ public static partial class FileUtility
     /// 获取不重复文件夹名称.
     /// <para>例如：NewDir已存在时，会返回NewDir(1)</para>
     /// </summary>
-    /// <param name="dirName"></param>
-    /// <returns></returns>
     public static string GetDuplicateDirectoryName(string dirName)
     {
         if (!Directory.Exists(dirName))
@@ -62,8 +59,6 @@ public static partial class FileUtility
     /// 获取不重复文件名。
     /// <para>例如：New.txt已存在时，会返回New(1).txt</para>
     /// </summary>
-    /// <param name="fileName"></param>
-    /// <returns></returns>
     public static string GetDuplicateFileName(string fileName)
     {
         if (!File.Exists(fileName))
@@ -87,8 +82,7 @@ public static partial class FileUtility
     /// 获得文件Hash值
     /// </summary>
     /// <param name="filePath">文件路径</param>
-    /// <param name="hash"></param>
-    /// <returns></returns>
+    /// <param name="hash">哈希算法。</param>
     public static string GetFileHash(string filePath, HashAlgorithm hash)
     {
         try
@@ -109,7 +103,6 @@ public static partial class FileUtility
     /// 获得文件Hash值
     /// </summary>
     /// <param name="filePath">文件路径</param>
-    /// <returns></returns>
     public static string GetFileHash256(string filePath)
     {
         try
@@ -130,8 +123,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获取文件MD5
     /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
     public static string GetFileMd5(string path)
     {
         using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
@@ -143,8 +134,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获取仅当前文件夹中包含的文件名称，不含全路径。
     /// </summary>
-    /// <param name="dirPath"></param>
-    /// <returns></returns>
     public static string[] GetIncludeFileNames(string dirPath)
     {
         return Directory.GetFiles(dirPath).Select(s => Path.GetFileName(s)).ToArray();
@@ -153,10 +142,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获取相对路径。
     /// </summary>
-    /// <param name="relativeTo"></param>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
     public static string GetRelativePath(string relativeTo, string path)
     {
         if (string.IsNullOrEmpty(relativeTo)) throw new ArgumentNullException(nameof(relativeTo));
@@ -193,9 +178,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获得流Hash值
     /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="hash"></param>
-    /// <returns></returns>
     public static string GetStreamHash(Stream stream, HashAlgorithm hash)
     {
         try
@@ -212,8 +194,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获得流Hash值
     /// </summary>
-    /// <param name="stream"></param>
-    /// <returns></returns>
     public static string GetStreamHash256(Stream stream)
     {
         try
@@ -231,8 +211,6 @@ public static partial class FileUtility
     /// <summary>
     /// 获取流MD5
     /// </summary>
-    /// <param name="fileStream"></param>
-    /// <returns></returns>
     public static string GetStreamMd5(Stream fileStream)
     {
         using (HashAlgorithm hash = System.Security.Cryptography.MD5.Create())
@@ -244,8 +222,6 @@ public static partial class FileUtility
     /// <summary>
     /// 判断该路径是否为文件夹
     /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
     public static bool IsDirectory(string path)
     {
         try
@@ -267,8 +243,6 @@ public static partial class FileUtility
     /// <remarks>
     /// 此操作会把路径中的所有反斜杠替换为正斜杠。例如：C:\\a.txt替换为C:/a.txt
     /// </remarks>
-    /// <param name="pathString"></param>
-    /// <returns></returns>
     public static string PathFormat(string pathString)
     {
         return pathString.Replace('\\', Path.AltDirectorySeparatorChar);
@@ -278,8 +252,6 @@ public static partial class FileUtility
     /// <summary>
     /// 转化为文件大小的字符串，类似10B，10Kb，10Mb，10Gb。
     /// </summary>
-    /// <param name="length"></param>
-    /// <returns></returns>
     public static string ToFileLengthString(long length)
     {
         const decimal kb = 1024;

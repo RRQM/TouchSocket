@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -31,7 +31,6 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
     /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <returns></returns>
     protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request)
     {
         if (beCached)
@@ -94,7 +93,6 @@ public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestIn
     /// <summary>
     /// 获取泛型实例。
     /// </summary>
-    /// <returns></returns>
     protected abstract TFixedHeaderRequestInfo GetInstance();
 }
 
@@ -113,8 +111,6 @@ public interface IFixedHeaderRequestInfo : IRequestInfo
     /// <para>您需要在此函数中，解析自己的固定包头，并且对<see cref="BodyLength"/>赋值后续数据的长度，然后返回True。</para>
     /// <para>如果返回<see langword="false"/>，则意味着放弃本次解析</para>
     /// </summary>
-    /// <param name="header"></param>
-    /// <returns></returns>
     bool OnParsingHeader(ReadOnlySpan<byte> header);
 
     /// <summary>

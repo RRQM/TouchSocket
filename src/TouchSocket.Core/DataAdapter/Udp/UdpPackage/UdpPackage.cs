@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -30,9 +30,6 @@ public class UdpPackage
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="millisecondsTimeout"></param>
-    /// <param name="revStore"></param>
     public UdpPackage(long id, int millisecondsTimeout, ConcurrentDictionary<long, UdpPackage> revStore)
     {
         this.Id = id;
@@ -84,7 +81,6 @@ public class UdpPackage
     /// <summary>
     /// 添加帧
     /// </summary>
-    /// <param name="frame"></param>
     public void Add(UdpFrame frame)
     {
         Interlocked.Increment(ref this.m_count);
@@ -105,8 +101,6 @@ public class UdpPackage
     /// <summary>
     /// 获得数据
     /// </summary>
-    /// <param name="byteBlock"></param>
-    /// <returns></returns>
     public bool TryGetData(ByteBlock byteBlock)
     {
         while (this.m_frames.TryDequeue(out var frame))

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -123,10 +123,6 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
     /// <summary>
     /// 方法调用前
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="invokeKey"></param>
-    /// <param name="args"></param>
-    /// <returns></returns>
     protected virtual void OnBefore(MethodInfo method, string invokeKey, ref object[] args)
     {
 
@@ -135,10 +131,6 @@ public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy wher
     /// <summary>
     /// 方法调用后
     /// </summary>
-    /// <param name="method"></param>
-    /// <param name="invokeKey"></param>
-    /// <param name="args"></param>
-    /// <param name="result"></param>
     protected virtual void OnAfter(MethodInfo method, string invokeKey, ref object[] args, ref object result)
     {
 

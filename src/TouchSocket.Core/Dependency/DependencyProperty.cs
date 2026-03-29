@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -57,9 +57,6 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     /// <summary>
     /// 判断否
     /// </summary>
-    /// <param name="left"></param>
-    /// <param name="right"></param>
-    /// <returns></returns>
     public static bool operator !=(DependencyProperty<TValue> left, DependencyProperty<TValue> right)
     {
         return left.Id != right.Id;
@@ -68,9 +65,6 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     /// <summary>
     /// 判断是
     /// </summary>
-    /// <param name="left"></param>
-    /// <param name="right"></param>
-    /// <returns></returns>
     public static bool operator ==(DependencyProperty<TValue> left, DependencyProperty<TValue> right)
     {
         return left.Id == right.Id;
@@ -80,9 +74,8 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     /// 注册依赖项属性。
     /// <para>依赖属性的默认值，可能会应用于所有的<see cref="IDependencyObject"/></para>
     /// </summary>
-    /// <param name="propertyName"></param>
+    /// <param name="propertyName">属性名称。</param>
     /// <param name="value">依赖项属性值，一般该值应该是值类型，因为它可能会被用于多个依赖对象。</param>
-    /// <returns></returns>
     [Obsolete("此方法已被弃用，请使用new直接代替", true)]
     public static DependencyProperty<TValue> Register(string propertyName, TValue value)
     {
@@ -91,16 +84,12 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     }
 
     /// <inheritdoc/>
-    /// <param name="other"></param>
-    /// <returns></returns>
     public bool Equals(DependencyProperty<TValue> other)
     {
         return this.Id == other.Id;
     }
 
     /// <inheritdoc/>
-    /// <param name="obj"></param>
-    /// <returns></returns>
     public override bool Equals(object obj)
     {
         if (obj is DependencyProperty<TValue> obj2)
@@ -114,7 +103,6 @@ public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquata
     }
 
     /// <inheritdoc/>
-    /// <returns></returns>
     public override int GetHashCode()
     {
         return this.Id;

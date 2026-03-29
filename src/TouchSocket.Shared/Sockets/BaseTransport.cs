@@ -24,7 +24,7 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     protected ClosedEventArgs m_closedEventArgs;
     protected ValueCounter m_receiveCounter;
     protected ValueCounter m_sentCounter;
-    private static readonly ClosedEventArgs s_defaultClosedEventArgs = new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+    private static readonly ClosedEventArgs s_defaultClosedEventArgs = new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
     private readonly object m_closeLock = new object();
     private readonly int m_maxBufferSize;
     private readonly int m_minBufferSize;
@@ -149,7 +149,7 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     {
         lock (this.m_closeLock)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
+            this.m_closedEventArgs ??= new ClosedEventArgs(msg);
 
             if (Interlocked.CompareExchange(ref this.m_closeSignaled, 1, 0) != 0)
             {

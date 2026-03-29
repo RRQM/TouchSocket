@@ -83,6 +83,20 @@ internal sealed class FolderEntry : IDisposable
     }
 
     /// <summary>
+    /// 向指定目录的跟踪集合中追加单个 URL 键。在 <see cref="StaticFilesPool"/> 写锁下调用。
+    /// </summary>
+    public void AddKeyToDirectory(string normalizedDirPath, string urlKey)
+    {
+        if (!this.m_dirToKeys.TryGetValue(normalizedDirPath, out var set))
+        {
+            set = new HashSet<string>();
+            this.m_dirToKeys[normalizedDirPath] = set;
+        }
+        set.Add(urlKey);
+        this.m_knownDirs.TryAdd(normalizedDirPath, 0);
+    }
+
+    /// <summary>
     /// 返回所有已跟踪目录下的全部 URL 键。在 <see cref="StaticFilesPool"/> 读/写锁下调用。
     /// </summary>
     public IEnumerable<string> GetAllUrlKeys()

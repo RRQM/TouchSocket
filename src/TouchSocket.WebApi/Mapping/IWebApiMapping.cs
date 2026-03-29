@@ -24,5 +24,11 @@ public interface IWebApiMapping : IEnumerable<MappingMethod>
     /// </summary>
     void MakeReadonly();
 
+    /// <summary>
+    /// 尝试匹配 URL 和 HTTP 方法。
+    /// </summary>
+    /// <param name="url">请求 URL。</param>
+    /// <param name="httpMethod">HTTP 方法。</param>
+    /// <returns>路由匹配结果。</returns>
     RouteMatchResult TryMatch(string url, HttpMethod httpMethod);
 }

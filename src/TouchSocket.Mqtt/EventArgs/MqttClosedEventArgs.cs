@@ -21,9 +21,8 @@ public class MqttClosedEventArgs : ClosedEventArgs
     /// <summary>
     /// 初始化 <see cref="MqttClosedEventArgs"/> 类的新实例。
     /// </summary>
-    /// <param name="manual">指示关闭是否是手动的。</param>
     /// <param name="mes">关闭的消息。</param>
-    public MqttClosedEventArgs(bool manual, string mes) : base(manual, mes)
+    public MqttClosedEventArgs(string mes) : base(mes)
     {
     }
 }

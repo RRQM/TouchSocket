@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -39,7 +39,6 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     /// <summary>
     /// 断开连接。在客户端未设置连接状态时，不会触发
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
         try
@@ -63,7 +62,6 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
         if (this.Closing != null)
@@ -80,7 +78,6 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     /// <summary>
     /// 已经建立管道连接
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
         try
@@ -104,7 +101,6 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     /// <summary>
     /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
         try

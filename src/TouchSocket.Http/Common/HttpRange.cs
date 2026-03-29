@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -25,9 +25,6 @@ public class HttpRange
     /// <summary>
     /// 转换获取的集合
     /// </summary>
-    /// <param name="rangeStr"></param>
-    /// <param name="size"></param>
-    /// <returns></returns>
     public static HttpRange[] GetRanges(string rangeStr, long size)
     {
         var ranges = rangeStr.Split('=');
@@ -76,9 +73,6 @@ public class HttpRange
     /// <summary>
     /// 转换获取的集合
     /// </summary>
-    /// <param name="rangeStr"></param>
-    /// <param name="size"></param>
-    /// <returns></returns>
     public static HttpRange GetRange(string rangeStr, long size)
     {
         var ranges = rangeStr.Split('=');

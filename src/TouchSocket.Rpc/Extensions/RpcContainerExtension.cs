@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -22,9 +22,6 @@ public static partial class RpcContainerExtension
     /// <summary>
     /// 向容器中添加<see cref="RpcStore"/>。
     /// </summary>
-    /// <param name="registrator"></param>
-    /// <param name="action"></param>
-    /// <returns></returns>
     public static IRegistrator AddRpcStore(this IRegistrator registrator, Action<RpcStore> action)
     {
         AddRpcServerProvider(registrator);
@@ -38,8 +35,6 @@ public static partial class RpcContainerExtension
     /// 添加Rpc服务器提供者
     /// </summary>
     /// <typeparam name="TRpcServerProvider"></typeparam>
-    /// <param name="registrator"></param>
-    /// <returns></returns>
     public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(AOT.Container)] TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
     {
         registrator.RegisterSingleton<IRpcServerProvider, TRpcServerProvider>();
@@ -49,8 +44,6 @@ public static partial class RpcContainerExtension
     /// <summary>
     /// 添加默认Rpc服务器提供者
     /// </summary>
-    /// <param name="registrator"></param>
-    /// <returns></returns>
     public static IRegistrator AddRpcServerProvider(this IRegistrator registrator)
     {
         return AddRpcServerProvider<InternalRpcServerProvider>(registrator);

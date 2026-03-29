@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -29,7 +29,6 @@ public static class DataSecurity
     /// </summary>
     /// <param name="data">待加密字节</param>
     /// <param name="encryptKey">加密口令（长度为8）</param>
-    /// <returns></returns>
     public static byte[] EncryptDES(byte[] data, string encryptKey)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
@@ -58,7 +57,6 @@ public static class DataSecurity
     /// </summary>
     /// <param name="data">待解密字节</param>
     /// <param name="encryptKey">解密口令（长度为8）</param>
-    /// <returns></returns>
     public static byte[] DecryptDES(byte[] data, string encryptKey)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
@@ -87,10 +85,9 @@ public static class DataSecurity
     /// 使用3DES流数据加密。
     /// <para>注意：数据会从<see cref="Stream.Position"/>开始</para>
     /// </summary>
-    /// <param name="inStream"></param>
-    /// <param name="outStream"></param>
+    /// <param name="inStream">输入流。</param>
+    /// <param name="outStream">输出流。</param>
     /// <param name="encryptKey">加密口令（长度为8）</param>
-    /// <returns></returns>
     public static void StreamEncryptDES(Stream inStream, Stream outStream, string encryptKey)
     {
         ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
@@ -121,8 +118,8 @@ public static class DataSecurity
     /// 使用3DES流数据解密
     /// <para>注意：数据会从<see cref="Stream.Position"/>开始</para>
     /// </summary>
-    /// <param name="inStream"></param>
-    /// <param name="outStream"></param>
+    /// <param name="inStream">输入流。</param>
+    /// <param name="outStream">输出流。</param>
     /// <param name="encryptKey">解密口令（长度为8）</param>
     public static void StreamDecryptDES(Stream inStream, Stream outStream, string encryptKey)
     {

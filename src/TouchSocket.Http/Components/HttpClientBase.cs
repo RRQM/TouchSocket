@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -79,15 +79,14 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <summary>
     /// 此方法会一直抛出异常，请使用<see cref="HttpConnectAsync(CancellationToken)"/>进行连接
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
+#pragma warning disable CS0809
     [Obsolete("请使用HttpConnectAsync进行连接", true)]
     protected sealed override Task TcpConnectAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException("请使用HttpConnectAsync进行连接");
         //return base.TcpConnectAsync(cancellationToken);
     }
+#pragma warning restore CS0809
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)

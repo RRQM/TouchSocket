@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -28,8 +28,6 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
     /// <summary>
     /// WSCommandLinePlugin
     /// </summary>
-    /// <param name="logger"></param>
-    /// <exception cref="ArgumentNullException"></exception>
     protected WebSocketCommandLinePlugin(ILog logger)
     {
         this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -54,7 +52,6 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
     /// <summary>
     /// 当有执行异常时，不返回异常。
     /// </summary>
-    /// <returns></returns>
     public WebSocketCommandLinePlugin NoReturnException()
     {
         this.ReturnException = false;
@@ -62,6 +59,7 @@ public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceive
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "插件基础设施相信动态代码是有效的")]
     public async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
     {
         if (e.DataFrame.Opcode != WSDataType.Text)

@@ -12,8 +12,14 @@
 
 namespace TouchSocket.Http;
 
+/// <summary>
+/// SSE 消息读取器的抽象基类。
+/// </summary>
 public abstract class SseReader
 {
+    /// <summary>
+    /// 获取关联的 HTTP 响应对象。
+    /// </summary>
     public abstract HttpResponse Response { get; }
 
     /// <summary>

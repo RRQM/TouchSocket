@@ -128,6 +128,12 @@ public static partial class GZip
         }
     }
 
+    /// <summary>
+    /// 使用GZip算法解压 <see cref="ReadOnlyMemory{T}"/> 数据，并通过 <typeparamref name="TWriter"/> 写入解压结果。
+    /// </summary>
+    /// <typeparam name="TWriter">实现 <see cref="IBytesWriter"/> 的写入器类型。</typeparam>
+    /// <param name="writer">目标写入器。</param>
+    /// <param name="memory">待解压的数据。</param>
     public static void Decompress<TWriter>(ref TWriter writer, ReadOnlyMemory<byte> memory)
         where TWriter : IBytesWriter
     {

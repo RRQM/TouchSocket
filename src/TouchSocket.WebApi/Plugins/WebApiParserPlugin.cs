@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -182,6 +183,8 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         return this.GetParameterInfo(parameter);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "WebApi基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "WebApi基础设施相信动态代码是有效的")]
     private async Task<object> ParseParameterAsync(RpcParameter parameter, WebApiCallContext callContext)
     {
         var request = callContext.HttpContext.Request;

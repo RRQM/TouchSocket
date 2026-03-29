@@ -12,47 +12,62 @@
 
 namespace TouchSocket.Core;
 
-public class RoomDependencyObject:IDependencyObject
+/// <summary>
+/// 委托模式的 <see cref="IDependencyObject"/> 包装，将所有依赖属性操作转发给内部持有的 <see cref="IDependencyObject"/> 实例。
+/// </summary>
+public class RoomDependencyObject : IDependencyObject
 {
     private readonly IDependencyObject m_dependencyObject;
 
+    /// <summary>
+    /// 初始化 <see cref="RoomDependencyObject"/> 类的新实例。
+    /// </summary>
+    /// <param name="dependencyObject">被委托的 <see cref="IDependencyObject"/> 实例。</param>
     public RoomDependencyObject(IDependencyObject dependencyObject)
     {
         this.m_dependencyObject = dependencyObject;
     }
 
+    /// <inheritdoc/>
     public bool DisposedValue => this.m_dependencyObject.DisposedValue;
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         this.m_dependencyObject.Dispose();
     }
 
+    /// <inheritdoc/>
     public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
     {
         return this.m_dependencyObject.GetValue(dp);
     }
 
+    /// <inheritdoc/>
     public bool HasValue<TValue>(DependencyProperty<TValue> dp)
     {
         return this.m_dependencyObject.HasValue(dp);
     }
 
+    /// <inheritdoc/>
     public void RemoveValue<TValue>(DependencyProperty<TValue> dp)
     {
         this.m_dependencyObject.RemoveValue(dp);
     }
 
+    /// <inheritdoc/>
     public void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value)
     {
         this.m_dependencyObject.SetValue(dp, value);
     }
 
+    /// <inheritdoc/>
     public bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
     {
         return this.m_dependencyObject.TryGetValue(dp, out value);
     }
 
+    /// <inheritdoc/>
     public bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
     {
         return this.m_dependencyObject.TryRemoveValue(dp, out value);

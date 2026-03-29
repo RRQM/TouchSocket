@@ -15,8 +15,18 @@ using System.Text.Json;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 基于 <see cref="System.Text.Json.JsonSerializer"/> 实现的 <see cref="ISerializerFormatter{TSource,TState}"/>，
+/// 在 <see cref="ReadOnlyMemory{T}"/> (byte) 与对象之间进行 JSON 序列化/反序列化。
+/// </summary>
+/// <typeparam name="TState">转换器状态类型。</typeparam>
 public class JsonBytesToClassSerializerFormatter<TState> : SystemTextJsonSerializerFormatter<ReadOnlyMemory<byte>, TState>
 {
+    /// <inheritdoc/>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026",
+        Justification = "targetType 参数已通过 DynamicallyAccessedMembers(All) 标注，可确保所有必要成员被保留。")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "targetType 参数已通过 DynamicallyAccessedMembers(All) 标注，可确保所有必要成员被保留。")]
     public override bool TryDeserialize(TState state, in ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers((DynamicallyAccessedMemberTypes)(-1))] Type targetType, out object target)
     {
         try
@@ -36,6 +46,11 @@ public class JsonBytesToClassSerializerFormatter<TState> : SystemTextJsonSeriali
         }
     }
 
+    /// <inheritdoc/>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026",
+        Justification = "此格式化器专为基于反射的 JSON 序列化设计，调用方需自行确保运行时类型可被裁剪工具保留。")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "此格式化器专为基于反射的 JSON 序列化设计，不适用于 Native AOT 场景。")]
     public override bool TrySerialize<TTarget>(TState state, in TTarget target, out ReadOnlyMemory<byte> source)
     {
         try

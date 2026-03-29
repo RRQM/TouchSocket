@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -43,18 +43,14 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="path">请求路径</param>
     /// <param name="metadata">元数据</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<PullSmallFileResult> PullSmallFileAsync(string targetId, string path, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 推送小文件。默认设置1024*1024字节大小。
-    /// </summary>
-    /// <param name="targetId"></param>
-    /// <param name="savePath">保存路径</param>
+    /// </summary>    /// <param name="targetId">目标客户端Id。</param>    /// <param name="savePath">保存路径</param>
     /// <param name="fileInfo">推送的文件信息</param>
     /// <param name="metadata">元数据</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     #endregion Id小文件
@@ -69,19 +65,17 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="metadata">元数据</param>
 
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata = default, CancellationToken cancellationToken = default);
 
 
     /// <summary>
     /// 推送小文件。默认设置1024*1024字节大小。
     /// </summary>
+
     /// <param name="savePath">保存路径</param>
     /// <param name="fileInfo">推送的文件信息</param>
     /// <param name="metadata">元数据</param>
-
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata = default, CancellationToken cancellationToken = default);
 
     #endregion 小文件
@@ -100,7 +94,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="metadata">元数据</param>
 
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken cancellationToken);
 
 
@@ -118,7 +111,6 @@ public interface IDmtpFileTransferActor : IActor
 
     /// <param name="fileSectionSize">文件分块尺寸。</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata, int fileSectionSize, CancellationToken cancellationToken);
 
 
@@ -130,7 +122,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileSection">文件块</param>
 
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, CancellationToken cancellationToken);
 
 
@@ -148,7 +139,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="metadata">元数据</param>
 
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken cancellationToken);
 
 
@@ -161,7 +151,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileSection">文件块</param>
 
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken cancellationToken);
 
     #endregion Id
@@ -178,7 +167,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="code">状态代码</param>
     /// <param name="metadata">元数据</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata, CancellationToken cancellationToken);
 
 
@@ -194,7 +182,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="metadata">元数据</param>
     /// <param name="fileSectionSize">文件分块尺寸</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata, int fileSectionSize, CancellationToken cancellationToken);
 
 
@@ -204,7 +191,6 @@ public interface IDmtpFileTransferActor : IActor
     /// </summary>
     /// <param name="fileSection">文件块</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, CancellationToken cancellationToken);
 
 
@@ -220,7 +206,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="metadata">元数据</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata, CancellationToken cancellationToken);
 
     /// <summary>
@@ -230,7 +215,6 @@ public interface IDmtpFileTransferActor : IActor
     /// <param name="fileResourceLocator">文件资源定位器</param>
     /// <param name="fileSection">文件块</param>
     /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
     Task<Result> PushFileSectionAsync(FileResourceLocator fileResourceLocator, FileSection fileSection, CancellationToken cancellationToken);
 
     #endregion 文件传输

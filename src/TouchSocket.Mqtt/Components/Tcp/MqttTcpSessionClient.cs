@@ -14,12 +14,19 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 TCP 的 Mqtt 会话客户端。
+/// </summary>
 public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 {
     private readonly MqttBroker m_mqttBroker;
     private MqttSessionActor m_mqttActor;
     private bool m_cleanSession;
 
+    /// <summary>
+    /// 初始化 <see cref="MqttTcpSessionClient"/> 类的新实例。
+    /// </summary>
+    /// <param name="mqttBroker">Mqtt 中介实例。</param>
     public MqttTcpSessionClient(MqttBroker mqttBroker)
     {
         this.m_mqttBroker = mqttBroker;
@@ -70,7 +77,13 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 
     #endregion MqttActor
 
+    /// <summary>
+    /// 获取是否清除会话。
+    /// </summary>
     public bool CleanSession => this.m_cleanSession;
+    /// <summary>
+    /// 获取 Mqtt 会话 Actor 实例。
+    /// </summary>
     public MqttSessionActor MqttActor => this.m_mqttActor;
 
     /// <inheritdoc/>
@@ -89,7 +102,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
             {
                 this.m_mqttBroker.RemoveMqttSessionActor(mqttActor);
             }
-            await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Manual, e.Message)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
         }
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }

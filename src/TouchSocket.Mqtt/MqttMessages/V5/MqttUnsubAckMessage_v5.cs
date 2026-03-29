@@ -15,8 +15,14 @@ namespace TouchSocket.Mqtt;
 public partial class MqttUnsubAckMessage
 {
     private readonly List<MqttReasonCode> m_reasonCodes = new List<MqttReasonCode>();
+    /// <summary>
+    /// 获取原因码列表。
+    /// </summary>
     public List<MqttReasonCode> ReasonCodes => this.m_reasonCodes;
 
+    /// <summary>
+    /// 获取或设置原因符串。
+    /// </summary>
     public string ReasonString { get; set; }
 
     /// <inheritdoc/>

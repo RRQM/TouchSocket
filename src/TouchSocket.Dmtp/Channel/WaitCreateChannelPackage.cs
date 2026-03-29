@@ -23,11 +23,6 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
     public int ChannelId { get; set; }
 
     /// <summary>
-    /// 元数据
-    /// </summary>
-    public Metadata Metadata { get; set; }
-
-    /// <summary>
     /// 随机Id
     /// </summary>
     public bool Random { get; set; }
@@ -37,16 +32,6 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
         base.PackageBody(ref writer);
         WriterExtension.WriteValue<TWriter, bool>(ref writer, this.Random);
         WriterExtension.WriteValue<TWriter, int>(ref writer, this.ChannelId);
-
-        if (this.Metadata is null)
-        {
-            WriterExtension.WriteNull(ref writer);
-        }
-        else
-        {
-            WriterExtension.WriteNotNull(ref writer);
-            this.Metadata.Package(ref writer);
-        }
     }
 
     public override void UnpackageBody<TReader>(ref TReader reader)
@@ -54,15 +39,5 @@ internal class WaitCreateChannelPackage : WaitRouterPackage
         base.UnpackageBody(ref reader);
         this.Random = ReaderExtension.ReadValue<TReader, bool>(ref reader);
         this.ChannelId = ReaderExtension.ReadValue<TReader, int>(ref reader);
-        if (ReaderExtension.ReadIsNull(ref reader))
-        {
-            this.Metadata = null;
-        }
-        else
-        {
-            var metadata = new Metadata();
-            metadata.Unpackage(ref reader);
-            this.Metadata = metadata;
-        }
     }
 }

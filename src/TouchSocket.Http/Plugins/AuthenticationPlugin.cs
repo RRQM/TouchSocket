@@ -20,10 +20,20 @@ namespace TouchSocket.Http;
 /// </remarks>
 public sealed class AuthenticationPlugin : PluginBase, IHttpPlugin
 {
+    /// <summary>
+    /// 认证密码。
+    /// </summary>
     public string Password { get; set; } = "111111";
+    /// <summary>
+    /// 认证领域。
+    /// </summary>
     public string Realm { get; set; } = "Server";
+    /// <summary>
+    /// 认证用户名。
+    /// </summary>
     public string UserName { get; set; } = "admin";
 
+    /// <inheritdoc/>
     public Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         var authorizationHeader = e.Context.Request.Headers["Authorization"];
@@ -68,6 +78,12 @@ public sealed class AuthenticationPlugin : PluginBase, IHttpPlugin
         return e.InvokeNext();
     }
 
+    /// <summary>
+    /// 设置认证凭据。
+    /// </summary>
+    /// <param name="userName">用户名。</param>
+    /// <param name="password">密码。</param>
+    /// <returns>返回当前实例。</returns>
     public AuthenticationPlugin SetCredentials(string userName, string password)
     {
         this.UserName = userName;
@@ -75,6 +91,11 @@ public sealed class AuthenticationPlugin : PluginBase, IHttpPlugin
         return this;
     }
 
+    /// <summary>
+    /// 设置认证领域。
+    /// </summary>
+    /// <param name="realm">领域名称，默认为 "Server"。</param>
+    /// <returns>返回当前实例。</returns>
     public AuthenticationPlugin SetRealm(string realm = "Server")
     {
         this.Realm = realm;

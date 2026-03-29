@@ -17,6 +17,9 @@ using TouchSocket.Http.WebSockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 WebSocket 的 Mqtt 客户端。
+/// </summary>
 public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
 {
     private readonly MqttClientActor m_mqttActor;
@@ -24,6 +27,9 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
     private readonly SegmentedPipe m_pipe = new SegmentedPipe();
     private readonly SemaphoreSlim m_semaphoreSlimConnect = new SemaphoreSlim(1, 1);
 
+    /// <summary>
+    /// 初始化 <see cref="MqttWebSocketClient"/> 类的新实例。
+    /// </summary>
     public MqttWebSocketClient()
     {
         var actor = new MqttClientActor
@@ -73,26 +79,31 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
         }
     }
 
+    /// <inheritdoc/>
     public ValueTask<Result> PingAsync(CancellationToken cancellationToken = default)
     {
         return this.m_mqttActor.PingAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public Task PublishAsync(MqttPublishMessage mqttMessage, CancellationToken cancellationToken = default)
     {
         return this.m_mqttActor.PublishAsync(mqttMessage, cancellationToken);
     }
 
+    /// <inheritdoc/>
     public Task<MqttSubAckMessage> SubscribeAsync(MqttSubscribeMessage message, CancellationToken cancellationToken = default)
     {
         return this.m_mqttActor.SubscribeAsync(message, cancellationToken);
     }
 
+    /// <inheritdoc/>
     public Task<MqttUnsubAckMessage> UnsubscribeAsync(MqttUnsubscribeMessage message, CancellationToken cancellationToken = default)
     {
         return this.m_mqttActor.UnsubscribeAsync(message, cancellationToken);
     }
 
+    /// <inheritdoc/>
     protected override async Task OnWebSocketReceived(WebSocketMessageType messageType, ReadOnlySequence<byte> sequenceSrc)
     {
         if (messageType != WebSocketMessageType.Binary)

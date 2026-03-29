@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -28,9 +28,6 @@ public static partial class HttpExtensions
     /// <param name="flowOperator">流速控制</param>
     /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
     /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="Exception"></exception>
-    /// <returns></returns>
     public static async Task<Result> FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpFlowOperator flowOperator, HttpRequest request = default, string fileName = null, bool autoGzip = true)
     {
         try
@@ -173,7 +170,6 @@ public static partial class HttpExtensions
     /// <param name="maxSpeed">最大速度。</param>
     /// <param name="bufferLen">读取长度。</param>
     /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用GZip</param>
-    /// <exception cref="Exception"></exception>
     /// <returns>异步任务</returns>
     public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
@@ -196,9 +192,6 @@ public static partial class HttpExtensions
     /// <param name="maxSpeed">最大速度。</param>
     /// <param name="bufferLen">读取长度。</param>
     /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="Exception"></exception>
-    /// <returns></returns>
     public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = int.MaxValue, int bufferLen = 1024 * 64, bool autoGzip = true)
     {
         await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip).ConfigureDefaultAwait();

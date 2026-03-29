@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using TouchSocket.Rpc;
@@ -41,6 +42,9 @@ public class DefaultSerializationSelector : ISerializationSelector
     /// <param name="parameterType">预期反序列化出的对象类型。</param>
     /// <returns>反序列化后的对象。</returns>
     /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "序列化器相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "序列化器相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "序列化器相信动态代码是有效的")]
     public virtual object DeserializeParameter<TReader>(ref TReader reader, SerializationType serializationType, Type parameterType) where TReader : IBytesReader
 
     {
@@ -87,6 +91,8 @@ public class DefaultSerializationSelector : ISerializationSelector
     /// <param name="serializationType">序列化类型，决定了使用哪种方式序列化</param>
     /// <param name="parameter">待序列化的参数对象</param>
     /// <typeparam name="TWriter">字节块类型，必须实现IByteBlock接口</typeparam>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "序列化器相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "序列化器相信动态代码是有效的")]
     public virtual void SerializeParameter<TWriter>(ref TWriter writer, SerializationType serializationType, in object parameter) where TWriter : IBytesWriter
 
     {
@@ -148,7 +154,6 @@ public class DefaultSerializationSelector : ISerializationSelector
     /// <summary>
     /// 使用System.Text.Json进行序列化
     /// </summary>
-    /// <param name="options"></param>
     public void UseSystemTextJson(Action<JsonSerializerOptions> options)
     {
         var serializerOptions = new JsonSerializerOptions();

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 using TouchSocket.Http;
 
@@ -18,7 +19,12 @@ namespace TouchSocket.XmlRpc;
 
 internal static class XmlDataTool
 {
-    public static object GetValue(XmlNode valueNode, Type type)
+    [RequiresDynamicCode("为数组类型创建实例时需要动态代码生成。")]
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072",
+        Justification = "GetValue 内部递归调用传递的 Type 是运行时通过反射获取，无法静态标注。")]
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2062",
+        Justification = "GetValue 内部递归调用传递的 Type 是运行时通过反射获取，无法静态标注。")]
+    public static object GetValue(XmlNode valueNode, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] Type type)
     {
         if (valueNode == null)
         {
@@ -135,6 +141,8 @@ internal static class XmlDataTool
         return request;
     }
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2075",
+        Justification = "对 value.GetType() 运行时类型的公共属性进行序列化，调用方应确保传入的对象类型已被保留。")]
     public static void CreateParam(XmlDocument xml, XmlNode xmlNode, object value)
     {
         if (value == null)

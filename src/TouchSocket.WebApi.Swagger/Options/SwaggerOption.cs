@@ -1,4 +1,4 @@
-// ------------------------------------------------------------------------------
+﻿// ------------------------------------------------------------------------------
 // 此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 // 源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 // CSDN博客：https://blog.csdn.net/qq_40374647
@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.WebApi.Swagger;
 
+/// <summary>
+/// Swagger 配置选项。
+/// </summary>
 public class SwaggerOption
 {
 
@@ -34,8 +37,6 @@ public class SwaggerOption
     /// <summary>
     /// 设置访问Swagger的前缀，默认“swagger”
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public void SetPrefix(string value)
     {
         this.Prefix = value;
@@ -44,7 +45,6 @@ public class SwaggerOption
     /// <summary>
     /// 在浏览器打开Swagger页面
     /// </summary>
-    /// <returns></returns>
     public void UseLaunchBrowser()
     {
         this.LaunchBrowser = true;

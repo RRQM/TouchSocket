@@ -21,6 +21,9 @@ public class DmtpRpcOption : DmtpFeatureOption
 {
     internal readonly GlobalQueueRpcDispatcher m_globalQueueRpcDispatcher = new();
 
+    /// <summary>
+    /// 初始化 <see cref="DmtpRpcOption"/> 类的新实例。
+    /// </summary>
     public DmtpRpcOption()
     {
         this.StartProtocol = 20;

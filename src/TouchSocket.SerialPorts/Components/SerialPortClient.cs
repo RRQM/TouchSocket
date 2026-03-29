@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -39,7 +39,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     /// <summary>
     /// 断开连接。在客户端未设置连接状态时，不会触发
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnSerialClosed(ClosedEventArgs e)
     {
         try
@@ -64,7 +63,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnSerialClosing(ClosingEventArgs e)
     {
         try
@@ -89,7 +87,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     /// <summary>
     /// 已经建立连接
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnSerialConnected(ConnectedEventArgs e)
     {
         try
@@ -113,7 +110,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     /// <summary>
     /// 准备连接的时候，此时并未建立连接
     /// </summary>
-    /// <param name="e"></param>
     protected override async Task OnSerialConnecting(ConnectingEventArgs e)
     {
         try

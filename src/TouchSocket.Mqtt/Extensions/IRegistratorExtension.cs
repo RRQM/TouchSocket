@@ -18,8 +18,15 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// <see cref="IRegistrator"/> 的 Mqtt 注入扩展类。
+/// </summary>
 public static class IRegistratorExtension
 {
+    /// <summary>
+    /// 添加 Mqtt WebSocket 服务。
+    /// </summary>
+    /// <param name="registrator">注入器实例。</param>
     public static void AddMqttWebSocketService(this IRegistrator registrator)
     {
         registrator.RegisterSingleton<IMqttWebSocketService, MqttWebSocketService>();

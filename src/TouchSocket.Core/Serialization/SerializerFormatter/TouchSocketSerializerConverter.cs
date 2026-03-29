@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -45,7 +45,6 @@ public class TouchSocketSerializerConverter<[DynamicallyAccessedMembers(AOT.Seri
     /// 添加插件
     /// </summary>
     /// <param name="converter">插件</param>
-    /// <exception cref="ArgumentNullException"></exception>
     public void Add(ISerializerFormatter<TSource, TState> converter)
     {
         if (converter == null)
@@ -94,7 +93,6 @@ public class TouchSocketSerializerConverter<[DynamicallyAccessedMembers(AOT.Seri
     /// <summary>
     /// 移除插件
     /// </summary>
-    /// <param name="converter"></param>
     public void Remove(ISerializerFormatter<TSource, TState> converter)
     {
         if (converter == null)
@@ -107,7 +105,6 @@ public class TouchSocketSerializerConverter<[DynamicallyAccessedMembers(AOT.Seri
     /// <summary>
     /// 移除插件
     /// </summary>
-    /// <param name="type"></param>
     public void Remove(Type type)
     {
         for (var i = this.m_converters.Count - 1; i >= 0; i--)
@@ -123,9 +120,6 @@ public class TouchSocketSerializerConverter<[DynamicallyAccessedMembers(AOT.Seri
     /// <summary>
     /// 将目标类型对象转换源数据
     /// </summary>
-    /// <param name="state"></param>
-    /// <param name="target"></param>
-    /// <returns></returns>
     public virtual TSource Serialize(TState state, in object target)
     {
         foreach (var item in this.m_converters)

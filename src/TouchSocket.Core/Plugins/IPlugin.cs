@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -20,12 +20,10 @@ public interface IPlugin : IDisposableObject
     /// <summary>
     /// 在插件被成功添加在<see cref="IPluginManager"/>时执行。
     /// </summary>
-    /// <param name="pluginManager"></param>
     void Loaded(IPluginManager pluginManager);
 
     /// <summary>
     /// 在插件被<see cref="IPluginManager.Remove(IPlugin)"/>时执行。
     /// </summary>
-    /// <param name="pluginManager"></param>
     void Unloaded(IPluginManager pluginManager);
 }

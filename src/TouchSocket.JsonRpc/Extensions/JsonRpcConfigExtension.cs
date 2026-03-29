@@ -18,8 +18,14 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.JsonRpc;
 
+/// <summary>
+/// JsonRpc 配置扩展类。
+/// </summary>
 public static class JsonRpcConfigExtension
 {
+    /// <summary>
+    /// JsonRpc 配置选项依赖属性。
+    /// </summary>
     [GeneratorProperty(TargetType =typeof(TouchSocketConfig),ActionMode =true)]
     public readonly static DependencyProperty<JsonRpcOption> JsonRpcOptionProperty =
        new("JsonRpcOption", default);

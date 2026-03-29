@@ -19,7 +19,13 @@ using TouchSocket.Http;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 WebSocket 的 Mqtt 会话客户端接口。
+/// </summary>
 public interface IMqttWebSocketSessionClient : IMqttSessionClient
 {
+    /// <summary>
+    /// 获取关联的 HTTP 会话客户端。
+    /// </summary>
     IHttpSessionClient Client { get; }
 }

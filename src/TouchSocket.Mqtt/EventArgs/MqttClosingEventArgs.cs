@@ -37,5 +37,8 @@ public class MqttClosingEventArgs : ClosingEventArgs
         this.m_message = message;
     }
 
+    /// <summary>
+    /// 获取 Mqtt 断开连接消息。
+    /// </summary>
     public MqttDisconnectMessage MqttMessage => this.m_message;
 }

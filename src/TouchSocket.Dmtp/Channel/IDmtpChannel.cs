@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -62,7 +62,7 @@ public partial interface IDmtpChannel : IDisposableObject
     /// 异步取消操作
     /// </summary>
     /// <param name="operationMes">可选参数，用于提供取消操作的详细信息</param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>返回一个Task对象，表示异步取消操作的完成</returns>
     Task<Result> CancelAsync(string operationMes = null, CancellationToken cancellationToken = default);
 
@@ -70,7 +70,7 @@ public partial interface IDmtpChannel : IDisposableObject
     /// 异步完成操作
     /// </summary>
     /// <param name="operationMes">操作信息，可选参数，默认为<see langword="null"/></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>返回一个Task对象，表示异步操作的完成</returns>
     Task<Result> CompleteAsync(string operationMes = null, CancellationToken cancellationToken = default);
 
@@ -78,9 +78,6 @@ public partial interface IDmtpChannel : IDisposableObject
     /// 异步调用继续
     /// <para>调用该指令时，接收方会获取到Msg，然后继续迭代。</para>
     /// </summary>
-    /// <param name="operationMes"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     Task<Result> HoldOnAsync(string operationMes = null, CancellationToken cancellationToken = default);
 
     /// <summary>

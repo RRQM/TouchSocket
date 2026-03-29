@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -55,6 +56,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     #region Rpc调用
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "WebApi基础设施相信动态代码是有效的")]
     public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
@@ -130,6 +132,7 @@ public class WebApiClient : HttpClientBase, IWebApiClient
     }
     #endregion Rpc调用
 
+    /// <inheritdoc/>
     protected override Task OnTcpClosed(ClosedEventArgs e)
     {
         return base.OnTcpClosed(e);

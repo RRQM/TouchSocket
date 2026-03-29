@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace TouchSocket.JsonRpc;
@@ -33,6 +34,8 @@ internal sealed class JsonRpcConverter
     /// <summary>
     /// 将请求序列化写入 <see cref="IBufferWriter{T}"/>。直接接收对象以避免中间字符串分配。
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JsonRpc基础设施相信动态代码是有效的")]
     public void WriteRequest(IBufferWriter<byte> bufferWriter, string method, int? id, object[] parameters, JsonSerializerOptions options)
     {
         using var writer = new Utf8JsonWriter(bufferWriter);
@@ -70,6 +73,8 @@ internal sealed class JsonRpcConverter
     /// <summary>
     /// 将响应序列化写入 <see cref="IBufferWriter{T}"/>。直接接收对象以避免中间字符串分配。
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JsonRpc基础设施相信动态代码是有效的")]
     public void WriteResponse(IBufferWriter<byte> bufferWriter, int? id, object result, int errorCode, string errorMessage, JsonSerializerOptions options)
     {
         using var writer = new Utf8JsonWriter(bufferWriter);

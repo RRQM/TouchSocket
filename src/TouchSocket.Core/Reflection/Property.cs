@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -57,7 +57,6 @@ public sealed class Property
     /// 从类型的属性获取属性
     /// </summary>
     /// <param name="type">类型</param>
-    /// <returns></returns>
     public static Property[] GetProperties([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type type)
     {
         return type.GetProperties().Select(p => new Property(p)).ToArray();
@@ -67,8 +66,6 @@ public sealed class Property
     /// 获取属性的值
     /// </summary>
     /// <param name="instance">实例</param>
-    /// <exception cref="NotSupportedException"></exception>
-    /// <returns></returns>
     public object GetValue(object instance)
     {
         return this.m_geter == null ? throw new NotSupportedException() : this.m_geter.Invoke(instance);
@@ -79,7 +76,6 @@ public sealed class Property
     /// </summary>
     /// <param name="instance">实例</param>
     /// <param name="value">值</param>
-    /// <exception cref="NotSupportedException"></exception>
     public void SetValue(object instance, object value)
     {
         if (this.m_seter == null)

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -30,7 +30,6 @@ public static class CodeGenerator
     /// <summary>
     /// 添加不需要代理的程序集
     /// </summary>
-    /// <param name="assembly"></param>
     public static void AddIgnoreProxyAssembly(Assembly assembly)
     {
         m_ignoreAssemblies.Add(assembly);
@@ -39,7 +38,6 @@ public static class CodeGenerator
     /// <summary>
     /// 添加不需要代理的类型
     /// </summary>
-    /// <param name="type"></param>
     public static void AddIgnoreProxyType(Type type)
     {
         m_ignoreTypes.Add(type);
@@ -48,7 +46,6 @@ public static class CodeGenerator
     /// <summary>
     /// 添加需要代理的程序集
     /// </summary>
-    /// <param name="assembly"></param>
     public static void AddProxyAssembly(Assembly assembly)
     {
         m_assemblies.Add(assembly);
@@ -57,8 +54,6 @@ public static class CodeGenerator
     /// <summary>
     /// 添加代理类型
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="deepSearch"></param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static void AddProxyType(Type type, bool deepSearch = true)
     {
@@ -85,7 +80,6 @@ public static class CodeGenerator
     /// 添加代理类型
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="deepSearch"></param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static void AddProxyType<T>(bool deepSearch = true)
     {
@@ -95,8 +89,6 @@ public static class CodeGenerator
     /// <summary>
     /// 是否包含类型
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool ContainsType(Type type)
     {
         return m_proxyType.ContainsKey(type);
@@ -105,9 +97,6 @@ public static class CodeGenerator
     /// <summary>
     /// 转换为cs代码。
     /// </summary>
-    /// <param name="namespace"></param>
-    /// <param name="serverCodes"></param>
-    /// <returns></returns>
     public static string ConvertToCode(string @namespace, params ServerCellCode[] serverCodes)
     {
         var serverCellCodes = new Dictionary<string, ServerCellCode>();
@@ -247,8 +236,8 @@ public static class CodeGenerator
     /// </summary>
     /// <typeparam name="TServer">服务类型</typeparam>
     /// <typeparam name="TAttribute">属性标签</typeparam>
-    /// <returns></returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public static ServerCellCode Generator<TServer, TAttribute>() where TServer : IRpcServer where TAttribute : RpcAttribute
     {
         return Generator(typeof(TServer), typeof(TAttribute));
@@ -258,9 +247,9 @@ public static class CodeGenerator
     /// 生成代码代理
     /// </summary>
     /// <param name="serverType">服务类型</param>
-    /// <param name="attributeType"></param>
-    /// <returns></returns>
+    /// <param name="attributeType">特性类型。</param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public static ServerCellCode Generator(Type serverType, Type attributeType)
     {
         var serverCellCode = new ServerCellCode();
@@ -375,8 +364,6 @@ public static class CodeGenerator
     /// <summary>
     /// 获取函数唯一Id
     /// </summary>
-    /// <param name="method"></param>
-    /// <returns></returns>
     public static string GetMethodId(MethodInfo method)
     {
         var stringBuilder = new StringBuilder();
@@ -392,8 +379,7 @@ public static class CodeGenerator
     /// <summary>
     /// 获取Method
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="methods"></param>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "RPC注册类型的接口相信动态代码是有效的")]
     public static void GetMethodInfos([DynamicallyAccessedMembers(AOT.RpcRegister)] Type type, ref Dictionary<string, MethodInfo> methods)
     {
         foreach (var item in type.GetInterfaces())
@@ -450,7 +436,6 @@ public static class CodeGenerator
     /// 从类型获取函数实例
     /// </summary>
     /// <typeparam name="TServer"></typeparam>
-    /// <returns></returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static RpcMethod[] GetRpcMethods<TServer>() where TServer : IRpcServer
     {
@@ -460,9 +445,6 @@ public static class CodeGenerator
     /// <summary>
     /// 从类型获取函数实例
     /// </summary>
-    /// <param name="serverFromType"></param>
-    /// <param name="serverToType"></param>
-    /// <returns></returns>
 
     public static RpcMethod[] GetRpcMethods([DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverFromType, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type serverToType)
     {
@@ -500,11 +482,8 @@ public static class CodeGenerator
     /// <summary>
     /// 生成代理代码
     /// </summary>
-    /// <param name="namespace"></param>
-    /// <param name="serverTypes"></param>
-    /// <param name="attributeTypes"></param>
-    /// <returns></returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public static string GetProxyCodes(string @namespace, Type[] serverTypes, Type[] attributeTypes)
     {
         var serverCellCodeList = new List<ServerCellCode>();
@@ -521,9 +500,6 @@ public static class CodeGenerator
     /// <summary>
     /// 获取类型代理名称
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="className"></param>
-    /// <returns></returns>
     public static bool TryGetProxyTypeName(Type type, out string className)
     {
         return m_proxyType.TryGetValue(type, out className);

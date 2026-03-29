@@ -14,12 +14,17 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 TCP 的 Mqtt 服务端。
+/// </summary>
 public class MqttTcpService : TcpServiceBase<MqttTcpSessionClient>, IMqttTcpService
 {
     private readonly MqttBroker m_mqttBroker = new();
 
+    /// <inheritdoc/>
     public MqttBroker MqttBroker => this.m_mqttBroker;
 
+    /// <inheritdoc/>
     protected override MqttTcpSessionClient NewClient()
     {
         return new MqttTcpSessionClient(this.m_mqttBroker);

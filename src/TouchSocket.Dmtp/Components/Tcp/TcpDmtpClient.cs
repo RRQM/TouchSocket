@@ -58,16 +58,11 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        // 检查是否已初始化IDmtpActor对象
         if (this.m_dmtpActor != null)
         {
-            // 向IDmtpActor对象发送关闭消息
-            await this.m_dmtpActor.SendCloseAsync(msg).ConfigureDefaultAwait();
-            // 关闭IDmtpActor对象
             await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
         }
 
-        // 调用基类的CloseAsync方法完成后续关闭操作
         return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
     }
 
@@ -134,6 +129,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             Connecting = this.OnDmtpActorConnecting,
             Connected = this.OnDmtpActorConnected,
             Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
             Logger = this.Logger,
             Client = this,
             FindDmtpActor = this.m_findDmtpActor,
@@ -153,10 +149,14 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         return base.ProtectedSendAsync(memory, cancellationToken);
     }
 
-    private async Task OnDmtpActorClose(DmtpActor actor, string msg)
+    private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
-        //this.Abort(false, msg);
+        return this.OnDmtpClosing(new ClosingEventArgs(msg));
+    }
+
+    private Task OnDmtpActorClosed(DmtpActor actor, ClosedEventArgs e)
+    {
+        return this.OnDmtpClosed(e);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -187,7 +187,6 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// 当Dmtp关闭以后。
     /// </summary>
     /// <param name="e">事件参数</param>
-    /// <returns></returns>
     protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
     {
         //如果事件已经被处理，则直接返回
@@ -202,11 +201,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <summary>
     /// 当Dmtp即将被关闭时触发。
     /// <para>
-    /// 该触发条件有2种：
-    /// <list type="number">
-    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
-    /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
-    /// </list>
+    /// 仅在终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>时触发。
     /// </para>
     /// </summary>
     /// <param name="e">提供了关闭事件的相关信息。</param>
@@ -297,15 +292,17 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.m_dmtpActor.CloseAsync(e.Message).ConfigureDefaultAwait();
-        await this.OnDmtpClosed(e).ConfigureDefaultAwait();
+        if (this.m_dmtpActor.ClosedMessage.HasValue())
+        {
+            e.Message = this.m_dmtpActor.ClosedMessage;
+        }
+        await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
         await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
@@ -318,16 +315,6 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
         this.m_dmtpAdapter = adapter;
         await base.OnTcpConnecting(e).ConfigureDefaultAwait();
     }
-
-    ///// <inheritdoc/>
-    //protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
-    //{
-    //    var message = (DmtpMessage)e.RequestInfo;
-    //    if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
-    //    {
-    //        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
-    //    }
-    //}
 
     /// <inheritdoc/>
     protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
@@ -347,58 +334,6 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             }
         }
         return true;
-    }
-
-    protected async Task ReceiveLoopAsync1111(ITransport transport)
-    {
-        var dmtpAdapter2 = new DmtpAdapter();
-        var cancellationToken = transport.ClosedToken;
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                // 等待接收数据
-                var readResult = await transport.Reader.ReadAsync(cancellationToken);
-
-                var sequence = readResult.Buffer;
-                var reader = new BytesReader(sequence);
-                try
-                {
-                    while (true)
-                    {
-                        if (!dmtpAdapter2.TryParseRequest(ref reader, out var dmtpMessage))
-                        {
-                            break;
-                        }
-
-                        await this.ProcessDmtpMessageAsync(dmtpMessage);
-                    }
-                }
-                finally
-                {
-                    transport.Reader.AdvanceTo(sequence.GetPosition(reader.BytesRead), sequence.End);
-                    reader.Dispose();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // 如果操作被取消，则退出循环
-                break;
-            }
-            catch (Exception ex)
-            {
-                // 处理接收过程中发生的异常
-                this.Logger.Error(ex, "接收数据时发生错误");
-                break;
-            }
-        }
-    }
-
-    private Task ProcessDmtpMessageAsync(DmtpMessage message)
-    {
-        // 处理Dmtp消息的逻辑
-        // 这里可以根据需要实现具体的处理逻辑
-        return Task.CompletedTask;
     }
     #endregion Override
 }

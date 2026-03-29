@@ -38,6 +38,8 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     /// <inheritdoc/>
     public DmtpRpcRequestPackage DmtpRpcPackage { get; }
 
+    IDmtpRpcRequestPackage IDmtpRpcCallContext.DmtpRpcPackage => this.DmtpRpcPackage;
+
     /// <inheritdoc/>
     public Metadata Metadata => this.DmtpRpcPackage.Metadata;
 

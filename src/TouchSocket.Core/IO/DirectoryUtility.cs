@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -23,7 +23,6 @@ public static partial class DirectoryUtility
     /// </summary>
     /// <param name="sourceFolder">原文件路径</param>
     /// <param name="destFolder">目标文件路径</param>
-    /// <returns></returns>
     public static void CopyDirectory(string sourceFolder, string destFolder)
     {
         //如果目标路径不存在,则创建目标路径
@@ -52,7 +51,6 @@ public static partial class DirectoryUtility
     /// <summary>
     /// 获取文件夹下的一级文件夹目录名称，不含子文件夹。
     /// </summary>
-    /// <param name="sourceFolder"></param>
     public static string[] GetDirectories(string sourceFolder)
     {
         return Directory.GetDirectories(sourceFolder)

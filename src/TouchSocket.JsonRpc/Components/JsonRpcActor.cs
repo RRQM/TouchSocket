@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using TouchSocket.Rpc;
 
@@ -133,6 +134,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="invokeOption">调用选项。</param>
     /// <param name="parameters">参数。</param>
     /// <returns>任务对象。</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JsonRpc基础设施相信动态代码是有效的")]
     public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         var waitData = this.m_waitHandle.GetWaitDataAsync(out var sign);
@@ -283,6 +287,9 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// </summary>
     /// <param name="callContext">调用上下文。</param>
     /// <param name="jsonRpcRequest">JsonRpc请求。</param>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JsonRpc基础设施相信动态代码是有效的")]
     private void BuildRequestContext(JsonRpcCallContextBase callContext, InternalJsonRpcRequest jsonRpcRequest)
     {
         if (this.ActionMap.TryGetRpcMethod(jsonRpcRequest.Method, out var rpcMethod))
@@ -415,6 +422,8 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
     /// <param name="result">结果。</param>
     /// <param name="returnType">返回类型。</param>
     /// <returns>解析后的对象。</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonRpc基础设施相信动态代码是有效的")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "JsonRpc基础设施相信动态代码是有效的")]
     private object ResultParseToType(string result, Type returnType)
     {
         if (returnType == default)

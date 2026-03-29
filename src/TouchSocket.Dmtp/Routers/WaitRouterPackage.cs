@@ -23,56 +23,19 @@ public class WaitRouterPackage : MsgRouterPackage, IWaitResult
     /// <inheritdoc/>
     public byte Status { get; set; }
 
-    /// <summary>
-    /// 是否将<see cref="Sign"/>和<see cref="Status"/>等参数放置在Router中。
-    /// </summary>
-    protected virtual bool IncludedRouter { get; }
-
-    /// <inheritdoc/>
-    public override void PackageBody<TWriter>(ref TWriter writer)
-    {
-        base.PackageBody(ref writer);
-        if (this.IncludedRouter)
-        {
-            return;
-        }
-
-        WriterExtension.WriteValue<TWriter, int>(ref writer, this.Sign);
-        WriterExtension.WriteValue<TWriter, byte>(ref writer, this.Status);
-    }
-
     /// <inheritdoc/>
     public override void PackageRouter<TWriter>(ref TWriter writer)
     {
         base.PackageRouter(ref writer);
-        if (!this.IncludedRouter)
-        {
-            return;
-        }
-
         WriterExtension.WriteValue<TWriter, int>(ref writer, this.Sign);
         WriterExtension.WriteValue<TWriter, byte>(ref writer, this.Status);
-    }
-
-    /// <inheritdoc/>
-    public override void UnpackageBody<TReader>(ref TReader reader)
-    {
-        base.UnpackageBody(ref reader);
-        if (!this.IncludedRouter)
-        {
-            this.Sign = ReaderExtension.ReadValue<TReader, int>(ref reader);
-            this.Status = ReaderExtension.ReadValue<TReader, byte>(ref reader);
-        }
     }
 
     /// <inheritdoc/>
     public override void UnpackageRouter<TReader>(ref TReader reader)
     {
         base.UnpackageRouter(ref reader);
-        if (this.IncludedRouter)
-        {
-            this.Sign = ReaderExtension.ReadValue<TReader, int>(ref reader);
-            this.Status = ReaderExtension.ReadValue<TReader, byte>(ref reader);
-        }
+        this.Sign = ReaderExtension.ReadValue<TReader, int>(ref reader);
+        this.Status = ReaderExtension.ReadValue<TReader, byte>(ref reader);
     }
 }

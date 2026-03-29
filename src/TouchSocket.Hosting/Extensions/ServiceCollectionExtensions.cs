@@ -143,6 +143,14 @@ public static class ServiceCollectionExtensions
         return AddSetupConfigObjectHostedService<ServiceHost<TObjectService>, TObjectService, TObjectImpService>(services, actionConfig);
     }
 
+    /// <summary>
+    /// 添加客户端类型的托管服务。
+    /// </summary>
+    /// <typeparam name="TObjectClient">客户端接口类型。</typeparam>
+    /// <typeparam name="TClientImpService">客户端实现类型。</typeparam>
+    /// <param name="services">服务集合。</param>
+    /// <param name="actionConfig">配置委托。</param>
+    /// <returns>服务集合。</returns>
     public static IServiceCollection AddClientHostedService<TObjectClient, [DynamicallyAccessedMembers(AOT.Container)] TClientImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TObjectClient : class, ISetupConfigObject, IConnectableClient,IClosableClient
     where TClientImpService : class, TObjectClient
@@ -150,6 +158,14 @@ public static class ServiceCollectionExtensions
         return AddSetupConfigObjectHostedService<ClientHost<TObjectClient>, TObjectClient, TClientImpService>(services, actionConfig);
     }
 
+    /// <summary>
+    /// 添加配置对象类型的托管服务（双泛型重载）。
+    /// </summary>
+    /// <typeparam name="TObject">目标接口类型。</typeparam>
+    /// <typeparam name="TObjectImp">实现类型。</typeparam>
+    /// <param name="services">服务集合。</param>
+    /// <param name="actionConfig">配置委托。</param>
+    /// <returns>服务集合。</returns>
     public static IServiceCollection AddSetupConfigObjectHostedService<TObject, [DynamicallyAccessedMembers(AOT.Container)] TObjectImp>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TObject : class, ISetupConfigObject
     where TObjectImp : class, TObject

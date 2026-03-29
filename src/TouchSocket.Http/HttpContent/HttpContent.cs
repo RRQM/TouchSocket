@@ -58,6 +58,11 @@ public abstract class HttpContent
     /// <param name="header">HTTP头的接口实现</param>
     protected abstract void OnBuildingHeader(IHttpHeader header);
 
+    /// <summary>
+    /// 将内容异步写入指定的 <see cref="PipeWriter"/>。
+    /// </summary>
+    /// <param name="writer">HTTP 内容的写入器。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     protected abstract Task WriteContent(PipeWriter writer, CancellationToken cancellationToken);
 
     #region implicit

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -74,8 +74,6 @@ public static class TouchSocketModbusUtility
     /// <summary>
     /// CRC16_Modbus效验
     /// </summary>
-    /// <param name="sourceSpan"></param>
-    /// <returns></returns>
     public static ushort ToModbusCrcValue(ReadOnlySpan<byte> sourceSpan)
     {
         Span<byte> crcSpan = stackalloc byte[2];
@@ -103,6 +101,11 @@ public static class TouchSocketModbusUtility
         return TouchSocketBitConverter.BigEndian.To<ushort>(crcSpan);
     }
 
+    /// <summary>
+    /// 计算 Modbus CRC 校验值。
+    /// </summary>
+    /// <param name="sourceSequence">源数据序列。</param>
+    /// <returns>CRC 校验值。</returns>
     public static ushort ToModbusCrcValue(ReadOnlySequence<byte> sourceSequence)
     {
         using (var buffer = new ContiguousMemoryBuffer(sourceSequence))
@@ -114,8 +117,6 @@ public static class TouchSocketModbusUtility
     /// <summary>
     /// 将布尔值转为2字节数组
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static ReadOnlyMemory<byte> BoolToBytes(bool value)
     {
         return value ? new byte[] { 255, 0 } : new byte[] { 0, 0 };

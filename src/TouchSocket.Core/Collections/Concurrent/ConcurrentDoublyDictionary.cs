@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -41,9 +41,6 @@ public class ConcurrentDoublyDictionary<TKey, TValue>
     /// <summary>
     ///  尝试将指定的键和值添加到字典中。
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryAdd(TKey key, TValue value)
     {
         if (this.KeyToValue.TryAdd(key, value))
@@ -64,9 +61,6 @@ public class ConcurrentDoublyDictionary<TKey, TValue>
     /// <summary>
     /// 由键尝试移除
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryRemoveFromKey(TKey key, out TValue value)
     {
         if (this.KeyToValue.TryRemove(key, out value))
@@ -82,9 +76,6 @@ public class ConcurrentDoublyDictionary<TKey, TValue>
     /// <summary>
     /// 由值尝试移除
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
     public bool TryRemoveFromValue(TValue value, out TKey key)
     {
         if (this.ValueToKey.TryRemove(value, out key))
@@ -100,9 +91,6 @@ public class ConcurrentDoublyDictionary<TKey, TValue>
     /// <summary>
     /// 由键获取到值
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryGetFromKey(TKey key, out TValue value)
     {
         return this.KeyToValue.TryGetValue(key, out value);
@@ -111,9 +99,6 @@ public class ConcurrentDoublyDictionary<TKey, TValue>
     /// <summary>
     /// 由值获取到键
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
     public bool TryGetFromValue(TValue value, out TKey key)
     {
         return this.ValueToKey.TryGetValue(value, out key);

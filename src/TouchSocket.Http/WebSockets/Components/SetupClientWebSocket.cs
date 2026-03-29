@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -46,6 +46,11 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     #region 连接
 
    
+    /// <summary>
+    /// 异步连接 WebSocket。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <param name="option">WebSocket 客户端选项配置委托。</param>
     protected async Task WebSocketConnectAsync(CancellationToken cancellationToken, Action<ClientWebSocketOptions> option = null)
     {
         this.ThrowIfDisposed();
@@ -173,7 +178,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                 return Result.Success;
             }
 
-            this.m_closedEventArgs ??= new ClosedEventArgs(true, msg);
+            this.m_closedEventArgs ??= new ClosedEventArgs(msg);
             await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
             this.CancelReceive();
             await this.WaitClearConnect().ConfigureDefaultAwait();
@@ -212,22 +217,23 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     /// <summary>
     /// 已断开连接。
     /// </summary>
-    /// <param name="e"></param>
     protected virtual Task OnWebSocketClosed(ClosedEventArgs e)
     {
         return EasyTask.CompletedTask;
     }
 
+    /// <summary>
+    /// 当收到 WebSocket 消息时调用。
+    /// </summary>
+    /// <param name="messageType">WebSocket 消息类型。</param>
+    /// <param name="sequence">消息数据序列。</param>
     protected abstract Task OnWebSocketReceived(WebSocketMessageType messageType, ReadOnlySequence<byte> sequence);
 
     /// <summary>
     /// 发送数据
     /// </summary>
-    /// <param name="memory">数据</param>
-    /// <param name="messageType"></param>
-    /// <param name="endOfMessage"></param>
-    /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns></returns>
+    /// <param name="memory">数据</param>    /// <param name="messageType">消息类型。</param>
+    /// <param name="endOfMessage">是否是消息的最后一帧。</param>    /// <param name="cancellationToken">可取消令箭</param>
     protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
     {
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
@@ -297,11 +303,11 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
                     break;
                 }
             }
-            this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+            this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs = new ClosedEventArgs(false, ex.Message);
+            this.m_closedEventArgs = new ClosedEventArgs(ex.Message, ex);
             this.Logger?.Debug(this, ex);
         }
     }

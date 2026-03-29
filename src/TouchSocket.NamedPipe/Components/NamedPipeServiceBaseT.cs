@@ -25,7 +25,6 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
 
     private readonly InternalClientCollection<TClient> m_clients = new InternalClientCollection<TClient>();
     private readonly List<NamedPipeMonitor> m_monitors = new List<NamedPipeMonitor>();
-    private readonly CancellationTokenSource m_cancellationTokenSource;
     private ServerState m_serverState;
     #endregion 字段
 

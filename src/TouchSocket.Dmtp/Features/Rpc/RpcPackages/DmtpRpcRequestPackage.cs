@@ -10,26 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc;
 
 internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
 {
+    private readonly Type m_returnType;
     private DmtpRpcCallContext m_callContext;
     private FeedbackType m_feedback;
 
     private string m_invokeKey;
-    private Metadata m_metadata;
     private object[] m_parameters;
-    private readonly Type m_returnType;
     private RpcMethod m_rpcMethod;
     private ISerializationSelector m_selector;
 
     private SerializationType m_serializationType;
+
     public DmtpRpcRequestPackage()
     {
-
     }
 
     public DmtpRpcRequestPackage(string invokeKey, InvokeOption option, object[] parameters, Type returnType, ISerializationSelector selector)
@@ -40,7 +40,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
         {
             this.m_feedback = dmtpInvokeOption.FeedbackType;
             this.m_serializationType = dmtpInvokeOption.SerializationType;
-            this.m_metadata = dmtpInvokeOption.Metadata;
+            this.Metadata = dmtpInvokeOption.Metadata;
         }
         else if (option is InvokeOption invokeOption)
         {
@@ -64,11 +64,6 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
     /// </summary>
     public string InvokeKey => this.m_invokeKey;
 
-    /// <summary>
-    /// 元数据
-    /// </summary>
-    public Metadata Metadata => this.m_metadata;
-
     public object[] Parameters => this.m_parameters;
 
     public Type ReturnType => this.m_returnType;
@@ -83,7 +78,6 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
     public SerializationType SerializationType => this.m_serializationType;
 
     /// <inheritdoc/>
-    protected override bool IncludedRouter => true;
 
     public void LoadInfo(RpcMethod rpcMethod)
     {
@@ -96,6 +90,7 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
         this.m_rpcMethod = callContext.RpcMethod;
         this.m_selector = selector;
     }
+
     /// <inheritdoc/>
     public override void PackageBody<TWriter>(ref TWriter writer)
     {
@@ -122,18 +117,10 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
         WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_serializationType);
         WriterExtension.WriteString(ref writer, this.InvokeKey, FixedHeaderType.Byte);
         WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.m_feedback);
-        if (this.Metadata is null)
-        {
-            WriterExtension.WriteNull(ref writer);
-        }
-        else
-        {
-            WriterExtension.WriteNotNull(ref writer);
-            this.Metadata.Package(ref writer);
-        }
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "RPC基础设施相信动态代码是有效的")]
     public override void UnpackageBody<TReader>(ref TReader reader)
     {
         base.UnpackageBody(ref reader);
@@ -178,11 +165,5 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
         this.m_serializationType = (SerializationType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
         this.m_invokeKey = ReaderExtension.ReadString(ref reader, FixedHeaderType.Byte);
         this.m_feedback = (FeedbackType)ReaderExtension.ReadValue<TReader, byte>(ref reader);
-        if (!ReaderExtension.ReadIsNull(ref reader))
-        {
-            var package = new Metadata();
-            package.Unpackage(ref reader);
-            this.m_metadata = package;
-        }
     }
 }

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -36,7 +36,6 @@ public abstract class FastSerializerContext
     /// <summary>
     /// 获取新实例
     /// </summary>
-    /// <param name="type"></param>
     public virtual object GetNewInstance([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
         return Activator.CreateInstance(type, null);
@@ -45,8 +44,6 @@ public abstract class FastSerializerContext
     /// <summary>
     /// 获取序列化对象
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     [RequiresUnreferencedCode("此方法可能会使用反射构建访问器，与剪裁不兼容。")]
     public virtual SerializObject GetSerializeObject([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type)
     {
@@ -56,8 +53,6 @@ public abstract class FastSerializerContext
     /// <summary>
     /// 添加转换器
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="converter"></param>
     protected void AddConverter([DynamicallyAccessedMembers(AOT.FastBinaryFormatter)] Type type, IFastBinaryConverter converter)
     {
         var serializObject = new SerializObject(type, converter);

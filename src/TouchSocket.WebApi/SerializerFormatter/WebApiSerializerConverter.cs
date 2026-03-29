@@ -53,6 +53,7 @@ public class WebApiSerializerConverter : TouchSocketSerializerConverter<string, 
     /// 添加Xml序列化器
     /// </summary>
     [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+    [RequiresDynamicCode("XML serializer relies on dynamic code generation")]
     public void AddXmlSerializerFormatter()
     {
         this.Add(new WebApiXmlSerializerFormatter());

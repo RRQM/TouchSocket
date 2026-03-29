@@ -21,6 +21,9 @@ public class NamedPipeListenOption
     /// 名称
     /// </summary>
     public string Name { get; set; }
+    /// <summary>
+    /// 命名管道名称。
+    /// </summary>
     public string PipeName { get; set; }
 
     /// <summary>

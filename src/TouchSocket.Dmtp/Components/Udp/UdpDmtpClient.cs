@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -24,9 +24,6 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     /// <summary>
     /// UdpDmtp终端客户端
     /// </summary>
-    /// <param name="udpSession"></param>
-    /// <param name="endPoint"></param>
-    /// <param name="logger"></param>
     public UdpDmtpClient(UdpDmtp udpSession, EndPoint endPoint, ILog logger) : base(false, false)
     {
         this.Id = endPoint.ToString();

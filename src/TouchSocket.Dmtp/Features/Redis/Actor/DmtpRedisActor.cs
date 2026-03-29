@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis;
@@ -148,7 +149,7 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     }
 
     /// <inheritdoc/>
-    public async Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken = default)
+    public async Task<TValue> GetAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TValue>(string key, CancellationToken cancellationToken = default)
     {
         var cache = await this.GetCacheAsync(key, cancellationToken).ConfigureDefaultAwait();
 
@@ -418,7 +419,6 @@ internal sealed class DmtpRedisActor : DisposableObject, IDmtpRedisActor
     /// <summary>
     /// 设置处理协议标识的起始标识。
     /// </summary>
-    /// <param name="start"></param>
     public void SetProtocolFlags(ushort start)
     {
         this.m_redis_Request = start++;

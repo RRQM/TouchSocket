@@ -142,7 +142,7 @@ class ThreadSafeTopicSubscriptions
                 var subscriptionTopic = kv.Key;
                 var subscribers = kv.Value;
 
-                if (this.IsTopicMatch(topic, subscriptionTopic))
+                if (IsTopicMatch(topic, subscriptionTopic))
                 {
                     matchingSubscriptions.AddRange(subscribers);
                 }
@@ -184,166 +184,9 @@ class ThreadSafeTopicSubscriptions
     }
 
     // topic 匹配逻辑，支持 + 和 # 通配符
-    private bool IsTopicMatch(string publishTopic, string subscriptionTopic)
+    private static bool IsTopicMatch(string publishTopic, string subscriptionTopic)
     {
-        if (subscriptionTopic.IndexOf('+') < 0 && subscriptionTopic.IndexOf('#') < 0)
-        {
-            return string.Equals(publishTopic, subscriptionTopic, StringComparison.Ordinal);
-        }
-
-        return this.CompareTopicWithWildcard(publishTopic, subscriptionTopic);
-    }
-
-    private bool CompareTopicWithWildcard(ReadOnlySpan<char> topic, ReadOnlySpan<char> filter)
-    {
-        const char LevelSeparator = '/';
-        const char MultiLevelWildcard = '#';
-        const char SingleLevelWildcard = '+';
-        const char ReservedTopicPrefix = '$';
-
-        if (topic.IsEmpty || filter.IsEmpty)
-        {
-            return false;
-        }
-
-        var filterOffset = 0;
-        var filterLength = filter.Length;
-        var topicOffset = 0;
-        var topicLength = topic.Length;
-
-        // 检查过滤器长度
-        if (filterLength > topicLength)
-        {
-            var lastFilterChar = filter[filterLength - 1];
-            if (lastFilterChar != MultiLevelWildcard && lastFilterChar != SingleLevelWildcard)
-            {
-                return false;
-            }
-        }
-
-        var isMultiLevelFilter = filter[filterLength - 1] == MultiLevelWildcard;
-        var isReservedTopic = topic[0] == ReservedTopicPrefix;
-
-        // 保留主题的特殊规则
-        if (isReservedTopic && filterLength == 1 && isMultiLevelFilter)
-        {
-            return false; // 不允许用 '#' 订阅 '$foo/bar'
-        }
-
-        if (isReservedTopic && filter[0] == SingleLevelWildcard)
-        {
-            return false; // 不允许用 '+/monitor/Clients' 订阅 '$SYS/monitor/Clients'
-        }
-
-        if (filterLength == 1 && isMultiLevelFilter)
-        {
-            return true; // '#' 匹配所有内容
-        }
-
-        // 逐字符比较
-        while (filterOffset < filterLength && topicOffset < topicLength)
-        {
-            // 检查多级通配符是否在最后位置
-            if (filter[filterOffset] == MultiLevelWildcard && filterOffset != filterLength - 1)
-            {
-                return false; // 多级通配符只能在最后
-            }
-
-            if (filter[filterOffset] == topic[topicOffset])
-            {
-                if (topicOffset == topicLength - 1)
-                {
-                    if (filterOffset == filterLength - 3 && filter[filterOffset + 1] == LevelSeparator && isMultiLevelFilter)
-                    {
-                        return true;
-                    }
-
-                    if (filterOffset == filterLength - 2 && filter[filterOffset] == LevelSeparator && isMultiLevelFilter)
-                    {
-                        return true;
-                    }
-                }
-
-                filterOffset++;
-                topicOffset++;
-
-                // 检查是否完全匹配
-                if (filterOffset == filterLength && topicOffset == topicLength)
-                {
-                    return true;
-                }
-
-                var endOfTopic = topicOffset == topicLength;
-
-                if (endOfTopic && filterOffset == filterLength - 1 && filter[filterOffset] == SingleLevelWildcard)
-                {
-                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
-                    {
-                        return false;
-                    }
-                    return true;
-                }
-            }
-            else
-            {
-                if (filter[filterOffset] == SingleLevelWildcard)
-                {
-                    // 检查单级通配符的有效性
-                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
-                    {
-                        return false; // 无效的 "+foo" 或 "a/+foo"
-                    }
-
-                    if (filterOffset < filterLength - 1 && filter[filterOffset + 1] != LevelSeparator)
-                    {
-                        return false; // 无效的 "foo+" 或 "foo+/a"
-                    }
-
-                    filterOffset++;
-                    // 跳过主题中的当前级别
-                    while (topicOffset < topicLength && topic[topicOffset] != LevelSeparator)
-                    {
-                        topicOffset++;
-                    }
-
-                    if (topicOffset == topicLength && filterOffset == filterLength)
-                    {
-                        return true;
-                    }
-                }
-                else if (filter[filterOffset] == MultiLevelWildcard)
-                {
-                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
-                    {
-                        return false;
-                    }
-
-                    if (filterOffset + 1 != filterLength)
-                    {
-                        return false;
-                    }
-
-                    return true; // 多级通配符匹配剩余所有内容
-                }
-                else
-                {
-                    // 检查 "foo/bar" 匹配 "foo/+/#"
-                    if (filterOffset > 0 &&
-                        filterOffset + 2 == filterLength &&
-                        topicOffset == topicLength &&
-                        filter[filterOffset - 1] == SingleLevelWildcard &&
-                        filter[filterOffset] == LevelSeparator &&
-                        isMultiLevelFilter)
-                    {
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        return false;
+        return MqttExtension.IsTopicMatch(publishTopic, subscriptionTopic);
     }
 
     private static void ValidateTopic(string topic)

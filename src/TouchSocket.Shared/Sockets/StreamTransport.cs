@@ -53,7 +53,7 @@ internal class StreamTransport : BaseTransport
 
                 if (result == 0)
                 {
-                    this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                    this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
                     await pipeWriter.CompleteAsync().ConfigureDefaultAwait();
                     return;
                 }
@@ -70,7 +70,7 @@ internal class StreamTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
+            this.m_closedEventArgs ??= new ClosedEventArgs(ex.Message, ex);
             await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureDefaultAwait();
         }
     }

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -31,7 +31,6 @@ public static class SystemExtension
     /// <summary>
     /// 安全性释放（不用判断对象是否为空）。不会抛出任何异常。
     /// </summary>
-    /// <param name="dis"></param>
     /// <returns>释放状态，当对象为<see langword="null"/>，或者已被释放时，均会返回<see cref="Result.Success"/>，只有实际在释放时遇到异常时，才显示其他状态。</returns>
     public static Result SafeDispose(this IDisposable dis)
     {
@@ -56,7 +55,6 @@ public static class SystemExtension
     /// 内部会判断<see cref="IDisposableObject.DisposedValue"/>的值，如果为<see langword="true"/>，则不会再执行<see cref="IDisposable.Dispose"/>。
     /// </para>
     /// </summary>
-    /// <param name="disposableObject"></param>
     /// <returns>释放状态，当对象为<see langword="null"/>，或者已被释放时，均会返回<see cref="Result.Success"/>，只有实际在释放时遇到异常时，才显示其他状态。</returns>
     public static Result SafeDispose(this IDisposableObject disposableObject)
     {
@@ -258,11 +256,6 @@ public static class SystemExtension
     /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
     /// <para>如果目标数组为<see langword="null"/>或长度为0，则直接返回offset的值</para>
     /// </summary>
-    /// <param name="srcByteArray"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="subByteArray"></param>
-    /// <returns></returns>
     public static int IndexOfFirst(this byte[] srcByteArray, int offset, int length, byte[] subByteArray)
     {
         return IndexOfFirst(new ReadOnlySpan<byte>(subByteArray), offset, length, subByteArray);
@@ -271,11 +264,6 @@ public static class SystemExtension
     /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
     /// <para>如果目标数组为<see langword="null"/>或长度为0，则直接返回offset的值</para>
     /// </summary>
-    /// <param name="srcByteArray"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="subByteArray"></param>
-    /// <returns></returns>
     public static int IndexOfFirst(this ReadOnlySpan<byte> srcByteArray, int offset, int length, byte[] subByteArray)
     {
         if (length < subByteArray.Length)
@@ -317,11 +305,6 @@ public static class SystemExtension
     /// 例如：在{0,1,2,3,1,2,3}中搜索{1,2}，则会返回list:[2,5]，均为最后索引的位置。
     /// </para>
     /// </summary>
-    /// <param name="srcByteArray"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="subByteArray"></param>
-    /// <returns></returns>
     public static List<int> IndexOfInclude(this byte[] srcByteArray, int offset, int length, byte[] subByteArray)
     {
         return IndexOfInclude(new ReadOnlySpan<byte>(srcByteArray), offset, length, subByteArray);
@@ -333,11 +316,6 @@ public static class SystemExtension
     /// 例如：在{0,1,2,3,1,2,3}中搜索{1,2}，则会返回list:[2,5]，均为最后索引的位置。
     /// </para>
     /// </summary>
-    /// <param name="srcByteArray"></param>
-    /// <param name="offset"></param>
-    /// <param name="length"></param>
-    /// <param name="subByteArray"></param>
-    /// <returns></returns>
     public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, ReadOnlySpan<byte> subByteArray)
     {
         var subByteArrayLen = subByteArray.Length;
@@ -375,8 +353,6 @@ public static class SystemExtension
     /// <summary>
     /// 转Base64。
     /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
     public static string ToBase64(this byte[] data)
     {
         return Convert.ToBase64String(data);
@@ -410,8 +386,6 @@ public static class SystemExtension
     /// <summary>
     /// 获取默认值
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static object GetDefault([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] this Type type)
     {
         return type.IsValueType ? Activator.CreateInstance(type) : null;
@@ -420,8 +394,6 @@ public static class SystemExtension
     /// <summary>
     /// 获取类型
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static Type GetRefOutType(this Type type)
     {
         return type.IsByRef ? type.GetElementType() : type;
@@ -518,8 +490,6 @@ public static class SystemExtension
     /// <summary>
     /// 是否是<see cref="List{T}"/>类型。
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsList(this Type type)
     {
         return typeof(IList).IsAssignableFrom(type);
@@ -528,8 +498,6 @@ public static class SystemExtension
     /// <summary>
     /// 判断该类型是否为可空类型
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsNullableType(this Type type)
     {
         return type != null
@@ -570,8 +538,6 @@ public static class SystemExtension
     /// <summary>
     /// 判断是否为静态类。
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsStatic(this Type type)
     {
         return type.IsAbstract && type.IsSealed;
@@ -580,8 +546,6 @@ public static class SystemExtension
     /// <summary>
     /// 判断为结构体
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsStruct(this Type type)
     {
         return !type.IsPrimitive && !type.IsClass && !type.IsEnum && type.IsValueType;
@@ -590,8 +554,6 @@ public static class SystemExtension
     /// <summary>
     /// 判断该类型是否为值元组类型
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsValueTuple(this Type type)
     {
         return type.IsValueType &&
@@ -605,8 +567,6 @@ public static class SystemExtension
     /// <item><see cref="string"/></item>
     /// </list>
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static bool IsPrimitive(this Type type)
     {
         return type.IsPrimitive || type == typeof(string);
@@ -615,8 +575,6 @@ public static class SystemExtension
     /// <summary>
     /// 获取类型的短确定性名称，支持泛型。
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public static string GetDeterminantName(this Type type)
     {
         var types = type.IsGenericType
@@ -804,8 +762,6 @@ public static class SystemExtension
     /// <summary>
     /// 从<see cref="EndPoint"/>中获得IP地址。
     /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
     public static string GetIP(this EndPoint endPoint)
     {
         var r = endPoint.ToString().LastIndexOf(":");
@@ -815,8 +771,6 @@ public static class SystemExtension
     /// <summary>
     /// 从<see cref="EndPoint"/>中获得Port。
     /// </summary>
-    /// <param name="endPoint"></param>
-    /// <returns></returns>
     public static int GetPort(this EndPoint endPoint)
     {
         var r = endPoint.ToString().LastIndexOf(":");

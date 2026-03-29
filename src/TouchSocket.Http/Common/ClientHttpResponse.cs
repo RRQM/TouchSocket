@@ -275,6 +275,7 @@ internal sealed class ClientHttpResponse : HttpResponse
     /// 读取分块传输的内容
     /// </summary>
     /// <param name="reader">管道读取器</param>
+    /// <param name="buffer">接收数据的缓冲区</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>HTTP读取结果</returns>
     private async ValueTask<int> ReadChunkedContentAsync(PipeReader reader, Memory<byte> buffer, CancellationToken cancellationToken)
@@ -387,6 +388,7 @@ internal sealed class ClientHttpResponse : HttpResponse
     /// 读取固定长度的内容
     /// </summary>
     /// <param name="reader">管道读取器</param>
+    /// <param name="buffer">接收数据的缓冲区</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>HTTP读取结果</returns>
     private async ValueTask<int> ReadFixedLengthContentAsync(PipeReader reader, Memory<byte> buffer, CancellationToken cancellationToken)

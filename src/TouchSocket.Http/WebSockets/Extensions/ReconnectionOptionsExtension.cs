@@ -106,7 +106,7 @@ public static class ReconnectionOptionsExtension
     /// <typeparam name="TClient">实现了 <see cref="SetupClientWebSocket"/></typeparam>
     /// <param name="reconnectionOption">要配置的 <see cref="ReconnectionOption{TClient}"/> 实例。</param>
     /// <param name="activeTimeSpan">在此时间范围内若有活动则跳过心跳检测，默认 3 秒。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 或 <paramref name="pingTimeout"/> 小于或等于零时抛出。</exception>
+    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 小于或等于零时抛出。</exception>
     public static void UseWebSocketCheckAction<TClient>(
         this ReconnectionOption<TClient> reconnectionOption,
         TimeSpan? activeTimeSpan = null)

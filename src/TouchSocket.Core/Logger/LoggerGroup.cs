@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -22,7 +22,6 @@ public class LoggerGroup : LoggerBase
     /// <summary>
     /// 一组日志记录器
     /// </summary>
-    /// <param name="logs"></param>
     public LoggerGroup(params ILog[] logs) : this()
     {
         ThrowHelper.ThrowIfNull(logs, nameof(logs));
@@ -49,7 +48,6 @@ public class LoggerGroup : LoggerBase
     /// <summary>
     /// 添加日志组件
     /// </summary>
-    /// <param name="logger"></param>
     public void AddLogger(ILog logger)
     {
         this.m_logs.Add(logger);
@@ -58,10 +56,6 @@ public class LoggerGroup : LoggerBase
     /// <summary>
     /// 指定输出<see cref="LoggerGroup"/>中的特定类型的日志
     /// </summary>
-    /// <param name="logLevel"></param>
-    /// <param name="source"></param>
-    /// <param name="message"></param>
-    /// <param name="exception"></param>
     public void Log<TLog>(LogLevel logLevel, object source, string message, Exception exception) where TLog : ILog
     {
         try
@@ -82,7 +76,6 @@ public class LoggerGroup : LoggerBase
     /// <summary>
     /// 移除指定日志日志
     /// </summary>
-    /// <param name="logger"></param>
     public bool RemoveLogger(ILog logger)
     {
         return this.m_logs.Remove(logger);
@@ -91,18 +84,12 @@ public class LoggerGroup : LoggerBase
     /// <summary>
     /// 移除指定类型的所有日志。
     /// </summary>
-    /// <param name="loggerType"></param>
-    /// <returns></returns>
     public int RemoveLogger(Type loggerType)
     {
         return this.m_logs.RemoveAll(a => a.GetType() == loggerType);
     }
 
     /// <inheritdoc/>
-    /// <param name="logLevel"></param>
-    /// <param name="source"></param>
-    /// <param name="message"></param>
-    /// <param name="exception"></param>
     protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
     {
         try

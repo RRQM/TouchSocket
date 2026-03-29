@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -49,6 +50,10 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     private readonly Func<IHttpSessionClient, HttpContext, Task<bool>> m_allowXmlRpc;
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072",
+        Justification = "RpcParameter.Type 无法静态标注 DynamicallyAccessedMembers，调用方应确保所有必要类型已被保留。")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "GetValue 方法用于 XML-RPC 动态类型传递，不适用于 Native AOT 场景。")]
     public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.Method == HttpMethod.Post)

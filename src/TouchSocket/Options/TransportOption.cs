@@ -28,6 +28,9 @@ public class TransportOption
         this.SendPipeOptions = CreateDefaultWritePipeOptions();
     }
 
+    /// <summary>
+    /// 获取或设置是否按需分配缓冲区。
+    /// </summary>
     public bool BufferOnDemand { get; set; } = true;
 
     /// <summary>

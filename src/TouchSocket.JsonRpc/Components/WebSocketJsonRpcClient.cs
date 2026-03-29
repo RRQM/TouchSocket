@@ -16,6 +16,9 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc;
 
+/// <summary>
+/// 基于 WebSocket 的 JsonRpc 客户端。
+/// </summary>
 public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClient
 {
     private readonly JsonRpcActor m_jsonRpcActor;

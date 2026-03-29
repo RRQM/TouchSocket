@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -155,7 +155,6 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
     /// </summary>
     /// <param name="client">断开的Tcp客户端</param>
     /// <param name="e">断开事件参数</param>
-    /// <returns></returns>
     protected abstract Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e);
 
     /// <summary>
@@ -163,7 +162,6 @@ public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
     /// </summary>
     /// <param name="client">发送数据的Tcp客户端</param>
     /// <param name="e">接收到的数据事件参数</param>
-    /// <returns></returns>
     protected virtual async Task OnTargetClientReceived(NatTargetClient client, ReceivedDataEventArgs e)
     {
         if (!this.Online)

@@ -20,15 +20,23 @@ public class ClosedEventArgs : ClosingEventArgs
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="manual">断开连接是否为手动操作</param>
     /// <param name="mes">断开连接的消息</param>
-    public ClosedEventArgs(bool manual, string mes) : base(mes)
+    public ClosedEventArgs(string mes) : base(mes)
     {
-        this.Manual = manual;
     }
 
     /// <summary>
-    /// 是否为主动行为。
+    /// 构造函数
     /// </summary>
-    public bool Manual { get; }
+    /// <param name="mes">断开连接的消息</param>
+    /// <param name="exception">断开连接时的异常</param>
+    public ClosedEventArgs(string mes, Exception exception) : base(mes)
+    {
+        this.Exception = exception;
+    }
+
+    /// <summary>
+    /// 断开连接时的异常信息
+    /// </summary>
+    public Exception Exception { get; }
 }

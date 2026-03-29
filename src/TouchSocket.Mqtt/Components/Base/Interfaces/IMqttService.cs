@@ -12,7 +12,13 @@
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// Mqtt 服务端接口。
+/// </summary>
 public interface IMqttService
 {
+    /// <summary>
+    /// 获取 Mqtt 中介实例。
+    /// </summary>
     MqttBroker MqttBroker { get; }
 }

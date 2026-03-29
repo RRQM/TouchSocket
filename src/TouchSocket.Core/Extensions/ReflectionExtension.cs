@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -27,8 +27,6 @@ public static class ReflectionExtension
     /// 获取方法的确定性名称，即使在重载时，也能区分。
     /// <para>计算规则是：方法名_参数类型名称</para>
     /// </summary>
-    /// <param name="methodInfo"></param>
-    /// <returns></returns>
     public static string GetDeterminantName(this MethodInfo methodInfo)
     {
         return GenerateKey(methodInfo);
@@ -50,8 +48,6 @@ public static class ReflectionExtension
     /// <summary>
     /// 获取方法的方法名。主要解决显式实现时函数名称的问题。
     /// </summary>
-    /// <param name="methodInfo"></param>
-    /// <returns></returns>
     public static string GetName(this MethodInfo methodInfo)
     {
         var r = methodInfo.Name.LastIndexOf('.');
@@ -65,8 +61,6 @@ public static class ReflectionExtension
     /// <summary>
     /// 获取元组的名称列表。
     /// </summary>
-    /// <param name="parameter"></param>
-    /// <returns></returns>
     public static IEnumerable<string> GetTupleElementNames(this ParameterInfo parameter)
     {
         return parameter.GetCustomAttribute<TupleElementNamesAttribute>().TransformNames;
@@ -75,8 +69,6 @@ public static class ReflectionExtension
     /// <summary>
     /// 判断该类型是否为可空类型
     /// </summary>
-    /// <param name="propertyInfo"></param>
-    /// <returns></returns>
     public static bool IsNullableType(this PropertyInfo propertyInfo)
     {
         var att = propertyInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
@@ -102,8 +94,6 @@ public static class ReflectionExtension
     /// <summary>
     /// 获取元组的名称列表。
     /// </summary>
-    /// <param name="memberInfo"></param>
-    /// <returns></returns>
     public static IEnumerable<string> GetTupleElementNames(this MemberInfo memberInfo)
     {
         return memberInfo.GetCustomAttribute<TupleElementNamesAttribute>().TransformNames;
@@ -126,8 +116,6 @@ public static class ReflectionExtension
     /// <summary>
     /// 判断该类型是否为可空类型
     /// </summary>
-    /// <param name="fieldInfo"></param>
-    /// <returns></returns>
     public static bool IsNullableType(this FieldInfo fieldInfo)
     {
         var att = fieldInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");

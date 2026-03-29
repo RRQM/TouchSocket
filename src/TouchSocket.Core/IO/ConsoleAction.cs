@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -52,7 +52,7 @@ public sealed class ConsoleAction
     /// </summary>
     /// <param name="order">指令，多个指令用"|"分割</param>
     /// <param name="description">描述</param>
-    /// <param name="action"></param>
+    /// <param name="action">执行的操作。</param>
     public void Add(string order, string description, Action action)
     {
         Task Run()
@@ -68,7 +68,7 @@ public sealed class ConsoleAction
     /// </summary>
     /// <param name="order">指令，多个指令用"|"分割</param>
     /// <param name="description">描述</param>
-    /// <param name="action"></param>
+    /// <param name="action">执行的异步操作。</param>
     public void Add(string order, string description, Func<Task> action)
     {
         var orders = order.ToLower().Split('|');
@@ -81,8 +81,6 @@ public sealed class ConsoleAction
     /// <summary>
     /// 执行，返回值仅表示是否有这个指令，异常获取请使用<see cref="OnException"/>
     /// </summary>
-    /// <param name="order"></param>
-    /// <returns></returns>
     public async Task<bool> RunAsync(string order)
     {
         if (this.m_actions.TryGetValue(order.ToLower(), out var vAction))

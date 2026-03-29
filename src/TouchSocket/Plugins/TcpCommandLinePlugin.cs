@@ -71,6 +71,7 @@ public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "插件基础设施7相信动态代码是有效的")]
     public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         if (client is not IClientSender clientSender)

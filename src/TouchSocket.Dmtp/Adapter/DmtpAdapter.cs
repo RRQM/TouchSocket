@@ -53,6 +53,7 @@ public sealed class DmtpAdapter : CustomDataHandlingAdapter<DmtpMessage>
         return FilterResult.Success;
     }
 
+    /// <inheritdoc/>
     public override void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
     {
         if (requestInfo is not DmtpMessage message)

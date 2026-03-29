@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace TouchSocket.Rpc;
 
 /// <summary>
@@ -28,7 +30,7 @@ public static class RpcClientExtension
 
     #region ITargetRpcClient
     /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(string, string, Type, InvokeOption, object[])"/>
-    public static async Task<T> InvokeTAsync<T>(this ITargetRpcClient client, string targetId, string invokeKey, InvokeOption invokeOption, params object[] parameters)
+    public static async Task<T> InvokeTAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)] T>(this ITargetRpcClient client, string targetId, string invokeKey, InvokeOption invokeOption, params object[] parameters)
     {
         return (T)(await client.InvokeAsync(targetId, invokeKey, typeof(T), invokeOption, parameters));
     }

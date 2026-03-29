@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -27,7 +28,6 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     /// <summary>
     /// 使用<see cref="HttpClient"/>为基础的WebApi客户端。
     /// </summary>
-    /// <param name="httpClient"></param>
     public WebApiClientSlim(HttpClient httpClient = default) : base(httpClient)
     {
         this.Converter = new StringSerializerConverter<HttpRequestMessage>(
@@ -41,6 +41,7 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     public StringSerializerConverter<HttpRequestMessage> Converter { get; }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "WebApi基础设施相信动态代码是有效的")]
     public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)

@@ -16,18 +16,39 @@ public partial class MqttPublishMessage
 {
     private readonly List<uint> m_subscriptionIdentifiers = new List<uint>();
 
+    /// <summary>
+    /// 获取或设置内容类型。
+    /// </summary>
     public string ContentType { get; set; }
 
+    /// <summary>
+    /// 获取或设置关联数据。
+    /// </summary>
     public ReadOnlyMemory<byte> CorrelationData { get; set; }
 
+    /// <summary>
+    /// 获取或设置消息过期时间间隔（秒）。
+    /// </summary>
     public uint MessageExpiryInterval { get; set; }
 
+    /// <summary>
+    /// 获取或设置货载格式指示符。
+    /// </summary>
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
+    /// <summary>
+    /// 获取或设置响应主题。
+    /// </summary>
     public string ResponseTopic { get; set; }
 
+    /// <summary>
+    /// 获取订阅标识符列表。
+    /// </summary>
     public IReadOnlyList<uint> SubscriptionIdentifiers => this.m_subscriptionIdentifiers;
 
+    /// <summary>
+    /// 获取或设置主题别名。
+    /// </summary>
     public ushort TopicAlias { get; set; }
 
     /// <inheritdoc/>

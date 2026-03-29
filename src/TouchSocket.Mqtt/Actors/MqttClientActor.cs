@@ -12,6 +12,9 @@
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// Mqtt 客户端 Actor，用于处理 Mqtt 客户端的连接、订阅、发布等操作。
+/// </summary>
 public sealed class MqttClientActor : MqttActor
 {
     private TaskCompletionSource<MqttConnAckMessage> m_waitForConnect;

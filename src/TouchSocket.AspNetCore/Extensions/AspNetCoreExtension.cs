@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -64,9 +64,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
@@ -77,9 +74,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加Scoped TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddScopedTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
@@ -90,9 +84,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
@@ -103,9 +94,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加单例TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddSingletonTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
@@ -116,9 +104,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientTcpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, ITcpDmtpClient
         where TImpClient : class, TClient
@@ -129,9 +114,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加瞬态TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddTransientTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
@@ -146,9 +128,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TService"></typeparam>
     /// <typeparam name="TImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddHttpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TService : class, IHttpServiceBase
         where TImpService : class, TService
@@ -159,9 +138,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加HttpService服务。并使用<see cref="IHttpService"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddHttpService(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddHttpService<IHttpService, HttpService>(actionConfig);
@@ -176,9 +152,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
@@ -189,9 +162,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加Scoped HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddScopedHttpClient<IHttpClient, HttpClient>(actionConfig);
@@ -202,9 +172,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
@@ -215,9 +182,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加单例HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddSingletonHttpClient<IHttpClient, HttpClient>(actionConfig);
@@ -228,9 +192,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientHttpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpClient
         where TImpClient : class, TClient
@@ -241,9 +202,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加瞬态HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddTransientHttpClient<IHttpClient, HttpClient>(actionConfig);
@@ -258,9 +216,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TService"></typeparam>
     /// <typeparam name="TImpService"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddHttpDmtpService<TService, [DynamicallyAccessedMembers(AOT.Container)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TService : class, IHttpDmtpServiceBase
         where TImpService : class, TService
@@ -271,9 +226,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加HttpDmtpService服务。并使用<see cref="IHttpDmtpService"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddHttpDmtpService(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddHttpDmtpService<IHttpDmtpService, HttpDmtpService>(actionConfig);
@@ -288,9 +240,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
@@ -301,9 +250,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加Scoped HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddScopedHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddScopedHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
@@ -314,9 +260,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
@@ -327,9 +270,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加单例HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSingletonHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddSingletonHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
@@ -340,9 +280,6 @@ public static class AspNetCoreExtension
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TImpClient"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientHttpDmtpClient<TClient, [DynamicallyAccessedMembers(AOT.Container)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         where TClient : class, IHttpDmtpClient
         where TImpClient : class, TClient
@@ -353,9 +290,6 @@ public static class AspNetCoreExtension
     /// <summary>
     /// 添加瞬态HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="actionConfig"></param>
-    /// <returns></returns>
     public static IServiceCollection AddTransientHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
     {
         return services.AddTransientHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);

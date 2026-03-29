@@ -34,6 +34,11 @@ public static class DmtpRpcPluginManagerExtension
 
         return dmtpRpcFeature;
     }
+    /// <summary>
+    /// 启用 DmtpRpc 功能。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器实例。</param>
+    /// <returns>返回 <see cref="DmtpRpcFeature"/> 实例。</returns>
     public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
     {
         return UseDmtpRpc(pluginManager, options => { });

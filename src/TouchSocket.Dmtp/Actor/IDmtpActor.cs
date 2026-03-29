@@ -150,8 +150,10 @@ public interface IDmtpActor : IDisposableObject, IOnlineClient, IClosableClient,
     /// </remarks>
     Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
 
+    /// <inheritdoc cref="SendAsync(ushort, ReadOnlyMemory{byte}, CancellationToken)"/>
     Task SendAsync<TPackage>(ushort protocol, TPackage package, CancellationToken cancellationToken = default) where TPackage : IPackage;
 
+    /// <inheritdoc cref="SendAsync(ushort, ReadOnlyMemory{byte}, CancellationToken)"/>
     Task SendAsync(ushort protocol, string value, CancellationToken cancellationToken = default);
 
     /// <summary>

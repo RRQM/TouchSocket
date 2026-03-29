@@ -130,7 +130,7 @@ internal sealed class TcpTransport : BaseTransport
                     socket.Shutdown(SocketShutdown.Both);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Socket已经断开或未连接,忽略此异常
             }
@@ -182,7 +182,7 @@ internal sealed class TcpTransport : BaseTransport
     /// <param name="cancellationToken">取消令牌</param>
     protected override async Task RunReceive(CancellationToken cancellationToken)
     {
-        var transportHash = this.GetHashCode();
+        
         var pipeWriter = this.m_pipeReceive.Writer;
         Exception error = null;
         var loopCount = 0;
@@ -199,7 +199,7 @@ internal sealed class TcpTransport : BaseTransport
 
                     if (waitResult.SocketError != SocketError.Success)
                     {
-                        this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                        this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
                         error = new SocketException((int)waitResult.SocketError);
                         break;
                     }
@@ -226,7 +226,7 @@ internal sealed class TcpTransport : BaseTransport
                     if (result.BytesTransferred == 0)
                     {
                         // 远程连接已断开（收到 FIN）
-                        this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                        this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
                         break;
                     }
 
@@ -260,7 +260,7 @@ internal sealed class TcpTransport : BaseTransport
                 else
                 {
                     // 处理接收失败的情况
-                    this.m_closedEventArgs ??= new ClosedEventArgs(false, TouchSocketResource.RemoteDisconnects);
+                    this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
                     error = new SocketException((int)result.SocketError);
                     break;
                 }
@@ -268,7 +268,7 @@ internal sealed class TcpTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(false, ex.Message);
+            this.m_closedEventArgs ??= new ClosedEventArgs(ex.Message, ex);
             error = ex;
         }
         finally
@@ -353,6 +353,10 @@ internal sealed class TcpTransport : BaseTransport
         finally
         {
             pipeReader.Complete();
+            // 完成写入器，确保连接关闭后任何写入操作都会立即抛出异常而不是静默成功。
+            // 若不在此处 Complete，pipeReader.Complete() 后 Writer.FlushAsync() 仅返回 IsCompleted=true，
+            // 导致调用方误认为写入成功，实际上数据已被丢弃。
+            this.m_pipeSend.Writer.Complete();
             // 发送循环退出时取消接收管道的挂起 Flush，
             // 确保 RunReceive 在背压场景（消费方慢导致 FlushAsync 阻塞）下也能立即解除阻塞。
             this.m_pipeReceive.Writer.CancelPendingFlush();
@@ -378,7 +382,7 @@ internal sealed class TcpTransport : BaseTransport
 
     private async Task ShutdownAsync()
     {
-        var transportHash = this.GetHashCode();
+        
         await this.WaitForTransportClosedAsync().ConfigureDefaultAwait();
 
         if (this.m_writer != null)

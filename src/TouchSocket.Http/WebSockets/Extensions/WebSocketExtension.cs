@@ -20,6 +20,13 @@ namespace TouchSocket.Http.WebSockets;
 public static class WebSocketExtension
 {
     #region WebSocket
+    /// <summary>
+    /// 安全关闭 WebSocket 客户端连接。
+    /// </summary>
+    /// <param name="webSocket">WebSocket 实例。</param>
+    /// <param name="msg">关闭原因。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>返回操作结果。</returns>
     public static async Task<Result> SafeCloseClientAsync(this WebSocket webSocket, string msg, CancellationToken cancellationToken)
     {
         if (webSocket is null)

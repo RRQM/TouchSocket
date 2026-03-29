@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -60,7 +60,6 @@ public abstract class DataHandlingAdapter : SafetyDisposableObject
     /// <summary>
     /// 当适配器在被第一次加载时调用。
     /// </summary>
-    /// <param name="owner"></param>
     /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
     public virtual void OnLoaded(object owner)
     {

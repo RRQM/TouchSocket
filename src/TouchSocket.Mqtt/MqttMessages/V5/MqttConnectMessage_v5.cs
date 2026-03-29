@@ -340,6 +340,10 @@ public partial class MqttConnectMessage
         }
     }
 
+    /// <summary>
+    /// 添加遗嘱用户属性。
+    /// </summary>
+    /// <param name="mqttUserProperty">要添加的用户属性。</param>
     public void AddWillUserProperties(MqttUserProperty mqttUserProperty)
     {
         this.m_willUserProperties ??= new List<MqttUserProperty>();

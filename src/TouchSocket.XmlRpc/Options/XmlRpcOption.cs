@@ -19,12 +19,22 @@ using TouchSocket.Http;
 
 namespace TouchSocket.XmlRpc;
 
+/// <summary>
+/// XmlRpc 配置项，用于配置 XmlRpc 服务的访问卸载项。
+/// </summary>
 public class XmlRpcOption
 {
+    /// <summary>
+    /// 初始化 <see cref="XmlRpcOption"/> 类的新实例，并默认允许访问路径为“/XmlRpc”的请求。
+    /// </summary>
     public XmlRpcOption()
     {
         this.SetAllowXmlRpc();
     }
+
+    /// <summary>
+    /// 获取或设置用于判断是否允许 XmlRpc 请求的委托。
+    /// </summary>
     public Func<IHttpSessionClient, HttpContext, Task<bool>> AllowXmlRpc { get; set; }
 
     /// <summary>

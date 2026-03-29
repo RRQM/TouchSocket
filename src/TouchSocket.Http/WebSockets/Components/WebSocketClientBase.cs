@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -55,7 +55,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <summary>
     /// 异步建立 WebSocket 连接。
     /// </summary>
-    /// <param name="autoReceive"></param>
+    /// <param name="autoReceive">是否自动接收消息。</param>
     /// <param name="cancellationToken">用于取消操作的 <see cref="CancellationToken"/>。</param>
     /// <returns>表示异步操作的 <see cref="Task"/>。</returns>
     protected virtual async Task ProtectedWebSocketConnectAsync(bool autoReceive, CancellationToken cancellationToken)
@@ -99,11 +99,14 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
         await this.PrivateOnConnected(new HttpContextEventArgs(new HttpContext(request, response))).ConfigureDefaultAwait();
     }
 
+#pragma warning disable CS0809
+    /// <inheritdoc/>
     [Obsolete("请使用ProtectedWebSocketConnectAsync方法进行连接。", true)]
     protected sealed override Task HttpConnectAsync(CancellationToken cancellationToken)
     {
         throw new NotSupportedException("请使用ProtectedWebSocketConnectAsync方法进行连接。");
     }
+#pragma warning restore CS0809
 
     #endregion Connect
 

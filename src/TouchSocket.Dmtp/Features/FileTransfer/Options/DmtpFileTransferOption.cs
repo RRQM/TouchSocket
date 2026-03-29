@@ -17,6 +17,9 @@ namespace TouchSocket.Dmtp.FileTransfer;
 /// </summary>
 public class DmtpFileTransferOption : DmtpFeatureOption
 {
+    /// <summary>
+    /// 初始化 <see cref="DmtpFileTransferOption"/> 类的新实例。
+    /// </summary>
     public DmtpFileTransferOption()
     {
         this.StartProtocol = 30;

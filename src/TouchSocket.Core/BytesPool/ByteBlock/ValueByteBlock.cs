@@ -244,12 +244,13 @@ public struct ValueByteBlock : IByteBlock
 
             var need = this.Capacity + size - (this.Capacity - this.Position);
             long lend = this.Capacity;
-            if (lend == 0)
-            {
-                return; //防止释放后死循环
-            }
+            
             while (need > lend)
             {
+                if (lend == 0)
+                {
+                    return; //防止释放后死循环
+                }
                 lend *= 2;
             }
 

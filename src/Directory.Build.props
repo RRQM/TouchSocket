@@ -22,7 +22,6 @@
 		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Packages</PackageOutputPath>
 		<LogoFile>logo.png</LogoFile>
 		<ReadmeFile>Readme.md</ReadmeFile>
-		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(MSBuildProjectName.StartsWith(`TouchSocketPro`))'">

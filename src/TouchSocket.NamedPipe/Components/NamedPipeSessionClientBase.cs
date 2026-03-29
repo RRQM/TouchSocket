@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -90,7 +90,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <inheritdoc/>
     public INamedPipeServiceBase Service => this.m_service;
 
-    /// <summary>
     /// <summary>
     /// 获取命名管道的底层传输层对象。
     /// </summary>
@@ -249,7 +248,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <summary>
     /// 当收到原始数据
     /// </summary>
-    /// <param name="reader"></param>
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
@@ -407,7 +405,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <summary>
     /// 客户端已断开连接。
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -416,7 +413,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
@@ -425,7 +421,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <summary>
     /// 当客户端完整建立连接。
     /// </summary>
-    /// <param name="e"></param>
     protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
         await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();

@@ -58,7 +58,7 @@ internal class DmtpRpcResponsePackage : WaitRouterPackage
     public object ReturnParameter { get => this.m_returnParameter; }
 
     /// <inheritdoc/>
-    protected override bool IncludedRouter => true;
+    
 
     public void LoadInfo(Type retuenType, ISerializationSelector selector, SerializationType serializationType)
     {
@@ -109,9 +109,10 @@ internal class DmtpRpcResponsePackage : WaitRouterPackage
         {
             case TouchSocketDmtpStatus.ClientNotFind:
                 {
-                    throw new ClientNotFindException(TouchSocketDmtpStatus.ClientNotFind.GetDescription(this.TargetId));
+                    throw new ClientNotFindException(string.IsNullOrEmpty(this.Message) ? TouchSocketDmtpStatus.ClientNotFind.GetDescription(this.SourceId) : this.Message);
                 }
             case TouchSocketDmtpStatus.UnknownError:
+
             case TouchSocketDmtpStatus.RpcMethodNotFind:
             case TouchSocketDmtpStatus.RpcMethodDisable:
             case TouchSocketDmtpStatus.RemoteRefuse:

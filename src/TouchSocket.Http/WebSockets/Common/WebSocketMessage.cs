@@ -60,6 +60,9 @@ public struct WebSocketMessage : IDisposable
         }
     }
 
+    /// <summary>
+    /// 获取消息的数据序列。
+    /// </summary>
     public readonly ReadOnlySequence<byte> PayloadSequence => this.m_sequence;
 
     /// <summary>

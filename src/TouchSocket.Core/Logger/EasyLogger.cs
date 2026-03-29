@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -42,10 +42,6 @@ public class EasyLogger : LoggerBase
     }
 
     /// <inheritdoc/>
-    /// <param name="logLevel"></param>
-    /// <param name="source"></param>
-    /// <param name="message"></param>
-    /// <param name="exception"></param>
     protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
     {
         try

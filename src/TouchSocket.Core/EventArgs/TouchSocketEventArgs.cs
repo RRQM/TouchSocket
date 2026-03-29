@@ -23,6 +23,9 @@ public class TouchSocketEventArgs : EventArgs
     /// </summary>
     public bool Handled { get; set; }
 
+    /// <summary>
+    /// 重置事件参数到初始状态。
+    /// </summary>
     protected virtual void Reset()
     {
         this.Handled = false;

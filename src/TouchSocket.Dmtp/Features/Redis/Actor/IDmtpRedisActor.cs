@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -9,6 +9,8 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
+
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Dmtp.Redis;
 
@@ -35,7 +37,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <param name="key">缓存项的键。</param>
     /// <param name="value">缓存项的值。</param>
     /// <param name="duration">缓存项的过期时间，单位为毫秒。默认为60000毫秒（1分钟）。</param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>一个Task对象，表示异步操作的结果。结果为<see langword="true"/>表示添加成功，false表示失败（例如，键已经存在）。</returns>
     /// <exception cref="ArgumentNullException">如果键或值为<see langword="null"/>，则抛出该异常。</exception>
     /// <exception cref="TimeoutException">如果异步操作超时，则抛出该异常。</exception>
@@ -47,12 +49,12 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// </summary>
     /// <typeparam name="TValue">缓存值的类型</typeparam>
     /// <param name="key">缓存的键</param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>缓存的值</returns>
     /// <exception cref="ArgumentNullException">如果 <paramref name="key"/> 为空或为 null，则抛出此异常。</exception>
     /// <exception cref="TimeoutException">如果获取操作超时，则抛出此异常。</exception>
     /// <exception cref="Exception">如果发生其他异常，则抛出此异常。</exception>
-    Task<TValue> GetAsync<TValue>(string key, CancellationToken cancellationToken);
+    Task<TValue> GetAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TValue>(string key, CancellationToken cancellationToken);
 
     /// <summary>
     /// 设置缓存值
@@ -62,7 +64,7 @@ public interface IDmtpRedisActor : ICacheAsync<string, ReadOnlyMemory<byte>>, IA
     /// <param name="key">缓存的键</param>
     /// <param name="value">缓存的值</param>
     /// <param name="duration">缓存的持续时间</param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>操作是否成功</returns>
     /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
     /// <exception cref="TimeoutException">当操作超时时抛出</exception>

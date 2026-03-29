@@ -31,4 +31,9 @@ public interface IReadonlyRouterPackage
     /// 目标Id
     /// </summary>
     string TargetId { get; }
+
+    /// <summary>
+    /// 元数据
+    /// </summary>
+    Metadata Metadata { get; }
 }

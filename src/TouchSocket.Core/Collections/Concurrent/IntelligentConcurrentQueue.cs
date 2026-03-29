@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -25,7 +25,6 @@ public class IntelligentConcurrentQueue<T> : ConcurrentQueue<T>
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="maxCount"></param>
     public IntelligentConcurrentQueue(int maxCount)
     {
         this.MaxCount = maxCount;
@@ -44,7 +43,6 @@ public class IntelligentConcurrentQueue<T> : ConcurrentQueue<T>
     /// <summary>
     /// 入队
     /// </summary>
-    /// <param name="item"></param>
     public new void Enqueue(T item)
     {
         SpinWait.SpinUntil(this.Check);
@@ -55,8 +53,6 @@ public class IntelligentConcurrentQueue<T> : ConcurrentQueue<T>
     /// <summary>
     /// 出队
     /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
     public new bool TryDequeue(out T result)
     {
         if (base.TryDequeue(out result))

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -22,8 +22,6 @@ public static class DataHandlingAdapterExtension
     /// <summary>
     /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
     /// </summary>
-    /// <param name="adapter"></param>
-    /// <param name="config"></param>
     public static void Config(this SingleStreamDataHandlingAdapter adapter, TouchSocketConfig config)
     {
         var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));
@@ -69,8 +67,6 @@ public static class DataHandlingAdapterExtension
     /// <summary>
     /// 将<see cref="TouchSocketConfig"/>中的配置，装载在<see cref="SingleStreamDataHandlingAdapter"/>上。
     /// </summary>
-    /// <param name="adapter"></param>
-    /// <param name="config"></param>
     public static void Config(this DataHandlingAdapter adapter, TouchSocketConfig config)
     {
         var option = config.GetValue(AdapterOptionProperty) ?? throw new ArgumentNullException(nameof(AdapterOptionProperty));

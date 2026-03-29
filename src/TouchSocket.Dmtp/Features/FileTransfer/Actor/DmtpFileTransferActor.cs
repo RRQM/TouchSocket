@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -23,8 +23,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 创建一个<see cref="DmtpFileTransferActor"/>
     /// </summary>
-    /// <param name="dmtpActor"></param>
-    /// <param name="fileResourceController"></param>
     public DmtpFileTransferActor(IDmtpActor dmtpActor, IFileResourceController fileResourceController)
     {
         this.DmtpActor = dmtpActor;
@@ -520,7 +518,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 设置处理协议标识的起始标识。默认为30；
     /// </summary>
-    /// <param name="start"></param>
     public void SetProtocolFlags(ushort start)
     {
         this.m_pullFileResourceInfo_Request = start++;
@@ -1038,7 +1035,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 请求完成
     /// </summary>
-    /// <param name="o"></param>
     private async Task RequestFinishedFileResourceInfo(object o)
     {
         //2.未找到
@@ -1144,7 +1140,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 请求拉取文件信息
     /// </summary>
-    /// <param name="o"></param>
     private async Task RequestPullFileResourceInfo(object o)
     {
         //2.不响应
@@ -1208,7 +1203,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 请求拉取文件块
     /// </summary>
-    /// <param name="o"></param>
     private async Task RequestPullFileSection(object o)
     {
         try
@@ -1261,7 +1255,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 请求推送文件信息
     /// </summary>
-    /// <param name="o"></param>
     private async Task RequestPushFileResourceInfo(object o)
     {
         //2.不响应
@@ -1332,7 +1325,6 @@ internal sealed class DmtpFileTransferActor : DisposableObject, IDmtpFileTransfe
     /// <summary>
     /// 请求推送文件块
     /// </summary>
-    /// <param name="waitFileSection"></param>
     private async Task RequestPushFileSection(WaitFileSection waitFileSection)
     {
         //2.没找到

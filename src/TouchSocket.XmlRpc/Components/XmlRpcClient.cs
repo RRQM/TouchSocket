@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -37,6 +38,10 @@ public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067",
+        Justification = "returnType 由调用方在运行时动态传入，无法静态标注。")]
+    [UnconditionalSuppressMessage("AotAnalysis", "IL3050",
+        Justification = "GetValue 方法用于 XML-RPC 动态类型传递，不适用于 Native AOT 场景。")]
     public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         invokeOption ??= InvokeOption.WaitInvoke;

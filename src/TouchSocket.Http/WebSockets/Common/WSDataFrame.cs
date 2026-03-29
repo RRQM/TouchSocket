@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -22,6 +22,10 @@ public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixed
     private ByteBlock m_payloadDataBlock;
     private int m_payloadLength;
 
+    /// <summary>
+    /// 初始化 <see cref="WSDataFrame"/> 类的新实例。
+    /// </summary>
+    /// <param name="payloadData">有效载荷数据。</param>
     public WSDataFrame(ReadOnlyMemory<byte> payloadData)
     {
         this.m_payloadData = payloadData;
@@ -181,6 +185,10 @@ public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixed
         writer.Advance((int)rawWriter.WrittenCount);
     }
 
+    /// <summary>
+    /// 设置渔码。
+    /// </summary>
+    /// <param name="mask">长度为4字节的渔码值。</param>
     public void SetMask(ReadOnlyMemory<byte> mask)
     {
         if (mask.Length != 4)
@@ -194,8 +202,6 @@ public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixed
     /// <summary>
     /// 设置Mask。
     /// </summary>
-    /// <param name="mask"></param>
-    /// <returns></returns>
     public void SetMaskString(string mask)
     {
         var masks = Encoding.ASCII.GetBytes(mask);

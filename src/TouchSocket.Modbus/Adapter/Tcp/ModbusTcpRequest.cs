@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -20,8 +20,6 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
     /// <summary>
     /// 从<see cref="ModbusRequest"/>创建一个ModbusTcpRequest
     /// </summary>
-    /// <param name="transactionId"></param>
-    /// <param name="request"></param>
     public ModbusTcpRequest(ushort transactionId, IModbusRequest request)
     {
         this.TransactionId = transactionId;

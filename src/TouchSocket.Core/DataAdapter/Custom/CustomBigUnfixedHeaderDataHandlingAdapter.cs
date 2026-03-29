@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -27,7 +27,6 @@ public abstract class CustomBigUnfixedHeaderDataHandlingAdapter<TFixedHeaderRequ
     /// <param name="reader">字节块</param>
     /// <param name="beCached">是否为上次遗留对象，当该参数为<see langword="true"/>时，request也将是上次实例化的对象。</param>
     /// <param name="request">对象。</param>
-    /// <returns></returns>
     protected override FilterResult Filter<TReader>(ref TReader reader, bool beCached, ref TFixedHeaderRequestInfo request)
     {
         if (beCached)
@@ -99,7 +98,6 @@ public abstract class CustomBigUnfixedHeaderDataHandlingAdapter<TFixedHeaderRequ
     /// <summary>
     /// 获取泛型实例。
     /// </summary>
-    /// <returns></returns>
     protected abstract TFixedHeaderRequestInfo GetInstance();
 }
 
@@ -124,7 +122,6 @@ public interface IBigUnfixedHeaderRequestInfo : IRequestInfo
     /// <para>如果返回<see langword="false"/>，意味着缓存剩余数据，此时如果仅仅是因为长度不足，则不必修改其他。</para>
     /// <para>但是如果是因为数据错误，则需要修改<see cref="ByteBlock.Position"/>到正确位置，如果都不正确，则设置<see cref="ByteBlock.Position"/>等于<see cref="ByteBlock.Length"/></para>
     /// </summary>
-    /// <param name="reader"></param>
     /// <returns>是否满足解析包头</returns>
     bool OnParsingHeader<TReader>(ref TReader reader) where TReader : IBytesReader;
 
@@ -132,7 +129,6 @@ public interface IBigUnfixedHeaderRequestInfo : IRequestInfo
     /// 当收到数据，由框架封送数据。
     /// <para>您需要将有效数据自行保存。该方法可能会多次调用。</para>
     /// </summary>
-    /// <param name="buffer"></param>
     /// <returns>是否成功有效</returns>
     void OnAppendBody(ReadOnlySpan<byte> buffer);
 

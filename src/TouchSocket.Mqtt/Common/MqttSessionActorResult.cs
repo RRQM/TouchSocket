@@ -12,13 +12,27 @@
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 表示 Mqtt 会话 Actor 的操作结果。
+/// </summary>
 public readonly struct MqttSessionActorResult
 {
+    /// <summary>
+    /// 初始化 <see cref="MqttSessionActorResult"/> 的新实例。
+    /// </summary>
+    /// <param name="sessionActor">会话 Actor 实例。</param>
+    /// <param name="isNew">是否是新建的会话。</param>
     public MqttSessionActorResult(MqttSessionActor sessionActor, bool isNew)
     {
         this.SessionActor = sessionActor;
         this.IsNew = isNew;
     }
+    /// <summary>
+    /// 获取会话 Actor 实例。
+    /// </summary>
     public MqttSessionActor SessionActor { get; }
+    /// <summary>
+    /// 获取是否是新建的会话。
+    /// </summary>
     public bool IsNew { get; }
 }

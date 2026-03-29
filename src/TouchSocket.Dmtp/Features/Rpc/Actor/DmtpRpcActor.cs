@@ -32,7 +32,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     /// <param name="dmtpActor">IDmtpActor接口的实现，提供Dmtp通信能力。</param>
     /// <param name="rpcServerProvider">IRpcServerProvider接口的实现，用于提供RPC服务。</param>
     /// <param name="m_resolver">IResolver接口的实现，用于解析服务提供者。</param>
-    /// <param name="dispatcher"></param>
+    /// <param name="dispatcher">RPC分发器。</param>
     public DmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IResolver m_resolver, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> dispatcher)
     {
         this.DmtpActor = dmtpActor;
@@ -84,7 +84,9 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                 rpcPackage.UnpackageRouter(ref reader);
                 if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureDefaultAwait())
+                    DmtpRpcResponsePackage rpcResponsePackage;
+                    var routeEventArgs = new PackageRouterEventArgs(RouteType.Rpc, rpcPackage);
+                    if (await this.DmtpActor.TryRouteAsync(routeEventArgs).ConfigureDefaultAwait())
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureDefaultAwait() is DmtpActor actor)
                         {
@@ -93,18 +95,18 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                         }
                         else
                         {
-                            rpcPackage.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
+                            rpcResponsePackage = new DmtpRpcResponsePackage(rpcPackage, this.m_serializationSelector, TouchSocketDmtpStatus.ClientNotFind, default);
                         }
                     }
                     else
                     {
-                        rpcPackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
+                        rpcResponsePackage = new DmtpRpcResponsePackage(rpcPackage, this.m_serializationSelector, TouchSocketDmtpStatus.RoutingNotAllowed, routeEventArgs.Message);
                     }
 
-                    rpcPackage.SwitchId();
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcPackage).ConfigureDefaultAwait();
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcResponsePackage).ConfigureDefaultAwait();
                 }
                 else
+
                 {
                     var rpcMethod = this.GetInvokeMethod.Invoke(rpcPackage.InvokeKey);
                     DmtpRpcCallContext callContext;
@@ -386,6 +388,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     #region Rpc
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "RPC基础设施相信动态代码是有效的")]
     public async Task<object> InvokeAsync(string invokeKey, Type returnType, InvokeOption invokeOption, params object[] parameters)
     {
         invokeOption ??= InvokeOption.WaitInvoke;
@@ -405,17 +408,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
         try
         {
-            var byteBlock = new ByteBlock(1024 * 64);
-            try
-            {
-                rpcPackage.Package(ref byteBlock);
-
-                await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureDefaultAwait();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            await this.DmtpActor.SendAsync(this.m_invoke_Request, rpcPackage).ConfigureDefaultAwait();
 
             switch (invokeOption.FeedbackType)
             {

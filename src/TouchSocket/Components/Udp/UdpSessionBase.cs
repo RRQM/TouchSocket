@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -588,7 +588,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </summary>
     /// <param name="endPoint">要发送数据到的端点。</param>
     /// <param name="memory">待发送的数据，以只读内存块的形式。</param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="cancellationToken">取消令牌。</param>
     /// <remarks>
     /// <para>在执行实际的数据发送之前，方法会：</para>
     /// <list type="bullet">

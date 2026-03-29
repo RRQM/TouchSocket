@@ -35,7 +35,13 @@ public interface ITcpSession : IDependencyClient, IResolverConfigObject, IOnline
     /// </summary>
     int Port { get; }
 
+    /// <summary>
+    /// 获取本地端点。
+    /// </summary>
     EndPoint LocalEndPoint { get; }
+    /// <summary>
+    /// 获取远端端点。
+    /// </summary>
     EndPoint RemoteEndPoint { get; }
 
     /// <summary>

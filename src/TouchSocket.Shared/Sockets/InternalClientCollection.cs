@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -49,8 +49,6 @@ internal class InternalClientCollection<TClient> : IClientCollection<TClient> wh
     /// <summary>
     /// 添加客户端
     /// </summary>
-    /// <param name="client"></param>
-    /// <returns></returns>
     public bool TryAdd(TClient client)
     {
         return this.m_clients.TryAdd(client.Id, client);
@@ -71,9 +69,6 @@ internal class InternalClientCollection<TClient> : IClientCollection<TClient> wh
     /// <summary>
     /// 移除对应客户端
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="client"></param>
-    /// <returns></returns>
     public bool TryRemoveClient(string id, out TClient client)
     {
         if (string.IsNullOrEmpty(id))

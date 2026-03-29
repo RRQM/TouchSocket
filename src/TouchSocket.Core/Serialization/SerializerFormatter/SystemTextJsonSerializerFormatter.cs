@@ -15,6 +15,11 @@ using System.Text.Json;
 
 namespace TouchSocket.Core;
 
+/// <summary>
+/// 基于 <see cref="System.Text.Json.JsonSerializer"/> 的序列化格式化器抽象基类。
+/// </summary>
+/// <typeparam name="TSource">序列化后的数据类型。</typeparam>
+/// <typeparam name="TState">转换器状态类型。</typeparam>
 public abstract class SystemTextJsonSerializerFormatter<TSource, TState> : ISerializerFormatter<TSource, TState>
 {
     /// <inheritdoc/>

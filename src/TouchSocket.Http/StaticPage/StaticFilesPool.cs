@@ -134,18 +134,28 @@ public class StaticFilesPool : DisposableObject
     }
 
     /// <summary>
-    /// 尝试查找缓存项。
+    /// 尝试查找缓存项。若缓存未命中且存在受监控的文件夹，则尝试从磁盘按需加载。
     /// </summary>
     /// <param name="key">要查找的键。</param>
     /// <param name="cacheEntry">找到的缓存项，通过引用返回。</param>
     /// <returns>如果找到缓存项则返回<see langword="true"/>；否则返回<see langword="false"/>。</returns>
     public bool TryFindEntry(string key, out StaticEntry cacheEntry)
     {
+        string normalizedKey;
         using (new ReadLock(this.m_lockSlim))
         {
-            key = FileUtility.PathFormat(key);
-            return this.m_entriesByKey.TryGetValue(key, out cacheEntry);
+            normalizedKey = FileUtility.PathFormat(key);
+            if (!normalizedKey.StartsWith("/"))
+            {
+                normalizedKey = "/" + normalizedKey;
+            }
+            if (this.m_entriesByKey.TryGetValue(normalizedKey, out cacheEntry))
+            {
+                return true;
+            }
         }
+
+        return this.TryLoadOnDemand(normalizedKey, out cacheEntry);
     }
 
     #endregion Entry
@@ -399,6 +409,130 @@ public class StaticFilesPool : DisposableObject
         {
             // ignored
         }
+    }
+
+    /// <summary>
+    /// 缓存未命中时，尝试从受监控的文件夹中按需加载文件至缓存。
+    /// </summary>
+    private bool TryLoadOnDemand(string normalizedKey, out StaticEntry cacheEntry)
+    {
+        cacheEntry = null;
+
+        List<FolderEntry> folders;
+        using (new ReadLock(this.m_lockSlim))
+        {
+            if (this.m_foldersByKey.Count == 0)
+            {
+                return false;
+            }
+            folders = this.m_foldersByKey.Values.ToList();
+        }
+
+        foreach (var folder in folders)
+        {
+            if (!TryResolvePhysicalPath(folder, normalizedKey, out var physicalPath))
+            {
+                continue;
+            }
+
+            if (!File.Exists(physicalPath))
+            {
+                continue;
+            }
+
+            if (!FileMatchesFilter(Path.GetFileName(physicalPath), folder.Filter))
+            {
+                continue;
+            }
+
+            if (!this.TryCreateEntry(physicalPath, folder.Timespan, out var entry))
+            {
+                continue;
+            }
+
+            var dirFullPath = Path.GetDirectoryName(physicalPath);
+            if (dirFullPath == null)
+            {
+                continue;
+            }
+            var dirPath = FileUtility.PathFormat(dirFullPath) + "/";
+
+            using (new WriteLock(this.m_lockSlim))
+            {
+                this.m_entriesByKey.AddOrUpdate(normalizedKey, entry);
+                folder.AddKeyToDirectory(dirPath, normalizedKey);
+            }
+
+            cacheEntry = entry;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 根据 URL 键和文件夹配置，反向计算对应的物理文件路径。
+    /// </summary>
+    private static bool TryResolvePhysicalPath(FolderEntry folder, string normalizedKey, out string physicalPath)
+    {
+        physicalPath = null;
+
+        var prefix = string.IsNullOrEmpty(folder.Prefix) || folder.Prefix == "/"
+            ? string.Empty
+            : folder.Prefix.TrimEnd('/');
+
+        string relativePart;
+        if (string.IsNullOrEmpty(prefix))
+        {
+            if (!normalizedKey.StartsWith("/", StringComparison.Ordinal))
+            {
+                return false;
+            }
+            relativePart = normalizedKey.Substring(1);
+        }
+        else
+        {
+            if (!normalizedKey.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            relativePart = normalizedKey.Substring(prefix.Length + 1);
+        }
+
+        if (string.IsNullOrEmpty(relativePart))
+        {
+            return false;
+        }
+
+        var relativeOsPath = relativePart.Replace('/', Path.DirectorySeparatorChar);
+        physicalPath = Path.Combine(folder.RootPath.TrimEnd('/'), relativeOsPath);
+
+        // 路径安全校验：防止路径遍历攻击
+        var rootFull = Path.GetFullPath(folder.RootPath.TrimEnd('/'));
+        var fileFull = Path.GetFullPath(physicalPath);
+        if (!fileFull.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            physicalPath = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 判断文件名是否匹配指定过滤器（支持 <c>*.*</c>、<c>*.ext</c> 等简单通配符）。
+    /// </summary>
+    private static bool FileMatchesFilter(string fileName, string filter)
+    {
+        if (filter is "*.*" or "*")
+        {
+            return true;
+        }
+        if (filter.StartsWith("*.", StringComparison.Ordinal))
+        {
+            return fileName.EndsWith(filter.Substring(1), StringComparison.OrdinalIgnoreCase);
+        }
+        return string.Equals(fileName, filter, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

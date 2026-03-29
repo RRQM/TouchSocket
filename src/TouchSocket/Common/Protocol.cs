@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -68,7 +68,6 @@ public readonly struct Protocol
     /// <summary>
     /// 转换为字符串
     /// </summary>
-    /// <returns></returns>
     public override string ToString()
     {
         return string.IsNullOrEmpty(this.m_value) ? "none" : this.m_value;
@@ -77,7 +76,6 @@ public readonly struct Protocol
     /// <summary>
     /// 获取哈希码
     /// </summary>
-    /// <returns></returns>
     public override int GetHashCode()
     {
         return this.m_value == null ? string.Empty.GetHashCode() : this.m_value.GetHashCode();
@@ -87,7 +85,6 @@ public readonly struct Protocol
     /// 比较是否和目标相等
     /// </summary>
     /// <param name="obj">目标</param>
-    /// <returns></returns>
     public override bool Equals(object obj)
     {
         return obj is Protocol && this.GetHashCode() == obj.GetHashCode();
@@ -96,9 +93,6 @@ public readonly struct Protocol
     /// <summary>
     /// 等于
     /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
     public static bool operator ==(Protocol a, Protocol b)
     {
         return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value) || string.Equals(a.m_value, b.m_value);
@@ -107,9 +101,6 @@ public readonly struct Protocol
     /// <summary>
     /// 不等于
     /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
     public static bool operator !=(Protocol a, Protocol b)
     {
         var state = a == b;

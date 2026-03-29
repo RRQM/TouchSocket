@@ -12,6 +12,9 @@
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 表示一个 Mqtt 订阅请求。
+/// </summary>
 public readonly record struct SubscribeRequest
 {
     /// <summary>

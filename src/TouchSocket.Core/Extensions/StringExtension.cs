@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -46,8 +46,6 @@ public static class StringExtension
     /// <summary>
     /// 从Base64转到数组。
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static byte[] ByBase64ToBytes(this string value)
     {
         return Convert.FromBase64String(value);
@@ -56,9 +54,6 @@ public static class StringExtension
     /// <summary>
     /// 将16进制的字符转换为数组。
     /// </summary>
-    /// <param name="hexString"></param>
-    /// <param name="split"></param>
-    /// <returns></returns>
     public static byte[] ByHexStringToBytes(this string hexString, string split = default)
     {
         if (!string.IsNullOrEmpty(split))
@@ -81,8 +76,6 @@ public static class StringExtension
     /// <summary>
     /// 将16进制的字符转换为int32。
     /// </summary>
-    /// <param name="hexString"></param>
-    /// <returns></returns>
     public static int ByHexStringToInt32(this string hexString)
     {
         return string.IsNullOrEmpty(hexString) ? default : int.Parse(hexString, System.Globalization.NumberStyles.HexNumber);
@@ -170,9 +163,8 @@ public static class StringExtension
     /// <summary>
     /// 将字符转换为对应的基础类型类型。
     /// </summary>
-    /// <param name="value"></param>
+    /// <param name="value">要转换的字符串。</param>
     /// <param name="destinationType">目标类型必须为基础类型</param>
-    /// <returns></returns>
     /// <exception cref="NotSupportedException">类型转换失败</exception>
     public static object ParseToType(this string value, Type destinationType)
     {
@@ -231,9 +223,6 @@ public static class StringExtension
     /// <summary>
     /// 按字符串分割
     /// </summary>
-    /// <param name="str"></param>
-    /// <param name="pattern"></param>
-    /// <returns></returns>
     public static string[] Split(this string str, string pattern)
     {
         return Regex.Split(str, pattern);
@@ -242,9 +231,6 @@ public static class StringExtension
     /// <summary>
     /// 只按第一个匹配项分割
     /// </summary>
-    /// <param name="str"></param>
-    /// <param name="split"></param>
-    /// <returns></returns>
     public static string[] SplitFirst(this string str, char split)
     {
         var s = new List<string>();
@@ -261,9 +247,6 @@ public static class StringExtension
     /// <summary>
     /// 只按最后一个匹配项分割
     /// </summary>
-    /// <param name="str"></param>
-    /// <param name="split"></param>
-    /// <returns></returns>
     public static string[] SplitLast(this string str, char split)
     {
         var s = new List<string>();
@@ -280,9 +263,6 @@ public static class StringExtension
     /// <summary>
     /// 转换为SHA1。
     /// </summary>
-    /// <param name="value"></param>
-    /// <param name="encoding"></param>
-    /// <returns></returns>
     public static byte[] ToSha1(this string value, Encoding encoding)
     {
         using (var sha1 = SHA1.Create())
@@ -294,8 +274,6 @@ public static class StringExtension
     /// <summary>
     /// 转换为UTF-8数据，效果等于<see cref="Encoding.UTF8"/>
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static ReadOnlyMemory<byte> ToUtf8Bytes(this string value)
     {
         ThrowHelper.ThrowIfNull(value, nameof(value));

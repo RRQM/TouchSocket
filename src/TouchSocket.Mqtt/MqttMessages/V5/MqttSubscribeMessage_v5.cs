@@ -14,6 +14,9 @@ namespace TouchSocket.Mqtt;
 
 public partial class MqttSubscribeMessage
 {
+    /// <summary>
+    /// 获取或设置订阅标识符。
+    /// </summary>
     public uint SubscriptionIdentifier { get; set; }
 
     /// <inheritdoc/>

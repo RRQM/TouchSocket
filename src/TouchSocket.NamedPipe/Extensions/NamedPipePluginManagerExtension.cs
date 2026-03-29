@@ -22,6 +22,7 @@ public static class NamedPipePluginManagerExtension
     /// 服务器、客户端均适用。
     /// </summary>
     /// <param name="pluginManager">插件管理器对象，用于管理插件。</param>
+    /// <param name="options">配置清理选项的委托，可为 <see langword="null"/>。</param>
     /// <returns>返回一个<see cref="CheckClearPlugin{TClient}"/>类型的插件实例，用于执行客户端活性检查及清理操作。</returns>
     public static CheckClearPlugin<INamedPipeSession> UseNamedPipeSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<INamedPipeSession>> options = null)
     {

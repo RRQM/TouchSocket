@@ -19,6 +19,9 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// 基于 WebSocket 的 Mqtt 客户端接口。
+/// </summary>
 public interface IMqttWebSocketClient: ISetupConfigObject, IMqttClient
 {
 }

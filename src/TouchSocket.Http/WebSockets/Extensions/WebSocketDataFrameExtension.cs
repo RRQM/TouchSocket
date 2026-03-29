@@ -17,6 +17,9 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public static class WebSocketDataFrameExtension
 {
+    /// <summary>
+    /// 默认渔码键。
+    /// </summary>
     public static readonly ReadOnlyMemory<byte> DefaultMaskingKey = "RRQM".ToUtf8Bytes();
 
     /// <summary>

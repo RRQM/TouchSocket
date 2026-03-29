@@ -14,8 +14,14 @@ namespace TouchSocket.Mqtt;
 
 public partial class MqttPubCompMessage
 {
+    /// <summary>
+    /// 获取或设置操作原因码。
+    /// </summary>
     public MqttReasonCode ReasonCode { get; set; }
 
+    /// <summary>
+    /// 获取或设置原因符串。
+    /// </summary>
     public string ReasonString { get; set; }
 
     /// <inheritdoc/>

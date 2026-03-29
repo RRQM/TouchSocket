@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -158,8 +158,6 @@ public static class TouchSocketConfigExtension
     /// <summary>
     /// 当udp作为客户端时，开始接收数据。起作用相当于<see cref="BindIPHostProperty"/>0端口。
     /// </summary>
-    /// <param name="config"></param>
-    /// <returns></returns>
     public static TouchSocketConfig UseUdpReceive(this TouchSocketConfig config)
     {
         return config.SetBindIPHost(0);
@@ -182,8 +180,8 @@ public static class TouchSocketConfigExtension
     /// 构建可配置，可连接类客户端，并连接
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    /// <param name="config"></param>
-    /// <returns></returns>
+    /// <param name="config">配置对象。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     public static async Task<TClient> BuildClientAsync<TClient>(this TouchSocketConfig config, CancellationToken cancellationToken = default) where TClient : ISetupConfigObject, IConnectableClient, new()
     {
         var client = new TClient();
@@ -196,8 +194,8 @@ public static class TouchSocketConfigExtension
     /// 构建Tcp类服务器，并启动。
     /// </summary>
     /// <typeparam name="TService"></typeparam>
-    /// <param name="config"></param>
-    /// <returns></returns>
+    /// <param name="config">配置对象。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
     public static async Task<TService> BuildServiceAsync<TService>(this TouchSocketConfig config, CancellationToken cancellationToken = default) where TService : IServiceBase, new()
     {
         var service = new TService();

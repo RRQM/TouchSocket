@@ -366,6 +366,14 @@ public static class ModbusMasterExtension
     #endregion ReadWrite
 
     #region SendModbusRequestAsync
+    /// <summary>
+    /// 异步发送 Modbus 请求，并支持超时。
+    /// </summary>
+    /// <param name="master">Modbus 主站实例。</param>
+    /// <param name="request">Modbus 请求。</param>
+    /// <param name="millisecondsTimeout">超时时间（毫秒）。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>Modbus 响应。</returns>
     public static async Task<IModbusResponse> SendModbusRequestAsync(this IModbusMaster master, ModbusRequest request, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         if (millisecondsTimeout == Timeout.Infinite)

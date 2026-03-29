@@ -13,6 +13,7 @@
 using System.Text.Json;
 using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -176,6 +177,7 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
 
     #region Build
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Swagger内部使用，相信动态代码是有效的")]
     private void AddSchemaType(Type type, in List<Type> types)
     {
         if (type.IsArray)
@@ -446,6 +448,7 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
         return openApiProperty;
     }
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Swagger内部使用，相信动态代码是有效的")]
     private OpenApiSchema CreateSchema(Type type)
     {
         var schema = new OpenApiSchema();
@@ -514,6 +517,7 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
         return schema;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "Swagger内部使用，相信动态代码是有效的")]
     private OpenApiComponent GetComponents(List<Type> types)
     {
         if (types.Count == 0)

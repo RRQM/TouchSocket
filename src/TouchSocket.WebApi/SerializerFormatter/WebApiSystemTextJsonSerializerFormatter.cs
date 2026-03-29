@@ -24,7 +24,7 @@ internal sealed class WebApiSystemTextJsonSerializerFormatter : SystemTextJsonSe
         this.JsonSettings = jsonSerializerOptions;
     }
 
-    public override bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
+    public override bool TryDeserialize(HttpContext state, in string source, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type targetType, out object target)
     {
         try
         {

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -47,7 +47,6 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 收到数据的切入点，该方法由框架自动调用。
     /// </summary>
-    /// <param name="reader"></param>
     public async Task ReceivedInputAsync<TReader>(TReader reader)
         where TReader : class, IBytesReader
     {
@@ -127,7 +126,6 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// <summary>
     /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(ReadOnlyMemory{byte}, IRequestInfo)"/>处理数据
     /// </summary>
-    /// <param name="reader"></param>
     protected abstract Task PreviewReceivedAsync<TReader>(TReader reader)
         where TReader : class, IBytesReader;
 

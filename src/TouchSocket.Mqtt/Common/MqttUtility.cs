@@ -12,10 +12,22 @@
 
 namespace TouchSocket.Mqtt;
 
+/// <summary>
+/// Mqtt 工具类。
+/// </summary>
 public static class MqttUtility
 {
+    /// <summary>
+    /// Mqtt 协议名称常量。
+    /// </summary>
     public const string MqttProtocolName = "MQTT";
+    /// <summary>
+    /// Mqtt 协议名称富脱utf-8字节空间。
+    /// </summary>
     public static ReadOnlySpan<byte> MqttProtocolNameSpan => Encoding.UTF8.GetBytes("MQTT");
 
+    /// <summary>
+    /// 空的 Mqtt 用户属性列表。
+    /// </summary>
     public static IReadOnlyList<MqttUserProperty> EmptyUserProperties { get; } = [];
 }

@@ -68,6 +68,12 @@ public static class MqttExtension
         return str;
     }
 
+    /// <summary>
+    /// 读取 Mqtt Int16 内存块。
+    /// </summary>
+    /// <typeparam name="TReader">读取器类型。</typeparam>
+    /// <param name="reader">字节读取器。</param>
+    /// <returns>读取的内存块。</returns>
     public static ReadOnlyMemory<byte> ReadMqttInt16Memory<TReader>(ref TReader reader)
         where TReader : IBytesReader
 
@@ -989,4 +995,168 @@ public static class MqttExtension
     }
 
     #endregion MqttV5Properties
+
+    #region TopicMatch
+
+    /// <summary>
+    /// 判断发布主题是否与订阅过滤器匹配，支持 <c>+</c>（单级通配符）和 <c>#</c>（多级通配符）。
+    /// </summary>
+    /// <param name="publishTopic">实际发布的主题名称。</param>
+    /// <param name="subscriptionTopic">订阅过滤器（可包含通配符）。</param>
+    /// <returns>若匹配则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+    public static bool IsTopicMatch(string publishTopic, string subscriptionTopic)
+    {
+        if (subscriptionTopic.IndexOf('+') < 0 && subscriptionTopic.IndexOf('#') < 0)
+        {
+            return string.Equals(publishTopic, subscriptionTopic, StringComparison.Ordinal);
+        }
+
+        return CompareTopicWithWildcard(publishTopic.AsSpan(), subscriptionTopic.AsSpan());
+    }
+
+    private static bool CompareTopicWithWildcard(ReadOnlySpan<char> topic, ReadOnlySpan<char> filter)
+    {
+        const char LevelSeparator = '/';
+        const char MultiLevelWildcard = '#';
+        const char SingleLevelWildcard = '+';
+        const char ReservedTopicPrefix = '$';
+
+        if (topic.IsEmpty || filter.IsEmpty)
+        {
+            return false;
+        }
+
+        var filterOffset = 0;
+        var filterLength = filter.Length;
+        var topicOffset = 0;
+        var topicLength = topic.Length;
+
+        if (filterLength > topicLength)
+        {
+            var lastFilterChar = filter[filterLength - 1];
+            if (lastFilterChar != MultiLevelWildcard && lastFilterChar != SingleLevelWildcard)
+            {
+                return false;
+            }
+        }
+
+        var isMultiLevelFilter = filter[filterLength - 1] == MultiLevelWildcard;
+        var isReservedTopic = topic[0] == ReservedTopicPrefix;
+
+        if (isReservedTopic && filterLength == 1 && isMultiLevelFilter)
+        {
+            return false;
+        }
+
+        if (isReservedTopic && filter[0] == SingleLevelWildcard)
+        {
+            return false;
+        }
+
+        if (filterLength == 1 && isMultiLevelFilter)
+        {
+            return true;
+        }
+
+        while (filterOffset < filterLength && topicOffset < topicLength)
+        {
+            if (filter[filterOffset] == MultiLevelWildcard && filterOffset != filterLength - 1)
+            {
+                return false;
+            }
+
+            if (filter[filterOffset] == topic[topicOffset])
+            {
+                if (topicOffset == topicLength - 1)
+                {
+                    if (filterOffset == filterLength - 3 && filter[filterOffset + 1] == LevelSeparator && isMultiLevelFilter)
+                    {
+                        return true;
+                    }
+
+                    if (filterOffset == filterLength - 2 && filter[filterOffset] == LevelSeparator && isMultiLevelFilter)
+                    {
+                        return true;
+                    }
+                }
+
+                filterOffset++;
+                topicOffset++;
+
+                if (filterOffset == filterLength && topicOffset == topicLength)
+                {
+                    return true;
+                }
+
+                var endOfTopic = topicOffset == topicLength;
+
+                if (endOfTopic && filterOffset == filterLength - 1 && filter[filterOffset] == SingleLevelWildcard)
+                {
+                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            else
+            {
+                if (filter[filterOffset] == SingleLevelWildcard)
+                {
+                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                    {
+                        return false;
+                    }
+
+                    if (filterOffset < filterLength - 1 && filter[filterOffset + 1] != LevelSeparator)
+                    {
+                        return false;
+                    }
+
+                    filterOffset++;
+                    while (topicOffset < topicLength && topic[topicOffset] != LevelSeparator)
+                    {
+                        topicOffset++;
+                    }
+
+                    if (topicOffset == topicLength && filterOffset == filterLength)
+                    {
+                        return true;
+                    }
+                }
+                else if (filter[filterOffset] == MultiLevelWildcard)
+                {
+                    if (filterOffset > 0 && filter[filterOffset - 1] != LevelSeparator)
+                    {
+                        return false;
+                    }
+
+                    if (filterOffset + 1 != filterLength)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    if (filterOffset > 0 &&
+                        filterOffset + 2 == filterLength &&
+                        topicOffset == topicLength &&
+                        filter[filterOffset - 1] == SingleLevelWildcard &&
+                        filter[filterOffset] == LevelSeparator &&
+                        isMultiLevelFilter)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    #endregion TopicMatch
 }

@@ -16,6 +16,7 @@ using TouchSocket.Http;
 namespace TouchSocket.WebApi;
 
 [RequiresUnreferencedCode("Members from deserialized types may be trimmed if not referenced directly")]
+[RequiresDynamicCode("XML serializer relies on dynamic code generation")]
 internal sealed class WebApiXmlSerializerFormatter : XmlStringToClassSerializerFormatter<HttpContext>
 {
     public override bool TrySerialize<TTarget>(HttpContext state, in TTarget target, out string source)

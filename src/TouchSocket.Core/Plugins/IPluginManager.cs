@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -33,7 +33,6 @@ public interface IPluginManager : IDisposableObject, IResolverObject
     /// 添加插件
     /// </summary>
     /// <param name="plugin">插件</param>
-    /// <exception cref="ArgumentNullException"></exception>
     void Add<[DynamicallyAccessedMembers(AOT.PluginMemberType)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin;
 
     /// <summary>
@@ -61,8 +60,6 @@ public interface IPluginManager : IDisposableObject, IResolverObject
     /// <summary>
     /// 获取已添加的指定名称的插件数量。
     /// </summary>
-    /// <param name="pluginType"></param>
-    /// <returns></returns>
     int GetPluginCount([DynamicallyAccessedMembers(AOT.PluginMemberType)] Type pluginType);
 
     /// <summary>

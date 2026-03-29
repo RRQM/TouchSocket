@@ -78,12 +78,24 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         };
     }
 
+    /// <summary>
+    /// 创建可变长度内容写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">字节块类型。</typeparam>
+    /// <param name="writer">字节块引用。</param>
+    /// <returns>内容写入器。</returns>
     protected BytesWriter CreateVariableWriter<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
     {
         return new BytesWriter(writer.GetMemory(this.GetMinimumRemainingLength() + 1024));
     }
 
+    /// <summary>
+    /// 创建属性写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">字节块类型。</typeparam>
+    /// <param name="writer">字节块引用。</param>
+    /// <returns>属性写入器。</returns>
     protected BytesWriter CreatePropertiesWriter<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
     {
@@ -113,11 +125,21 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         writer.Advance(byteBlockWriter.Position);
     }
 
+    /// <summary>
+    /// 构建 Mqtt v3 可变长度主体。
+    /// </summary>
+    /// <typeparam name="TWriter">字节块类型。</typeparam>
+    /// <param name="writer">字节块引用。</param>
     protected abstract void BuildVariableBodyWithMqtt3<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
 
         ;
 
+    /// <summary>
+    /// 构建 Mqtt v5 可变长度主体。
+    /// </summary>
+    /// <typeparam name="TWriter">字节块类型。</typeparam>
+    /// <param name="writer">字节块引用。</param>
     protected abstract void BuildVariableBodyWithMqtt5<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
 
@@ -185,15 +207,31 @@ public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
         }
     }
 
+    /// <summary>
+    /// 判断是否已被冑字节块。
+    /// </summary>
+    /// <typeparam name="TReader">字节块类型。</typeparam>
+    /// <param name="reader">字节块引用。</param>
+    /// <returns>如果已到达字节块末尾则返回 <see langword="true"/>。</returns>
     protected bool EndOfByteBlock<TReader>(in TReader reader)
         where TReader : IBytesReader
     {
         return this.m_endPosition == reader.BytesRead;
     }
 
+    /// <summary>
+    /// 解包 Mqtt v3 消息。
+    /// </summary>
+    /// <typeparam name="TReader">字节块类型。</typeparam>
+    /// <param name="reader">字节块引用。</param>
     protected abstract void UnpackWithMqtt3<TReader>(ref TReader reader)
         where TReader : IBytesReader;
 
+    /// <summary>
+    /// 解包 Mqtt v5 消息。
+    /// </summary>
+    /// <typeparam name="TReader">字节块类型。</typeparam>
+    /// <param name="reader">字节块引用。</param>
     protected abstract void UnpackWithMqtt5<TReader>(ref TReader reader)
         where TReader : IBytesReader;
 

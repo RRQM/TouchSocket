@@ -86,6 +86,7 @@ public static class HttpPluginManagerExtension
     /// 该插件用于定期检查<see cref="IHttpSession"/>会话并进行清理操作，防止资源泄漏。
     /// </summary>
     /// <param name="pluginManager">插件管理器实例，用于添加和管理插件。</param>
+    /// <param name="options">配置清理选项的委托，可为 <see langword="null"/>。</param>
     /// <returns>返回创建并添加到插件管理器的实例。</returns>
     public static CheckClearPlugin<IHttpSession> UseHttpSessionCheckClear(this IPluginManager pluginManager, Action<CheckClearOption<IHttpSession>> options = null)
     {

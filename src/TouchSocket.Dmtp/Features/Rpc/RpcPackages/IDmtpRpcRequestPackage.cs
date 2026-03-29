@@ -28,13 +28,6 @@ public interface IDmtpRpcRequestPackage : IReadonlyRouterPackage
     SerializationType SerializationType { get; }
 
     /// <summary>
-    /// 获取元数据。
-    /// 元数据提供了关于包的附加信息，如发送者、接收者等。
-    /// </summary>
-    /// <value>元数据对象</value>
-    Metadata Metadata { get; }
-
-    /// <summary>
     /// 获取反馈类型。
     /// 反馈类型指示了调用方期望的反馈方式，如无反馈、单向反馈等。
     /// </summary>

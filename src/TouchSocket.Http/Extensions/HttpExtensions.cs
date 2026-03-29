@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -47,10 +47,6 @@ public static partial class HttpExtensions
     /// <summary>
     /// 添加Header参数
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static TRequest AddHeader<TRequest>(this TRequest request, string key, string value) where TRequest : HttpBase
     {
         request.Headers.Add(key, value);
@@ -85,9 +81,6 @@ public static partial class HttpExtensions
     /// <summary>
     /// 当数据类型为multipart/form-data时，获取boundary
     /// </summary>
-    /// <param name="httpBase"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     public static string GetBoundary(this HttpBase httpBase)
     {
         // 检查ContentType是否为空，如果为空则直接返回空字符串
@@ -129,9 +122,6 @@ public static partial class HttpExtensions
     /// <summary>
     /// 从Json
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static T FromJson<T>(this T request, string value) where T : HttpBase
     {
         request.SetContent(StringHttpContent.FromJson(value));
@@ -141,9 +131,6 @@ public static partial class HttpExtensions
     /// <summary>
     /// 从文本
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static T FromText<T>(this T request, string value) where T : HttpBase
     {
         request.SetContent(StringHttpContent.FromText(value));
@@ -153,9 +140,6 @@ public static partial class HttpExtensions
     /// <summary>
     /// 从Xml格式
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public static T FromXml<T>(this T request, string value) where T : HttpBase
     {
         request.SetContent(StringHttpContent.FromXml(value));
@@ -166,9 +150,6 @@ public static partial class HttpExtensions
     /// 从Xml格式
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="request"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     [Obsolete("由于方法名称不符合规范，该方法已被弃用，请使用FromXml代替")]
     public static T FromXML<T>(this T request, string value) where T : HttpBase
     {
@@ -364,7 +345,7 @@ public static partial class HttpExtensions
     /// <summary>
     /// 设置Url，可带参数
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="request">请求对象。</param>
     /// <param name="url">要设置的URL地址</param>
     /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
     public static TRequest SetUrl<TRequest>(this TRequest request, string url)

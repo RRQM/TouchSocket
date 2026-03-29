@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -38,8 +38,6 @@ public static class RpcStoreExtension
     /// <summary>
     /// 注册指定程序集的Rpc服务。
     /// </summary>
-    /// <param name="rpcStore"></param>
-    /// <param name="assembly"></param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
     public static void RegisterAllServer(this RpcStore rpcStore, Assembly assembly)
     {
@@ -53,7 +51,6 @@ public static class RpcStoreExtension
     /// 注册服务
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
     public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] T>(this RpcStore rpcStore) where T : IRpcServer
     {
         rpcStore.RegisterServer(typeof(T));
@@ -62,9 +59,6 @@ public static class RpcStoreExtension
     /// <summary>
     /// 注册服务
     /// </summary>
-    /// <param name="rpcStore"></param>
-    /// <param name="providerType"></param>
-    /// <returns></returns>
     public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(AOT.RpcRegister)] Type providerType)
     {
         rpcStore.RegisterServer(providerType, providerType);
@@ -75,7 +69,6 @@ public static class RpcStoreExtension
     /// </summary>
     /// <typeparam name="TFrom"></typeparam>
     /// <typeparam name="TTo"></typeparam>
-    /// <returns></returns>
     public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] TFrom, [DynamicallyAccessedMembers(AOT.RpcRegister)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
     {
         rpcStore.RegisterServer(typeof(TFrom), typeof(TTo));
@@ -85,7 +78,6 @@ public static class RpcStoreExtension
     /// 注册为单例服务
     /// </summary>
     /// <typeparam name="TFrom"></typeparam>
-    /// <returns></returns>
     public static void RegisterServer<[DynamicallyAccessedMembers(AOT.RpcRegister)] TFrom>(this RpcStore rpcStore, TFrom rpcServer) where TFrom : class, IRpcServer
     {
         rpcStore.RegisterServer(typeof(TFrom), rpcServer);

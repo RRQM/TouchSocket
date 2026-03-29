@@ -62,6 +62,7 @@ public sealed class RpcStore
     /// <param name="attributeTypes">Rpc特性类型数组，用于指定要生成代理的Rpc方法特性</param>
     /// <returns>生成的代理代码字符串</returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public string GetProxyCodes(string @namespace, params Type[] attributeTypes)
     {
         var cellCodes = this.GetProxyInfo(attributeTypes);
@@ -75,6 +76,7 @@ public sealed class RpcStore
     /// <param name="namespace">生成代理代码的目标命名空间</param>
     /// <returns>生成的代理代码字符串</returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public string GetProxyCodes<TAttribute>(string @namespace) where TAttribute : RpcAttribute
     {
         var cellCodes = this.GetProxyInfo(new Type[] { typeof(TAttribute) });
@@ -87,6 +89,7 @@ public sealed class RpcStore
     /// <param name="attributeType">Rpc特性类型数组，用于指定要生成代理的Rpc方法特性</param>
     /// <returns>服务单元代码数组，包含所有匹配特性的服务代码</returns>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public ServerCellCode[] GetProxyInfo(Type[] attributeType)
     {
         var codes = new List<ServerCellCode>();

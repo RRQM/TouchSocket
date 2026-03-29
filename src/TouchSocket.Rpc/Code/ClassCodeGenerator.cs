@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -29,7 +29,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 构造函数
     /// </summary>
-    /// <param name="assembly"></param>
     public ClassCodeGenerator(Assembly[] assembly)
     {
         this.Assembly = assembly;
@@ -49,8 +48,8 @@ public class ClassCodeGenerator
     /// <summary>
     /// 添加类型字符串
     /// </summary>
-    /// <param name="type"></param>
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     public void AddTypeString(Type type)
     {
         var list = new List<Type>();
@@ -66,7 +65,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 获取类单元参数
     /// </summary>
-    /// <returns></returns>
     public ClassCellCode[] GetClassCellCodes()
     {
         return this.PropertyDic.Values.ToArray();
@@ -75,8 +73,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 获取类型全名
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns></returns>
     public string GetTypeFullName(Type type)
     {
         if (type.FullName == null)
@@ -170,8 +166,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 获取类型全名
     /// </summary>
-    /// <param name="parameterInfo"></param>
-    /// <returns></returns>
     public string GetTypeFullName(ParameterInfo parameterInfo)
     {
         this.m_tupleElementNames = parameterInfo.ParameterType.FullName.Contains("System.ValueTuple") ? (parameterInfo.GetTupleElementNames()?.ToList()) : default;
@@ -181,8 +175,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 获取类型全名
     /// </summary>
-    /// <param name="propertyInfo"></param>
-    /// <returns></returns>
     public string GetTypeFullName(PropertyInfo propertyInfo)
     {
         this.m_tupleElementNames = propertyInfo.PropertyType.FullName.Contains("System.ValueTuple") ? (propertyInfo.GetTupleElementNames()?.ToList()) : default;
@@ -192,8 +184,6 @@ public class ClassCodeGenerator
     /// <summary>
     /// 获取类型全名
     /// </summary>
-    /// <param name="fieldInfo"></param>
-    /// <returns></returns>
     public string GetTypeFullName(FieldInfo fieldInfo)
     {
         this.m_tupleElementNames = fieldInfo.FieldType.FullName.Contains("System.ValueTuple") ? (fieldInfo.GetTupleElementNames()?.ToList()) : default;
@@ -363,6 +353,7 @@ public class ClassCodeGenerator
     }
 
     [RequiresUnreferencedCode("此方法使用反射动态加载程序集，与剪裁不兼容。请改用安全的替代方法。")]
+    [RequiresDynamicCode("此方法使用动态代码，与AOT不兼容。")]
     private void PrivateAddTypeString(Type type)
     {
         if (CodeGenerator.m_ignoreTypes.Contains(type))

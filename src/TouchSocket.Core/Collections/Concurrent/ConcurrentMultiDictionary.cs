@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -25,9 +25,6 @@ public readonly struct Ternary<TKey1, TKey2, TValue>
     /// <summary>
     /// 三元组合
     /// </summary>
-    /// <param name="key1"></param>
-    /// <param name="key2"></param>
-    /// <param name="value"></param>
     public Ternary(TKey1 key1, TKey2 key2, TValue value)
     {
         this.Key1 = key1;
@@ -92,8 +89,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 是否包含指定键。
     /// </summary>
-    /// <param name="key"></param>
-    /// <returns></returns>
     public bool ContainsKey(TKey2 key)
     {
         return this.m_key2ToValue.ContainsKey(key);
@@ -102,8 +97,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 是否包含指定键。
     /// </summary>
-    /// <param name="key"></param>
-    /// <returns></returns>
     public bool ContainsKey(TKey1 key)
     {
         return this.m_key1ToValue.ContainsKey(key);
@@ -112,10 +105,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 尝试添加。
     /// </summary>
-    /// <param name="key1"></param>
-    /// <param name="key2"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryAdd(TKey1 key1, TKey2 key2, TValue value)
     {
         var ternary = new Ternary<TKey1, TKey2, TValue>(key1, key2, value);
@@ -134,9 +123,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 由首键删除
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryRemove(TKey1 key, out TValue value)
     {
         if (this.m_key1ToValue.TryRemove(key, out var ternary))
@@ -152,9 +138,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 由次键删除
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryRemove(TKey2 key, out TValue value)
     {
         if (this.m_key2ToValue.TryRemove(key, out var ternary))
@@ -170,9 +153,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 由首键获取值
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryGetValue(TKey1 key, out TValue value)
     {
         if (this.m_key1ToValue.TryGetValue(key, out var ternary))
@@ -187,9 +167,6 @@ public class ConcurrentMultiDictionary<TKey1, TKey2, TValue>
     /// <summary>
     /// 由次键获取值
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
     public bool TryGetValue(TKey2 key, out TValue value)
     {
         if (this.m_key2ToValue.TryGetValue(key, out var ternary))

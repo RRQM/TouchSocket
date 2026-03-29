@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -24,7 +24,6 @@ public static class LoggerContainerExtension
     /// <summary>
     /// 添加控制台日志到日志组。
     /// </summary>
-    /// <returns></returns>
     public static void AddConsoleLogger(this LoggerGroup loggerGroup, LogLevel logLevel = LogLevel.Info)
     {
         ConsoleLogger.Default.LogLevel = logLevel;
@@ -35,7 +34,7 @@ public static class LoggerContainerExtension
     /// 为注册器容器添加控制台日志记录器的扩展方法。
     /// </summary>
     /// <param name="container">要添加控制台日志记录器的注册器。</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     /// <returns>添加了控制台日志记录器的注册器。</returns>
     public static IRegistrator AddConsoleLogger(this IRegistrator container, LogLevel logLevel = LogLevel.Info)
     {
@@ -55,7 +54,7 @@ public static class LoggerContainerExtension
     /// </summary>
     /// <param name="loggerGroup">日志组对象，表示要添加委托日志到哪个日志组。</param>
     /// <param name="action">一个委托，表示日志记录的行动，包含日志级别、日志信息、标签以及异常信息。</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     /// <returns>该方法没有返回值。</returns>
     public static void AddEasyLogger(this LoggerGroup loggerGroup, Action<LogLevel, object, string, Exception> action, LogLevel logLevel = LogLevel.Info)
     {
@@ -74,7 +73,7 @@ public static class LoggerContainerExtension
     /// </summary>
     /// <param name="loggerGroup">日志组对象，表示要向其添加新日志器的组。</param>
     /// <param name="action">一个委托，定义了日志记录的方式。</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     public static void AddEasyLogger(this LoggerGroup loggerGroup, Action<string> action, LogLevel logLevel = LogLevel.Info)
     {
         // 创建一个使用提供的日志委托的EasyLogger实例
@@ -92,7 +91,7 @@ public static class LoggerContainerExtension
     /// </summary>
     /// <param name="container">日志记录器需要注册到的容器。</param>
     /// <param name="action">一个委托动作，当记录日志时将被执行。它接收日志级别、日志消息、发生日志的源和任何异常信息作为参数。</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     /// <returns>返回注册容器，以便进行链式调用。</returns>
     public static IRegistrator AddEasyLogger(this IRegistrator container, Action<LogLevel, object, string, Exception> action, LogLevel logLevel = LogLevel.Info)
     {
@@ -107,7 +106,7 @@ public static class LoggerContainerExtension
     /// </summary>
     /// <param name="container">要添加日志记录器的注册容器</param>
     /// <param name="action">一个委托，定义了如何处理日志消息</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     /// <returns>返回修改后的注册容器，支持链式调用</returns>
     public static IRegistrator AddEasyLogger(this IRegistrator container, Action<string> action, LogLevel logLevel = LogLevel.Info)
     {
@@ -123,9 +122,7 @@ public static class LoggerContainerExtension
     /// 添加文件日志到日志组。
     /// </summary>
     /// <param name="loggerGroup">要添加文件日志的LoggerGroup实例。</param>
-    /// <param name="rootPath">日志文件的根路径，默认为"logs"。</param>
-    /// <param name="logLevel"></param>
-    /// <returns>此方法不返回任何值。</returns>
+    /// <param name="rootPath">日志文件的根路径，默认为"logs"。</param>    /// <param name="logLevel">日志级别。</param>    /// <returns>此方法不返回任何值。</returns>
     /// <remarks>
     /// 该方法扩展了LoggerGroup类的功能，允许轻松添加文件日志记录器。
     /// 文件日志记录器会根据当前日期在指定的根路径下创建日志文件夹。
@@ -167,7 +164,7 @@ public static class LoggerContainerExtension
     /// </summary>
     /// <param name="container">要添加文件日志记录器的注册器。</param>
     /// <param name="rootPath">日志文件的基础路径，默认为"logs"。</param>
-    /// <param name="logLevel"></param>
+    /// <param name="logLevel">日志级别。</param>
     /// <returns>添加了文件日志记录器后的注册器。</returns>
     public static IRegistrator AddFileLogger(this IRegistrator container, string rootPath = "logs", LogLevel logLevel = LogLevel.Info)
     {

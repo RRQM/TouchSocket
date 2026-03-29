@@ -16,6 +16,7 @@ namespace TouchSocket.Dmtp;
 
 /// <summary>
 /// 定义即将断开连接时的插件行为（仅主动断开时有效）。
+/// <para>Closing仅在主动调用关闭的一端触发，收到远程关闭报文时不会触发Closing，而是直接触发Closed。</para>
 /// </summary>
 [DynamicMethod]
 public interface IDmtpClosingPlugin : IPlugin

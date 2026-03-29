@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -53,8 +53,12 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
     {
-        //base.Abort(false, msg);
-        return EasyTask.CompletedTask;
+        return this.OnDmtpClosing(new ClosingEventArgs(msg));
+    }
+
+    private Task OnDmtpActorClosed(DmtpActor actor, ClosedEventArgs e)
+    {
+        return this.OnDmtpClosed(e);
     }
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
@@ -111,7 +115,6 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// 当Dmtp关闭以后。
     /// </summary>
     /// <param name="e">事件参数</param>
-    /// <returns></returns>
     protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
     {
         // 如果事件已经被处理，则直接返回
@@ -126,11 +129,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <summary>
     /// 当Dmtp即将被关闭时触发。
     /// <para>
-    /// 该触发条件有2种：
-    /// <list type="number">
-    /// <item>终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>。</item>
-    /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
-    /// </list>
+    /// 仅在终端主动调用<see cref="IClosableClient.CloseAsync(string, System.Threading.CancellationToken)"/>时触发。
     /// </para>
     /// </summary>
     /// <param name="e">关闭事件参数，包含关闭的原因等信息。</param>
@@ -203,16 +202,11 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <returns>异步任务</returns>
     public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        
         if (this.m_dmtpActor != null)
         {
-            //issue：https://gitee.com/RRQM_Home/TouchSocket/issues/IDND2L
-            await this.m_dmtpActor.SendCloseAsync(msg,cancellationToken).ConfigureDefaultAwait();
-           
             await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
         }
 
-        // 调用基类的CloseAsync方法发送关闭消息
         return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
     }
 
@@ -275,6 +269,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -306,14 +301,17 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        await this.OnDmtpClosed(e).ConfigureDefaultAwait();
+        if (this.m_dmtpActor.ClosedMessage.HasValue())
+        {
+            e.Message = this.m_dmtpActor.ClosedMessage;
+        }
+        await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
         await base.OnTcpClosing(e).ConfigureDefaultAwait();
     }
 
