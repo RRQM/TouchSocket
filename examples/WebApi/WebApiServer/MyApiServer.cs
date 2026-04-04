@@ -38,7 +38,7 @@ public class MyApiServer : SingletonRpcServer
     {
         if (callContext.Caller is HttpSessionClient sessionClient)
         {
-            var result = await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext);
+            var result = await sessionClient.SwitchProtocolToWebSocketAsync(false);
             if (!result.IsSuccess)
             {
                 Console.WriteLine(result.Message);
@@ -48,28 +48,29 @@ public class MyApiServer : SingletonRpcServer
             this.m_logger.Info("WS通过WebApi连接");
             var webSocket = sessionClient.WebSocket;
 
-            webSocket.AllowAsyncRead = true;
-
-            while (true)
+            _=EasyTask.SafeNewRun(async() =>
             {
-                using (var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                while (true)
                 {
-                    using (var receiveResult = await webSocket.ReadAsync(tokenSource.Token))
+                    using (var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                     {
-                        if (receiveResult.IsCompleted)
+                        using (var receiveResult = await webSocket.ReadAsync(tokenSource.Token))
                         {
-                            //webSocket已断开
-                            return;
+                            if (receiveResult.IsCompleted)
+                            {
+                                //webSocket已断开
+                                return;
+                            }
+
+                            //webSocket数据帧
+                            var dataFrame = receiveResult.DataFrame;
+
+                            //此处可以处理数据
                         }
-
-                        //webSocket数据帧
-                        var dataFrame = receiveResult.DataFrame;
-
-                        //此处可以处理数据
                     }
-                }
 
-            }
+                }
+            });
         }
     }
 

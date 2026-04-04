@@ -27,6 +27,11 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
         this.Protocol = TouchSocketModbusUtility.ModbusRtuOverUdp;
     }
 
+    /// <summary>
+    /// 获取或设置功能码处理器注册表，默认使用<see cref="ModbusFunctionHandlerRegistry.Default"/>
+    /// </summary>
+    public ModbusFunctionHandlerRegistry FunctionHandlerRegistry { get; } = ModbusFunctionHandlerRegistry.Default;
+
     #region 字段
 
     private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
@@ -37,7 +42,7 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
-        this.SetAdapter(new ModbusUdpRtuAdapter());
+        this.SetAdapter(new ModbusUdpRtuAdapter(this.FunctionHandlerRegistry));
         base.LoadConfig(config);
     }
 
@@ -48,7 +53,7 @@ public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
 
         try
         {
-            var modbusTcpRequest = new ModbusRtuRequest(request);
+            var modbusTcpRequest = new ModbusRtuRequest(request, this.FunctionHandlerRegistry);
 
             await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureDefaultAwait();
 

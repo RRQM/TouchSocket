@@ -17,11 +17,14 @@ namespace TouchSocket.Modbus;
 /// </summary>
 internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRequestInfo
 {
+    private readonly ModbusFunctionHandlerRegistry m_registry;
+
     /// <summary>
     /// 从<see cref="ModbusRequest"/>创建一个ModbusTcpRequest
     /// </summary>
-    public ModbusTcpRequest(ushort transactionId, IModbusRequest request)
+    public ModbusTcpRequest(ushort transactionId, IModbusRequest request, ModbusFunctionHandlerRegistry registry)
     {
+        this.m_registry = registry;
         this.TransactionId = transactionId;
         this.ProtocolId = 0;
         this.SlaveId = request.SlaveId;
@@ -29,8 +32,7 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
         this.StartingAddress = request.StartingAddress;
         this.Quantity = request.Quantity;
         this.Data = request.Data;
-        
-        // 如果是读写操作，获取读取相关的属性
+
         if (request is IModbusReadWriteRequest readWriteRequest)
         {
             this.ReadStartAddress = readWriteRequest.ReadStartAddress;
@@ -39,56 +41,33 @@ internal sealed class ModbusTcpRequest : ModbusTcpBase, IRequestInfoBuilder, IRe
     }
 
     /// <inheritdoc/>
-    public int MaxLength => 1024;
+    public int MaxLength => 2048;
 
     /// <inheritdoc/>
     public void Build<TWriter>(ref TWriter writer)
         where TWriter : IBytesWriter
-
     {
-        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.TransactionId, EndianType.Big);
-        WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ProtocolId, EndianType.Big);
-        if ((byte)this.FunctionCode <= 4)
-        {
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, 6, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
-        }
-        else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
-        {
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, 6, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
-            writer.Write(this.Data.Span);
-        }
-        else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
-        {
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)(this.Data.Length + 7), EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Data.Length);
-            writer.Write(this.Data.Span);
-        }
-        else if (this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
-        {
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, (ushort)(this.Data.Length + 11), EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, this.SlaveId);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.FunctionCode);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ReadStartAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.ReadQuantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.StartingAddress, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, ushort>(ref writer, this.Quantity, EndianType.Big);
-            WriterExtension.WriteValue<TWriter, byte>(ref writer, (byte)this.Data.Length);
-            writer.Write(this.Data.Span);
-        }
-        else
-        {
-            throw new System.InvalidOperationException("无法识别的功能码");
-        }
+        var handler = this.m_registry.GetHandler(this.FunctionCode)
+            ?? throw new InvalidOperationException($"不支持的Modbus功能码: {this.FunctionCode}");
+
+        // Modbus单帧不超过2048字节，直接预留，无需提前计算PDU长度
+        var memory = writer.GetMemory(2048);
+        var bytesWriter = new BytesWriter(memory);
+
+        // TCP帧格式：TransactionId(2) + ProtocolId(2) + Length(2) + SlaveId(1) + FuncCode(1) + PDU
+        WriterExtension.WriteValue<BytesWriter, ushort>(ref bytesWriter, this.TransactionId, EndianType.Big);
+        WriterExtension.WriteValue<BytesWriter, ushort>(ref bytesWriter, this.ProtocolId, EndianType.Big);
+        // 占位Length字段（2字节），写完PDU后回填
+        var lengthAnchor = new WriterAnchor<BytesWriter>(ref bytesWriter, 2);
+        WriterExtension.WriteValue<BytesWriter, byte>(ref bytesWriter, this.SlaveId);
+        WriterExtension.WriteValue<BytesWriter, byte>(ref bytesWriter, (byte)this.FunctionCode);
+        handler.BuildRequestPdu(ref bytesWriter, this);
+
+        // length = SlaveId(1) + FuncCode(1) + PDU body，正好是MBAP Length字段的值
+        var lengthSpan = lengthAnchor.Rewind(ref bytesWriter, out var length);
+        lengthSpan[0] = (byte)(length >> 8);
+        lengthSpan[1] = (byte)length;
+
+        writer.Advance((int)bytesWriter.WrittenCount);
     }
 }

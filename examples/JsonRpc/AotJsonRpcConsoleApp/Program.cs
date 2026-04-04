@@ -51,10 +51,7 @@ internal class Program
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
             .SetJsonRpcOption(options =>
             {
-                options.UseSystemTextJsonFormatter(jsonOption =>
-                {
-                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                });
+                options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
             })
              .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
         await jsonRpcClient.ConnectAsync();
@@ -74,10 +71,7 @@ internal class Program
              .SetRemoteIPHost("127.0.0.1:7705")
              .SetJsonRpcOption(options =>
              {
-                 options.UseSystemTextJsonFormatter(jsonOption =>
-                 {
-                     jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                 });
+                 options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
              })
              .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8)));
 
@@ -100,10 +94,7 @@ internal class Program
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
             .SetJsonRpcOption(options =>
             {
-                options.UseSystemTextJsonFormatter(jsonOption =>
-                {
-                    jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                });
+                options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
             })
              .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
         await jsonRpcClient.ConnectAsync();
@@ -140,10 +131,7 @@ internal class Program
                   {
                       options.SetAllowJsonRpc("/jsonRpc");
 
-                      options.UseSystemTextJsonFormatter(jsonOption =>
-                      {
-                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                      });
+                      options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
                   });
               }));
         await service.StartAsync();
@@ -178,10 +166,7 @@ internal class Program
                           return true;
                       });
 
-                      options.UseSystemTextJsonFormatter(jsonOption =>
-                        {
-                            jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                        });
+                      options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
                   });
               }));
         await service.StartAsync();
@@ -217,10 +202,7 @@ internal class Program
                           });
 
                       #region 配置JsonRpc序列化器
-                      options.UseSystemTextJsonFormatter(jsonOption =>
-                      {
-                          jsonOption.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-                      });
+                      options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
                       #endregion
 
 

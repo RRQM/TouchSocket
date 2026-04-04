@@ -305,7 +305,10 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
                 break;
         }
 
-        httpResponse.ContentType = contentType;
+        if (httpResponse.ContentType.IsEmpty)
+        {
+            httpResponse.ContentType = contentType;
+        }
 
         switch (invokeResult.Status)
         {

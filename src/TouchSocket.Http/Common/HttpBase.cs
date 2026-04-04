@@ -74,7 +74,7 @@ public abstract class HttpBase : IRequestInfo
         set
         {
             this.m_contentLength = value;
-            this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
+            this.m_headers[HttpHeaders.ContentLength] = value.ToString();
         }
     }
 
@@ -89,7 +89,7 @@ public abstract class HttpBase : IRequestInfo
     public TextValues ContentType
     {
         get => this.m_headers.Get(HttpHeaders.ContentType);
-        set => this.m_headers.Add(HttpHeaders.ContentType, value);
+        set => this.m_headers[HttpHeaders.ContentType] = value;
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public abstract class HttpBase : IRequestInfo
             this.m_isChunk = value;
             if (value)
             {
-                this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
+                this.m_headers[HttpHeaders.TransferEncoding] = "chunked";
             }
             else
             {
@@ -253,7 +253,7 @@ public abstract class HttpBase : IRequestInfo
                 this.m_contentLength = length;
             }
             var value = this.m_stringPool.Get(valueSpan);
-            this.m_headers.AddInternal(HttpHeaders.ContentLength, value);
+            this.m_headers[HttpHeaders.ContentLength] = value;
             return;
         }
 
@@ -261,7 +261,14 @@ public abstract class HttpBase : IRequestInfo
         {
             this.m_isChunk = TouchSocketHttpUtility.EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
             var value = this.m_stringPool.Get(valueSpan);
-            this.m_headers.AddInternal(HttpHeaders.TransferEncoding, value);
+            this.m_headers[HttpHeaders.TransferEncoding] = value;
+            return;
+        }
+
+        if (keySpan.Length == 12 && TouchSocketHttpUtility.EqualsIgnoreCaseAscii(keySpan, "Content-Type"u8))
+        {
+            var value = this.m_stringPool.Get(valueSpan);
+            this.m_headers[HttpHeaders.ContentType] = value;
             return;
         }
 

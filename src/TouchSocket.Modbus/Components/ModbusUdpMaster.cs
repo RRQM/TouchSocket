@@ -30,13 +30,18 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
         this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0, ushort.MaxValue);
     }
 
+    /// <summary>
+    /// 获取或设置功能码处理器注册表，默认使用<see cref="ModbusFunctionHandlerRegistry.Default"/>
+    /// </summary>
+    public ModbusFunctionHandlerRegistry FunctionHandlerRegistry { get; } = ModbusFunctionHandlerRegistry.Default;
+
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
     {
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
-            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
+            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request, this.FunctionHandlerRegistry);
 
             await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureDefaultAwait();
 
@@ -57,7 +62,7 @@ public class ModbusUdpMaster : UdpSessionBase, IModbusUdpMaster
     /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
-        this.SetAdapter(new ModbusUdpAdapter());
+        this.SetAdapter(new ModbusUdpAdapter(this.FunctionHandlerRegistry));
         base.LoadConfig(config);
     }
 

@@ -12,7 +12,6 @@
 
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -528,12 +527,14 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     #endregion Receiver
 
+    #region 内置常规数据发送
+
     #region Throw
 
     /// <summary>
     ///  如果TCP客户端未连接，则抛出异常。
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     protected void ThrowIfClientNotConnected()
     {
         if (this.m_online)
@@ -544,18 +545,16 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         ThrowHelper.ThrowClientNotConnectedException();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
     private void ThrowIfCannotSendRequestInfo()
     {
         if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
         {
-            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
+            ThrowHelper.ThrowNotSupportedException(TouchSocket.Resources.TouchSocketResource.CannotSendRequestInfo);
         }
     }
 
     #endregion Throw
-
-    #region 发送
 
     /// <summary>
     /// 异步发送数据，通过适配器模式灵活处理数据发送。
@@ -628,5 +627,33 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
     }
 
+    /// <summary>
+    /// 异步发送请求信息构建器的受保护方法。
+    /// </summary>
+    /// <typeparam name="TRequestInfoBuilder">请求信息构建器的类型，必须实现<see cref="IRequestInfoBuilder"/>接口。</typeparam>
+    /// <param name="requestInfoBuilder">请求信息构建器实例。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
+    /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
+    protected async Task ProtectedSendAsync<TRequestInfoBuilder>(TRequestInfoBuilder requestInfoBuilder, CancellationToken cancellationToken)
+        where TRequestInfoBuilder : IRequestInfoBuilder
+    {
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+
+        var transport = this.m_transport;
+        var locker = transport.WriteLocker;
+
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        try
+        {
+            var writer = new PipeBytesWriter(transport.Writer);
+            requestInfoBuilder.Build(ref writer);
+            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+        }
+        finally
+        {
+            locker.Release();
+        }
+    }
     #endregion 发送
 }

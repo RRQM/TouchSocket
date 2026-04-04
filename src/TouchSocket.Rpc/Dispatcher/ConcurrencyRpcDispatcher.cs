@@ -37,7 +37,8 @@ public class ConcurrencyRpcDispatcher<TRpcActor, TCallContext> : DisposableObjec
         }
 
         // 否则，使用EasyTask.Run在新的线程上执行RPC方法，以支持并发调用
-        _ = EasyTask.SafeRun(func, callContext);
+        //issue:https://gitee.com/RRQM_Home/TouchSocket/issues/IHVCII
+        _ = EasyTask.SafeNewRun(func, callContext);
 
         return EasyTask.CompletedTask;
     }

@@ -1,0 +1,28 @@
+<Window x:Class="WpfApp1.CaptureClientWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="PixStream 采集端（场景二）" Height="160" Width="420"
+        Loaded="Window_Loaded" Closed="Window_Closed">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="采集端 (TcpDmtpClient)" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,4">
+            <TextBlock Text="连接状态：" VerticalAlignment="Center"/>
+            <TextBlock x:Name="txtStatus" Text="连接中…" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <TextBlock Text="采集帧率：" VerticalAlignment="Center"/>
+            <TextBlock x:Name="txtCaptureRate" Text="—" VerticalAlignment="Center" Foreground="Gray"/>
+        </StackPanel>
+    </Grid>
+</Window>

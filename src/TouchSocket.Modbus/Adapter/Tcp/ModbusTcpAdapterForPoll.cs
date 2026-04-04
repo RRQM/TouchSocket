@@ -22,12 +22,19 @@ namespace TouchSocket.Modbus;
 /// </summary>
 internal class ModbusTcpAdapterForPoll : CustomFixedHeaderDataHandlingAdapter<ModbusTcpResponse>
 {
+    private readonly ModbusFunctionHandlerRegistry m_registry;
+
+    internal ModbusTcpAdapterForPoll(ModbusFunctionHandlerRegistry registry)
+    {
+        this.m_registry = registry;
+    }
+
     public override int HeaderLength => 8;
 
     public override bool CanSendRequestInfo => true;
 
     protected override ModbusTcpResponse GetInstance()
     {
-        return new ModbusTcpResponse();
+        return new ModbusTcpResponse(this.m_registry);
     }
 }

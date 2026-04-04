@@ -268,9 +268,9 @@ internal class Program
                 //使用的大概逻辑是：
                 //1.每隔PollingInterval时间检验一次连接状态。
                 //2.如果连接断开，则执行重连操作。
-                //3.如果连接在线，则检查距离上次活动时间是否超过activeTimeSpan，如果超过，则发送ping包。
-                //4.如果ping包在pingTimeout时间内没有收到响应，则认为连接断开，执行重连操作。
-                options.UseMqttCheckAction(activeTimeSpan: TimeSpan.FromSeconds(10), pingTimeout: TimeSpan.FromSeconds(3));
+                //3.每隔pingInterval的时间，发送一次ping报文。
+                //4.如果在activeTimeSpan（30秒）内，有数据收发，则也会认为在活。
+                options.UseMqttCheckAction(activeTimeSpan: TimeSpan.FromSeconds(10), pingInterval: TimeSpan.FromSeconds(3));
             });
         });
         #endregion

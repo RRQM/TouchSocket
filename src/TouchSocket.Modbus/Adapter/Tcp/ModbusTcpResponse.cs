@@ -14,8 +14,15 @@ namespace TouchSocket.Modbus;
 
 internal sealed class ModbusTcpResponse : ModbusTcpBase, IFixedHeaderRequestInfo, IWaitHandle, IModbusResponse
 {
+    private readonly ModbusFunctionHandlerRegistry m_registry;
     private int m_bodyLength;
     private bool m_isError;
+
+    internal ModbusTcpResponse(ModbusFunctionHandlerRegistry registry)
+    {
+        this.m_registry = registry;
+    }
+
     int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
 
     public ModbusErrorCode ErrorCode { get; private set; }
@@ -29,30 +36,18 @@ internal sealed class ModbusTcpResponse : ModbusTcpBase, IFixedHeaderRequestInfo
             this.ErrorCode = (ModbusErrorCode)body[0];
             return true;
         }
-        if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
-        {
-            var len = body[0];
 
-            if (body.Length - 1 == len)
-            {
-                this.Data = body.Slice(1).ToArray();
-                return true;
-            }
-        }
-        else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
+        var handler = this.m_registry.GetHandler(this.FunctionCode);
+        if (handler == null)
         {
-            this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
-            this.Data = body.Slice(2).ToArray();
-            return true;
+            return false;
         }
-        else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
-        {
-            this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
-            this.Quantity = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(2));
-            this.Data = ReadOnlyMemory<byte>.Empty;
-            return true;
-        }
-        return false;
+
+        var responseData = handler.ParseResponsePdu(body);
+        this.Data = responseData.Data;
+        this.StartingAddress = responseData.StartingAddress;
+        this.Quantity = responseData.Quantity;
+        return true;
     }
 
     bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)

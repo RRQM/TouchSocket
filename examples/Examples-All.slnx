@@ -1,0 +1,245 @@
+<Solution>
+  <Folder Name="/.Solutions/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Adapter/">
+    <Project Path="Adapter/AdapterTesterConsoleApp/AdapterTesterConsoleApp.csproj" />
+    <Project Path="Adapter/BetweenAndConsoleApp/BetweenAndConsoleApp.csproj" />
+    <Project Path="Adapter/CustomAdapterConsoleApp/CustomAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/CustomBigFixedHeaderConsoleApp/CustomBigFixedHeaderConsoleApp.csproj" />
+    <Project Path="Adapter/CustomBigUnfixedHeaderConsoleApp/CustomBigUnfixedHeaderConsoleApp.csproj" />
+    <Project Path="Adapter/CustomCountSpliterDataHandlingAdapterConsoleApp/CustomCountSpliterDataHandlingAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/CustomFixedHeaderConsoleApp/CustomFixedHeaderConsoleApp.csproj" />
+    <Project Path="Adapter/CustomJsonDataHandlingAdapterConsoleApp/CustomJsonDataHandlingAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/CustomUnfixedHeaderConsoleApp/CustomUnfixedHeaderConsoleApp.csproj" />
+    <Project Path="Adapter/JsonPackageAdapterConsoleApp/JsonPackageAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/MultipacketAdapterConsoleApp/MultipacketAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/PackageAdapterConsoleApp/PackageAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/RawAdapterConsoleApp/RawAdapterConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/BlogsDemos/">
+    <Project Path="BlogsDemos/AccessRestrictionsConsoleApp/AccessRestrictionsConsoleApp.csproj" />
+    <Project Path="BlogsDemos/DifferentProtocolConsoleApp/DifferentProtocolConsoleApp.csproj" />
+    <Project Path="BlogsDemos/HeartbeatConsoleApp/HeartbeatConsoleApp.csproj" />
+    <Project Path="BlogsDemos/LimitNumberOfConnectionsConsoleApp/LimitNumberOfConnectionsConsoleApp.csproj" />
+    <Project Path="BlogsDemos/ThrottlingConsoleApp/ThrottlingConsoleApp.csproj" />
+    <Project Path="BlogsDemos/TrafficCounterConsoleApp/TrafficCounterConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Consul简单示例/" />
+  <Folder Name="/Consul简单示例/Dmtp集群/">
+    <Project Path="Consul集群示例/TouchRpc Consul集群/ServiceConsoleApp/ServiceConsoleApp.csproj" />
+    <Project Path="Consul集群示例/TouchRpc Consul集群/WinFormsApp/WinFormsApp.csproj" />
+  </Folder>
+  <Folder Name="/Consul简单示例/Tcp集群/">
+    <Project Path="Consul集群示例/ConsulConsoleApp/ConsulConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="Core/AotDynamicMethodConsoleApp/AotDynamicMethodConsoleApp.csproj" />
+    <Project Path="Core/AotFastBinaryFormatterConsoleApp/AotFastBinaryFormatterConsoleApp.csproj" />
+    <Project Path="Core/AotPluginConsoleApp/AotPluginConsoleApp.csproj" />
+    <Project Path="Core/AppMessengerConsoleApp/AppMessengerConsoleApp.csproj" />
+    <Project Path="Core/AppMessengerWinApp/AppMessengerWinApp.csproj" />
+    <Project Path="Core/BytePoolConsoleApp/BytePoolConsoleApp.csproj" />
+    <Project Path="Core/ConsoleActionConsoleApp/ConsoleActionConsoleApp.csproj" />
+    <Project Path="Core/DependencyPropertyConsoleApp/DependencyPropertyConsoleApp.csproj" />
+    <Project Path="Core/FastBinaryFormatterConsoleApp/FastBinaryFormatterConsoleApp.csproj" />
+    <Project Path="Core/IocConsoleApp/IocConsoleApp.csproj" />
+    <Project Path="Core/Log4netConsoleApp/Log4netConsoleApp.csproj" />
+    <Project Path="Core/LoggerConsoleApp/LoggerConsoleApp.csproj" />
+    <Project Path="Core/PackageConsoleApp/PackageConsoleApp.csproj" />
+    <Project Path="Core/PluginConsoleApp/PluginConsoleApp.csproj" />
+    <Project Path="Core/TouchSocketBitConverterConsoleApp/TouchSocketBitConverterConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/" />
+  <Folder Name="/Dmtp/Aot/">
+    <Project Path="Dmtp/AotDmtpRpcConsoleApp/DmtpRpcConsoleApp.csproj" />
+    <Project Path="Dmtp/AotDmtpRpcPerformanceConsoleApp/DmtpRpcPerformanceConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/DmtpChannel/">
+    <Project Path="Dmtp/DmtpChannelConsoleApp/DmtpChannelConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/DmtpRpc/">
+    <Project Path="Dmtp/DmtpRpcClientApp/DmtpRpcClientApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/DmtpRpc/DispatchProxy/">
+    <Project Path="Dmtp/DispatchProxyDmtpRpcConsoleApp/DispatchProxyDmtpRpcConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/DmtpRpc/控制台/">
+    <Project Path="Dmtp/DmtpRpcClientConsoleApp/DmtpRpcClientConsoleApp.csproj" />
+    <Project Path="Dmtp/DmtpRpcServerConsoleApp/DmtpRpcServerConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/DmtpRpc工厂示例/">
+    <Project Path="Dmtp/RpcFactoryConsoleApp/RpcFactoryConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/EventBus简单示例(暂时移除)/" />
+  <Folder Name="/Dmtp/FileTransfer/">
+    <Project Path="Dmtp/FileTransferConsoleApp/FileTransferConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/Performance/">
+    <Project Path="Dmtp/DmtpRpcDelayPerformanceConsoleApp/DmtpRpcDelayPerformanceConsoleApp.csproj" />
+    <Project Path="Dmtp/DmtpRpcPerformanceConsoleApp/DmtpRpcPerformanceConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/Redis/">
+    <Project Path="Dmtp/DmtpRedisConsoleApp/DmtpRedisConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/Rpc流式数据传输/">
+    <Project Path="Dmtp/RpcStreamConsoleApp/RpcStreamConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/内网穿透/">
+    <Project Path="Dmtp/RelayConsoleApp/RelayConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/创建Dmtp/">
+    <Project Path="Dmtp/CreateDmtpConsoleApp/CreateDmtpConsoleApp.csproj" />
+    <Project Path="Dmtp/DmtpConsoleApp/DmtpConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/即时视频流/">
+    <Project Path="Dmtp/WpfPixStreamApp/WpfPixStreamApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/反向Rpc示例/">
+    <Project Path="Dmtp/ReverseRpcConsoleApp/ReverseRpcConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/基于AspNetCore的Dmtp/">
+    <Project Path="Dmtp/DmtpAspnetcoreConsoleApp/DmtpAspnetcoreConsoleApp.csproj" />
+    <Project Path="Dmtp/DmtpWebApplication/DmtpWebApplication.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/基于NamedPipe的Dmtp/">
+    <Project Path="Dmtp/NamedPipeDmtpConsoleApp/NamedPipeDmtpConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/序列化选择器/">
+    <Project Path="Dmtp/SerializationSelectorClassLibrary/SerializationSelectorClassLibrary.csproj" />
+    <Project Path="Dmtp/SerializationSelectorConsoleApp/SerializationSelectorConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/源代码生成代理/">
+    <Project Path="Dmtp/GeneratorRpcProxyConsoleApp/GeneratorRpcProxyConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/源生成代理推荐写法/">
+    <Project Path="Dmtp/RecommendRpcConsoleApp/RecommendRpcConsoleApp.csproj" />
+    <Project Path="Dmtp/RpcClassLibrary/RpcClassLibrary.csproj" />
+    <Project Path="Dmtp/RpcImplementationClassLibrary/RpcImplementationClassLibrary.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/自定义DmtpActor/">
+    <Project Path="Dmtp/CustomDmtpActorConsoleApp/CustomDmtpActorConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/路由包示例/">
+    <Project Path="Dmtp/RouterPackageConsoleApp/RouterPackageConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/远程文件系统访问简单示例/">
+    <Project Path="Dmtp/RemoteAccessApp/RemoteAccessApp.csproj" />
+  </Folder>
+  <Folder Name="/Dmtp/远程流映射/">
+    <Project Path="Dmtp/RemoteStreamConsoleApp/RemoteStreamConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Hosting/">
+    <Project Path="Hosting/HostingWorkerService/HostingWorkerService.csproj" />
+  </Folder>
+  <Folder Name="/Http/">
+    <Project Path="Http/HttpClientConsoleApp/HttpClientConsoleApp.csproj" />
+    <Project Path="Http/HttpServiceConsoleApp/HttpServiceConsoleApp.csproj" />
+    <Project Path="Http/HttpServiceForCorsConsoleApp/HttpServiceForCorsConsoleApp.csproj" />
+    <Project Path="Http/HttpSseConsoleApp/HttpSseConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/JsonRpc/">
+    <Project Path="JsonRpc/AotJsonRpcConsoleApp/AotJsonRpcConsoleApp.csproj" />
+    <Project Path="JsonRpc/DispatchProxyJsonRpcClientConsoleApp/DispatchProxyJsonRpcClientConsoleApp.csproj" />
+    <Project Path="JsonRpc/JsonRpcClientConsoleApp/JsonRpcClientConsoleApp.csproj" />
+    <Project Path="JsonRpc/JsonRpcConsoleApp/JsonRpcServiceConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/JsonRpc/反向Rpc/">
+    <Project Path="JsonRpc/ReverseJsonRpcConsoleApp/ReverseJsonRpcConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Modbus/">
+    <Project Path="Modbus/ModbusMasterConsoleApp/ModbusMasterConsoleApp.csproj" />
+    <Project Path="Modbus/ModbusObjectConsoleApp/ModbusObjectConsoleApp.csproj" />
+    <Project Path="Modbus/ModbusSlaveConsoleApp/ModbusSlaveConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Mqtt/">
+    <Project Path="Mqtt/MqttConsoleApp/MqttConsoleApp.csproj" />
+    <Project Path="Mqtt/MqttTopicHandlerConsoleApp/MqttTopicHandlerConsoleApp.csproj" />
+    <Project Path="Mqtt/MqttWebSocketConsoleApp/MqttWebSocketConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/NamedPipe/">
+    <Project Path="NamedPipe/NamedPipeClientConsoleApp/NamedPipeClientConsoleApp.csproj" />
+    <Project Path="NamedPipe/NamedPipeServiceConsoleApp/NamedPipeServiceConsoleApp.csproj" />
+    <Project Path="NamedPipe/NamedPipeStressTestingConsoleApp/NamedPipeStressTestingConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/NamedPipe/AspNetCore/">
+    <Project Path="NamedPipe/NamedPipeWebApplication/NamedPipeWebApplication.csproj" />
+  </Folder>
+  <Folder Name="/NatService/">
+    <Project Path="NatService/NatServiceConsoleApp/NatServiceConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/PlcBridges/">
+    <Project Path="PlcBridges/ModbusPlcBridgeConsoleApp/ModbusPlcBridgeConsoleApp.csproj" />
+    <Project Path="PlcBridges/PlcBridgesConsoleApp/PlcBridgesConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/PluginPassingParameters/" />
+  <Folder Name="/Rpc/">
+    <Project Path="Rpc/GenerateProxyFromServerConsoleApp/GenerateProxyFromServerConsoleApp.csproj" />
+    <Project Path="Rpc/RpcAopConsoleApp/RpcAopConsoleApp.csproj" />
+    <Project Path="Rpc/RpcCallContextConsoleApp/RpcCallContextConsoleApp.csproj" />
+    <Project Path="Rpc/RpcDispatcherConsoleApp/RpcDispatcherConsoleApp.csproj" />
+    <Project Path="Rpc/RpcRateLimitingConsoleApp/RpcRateLimitingConsoleApp.csproj" />
+    <Project Path="Rpc/RpcRegisterConsoleApp/RpcRegisterConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Serial/">
+    <Project Path="Serial/SerialPortClientConsoleApp/SerialPortClientConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Ssl证书相关/">
+    <File Path="Ssl证书相关/证书生成.zip" />
+  </Folder>
+  <Folder Name="/Tcp/">
+    <Project Path="Tcp/AotTcpConsoleApp/AotTcpConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Tcp/AspNetCore/">
+    <Project Path="Tcp/TcpServiceForWebApi/TcpServiceForWebApi.csproj" />
+  </Folder>
+  <Folder Name="/Tcp/Performance/">
+    <Project Path="Tcp/TcpConnectStressTestingConsoleApp/TcpConnectStressTestingConsoleApp.csproj" />
+    <Project Path="Tcp/TcpFlowStressTestingConsoleApp/TcpFlowStressTestingConsoleApp.csproj" />
+    <Project Path="Tcp/TcpStressTestingConsoleApp/TcpStressTestingConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Tcp/Tcp命令行执行插件/">
+    <Project Path="Tcp/TcpCommandLineConsoleApp/TcpCommandLineConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Tcp/控制台/">
+    <Project Path="Tcp/ScopedTcpServiceConsoleApp/ScopedTcpServiceConsoleApp.csproj" />
+    <Project Path="Tcp/TcpConsoleApp/TcpConsoleApp.csproj" />
+    <Project Path="Tcp/TcpServiceReadAsyncConsoleApp/TcpServiceReadAsyncConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Udp/">
+    <Project Path="Udp/UdpDemoApp/UdpDemoApp.csproj" />
+  </Folder>
+  <Folder Name="/Udp/UdpScreenCapture/">
+    <Project Path="Udp/UdpScreenCapture/ScreenUdpReceiver/ScreenUdpReceiver.csproj" />
+    <Project Path="Udp/UdpScreenCapture/ScreenUdpSender/ScreenUdpSender.csproj" />
+  </Folder>
+  <Folder Name="/Udp/Udp组播、广播/">
+    <Project Path="Udp/UdpBroadcastConsoleApp/UdpBroadcastConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/Unity3d/">
+    <Project Path="Unity3d/UnityServerConsoleApp_2D/UnityServerConsoleApp_2D.csproj" />
+    <Project Path="Unity3d/UnityServerConsoleApp_All/UnityServerConsoleApp_All.csproj" />
+  </Folder>
+  <Folder Name="/WaitingClient/">
+    <Project Path="WaitingClient/TcpWaitingClientWinFormsApp/TcpWaitingClientWinFormsApp.csproj" />
+    <Project Path="WaitingClient/WaitingClientConsoleApp/WaitingClientConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/WebApi/">
+    <Project Path="WebApi/AotWebApiConsoleApp/AotWebApiConsoleApp.csproj" />
+    <Project Path="WebApi/DispatchProxyWebApiConsoleApp/DispatchProxyWebApiConsoleApp.csproj" />
+    <Project Path="WebApi/WebApiAuthenticationConsoleApp/WebApiAuthenticationConsoleApp.csproj" />
+    <Project Path="WebApi/WebApiClientApp/WebApiClientApp.csproj" />
+    <Project Path="WebApi/WebApiPerformanceConsoleApp/WebApiPerformanceConsoleApp.csproj" />
+    <Project Path="WebApi/WebApiServer/WebApiServerApp.csproj" />
+  </Folder>
+  <Folder Name="/WebSocket/">
+    <Project Path="WebSocket/AsyncWebSocketConsoleApp/AsyncWebSocketConsoleApp.csproj" />
+    <Project Path="WebSocket/WebSocketConsoleApp/WebSocketConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/XmlRpc/">
+    <Project Path="XmlRpc/DispatchProxyXmlRpcClientConsoleApp/DispatchProxyXmlRpcClientConsoleApp.csproj" />
+    <Project Path="XmlRpc/XmlRpcClientApp/XmlRpcClientApp.csproj" />
+    <Project Path="XmlRpc/XmlRpcServerApp/XmlRpcServerApp.csproj" />
+  </Folder>
+</Solution>

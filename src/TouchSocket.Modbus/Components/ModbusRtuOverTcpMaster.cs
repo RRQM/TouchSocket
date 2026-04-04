@@ -27,6 +27,10 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
         this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
     }
 
+    /// <summary>
+    /// 获取或设置功能码处理器注册表，默认使用<see cref="ModbusFunctionHandlerRegistry.Default"/>
+    /// </summary>
+    public ModbusFunctionHandlerRegistry FunctionHandlerRegistry { get; } = ModbusFunctionHandlerRegistry.Default;
 
     /// <inheritdoc/>
     public async Task<IModbusResponse> SendModbusRequestAsync(IModbusRequest request, CancellationToken cancellationToken)
@@ -35,7 +39,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
 
         try
         {
-            var modbusRequest = new ModbusRtuRequest(request);
+            var modbusRequest = new ModbusRtuRequest(request, this.FunctionHandlerRegistry);
 
             var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
             try
@@ -64,7 +68,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     /// <inheritdoc/>
     protected override Task OnTcpConnecting(ConnectingEventArgs e)
     {
-        this.SetAdapter(new ModbusRtuAdapter());
+        this.SetAdapter(new ModbusRtuAdapter(this.FunctionHandlerRegistry));
         return base.OnTcpConnecting(e);
     }
 

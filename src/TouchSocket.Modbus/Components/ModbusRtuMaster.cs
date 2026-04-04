@@ -30,6 +30,11 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
         this.Protocol = TouchSocketModbusUtility.ModbusRtu;
     }
 
+    /// <summary>
+    /// 获取或设置功能码处理器注册表，默认使用<see cref="ModbusFunctionHandlerRegistry.Default"/>
+    /// </summary>
+    public ModbusFunctionHandlerRegistry FunctionHandlerRegistry { get; } = ModbusFunctionHandlerRegistry.Default;
+
     /// <inheritdoc/>
     public Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -44,7 +49,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
         try
         {
             this.m_modbusRequest = request;
-            var modbusRequest = new ModbusRtuRequest(request);
+            var modbusRequest = new ModbusRtuRequest(request, this.FunctionHandlerRegistry);
             var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
             try
             {
@@ -74,7 +79,7 @@ public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     /// <inheritdoc/>
     protected override async Task OnSerialConnecting(ConnectingEventArgs e)
     {
-        this.SetAdapter(new ModbusRtuAdapter());
+        this.SetAdapter(new ModbusRtuAdapter(this.FunctionHandlerRegistry));
         await base.OnSerialConnecting(e).ConfigureDefaultAwait();
     }
 

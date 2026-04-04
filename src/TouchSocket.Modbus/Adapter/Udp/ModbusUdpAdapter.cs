@@ -16,12 +16,18 @@ namespace TouchSocket.Modbus;
 
 internal class ModbusUdpAdapter : UdpDataHandlingAdapter
 {
-    public override bool CanSendRequestInfo => true;
+    private readonly ModbusFunctionHandlerRegistry m_registry;
 
+    internal ModbusUdpAdapter(ModbusFunctionHandlerRegistry registry)
+    {
+        this.m_registry = registry;
+    }
+
+    public override bool CanSendRequestInfo => true;
 
     protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
-        var response = new ModbusTcpResponse();
+        var response = new ModbusTcpResponse(this.m_registry);
 
         if (((IFixedHeaderRequestInfo)response).OnParsingHeader(memory.Span.Slice(0, 8)))
         {

@@ -19,103 +19,92 @@ namespace TouchSocket.Http.WebSockets;
 /// </summary>
 public static class ReconnectionOptionsExtension
 {
-
     /// <summary>
     /// 为 <see cref="ReconnectionOption{TClient}"/> 设置一个基于活动时间与 Ping 的检查动作。
     /// </summary>
-    /// <typeparam name="TClient">实现了 <see cref="IConnectableClient"/>, <see cref="IOnlineClient"/>, <see cref="IDependencyClient"/>, <see cref="IWebSocketClient"/> 的客户端类型。</typeparam>
+    /// <typeparam name="TClient">实现了 <see cref="IConnectableClient"/>、<see cref="IOnlineClient"/>、<see cref="IDependencyClient"/>、<see cref="IWebSocket"/> 的客户端类型。</typeparam>
     /// <param name="reconnectionOption">要配置的 <see cref="ReconnectionOption{TClient}"/> 实例。</param>
     /// <param name="activeTimeSpan">在此时间范围内若有活动则跳过心跳检测，默认 3 秒。</param>
-    /// <param name="pingTimeout">执行 Ping 与 Close 操作时的超时时间，默认 5 秒。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 或 <paramref name="pingTimeout"/> 小于或等于零时抛出。</exception>
+    /// <param name="pingInterval">Ping 间隔时间，默认 5 秒。如果上次 Ping 距离本次超过该间隔，则进行 Ping。</param>
+    /// <exception cref="ArgumentNullException">当 <paramref name="reconnectionOption"/> 为 <see langword="null"/> 时抛出。</exception>
+    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 或 <paramref name="pingInterval"/> 小于或等于零时抛出。</exception>
     public static void UseWebSocketCheckAction<TClient>(
         this ReconnectionOption<TClient> reconnectionOption,
         TimeSpan? activeTimeSpan = null,
-        TimeSpan? pingTimeout = null)
-  where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IWebSocket
+        TimeSpan? pingInterval = null)
+        where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IWebSocket
     {
         //PR:https://github.com/RRQM/TouchSocket/pull/112
         ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
         var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
-        var timeout = pingTimeout ?? TimeSpan.FromSeconds(5);
+        var interval = pingInterval ?? TimeSpan.FromSeconds(5);
+        var pingOperationTimeout = TimeSpan.FromSeconds(5);
 
-        // 验证时间参数的有效性
         if (span <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(activeTimeSpan), "活动时间间隔必须大于零");
         }
 
-        if (timeout <= TimeSpan.Zero)
+        if (interval <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(pingTimeout), "Ping超时时间必须大于零");
+            throw new ArgumentOutOfRangeException(nameof(pingInterval), "Ping间隔必须大于零");
         }
+
+        DateTimeOffset lastPingTime = DateTimeOffset.MinValue;
 
         reconnectionOption.CheckAction = async (client) =>
         {
-            // 第1步：快速在线状态检查
-            // 如果客户端已经离线，无需进一步检查，直接返回Dead状态
             if (!client.Online)
             {
                 return ConnectionCheckResult.Dead;
             }
 
-            // 第2步：活动时间检查
-            // 如果客户端在指定时间内有活动，说明连接正常，跳过本次心跳检查
-            var lastActiveTime = client.GetLastActiveTime();
-            var timeSinceLastActivity = DateTimeOffset.UtcNow - lastActiveTime;
+            var timeSinceLastPing = DateTimeOffset.UtcNow - lastPingTime;
+            var timeSinceLastActivity = DateTimeOffset.UtcNow - client.GetLastActiveTime();
 
-            if (timeSinceLastActivity < span)
+            if (timeSinceLastPing >= interval)
             {
-                return ConnectionCheckResult.Skip;
-            }
-
-            // 第3步：主动心跳检查
-            // 通过Ping操作验证连接的实际可用性
-            try
-            {
-                using var pingCts = new CancellationTokenSource(timeout);
-                var pingResult = await client.PingAsync(pingCts.Token).ConfigureDefaultAwait();
-
-                if (pingResult.IsSuccess)
+                try
                 {
-                    return ConnectionCheckResult.Alive;
+                    using var pingCts = new CancellationTokenSource(pingOperationTimeout);
+                    var pingResult = await client.PingAsync(pingCts.Token).ConfigureDefaultAwait();
+
+                    if (pingResult.IsSuccess)
+                    {
+                        lastPingTime = DateTimeOffset.UtcNow;
+                        return ConnectionCheckResult.Alive;
+                    }
+
+                    using var closeCts = new CancellationTokenSource(pingOperationTimeout);
+                    await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureDefaultAwait();
+                    return ConnectionCheckResult.Dead;
                 }
-
-                using var closeCts = new CancellationTokenSource(timeout);
-
-                var closeResult = await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureDefaultAwait();
-
-                return ConnectionCheckResult.Dead;
+                catch
+                {
+                    return ConnectionCheckResult.Dead;
+                }
             }
-            catch (OperationCanceledException)
-            {
-                // Ping超时，认为连接已死
-                return ConnectionCheckResult.Dead;
-            }
-            catch
-            {
-                // 其他异常也认为连接不可用
-                return ConnectionCheckResult.Dead;
-            }
+
+            return timeSinceLastActivity < span ? ConnectionCheckResult.Skip : ConnectionCheckResult.Alive;
         };
     }
 
     /// <summary>
-    /// 为 <see cref="ReconnectionOption{TClient}"/> 设置一个基于活动时间与 Ping 的检查动作。
+    /// 为 <see cref="ReconnectionOption{TClient}"/> 设置一个仅基于活动时间的检查动作。
     /// </summary>
-    /// <typeparam name="TClient">实现了 <see cref="SetupClientWebSocket"/></typeparam>
+    /// <typeparam name="TClient">实现了 <see cref="SetupClientWebSocket"/> 的客户端类型。</typeparam>
     /// <param name="reconnectionOption">要配置的 <see cref="ReconnectionOption{TClient}"/> 实例。</param>
     /// <param name="activeTimeSpan">在此时间范围内若有活动则跳过心跳检测，默认 3 秒。</param>
+    /// <exception cref="ArgumentNullException">当 <paramref name="reconnectionOption"/> 为 <see langword="null"/> 时抛出。</exception>
     /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="activeTimeSpan"/> 小于或等于零时抛出。</exception>
     public static void UseWebSocketCheckAction<TClient>(
         this ReconnectionOption<TClient> reconnectionOption,
         TimeSpan? activeTimeSpan = null)
-  where TClient : SetupClientWebSocket, IConnectableClient, IOnlineClient, IDependencyClient
+        where TClient : SetupClientWebSocket, IConnectableClient, IOnlineClient, IDependencyClient
     {
         ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
         var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
-      
-        // 验证时间参数的有效性
+
         if (span <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(activeTimeSpan), "活动时间间隔必须大于零");
@@ -123,24 +112,13 @@ public static class ReconnectionOptionsExtension
 
         reconnectionOption.CheckAction = async (client) =>
         {
-            // 第1步：快速在线状态检查
-            // 如果客户端已经离线，无需进一步检查，直接返回Dead状态
             if (!client.Online)
             {
                 return ConnectionCheckResult.Dead;
             }
 
-            // 第2步：活动时间检查
-            // 如果客户端在指定时间内有活动，说明连接正常，跳过本次心跳检查
-            var lastActiveTime = client.GetLastActiveTime();
-            var timeSinceLastActivity = DateTimeOffset.UtcNow - lastActiveTime;
-
-            if (timeSinceLastActivity < span)
-            {
-                return ConnectionCheckResult.Skip;
-            }
-
-            return ConnectionCheckResult.Alive;
+            var timeSinceLastActivity = DateTimeOffset.UtcNow - client.GetLastActiveTime();
+            return timeSinceLastActivity < span ? ConnectionCheckResult.Skip : ConnectionCheckResult.Alive;
         };
     }
 }

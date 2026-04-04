@@ -106,7 +106,6 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcResponsePackage).ConfigureDefaultAwait();
                 }
                 else
-
                 {
                     var rpcMethod = this.GetInvokeMethod.Invoke(rpcPackage.InvokeKey);
                     DmtpRpcCallContext callContext;
@@ -122,8 +121,6 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
                     rpcPackage.LoadInfo(callContext, this.m_serializationSelector);
                     rpcPackage.UnpackageBody(ref reader);
-                    //await this.InvokeThisAsync(callContext).ConfigureDefaultAwait();
-                    //await EasyTask.Run(this.InvokeThisAsync, callContext).ConfigureDefaultAwait();
                     await this.Dispatcher.Dispatcher(this.DmtpActor, callContext, this.InvokeThisAsync)
                         .ConfigureDefaultAwait();
                 }
@@ -264,20 +261,8 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
             if (rpcRequestPackage.Feedback == FeedbackType.WaitSend)
             {
                 //立即返回
-
-                var returnByteBlock = new ValueByteBlock(1024);
-                try
-                {
-                    rpcResponsePackage = new DmtpRpcResponsePackage(rpcRequestPackage, this.m_serializationSelector, null);
-
-                    rpcResponsePackage.Package(ref returnByteBlock);
-
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureDefaultAwait();
-                }
-                finally
-                {
-                    returnByteBlock.Dispose();
-                }
+                rpcResponsePackage = new DmtpRpcResponsePackage(rpcRequestPackage, this.m_serializationSelector, null);
+                await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcResponsePackage).ConfigureDefaultAwait();
             }
 
             var invokeResult = new InvokeResult();
@@ -335,19 +320,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                 default:
                     return;
             }
-
-
-            var byteBlock = new ValueByteBlock(1024 * 64);
-            try
-            {
-                rpcResponsePackage.Package(ref byteBlock);
-
-                await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureDefaultAwait();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            await this.DmtpActor.SendAsync(this.m_invoke_Response, rpcResponsePackage).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {

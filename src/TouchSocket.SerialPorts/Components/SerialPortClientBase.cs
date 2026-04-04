@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -20,6 +20,7 @@ namespace TouchSocket.SerialPorts;
 /// 串口客户端基类
 /// </summary>
 [CodeInject.RegionInject(FileName = "TcpClientBase.cs", RegionName = "ReceiveLoopAsync", Placeholders = new[] { "OnTcpReceiving", "OnSerialReceiving" })]
+[CodeInject.RegionInject(FileName = "TcpClientBase.cs", RegionName = "内置常规数据发送", Placeholders = new[] { "OnTcpSending", "OnSerialSending" })]
 public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialPortSession
 {
     /// <summary>
@@ -417,103 +418,4 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     }
 
     #endregion Receiver
-
-    #region Throw
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ThrowIfCannotSendRequestInfo()
-    {
-        if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
-        {
-            ThrowHelper.ThrowNotSupportedException(TouchSocketResource.CannotSendRequestInfo);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ThrowIfClientNotConnected()
-    {
-        if (this.m_online)
-        {
-            return;
-        }
-
-        ThrowHelper.ThrowClientNotConnectedException();
-    }
-
-    #endregion Throw
-
-    #region 发送
-
-    /// <summary>
-    /// 异步发送数据，通过适配器模式灵活处理数据发送。
-    /// </summary>
-    /// <param name="memory">待发送的只读字节内存块。</param>
-    /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns>一个异步任务，表示发送操作。</returns>
-    protected async Task ProtectedSendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
-    {
-        this.ThrowIfDisposed();
-        this.ThrowIfClientNotConnected();
-
-        var transport = this.m_transport;
-        var adapter = this.m_dataHandlingAdapter;
-        var locker = transport.WriteLocker;
-
-        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-        await this.OnSerialSending(memory).ConfigureDefaultAwait();
-        try
-        {
-            // 如果数据处理适配器未设置，则使用默认发送方式。
-            if (adapter == null)
-            {
-                await transport.Writer.WriteAsync(memory, cancellationToken).ConfigureDefaultAwait();
-            }
-            else
-            {
-                var writer = new PipeBytesWriter(transport.Writer);
-                adapter.SendInput(ref writer, in memory);
-                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-            }
-        }
-        finally
-        {
-            locker.Release();
-        }
-    }
-
-    /// <summary>
-    /// 异步发送请求信息的受保护方法。
-    ///
-    /// 此方法首先检查当前对象是否能够发送请求信息，如果不能，则抛出异常。
-    /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
-    /// </summary>
-    /// <param name="requestInfo">要发送的请求信息。</param>
-    /// <param name="cancellationToken">可取消令箭</param>
-    /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
-    protected async Task ProtectedSendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken)
-    {
-        // 检查是否具备发送请求的条件，如果不具备则抛出异常
-        this.ThrowIfCannotSendRequestInfo();
-
-        this.ThrowIfDisposed();
-        this.ThrowIfClientNotConnected();
-
-        var transport = this.m_transport;
-        var adapter = this.m_dataHandlingAdapter;
-        var locker = transport.WriteLocker;
-
-        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-        try
-        {
-            var writer = new PipeBytesWriter(transport.Writer);
-            adapter.SendInput(ref writer, requestInfo);
-            await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-        }
-        finally
-        {
-            locker.Release();
-        }
-    }
-
-    #endregion 发送
 }

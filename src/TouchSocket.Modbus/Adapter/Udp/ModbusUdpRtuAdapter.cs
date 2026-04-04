@@ -10,48 +10,110 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Net;
 
 namespace TouchSocket.Modbus;
 
 internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
 {
+    private readonly ModbusFunctionHandlerRegistry m_registry;
+
+    internal ModbusUdpRtuAdapter(ModbusFunctionHandlerRegistry registry)
+    {
+        this.m_registry = registry;
+    }
+
     public override bool CanSendRequestInfo => true;
 
     protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
     {
+        if (memory.Length < 4)
+        {
+            return;
+        }
+
         var reader = new BytesReader(memory);
-        var response = new ModbusRtuResponse();
-        response.SlaveId = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-        response.FunctionCode = (FunctionCode)ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
+        var slaveId = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
+        var code = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
 
-        var crcLen = 0;
-        if ((byte)response.FunctionCode <= 4)
+        var isError = (code & 0x80) != 0;
+        if (isError)
         {
-            var len = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-            response.SetValue(ReaderExtension.ReadToSpan(ref reader, len).ToArray());
-            response.Crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            crcLen = 3 + len;
+            code = code.SetBit(7, false);
         }
-        else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
+        var functionCode = (FunctionCode)code;
+
+        if (isError)
         {
-            response.StartingAddress = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            response.SetValue(ReaderExtension.ReadToSpan(ref reader, 2).ToArray());
-            response.Crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            crcLen = 6;
-        }
-        else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
-        {
-            response.StartingAddress = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            response.Quantity = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            response.Crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            crcLen = 6;
+            if (reader.BytesRemaining < 3)
+            {
+                return;
+            }
+            var errorCode = (ModbusErrorCode)ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
+            var crcDataLength = (int)reader.BytesRead;
+            var crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
+            var expectedCrc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcDataLength));
+            if (crc == expectedCrc)
+            {
+                var response = new ModbusRtuResponse()
+                {
+                    SlaveId = slaveId,
+                    FunctionCode = functionCode,
+                    ErrorCode = errorCode,
+                };
+                await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
+            }
+            return;
         }
 
-        var crc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcLen));
-        if (crc == (response.Crc))
+        var handler = this.m_registry.GetHandler(functionCode);
+        if (handler == null)
         {
-            await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
+            return;
+        }
+
+        if (reader.BytesRemaining < 1)
+        {
+            return;
+        }
+
+        var firstByte = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
+        var afterFirstByteLength = handler.GetRtuResponseAfterFirstByteLength(firstByte);
+
+        if (reader.BytesRemaining < afterFirstByteLength + 2)
+        {
+            return;
+        }
+
+        var pduBodyLength = 1 + afterFirstByteLength;
+        var pduBodyBuffer = ArrayPool<byte>.Shared.Rent(pduBodyLength);
+        try
+        {
+            pduBodyBuffer[0] = firstByte;
+            ReaderExtension.ReadToSpan(ref reader, afterFirstByteLength).CopyTo(pduBodyBuffer.AsSpan(1));
+
+            var crcDataLength = (int)reader.BytesRead;
+            var crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
+            var expectedCrc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcDataLength));
+
+            if (crc == expectedCrc)
+            {
+                var responseData = handler.ParseResponsePdu(pduBodyBuffer.AsSpan(0, pduBodyLength));
+                var response = new ModbusRtuResponse()
+                {
+                    SlaveId = slaveId,
+                    FunctionCode = functionCode,
+                    Data = responseData.Data,
+                    StartingAddress = responseData.StartingAddress,
+                    Quantity = responseData.Quantity,
+                };
+                await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(pduBodyBuffer);
         }
     }
 }

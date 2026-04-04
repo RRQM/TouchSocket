@@ -12,7 +12,7 @@
 
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Dmtp.RouterPackage;
+using TouchSocket.Dmtp.RouterPackages;
 using TouchSocket.Sockets;
 
 namespace RouterPackageConsoleApp;

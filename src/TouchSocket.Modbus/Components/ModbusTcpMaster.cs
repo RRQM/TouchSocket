@@ -19,7 +19,6 @@ namespace TouchSocket.Modbus;
 /// </summary>
 public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
 {
-    private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(10);
     private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
 
@@ -31,6 +30,11 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
         this.Protocol = TouchSocketModbusUtility.ModbusTcp;
         this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>(0, ushort.MaxValue);
     }
+
+    /// <summary>
+    /// 获取或设置功能码处理器注册表，默认使用<see cref="ModbusFunctionHandlerRegistry.Default"/>
+    /// </summary>
+    public ModbusFunctionHandlerRegistry FunctionHandlerRegistry { get; } = ModbusFunctionHandlerRegistry.Default;
 
     /// <inheritdoc/>
     public Task ConnectAsync(CancellationToken cancellationToken)
@@ -45,7 +49,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
         var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
         try
         {
-            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
+            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request, this.FunctionHandlerRegistry);
 
             var valueByteBlock = new ValueByteBlock(modbusTcpRequest.MaxLength);
             try
@@ -76,7 +80,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     /// <inheritdoc/>
     protected override Task OnTcpConnecting(ConnectingEventArgs e)
     {
-        this.SetAdapter(new ModbusTcpAdapterForPoll());
+        this.SetAdapter(new ModbusTcpAdapterForPoll(this.FunctionHandlerRegistry));
         return base.OnTcpConnecting(e);
     }
 

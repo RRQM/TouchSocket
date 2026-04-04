@@ -11,13 +11,12 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Core;
+using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 
 internal class SimpleDmtpRpcPackage : WaitRouterPackage
 {
-    protected override bool IncludedRouter => true;
-
     public string MethodName { get; set; }
 
 

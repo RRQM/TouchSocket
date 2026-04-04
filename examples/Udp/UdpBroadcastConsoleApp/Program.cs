@@ -142,3 +142,13 @@ internal class Program
         }
     }
 }
+
+class MyUdpSessionBase : UdpSessionBase
+{
+    protected override ValueTask<bool> OnUdpReceiving(UdpReceiveingEventArgs e)
+    {
+        var memory = e.Memory;
+        return base.OnUdpReceiving(e);
+    }
+
+}

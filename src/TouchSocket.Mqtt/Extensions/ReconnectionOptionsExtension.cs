@@ -19,24 +19,27 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public static class ReconnectionOptionsExtension
 {
+
     /// <summary>
     /// 配置MQTT检查操作。
     /// </summary>
     /// <typeparam name="TClient">客户端类型，必须实现<see cref="IConnectableClient"/>、<see cref="IOnlineClient"/>、<see cref="IDependencyClient"/>和<see cref="IMqttClient"/>。</typeparam>
     /// <param name="reconnectionOption">重连选项。</param>
     /// <param name="activeTimeSpan">活动时间间隔，默认为3秒。</param>
-    /// <param name="pingTimeout">Ping超时时间，默认为5秒。</param>
+    /// <param name="pingInterval">Ping间隔时间，默认为5秒。如果上次Ping距离本次超过该间隔，则进行Ping。</param>
     /// <exception cref="ArgumentOutOfRangeException">当时间参数小于或等于零时抛出。</exception>
     /// <exception cref="ArgumentNullException">当<paramref name="reconnectionOption"/>为<see langword="null"/>时抛出。</exception>
     public static void UseMqttCheckAction<TClient>(
         this ReconnectionOption<TClient> reconnectionOption,
         TimeSpan? activeTimeSpan = null,
-        TimeSpan? pingTimeout = null)
+        TimeSpan? pingInterval = null)
         where TClient : IConnectableClient, IOnlineClient, IDependencyClient, IMqttClient
     {
         ThrowHelper.ThrowIfNull(reconnectionOption, nameof(reconnectionOption));
         var span = activeTimeSpan ?? TimeSpan.FromSeconds(3);
-        var timeout = pingTimeout ?? TimeSpan.FromSeconds(5);
+        var interval = pingInterval ?? TimeSpan.FromSeconds(5);
+        // 单次Ping操作的超时时间，固定使用5秒。
+        var pingOperationTimeout = TimeSpan.FromSeconds(5);
 
         // 验证时间参数的有效性
         if (span <= TimeSpan.Zero)
@@ -44,58 +47,47 @@ public static class ReconnectionOptionsExtension
             throw new ArgumentOutOfRangeException(nameof(activeTimeSpan), "活动时间间隔必须大于零");
         }
 
-        if (timeout <= TimeSpan.Zero)
+        if (interval <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(pingTimeout), "Ping超时时间必须大于零");
+            throw new ArgumentOutOfRangeException(nameof(pingInterval), "Ping间隔必须大于零");
         }
+
+        var lastPingTime = DateTimeOffset.MinValue;
 
         reconnectionOption.CheckAction = async (client) =>
         {
-            // 第1步：快速在线状态检查
-            // 如果客户端已经离线，无需进一步检查，直接返回Dead状态
             if (!client.Online)
             {
                 return ConnectionCheckResult.Dead;
             }
 
-            // 第2步：活动时间检查
-            // 如果客户端在指定时间内有活动，说明连接正常，跳过本次心跳检查
-            var lastActiveTime = client.GetLastActiveTime();
-            var timeSinceLastActivity = DateTimeOffset.UtcNow - lastActiveTime;
+            var timeSinceLastPing = DateTimeOffset.UtcNow - lastPingTime;
+            var timeSinceLastActivity = DateTimeOffset.UtcNow - client.GetLastActiveTime();
 
-            if (timeSinceLastActivity < span)
+            if (timeSinceLastPing >= interval)
             {
-                return ConnectionCheckResult.Skip;
-            }
-
-            // 第3步：主动心跳检查
-            // 通过Ping操作验证连接的实际可用性
-            try
-            {
-                using var pingCts = new CancellationTokenSource(timeout);
-                var pingResult = await client.PingAsync(pingCts.Token).ConfigureDefaultAwait();
-
-                if (pingResult.IsSuccess)
+                try
                 {
-                    return ConnectionCheckResult.Alive;
+                    using var pingCts = new CancellationTokenSource(pingOperationTimeout);
+                    var pingResult = await client.PingAsync(pingCts.Token).ConfigureDefaultAwait();
+
+                    if (pingResult.IsSuccess)
+                    {
+                        lastPingTime = DateTimeOffset.UtcNow;
+                        return ConnectionCheckResult.Alive;
+                    }
+
+                    using var closeCts = new CancellationTokenSource(pingOperationTimeout);
+                    await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureDefaultAwait();
+                    return ConnectionCheckResult.Dead;
                 }
-
-                using var closeCts = new CancellationTokenSource(timeout);
-
-                var closeResult = await client.CloseAsync("心跳插件ping失败主动断开连接", closeCts.Token).ConfigureDefaultAwait();
-
-                return ConnectionCheckResult.Dead;
+                catch
+                {
+                    return ConnectionCheckResult.Dead;
+                }
             }
-            catch (OperationCanceledException)
-            {
-                // Ping超时，认为连接已死
-                return ConnectionCheckResult.Dead;
-            }
-            catch
-            {
-                // 其他异常也认为连接不可用
-                return ConnectionCheckResult.Dead;
-            }
+
+            return timeSinceLastActivity < span ? ConnectionCheckResult.Skip : ConnectionCheckResult.Alive;
         };
     }
 }
