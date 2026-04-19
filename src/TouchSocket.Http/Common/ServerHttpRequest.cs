@@ -137,6 +137,25 @@ internal sealed class ServerHttpRequest : HttpRequest
         this.m_isChunkedBody = isChunked;
     }
 
+    /// <summary>
+    /// 获取请求体是否已被完整消费。
+    /// </summary>
+    internal bool InternalIsBodyConsumed =>
+        this.ContentStatus == ContentCompletionStatus.ContentCompleted ||
+        this.ContentStatus == ContentCompletionStatus.ReadCompleted ||
+        this.m_pipeReader == null ||
+        (!this.m_isChunkedBody && this.m_bodyBytesRemaining == 0);
+
+    /// <summary>
+    /// 获取剩余未读取的固定长度请求体字节数。
+    /// </summary>
+    internal long InternalBodyBytesRemaining => this.m_bodyBytesRemaining;
+
+    /// <summary>
+    /// 获取请求体是否为 chunked 传输编码。
+    /// </summary>
+    internal bool InternalIsChunkedBody => this.m_isChunkedBody;
+
     internal async Task InternalDrainBodyAsync(CancellationToken cancellationToken)
     {
         if (this.ContentStatus == ContentCompletionStatus.ContentCompleted ||

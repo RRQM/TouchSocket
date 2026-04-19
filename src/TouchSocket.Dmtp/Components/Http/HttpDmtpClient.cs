@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -61,6 +61,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             {
                 return;
             }
+
             // 如果基础连接不在状态，则尝试建立TCP连接
             if (!base.Online)
             {
@@ -144,6 +145,21 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             this.m_allowRoute = true;
             this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
         }
+
+        this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
+        {
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
+            OutputSendAsync = this.DmtpActorSendAsync,
+            Routing = this.OnDmtpActorRouting,
+            Connecting = this.OnDmtpActorConnecting,
+            Connected = this.OnDmtpActorConnected,
+            Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
+            CreatedChannel = this.OnDmtpActorCreateChannel,
+            Logger = this.Logger,
+            Client = this,
+            FindDmtpActor = this.m_findDmtpActor
+        };
     }
 
     /// <inheritdoc/>
@@ -198,22 +214,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
         var adapter = new DmtpAdapter();
         this.SetAdapter(adapter);
         this.m_adapter = adapter;
-        this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
-        {
-            //OutputSend = this.DmtpActorSend,
-            TransportWriter = base.Transport,
-            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
-            OutputSendAsync = this.DmtpActorSendAsync,
-            Routing = this.OnDmtpActorRouting,
-            Connecting = this.OnDmtpActorConnecting,
-            Connected = this.OnDmtpActorConnected,
-            Closing = this.OnDmtpActorClose,
-            Closed = this.OnDmtpActorClosed,
-            CreatedChannel = this.OnDmtpActorCreateChannel,
-            Logger = this.Logger,
-            Client = this,
-            FindDmtpActor = this.m_findDmtpActor
-        };
+        this.m_dmtpActor.TransportWriter = base.Transport;
+        this.m_dmtpActor.MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0;
+        this.m_dmtpActor.Logger = this.Logger;
+        this.m_dmtpActor.Client = this;
 
         var transport = base.Transport;
         _ = EasyTask.SafeRun(this.DmtpReceiveLoopAsync, transport);

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.IO.Pipelines;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -158,6 +157,14 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
             try
             {
                 await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureDefaultAwait();
+
+                // 若 handler 未响应，兜底返回 404
+                if (!this.m_serverHttpResponse.Responsed)
+                {
+                    await this.m_serverHttpResponse.UrlNotFind()
+                        .AnswerAsync(closedToken)
+                        .ConfigureDefaultAwait();
+                }
             }
             catch (Exception ex)
             {
@@ -168,17 +175,40 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
                 this.m_serverHttpResponse.Reset();
             }
 
-            // 阶段三：丢弃未读取的 body
-            try
-            {
-                await this.m_requestRoot.InternalDrainBodyAsync(closedToken).ConfigureDefaultAwait();
-            }
-            catch
+            if (this.m_isCustomProtocol)
             {
                 return;
             }
 
-            if (this.m_isCustomProtocol)
+            // 阶段三：处理 body 未被完整消费的情况
+            //   - chunked body 未消费 → 断开连接（行为不可预测）
+            //   - fixed-length body 剩余 <= 64KB → drain 后继续 keep-alive
+            //   - fixed-length body 剩余 > 64KB → 断开连接（避免无谓等待）
+            if (!this.m_requestRoot.InternalIsBodyConsumed)
+            {
+                if (this.m_requestRoot.InternalIsChunkedBody)
+                {
+                    return;
+                }
+
+                const long drainThreshold = 65536L;
+                if (this.m_requestRoot.InternalBodyBytesRemaining > drainThreshold)
+                {
+                    return;
+                }
+
+                try
+                {
+                    await this.m_requestRoot.InternalDrainBodyAsync(closedToken).ConfigureDefaultAwait();
+                }
+                catch
+                {
+                    return;
+                }
+            }
+
+            // 阶段四：若请求不保持连接，断开连接
+            if (!this.m_requestRoot.KeepAlive)
             {
                 return;
             }

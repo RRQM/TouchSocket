@@ -297,6 +297,49 @@ public static partial class WriterExtension
     }
 
     /// <summary>
+    /// 使用指定编码将字符跨度写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的字符只读跨度。</param>
+    /// <param name="encoding">要使用的字符编码。</param>
+    /// <remarks>
+    /// 此方法直接将字符跨度按指定编码写入，不包含长度信息。如果跨度为空则不进行任何操作。
+    /// </remarks>
+    public static void WriteNormalString<TWriter>(ref TWriter writer, ReadOnlySpan<char> value, Encoding encoding)
+        where TWriter : IBytesWriter
+    {
+        if (value.IsEmpty)
+        {
+            return;
+        }
+
+        var remaining = value.Length;
+        var offset = 0;
+        var chunkSize = InitialChunkSize;
+        var iterationCount = 0;
+
+        while (remaining > 0)
+        {
+            var charsToProcess = Math.Min(remaining, chunkSize);
+            var chunk = value.Slice(offset, charsToProcess);
+            var maxByteCount = encoding.GetMaxByteCount(charsToProcess);
+            var span = writer.GetSpan(maxByteCount);
+            var bytesWritten = encoding.GetBytes(chunk, span);
+            writer.Advance(bytesWritten);
+
+            offset += charsToProcess;
+            remaining -= charsToProcess;
+
+            iterationCount++;
+            if (chunkSize < MaxChunkSize && iterationCount % ChunkSizeDoubleInterval == 0)
+            {
+                chunkSize = Math.Min(chunkSize << 1, MaxChunkSize);
+            }
+        }
+    }
+
+    /// <summary>
     /// 写入非空值标识。
     /// </summary>
     /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
@@ -481,6 +524,107 @@ public static partial class WriterExtension
     }
 
     /// <summary>
+    /// 将UTF-8编码的字符跨度写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的字符只读跨度。</param>
+    /// <param name="headerType">固定头部类型，指定长度字段的大小。默认为<see cref="FixedHeaderType.Int"/>。</param>
+    /// <exception cref="ArgumentOutOfRangeException">当字符跨度长度超过头部类型允许的最大值时抛出。</exception>
+    /// <remarks>
+    /// 此方法根据指定的头部类型写入长度信息，然后写入UTF-8编码的字符跨度内容。
+    /// 当字符跨度为空时，长度字段写入0。
+    /// </remarks>
+    public static void WriteString<TWriter>(ref TWriter writer, ReadOnlySpan<char> value, FixedHeaderType headerType = FixedHeaderType.Int)
+            where TWriter : IBytesWriter
+    {
+        if (value.IsEmpty)
+        {
+            switch (headerType)
+            {
+                case FixedHeaderType.Byte:
+                    WriteValue<TWriter, byte>(ref writer, 0);
+                    return;
+
+                case FixedHeaderType.Ushort:
+                    WriteValue<TWriter, ushort>(ref writer, 0);
+                    return;
+
+                case FixedHeaderType.Int:
+                default:
+                    WriteValue<TWriter, int>(ref writer, 0);
+                    return;
+            }
+        }
+        else
+        {
+            var headerLength = headerType switch
+            {
+                FixedHeaderType.Byte => (byte)1,
+                FixedHeaderType.Ushort => (byte)2,
+                _ => (byte)4,
+            };
+
+            var writerAnchor = new WriterAnchor<TWriter>(ref writer, headerLength);
+
+            var totalLen = 0;
+            var remaining = value.Length;
+            var offset = 0;
+            var chunkSize = InitialChunkSize;
+            var iterationCount = 0;
+
+            while (remaining > 0)
+            {
+                var charsToProcess = Math.Min(remaining, chunkSize);
+                var chunk = value.Slice(offset, charsToProcess);
+                var maxByteCount = Encoding.UTF8.GetMaxByteCount(charsToProcess);
+                var bodySpan = writer.GetSpan(maxByteCount);
+                var bytesWritten = Encoding.UTF8.GetBytes(chunk, bodySpan);
+                writer.Advance(bytesWritten);
+                totalLen += bytesWritten;
+
+                offset += charsToProcess;
+                remaining -= charsToProcess;
+
+                iterationCount++;
+                if (chunkSize < MaxChunkSize && iterationCount % ChunkSizeDoubleInterval == 0)
+                {
+                    chunkSize = Math.Min(chunkSize << 1, MaxChunkSize);
+                }
+            }
+
+            var headerSpan = writerAnchor.Rewind(ref writer, out _);
+            switch (headerType)
+            {
+                case FixedHeaderType.Byte:
+                    if (totalLen >= byte.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, byte.MaxValue);
+                    }
+                    headerSpan.WriteValue((byte)totalLen);
+                    break;
+
+                case FixedHeaderType.Ushort:
+                    if (totalLen >= ushort.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, ushort.MaxValue);
+                    }
+                    headerSpan.WriteValue((ushort)totalLen);
+                    break;
+
+                case FixedHeaderType.Int:
+                default:
+                    if (totalLen >= int.MaxValue)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), totalLen, int.MaxValue);
+                    }
+                    headerSpan.WriteValue(totalLen);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
     /// 将指定类型的值写入字节写入器，使用默认的字节序。
     /// </summary>
     /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
@@ -579,6 +723,53 @@ public static partial class WriterExtension
                         chunkSize = Math.Min(chunkSize << 1, MaxChunkSize);
                     }
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 将可变长度编码的字符跨度写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的字符只读跨度。</param>
+    /// <remarks>
+    /// 此方法使用<see cref="WriteVarUInt32{TWriter}(ref TWriter, uint)"/>写入UTF-8字节长度（长度+1），
+    /// 然后写入UTF-8编码的字符跨度内容。当<paramref name="value"/>为空时，写入1（代表空字符串）。
+    /// </remarks>
+    public static void WriteVarString<TWriter>(ref TWriter writer, ReadOnlySpan<char> value)
+        where TWriter : IBytesWriter
+    {
+        if (value.IsEmpty)
+        {
+            WriteVarUInt32(ref writer, 1);
+            return;
+        }
+
+        var byteCount = Encoding.UTF8.GetByteCount(value);
+        WriteVarUInt32(ref writer, (uint)(byteCount + 1));
+
+        var remaining = value.Length;
+        var offset = 0;
+        var chunkSize = InitialChunkSize;
+        var iterationCount = 0;
+
+        while (remaining > 0)
+        {
+            var charsToProcess = Math.Min(remaining, chunkSize);
+            var chunk = value.Slice(offset, charsToProcess);
+            var maxByteCount = Encoding.UTF8.GetMaxByteCount(charsToProcess);
+            var span = writer.GetSpan(maxByteCount);
+            var bytesWritten = Encoding.UTF8.GetBytes(chunk, span);
+            writer.Advance(bytesWritten);
+
+            offset += charsToProcess;
+            remaining -= charsToProcess;
+
+            iterationCount++;
+            if (chunkSize < MaxChunkSize && iterationCount % ChunkSizeDoubleInterval == 0)
+            {
+                chunkSize = Math.Min(chunkSize << 1, MaxChunkSize);
             }
         }
     }

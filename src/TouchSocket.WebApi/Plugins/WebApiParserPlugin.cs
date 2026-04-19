@@ -111,14 +111,6 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         return default;
     }
 
-    private static void CloseClient(IHttpSessionClient client)
-    {
-        _ = EasyTask.SafeNewRun(async () =>
-        {
-            await client.CloseAsync("No keepalive close.").ConfigureDefaultAwait();
-        });
-    }
-
     private async Task ExecuteRpcMethodAsync(IHttpSessionClient client, HttpContextEventArgs e, RpcMethod rpcMethod)
     {
         var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver, client.ClosedToken);
@@ -339,11 +331,6 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         }
 
         await httpResponse.AnswerAsync().ConfigureDefaultAwait();
-
-        if (!httpContext.Request.KeepAlive)
-        {
-            CloseClient(client);
-        }
     }
 
     private async Task ResponseMethodNotAllowedAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
@@ -368,11 +355,6 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             .SetStatus(405, "Method Not Allowed")
             .AnswerAsync()
             .ConfigureDefaultAwait();
-
-        if (!httpContext.Request.KeepAlive)
-        {
-            CloseClient(client);
-        }
     }
 
     private static async Task ResponseOptionsAsync(IHttpSessionClient client, HttpContext httpContext, IEnumerable<HttpMethod> allowedMethods)
@@ -390,10 +372,5 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
             .SetStatus(204, "No Content")
             .AnswerAsync()
             .ConfigureDefaultAwait();
-
-        if (!httpContext.Request.KeepAlive)
-        {
-            CloseClient(client);
-        }
     }
 }
