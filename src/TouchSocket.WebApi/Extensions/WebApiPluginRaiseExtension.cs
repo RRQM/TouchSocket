@@ -10,17 +10,12 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using TouchSocket.Dmtp;
+using TouchSocket.WebApi;
 
 namespace TouchSocket.Core;
 
-[PluginRaise(typeof(IDmtpConnectingPlugin))]
-[PluginRaise(typeof(IDmtpConnectedPlugin))]
-[PluginRaise(typeof(IDmtpReceivedPlugin))]
-[PluginRaise(typeof(IDmtpRoutingPlugin))]
-[PluginRaise(typeof(IDmtpCreatedChannelPlugin))]
-[PluginRaise(typeof(IDmtpClosingPlugin))]
-[PluginRaise(typeof(IDmtpClosedPlugin))]
-internal static partial class DmtpPluginRaiseExtension
+[PluginRaise(typeof(IWebApiRequestPlugin))]
+[PluginRaise(typeof(IWebApiResponsePlugin))]
+internal static partial class WebApiPluginRaiseExtension
 {
 }

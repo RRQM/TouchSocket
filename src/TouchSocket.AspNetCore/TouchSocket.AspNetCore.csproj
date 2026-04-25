@@ -10,7 +10,9 @@
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Dmtp\Actor\SealedDmtpActor.cs" Link="Dmtp\Actor\SealedDmtpActor.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Dmtp\DmtpPluginRaiseExtension.cs" Link="Dmtp\Extensions\DmtpPluginRaiseExtension.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Dmtp\Common\InternalClientCollection.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\PluginRaiseExtension.cs" Link="Dmtp\Extensions\PluginRaiseExtension.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

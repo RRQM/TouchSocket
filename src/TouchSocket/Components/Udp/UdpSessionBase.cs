@@ -195,7 +195,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             this.m_receiveTasks.Clear();
 
             this.m_receiver?.Complete(default);
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
 
             return Result.Success;
         }
@@ -229,7 +229,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
     {
         // 触发所有实现了IUdpReceivedPlugin接口的插件的处理方法，并传递接收到的数据事件参数。
-        await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIUdpReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -243,7 +243,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         // 提升插件管理器以异步方式提升IUdpSendingPlugin接口的事件
         // 使用UdpSendingEventArgs包装待发送的数据和目标端点
-        return this.PluginManager.RaiseAsync(typeof(IUdpSendingPlugin), this.Resolver, this, new UdpSendingEventArgs(memory, endPoint));
+        return this.PluginManager.RaiseIUdpSendingPluginAsync(this.Resolver, this, new UdpSendingEventArgs(memory, endPoint));
     }
 
     /// <summary>
@@ -447,7 +447,7 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     /// </returns>
     protected virtual ValueTask<bool> OnUdpReceiving(UdpReceiveingEventArgs e)
     {
-        return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
+        return this.PluginManager.RaiseIUdpReceivingPluginAsync(this.Resolver, this, e);
     }
 
     private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)

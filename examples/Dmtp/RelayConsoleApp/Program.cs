@@ -106,7 +106,7 @@ namespace RelayConsoleApp
         /// 连接中继服务器并注册TCP穿透。
         /// 注册成功后将 RelayId 持久化，以便进程崩溃重启后能够预注销残留注册。
         /// </summary>
-        static async Task<(TcpDmtpClient Client, ITcpRelayRegistration Registration)> RegisterTcpRelayAsync(
+        static async Task<(TcpDmtpClient Client, ITcpRelayListener RelayListener)> RegisterTcpRelayAsync(
             string serverHost = "127.0.0.1:7789",
             string localIPHost = "127.0.0.1:8848",
             string remoteIPHost = "0.0.0.0:8889")
@@ -159,7 +159,7 @@ namespace RelayConsoleApp
         /// 连接中继服务器并注册UDP穿透。
         /// 注册成功后同样将 RelayId 持久化，以便崩溃重启后预注销残留注册。
         /// </summary>
-        static async Task<(TcpDmtpClient Client, IUdpRelayRegistration Registration)> RegisterUdpRelayAsync(
+        static async Task<(TcpDmtpClient Client, IUdpRelayListener RelayListener)> RegisterUdpRelayAsync(
             string serverHost = "127.0.0.1:7789",
             string localIPHost = "127.0.0.1:9000",
             string remoteIPHost = "0.0.0.0:9001")

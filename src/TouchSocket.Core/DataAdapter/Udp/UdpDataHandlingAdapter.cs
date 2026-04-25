@@ -108,20 +108,7 @@ public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     /// <param name="cancellationToken">可取消令箭。</param>
     protected virtual async Task PreviewSendAsync(EndPoint endPoint, IRequestInfo requestInfo, CancellationToken cancellationToken)
     {
-        ThrowHelper.ThrowIfNull(requestInfo, nameof(requestInfo));
-
-        var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-
-        var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength);
-        try
-        {
-            requestInfoBuilder.Build(ref byteBlock);
-            await this.GoSendAsync(endPoint, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
-        }
-        finally
-        {
-            byteBlock.Dispose();
-        }
+        throw new NotImplementedException();
     }
 
     /// <summary>

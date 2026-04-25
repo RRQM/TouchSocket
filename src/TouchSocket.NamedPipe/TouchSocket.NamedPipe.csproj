@@ -14,6 +14,7 @@
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Common\InternalClientCollection.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Common\InternalReceiver.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Common\InternalReceiverResult.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\PluginRaiseExtension.cs" Link="Extensions\PluginRaiseExtension.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\StreamTransport.cs" Link="Transports\StreamTransport.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>

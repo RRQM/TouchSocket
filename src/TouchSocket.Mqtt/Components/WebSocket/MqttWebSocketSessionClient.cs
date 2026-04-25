@@ -116,6 +116,7 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
             actor.Connecting = this.PrivateMqttOnConnecting;
             actor.Connected = this.PrivateMqttOnConnected;
             actor.MessageArrived = this.PrivateMqttOnMessageArrived;
+            actor.MessageDiscarded = this.PrivateMqttOnMessageDiscarded;
             actor.Closing = this.PrivateMqttOnClosing;
             actor.Activate(mqttConnectMessage);
             this.m_mqttActor = actor;
@@ -137,12 +138,12 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnected(MqttActor mqttActor, MqttConnectedEventArgs args)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, args).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectedPluginAsync(this.Resolver, this, args).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnecting(MqttActor mqttActor, MqttConnectingEventArgs e)
@@ -152,12 +153,17 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
             await this.m_client.ResetIdAsync(e.ConnectMessage.ClientId, CancellationToken.None).ConfigureDefaultAwait();
         }
 
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnMessageArrived(MqttActor actor, MqttReceivedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
+    }
+
+    private async Task PrivateMqttOnMessageDiscarded(MqttSessionActor actor, MqttMessageDiscardedEventArgs e)
+    {
+        await this.PluginManager.RaiseIMqttMessageDiscardedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)

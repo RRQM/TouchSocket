@@ -57,7 +57,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// </summary>
     protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// </summary>
     protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// </summary>
     protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// </summary>
     protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateOnNamedPipeClosing(ClosingEventArgs e)
@@ -94,7 +94,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
         await this.OnNamedPipeConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
-            var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
+            var adapter = this.Config.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty)?.Invoke();
             if (adapter != null)
             {
                 this.SetAdapter(adapter);
@@ -344,7 +344,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -354,7 +354,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
+        return this.PluginManager.RaiseINamedPipeReceivingPluginAsync(this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
     }
 
     /// <summary>
@@ -365,7 +365,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
     {
         // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
+        return this.PluginManager.RaiseINamedPipeSendingPluginAsync(this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
 
     /// <summary>

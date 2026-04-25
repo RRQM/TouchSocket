@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -95,8 +95,6 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
 
     /// <summary>
     /// 发送输入数据到指定的写入器。
-    /// 如果 <paramref name="requestInfo"/> 实现了 <see cref="IRequestInfoBuilder"/>，则调用其 Build 方法写入数据。
-    /// 否则抛出异常。
     /// </summary>
     /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
     /// <param name="writer">写入器的引用。</param>
@@ -104,11 +102,7 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     public virtual void SendInput<TWriter>(ref TWriter writer, IRequestInfo requestInfo)
         where TWriter : IBytesWriter
     {
-        if (requestInfo is not IRequestInfoBuilder requestInfoBuilder)
-        {
-            throw new Exception();
-        }
-        requestInfoBuilder.Build(ref writer);
+        throw new NotImplementedException();
     }
 
     #endregion SendInput

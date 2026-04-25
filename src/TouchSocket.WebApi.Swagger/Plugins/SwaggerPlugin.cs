@@ -18,6 +18,7 @@ using System.Reflection;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using TouchSocket.WebApi;
 
 namespace TouchSocket.WebApi.Swagger;
 
@@ -39,7 +40,10 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
 
         this.LaunchBrowser = options.LaunchBrowser;
         this.Prefix = options.Prefix;
+        this.m_configureOperation = options.ConfigureOperation;
     }
+
+    private readonly Action<RpcMethod, OpenApiPathValue> m_configureOperation;
 
     /// <summary>
     /// 是否在浏览器打开Swagger页面
@@ -353,6 +357,8 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
 
         this.BuildResponse(rpcMethod, openApiPathValue, schemaTypeList);
 
+        this.m_configureOperation?.Invoke(rpcMethod, openApiPathValue);
+
         //需要符合OpenAPI规范，其中一个路径可以包含多个HTTP方法操作。
         //issue:https://github.com/RRQM/TouchSocket/issues/114
         if (!paths.TryGetValue(url, out var openApiPath))
@@ -371,6 +377,31 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
 
     private void BuildResponse(RpcMethod rpcMethod, in OpenApiPathValue openApiPathValue, in List<Type> schemaTypeList)
     {
+        openApiPathValue.Responses = new Dictionary<string, OpenApiResponse>();
+
+        // 优先从 WebApiProducesResponseTypeAttribute 特性收集响应类型
+        var producesAttributes = rpcMethod.Info.GetCustomAttributes<WebApiProducesResponseTypeAttribute>(false);
+        if (producesAttributes.Any())
+        {
+            foreach (var attr in producesAttributes)
+            {
+                var producesResponse = new OpenApiResponse();
+                producesResponse.Description = attr.StatusCode == 200 ? "Success" : attr.StatusCode.ToString();
+                producesResponse.Content = new Dictionary<string, OpenApiContent>();
+                var producesContent = new OpenApiContent();
+                producesContent.Schema = this.CreateSchema(attr.Type);
+                producesResponse.Content.Add("application/json", producesContent);
+                producesResponse.Content.Add("text/xml", producesContent);
+                producesResponse.Content.Add("text/plain", producesContent);
+                producesResponse.Content.Add("text/json", producesContent);
+                producesResponse.Content.Add("application/xml", producesContent);
+                this.AddSchemaType(attr.Type, schemaTypeList);
+                openApiPathValue.Responses.TryAdd(attr.StatusCode.ToString(), producesResponse);
+            }
+            return;
+        }
+
+        // 没有特性时，使用方法声明的返回类型
         var openApiResponse = new OpenApiResponse();
         openApiResponse.Description = "Success";
 
@@ -387,7 +418,6 @@ internal sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlu
             this.AddSchemaType(rpcMethod.RealReturnType, schemaTypeList);
         }
 
-        openApiPathValue.Responses = new Dictionary<string, OpenApiResponse>();
         openApiPathValue.Responses.Add("200", openApiResponse);
     }
 

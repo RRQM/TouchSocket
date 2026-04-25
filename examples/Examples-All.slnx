@@ -155,6 +155,7 @@
   </Folder>
   <Folder Name="/Mqtt/">
     <Project Path="Mqtt/MqttConsoleApp/MqttConsoleApp.csproj" />
+    <Project Path="Mqtt/MqttPerformanceTestingConsoleApp/MqttPerformanceTestingConsoleApp.csproj" />
     <Project Path="Mqtt/MqttTopicHandlerConsoleApp/MqttTopicHandlerConsoleApp.csproj" />
     <Project Path="Mqtt/MqttWebSocketConsoleApp/MqttWebSocketConsoleApp.csproj" />
   </Folder>

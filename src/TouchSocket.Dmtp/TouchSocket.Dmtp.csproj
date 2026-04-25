@@ -11,6 +11,7 @@
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Dmtp\Actor\SealedDmtpActor.cs" Link="Actor\SealedDmtpActor.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Dmtp\DmtpPluginRaiseExtension.cs" Link="Extensions\DmtpPluginRaiseExtension.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>
 

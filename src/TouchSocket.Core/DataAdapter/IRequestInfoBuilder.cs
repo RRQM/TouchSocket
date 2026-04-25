@@ -15,7 +15,7 @@ namespace TouchSocket.Core;
 /// <summary>
 /// 指示<see cref="IRequestInfo"/>应当如何构建
 /// </summary>
+[Obsolete($"此接口已过时，请使用{nameof(IBytesBuilder)}接口替代。",true)]
 public interface IRequestInfoBuilder : IRequestInfo, IBytesBuilder
 {
-
 }

@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Channels;
-
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -20,28 +18,60 @@ namespace TouchSocket.Mqtt;
 public class MqttSessionActor : MqttActor
 {
     private readonly AsyncManualResetEvent m_asyncResetEvent = new(false);
-
-    private readonly Channel<DistributeMessage> m_mqttArrivedMessageQueue = Channel.CreateBounded<DistributeMessage>(new BoundedChannelOptions(1000)
-    {
-        FullMode = BoundedChannelFullMode.DropNewest,
-        SingleReader = true,
-        SingleWriter = false,
-        AllowSynchronousContinuations = false,
-        Capacity = 1000
-    });
-
+    private readonly Queue<DistributeMessage> m_messageQueue = new Queue<DistributeMessage>();
     private readonly MqttBroker m_mqttBroker;
+    private readonly Lock m_queueLock = new Lock();
+    private readonly SemaphoreSlim m_queueSemaphore = new SemaphoreSlim(0);
+    private int m_messageCapacity = 1000;
+    private TimeSpan m_messageExpiry = TimeSpan.Zero;
     private MqttPublishMessage m_mqttWillMessage;
+    private long m_offlineTicksUtc = -1L;
     private bool m_sessionPresent;
 
     /// <summary>
     /// 初始化 <see cref="MqttSessionActor"/> 类的新实例。
     /// </summary>
-    /// <param name="messageCenter">Mqtt 消息中心。</param>
-    public MqttSessionActor(MqttBroker messageCenter)
+    /// <param name="broker">Mqtt 消息中心。</param>
+    public MqttSessionActor(MqttBroker broker)
     {
-        this.m_mqttBroker = messageCenter;
-        _ = EasyTask.SafeRun(this.WaitForReadAsync);
+        this.m_mqttBroker = broker;
+        _ = EasyTask.SafeNewRun(this.WaitForReadAsync);
+    }
+
+    /// <summary>
+    /// 获取或设置消息队列的最大容量，达到上限时新消息将被丢弃。默认值为 1000。
+    /// </summary>
+    public int MessageCapacity
+    {
+        get => this.m_messageCapacity;
+        set => this.m_messageCapacity = value > 0 ? value : 1000;
+    }
+
+    /// <summary>
+    /// 当 Mqtt 消息被丢弃时调用。
+    /// </summary>
+    public Func<MqttSessionActor, MqttMessageDiscardedEventArgs, Task> MessageDiscarded { get; set; }
+
+    /// <summary>
+    /// 获取或设置消息的过期时间。从服务端接收到消息起计算，超过此时间的消息将被丢弃。
+    /// 设置为 <see cref="TimeSpan.Zero"/> 时表示永不过期。
+    /// </summary>
+    public TimeSpan MessageExpiry
+    {
+        get => this.m_messageExpiry;
+        set => this.m_messageExpiry = value;
+    }
+
+    /// <summary>
+    /// 获取会话离线的时间。若会话在线，则返回 <see langword="null"/>。
+    /// </summary>
+    public DateTimeOffset? OfflineSince
+    {
+        get
+        {
+            var ticks = Interlocked.Read(ref this.m_offlineTicksUtc);
+            return ticks < 0L ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
+        }
     }
 
     /// <summary>
@@ -54,6 +84,7 @@ public class MqttSessionActor : MqttActor
     /// </summary>
     public void Activate(MqttConnectMessage mqttConnectMessage)
     {
+        Interlocked.Exchange(ref this.m_offlineTicksUtc, -1L);
         if (mqttConnectMessage.WillFlag)
         {
             var mqttPublishMessage = new MqttPublishMessage(mqttConnectMessage.WillTopic, mqttConnectMessage.WillPayload);
@@ -71,6 +102,7 @@ public class MqttSessionActor : MqttActor
     /// </summary>
     public async Task Deactivate()
     {
+        Interlocked.Exchange(ref this.m_offlineTicksUtc, DateTimeOffset.UtcNow.UtcTicks);
         this.m_asyncResetEvent.Reset();
         var willMessage = this.m_mqttWillMessage;
         this.m_mqttWillMessage = null;
@@ -101,14 +133,28 @@ public class MqttSessionActor : MqttActor
             return;
         }
 
-        try
+        bool enqueued;
+        lock (this.m_queueLock)
         {
-            await this.m_mqttArrivedMessageQueue.Writer.WriteAsync(message, tokenClosed).ConfigureDefaultAwait();
+            if (this.m_messageQueue.Count >= this.m_messageCapacity)
+            {
+                enqueued = false;
+            }
+            else
+            {
+                this.m_messageQueue.Enqueue(message);
+                enqueued = true;
+            }
         }
-        catch
+
+        if (!enqueued)
         {
+            await this.OnMessageDiscardedAsync(message, DiscardReason.QueueFull).ConfigureDefaultAwait();
             message.Dispose();
+            return;
         }
+
+        this.m_queueSemaphore.Release();
     }
 
     /// <inheritdoc/>
@@ -117,25 +163,19 @@ public class MqttSessionActor : MqttActor
         if (disposing)
         {
             this.m_asyncResetEvent.Set();
-            
-            this.m_mqttArrivedMessageQueue.Writer.Complete();
-            
-            while (this.m_mqttArrivedMessageQueue.Reader.TryRead(out var message))
-            {
-                message.Dispose();
-            }
         }
         base.Dispose(disposing);
+        if (disposing)
+        {
+            lock (this.m_queueLock)
+            {
+                while (this.m_messageQueue.TryDequeue(out var message))
+                {
+                    message.Dispose();
+                }
+            }
+        }
     }
-
-    #region 属性
-
-    /// <summary>
-    /// 获取 Mqtt 消息中心。
-    /// </summary>
-    public MqttBroker MqttBroker => this.m_mqttBroker;
-
-    #endregion 属性
 
     /// <inheritdoc/>
     protected override Task InputMqttConnAckMessageAsync(MqttConnAckMessage message, CancellationToken cancellationToken)
@@ -220,9 +260,26 @@ public class MqttSessionActor : MqttActor
         await base.PublishMessageArrivedAsync(message).ConfigureDefaultAwait();
     }
 
+    private async ValueTask OnMessageDiscardedAsync(DistributeMessage message, DiscardReason reason)
+    {
+        if (this.MessageDiscarded != null)
+        {
+            var e = new MqttMessageDiscardedEventArgs(this.Id, message, reason);
+            await this.MessageDiscarded.Invoke(this, e).ConfigureAwait(false);
+        }
+    }
+
+    #region 属性
+
+    /// <summary>
+    /// 获取 Mqtt 消息中心。
+    /// </summary>
+    public MqttBroker MqttBroker => this.m_mqttBroker;
+
+    #endregion 属性
+
     private async ValueTask<bool> PublishDistributeMessageAsync(DistributeMessage distributeMessage, CancellationToken cancellationToken)
     {
-        
         try
         {
             if (cancellationToken.IsCancellationRequested)
@@ -246,36 +303,35 @@ public class MqttSessionActor : MqttActor
     private async Task WaitForReadAsync()
     {
         var cancellationToken = this.TokenSource.Token;
-        var reader = this.m_mqttArrivedMessageQueue.Reader;
         while (true)
         {
             try
             {
-                if (cancellationToken.IsCancellationRequested)
+                await this.m_queueSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+
+                DistributeMessage distributeMessage;
+                lock (this.m_queueLock)
                 {
-                    Console.WriteLine("WaitForReadAsync IsCancellationRequested");
-                    return;
+                    if (!this.m_messageQueue.TryDequeue(out distributeMessage))
+                    {
+                        continue;
+                    }
                 }
 
-                var b = await reader.WaitToReadAsync(cancellationToken).ConfigureDefaultAwait();
-                if (!b)
+                var expiry = this.m_messageExpiry;
+                if (expiry > TimeSpan.Zero && DateTimeOffset.UtcNow - distributeMessage.ReceivedTime > expiry)
                 {
-                    return;
-                }
-
-                if (!reader.TryPeek(out var distributeMessage))
-                {
+                    await this.OnMessageDiscardedAsync(distributeMessage, DiscardReason.Expired).ConfigureDefaultAwait();
+                    distributeMessage.Dispose();
                     continue;
                 }
 
                 var published = await this.PublishDistributeMessageAsync(distributeMessage, cancellationToken).ConfigureDefaultAwait();
-                if (published)
+                if (!published)
                 {
-                    if (reader.TryRead(out var readMessage))
-                    {
-                        readMessage.Dispose();
-                    }
+                    await this.OnMessageDiscardedAsync(distributeMessage, DiscardReason.PublishFailed).ConfigureDefaultAwait();
                 }
+                distributeMessage.Dispose();
             }
             catch (OperationCanceledException)
             {

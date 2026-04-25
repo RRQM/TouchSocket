@@ -10,21 +10,19 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+
 namespace TouchSocket.Sockets;
 
-[PluginRaise(typeof(IIdChangedPlugin))]
-[PluginRaise(typeof(IServerStartedPlugin))]
-[PluginRaise(typeof(IServerStoppedPlugin))]
-[PluginRaise(typeof(ITcpClosedPlugin))]
-[PluginRaise(typeof(ITcpClosingPlugin))]
-[PluginRaise(typeof(ITcpConnectedPlugin))]
-[PluginRaise(typeof(ITcpConnectingPlugin))]
-[PluginRaise(typeof(ITcpReceivedPlugin))]
-[PluginRaise(typeof(ITcpReceivingPlugin))]
-[PluginRaise(typeof(ITcpSendingPlugin))]
-[PluginRaise(typeof(IUdpReceivedPlugin))]
-[PluginRaise(typeof(IUdpReceivingPlugin))]
-[PluginRaise(typeof(IUdpSendingPlugin))]
-internal static partial class PluginRaiseExtension
+/// <summary>
+/// KCP 收到数据时的事件参数。
+/// </summary>
+public sealed class KcpReceivedEventArgs : MsgEventArgs
 {
+    internal KcpReceivedEventArgs() { }
+
+    /// <summary>
+    /// 接收到的应用层数据（生命周期仅在事件处理方法内有效）。
+    /// </summary>
+    public ReadOnlyMemory<byte> Memory { get; internal set; }
 }

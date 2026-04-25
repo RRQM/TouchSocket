@@ -10,23 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Sockets;
+using TouchSocket.Core;
 
 namespace TouchSocket.Mqtt;
-
 /// <summary>
 /// 基于 TCP 的 Mqtt 服务端。
 /// </summary>
-public class MqttTcpService : TcpServiceBase<MqttTcpSessionClient>, IMqttTcpService
+public class MqttTcpService : MqttTcpServiceBase
 {
     private readonly MqttBroker m_mqttBroker = new();
 
     /// <inheritdoc/>
-    public MqttBroker MqttBroker => this.m_mqttBroker;
+    public override MqttBroker MqttBroker => this.m_mqttBroker;
 
     /// <inheritdoc/>
-    protected override MqttTcpSessionClient NewClient()
+    protected override void LoadConfig(TouchSocketConfig config)
     {
-        return new MqttTcpSessionClient(this.m_mqttBroker);
+        base.LoadConfig(config);
+        this.m_mqttBroker.LoadConfig(config.GetValue(MqttConfigExtension.MqttBrokerOptionProperty) ?? new MqttBrokerOption());
     }
 }

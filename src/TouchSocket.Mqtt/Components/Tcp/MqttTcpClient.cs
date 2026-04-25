@@ -44,22 +44,22 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnected(MqttActor mqttActor, MqttConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnecting(MqttActor mqttActor, MqttConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnMessageArrived(MqttActor actor, MqttReceivedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)
@@ -122,7 +122,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
 
             var connectMessage = new MqttConnectMessage(mqttConnectOptions);
 
-            await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
+            await this.PluginManager.RaiseIMqttConnectingPluginAsync(this.Resolver, this, new MqttConnectingEventArgs(connectMessage, default));
 
             await base.TcpConnectAsync(cancellationToken).ConfigureDefaultAwait();
 
@@ -131,7 +131,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
             {
                 ThrowHelper.ThrowException($"Connection failed with reason: {connAckMessage.ReturnCode}，reasonString: {connAckMessage.ReasonString}");
             }
-            await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIMqttConnectedPluginAsync(this.Resolver, this, new MqttConnectedEventArgs(connectMessage, connAckMessage)).ConfigureDefaultAwait();
         }
         finally
         {
@@ -169,7 +169,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     {
         this.m_mqttActor.WaitHandlePool.CancelAll();
 
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIMqttClosedPluginAsync(this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
 
@@ -186,7 +186,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     {
         if (e.RequestInfo is MqttMessage mqttMessage)
         {
-            await this.PluginManager.RaiseAsync(typeof(IMqttReceivingPlugin), this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIMqttReceivingPluginAsync(this.Resolver, this, new MqttReceivingEventArgs(mqttMessage)).ConfigureDefaultAwait();
 
             await this.m_mqttActor.InputMqttMessageAsync(mqttMessage, CancellationToken.None).ConfigureDefaultAwait();
         }

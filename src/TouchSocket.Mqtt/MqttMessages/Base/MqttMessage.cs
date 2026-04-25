@@ -15,7 +15,7 @@ namespace TouchSocket.Mqtt;
 /// <summary>
 /// 表示一个Mqtt消息的抽象基类。
 /// </summary>
-public abstract class MqttMessage : IRequestInfo, IRequestInfoBuilder
+public abstract class MqttMessage : IRequestInfo, IBytesBuilder
 {
     private long m_endPosition;
 

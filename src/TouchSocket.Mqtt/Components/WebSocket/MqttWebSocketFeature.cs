@@ -10,7 +10,6 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System.Net.WebSockets;
 using TouchSocket.Http;
 
 namespace TouchSocket.Mqtt;
@@ -18,7 +17,7 @@ namespace TouchSocket.Mqtt;
 /// <summary>
 /// Mqtt WebSocket功能插件
 /// </summary>
-internal sealed class MqttWebSocketFeature : PluginBase, IHttpPlugin
+internal sealed class MqttWebSocketFeature : PluginBase, IHttpPlugin, ILoadedConfigPlugin
 {
     private readonly MqttBroker m_mqttBroker;
     private readonly MqttWebSocketFeatureOption m_options;
@@ -52,18 +51,17 @@ internal sealed class MqttWebSocketFeature : PluginBase, IHttpPlugin
             return;
         }
 
-        _ = Task.Run(async () =>
+        _ = EasyTask.SafeNewRun(async () =>
         {
             var session = new MqttWebSocketSessionClient(client, this.m_mqttBroker);
-            try
-            {
-                await session.Start(client.ClosedToken);
-            }
-            finally
-            {
-                
-            }
-            
+            await session.Start(client.ClosedToken);
         });
+    }
+
+    /// <inheritdoc/>
+    public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+    {
+        this.m_mqttBroker.LoadConfig(e.Config.GetValue(MqttConfigExtension.MqttBrokerOptionProperty) ?? new MqttBrokerOption());
+        await e.InvokeNext().ConfigureDefaultAwait();
     }
 }

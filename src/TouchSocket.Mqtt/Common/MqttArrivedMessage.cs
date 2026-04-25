@@ -17,7 +17,7 @@ namespace TouchSocket.Mqtt;
 /// <summary>
 /// 表示一个到达的 Mqtt 消息。
 /// </summary>
-public sealed class MqttArrivedMessage
+public class MqttArrivedMessage
 {
     /// <summary>
     /// 初始化 <see cref="MqttArrivedMessage"/> 类的新实例。

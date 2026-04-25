@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -15,7 +15,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// WebSocket数据帧
 /// </summary>
-public sealed class WSDataFrame : IRequestInfo, IRequestInfoBuilder, IBigUnfixedHeaderRequestInfo
+public sealed class WSDataFrame : IRequestInfo, IBytesBuilder, IBigUnfixedHeaderRequestInfo
 {
     private readonly ReadOnlyMemory<byte> m_payloadData;
     private int m_headerLength;

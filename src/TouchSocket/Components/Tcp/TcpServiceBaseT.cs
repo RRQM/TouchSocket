@@ -162,7 +162,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
                         ServiceSslOption = this.Config.GetValue(TouchSocketConfigExtension.ServiceSslOptionProperty),
                         ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
                         NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
-                        Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
+                        Adapter = this.Config.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty),
                         Backlog= this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty)
                     };
                     optionList.Add(option);
@@ -189,13 +189,13 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             }
             this.m_serverState = ServerState.Running;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             throw;
         }
     }
@@ -218,7 +218,7 @@ public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITc
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
-                await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
+                await this.PluginManager.RaiseIServerStoppedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
             }
             return Result.Success;
         }

@@ -14,26 +14,50 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiPathValue
+/// <summary>
+/// 表示 OpenAPI 路径中某个 HTTP 方法的操作定义。
+/// </summary>
+public class OpenApiPathValue
 {
+    /// <summary>
+    /// 获取或设置操作所属的标签列表，用于在 UI 中对操作分组。
+    /// </summary>
     [JsonPropertyName("tags")]
     public IEnumerable<string> Tags { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作的简短摘要。
+    /// </summary>
     [JsonPropertyName("summary")]
     public string Summary { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作的详细描述信息。
+    /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作的唯一标识符。
+    /// </summary>
     [JsonPropertyName("operationId")]
     public string OperationId { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作的请求体定义。
+    /// </summary>
     [JsonPropertyName("requestBody")]
     public OpenApiRequestBody RequestBody { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作的参数列表。
+    /// </summary>
     [JsonPropertyName("parameters")]
     public IEnumerable<OpenApiParameter> Parameters { get; set; }
 
+    /// <summary>
+    /// 获取或设置操作可能返回的响应字典，键为 HTTP 状态码。
+    /// </summary>
     [JsonPropertyName("responses")]
     public Dictionary<string, OpenApiResponse> Responses { get; set; }
 }

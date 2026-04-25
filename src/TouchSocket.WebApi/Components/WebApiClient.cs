@@ -95,12 +95,12 @@ public class WebApiClient : HttpClientBase, IWebApiClient
 
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
+        await this.PluginManager.RaiseIWebApiRequestPluginAsync(this.Resolver, this, new WebApiEventArgs(request, default));
 
         using (var responseResult = await this.ProtectedRequestAsync(request, invokeOption.Token).ConfigureDefaultAwait())
         {
             var response = responseResult.Response;
-            await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
+            await this.PluginManager.RaiseIWebApiResponsePluginAsync(this.Resolver, this, new WebApiEventArgs(request, response));
 
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {

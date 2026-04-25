@@ -10,11 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi.Swagger;
 
@@ -50,5 +46,10 @@ public class SwaggerOption
         this.LaunchBrowser = true;
     }
 
-
+    /// <summary>
+    /// OpenAPI 操作元数据构建完成后的回调委托。
+    /// 每个 WebApi 方法对应的 <see cref="OpenApiPathValue"/> 生成完毕后会调用此委托，
+    /// 可在此修改响应类型、标签、描述等元数据，使 OpenAPI 文档与运行时行为保持一致。
+    /// </summary>
+    public Action<RpcMethod, OpenApiPathValue> ConfigureOperation { get; set; }
 }

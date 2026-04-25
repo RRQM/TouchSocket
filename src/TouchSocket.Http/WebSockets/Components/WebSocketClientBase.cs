@@ -178,7 +178,7 @@ public abstract class WebSocketClientBase : HttpClientBase, IWebSocket
     /// <returns>一个Task对象，表示异步操作</returns>
     protected virtual async Task OnWebSocketReceived(WSDataFrameEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIWebSocketReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     #region Properties

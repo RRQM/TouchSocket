@@ -14,16 +14,32 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiParameter
+/// <summary>
+/// 表示 OpenAPI 路径操作中的参数定义。
+/// </summary>
+public class OpenApiParameter
 {
+    /// <summary>
+    /// 获取或设置参数的描述信息。
+    /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
+    /// <summary>
+    /// 获取或设置参数的位置，如 query、header、path 或 cookie。
+    /// </summary>
     [JsonPropertyName("in")]
     public string In { get; set; }
 
+    /// <summary>
+    /// 获取或设置参数的名称。
+    /// </summary>
     [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    /// <summary>
+    /// 获取或设置参数的 Schema 定义。
+    /// </summary>
     [JsonPropertyName("schema")]
     public OpenApiSchema Schema { get; set; }
 }

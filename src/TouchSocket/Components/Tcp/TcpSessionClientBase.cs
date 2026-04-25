@@ -242,7 +242,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpClosed(ClosedEventArgs e)
     {
         // 调用插件管理器，通知所有实现ITcpClosedPlugin接口的插件客户端已断开连接
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpClosing(ClosingEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
     {
         // 调用插件管理器，异步触发所有实现ITcpConnectedPlugin接口的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -280,7 +280,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         // 调用插件管理器，异步触发所有ITcpConnectingPlugin插件的对应事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -350,7 +350,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     /// <returns>异步任务</returns>
     protected virtual async Task IdChanged(string sourceId, string targetId)
     {
-        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIIdChangedPluginAsync(this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -361,7 +361,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         // 提供适配器处理的数据给所有相关的插件处理
-        await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -385,7 +385,7 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     {
         // 通过PluginManager委托调用ITcpSendingPlugin接口，传递当前实例和待发送的数据事件。
         // 这里使用RaiseAsync方法异步触发相关插件，以实现对发送行为的扩展或拦截。
-        return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
+        return this.PluginManager.RaiseITcpSendingPluginAsync(this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
 
     /// <summary>

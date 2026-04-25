@@ -79,11 +79,11 @@ public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
 
         invokeOption ??= InvokeOption.WaitInvoke;
 
-        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIWebApiRequestPluginAsync(this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureDefaultAwait();
 
         var response = await this.HttpClient.SendAsync(request, invokeOption.Token).ConfigureDefaultAwait();
 
-        await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIWebApiRequestPluginAsync(this.Resolver, this, new WebApiEventArgs(request, response)).ConfigureDefaultAwait();
 
         if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
         {

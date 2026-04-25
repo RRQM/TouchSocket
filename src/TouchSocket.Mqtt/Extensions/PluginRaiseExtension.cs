@@ -16,6 +16,7 @@ namespace TouchSocket.Mqtt;
 [PluginRaise(typeof(IMqttConnectedPlugin))]
 [PluginRaise(typeof(IMqttReceivingPlugin))]
 [PluginRaise(typeof(IMqttReceivedPlugin))]
+[PluginRaise(typeof(IMqttMessageDiscardedPlugin))]
 [PluginRaise(typeof(IMqttClosingPlugin))]
 [PluginRaise(typeof(IMqttClosedPlugin))]
 internal static partial class PluginRaiseExtension

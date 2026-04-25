@@ -20,8 +20,8 @@ namespace TouchSocket.Mqtt;
 public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 {
     private readonly MqttBroker m_mqttBroker;
-    private MqttSessionActor m_mqttActor;
     private bool m_cleanSession;
+    private MqttSessionActor m_mqttActor;
 
     /// <summary>
     /// 初始化 <see cref="MqttTcpSessionClient"/> 类的新实例。
@@ -36,12 +36,12 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnected(MqttActor mqttActor, MqttConnectedEventArgs args)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectedPlugin), this.Resolver, this, args).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectedPluginAsync(this.Resolver, this, args).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnConnecting(MqttActor mqttActor, MqttConnectingEventArgs e)
@@ -51,12 +51,17 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
             await this.ResetIdAsync(e.ConnectMessage.ClientId, CancellationToken.None).ConfigureDefaultAwait();
         }
 
-        await this.PluginManager.RaiseAsync(typeof(IMqttConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnMessageArrived(MqttActor actor, MqttReceivedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(IMqttReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIMqttReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
+    }
+
+    private async Task PrivateMqttOnMessageDiscarded(MqttSessionActor actor, MqttMessageDiscardedEventArgs e)
+    {
+        await this.PluginManager.RaiseIMqttMessageDiscardedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private async Task PrivateMqttOnSend(MqttActor mqttActor, MqttMessage message, CancellationToken cancellationToken)
@@ -81,10 +86,11 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
     /// 获取是否清除会话。
     /// </summary>
     public bool CleanSession => this.m_cleanSession;
+
     /// <summary>
     /// 获取 Mqtt 会话 Actor 实例。
     /// </summary>
-    public MqttSessionActor MqttActor => this.m_mqttActor;
+    public MqttActor MqttActor => this.m_mqttActor;
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
@@ -96,13 +102,14 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
             mqttActor.Connecting = null;
             mqttActor.Connected = null;
             mqttActor.MessageArrived = null;
+            mqttActor.MessageDiscarded = null;
             mqttActor.Closing = null;
             await mqttActor.Deactivate().ConfigureDefaultAwait();
             if (this.CleanSession)
             {
-                this.m_mqttBroker.RemoveMqttSessionActor(mqttActor);
+                this.m_mqttBroker.RemoveMqttSessionActor(mqttActor.Id);
             }
-            await this.PluginManager.RaiseAsync(typeof(IMqttClosedPlugin), this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIMqttClosedPluginAsync(this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
         }
         await base.OnTcpClosed(e).ConfigureDefaultAwait();
     }
@@ -134,6 +141,7 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
                 actor.Connecting = this.PrivateMqttOnConnecting;
                 actor.Connected = this.PrivateMqttOnConnected;
                 actor.MessageArrived = this.PrivateMqttOnMessageArrived;
+                actor.MessageDiscarded = this.PrivateMqttOnMessageDiscarded;
                 actor.Closing = this.PrivateMqttOnClosing;
                 actor.Activate(mqttConnectMessage);
                 this.m_mqttActor = actor;

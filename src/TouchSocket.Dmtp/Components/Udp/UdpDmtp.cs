@@ -94,7 +94,7 @@ public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
         {
             if (this.PluginManager.Enable)
             {
-                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
+                await this.PluginManager.RaiseIDmtpReceivedPluginAsync(this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureDefaultAwait();
             }
         }
     }

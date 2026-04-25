@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Mqtt;
 
 /// <summary>
 /// 表示一个分发消息的类。
 /// </summary>
-sealed class DistributeMessage : IDisposable
+sealed class DistributeMessage : MqttArrivedMessage
 {
     /// <summary>
     /// 初始化 <see cref="DistributeMessage"/> 类的新实例。
@@ -24,33 +26,22 @@ sealed class DistributeMessage : IDisposable
     /// <param name="retain">是否保留消息。</param>
     /// <param name="qosLevel">服务质量级别。</param>
     /// <param name="sharedPayload">共享的有效负载。</param>
-    public DistributeMessage(string topicName, bool retain, QosLevel qosLevel, SharedPayload sharedPayload)
+    internal DistributeMessage(string topicName, bool retain, QosLevel qosLevel, SharedPayload sharedPayload):
+        base(topicName, qosLevel, retain, sharedPayload.Payload)
     {
-        this.TopicName = topicName;
-        this.Retain = retain;
-        this.QosLevel = qosLevel;
         this.SharedPayload = sharedPayload;
+        this.ReceivedTime = DateTimeOffset.UtcNow;
     }
-
-    /// <summary>
-    /// 获取主题名称。
-    /// </summary>
-    public string TopicName { get; }
-
-    /// <summary>
-    /// 获取一个值，该值指示消息是否被保留。
-    /// </summary>
-    public bool Retain { get; }
-
-    /// <summary>
-    /// 获取服务质量级别。
-    /// </summary>
-    public QosLevel QosLevel { get; }
 
     /// <summary>
     /// 获取共享的有效负载。
     /// </summary>
-    public SharedPayload SharedPayload { get; }
+    internal SharedPayload SharedPayload { get; }
+
+    /// <summary>
+    /// 获取消息被服务端接收的时间。
+    /// </summary>
+    public DateTimeOffset ReceivedTime { get; }
 
     /// <inheritdoc/>
     public void Dispose()

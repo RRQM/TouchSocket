@@ -38,7 +38,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
 
     private async Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
     {
-        await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.m_udpSession.Resolver, this, e).ConfigureDefaultAwait();
+        await this.m_pluginManager.RaiseIDmtpCreatedChannelPluginAsync(this.m_udpSession.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     public async Task<bool> CreatedAsync(IPluginManager pluginManager)
@@ -49,7 +49,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
             Id = this.Id,
             IsPermitOperation = true
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpConnectingPlugin), this.m_udpSession.Resolver, this, args).ConfigureDefaultAwait();
+        await pluginManager.RaiseIDmtpConnectingPluginAsync(this.m_udpSession.Resolver, this, args).ConfigureDefaultAwait();
 
         if (args.IsPermitOperation == false)
         {
@@ -60,7 +60,7 @@ internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
         {
             Id = this.Id
         };
-        await pluginManager.RaiseAsync(typeof(IDmtpConnectedPlugin), this.m_udpSession.Resolver, this, args).ConfigureDefaultAwait();
+        await pluginManager.RaiseIDmtpConnectedPluginAsync(this.m_udpSession.Resolver, this, args).ConfigureDefaultAwait();
 
         return true;
     }

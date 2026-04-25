@@ -14,23 +14,44 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiSchema
+/// <summary>
+/// 表示 OpenAPI 规范中的 Schema 定义，用于描述请求或响应数据的结构。
+/// </summary>
+public class OpenApiSchema
 {
+    /// <summary>
+    /// 获取或设置指向其他 Schema 组件的引用路径。
+    /// </summary>
     [JsonPropertyName("$ref")]
     public string Ref { get; set; }
 
+    /// <summary>
+    /// 获取或设置 Schema 的数据类型。
+    /// </summary>
     [JsonPropertyName("type")]
     public OpenApiDataTypes? Type { get; set; }
 
+    /// <summary>
+    /// 获取或设置 Schema 的格式说明，如 int32、int64、float、double、byte、date、date-time 等。
+    /// </summary>
     [JsonPropertyName("format")]
     public string Format { get; set; }
 
+    /// <summary>
+    /// 获取或设置对象类型 Schema 的属性字典，键为属性名称。
+    /// </summary>
     [JsonPropertyName("properties")]
     public Dictionary<string, OpenApiProperty> Properties { get; set; }
 
+    /// <summary>
+    /// 获取或设置数组类型 Schema 的元素 Schema 定义。
+    /// </summary>
     [JsonPropertyName("items")]
     public OpenApiSchema Items { get; set; }
 
+    /// <summary>
+    /// 获取或设置枚举类型的可选值列表。
+    /// </summary>
     [JsonPropertyName("enum")]
     public long[] Enum { get; set; }
 }

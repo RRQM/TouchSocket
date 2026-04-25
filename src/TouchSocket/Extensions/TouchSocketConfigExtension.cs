@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -12,10 +12,8 @@
 
 namespace TouchSocket.Sockets;
 
-
-
 /// <summary>
-/// 触摸套接字配置扩展类
+/// 配置扩展类
 /// </summary>
 public static class TouchSocketConfigExtension
 {
@@ -27,12 +25,19 @@ public static class TouchSocketConfigExtension
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<TransportOption> TransportOptionProperty = new("TransportOption", new TransportOption());
 
+    /// <summary>
+    /// 流式数据处理适配器，适用于 TCP、串口、命名管道等流式传输场景。
+    /// 所需类型<see cref="Func{TResult}"/>
+    /// </summary>
+    /// issue:https://github.com/RRQM/TouchSocket/issues/131
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> SingleStreamDataHandlingAdapterProperty = new("SingleStreamDataHandlingAdapter", null);
 
     /// <summary>
     /// 数据处理适配器
     /// 所需类型<see cref="Func{TResult}"/>
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [Obsolete("请使用DataHandlingAdapterProperty或SetDataHandlingAdapter代替。", false)]
     public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = new("TcpDataHandlingAdapter", null);
 
     /// <summary>
@@ -173,6 +178,27 @@ public static class TouchSocketConfigExtension
     public static readonly DependencyProperty<bool> UdpConnResetProperty = new("UdpConnReset", false);
 
     #endregion UDP
+
+    #region 过时
+
+    /// <inheritdoc cref="SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用SetSingleStreamDataHandlingAdapter代替。", false)]
+    public static TDependencyObject SetTcpDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject, Func<SingleStreamDataHandlingAdapter> value)
+        where TDependencyObject : TouchSocketConfig
+    {
+        dependencyObject.SetValue(SingleStreamDataHandlingAdapterProperty, value);
+        return dependencyObject;
+    }
+
+    /// <inheritdoc cref="SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用GetDataHandlingAdapter代替。", false)]
+    public static Func<SingleStreamDataHandlingAdapter> GetTcpDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject)
+        where TDependencyObject : TouchSocketConfig
+    {
+        return dependencyObject.GetValue(SingleStreamDataHandlingAdapterProperty);
+    }
+
+    #endregion 过时
 
     #region 创建
 

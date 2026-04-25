@@ -20,7 +20,7 @@ public static class NamedPipeConfigExtension
     /// <summary>
     /// 命名管道数据处理适配器属性。
     /// </summary>
-    [GeneratorProperty(TargetType =typeof(TouchSocketConfig))]
+    [Obsolete("请使用TouchSocketConfigExtension.DataHandlingAdapterProperty或SetDataHandlingAdapter代替。", false)]
     public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = new("NamedPipeDataHandlingAdapter", null
         );
 
@@ -41,4 +41,25 @@ public static class NamedPipeConfigExtension
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
     public static readonly DependencyProperty<string> PipeServerNameProperty = new("PipeServerName", ".");
+
+    #region 过时
+
+    /// <inheritdoc cref="TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用SetSingleStreamDataHandlingAdapter代替。", false)]
+    public static TDependencyObject SetNamedPipeDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject, Func<SingleStreamDataHandlingAdapter> value)
+        where TDependencyObject : TouchSocketConfig
+    {
+        dependencyObject.SetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty, value);
+        return dependencyObject;
+    }
+
+    /// <inheritdoc cref="TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用GetDataHandlingAdapter代替。", false)]
+    public static Func<SingleStreamDataHandlingAdapter> GetNamedPipeDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject)
+        where TDependencyObject : TouchSocketConfig
+    {
+        return dependencyObject.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty);
+    }
+
+    #endregion 过时
 }

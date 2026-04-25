@@ -54,7 +54,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </summary>
     protected virtual async Task OnSerialClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseISerialClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </summary>
     protected virtual async Task OnSerialClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseISerialClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </summary>
     protected virtual async Task OnSerialConnected(ConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseISerialConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </summary>
     protected virtual async Task OnSerialConnecting(ConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseISerialConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
     protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseISerialReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     protected virtual ValueTask<bool> OnSerialReceiving(IBytesReader byteBlock)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, m_bytesReaderEventArgs.Reset(byteBlock));
+        return this.PluginManager.RaiseISerialReceivingPluginAsync(this.Resolver, this, m_bytesReaderEventArgs.Reset(byteBlock));
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </remarks>
     protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
     {
-        return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
+        return this.PluginManager.RaiseISerialSendingPluginAsync(this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
 
     private Task PrivateOnClosing(ClosingEventArgs e)
@@ -128,7 +128,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
         await this.OnSerialConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
-            var adapter = this.Config.GetValue(SerialPortConfigExtension.SerialDataHandlingAdapterProperty)?.Invoke();
+            var adapter = this.Config.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty)?.Invoke();
             if (adapter != null)
             {
                 this.SetAdapter(adapter);

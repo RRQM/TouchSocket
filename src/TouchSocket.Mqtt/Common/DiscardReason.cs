@@ -13,26 +13,22 @@
 namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 Mqtt 会话 Actor 的操作结果。
+/// 表示消息被丢弃的原因。
 /// </summary>
-public readonly struct MqttSessionActorResult
+public enum DiscardReason
 {
     /// <summary>
-    /// 初始化 <see cref="MqttSessionActorResult"/> 的新实例。
+    /// 消息队列已满，超出容量限制。
     /// </summary>
-    /// <param name="sessionActor">会话 Actor 实例。</param>
-    /// <param name="isNew">是否是新建的会话。</param>
-    public MqttSessionActorResult(MqttSessionActor sessionActor, bool isNew)
-    {
-        this.SessionActor = sessionActor;
-        this.IsNew = isNew;
-    }
+    QueueFull,
+
     /// <summary>
-    /// 获取会话 Actor 实例。
+    /// 消息已超过设定的过期时间。
     /// </summary>
-    public MqttSessionActor SessionActor { get; }
+    Expired,
+
     /// <summary>
-    /// 获取是否是新建的会话。
+    /// 消息发布失败。
     /// </summary>
-    public bool IsNew { get; }
+    PublishFailed
 }

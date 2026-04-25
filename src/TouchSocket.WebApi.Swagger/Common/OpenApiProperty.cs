@@ -14,23 +14,44 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiProperty
+/// <summary>
+/// 表示 OpenAPI Schema 中的属性定义。
+/// </summary>
+public class OpenApiProperty
 {
+    /// <summary>
+    /// 获取或设置属性的描述信息。
+    /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
+    /// <summary>
+    /// 获取或设置属性的格式说明，如 int32、int64、float、double、byte、date、date-time 等。
+    /// </summary>
     [JsonPropertyName("format")]
     public string Format { get; set; }
 
+    /// <summary>
+    /// 获取或设置数组类型属性的元素属性定义。
+    /// </summary>
     [JsonPropertyName("items")]
     public OpenApiProperty Items { get; set; }
 
+    /// <summary>
+    /// 获取或设置属性是否为只读。
+    /// </summary>
     [JsonPropertyName("readOnly")]
     public bool? ReadOnly { get; set; }
 
+    /// <summary>
+    /// 获取或设置指向其他 Schema 组件的引用路径。
+    /// </summary>
     [JsonPropertyName("$ref")]
     public string Ref { get; set; }
 
+    /// <summary>
+    /// 获取或设置属性的数据类型。
+    /// </summary>
     [JsonPropertyName("type")]
     public OpenApiDataTypes? Type { get; set; }
 }

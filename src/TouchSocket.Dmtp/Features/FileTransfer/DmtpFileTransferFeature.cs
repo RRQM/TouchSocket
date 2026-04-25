@@ -82,11 +82,11 @@ public sealed class DmtpFileTransferFeature : PluginBase, IDmtpConnectingPlugin,
 
     private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)
     {
-        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
+        await this.m_pluginManager.RaiseIDmtpFileTransferredPluginAsync(actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
     }
 
     private async Task OnFileTransfering(IDmtpActor actor, FileTransferringEventArgs e)
     {
-        await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
+        await this.m_pluginManager.RaiseIDmtpFileTransferringPluginAsync(actor.Client.Resolver, actor.Client, e).ConfigureDefaultAwait();
     }
 }

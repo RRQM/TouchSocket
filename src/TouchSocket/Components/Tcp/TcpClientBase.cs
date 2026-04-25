@@ -64,7 +64,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpClosed(ClosedEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosedPlugin类型的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpClosing(ClosingEventArgs e)
     {
         // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-        await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
     {
         // 调用插件管理器，异步触发所有ITcpConnectedPlugin类型的插件
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
     {
         // 调用插件管理器，触发ITcpConnectingPlugin类型的插件进行相应操作
-        await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseITcpConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -116,7 +116,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         await this.OnTcpConnecting(e).ConfigureDefaultAwait();
         if (this.m_dataHandlingAdapter == null)
         {
-            var adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty)?.Invoke();
+            var adapter = this.Config.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty)?.Invoke();
             if (adapter != null)
             {
                 this.SetAdapter(adapter);
@@ -630,12 +630,12 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     /// <summary>
     /// 异步发送请求信息构建器的受保护方法。
     /// </summary>
-    /// <typeparam name="TRequestInfoBuilder">请求信息构建器的类型，必须实现<see cref="IRequestInfoBuilder"/>接口。</typeparam>
+    /// <typeparam name="TRequestInfoBuilder">请求信息构建器的类型，必须实现<see cref="IBytesBuilder"/>接口。</typeparam>
     /// <param name="requestInfoBuilder">请求信息构建器实例。</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
     protected async Task ProtectedSendAsync<TRequestInfoBuilder>(TRequestInfoBuilder requestInfoBuilder, CancellationToken cancellationToken)
-        where TRequestInfoBuilder : IRequestInfoBuilder
+        where TRequestInfoBuilder : IBytesBuilder
     {
         this.ThrowIfDisposed();
         this.ThrowIfClientNotConnected();

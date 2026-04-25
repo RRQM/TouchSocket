@@ -130,7 +130,7 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             var option = new NamedPipeListenOption
             {
                 PipeName = pipeName,
-                Adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty),
+                Adapter = this.Config.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty),
             };
 
             optionList.Add(option);
@@ -163,13 +163,13 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
             }
 
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
 
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             throw;
         }
     }
@@ -181,13 +181,13 @@ public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient
         {
             await this.ClearAsync().ConfigureDefaultAwait();
             this.m_serverState = ServerState.Stopped;
-            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStoppedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
         {
             this.m_serverState = ServerState.Exception;
-            await this.PluginManager.RaiseAsync(typeof(IServerStoppedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
+            await this.PluginManager.RaiseIServerStoppedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureDefaultAwait();
             return Result.FromException(ex);
         }
         finally

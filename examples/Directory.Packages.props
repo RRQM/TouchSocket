@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- Enable Central Package Management -->
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <TouchSocketVersion>4.2.4</TouchSocketVersion>
+    <TouchSocketVersion>4.2.6</TouchSocketVersion>
   </PropertyGroup>
   <!-- Centralized Package Version Management -->
   <ItemGroup>
@@ -40,5 +40,8 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="FastEndpoints" Version="6.2.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.2.0" />
+    <PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageVersion Include="MQTTnet.Server" Version="5.1.0.1559" />
+    <PackageVersion Include="Spectre.Console" Version="0.49.1" />
   </ItemGroup>
 </Project>

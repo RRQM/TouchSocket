@@ -234,7 +234,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// <returns>表示异步操作的任务。</returns>
     protected virtual async Task IdChanged(string sourceId, string targetId)
     {
-        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseIIdChangedPluginAsync(this.Resolver, this, new IdChangedEventArgs(sourceId, targetId)).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -243,7 +243,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// </summary>
     protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeReceivedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -253,7 +253,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     protected virtual ValueTask<bool> OnNamedPipeReceiving(IBytesReader reader)
     {
         // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
+        return this.PluginManager.RaiseINamedPipeReceivingPluginAsync(this.Resolver, this, m_bytesReaderEventArgs.Reset(reader));
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
     {
         // 将发送事件委托给插件管理器处理，异步调用相关插件的发送逻辑
-        return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, m_sendingEventArgs.Reset(memory));
+        return this.PluginManager.RaiseINamedPipeSendingPluginAsync(this.Resolver, this, m_sendingEventArgs.Reset(memory));
     }
 
     /// <summary>
@@ -408,7 +408,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// </summary>
     protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeClosedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -416,7 +416,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// </summary>
     protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeClosingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -424,7 +424,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// </summary>
     protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeConnectedPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     /// <summary>
@@ -432,7 +432,7 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     /// </summary>
     protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
     {
-        await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureDefaultAwait();
+        await this.PluginManager.RaiseINamedPipeConnectingPluginAsync(this.Resolver, this, e).ConfigureDefaultAwait();
     }
 
     private Task PrivateOnNamedPipeClosing(ClosingEventArgs e)

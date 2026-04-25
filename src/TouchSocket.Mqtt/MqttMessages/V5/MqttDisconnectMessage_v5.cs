@@ -59,7 +59,18 @@ public partial class MqttDisconnectMessage
     /// <inheritdoc/>
     protected override void UnpackWithMqtt5<TReader>(ref TReader reader)
     {
+        // MQTT v5规范：RemainingLength=0时，ReasonCode隐式为0x00（正常断开），Properties缺失
+        if (this.EndOfByteBlock(reader))
+        {
+            return;
+        }
         this.ReasonCode = (MqttReasonCode)ReaderExtension.ReadValue<TReader, byte>(ref reader);
+
+        // RemainingLength=1时，只有ReasonCode，Properties缺失
+        if (this.EndOfByteBlock(reader))
+        {
+            return;
+        }
 
         var propertiesReader = new MqttV5PropertiesReader<TReader>(ref reader);
 

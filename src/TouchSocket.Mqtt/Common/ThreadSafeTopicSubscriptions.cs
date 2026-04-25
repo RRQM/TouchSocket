@@ -109,15 +109,14 @@ class ThreadSafeTopicSubscriptions
     }
 
     /// <summary>
-    /// 获取所有存在的主题名称（返回只读副本）
+    /// 获取所有主题及其订阅者 ClientId 的快照。
     /// </summary>
     public IReadOnlyList<string> GetAllTopics()
     {
         this.m_lock.EnterReadLock();
         try
         {
-            // 返回键的副本防止外部修改字典
-            return this.m_topicToSubscribers.Keys.ToArray();
+           return this.m_topicToSubscribers.Keys.ToArray();
         }
         finally
         {

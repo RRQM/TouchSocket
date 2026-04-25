@@ -18,6 +18,12 @@ namespace TouchSocket.Mqtt;
 public static class MqttConfigExtension
 {
     /// <summary>
+    /// Mqtt 代理配置选项的依赖属性。
+    /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
+    public static readonly DependencyProperty<MqttBrokerOption> MqttBrokerOptionProperty = new DependencyProperty<MqttBrokerOption>("MqttBrokerOption", null);
+
+    /// <summary>
     /// Mqtt连接选项的依赖属性。
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]

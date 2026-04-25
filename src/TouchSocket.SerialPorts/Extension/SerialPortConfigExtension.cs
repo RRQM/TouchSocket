@@ -20,7 +20,7 @@ public static class SerialPortConfigExtension
     /// <summary>
     /// 设置串口适配器
     /// </summary>
-    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    [Obsolete("请使用TouchSocketConfigExtension.DataHandlingAdapterProperty或SetDataHandlingAdapter代替。", false)]
     public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> SerialDataHandlingAdapterProperty =
         new("SerialDataHandlingAdapter", null);
 
@@ -30,4 +30,25 @@ public static class SerialPortConfigExtension
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
     public static readonly DependencyProperty<SerialPortOption> SerialPortOptionProperty =
         new("SerialPortOption", default);
+
+    #region 过时
+
+    /// <inheritdoc cref="TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用SetSingleStreamDataHandlingAdapter代替。", false)]
+    public static TDependencyObject SetSerialDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject, Func<SingleStreamDataHandlingAdapter> value)
+        where TDependencyObject : TouchSocketConfig
+    {
+        dependencyObject.SetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty, value);
+        return dependencyObject;
+    }
+
+    /// <inheritdoc cref="TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty"/>
+    [Obsolete("请使用GetDataHandlingAdapter代替。", false)]
+    public static Func<SingleStreamDataHandlingAdapter> GetSerialDataHandlingAdapter<TDependencyObject>(this TDependencyObject dependencyObject)
+        where TDependencyObject : TouchSocketConfig
+    {
+        return dependencyObject.GetValue(TouchSocketConfigExtension.SingleStreamDataHandlingAdapterProperty);
+    }
+
+    #endregion 过时
 }

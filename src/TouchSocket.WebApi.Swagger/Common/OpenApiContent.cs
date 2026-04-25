@@ -14,8 +14,14 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiContent
+/// <summary>
+/// 表示 OpenAPI 内容对象，用于描述请求体或响应中某种媒体类型的内容。
+/// </summary>
+public class OpenApiContent
 {
+    /// <summary>
+    /// 获取或设置内容对应的 Schema 定义。
+    /// </summary>
     [JsonPropertyName("schema")]
     public OpenApiSchema Schema { get; set; }
 }

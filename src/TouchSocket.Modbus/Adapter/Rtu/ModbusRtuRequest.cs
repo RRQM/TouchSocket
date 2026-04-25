@@ -12,7 +12,7 @@
 
 namespace TouchSocket.Modbus;
 
-internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRequestInfo
+internal sealed class ModbusRtuRequest : ModbusRtuBase, IBytesBuilder, IRequestInfo
 {
     private readonly ModbusFunctionHandlerRegistry m_registry;
 

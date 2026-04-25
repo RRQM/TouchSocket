@@ -14,11 +14,20 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.Swagger;
 
-internal class OpenApiResponse
+/// <summary>
+/// 表示 OpenAPI 操作的响应定义。
+/// </summary>
+public class OpenApiResponse
 {
+    /// <summary>
+    /// 获取或设置响应的描述信息。
+    /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
+    /// <summary>
+    /// 获取或设置响应支持的媒体类型内容字典，键为媒体类型（如 application/json）。
+    /// </summary>
     [JsonPropertyName("content")]
     public Dictionary<string, OpenApiContent> Content { get; set; }
 }
