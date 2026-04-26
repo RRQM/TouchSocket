@@ -34,6 +34,7 @@ internal static class TSMqttServer
             .SetMqttBrokerOption(o =>
             {
                 o.MessageCapacity = int.MaxValue;
+                o.PublishConcurrency = 5;
             })
             .ConfigureContainer(a =>
             {

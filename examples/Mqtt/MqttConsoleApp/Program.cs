@@ -205,6 +205,57 @@ internal class Program
         }
         #endregion
 
+        #region Mqtt服务器查询所有主题
+        // 获取当前 Broker 中已注册的所有主题名称快照
+        var broker1 = service.MqttBroker;
+        var allTopics = broker1.GetAllTopics();
+        foreach (var topic in allTopics)
+        {
+            Console.WriteLine($"Topic: {topic}");
+        }
+        #endregion
+
+        #region Mqtt服务器查询主题的订阅者
+        // GetSubscribers 支持通配符匹配，返回与指定主题匹配的所有订阅者
+        var broker2 = service.MqttBroker;
+        var subscribers = broker2.GetSubscribers("home/temperature");
+        foreach (var sub in subscribers)
+        {
+            Console.WriteLine($"ClientId: {sub.ClientId}, QoS: {sub.QosLevel}");
+        }
+        #endregion
+
+        #region Mqtt服务器检查订阅者
+        // 精确判断某个客户端是否订阅了指定主题
+        var broker3 = service.MqttBroker;
+        var subscription = new Subscription("client-001", QosLevel.AtLeastOnce);
+        var exists = broker3.ContainsSubscriber("home/temperature", subscription);
+        Console.WriteLine($"订阅关系是否存在: {exists}");
+        #endregion
+
+        #region Mqtt服务器手动添加订阅
+        // 服务端主动为客户端注册订阅关系，无需客户端发送 Subscribe 指令
+        var broker4 = service.MqttBroker;
+        broker4.RegisterActor("client-001", "home/temperature", QosLevel.AtLeastOnce);
+        broker4.RegisterActor("client-001", "home/humidity", QosLevel.AtMostOnce);
+        #endregion
+
+        #region Mqtt服务器手动移除订阅
+        // 从指定主题中移除某个客户端的订阅关系
+        var broker5 = service.MqttBroker;
+        broker5.UnregisterActor("client-001", "home/temperature");
+        #endregion
+
+        #region Mqtt服务器清空主题订阅
+        var broker6 = service.MqttBroker;
+
+        // 移除指定主题下的所有订阅者（保留空主题）
+        broker6.ClearTopic("home/temperature");
+
+        // 清空所有主题及订阅关系
+        broker6.Clear();
+        #endregion
+
         return service;
     }
 
