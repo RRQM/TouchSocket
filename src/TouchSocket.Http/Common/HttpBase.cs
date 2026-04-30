@@ -241,7 +241,7 @@ public abstract class HttpBase : IRequestInfo
         var keySpan = line.Slice(0, colonIndex);
         var valueSpan = TouchSocketHttpUtility.TrimWhitespace(line.Slice(colonIndex + 1));
 
-        if (keySpan.IsEmpty || valueSpan.IsEmpty)
+        if (keySpan.IsEmpty)
         {
             return;
         }
