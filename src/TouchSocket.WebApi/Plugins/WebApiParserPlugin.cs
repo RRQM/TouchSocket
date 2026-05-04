@@ -189,6 +189,10 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
         {
             return callContext.Resolver.Resolve(parameter.Type);
         }
+        else if (parameter.Type == typeof(CancellationToken))
+        {
+            return callContext.Token;
+        }
         else if (IsSimpleType(parameter.Type))
         {
             var parameterInfo = this.GetParameterInfo(parameter);

@@ -12,12 +12,12 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
 /// <summary>
 /// 表示 OpenAPI 规范中支持的数据类型。
 /// </summary>
-[JsonConverter(typeof(OpenApiStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<OpenApiDataTypes>))]
 public enum OpenApiDataTypes
 {
     /// <summary>

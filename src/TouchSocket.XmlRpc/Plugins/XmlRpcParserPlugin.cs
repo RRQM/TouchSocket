@@ -94,6 +94,10 @@ public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
                                 {
                                     ps[i] = callContext.Resolver.Resolve(parameter.Type);
                                 }
+                                else if (parameter.Type == typeof(CancellationToken))
+                                {
+                                    ps[i] = callContext.Token;
+                                }
                                 else if (index < paramsNode.ChildNodes.Count)
                                 {
                                     var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;

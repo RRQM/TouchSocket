@@ -49,4 +49,26 @@ public static class WebApiPluginManagerExtension
     {
         return UseWebApi(pluginManager, options => { });
     }
+
+    /// <summary>
+    /// 使用 <see cref="OpenApiPlugin"/> 插件，在 <c>/{Prefix}/openapi.json</c> 提供 OpenApi JSON 文档。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器</param>
+    /// <param name="options">OpenApi 配置选项</param>
+    public static void UseOpenApi(this IPluginManager pluginManager, Action<OpenApiOption> options)
+    {
+        var option = new OpenApiOption();
+        options.Invoke(option);
+        var plugin = new OpenApiPlugin(pluginManager.Resolver.Resolve<ILog>(), option);
+        pluginManager.Add(plugin);
+    }
+
+    /// <summary>
+    /// 使用 <see cref="OpenApiPlugin"/> 插件，在 <c>/openapi/openapi.json</c> 提供 OpenApi JSON 文档。
+    /// </summary>
+    /// <param name="pluginManager">插件管理器</param>
+    public static void UseOpenApi(this IPluginManager pluginManager)
+    {
+        pluginManager.UseOpenApi(options => { });
+    }
 }

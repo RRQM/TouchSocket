@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Collections.Concurrent;
+
 namespace TouchSocket.Mqtt;
 
 /// <summary>
@@ -18,24 +20,30 @@ namespace TouchSocket.Mqtt;
 public class MqttSessionActor : MqttActor
 {
     private readonly AsyncManualResetEvent m_asyncResetEvent = new(false);
-    private readonly Queue<DistributeMessage> m_messageQueue = new Queue<DistributeMessage>();
+    private readonly ConcurrentQueue<DistributeMessage> m_messageQueue = new ConcurrentQueue<DistributeMessage>();
     private readonly MqttBroker m_mqttBroker;
-    private readonly Lock m_queueLock = new Lock();
     private readonly SemaphoreSlim m_queueSemaphore = new SemaphoreSlim(0);
     private int m_messageCapacity = 1000;
     private TimeSpan m_messageExpiry = TimeSpan.Zero;
     private MqttPublishMessage m_mqttWillMessage;
     private long m_offlineTicksUtc = -1L;
+    private int m_queueCount;
+    private QueueOverflowPolicy m_queueOverflowPolicy = QueueOverflowPolicy.DropNewest;
     private bool m_sessionPresent;
 
     /// <summary>
     /// 初始化 <see cref="MqttSessionActor"/> 类的新实例。
     /// </summary>
     /// <param name="broker">Mqtt 消息中心。</param>
-    public MqttSessionActor(MqttBroker broker)
+    /// <param name="concurrency">并发推送的 Worker 数量，默认为 1。</param>
+    public MqttSessionActor(MqttBroker broker, int concurrency)
     {
         this.m_mqttBroker = broker;
-        _ = EasyTask.SafeNewRun(this.WaitForReadAsync);
+        var workerCount = Math.Max(1, concurrency);
+        for (var i = 0; i < workerCount; i++)
+        {
+            _ = EasyTask.SafeNewRun(this.WaitForReadAsync);
+        }
     }
 
     /// <summary>
@@ -45,6 +53,15 @@ public class MqttSessionActor : MqttActor
     {
         get => this.m_messageCapacity;
         set => this.m_messageCapacity = value > 0 ? value : 1000;
+    }
+
+    /// <summary>
+    /// 获取或设置消息队列达到上限时的处理策略。默认值为 <see cref="QueueOverflowPolicy.DropNewest"/>。
+    /// </summary>
+    public QueueOverflowPolicy QueueOverflowPolicy
+    {
+        get => this.m_queueOverflowPolicy;
+        set => this.m_queueOverflowPolicy = value;
     }
 
     /// <summary>
@@ -133,27 +150,41 @@ public class MqttSessionActor : MqttActor
             return;
         }
 
-        bool enqueued;
-        lock (this.m_queueLock)
+        var newCount = Interlocked.Increment(ref this.m_queueCount);
+        if (newCount <= this.m_messageCapacity)
         {
-            if (this.m_messageQueue.Count >= this.m_messageCapacity)
-            {
-                enqueued = false;
-            }
-            else
-            {
-                this.m_messageQueue.Enqueue(message);
-                enqueued = true;
-            }
+            this.m_messageQueue.Enqueue(message);
+            this.m_queueSemaphore.Release();
+            return;
         }
 
-        if (!enqueued)
+        if (this.m_queueOverflowPolicy == QueueOverflowPolicy.DropNewest)
         {
+            Interlocked.Decrement(ref this.m_queueCount);
             await this.OnMessageDiscardedAsync(message, DiscardReason.QueueFull).ConfigureDefaultAwait();
             message.Dispose();
             return;
         }
 
+        Interlocked.Decrement(ref this.m_queueCount);
+
+        if (this.m_messageQueue.TryDequeue(out var oldMessage))
+        {
+            await this.OnMessageDiscardedAsync(oldMessage, DiscardReason.QueueFull).ConfigureDefaultAwait();
+            oldMessage.Dispose();
+            Interlocked.Decrement(ref this.m_queueCount);
+        }
+
+        newCount = Interlocked.Increment(ref this.m_queueCount);
+        if (newCount > this.m_messageCapacity)
+        {
+            Interlocked.Decrement(ref this.m_queueCount);
+            await this.OnMessageDiscardedAsync(message, DiscardReason.QueueFull).ConfigureDefaultAwait();
+            message.Dispose();
+            return;
+        }
+
+        this.m_messageQueue.Enqueue(message);
         this.m_queueSemaphore.Release();
     }
 
@@ -167,12 +198,10 @@ public class MqttSessionActor : MqttActor
         base.Dispose(disposing);
         if (disposing)
         {
-            lock (this.m_queueLock)
+            while (this.m_messageQueue.TryDequeue(out var message))
             {
-                while (this.m_messageQueue.TryDequeue(out var message))
-                {
-                    message.Dispose();
-                }
+                Interlocked.Decrement(ref this.m_queueCount);
+                message.Dispose();
             }
         }
     }
@@ -309,14 +338,11 @@ public class MqttSessionActor : MqttActor
             {
                 await this.m_queueSemaphore.WaitAsync(cancellationToken).ConfigureDefaultAwait();
 
-                DistributeMessage distributeMessage;
-                lock (this.m_queueLock)
+                if (!this.m_messageQueue.TryDequeue(out var distributeMessage))
                 {
-                    if (!this.m_messageQueue.TryDequeue(out distributeMessage))
-                    {
-                        continue;
-                    }
+                    continue;
                 }
+                Interlocked.Decrement(ref this.m_queueCount);
 
                 var expiry = this.m_messageExpiry;
                 if (expiry > TimeSpan.Zero && DateTimeOffset.UtcNow - distributeMessage.ReceivedTime > expiry)

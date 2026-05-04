@@ -26,7 +26,7 @@ public class Touch_TCP : BaseTouchServer
     {
         await this.tcpService.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts(new IPHost(port))
-             .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
+             .SetSingleStreamDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
              .ConfigurePlugins(a =>
              {
                  a.Add<Touch_TCP_Log_Plguin>();//此处可以添加插件

@@ -10,24 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Text.Json.Serialization;
-
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.Mqtt;
 
 /// <summary>
-/// 表示 OpenAPI 操作的请求体定义。
+/// 表示消息队列达到容量上限时的处理策略。
 /// </summary>
-public class OpenApiRequestBody
+public enum QueueOverflowPolicy
 {
     /// <summary>
-    /// 获取或设置请求体的描述信息。
+    /// 丢弃最新到达的消息。
     /// </summary>
-    [JsonPropertyName("description")]
-    public string Description { get; set; }
+    DropNewest,
 
     /// <summary>
-    /// 获取或设置请求体支持的媒体类型内容字典，键为媒体类型（如 application/json）。
+    /// 丢弃队列中最旧的消息，为新消息腾出空间。
     /// </summary>
-    [JsonPropertyName("content")]
-    public Dictionary<string, OpenApiContent> Content { get; set; }
+    DropOldest
 }

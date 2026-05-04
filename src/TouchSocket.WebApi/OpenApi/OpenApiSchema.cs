@@ -12,7 +12,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
 /// <summary>
 /// 表示 OpenAPI 规范中的 Schema 定义，用于描述请求或响应数据的结构。

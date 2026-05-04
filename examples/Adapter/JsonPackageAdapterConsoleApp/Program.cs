@@ -40,7 +40,7 @@ internal class Program
         //载入配置
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8))//赋值适配，必须使用委托，且返回的适配，必须new。不能返回一个单例
+             .SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8))//赋值适配，必须使用委托，且返回的适配，必须new。不能返回一个单例
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个日志注入
@@ -72,7 +72,7 @@ internal class Program
         #endregion
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-             .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8))
+             .SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8))
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）

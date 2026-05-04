@@ -24,7 +24,7 @@ internal class Program
         //载入配置
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+             .SetSingleStreamDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个日志注入
@@ -53,7 +53,7 @@ internal class Program
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-             .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+             .SetSingleStreamDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）

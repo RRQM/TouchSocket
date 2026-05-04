@@ -44,7 +44,7 @@ internal class Program
         //载入配置
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetTcpDataHandlingAdapter(() => new MyRawDataHandleAdapter())
+             .SetSingleStreamDataHandlingAdapter(() => new MyRawDataHandleAdapter())
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个日志注入
@@ -68,7 +68,7 @@ internal class Program
 
         await service.SetupAsync(new TouchSocketConfig()//载入配置
              .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-             .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromSeconds(1) })
+             .SetSingleStreamDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromSeconds(1) })
              .ConfigureContainer(a =>
              {
                  a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -87,15 +87,15 @@ internal class Program
         var config = new TouchSocketConfig();
 
         #region 配置使用Tcp适配器
-        config.SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
+        config.SetSingleStreamDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
         #endregion
 
         #region 配置使用NamedPipe适配器
-        config.SetNamedPipeDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
+        config.SetSingleStreamDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
         #endregion
 
         #region 配置使用Serial适配器
-        config.SetSerialDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
+        config.SetSingleStreamDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"));
         #endregion
 
     }

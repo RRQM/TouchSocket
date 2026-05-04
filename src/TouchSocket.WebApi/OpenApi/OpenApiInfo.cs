@@ -12,7 +12,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
 internal class OpenApiInfo
 {

@@ -139,6 +139,10 @@ internal class DmtpRpcRequestPackage : WaitRouterPackage, IDmtpRpcRequestPackage
             {
                 ps[i] = this.m_callContext.Resolver.Resolve(parameter.Type);
             }
+            else if (parameter.Type == typeof(CancellationToken))
+            {
+                ps[i] = this.m_callContext.Token;
+            }
             else if (index < countPar)
             {
                 ps[i] = this.m_selector.DeserializeParameter(ref reader, this.SerializationType, parameter.Type);

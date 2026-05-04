@@ -17,6 +17,7 @@
     <Project Path="Adapter/MultipacketAdapterConsoleApp/MultipacketAdapterConsoleApp.csproj" />
     <Project Path="Adapter/PackageAdapterConsoleApp/PackageAdapterConsoleApp.csproj" />
     <Project Path="Adapter/RawAdapterConsoleApp/RawAdapterConsoleApp.csproj" />
+    <Project Path="Adapter/UseAdapterConsoleApp/UseAdapterConsoleApp.csproj" Id="c457e249-923e-44a5-8141-ce3dffe92d7f" />
   </Folder>
   <Folder Name="/BlogsDemos/">
     <Project Path="BlogsDemos/AccessRestrictionsConsoleApp/AccessRestrictionsConsoleApp.csproj" />

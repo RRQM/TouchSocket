@@ -12,7 +12,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
 /// <summary>
 /// 表示 OpenAPI 路径中某个 HTTP 方法的操作定义。

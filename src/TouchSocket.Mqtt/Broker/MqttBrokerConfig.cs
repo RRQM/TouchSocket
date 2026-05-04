@@ -18,6 +18,7 @@ namespace TouchSocket.Mqtt;
 public sealed class MqttBrokerOption
 {
     private int m_messageCapacity = 1000;
+    private QueueOverflowPolicy m_queueOverflowPolicy = QueueOverflowPolicy.DropNewest;
 
     /// <summary>
     /// 获取或设置消息队列的最大容量。达到上限时，新消息将被丢弃。默认值为 1000。
@@ -33,6 +34,20 @@ public sealed class MqttBrokerOption
     /// 设置为 <see cref="TimeSpan.Zero"/> 时表示永不过期。
     /// </summary>
     public TimeSpan MessageExpiry { get; set; }
+
+    /// <summary>
+    /// 每个连接发布消息时的并发度。默认值为 1，表示每个连接一次只能发布一条消息。增加此值可以提高发布性能，但可能会增加资源消耗和消息乱序的风险。
+    /// </summary>
+    public int PublishConcurrency { get; set; } = 1;
+
+    /// <summary>
+    /// 获取或设置消息队列达到上限时的处理策略。默认值为 <see cref="QueueOverflowPolicy.DropNewest"/>。
+    /// </summary>
+    public QueueOverflowPolicy QueueOverflowPolicy
+    {
+        get => this.m_queueOverflowPolicy;
+        set => this.m_queueOverflowPolicy = value;
+    }
 
     /// <summary>
     /// 获取或设置离线会话的过期时长。超过该时长的离线会话将自动从代理中移除。

@@ -10,34 +10,69 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Rpc;
+using TouchSocket.WebApi;
+
 namespace TouchSocket.WebApi.Swagger;
 
 /// <summary>
-/// <inheritdoc/>
+/// Swagger 插件管理器扩展
 /// </summary>
 public static class SwaggerPluginManagerExtension
 {
     /// <summary>
-    /// 使用<see cref="SwaggerPlugin"/>插件。
+    /// 使用 <see cref="SwaggerPlugin"/> 插件，同时自动添加 <see cref="OpenApiPlugin"/>。
+    /// <see cref="OpenApiPlugin"/> 提供 openapi.json 端点，<see cref="SwaggerPlugin"/> 提供 Swagger UI 页面。
     /// </summary>
     /// <param name="pluginManager">插件管理器</param>
-    /// <param name="options">Swagger配置选项</param>
-    /// <returns>Swagger插件实例</returns>
+    /// <param name="options">Swagger 配置选项</param>
     public static void UseSwagger(this IPluginManager pluginManager, Action<SwaggerOption> options)
     {
-        SwaggerOption option = new();
+        var option = new SwaggerOption();
         options.Invoke(option);
-        SwaggerPlugin swaggerPlugin = new(pluginManager.Resolver.Resolve<ILog>(), option);
-        pluginManager.Add(swaggerPlugin);
+
+        // 默认使用 SwaggerDescriptionAttribute 提供标签
+        option.GetTags ??= GetTagsFromSwaggerDescription;
+
+        var logger = pluginManager.Resolver.Resolve<ILog>();
+        pluginManager.Add(new OpenApiPlugin(logger, option));
+        pluginManager.Add(new SwaggerPlugin(logger, option));
     }
 
     /// <summary>
-    /// 使用<see cref="SwaggerPlugin"/>插件。
+    /// 使用 <see cref="SwaggerPlugin"/> 插件，同时自动添加 <see cref="OpenApiPlugin"/>。
     /// </summary>
     /// <param name="pluginManager">插件管理器</param>
-    /// <returns>Swagger插件实例</returns>
     public static void UseSwagger(this IPluginManager pluginManager)
     {
         pluginManager.UseSwagger(options => { });
+    }
+
+    private static IEnumerable<string> GetTagsFromSwaggerDescription(RpcMethod rpcMethod)
+    {
+        var tags = new List<string>();
+
+        foreach (var item in rpcMethod.ServerFromType.GetCustomAttributes(false))
+        {
+            if (item is SwaggerDescriptionAttribute attr && attr.Groups != null)
+            {
+                tags.AddRange(attr.Groups);
+            }
+        }
+
+        foreach (var item in rpcMethod.Info.GetCustomAttributes(false))
+        {
+            if (item is SwaggerDescriptionAttribute attr && attr.Groups != null)
+            {
+                tags.AddRange(attr.Groups);
+            }
+        }
+
+        if (tags.Count == 0)
+        {
+            tags.Add(rpcMethod.ServerFromType.Name);
+        }
+
+        return tags;
     }
 }

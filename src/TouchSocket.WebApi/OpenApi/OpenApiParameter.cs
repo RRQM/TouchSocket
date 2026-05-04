@@ -12,22 +12,34 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
 /// <summary>
-/// 表示 OpenAPI 操作的响应定义。
+/// 表示 OpenAPI 路径操作中的参数定义。
 /// </summary>
-public class OpenApiResponse
+public class OpenApiParameter
 {
     /// <summary>
-    /// 获取或设置响应的描述信息。
+    /// 获取或设置参数的描述信息。
     /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
     /// <summary>
-    /// 获取或设置响应支持的媒体类型内容字典，键为媒体类型（如 application/json）。
+    /// 获取或设置参数的位置，如 query、header、path 或 cookie。
     /// </summary>
-    [JsonPropertyName("content")]
-    public Dictionary<string, OpenApiContent> Content { get; set; }
+    [JsonPropertyName("in")]
+    public string In { get; set; }
+
+    /// <summary>
+    /// 获取或设置参数的名称。
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    /// <summary>
+    /// 获取或设置参数的 Schema 定义。
+    /// </summary>
+    [JsonPropertyName("schema")]
+    public OpenApiSchema Schema { get; set; }
 }

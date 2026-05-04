@@ -248,7 +248,7 @@ public abstract class HttpBase : IRequestInfo
 
         if (keySpan.Length == 14 && TouchSocketHttpUtility.EqualsIgnoreCaseAscii(keySpan, "Content-Length"u8))
         {
-            if (TryParseLong(valueSpan, out var length))
+            if (!valueSpan.IsEmpty && TryParseLong(valueSpan, out var length))
             {
                 this.m_contentLength = length;
             }
@@ -259,7 +259,10 @@ public abstract class HttpBase : IRequestInfo
 
         if (keySpan.Length == 17 && TouchSocketHttpUtility.EqualsIgnoreCaseAscii(keySpan, "Transfer-Encoding"u8))
         {
-            this.m_isChunk = TouchSocketHttpUtility.EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
+            if (!valueSpan.IsEmpty)
+            {
+                this.m_isChunk = TouchSocketHttpUtility.EqualsIgnoreCaseAscii(valueSpan, "chunked"u8);
+            }
             var value = this.m_stringPool.Get(valueSpan);
             this.m_headers[HttpHeaders.TransferEncoding] = value;
             return;
@@ -273,6 +276,13 @@ public abstract class HttpBase : IRequestInfo
         }
 
         var key = this.m_stringPool.Get(keySpan);
+
+        // 空值直接存储为空字符串，不进入逗号分割逻辑
+        if (valueSpan.IsEmpty)
+        {
+            this.m_headers.AddInternal(key, string.Empty);
+            return;
+        }
 
         // 只对支持多值的头进行逗号分割
         if (!TouchSocketHttpUtility.SupportsMultipleValues(keySpan))

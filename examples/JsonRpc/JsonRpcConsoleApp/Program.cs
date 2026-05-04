@@ -134,7 +134,7 @@ internal class Program
         config.SetListenIPHosts(7705);
 
         //设置json数据处理适配器。
-        config.SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8));
+        config.SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8));
 
         //配置容器
         config.ConfigureContainer(a =>

@@ -24,7 +24,7 @@ internal class Program
 
         var config = new TouchSocketConfig();
         config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
-              .SetTcpDataHandlingAdapter(() =>
+              .SetSingleStreamDataHandlingAdapter(() =>
               {
                   return new TerminatorPackageAdapter("\r\n");//命令行中使用\r\n结尾
               })

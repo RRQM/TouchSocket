@@ -53,7 +53,7 @@ internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
         var client = new TcpJsonRpcClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7705")
-             .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
+             .SetSingleStreamDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
         await client.ConnectAsync();
         return client;
     }

@@ -12,10 +12,22 @@
 
 using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
-internal class OpenApiComponent
+/// <summary>
+/// 表示 OpenAPI 操作的请求体定义。
+/// </summary>
+public class OpenApiRequestBody
 {
-    [JsonPropertyName("schemas")]
-    public Dictionary<string, OpenApiSchema> Schemas { get; set; }
+    /// <summary>
+    /// 获取或设置请求体的描述信息。
+    /// </summary>
+    [JsonPropertyName("description")]
+    public string Description { get; set; }
+
+    /// <summary>
+    /// 获取或设置请求体支持的媒体类型内容字典，键为媒体类型（如 application/json）。
+    /// </summary>
+    [JsonPropertyName("content")]
+    public Dictionary<string, OpenApiContent> Content { get; set; }
 }

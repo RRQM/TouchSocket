@@ -34,7 +34,7 @@ internal class Program
         var service = new TcpService();
         await service.SetupAsync(new TouchSocketConfig()//载入配置
                  .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                 .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
+                 .SetSingleStreamDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
                  .ConfigureContainer(a =>
                  {
                      a.AddConsoleLogger();
@@ -50,7 +50,7 @@ internal class Program
         var tcpClient = new TcpClient();
         await tcpClient.SetupAsync(new TouchSocketConfig()
               .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-              .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
+              .SetSingleStreamDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
               .ConfigureContainer(a =>
               {
                   a.AddConsoleLogger();

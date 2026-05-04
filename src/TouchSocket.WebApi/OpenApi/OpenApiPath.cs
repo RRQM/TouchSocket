@@ -10,21 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Text.Json.Serialization;
+namespace TouchSocket.WebApi.OpenApi;
 
-namespace TouchSocket.WebApi.Swagger;
-
-internal class OpenApiRoot
+internal class OpenApiPath : Dictionary<string, OpenApiPathValue>
 {
-    [JsonPropertyName("openapi")]
-    public string OpenApi { get; set; } = "3.0.1";
-
-    [JsonPropertyName("info")]
-    public OpenApiInfo Info { get; set; }
-
-    [JsonPropertyName("paths")]
-    public Dictionary<string, OpenApiPath> Paths { get; set; }
-
-    [JsonPropertyName("components")]
-    public OpenApiComponent Components { get; set; }
 }

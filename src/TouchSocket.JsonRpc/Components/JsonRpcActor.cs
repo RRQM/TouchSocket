@@ -310,6 +310,10 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                     {
                         ps[i] = callContext.Resolver.Resolve(parameter.Type);
                     }
+                    else if (parameter.Type == typeof(CancellationToken))
+                    {
+                        ps[i] = callContext.Token;
+                    }
                     else if (parameter.ParameterInfo.HasDefaultValue)
                     {
                         ps[i] = parameter.ParameterInfo.DefaultValue;
@@ -334,6 +338,10 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                         else if (parameter.IsFromServices)
                         {
                             ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                        }
+                        else if (parameter.Type == typeof(CancellationToken))
+                        {
+                            ps[i] = callContext.Token;
                         }
                         else if (element.TryGetProperty(parameter.Name, out var property))
                         {
@@ -363,6 +371,10 @@ public sealed class JsonRpcActor : DisposableObject, IJsonRpcClient
                         else if (parameter.IsFromServices)
                         {
                             ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                        }
+                        else if (parameter.Type == typeof(CancellationToken))
+                        {
+                            ps[i] = callContext.Token;
                         }
                         else if (index < arrayLength)
                         {

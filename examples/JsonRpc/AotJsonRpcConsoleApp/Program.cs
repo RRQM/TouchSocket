@@ -73,7 +73,7 @@ internal class Program
              {
                  options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
              })
-             .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8)));
+             .SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8)));
 
         await jsonRpcClient.ConnectAsync();
 
@@ -178,7 +178,7 @@ internal class Program
     {
         var service = new TcpService();
         await service.SetupAsync(new TouchSocketConfig()
-              .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8))
+              .SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(System.Text.Encoding.UTF8))
               .SetListenIPHosts(7705)
               .ConfigureContainer(a =>
               {

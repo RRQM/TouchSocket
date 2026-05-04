@@ -44,7 +44,7 @@ internal class Program
         var jsonRpcClient = new TcpJsonRpcClient();
         await jsonRpcClient.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7705")
-             .SetTcpDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8)));
+             .SetSingleStreamDataHandlingAdapter(() => new JsonPackageAdapter(Encoding.UTF8)));
         await jsonRpcClient.ConnectAsync();
 
         return jsonRpcClient;

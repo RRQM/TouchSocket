@@ -10,15 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
-namespace TouchSocket.WebApi.Swagger;
+namespace TouchSocket.WebApi.OpenApi;
 
-[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Swagger内部使用，相信动态代码是有效的")]
-internal class OpenApiStringEnumConverter : System.Text.Json.Serialization.JsonStringEnumConverter
+internal class OpenApiRoot
 {
-    public OpenApiStringEnumConverter() : base(JsonNamingPolicy.CamelCase)
-    {
-    }
+    [JsonPropertyName("openapi")]
+    public string OpenApi { get; set; } = "3.0.1";
+
+    [JsonPropertyName("info")]
+    public OpenApiInfo Info { get; set; }
+
+    [JsonPropertyName("paths")]
+    public Dictionary<string, OpenApiPath> Paths { get; set; }
+
+    [JsonPropertyName("components")]
+    public OpenApiComponent Components { get; set; }
 }

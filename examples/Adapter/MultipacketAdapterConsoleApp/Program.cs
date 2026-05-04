@@ -36,7 +36,7 @@ internal class Program
     {
         var tcpClient = new TcpClient();
         await tcpClient.SetupAsync(new TouchSocketConfig()
-            .SetTcpDataHandlingAdapter(() => new MyAdapter())
+            .SetSingleStreamDataHandlingAdapter(() => new MyAdapter())
                .SetRemoteIPHost("tcp://127.0.0.1:7789"));
         await tcpClient.ConnectAsync();
 
@@ -70,7 +70,7 @@ internal class Program
 
         await service.SetupAsync(new TouchSocketConfig()
             .SetListenIPHosts(7789)
-            .SetTcpDataHandlingAdapter(() => new MyAdapter()));
+            .SetSingleStreamDataHandlingAdapter(() => new MyAdapter()));
 
         await service.StartAsync();//启动
         return service;

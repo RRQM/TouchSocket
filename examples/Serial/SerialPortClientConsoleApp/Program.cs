@@ -50,7 +50,7 @@ internal class Program
         #endregion
 
         #region 串口一般推荐周期适配器
-        config.SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromMilliseconds(100) });
+        config.SetSingleStreamDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout = TimeSpan.FromMilliseconds(100) });
         #endregion
 
         #region 使用串口接收插件

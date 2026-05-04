@@ -23,8 +23,25 @@ public class MqttBroker : DisposableObject
     private readonly ThreadSafeTopicSubscriptions m_topicToActors = new();
     private Timer m_cleanupTimer;
     private TimeSpan m_sessionExpiry = TimeSpan.Zero;
+
+    /// <summary>
+    /// 获取或设置消息队列的最大容量。
+    /// </summary>
     public int MessageCapacity { get; set; }
 
+    /// <summary>
+    /// 获取或设置当消息队列溢出时的处理策略。
+    /// </summary>
+    public QueueOverflowPolicy QueueOverflowPolicy { get; set; }
+
+    /// <summary>
+    /// 获取或设置消息并发发布的最大并发数。
+    /// </summary>
+    public int PublishConcurrency { get; set; }
+
+    /// <summary>
+    /// 获取或设置消息的过期时长。
+    /// </summary>
     public TimeSpan MessageExpiry { get; set; }
 
     /// <summary>
@@ -134,9 +151,12 @@ public class MqttBroker : DisposableObject
         }
         else
         {
-            var newActor = new MqttSessionActor(this);
-            newActor.MessageCapacity = this.MessageCapacity;
-            newActor.MessageExpiry = this.MessageExpiry;
+            var newActor = new MqttSessionActor(this, this.PublishConcurrency)
+            {
+                MessageCapacity = this.MessageCapacity,
+                QueueOverflowPolicy = this.QueueOverflowPolicy,
+                MessageExpiry = this.MessageExpiry
+            };
             if (this.m_sessionActors.TryAdd(clientId, newActor))
             {
                 return newActor;
@@ -164,7 +184,9 @@ public class MqttBroker : DisposableObject
     {
         this.SessionExpiry = option.SessionExpiry;
         this.MessageCapacity = option.MessageCapacity;
+        this.QueueOverflowPolicy = option.QueueOverflowPolicy;
         this.MessageExpiry = option.MessageExpiry;
+        this.PublishConcurrency = option.PublishConcurrency;
     }
 
     /// <summary>
