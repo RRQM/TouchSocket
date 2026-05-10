@@ -24,37 +24,37 @@ public class RpcAnalyzer : DiagnosticAnalyzer
 {
     #region DiagnosticDescriptors
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0001 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0001 = new DiagnosticDescriptor(
         "Rpc0001",
         "用于判断源生成接口函数是否使用了构造入参",
         "{0}使用了构造函数设置，这在源生成时将无法生效，所以可能会导致调用失败，所以请考虑使用NamedArguments设置。例如：“MethodInvoke =true”",
         "Rpc", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0002 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0002 = new DiagnosticDescriptor(
         "Rpc0002",
         "用于判断Rpc函数是否为静态函数",
         "{0}是静态函数，这在Rpc中是不允许的。",
         "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0003 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0003 = new DiagnosticDescriptor(
        "Rpc0003",
        "用于判断Rpc函数是否为异步void",
        "{0}是异步Rpc，但是返回值为void，这在Rpc中是不允许的，请将返回值改为Task。",
        "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0004 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0004 = new DiagnosticDescriptor(
        "Rpc0004",
        "用于判断Rpc函数是否有重载函数",
        "Rpc中{0}函数出现重载，这是不允许的。",
        "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0005 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0005 = new DiagnosticDescriptor(
        "Rpc0005",
        "用于判断Rpc函数是否有ref、out、in参数",
        "Rpc中{0}函数出现ref、out、in参数，这是不允许的。",
        "Rpc", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-    private static readonly DiagnosticDescriptor m_rule_Rpc0006 = new DiagnosticDescriptor(
+    private static readonly DiagnosticDescriptor s_rule_Rpc0006 = new DiagnosticDescriptor(
       "Rpc0006",
       "用于判断Rpc函数参数是否为接口或抽象类且没有标识[FromServices]",
       "Rpc中{0}函数{1}参数为接口或抽象类，且没有标识[FromServices]，这是不允许的。",
@@ -67,12 +67,12 @@ public class RpcAnalyzer : DiagnosticAnalyzer
         get
         {
             return ImmutableArray.Create(
-        m_rule_Rpc0001,
-        m_rule_Rpc0002,
-        m_rule_Rpc0003,
-        m_rule_Rpc0004,
-        m_rule_Rpc0005,
-        m_rule_Rpc0006
+        s_rule_Rpc0001,
+        s_rule_Rpc0002,
+        s_rule_Rpc0003,
+        s_rule_Rpc0004,
+        s_rule_Rpc0005,
+        s_rule_Rpc0006
         );
         }
     }
@@ -99,7 +99,7 @@ public class RpcAnalyzer : DiagnosticAnalyzer
                 var att = RpcUtils.GetRpcAttribute(methodSymbol);
                 if (att != null && att.ConstructorArguments.Length > 0)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0001, att.ApplicationSyntaxReference.GetSyntax().GetLocation(), att.AttributeClass.Name));
+                    context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0001, att.ApplicationSyntaxReference.GetSyntax().GetLocation(), att.AttributeClass.Name));
                 }
             }
         }
@@ -107,6 +107,7 @@ public class RpcAnalyzer : DiagnosticAnalyzer
         if (namedTypeSymbol.AllInterfaces.Any(a => a.ToDisplayString() == RpcServerSourceGenerator.IRpcServerTypeName))
         {
             var names = new List<string>();
+            CollectInheritedRpcMethodNames(namedTypeSymbol, names);
             foreach (var methodSymbol in namedTypeSymbol.GetMembers().OfType<IMethodSymbol>())
             {
                 var att = RpcUtils.GetRpcAttribute(methodSymbol);
@@ -114,14 +115,14 @@ public class RpcAnalyzer : DiagnosticAnalyzer
                 {
                     if (methodSymbol.IsStatic)//静态
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0002, methodSymbol.Locations[0], methodSymbol.Name));
+                        context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0002, methodSymbol.Locations[0], methodSymbol.Name));
                     }
 
                     foreach (var item in methodSymbol.Parameters)
                     {
                         if (item.RefKind != RefKind.None)
                         {
-                            context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0005, methodSymbol.Locations[0], methodSymbol.Name));
+                            context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0005, methodSymbol.Locations[0], methodSymbol.Name));
                         }
 
                         var type = item.Type;
@@ -129,14 +130,14 @@ public class RpcAnalyzer : DiagnosticAnalyzer
                         {
                             if (!item.HasAttribute(RpcUtils.FromServicesAttributeName))
                             {
-                                context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0006, methodSymbol.Locations[0], methodSymbol.Name, item.Name));
+                                context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0006, methodSymbol.Locations[0], methodSymbol.Name, item.Name));
                             }
                         }
                     }
 
                     if (names.Contains(methodSymbol.Name))//有重载
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0004, methodSymbol.Locations[0], methodSymbol.Name));
+                        context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0004, methodSymbol.Locations[0], methodSymbol.Name));
                     }
                     else
                     {
@@ -146,7 +147,38 @@ public class RpcAnalyzer : DiagnosticAnalyzer
 
                 if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(m_rule_Rpc0003, methodSymbol.Locations[0], methodSymbol.Name));
+                    context.ReportDiagnostic(Diagnostic.Create(s_rule_Rpc0003, methodSymbol.Locations[0], methodSymbol.Name));
+                }
+            }
+        }
+    }
+
+    private static void CollectInheritedRpcMethodNames(INamedTypeSymbol typeSymbol, List<string> names)
+    {
+        //issue：https://gitee.com/RRQM_Home/TouchSocket/issues/IDR7VC
+
+        var baseType = typeSymbol.BaseType;
+        while (baseType != null)
+        {
+            foreach (var method in baseType.GetMembers().OfType<IMethodSymbol>())
+            {
+                var att = RpcUtils.GetRpcAttribute(method);
+                if (att != null && !names.Contains(method.Name))
+                {
+                    names.Add(method.Name);
+                }
+            }
+            baseType = baseType.BaseType;
+        }
+
+        foreach (var iface in typeSymbol.AllInterfaces)
+        {
+            foreach (var method in iface.GetMembers().OfType<IMethodSymbol>())
+            {
+                var att = RpcUtils.GetRpcAttribute(method);
+                if (att != null && !names.Contains(method.Name))
+                {
+                    names.Add(method.Name);
                 }
             }
         }

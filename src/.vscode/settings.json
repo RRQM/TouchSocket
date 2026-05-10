@@ -1,0 +1,10 @@
+{
+    "marscode.codeCompletionPro": {
+        "enableCodeCompletionPro": false
+    },
+    "marscode.enableInlineCommand": true,
+    "cSpell.words": [
+        "Autofac",
+        "netstandard"
+    ]
+}

@@ -101,7 +101,7 @@ namespace TouchSocket.Core
                structDeclaration.AttributeLists.Count > 0);
     }
 
-    private static INamedTypeSymbol? GetClassSymbol(GeneratorSyntaxContext context)
+    private static INamedTypeSymbol GetClassSymbol(GeneratorSyntaxContext context)
     {
         var model = context.SemanticModel;
         var classSymbol = model.GetDeclaredSymbol(context.Node) as INamedTypeSymbol;

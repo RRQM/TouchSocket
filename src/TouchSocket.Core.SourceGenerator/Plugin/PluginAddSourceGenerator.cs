@@ -175,8 +175,8 @@ public class PluginAddSourceGenerator : IIncrementalGenerator
             codeBuilder.AppendLine("{");
             codeBuilder.AppendLine("async Task newFunc(object sender, PluginEventArgs e)");
             codeBuilder.AppendLine("{");
-            codeBuilder.AppendLine($"await func(({firstType.ToDisplayString()})sender).ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
-            codeBuilder.AppendLine("await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+            codeBuilder.AppendLine($"await func(({firstType.ToDisplayString()})sender).ConfigureDefaultAwait();");
+            codeBuilder.AppendLine("await e.InvokeNext().ConfigureDefaultAwait();");
             codeBuilder.AppendLine("}");
             codeBuilder.AppendLine($"pluginManager.Add(typeof({this.m_pluginClass.ToDisplayString()}), newFunc, func);");
             codeBuilder.AppendLine("}");

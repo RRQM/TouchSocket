@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net10.0;net8.0</TargetFrameworks>
+		<PackageTags>SocketIo;Socket.IO;EngineIO;WebSocket;Polling;TouchSocket;实时通信</PackageTags>
+		<Description>TouchSocket.SocketIo 是 TouchSocket 框架的 Socket.IO 协议组件，提供完整的 Socket.IO 客户端实现。
+
+核心功能：
+- 兼容 Socket.IO 3.x 和 4.x 协议
+- 支持 WebSocket 和 HTTP 长轮询两种传输方式，并支持自动从轮询升级为 WebSocket
+- 支持 Engine.IO v3 和 v4 协议
+- 基于 Emit/Ack 模型的事件双向通信
+- 支持命名空间（Namespace）、二进制附件、自定义 Query 参数
+- 内置 System.Text.Json 序列化器，支持自定义序列化策略
+- 丰富的插件扩展点：事件拦截、握手验证、连接生命周期管理
+
+说明文档：https://touchsocket.net/</Description>
+		<Title>TouchSocket.SocketIo</Title>
+	</PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="..\TouchSocket.Shared\SocketIo\EngineIo3.cs" Link="EngineIo\EngineIo3.cs" />
+        <Compile Include="..\TouchSocket.Shared\SocketIo\EngineIo4.cs" Link="EngineIo\EngineIo4.cs" />
+        <Compile Include="..\TouchSocket.Shared\SocketIo\InternalSocketIoResponse.cs" Link="SocketIo\InternalSocketIoResponse.cs" />
+        <Compile Include="..\TouchSocket.Shared\SocketIo\InternalSocketIoCore.cs" Link="SocketIo\InternalSocketIoCore.cs" />
+    </ItemGroup>
+    
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net462'">
+	  <Reference Include="System.Net.Http" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="TouchSocket.Core" />
+		<Using Include="TouchSocket.Sockets" />
+	</ItemGroup>
+</Project>

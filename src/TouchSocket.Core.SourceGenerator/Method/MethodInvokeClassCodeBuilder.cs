@@ -99,7 +99,7 @@ internal class MethodInvokeClassCodeBuilder : MethodCodeBuilder
 
                         if (hasConfigureAwait)
                         {
-                            codeBuilder.AppendLine("await result.ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+                            codeBuilder.AppendLine("await result.ConfigureDefaultAwait();");
                         }
                         else
                         {
@@ -130,7 +130,7 @@ internal class MethodInvokeClassCodeBuilder : MethodCodeBuilder
 
                         if (hasConfigureAwait)
                         {
-                            codeBuilder.AppendLine("return await result.ConfigureAwait(EasyTask.ContinueOnCapturedContext);");
+                            codeBuilder.AppendLine("return await result.ConfigureDefaultAwait();");
                         }
                         else
                         {

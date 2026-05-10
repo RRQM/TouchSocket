@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<NoWarn>RS2007;CS0162</NoWarn>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
 		<BaseOutputPath>bin</BaseOutputPath>

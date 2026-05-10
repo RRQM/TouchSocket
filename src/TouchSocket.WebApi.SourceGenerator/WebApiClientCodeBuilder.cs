@@ -81,7 +81,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
         var methodName = this.GetMethodName(method, namedArguments);
         var genericConstraintTypes = this.GetGenericConstraintTypes(method, namedArguments);
         //var isIncludeCallContext = this.IsIncludeCallContext(method);
-        var allowSync = this.AllowSync(GeneratorFlag.ExtensionSync, method, namedArguments);
+        //var allowSync = this.AllowSync(GeneratorFlag.ExtensionSync, method, namedArguments);
         var allowAsync = this.AllowAsync(GeneratorFlag.ExtensionAsync, method, namedArguments);
         var returnType = this.GetReturnType(method);
         var taskType = this.GetTaskType(method);
@@ -92,77 +92,77 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
         //生成开始
         var codeBuilder = new StringBuilder();
 
-        if (allowSync)
-        {
-            codeBuilder.AppendLine("///<summary>");
-            codeBuilder.AppendLine($"///{this.GetDescription(method)}");
-            codeBuilder.AppendLine("///</summary>");
-            codeBuilder.Append($"public static {returnType} {methodName}");
-            codeBuilder.Append("<TClient>(");//方法参数
+        //if (allowSync)
+        //{
+        //    codeBuilder.AppendLine("///<summary>");
+        //    codeBuilder.AppendLine($"///{this.GetDescription(method)}");
+        //    codeBuilder.AppendLine("///</summary>");
+        //    codeBuilder.Append($"public static {returnType} {methodName}");
+        //    codeBuilder.Append("<TClient>(");//方法参数
 
-            codeBuilder.Append($"this TClient client");
+        //    codeBuilder.Append($"this TClient client");
 
-            codeBuilder.Append(",");
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                if (i > 0)
-                {
-                    codeBuilder.Append(",");
-                }
-                codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
-            }
-            if (parameters.Length > 0)
-            {
-                codeBuilder.Append(",");
-            }
-            codeBuilder.Append("InvokeOption invokeOption = default");
-            codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
+        //    codeBuilder.Append(",");
+        //    for (var i = 0; i < parameters.Length; i++)
+        //    {
+        //        if (i > 0)
+        //        {
+        //            codeBuilder.Append(",");
+        //        }
+        //        codeBuilder.Append(this.GetMethodParameterString(parameters[i]));
+        //    }
+        //    if (parameters.Length > 0)
+        //    {
+        //        codeBuilder.Append(",");
+        //    }
+        //    codeBuilder.Append("InvokeOption invokeOption = default");
+        //    codeBuilder.AppendLine($") where TClient:{string.Join(",", genericConstraintTypes)}");
 
-            codeBuilder.AppendLine("{");//方法开始
+        //    codeBuilder.AppendLine("{");//方法开始
 
-            var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
+        //    var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
 
-            codeBuilder.AppendLine("var _request=new WebApiRequest();");
-            codeBuilder.AppendLine($"_request.Method = \"{webApiMethod}\";");
-            codeBuilder.AppendLine($"_request.Headers = {this.GetFromHeaderString(method, webApiParameterInfos)};");
-            codeBuilder.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
-            codeBuilder.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
+        //    codeBuilder.AppendLine("var _request=new WebApiRequest();");
+        //    codeBuilder.AppendLine($"_request.Method = \"{webApiMethod}\";");
+        //    codeBuilder.AppendLine($"_request.Headers = {this.GetFromHeaderString(method, webApiParameterInfos)};");
+        //    codeBuilder.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
+        //    codeBuilder.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
 
-            string bodyName = default;
+        //    string bodyName = default;
 
-            //Debugger.Launch();
+        //    //Debugger.Launch();
 
-            foreach (var webApiParameterInfo in webApiParameterInfos)
-            {
-                if (webApiParameterInfo.Parameter.Type.IsPrimitiveAndString())
-                {
-                    //Debugger.Launch();
-                    if (webApiParameterInfo.IsFromBody)
-                    {
-                        bodyName = webApiParameterInfo.Parameter.Name;
-                    }
-                }
-                else
-                {
-                    bodyName = webApiParameterInfo.Parameter.Name;
-                }
-            }
+        //    foreach (var webApiParameterInfo in webApiParameterInfos)
+        //    {
+        //        if (webApiParameterInfo.Parameter.Type.IsPrimitiveAndString())
+        //        {
+        //            //Debugger.Launch();
+        //            if (webApiParameterInfo.IsFromBody)
+        //            {
+        //                bodyName = webApiParameterInfo.Parameter.Name;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            bodyName = webApiParameterInfo.Parameter.Name;
+        //        }
+        //    }
 
-            if (bodyName != null)
-            {
-                codeBuilder.AppendLine($"_request.Body = {bodyName};");
-            }
+        //    if (bodyName != null)
+        //    {
+        //        codeBuilder.AppendLine($"_request.Body = {bodyName};");
+        //    }
 
-            if (method.HasReturn())
-            {
-                codeBuilder.AppendLine($"return ({returnType}) client.Invoke(\"{invokeKey}\",typeof({returnType}),invokeOption,_request);");
-            }
-            else
-            {
-                codeBuilder.AppendLine($"client.Invoke(\"{invokeKey}\",default,invokeOption,_request);");
-            }
-            codeBuilder.AppendLine("}");
-        }
+        //    if (method.HasReturn())
+        //    {
+        //        codeBuilder.AppendLine($"return ({returnType}) client.Invoke(\"{invokeKey}\",typeof({returnType}),invokeOption,_request);");
+        //    }
+        //    else
+        //    {
+        //        codeBuilder.AppendLine($"client.Invoke(\"{invokeKey}\",default,invokeOption,_request);");
+        //    }
+        //    codeBuilder.AppendLine("}");
+        //}
 
         if (allowAsync)
         {
@@ -251,11 +251,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
 
     protected override string ReplacePattern(string key, TypedConstant typedConstant)
     {
-        if (key == "Method")
-        {
-            return typedConstant.Value.ToString();
-        }
-        return base.ReplacePattern(key, typedConstant);
+        return key == "Method" ? typedConstant.Value.ToString() : base.ReplacePattern(key, typedConstant);
     }
 
     private string GetFromFormString(IEnumerable<WebApiParameterInfo> webApiParameterInfos)
@@ -310,13 +306,9 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
                 {
                     return false;
                 }
-                else if (a.IsFromForm)
-                {
-                    return false;
-                }
                 else
                 {
-                    return true;
+                    return !a.IsFromForm;
                 }
             }
             return false;
@@ -336,22 +328,12 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
 
     private string GetMethodType(Dictionary<string, TypedConstant> namedArguments)
     {
-        if (namedArguments.TryGetValue("Method", out var typedConstant))
-        {
-            return typedConstant.Value.ToString();
-        }
-
-        return "0";
+        return namedArguments.TryGetValue("Method", out var typedConstant) ? typedConstant.Value.ToString() : "0";
     }
 
     private string GetParameterToString(IParameterSymbol parameter)
     {
-        if (parameter.Type.IsValueType)
-        {
-            return $"{parameter.Name}.ToString()";
-        }
-
-        return $"{parameter.Name}?.ToString()";
+        return parameter.Type.IsValueType ? $"{parameter.Name}.ToString()" : $"{parameter.Name}?.ToString()";
     }
 
     private string GetRouteUrl(IMethodSymbol rpcMethod, AttributeData routerAttribute, Dictionary<string, TypedConstant> namedArguments)

@@ -52,7 +52,7 @@ public class MqttConnectOptions
     /// <summary>
     /// 获取或设置版本号。
     /// </summary>
-    public MqttProtocolVersion Version { get; set; }
+    public MqttProtocolVersion Version { get; set; }= MqttProtocolVersion.V311;
 
     /// <summary>
     /// 获取或设置一个值，该值指示是否设置遗嘱标志。

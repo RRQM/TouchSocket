@@ -10,28 +10,30 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
+namespace TouchSocket.SocketIo;
 
-namespace TouchSocket.SocketIo
+internal class InternalSocketIoResponse : ISocketIoResponse
 {
-    internal class InternalSocketIoResponse : ISocketIoResponse
+    private readonly ISocketIoCore m_socketIo;
+    private readonly ISocketIoMessage m_socketIoMessage;
+
+    public InternalSocketIoResponse(ISocketIoMessage socketIoMessage, ISocketIoCore socketIo)
     {
-        private readonly ISocketIoCore m_socketIo;
-        private readonly ISocketIoMessage m_socketIoMessage;
+        this.m_socketIoMessage = socketIoMessage;
+        this.m_socketIo = socketIo;
+    }
 
-        public InternalSocketIoResponse(ISocketIoMessage socketIoMessage, ISocketIoCore socketIo)
-        {
-            this.m_socketIoMessage = socketIoMessage;
-            this.m_socketIo = socketIo;
-        }
+    public int ArgsCount => this.m_socketIoMessage.ArgsCount;
+    public int[] BytesIndexs => this.m_socketIoMessage.BytesIndexs;
+    public bool CanAck => this.m_socketIoMessage.Id.HasValue;
 
-        public int ArgsCount => this.m_socketIoMessage.ArgsCount;
-        public int[] BytesIndexs => this.m_socketIoMessage.BytesIndexs;
-        public bool CanAck => this.m_socketIoMessage.Id.HasValue;
+    public object GetValue(Type targetType, int index)
+    {
+        return this.m_socketIo.Deserialize(targetType, this.m_socketIoMessage, index);
+    }
 
-        public object GetValue(Type targetType, int index)
-        {
-            return this.m_socketIo.Deserialize(targetType, this.m_socketIoMessage, index);
-        }
+    public T GetValue<T>(int index)
+    {
+        return (T)this.GetValue(typeof(T), index);
     }
 }

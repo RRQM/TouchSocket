@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net8.0;net10.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<PackageTags>SECS;HSMS;SEMI;TouchSocket</PackageTags>
+		<Description>这是一个半导体协议功能库，目前包括基于HSMS（SEMI E37）的 HsmsClient 以及 SECS-II（SEMI E5）数据项解析。
+
+说明文档：https://touchsocket.net/</Description>
+		<Title>TouchSocket.Semi</Title>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+</Project>
