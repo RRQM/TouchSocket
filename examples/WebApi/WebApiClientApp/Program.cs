@@ -202,7 +202,7 @@ internal class Program
     #region WebApi客户端创建WebApiClient
     private static async Task<WebApiClient> CreateWebApiClient()
     {
-        using var client = new WebApiClient();
+        var client = new WebApiClient();
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("127.0.0.1:7789")
              .ConfigurePlugins(a =>
@@ -218,7 +218,7 @@ internal class Program
     #region WebApi客户端创建WebApiClientSlim
     private static async Task<WebApiClientSlim> CreateWebApiClientSlim()
     {
-        using var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
+        var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
         await client.SetupAsync(new TouchSocketConfig()
              .SetRemoteIPHost("http://127.0.0.1:7789")
              .ConfigurePlugins(a =>
@@ -236,7 +236,6 @@ internal class Program
     /// </summary>
     private class MyWebApiPlugin : PluginBase, IWebApiRequestPlugin, IWebApiResponsePlugin
     {
-
         public async Task OnWebApiRequest(IWebApiClientBase client, WebApiEventArgs e)
         {
             if (e.IsHttpMessage)//发送的是System.Net.Http.HttpClient为通讯主体

@@ -154,11 +154,18 @@
     <Project Path="Modbus/ModbusObjectConsoleApp/ModbusObjectConsoleApp.csproj" />
     <Project Path="Modbus/ModbusSlaveConsoleApp/ModbusSlaveConsoleApp.csproj" />
   </Folder>
+  <Folder Name="/Semi/">
+    <Project Path="Semi/SemiServiceConsoleApp/SemiServiceConsoleApp.csproj" />
+    <Project Path="Semi/SemiClientConsoleApp/SemiClientConsoleApp.csproj" />
+  </Folder>
   <Folder Name="/Mqtt/">
     <Project Path="Mqtt/MqttConsoleApp/MqttConsoleApp.csproj" />
     <Project Path="Mqtt/MqttPerformanceTestingConsoleApp/MqttPerformanceTestingConsoleApp.csproj" />
     <Project Path="Mqtt/MqttTopicHandlerConsoleApp/MqttTopicHandlerConsoleApp.csproj" />
     <Project Path="Mqtt/MqttWebSocketConsoleApp/MqttWebSocketConsoleApp.csproj" />
+  </Folder>
+  <Folder Name="/MqttRpc/">
+    <Project Path="MqttRpc/MqttRpcConsoleApp/MqttRpcConsoleApp.csproj" Id="3d9e2a2e-93bb-4ae5-948d-4bad9611d744" />
   </Folder>
   <Folder Name="/NamedPipe/">
     <Project Path="NamedPipe/NamedPipeClientConsoleApp/NamedPipeClientConsoleApp.csproj" />
