@@ -12,17 +12,18 @@
 
 namespace TouchSocket.SocketIo;
 
+/// <summary>
+/// Socket.IO 核心功能接口，提供消息响应和数据反序列化能力。
+/// </summary>
 public interface ISocketIoCore
 {
-    Task AckAsync(int packetId, object[] data);
+    /// <summary>
+    /// 发送 Ack 响应。
+    /// </summary>
+    Task AckAsync(int packetId, object[] data, CancellationToken cancellationToken);
 
-    ISocketIoMessage CreateMessage(SocketIoMessageType messageType);
-
+    /// <summary>
+    /// 将消息中指定索引处的数据反序列化为目标类型。
+    /// </summary>
     object Deserialize(Type targetType, in ISocketIoMessage message, int index);
-
-    IHandshakeMessage DeserializeHandshakeMessage(in EngineIoMessage message);
-
-    List<DataItem> SerializeAck(int? packetId, string nsp, object[] data);
-
-    List<DataItem> SerializeEvent(string eventName, int? packetId, string nsp, object[] data);
 }

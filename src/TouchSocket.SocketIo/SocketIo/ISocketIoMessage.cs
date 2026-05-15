@@ -12,17 +12,51 @@
 
 namespace TouchSocket.SocketIo;
 
+/// <summary>
+/// Socket.IO 消息接口，表示一条已解码的 Socket.IO 数据包。
+/// </summary>
 public interface ISocketIoMessage : IWaitHandle
 {
+    /// <summary>
+    /// 获取消息的参数数量。
+    /// </summary>
     int ArgsCount { get; }
-    List<byte[]> Bytes { get; set; }
-    int[] BytesIndexs { get; }
-    string Error { get; set; }
-    string Event { get; set; }
-    int? Id { get; set; }
-    SocketIoMessageType MessageType { get; }
-    string Namespace { get; set; }
-    string Text { get; set; }
 
-    bool TryGetBytes(int index, out byte[] bytes);
+    /// <summary>
+    /// 获取包含二进制数据的参数索引集合。
+    /// </summary>
+    int[] BytesIndices { get; }
+
+    /// <summary>
+    /// 获取错误信息。仅当 <see cref="MessageType"/> 为 <see cref="SocketIoMessageType.Error"/> 时有效。
+    /// </summary>
+    string Error { get; }
+
+    /// <summary>
+    /// 获取事件名称。仅当 <see cref="MessageType"/> 为 <see cref="SocketIoMessageType.Event"/> 或 <see cref="SocketIoMessageType.Binary"/> 时有效。
+    /// </summary>
+    string Event { get; }
+
+    /// <summary>
+    /// 获取数据包 ID。不为 <see langword="null"/> 时表示发送方期望收到 Ack 响应。
+    /// </summary>
+    int? Id { get; }
+
+    /// <summary>
+    /// 获取消息类型。
+    /// </summary>
+    SocketIoMessageType MessageType { get; }
+
+    /// <summary>
+    /// 获取命名空间。
+    /// </summary>
+    string Namespace { get; }
+
+    /// <summary>
+    /// 尝试获取指定参数索引处的二进制数据。
+    /// </summary>
+    /// <param name="index">参数索引。</param>
+    /// <param name="bytes">成功时返回对应的二进制数据。</param>
+    /// <returns>若该索引处存在二进制数据则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+    bool TryGetBytes(int index, out ReadOnlyMemory<byte> bytes);
 }

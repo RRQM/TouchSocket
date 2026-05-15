@@ -14,9 +14,11 @@ using TouchSocket.SocketIo;
 
 namespace TouchSocket.Core;
 
-[PluginRaise(typeof(ISocketIoHandshakedPlugin))]
-[PluginRaise(typeof(ISocketIoHandshakingPlugin))]
-[PluginRaise(typeof(ISocketIoEventPlugin))]
+[PluginRaise(typeof(ISocketIoConnectedPlugin))]
+[PluginRaise(typeof(ISocketIoConnectingPlugin))]
+[PluginRaise(typeof(ISocketIoReceivedPlugin))]
+[PluginRaise(typeof(ISocketIoClosingPlugin))]
+[PluginRaise(typeof(ISocketIoClosedPlugin))]
 internal static partial class SocketIoPluginRaiseExtension
 {
 }

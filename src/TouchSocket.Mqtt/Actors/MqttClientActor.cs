@@ -18,7 +18,6 @@ namespace TouchSocket.Mqtt;
 public sealed class MqttClientActor : MqttActor
 {
     private TaskCompletionSource<MqttConnAckMessage> m_waitForConnect;
-    private readonly WaitDataAsync<MqttPingRespMessage> m_waitForPing = new();
 
     /// <summary>
     /// 异步断开连接。
@@ -44,27 +43,11 @@ public sealed class MqttClientActor : MqttActor
         }
     }
 
-    /// <summary>
-    /// 异步发送PING消息。
-    /// </summary>
-    /// <param name="cancellationToken">取消令牌。</param>
-    /// <returns>操作结果。</returns>
-    public async ValueTask<Result> PingAsync(CancellationToken cancellationToken)
+    /// <inheritdoc/>
+    public override void CancelPendingOperations()
     {
-        var contentForAck = new MqttPingReqMessage();
-        this.m_waitForPing.Reset();
-        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureDefaultAwait();
-        var waitDataStatus = await this.m_waitForPing.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-
-        return waitDataStatus switch
-        {
-            WaitDataStatus.Default => Result.UnknownFail,
-            WaitDataStatus.Success => Result.Success,
-            WaitDataStatus.Overtime => Result.Overtime,
-            WaitDataStatus.Canceled => Result.Canceled,
-            WaitDataStatus.Disposed => Result.Disposed,
-            _ => Result.UnknownFail,
-        };
+        base.CancelPendingOperations();
+        this.m_waitForConnect?.TrySetCanceled();
     }
 
     /// <summary>
@@ -75,7 +58,7 @@ public sealed class MqttClientActor : MqttActor
     /// <returns>连接确认消息。</returns>
     public async Task<MqttConnAckMessage> ConnectAsync(MqttConnectMessage message, CancellationToken cancellationToken)
     {
-        this.m_waitForConnect = new TaskCompletionSource<MqttConnAckMessage>();
+        this.m_waitForConnect = new TaskCompletionSource<MqttConnAckMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         await this.ProtectedOutputSendAsync(message, cancellationToken).ConfigureDefaultAwait();
         var connAckMessage = await this.m_waitForConnect.Task.WithCancellation(cancellationToken);
@@ -96,13 +79,6 @@ public sealed class MqttClientActor : MqttActor
     protected override Task InputMqttConnectMessageAsync(MqttConnectMessage message, CancellationToken cancellationToken)
     {
         throw ThrowHelper.CreateNotSupportedException($"遇到无法处理的数据报文,Message={message}");
-    }
-
-    /// <inheritdoc/>
-    protected override Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken)
-    {
-        this.m_waitForPing.Set(message);
-        return EasyTask.CompletedTask;
     }
 
     /// <inheritdoc/>

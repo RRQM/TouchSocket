@@ -10,24 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Semi;
+namespace TouchSocket.SocketIo;
 
-/// <summary>
-/// 表示 SECS-II F8（Double）格式数据项。
-/// </summary>
-public class F8SecsItem : SecsItem<double>
+public interface IConnectMessage
 {
-    /// <summary>
-    /// 初始化 <see cref="F8SecsItem"/> 的新实例（用于反序列化）。
-    /// </summary>
-    public F8SecsItem() { }
-
-    /// <summary>
-    /// 初始化 <see cref="F8SecsItem"/> 的新实例，并设置初始值。
-    /// </summary>
-    /// <param name="values">双精度浮点值数组。</param>
-    public F8SecsItem(ReadOnlyMemory<double> values) : base(values) { }
-
-    /// <inheritdoc/>
-    public override SecsFormat SecsFormat => SecsFormat.F8;
+    string Sid { get; set; }
+    IEnumerable<string> Upgrades { get; set; }
+    long PingInterval { get; set; }
+    long PingTimeout { get; set; }
+    int MaxPayload { get; set; }
 }

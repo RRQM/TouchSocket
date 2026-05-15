@@ -10,6 +10,7 @@
 // 感谢您的下载和使用
 // ------------------------------------------------------------------------------
 
+using System.Buffers.Text;
 using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core;
@@ -803,5 +804,25 @@ public static partial class WriterExtension
 
         writer.Advance(byteLength);
         return byteLength;
+    }
+
+    /// <summary>
+    /// 将字节数组以Base64编码写入字节写入器。
+    /// </summary>
+    /// <typeparam name="TWriter">实现<see cref="IBytesWriter"/>接口的写入器类型。</typeparam>
+    /// <param name="writer">字节写入器实例。</param>
+    /// <param name="value">要写入的字节数组只读跨度。</param>
+    public static void WriteBase64<TWriter>(ref TWriter writer, ReadOnlySpan<byte> value)
+                                                where TWriter : IBytesWriter
+    {
+        if (value.IsEmpty)
+        {
+            return;
+        }
+
+        var base64Length = Base64.GetMaxEncodedToUtf8Length(value.Length);
+        var span = writer.GetSpan(base64Length);
+        Base64.EncodeToUtf8(value, span, out _, out var bytesWritten);
+        writer.Advance(bytesWritten);
     }
 }

@@ -14,6 +14,7 @@ using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.WebSockets;
 using TouchSocket.Http.WebSockets;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Mqtt;
 
@@ -104,8 +105,14 @@ public class MqttWebSocketClient : SetupClientWebSocket, IMqttWebSocketClient
     }
 
     /// <inheritdoc/>
-    protected override async Task OnWebSocketReceived(WebSocketMessageType messageType, ReadOnlySequence<byte> sequenceSrc)
+    protected override Task OnWebSocketClosed(ClosedEventArgs e)
     {
+        this.m_mqttActor.CancelPendingOperations();
+        return this.PluginManager.RaiseIMqttClosedPluginAsync(this.Resolver, this, new MqttClosedEventArgs(e.Message)).AsTask();
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnWebSocketReceived(WebSocketMessageType messageType, ReadOnlySequence<byte> sequenceSrc)    {
         if (messageType != WebSocketMessageType.Binary)
         {
             return;

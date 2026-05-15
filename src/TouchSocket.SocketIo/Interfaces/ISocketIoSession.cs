@@ -14,7 +14,7 @@ namespace TouchSocket.SocketIo;
 
 public interface ISocketIoSession : IClient, IOnlineClient, IClosableClient, IIdClient
 {
-    Task AckAsync(int packetId, params object[] data);
-    Task EmitAsync(string eventName, params object[] data);
-    Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, int millisecondsTimeout, CancellationToken token);
+    Task AckAsync(int packetId, object[] data, CancellationToken cancellationToken = default);
+    Task EmitAsync(string eventName, object[] data, CancellationToken cancellationToken = default);
+    Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, CancellationToken token);
 }

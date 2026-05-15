@@ -19,7 +19,21 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class ListSecsItem : SecsItem
 {
-    private SecsItem[] m_items = [];
+    private ReadOnlyMemory<SecsItem> m_items;
+
+    /// <summary>
+    /// 初始化 <see cref="ListSecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public ListSecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="ListSecsItem"/> 的新实例，并设置子数据项。
+    /// </summary>
+    /// <param name="items">子数据项集合。</param>
+    public ListSecsItem(ReadOnlyMemory<SecsItem> items)
+    {
+        this.m_items = items;
+    }
 
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.List;
@@ -33,7 +47,7 @@ public class ListSecsItem : SecsItem
     public override void Package<TWriter>(ref TWriter writer)
     {
         WriteHeader(ref writer, SecsFormat.List, (uint)this.m_items.Length);
-        foreach (var item in this.m_items)
+        foreach (var item in this.m_items.Span)
         {
             item.Package(ref writer);
         }

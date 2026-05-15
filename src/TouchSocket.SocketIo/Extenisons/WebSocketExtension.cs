@@ -11,11 +11,38 @@
 //------------------------------------------------------------------------------
 
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 
 namespace TouchSocket.SocketIo;
 
 internal static class WebSocketExtension
 {
+    public static async Task<byte[]> ReadAsBytesAsync(this WebSocket webSocket, CancellationToken cancellationToken = default)
+    {
+        var buffer = new byte[4096];
+        var ms = new MemoryStream();
+
+        while (true)
+        {
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                await webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationToken);
+                throw new WebSocketException("收到 WebSocket 关闭消息。");
+            }
+
+            ms.Write(buffer, 0, result.Count);
+
+            if (result.EndOfMessage)
+            {
+                break;
+            }
+        }
+
+        return ms.ToArray();
+    }
+
     public static async Task<string> ReadAsStringAsync(this WebSocket webSocket, CancellationToken cancellationToken = default)
     {
         var buffer = new byte[4096];
@@ -58,18 +85,20 @@ internal static class WebSocketExtension
         await webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, cancellationToken);
     }
 
-    public static async Task SendBinaryAsync(this WebSocket webSocket, byte[] data, CancellationToken cancellationToken = default)
+    public static async Task SendBinaryAsync(this WebSocket webSocket, ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         if (webSocket == null)
         {
             throw new ArgumentNullException(nameof(webSocket));
         }
 
-        if (data == null)
+        if (MemoryMarshal.TryGetArray(data, out var segment))
         {
-            throw new ArgumentNullException(nameof(data));
+            await webSocket.SendAsync(segment, WebSocketMessageType.Binary, true, cancellationToken);
         }
-
-        await webSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, cancellationToken);
+        else
+        {
+            await webSocket.SendAsync(new ArraySegment<byte>(data.ToArray()), WebSocketMessageType.Binary, true, cancellationToken);
+        }
     }
 }

@@ -12,11 +12,17 @@
 
 namespace TouchSocket.SocketIo;
 
-public interface IHandshakeMessage
+/// <summary>
+/// 定义在 Socket.IO 客户端完成连接之前触发的插件接口。
+/// </summary>
+[DynamicMethod]
+public interface ISocketIoConnectingPlugin : IPlugin
 {
-    string Sid { get; set; }
-    IEnumerable<string> Upgrades { get; set; }
-    long PingInterval { get; set; }
-    long PingTimeout { get; set; }
-    int MaxPayload { get; set; }
+    /// <summary>
+    /// 在 Socket.IO 客户端即将建立连接时调用，可用于验证或拦截连接。
+    /// </summary>
+    /// <param name="client">客户端对象。</param>
+    /// <param name="e">Socket.IO 连接验证事件参数。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    Task OnSocketIoConnecting(ISocketIoSession client, SocketIoVerifyEventArgs e);
 }

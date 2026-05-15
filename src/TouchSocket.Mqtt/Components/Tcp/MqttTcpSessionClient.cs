@@ -93,11 +93,18 @@ public class MqttTcpSessionClient : TcpSessionClientBase, IMqttTcpSessionClient
     public MqttActor MqttActor => this.m_mqttActor;
 
     /// <inheritdoc/>
+    public ValueTask<Result> PingAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_mqttActor.PingAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
         var mqttActor = this.m_mqttActor;
         if (mqttActor is not null)
         {
+            mqttActor.CancelPendingOperations();
             mqttActor.OutputSendAsync = null;
             mqttActor.Connecting = null;
             mqttActor.Connected = null;

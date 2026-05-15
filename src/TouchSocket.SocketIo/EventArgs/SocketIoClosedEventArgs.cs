@@ -12,8 +12,22 @@
 
 namespace TouchSocket.SocketIo;
 
-[DynamicMethod]
-public interface ISocketIoEventPlugin : IPlugin
+/// <summary>
+/// Socket.IO 会话关闭事件参数，包含关闭原因。
+/// </summary>
+public class SocketIoClosedEventArgs : PluginEventArgs
 {
-    Task OnSocketIoReceivedEvent(object client, SocketIoEventArgs e);
+    /// <summary>
+    /// 初始化 <see cref="SocketIoClosedEventArgs"/>。
+    /// </summary>
+    /// <param name="message">关闭原因。</param>
+    public SocketIoClosedEventArgs(string message)
+    {
+        this.Message = message;
+    }
+
+    /// <summary>
+    /// 关闭原因。
+    /// </summary>
+    public string Message { get; }
 }

@@ -20,9 +20,15 @@ namespace TouchSocket.Semi;
 public class JIS8SecsItem : StringSecsItem
 {
     /// <summary>
-    /// 初始化 <see cref="JIS8SecsItem"/> 的新实例。
+    /// 初始化 <see cref="JIS8SecsItem"/> 的新实例（用于反序列化）。
     /// </summary>
     public JIS8SecsItem() : base(Encoding.UTF8) { }
+
+    /// <summary>
+    /// 初始化 <see cref="JIS8SecsItem"/> 的新实例，并设置字符串值。
+    /// </summary>
+    /// <param name="value">字符串值。</param>
+    public JIS8SecsItem(string value) : base(Encoding.UTF8, value) { }
 
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.JIS8;

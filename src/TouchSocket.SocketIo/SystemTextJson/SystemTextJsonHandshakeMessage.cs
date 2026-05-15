@@ -14,7 +14,7 @@ using System.Text.Json.Serialization;
 
 namespace TouchSocket.SocketIo;
 
-internal class SystemTextJsonHandshakeMessage : IHandshakeMessage
+internal class SystemTextJsonHandshakeMessage : IConnectMessage
 {
     [JsonPropertyName("maxPayload")]
     public int MaxPayload { get; set; } = 1000000;

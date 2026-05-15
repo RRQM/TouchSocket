@@ -19,7 +19,21 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class BinarySecsItem : SecsItem
 {
-    private byte[] m_data = [];
+    private ReadOnlyMemory<byte> m_data;
+
+    /// <summary>
+    /// 初始化 <see cref="BinarySecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public BinarySecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="BinarySecsItem"/> 的新实例，并设置二进制数据。
+    /// </summary>
+    /// <param name="data">二进制数据。</param>
+    public BinarySecsItem(ReadOnlyMemory<byte> data)
+    {
+        this.m_data = data;
+    }
 
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.Binary;
@@ -34,7 +48,7 @@ public class BinarySecsItem : SecsItem
     {
         WriteHeader(ref writer, SecsFormat.Binary, (uint)this.m_data.Length);
         var span = writer.GetSpan(this.m_data.Length);
-        this.m_data.CopyTo(span);
+        this.m_data.Span.CopyTo(span);
         writer.Advance(this.m_data.Length);
     }
 

@@ -15,6 +15,7 @@ using TouchSocket.Core;
 using TouchSocket.Mqtt;
 using TouchSocket.Mqtt.Rpc;
 using TouchSocket.Rpc;
+using TouchSocket.Rpc.MqttRpc.Generators;
 using TouchSocket.Sockets;
 
 namespace MqttRpcConsoleApp;
@@ -39,23 +40,21 @@ internal class Program
         // 使用 InvokeAsync 调用远程方法
         // invokeKey 默认为 "命名空间.类名.方法名" 全小写
         var addResult = (int)await rpcClient.InvokeAsync(
-            "mqttrpcconsoleapp.myrpcserver.add",
+            "mqttrpcconsoleapp.imyrpcserver.add",
             typeof(int),
             InvokeOption.WaitInvoke,
             10, 20);
         Console.WriteLine($"Add(10, 20) = {addResult}");
 
         var dateResult = (string)await rpcClient.InvokeAsync(
-            "mqttrpcconsoleapp.myrpcserver.getdatetime",
+            "mqttrpcconsoleapp.imyrpcserver.getcallerinfo",
             typeof(string),
             InvokeOption.WaitInvoke);
-        Console.WriteLine($"GetDateTime() = {dateResult}");
+        Console.WriteLine($"GetCallerInfo() = {dateResult}");
         #endregion
 
         #region MqttRpc代理调用
-        // 使用 DispatchProxy 实现强类型代理调用
-        var proxy = MyMqttRpcDispatchProxy.Create<IMyRpcApi, MyMqttRpcDispatchProxy>(rpcClient);
-        var proxyResult = await proxy.AddAsync(100, 200);
+        var proxyResult = await rpcClient.AddAsync(100, 200);
         Console.WriteLine($"代理调用 Add(100, 200) = {proxyResult}");
         #endregion
 
@@ -96,7 +95,7 @@ internal class Program
                 // 注册 RPC 服务到容器
                 a.AddRpcStore(store =>
                 {
-                    store.RegisterServer<MyRpcServer>();
+                    store.RegisterServer<IMyRpcServer, MyRpcServer>();
                 });
             })
             .ConfigurePlugins(a =>
@@ -148,6 +147,52 @@ internal class Program
         return client;
     }
     #endregion
+
+    #region MqttRpc自定义调用选项
+    private static async Task DemoCustomInvokeOption(IMqttRpcClient rpcClient)
+    {
+        // 自定义调用选项：设置 10s 超时，并绑定取消令牌
+        using var cts = new CancellationTokenSource();
+        var option = new InvokeOption(10000)  // 设置 10s 超时
+        {
+            FeedbackType = FeedbackType.WaitInvoke,
+            Token = cts.Token
+        };
+
+        var result = (int)await rpcClient.InvokeAsync(
+            "mqttrpcconsoleapp.imyrpcserver.add",
+            typeof(int),
+            option,
+            10, 20);
+        Console.WriteLine($"自定义选项调用结果：{result}");
+    }
+    #endregion
+
+    #region MqttRpc序列化配置
+    private static async Task<MqttTcpClient> CreateCallerClientWithCustomSerializer()
+    {
+        var client = new MqttTcpClient();
+        await client.SetupAsync(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:1883")
+            .SetMqttConnectOptions(o =>
+            {
+                o.ClientId = "RpcCallerCustom";
+                o.CleanSession = true;
+            })
+            .ConfigurePlugins(a =>
+            {
+                a.UseMqttRpcClient(o =>
+                {
+                    // 自定义 JSON 序列化选项
+                    o.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    o.SerializerOptions.WriteIndented = false;
+                });
+            }));
+
+        await client.ConnectAsync();
+        return client;
+    }
+    #endregion
 }
 
 #region MqttRpc定义服务
@@ -155,33 +200,39 @@ internal class Program
 /// RPC 服务实现，继承 SingletonRpcServer 以单例方式运行。
 /// 标记 [MqttRpc] 的公共方法将被注册为 RPC 方法。
 /// </summary>
-public class MyRpcServer : SingletonRpcServer
+public class MyRpcServer : SingletonRpcServer, IMyRpcServer
 {
     /// <summary>
-    /// 两数相加。调用键默认为：mqttrpcconsoleapp.myrpcserver.add
+    /// 两数相加。
     /// </summary>
-    [MqttRpc]
     public int Add(int a, int b)
     {
         return a + b;
     }
 
     /// <summary>
-    /// 获取当前服务器时间。调用键默认为：mqttrpcconsoleapp.myrpcserver.getdatetime
-    /// </summary>
-    [MqttRpc]
-    public string GetDateTime()
-    {
-        return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-    }
-
-    /// <summary>
     /// 使用调用上下文获取调用方信息。
     /// IMqttRpcCallContext 参数由框架自动注入，不需要客户端传递。
     /// </summary>
+    public string GetCallerInfo(IMqttRpcCallContext callContext)
+    {
+        return $"调用来自 Mqtt 客户端，服务器时间：{DateTime.Now:HH:mm:ss}";
+    }
+}
+#endregion
+
+#region MqttRpc调用上下文
+/// <summary>
+/// 演示在 RPC 方法中使用 IMqttRpcCallContext 获取调用方信息。
+/// IMqttRpcCallContext 参数由框架自动注入，客户端无需传递。
+/// </summary>
+public class MyRpcServerWithContext : SingletonRpcServer
+{
     [MqttRpc]
     public string GetCallerInfo(IMqttRpcCallContext callContext)
     {
+        // 通过 callContext.Caller 可访问发起调用的 Mqtt 会话对象
+        // 通过 callContext.Token 可获取与会话生命周期绑定的取消令牌
         return $"调用来自 Mqtt 客户端，服务器时间：{DateTime.Now:HH:mm:ss}";
     }
 }
@@ -191,34 +242,13 @@ public class MyRpcServer : SingletonRpcServer
 /// <summary>
 /// 定义 RPC 代理接口，方法签名需与服务端保持一致（带 Async 后缀的异步版本）。
 /// </summary>
-public interface IMyRpcApi
+[GeneratorRpcProxy]
+public interface IMyRpcServer : ISingletonRpcServer
 {
     [MqttRpc]
-    Task<int> AddAsync(int a, int b);
+    int Add(int a, int b);
+
+    [MqttRpc]
+    string GetCallerInfo(IMqttRpcCallContext callContext);
 }
 #endregion
-
-#region MqttRpc创建DispatchProxy
-/// <summary>
-/// 继承 MqttRpcDispatchProxy 以实现代理转发。
-/// 重写 GetClient 返回当前持有的 IMqttRpcClient。
-/// </summary>
-public class MyMqttRpcDispatchProxy : MqttRpcDispatchProxy
-{
-    private IMqttRpcClient? m_client;
-
-    public static TInterface Create<TInterface, TProxy>(IMqttRpcClient client)
-        where TProxy : MyMqttRpcDispatchProxy, new()
-    {
-        var proxy = DispatchProxy.Create<TInterface, TProxy>();
-        ((MyMqttRpcDispatchProxy)(object)proxy!).m_client = client;
-        return proxy;
-    }
-
-    public override IMqttRpcClient GetClient()
-    {
-        return this.m_client!;
-    }
-}
-#endregion
-

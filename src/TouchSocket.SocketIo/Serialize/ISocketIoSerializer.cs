@@ -12,17 +12,33 @@
 
 namespace TouchSocket.SocketIo;
 
+/// <summary>
+/// Socket.IO 序列化器接口，负责消息的编解码与数据的序列化/反序列化。
+/// </summary>
 public interface ISocketIoSerializer
 {
-    ISocketIoMessage CreateMessage(EngineIoVersion eio, SocketIoMessageType messageType);
+    /// <summary>
+    /// 将 Engine.IO 消息解码为 Socket.IO 消息。
+    /// </summary>
+    ISocketIoMessage Decode(in EngineIoMessage message);
 
-    ISocketIoMessage Decode(EngineIoVersion eio, in EngineIoMessage message);
+    /// <summary>
+    /// 将 Socket.IO 消息中指定索引处的数据反序列化为目标类型。
+    /// </summary>
+    object Deserialize(Type targetType, in ISocketIoMessage message, int index);
 
-    object Deserialize(EngineIoVersion eio, Type targetType, in ISocketIoMessage message, int index);
+    /// <summary>
+    /// 反序列化握手消息。
+    /// </summary>
+    IConnectMessage DeserializeHandshakeMessage(in EngineIoMessage message);
 
-    IHandshakeMessage DeserializeHandshakeMessage(EngineIoVersion eio, in EngineIoMessage message);
+    /// <summary>
+    /// 序列化 Ack 响应数据。
+    /// </summary>
+    List<DataItem> SerializeAck(int? packetId, string nsp, object[] data);
 
-    List<DataItem> SerializeAck(EngineIoVersion eio, int? packetId, string nsp, object[] data);
-
-    List<DataItem> SerializeEvent(EngineIoVersion eio, string eventName, int? packetId, string nsp, object[] data);
+    /// <summary>
+    /// 序列化事件数据。
+    /// </summary>
+    List<DataItem> SerializeEvent(string eventName, int? packetId, string nsp, object[] data);
 }

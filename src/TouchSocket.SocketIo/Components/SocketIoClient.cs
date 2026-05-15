@@ -67,63 +67,95 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
 
     #region Emit
 
-    public Task AckAsync(int packetId, params object[] data)
+    public Task AckAsync(int packetId, object[] data,CancellationToken cancellationToken=default)
     {
-        return this.m_socketIo.AckAsync(packetId, data);
+        return this.m_socketIo.AckAsync(packetId, data, cancellationToken);
     }
 
-    public Task EmitAsync(string eventName, params object[] data)
+    public Task EmitAsync(string eventName, object[] data, CancellationToken cancellationToken = default)
     {
-        return this.m_socketIo.EmitAsync(eventName, data);
+        return this.m_socketIo.EmitAsync(eventName, data, cancellationToken);
     }
 
-    public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, int millisecondsTimeout, CancellationToken token)
+    public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, CancellationToken token)
     {
-        return await this.m_socketIo.EmitWithAckAsync(eventName, data, millisecondsTimeout, token);
+        return await this.m_socketIo.EmitWithAckAsync(eventName, data, token);
     }
 
     #endregion Emit
 
     #region 事件
 
-    protected virtual async Task OnHandshaked()
+    /// <summary>
+    /// 在即将建立 Socket.IO 连接时触发，可用于验证或拦截。
+    /// </summary>
+    protected virtual async Task OnConnecting(SocketIoVerifyEventArgs e)
+    {
+        await this.PluginManager.RaiseISocketIoConnectingPluginAsync(this.Resolver, this, e);
+    }
+
+    /// <summary>
+    /// 在 Socket.IO 连接成功后触发。
+    /// </summary>
+    protected virtual async Task OnConnected()
     {
         try
         {
-            var e = new SocketIoVerifyEventArgs();
-            await this.PluginManager.RaiseISocketIoHandshakedPluginAsync(this.Resolver, this, e);
+            var e = new SocketIoConnectedEventArgs();
+            await this.PluginManager.RaiseISocketIoConnectedPluginAsync(this.Resolver, this, e);
         }
         catch
         {
         }
-
     }
 
-    protected virtual async Task OnHandshaking(SocketIoVerifyEventArgs e)
+    /// <summary>
+    /// 在 Socket.IO 连接即将关闭时触发（仅主动关闭时有效）。
+    /// </summary>
+    protected virtual async Task OnClosing(SocketIoClosedEventArgs e)
     {
-        await this.PluginManager.RaiseISocketIoHandshakingPluginAsync(this.Resolver, this, e);
+        try
+        {
+            await this.PluginManager.RaiseISocketIoClosingPluginAsync(this.Resolver, this, e);
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>
+    /// 在 Socket.IO 连接已关闭后触发。
+    /// </summary>
+    protected virtual async Task OnClosed(SocketIoClosedEventArgs e)
+    {
+        try
+        {
+            await this.PluginManager.RaiseISocketIoClosedPluginAsync(this.Resolver, this, e);
+        }
+        catch
+        {
+        }
     }
 
     #endregion 事件
 
+    /// <summary>
+    /// 构建连接 URL。
+    /// </summary>
+    /// <param name="isWebSocket">是否为 WebSocket 连接。</param>
     public string BuildUrl(bool isWebSocket)
     {
         Uri baseUri = this.RemoteIpHost;
         var urlBuilder = new StringBuilder();
 
-        // Determine the scheme based on whether it's a WebSocket or not.
         var scheme = isWebSocket ? (baseUri.Scheme == "https" ? "wss" : "ws") : baseUri.Scheme;
-        urlBuilder.Append(scheme);
-        urlBuilder.Append("://");
+        urlBuilder.Append(scheme).Append("://").Append(baseUri.Host);
 
-        // Append the host and port if necessary.
-        urlBuilder.Append(baseUri.Host);
         if (baseUri.Port != 80 && baseUri.Port != 443)
         {
-            urlBuilder.Append(":").Append(baseUri.Port);
+            urlBuilder.Append(':').Append(baseUri.Port);
         }
 
-        // Append the path and query string.
         var path = baseUri.AbsolutePath;
         if (string.IsNullOrEmpty(path) || path == "/")
         {
@@ -131,9 +163,9 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         }
         urlBuilder.Append(path);
 
-        urlBuilder.Append($"?EIO={(int)this.EIO}&");
-        urlBuilder.Append($"transport={this.TransportType.ToString().ToLower()}&");
-        urlBuilder.Append($"t={DateTimeOffset.Now.ToUnsignedMillis()}");
+        urlBuilder.Append("?EIO=").Append((int)this.EIO)
+            .Append("&transport=").Append(this.TransportType.ToString().ToLower())
+            .Append("&t=").Append(DateTimeOffset.Now.ToUnsignedMillis());
 
         if (this.m_option.Query != null)
         {
@@ -154,7 +186,7 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
     /// <inheritdoc/>
     public async Task ConnectAsync(CancellationToken token)
     {
-        await this.m_semaphoreSlimForConnect.WaitAsync(token).ConfigureAwait(false);
+        await this.m_semaphoreSlimForConnect.WaitAsync(token).ConfigureDefaultAwait();
         try
         {
             if (this.m_online)
@@ -163,26 +195,26 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             }
 
             this.m_closedTokenSource = new CancellationTokenSource();
-            await this.OnHandshaking(new SocketIoVerifyEventArgs()).ConfigureAwait(false);
+            await this.OnConnecting(new SocketIoVerifyEventArgs()).ConfigureDefaultAwait();
             if (this.TransportType == EngineIoTransportType.Polling)
             {
                 //使用长轮询
                 if (this.EIO == EngineIoVersion.V3)
                 {
-                    await this.ConnectWithHttpEIO3(token).ConfigureAwait(false);
+                    await this.ConnectWithHttpEIO3(token).ConfigureDefaultAwait();
                 }
                 else
                 {
-                    await this.ConnectWithHttpEIO4(token).ConfigureAwait(false);
+                    await this.ConnectWithHttpEIO4(token).ConfigureDefaultAwait();
                 }
             }
             else if (this.TransportType == EngineIoTransportType.WebSocket)
             {
                 //直接使用ws
-                await this.ConnectWithWebSocket(token).ConfigureAwait(false);
+                await this.ConnectWithWebSocket(token).ConfigureDefaultAwait();
             }
             this.m_online = true;
-            _ = Task.Factory.StartNew(this.OnHandshaked);
+            await this.OnConnected().ConfigureDefaultAwait();
         }
         finally
         {
@@ -190,6 +222,7 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         }
     }
 
+    /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
         this.RemoteIpHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
@@ -202,115 +235,87 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         base.LoadConfig(config);
     }
 
-    private async Task Connect2(HttpClient httpClient)
+    private async Task SendNamespaceConnectAsync(HttpClient httpClient)
     {
-        await Task.Yield();
-        var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(false));
+        using var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(false));
         request.Content = new StringContent($"40{this.m_option.Namespace}");
-
-        var response = await httpClient.SendAsync(request);
+        var response = await httpClient.SendAsync(request).ConfigureDefaultAwait();
         response.EnsureSuccessStatusCode();
-
-        var body = await response.Content.ReadAsStringAsync();
     }
 
     private async Task ConnectWithHttpEIO3(CancellationToken token)
     {
         var httpClient = this.CreateHttpClient();
-
-        var request = this.GetRequest(HttpMethod.Get);
-
-        var response = await httpClient.SendAsync(request, token);
+        var response = await httpClient.SendAsync(this.GetRequest(HttpMethod.Get), token).ConfigureDefaultAwait();
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadAsStringAsync();
-        if (body.IsNullOrEmpty())
+        var bodyBytes = await response.Content.ReadAsByteArrayAsync().ConfigureDefaultAwait();
+        if (bodyBytes.Length == 0)
         {
-            throw new ArgumentNullException(nameof(body), "获得的握手响应数据为空，可能对方并不是SocketIo服务器。");
+            throw new ArgumentNullException(nameof(bodyBytes), "获得的握手响应数据为空，可能对方并不是SocketIo服务器。");
         }
-        var values = SocketIoUtility.SplitEIO3(body);
+        var values = SocketIoUtility.SplitEIO3(bodyBytes.AsMemory());
 
         var eioMessage = this.m_socketIo.Decode(values[0]);
-        if (eioMessage.MessageType == EngineIoMessageType.Open)
+        if (eioMessage.MessageType != EngineIoMessageType.Open)
         {
-            var handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage);
+            return;
+        }
 
-            if (handshakeMessage.UpgradeWebSocket() && this.m_option.AutoUpgrade)
+        var handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage);
+        if (handshakeMessage.UpgradeWebSocket() && this.m_option.AutoUpgrade)
+        {
+            this.m_socketIo.TransportType = EngineIoTransportType.WebSocket;
+            var webSocketClient = this.GetWebSocket();
+            await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token).ConfigureDefaultAwait();
+            try
             {
-                this.m_socketIo.TransportType = EngineIoTransportType.WebSocket;
-                var webSocketClient = this.GetWebSocket();
-                //webSocketClient.Setup(this.Config.Clone());
-                await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token);
-                try
-                {
-                    body = await webSocketClient.ReadAsStringAsync(token);
-                    var eioMessage11 = this.m_socketIo.Decode(body);
-                    handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage11);
-                    this.m_socketIo.Sid = handshakeMessage.Sid;
-
-                    this.m_transport = new WebSocketTransport(this.m_socketIo, webSocketClient, this.ReceivedSocketIoMessage);
-                    _ = Task.Factory.StartNew(this.m_transport.BeginPolling);
-                    await webSocketClient.SendAsync("40", token);
-                }
-                catch
-                {
-                    webSocketClient.SafeDispose();
-                    throw;
-                }
+                await this.SetupWebSocketTransportAsync(webSocketClient, token).ConfigureDefaultAwait();
             }
-
-            if (this.m_socketIo.Decode(values[1]).MessageType == EngineIoMessageType.Message)
+            catch
             {
-                this.m_socketIo.Sid = handshakeMessage.Sid;
-
-                this.m_transport = new Eio3HttpSockeIoTransport(this.m_socketIo, httpClient, this.GetRequest, this.ReceivedSocketIoMessage);
-                _ = Task.Factory.StartNew(this.m_transport.BeginPolling);
+                webSocketClient.SafeDispose();
+                throw;
             }
+        }
+        else
+        {
+            this.m_socketIo.Sid = handshakeMessage.Sid;
+            this.m_transport = new Eio3HttpSockeIoTransport(this.m_socketIo, httpClient, this.GetRequest, this.ReceivedSocketIoMessage);
+            _ = Task.Run(() => this.m_transport.BeginPolling(this.m_closedTokenSource.Token));
         }
     }
 
     private async Task ConnectWithHttpEIO4(CancellationToken token)
     {
         var httpClient = this.CreateHttpClient();
-
-        var request = this.GetRequest(HttpMethod.Get);
-
-        var response = await httpClient.SendAsync(request, token);
+        var response = await httpClient.SendAsync(this.GetRequest(HttpMethod.Get), token).ConfigureDefaultAwait();
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadAsStringAsync();
-        if (body.IsNullOrEmpty())
+        var bodyBytes = await response.Content.ReadAsByteArrayAsync().ConfigureDefaultAwait();
+        if (bodyBytes.Length == 0)
         {
-            throw new ArgumentNullException(nameof(body), "获得的握手响应数据为空，可能对方并不是SocketIo服务器。");
+            throw new ArgumentNullException(nameof(bodyBytes), "获得的握手响应数据为空，可能对方并不是SocketIo服务器。");
         }
 
-        var eioMessage = this.m_socketIo.Decode(body);
+        var eioMessage = this.m_socketIo.Decode(bodyBytes.AsMemory());
         if (eioMessage.MessageType != EngineIoMessageType.Open)
         {
-            throw new Exception();
+            throw new InvalidOperationException("握手响应类型不正确，可能对方并不是SocketIo服务器。");
         }
 
         var handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage);
-
         if (handshakeMessage.UpgradeWebSocket() && this.m_option.AutoUpgrade)
         {
             this.m_socketIo.TransportType = EngineIoTransportType.WebSocket;
             var webSocketClient = this.GetWebSocket();
-            await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token);
+            await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token).ConfigureDefaultAwait();
             try
             {
-                body = await webSocketClient.ReadAsStringAsync(token);
-                var eioMessage11 = this.m_socketIo.Decode(body);
-                handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage11);
-                this.m_socketIo.Sid = handshakeMessage.Sid;
-
-                this.m_transport = new WebSocketTransport(this.m_socketIo, webSocketClient, this.ReceivedSocketIoMessage);
-                _ = Task.Factory.StartNew(this.m_transport.BeginPolling);
-                await webSocketClient.SendAsync("40");
+                await this.SetupWebSocketTransportAsync(webSocketClient, token).ConfigureDefaultAwait();
             }
             catch
             {
-                webSocketClient.SafeDispose();
                 webSocketClient.SafeDispose();
                 throw;
             }
@@ -319,18 +324,14 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         {
             this.m_socketIo.Sid = handshakeMessage.Sid;
 
-            var url = this.BuildUrl(false);
+            var getTask = httpClient.SendAsync(this.GetRequest(HttpMethod.Get), token);
+            var postTask = this.SendNamespaceConnectAsync(httpClient);
+            var getResponse = await getTask.ConfigureDefaultAwait();
+            getResponse.EnsureSuccessStatusCode();
+            await postTask.ConfigureDefaultAwait();
 
-            request = new HttpRequestMessage(HttpMethod.Get, url);
-
-            var task = this.Connect2(httpClient);
-            var response2 = await httpClient.SendAsync(request, token);
-            response2.EnsureSuccessStatusCode();
-
-            await task;
             this.m_transport = new Eio4HttpSockeIoTransport(this.m_socketIo, httpClient, this.GetRequest, this.ReceivedSocketIoMessage);
-
-            _ = Task.Factory.StartNew(this.m_transport.BeginPolling);
+            _ = Task.Run(() => this.m_transport.BeginPolling(this.m_closedTokenSource.Token));
         }
     }
 
@@ -338,27 +339,39 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
     {
         this.m_socketIo.TransportType = EngineIoTransportType.WebSocket;
         var webSocketClient = this.GetWebSocket();
-
-        await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token);
-
+        await webSocketClient.ConnectAsync(new Uri(this.BuildUrl(true)), token).ConfigureDefaultAwait();
         try
         {
-            var body = await webSocketClient.ReadAsStringAsync(token);
-            var eioMessage = this.m_socketIo.Decode(body);
-            var handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage);
-            this.m_socketIo.Sid = handshakeMessage.Sid;
-
-            this.m_transport = new WebSocketTransport(this.m_socketIo, webSocketClient, this.ReceivedSocketIoMessage);
-            _ = Task.Factory.StartNew(this.m_transport.BeginPolling);
-            await webSocketClient.SendAsync("40", token);
-            //this.m_client = webSocketClient;
+            await this.SetupWebSocketTransportAsync(webSocketClient, token).ConfigureDefaultAwait();
         }
         catch
         {
             webSocketClient.SafeDispose();
-            webSocketClient.SafeDispose();
             throw;
         }
+    }
+
+    private async Task SetupWebSocketTransportAsync(ClientWebSocket webSocketClient, CancellationToken token)
+    {
+        var bodyBytes = await webSocketClient.ReadAsBytesAsync(token).ConfigureDefaultAwait();
+        var eioMessage = this.m_socketIo.Decode(bodyBytes.AsMemory());
+        var handshakeMessage = this.m_socketIo.DeserializeHandshakeMessage(eioMessage);
+        this.m_socketIo.Sid = handshakeMessage.Sid;
+
+        this.m_transport = new WebSocketTransport(this.m_socketIo, webSocketClient, this.ReceivedSocketIoMessage);
+        _ = Task.Run(() => this.m_transport.BeginPolling(this.m_closedTokenSource.Token));
+        var nsp = this.m_socketIo.Namespace;
+        if (!string.IsNullOrEmpty(nsp))
+        {
+            // 自定义命名空间：需要显式发送 connect 包
+            await webSocketClient.SendAsync($"40{nsp},", token).ConfigureDefaultAwait();
+        }
+        else if (this.m_socketIo.EIO == EngineIoVersion.V4)
+        {
+            // EIO v4 + 默认命名空间：服务端不会自动连接，需要显式发送 connect 包
+            await webSocketClient.SendAsync("40", token).ConfigureDefaultAwait();
+        }
+        // EIO v3 + 默认命名空间：服务端会自动连接到默认命名空间，无需显式发送 connect 包
     }
 
     private HttpClient CreateHttpClient()
@@ -369,9 +382,11 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
 
     private HttpRequestMessage GetRequest(HttpMethod method)
     {
-        var request = new HttpRequestMessage();
-        request.Method = method;
-        request.RequestUri = new Uri(this.BuildUrl(false));
+        var request = new HttpRequestMessage
+        {
+            Method = method,
+            RequestUri = new Uri(this.BuildUrl(false))
+        };
         return request;
     }
 
@@ -401,7 +416,7 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             case SocketIoMessageType.Binary:
             case SocketIoMessageType.Event:
                 {
-                    await this.PluginManager.RaiseISocketIoEventPluginAsync(this.Resolver, this, new SocketIoEventArgs(socketIOMessage, this.m_socketIo));
+                    await this.PluginManager.RaiseISocketIoReceivedPluginAsync(this.Resolver, this, new SocketIoEventArgs(socketIOMessage, this.m_socketIo));
                 }
                 break;
 
@@ -426,10 +441,10 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
 
     #region Send
 
-    private Task SendAsync(List<DataItem> dataItems)
+    private Task SendAsync(List<DataItem> dataItems,CancellationToken cancellationToken)
     {
         this.LastSentTime = DateTimeOffset.Now;
-        return this.m_transport.SendAsync(dataItems);
+        return this.m_transport.SendAsync(dataItems, cancellationToken);
     }
 
     #endregion Send
@@ -439,6 +454,9 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
     {
         try
         {
+            var closedArgs = new SocketIoClosedEventArgs(msg);
+            await this.OnClosing(closedArgs).ConfigureDefaultAwait();
+
             this.m_online = false;
             this.m_closedTokenSource.SafeCancel();
 
@@ -447,6 +465,7 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
                 await this.m_clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
             }
 
+            await this.OnClosed(closedArgs).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)

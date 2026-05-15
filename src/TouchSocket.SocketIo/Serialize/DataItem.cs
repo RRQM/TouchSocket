@@ -21,14 +21,14 @@ public readonly struct DataItem
         this.Bytes = default;
     }
 
-    public DataItem(byte[] bytes)
+    public DataItem(ReadOnlyMemory<byte> bytes)
     {
         this.Bytes = bytes;
         this.IsText = false;
         this.Text = default;
     }
 
-    public byte[] Bytes { get; }
+    public ReadOnlyMemory<byte> Bytes { get; }
     public bool IsText { get; }
     public string Text { get; }
 

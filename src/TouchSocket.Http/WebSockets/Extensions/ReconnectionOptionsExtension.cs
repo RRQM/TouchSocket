@@ -64,6 +64,11 @@ public static class ReconnectionOptionsExtension
 
             if (timeSinceLastPing >= interval)
             {
+                if (timeSinceLastActivity < span)
+                {
+                    return ConnectionCheckResult.Skip;
+                }
+
                 try
                 {
                     using var pingCts = new CancellationTokenSource(pingOperationTimeout);

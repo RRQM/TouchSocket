@@ -248,12 +248,7 @@ public class MqttSessionActor : MqttActor
     }
 
     /// <inheritdoc/>
-    protected override Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
 
-    /// <inheritdoc/>
     protected override async Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message, CancellationToken cancellationToken)
     {
         var contentForAck = new MqttSubAckMessage()

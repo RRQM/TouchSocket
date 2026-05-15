@@ -18,6 +18,7 @@
 	</PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
         <Compile Include="..\TouchSocket.Shared\SocketIo\EngineIo3.cs" Link="EngineIo\EngineIo3.cs" />
         <Compile Include="..\TouchSocket.Shared\SocketIo\EngineIo4.cs" Link="EngineIo\EngineIo4.cs" />
         <Compile Include="..\TouchSocket.Shared\SocketIo\InternalSocketIoResponse.cs" Link="SocketIo\InternalSocketIoResponse.cs" />

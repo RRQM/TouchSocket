@@ -17,5 +17,11 @@ namespace TouchSocket.Mqtt;
 /// </summary>
 public interface IMqttSessionClient : IMqttSession
 {
+    /// <summary>
+    /// 向客户端发送 PING 请求并等待响应。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>操作结果。</returns>
+    ValueTask<Result> PingAsync(CancellationToken cancellationToken = default);
 }
 

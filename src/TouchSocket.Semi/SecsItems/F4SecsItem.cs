@@ -17,6 +17,17 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class F4SecsItem : SecsItem<float>
 {
+    /// <summary>
+    /// 初始化 <see cref="F4SecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public F4SecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="F4SecsItem"/> 的新实例，并设置初始值。
+    /// </summary>
+    /// <param name="values">单精度浮点值数组。</param>
+    public F4SecsItem(ReadOnlyMemory<float> values) : base(values) { }
+
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.F4;
 }

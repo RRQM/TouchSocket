@@ -17,6 +17,17 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class U2SecsItem : SecsItem<ushort>
 {
+    /// <summary>
+    /// 初始化 <see cref="U2SecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public U2SecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="U2SecsItem"/> 的新实例，并设置初始值。
+    /// </summary>
+    /// <param name="values">16 位无符号整数值数组。</param>
+    public U2SecsItem(ReadOnlyMemory<ushort> values) : base(values) { }
+
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.U2;
 }

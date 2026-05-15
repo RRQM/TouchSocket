@@ -11,17 +11,17 @@
 //------------------------------------------------------------------------------
 
 using System.Net.Http;
+using System.Runtime.InteropServices;
 
 namespace TouchSocket.SocketIo;
 
 internal class Eio4HttpSockeIoTransport : ISocketIoTransport
 {
-    private static readonly char[] m_separator = new char[] { '\u001E' };
     private readonly Func<HttpMethod, HttpRequestMessage> m_func;
     private readonly HttpClient m_httpClientPool;
     private readonly Func<ISocketIoMessage, Task> m_receivedSocketIoMessage;
     private readonly SocketIoCore m_socketIo;
-    private ISocketIoMessage m_socketIOMessage;
+    private SystemTextJsonSocketIoMessage m_socketIOMessage;
 
     public Eio4HttpSockeIoTransport(SocketIoCore socketIo, HttpClient httpClientPool, Func<HttpMethod, HttpRequestMessage> func, Func<ISocketIoMessage, Task> receivedSocketIoMessage)
     {
@@ -31,28 +31,27 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
         this.m_receivedSocketIoMessage = receivedSocketIoMessage;
     }
 
-    public async Task BeginPolling()
+    public async Task BeginPolling(CancellationToken cancellationToken = default)
     {
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var request = this.m_func.Invoke(HttpMethod.Get);
 
-                var response = await this.m_httpClientPool.SendAsync(request);
+                var response = await this.m_httpClientPool.SendAsync(request, cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
-                    var body = await response.Content.ReadAsStringAsync();
+                    var bodyBytes = await response.Content.ReadAsByteArrayAsync().ConfigureDefaultAwait();
+                    var bodyMemory = bodyBytes.AsMemory();
 
-                    var items = body.Split(m_separator, StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (var item in items)
+                    foreach (var item in SplitByByte(bodyMemory, 0x1E))
                     {
-                        if (item[0] == 'b')
+                        if (item.Length > 0 && item.Span[0] == (byte)'b')
                         {
-                            var bytes = Convert.FromBase64String(item.Substring(1));
+                            ReadOnlyMemory<byte> bytes = Convert.FromBase64String(Encoding.UTF8.GetString(item.Slice(1).ToArray()));
                             this.m_socketIOMessage.Bytes.Add(bytes);
-                            if (this.m_socketIOMessage.Bytes.Count == this.m_socketIOMessage.BytesIndexs.Length)
+                            if (this.m_socketIOMessage.Bytes.Count == this.m_socketIOMessage.BytesIndices.Length)
                             {
                                 await this.m_receivedSocketIoMessage.Invoke(this.m_socketIOMessage);
                                 this.m_socketIOMessage = default;
@@ -60,10 +59,14 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
                         }
                         else
                         {
-                            await this.ReceivedText(item).ConfigureAwait(false);
+                            await this.ReceivedData(item, cancellationToken).ConfigureDefaultAwait();
                         }
                     }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
             }
             catch (Exception ex)
             {
@@ -71,21 +74,21 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
         }
     }
 
-    public async Task PingAsync()
+    public async Task PingAsync(CancellationToken cancellationToken = default)
     {
         var request = this.m_func.Invoke(HttpMethod.Post);
         request.Content = new StringContent("3");
-        await this.m_httpClientPool.SendAsync(request);
+        await this.m_httpClientPool.SendAsync(request, cancellationToken);
     }
 
 
-    public async Task SendAsync(List<DataItem> dataItems)
+    public async Task SendAsync(List<DataItem> dataItems, CancellationToken cancellationToken = default)
     {
         if (dataItems[0].IsText)
         {
             var request = this.m_func.Invoke(HttpMethod.Post);
             request.Content = new StringContent(dataItems[0].Text);
-            var vv = await this.m_httpClientPool.SendAsync(request);
+            var vv = await this.m_httpClientPool.SendAsync(request, cancellationToken);
         }
 
         var binary = dataItems.Where(x => !x.IsText).Select(x => x.Bytes).ToArray();
@@ -94,10 +97,10 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
             var builder = new StringBuilder();
             for (var i = 0; i < binary.Length; i++)
             {
-                builder.Append('b').Append(Convert.ToBase64String(binary[i]));
+                builder.Append('b').Append(ToBase64(binary[i]));
                 if (i != binary.Length - 1)
                 {
-                    builder.Append(m_separator);
+                    builder.Append('\u001E');
                 }
             }
             if (builder.Length == 0)
@@ -108,11 +111,11 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
             var request = this.m_func.Invoke(HttpMethod.Post);
             request.Content = new StringContent(text);
 
-            await this.m_httpClientPool.SendAsync(request);
+            await this.m_httpClientPool.SendAsync(request, cancellationToken);
         }
     }
 
-    private async Task ReceivedEngineIoMessage(EngineIoMessage engineIOMessage)
+    private async Task ReceivedEngineIoMessage(EngineIoMessage engineIOMessage, CancellationToken cancellationToken)
     {
         Console.WriteLine(engineIOMessage.MessageType);
         switch (engineIOMessage.MessageType)
@@ -126,7 +129,7 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
 
             case EngineIoMessageType.Ping:
                 {
-                    await this.PingAsync();
+                    await this.PingAsync(cancellationToken);
                 }
                 break;
 
@@ -135,10 +138,10 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
 
             case EngineIoMessageType.Message:
                 {
-                    var socketIOMessage = this.m_socketIo.Decode(engineIOMessage);
-                    if (socketIOMessage.BytesIndexs.Length > 0)
+                    var socketIOMessage = (SystemTextJsonSocketIoMessage)this.m_socketIo.Decode(engineIOMessage);
+                    if (socketIOMessage.BytesIndices.Length > 0)
                     {
-                        socketIOMessage.Bytes = new List<byte[]>();
+                        socketIOMessage.Bytes = new List<ReadOnlyMemory<byte>>();
                         this.m_socketIOMessage = socketIOMessage;
                     }
                     else
@@ -159,8 +162,42 @@ internal class Eio4HttpSockeIoTransport : ISocketIoTransport
         }
     }
 
-    private async Task ReceivedText(string text)
+    private async Task ReceivedData(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
     {
-        await this.ReceivedEngineIoMessage(this.m_socketIo.Decode(text));
+        await this.ReceivedEngineIoMessage(this.m_socketIo.Decode(data), cancellationToken);
+    }
+
+    private static List<ReadOnlyMemory<byte>> SplitByByte(ReadOnlyMemory<byte> data, byte separator)
+    {
+        var result = new List<ReadOnlyMemory<byte>>();
+        var span = data.Span;
+        var start = 0;
+        for (var i = 0; i < span.Length; i++)
+        {
+            if (span[i] == separator)
+            {
+                if (i > start)
+                {
+                    result.Add(data.Slice(start, i - start));
+                }
+
+                start = i + 1;
+            }
+        }
+        if (start < data.Length)
+        {
+            result.Add(data.Slice(start));
+        }
+
+        return result;
+    }
+
+    private static string ToBase64(ReadOnlyMemory<byte> data)
+    {
+        if (MemoryMarshal.TryGetArray(data, out var seg))
+        {
+            return Convert.ToBase64String(seg.Array, seg.Offset, seg.Count);
+        }
+        return Convert.ToBase64String(data.ToArray());
     }
 }

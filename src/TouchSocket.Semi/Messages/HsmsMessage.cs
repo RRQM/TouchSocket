@@ -105,12 +105,13 @@ public class HsmsMessage : IRequestInfo, IBytesBuilder, IWaitHandle
     /// <summary>
     /// 创建一条 Select.req 消息。
     /// </summary>
-    /// <param name="deviceId">设备 ID。</param>
-    public static HsmsMessage CreateSelectRequest(ushort deviceId = 0)
+    /// <remarks>根据 SEMI E37 规范，控制消息的 Device ID 固定为 <see langword="0xFFFF"/>。</remarks>
+    /// https://gitee.com/RRQM_Home/TouchSocket/issues/IJMFEC
+    public static HsmsMessage CreateSelectRequest()
     {
         return new HsmsMessage
         {
-            DeviceId = deviceId,
+            DeviceId = 0xFFFF,
             MessageType = HsmsMessageType.SelectRequest,
             ReplyExpected = true
         };
@@ -121,10 +122,12 @@ public class HsmsMessage : IRequestInfo, IBytesBuilder, IWaitHandle
     /// </summary>
     /// <param name="systemBytes">对应请求消息的系统字节。</param>
     /// <param name="status">选择状态码。</param>
+    /// <remarks>根据 SEMI E37 规范，控制消息的 Device ID 固定为 <see langword="0xFFFF"/>。</remarks>
     public static HsmsMessage CreateSelectResponse(int systemBytes, SelectStatus status = SelectStatus.Success)
     {
         return new HsmsMessage
         {
+            DeviceId = 0xFFFF,
             MessageType = HsmsMessageType.SelectResponse,
             SystemBytes = systemBytes,
             F = (byte)status
@@ -134,10 +137,12 @@ public class HsmsMessage : IRequestInfo, IBytesBuilder, IWaitHandle
     /// <summary>
     /// 创建一条 Linktest.req 消息。
     /// </summary>
+    /// <remarks>根据 SEMI E37 规范，控制消息的 Device ID 固定为 <see langword="0xFFFF"/>。</remarks>
     public static HsmsMessage CreateLinkTestRequest()
     {
         return new HsmsMessage
         {
+            DeviceId = 0xFFFF,
             MessageType = HsmsMessageType.LinkTestRequest,
             ReplyExpected = true
         };
@@ -147,10 +152,12 @@ public class HsmsMessage : IRequestInfo, IBytesBuilder, IWaitHandle
     /// 创建一条 Linktest.rsp 消息。
     /// </summary>
     /// <param name="systemBytes">对应请求消息的系统字节。</param>
+    /// <remarks>根据 SEMI E37 规范，控制消息的 Device ID 固定为 <see langword="0xFFFF"/>。</remarks>
     public static HsmsMessage CreateLinkTestResponse(int systemBytes)
     {
         return new HsmsMessage
         {
+            DeviceId = 0xFFFF,
             MessageType = HsmsMessageType.LinkTestResponse,
             SystemBytes = systemBytes
         };
@@ -159,10 +166,12 @@ public class HsmsMessage : IRequestInfo, IBytesBuilder, IWaitHandle
     /// <summary>
     /// 创建一条 Separate.req 消息。
     /// </summary>
+    /// <remarks>根据 SEMI E37 规范，控制消息的 Device ID 固定为 <see langword="0xFFFF"/>。</remarks>
     public static HsmsMessage CreateSeparateRequest()
     {
         return new HsmsMessage
         {
+            DeviceId = 0xFFFF,
             MessageType = HsmsMessageType.SeparateRequest
         };
     }

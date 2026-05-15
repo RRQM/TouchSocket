@@ -167,7 +167,7 @@ public class MqttTcpClient : TcpClientBase, IMqttTcpClient
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        this.m_mqttActor.WaitHandlePool.CancelAll();
+        this.m_mqttActor.CancelPendingOperations();
 
             await this.PluginManager.RaiseIMqttClosedPluginAsync(this.Resolver, this, new MqttClosedEventArgs(e.Message)).ConfigureDefaultAwait();
         await base.OnTcpClosed(e).ConfigureDefaultAwait();

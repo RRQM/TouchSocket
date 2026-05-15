@@ -55,7 +55,7 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
     {
         if (sender is TClient client)
         {
-            _ = EasyTask.SafeRun(this.StartReconnectionLoop, client);
+            _ = EasyTask.SafeNewRun(this.StartReconnectionLoop, client);
         }
 
         await e.InvokeNext().ConfigureDefaultAwait();

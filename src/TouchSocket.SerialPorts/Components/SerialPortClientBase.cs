@@ -190,6 +190,11 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     /// </summary>
     protected ITransport Transport => this.m_transport;
 
+    /// <summary>
+    /// <see cref="SerialPortTransport"/>的<see cref="SerialPortTransport.SerialCore"/>属性的快捷访问器。
+    /// </summary>
+    /// https://gitee.com/RRQM_Home/TouchSocket/issues/IJM3F7
+    protected SerialPort SerialPort => this.m_transport?.SerialCore?.SerialPort;
     #endregion 属性
 
     #region 断开操作

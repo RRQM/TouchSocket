@@ -23,19 +23,30 @@ internal class EngineIo4 : IEngineIo
 
     #region Encode
 
-    public void EncodeToBinary(EngineIoMessage message, ByteBlock byteBlock)
+    public void EncodeToBinary<TWriter>(EngineIoMessage message, ref TWriter writer)
+        where TWriter : IBytesWriter
     {
-        byteBlock.WriteByte((byte)message.MessageType);
-        byteBlock.Write(message.GetRawData());
+        var typeSpan = writer.GetSpan(1);
+        typeSpan[0] = (byte)message.MessageType;
+        writer.Advance(1);
+        writer.Write(message.RawData.Span);
     }
 
-    public string EncodeToString(EngineIoMessage message)
+    public void EncodeToText<TWriter>(EngineIoMessage message, ref TWriter writer)
+        where TWriter : IBytesWriter
     {
-        var builder = new StringBuilder();
-        builder.Append(message.IsText ? ((int)message.MessageType).ToString() : "b");
-        builder.Append(message.IsText ? message.GetText() : Convert.ToBase64String(message.GetRawData()));
-
-        return builder.ToString();
+        if (message.IsText)
+        {
+            var span = writer.GetSpan(1);
+            span[0] = (byte)('0' + (int)message.MessageType);
+            writer.Advance(1);
+            writer.Write(message.RawData.Span);
+        }
+        else
+        {
+            WriterExtension.WriteNormalString(ref writer, "b", Encoding.UTF8);
+            WriterExtension.WriteBase64(ref writer, message.RawData.Span);
+        }
     }
 
     #endregion Encode
@@ -44,30 +55,19 @@ internal class EngineIo4 : IEngineIo
 
     public const string Seperator = "\u001e";
 
-    public EngineIoMessage Decode(string value)
+    public EngineIoMessage Decode(ReadOnlyMemory<byte> data)
     {
-        if (string.IsNullOrEmpty(value))
+        if (data.IsEmpty)
         {
-            throw new ArgumentException($"\"{ nameof(value)}\" 不能为 null 或空。", nameof(value));
+            ThrowHelper.ThrowArgumentNullException(nameof(data));
         }
 
-        var message = value.Length > 1
-            ? new EngineIoMessage((EngineIoMessageType)value[0] - '0', value.Substring(1))
-            : new EngineIoMessage((EngineIoMessageType)value[0] - '0');
-        return message;
+        var firstByte = data.Span[0];
+        var type = (EngineIoMessageType)(firstByte - '0');
+        var rest = data.Slice(1);
+        return rest.IsEmpty
+            ? new EngineIoMessage(type, true, ReadOnlyMemory<byte>.Empty)
+            : new EngineIoMessage(type, true, rest);
     }
-
-    public EngineIoMessage Decode(byte[] rawData)
-    {
-        if (rawData is null)
-        {
-            throw new ArgumentNullException(nameof(rawData));
-        }
-
-        var message = new EngineIoMessage((EngineIoMessageType)rawData[0], rawData.Skip(1).ToArray());
-
-        return message;
-    }
-
     #endregion Decode
 }

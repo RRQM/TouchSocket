@@ -20,7 +20,7 @@ internal class WebSocketTransport : ISocketIoTransport
     private readonly Func<ISocketIoMessage, Task> m_receivedSocketIoMessage;
     private readonly SocketIoCore m_socketIo;
     private readonly WebSocket m_webSocket;
-    private ISocketIoMessage m_socketIOMessage;
+    private SystemTextJsonSocketIoMessage m_socketIOMessage;
 
     public WebSocketTransport(SocketIoCore socketIo, WebSocket webSocket, Func<ISocketIoMessage, Task> receivedSocketIoMessage)
     {
@@ -29,11 +29,11 @@ internal class WebSocketTransport : ISocketIoTransport
         this.m_receivedSocketIoMessage = receivedSocketIoMessage;
     }
 
-    public async Task BeginPolling()
+    public async Task BeginPolling(CancellationToken cancellationToken = default)
     {
         var buffer = new byte[1024 * 16];
 
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
             WebSocketReceiveResult receiveResult;
             MemoryStream ms = null;
@@ -43,7 +43,7 @@ internal class WebSocketTransport : ISocketIoTransport
                 do
                 {
                     var arraySegment = new ArraySegment<byte>(buffer);
-                    receiveResult = await this.m_webSocket.ReceiveAsync(arraySegment, CancellationToken.None);
+                    receiveResult = await this.m_webSocket.ReceiveAsync(arraySegment, cancellationToken);
                     if (receiveResult.Count > 0)
                     {
                         ms.Write(buffer, 0, receiveResult.Count);
@@ -63,7 +63,7 @@ internal class WebSocketTransport : ISocketIoTransport
             switch (receiveResult.MessageType)
             {
                 case WebSocketMessageType.Text:
-                    await this.ReceivedText(Encoding.UTF8.GetString(data));
+                    await this.ReceivedData(new ReadOnlyMemory<byte>(data), cancellationToken);
                     break;
 
                 case WebSocketMessageType.Binary:
@@ -71,7 +71,7 @@ internal class WebSocketTransport : ISocketIoTransport
                         if (this.m_socketIOMessage != null)
                         {
                             this.m_socketIOMessage.Bytes.Add(data);
-                            if (this.m_socketIOMessage.Bytes.Count == this.m_socketIOMessage.BytesIndexs.Length)
+                            if (this.m_socketIOMessage.Bytes.Count == this.m_socketIOMessage.BytesIndices.Length)
                             {
                                 await this.m_receivedSocketIoMessage.Invoke(this.m_socketIOMessage);
                                 this.m_socketIOMessage = null;
@@ -82,31 +82,31 @@ internal class WebSocketTransport : ISocketIoTransport
 
                 case WebSocketMessageType.Close:
                 default:
-                    await this.m_webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+                    await this.m_webSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationToken);
                     return;
             }
         }
     }
 
-    public async Task PingAsync()
+    public async Task PingAsync(CancellationToken cancellationToken = default)
     {
-        await this.m_webSocket.SendAsync("3");
+        await this.m_webSocket.SendAsync("3", cancellationToken);
     }
 
-    public async Task SendAsync(List<DataItem> dataItems)
+    public async Task SendAsync(List<DataItem> dataItems, CancellationToken cancellationToken = default)
     {
         if (dataItems.Count > 0 && dataItems[0].IsText)
         {
-            await this.m_webSocket.SendAsync(dataItems[0].Text);
+            await this.m_webSocket.SendAsync(dataItems[0].Text, cancellationToken);
         }
 
         for (var i = 1; i < dataItems.Count; i++)
         {
-            await this.m_webSocket.SendBinaryAsync(dataItems[i].Bytes);
+            await this.m_webSocket.SendBinaryAsync(dataItems[i].Bytes, cancellationToken);
         }
     }
 
-    private async Task ReceivedEngineIoMessage(EngineIoMessage engineIOMessage)
+    private async Task ReceivedEngineIoMessage(EngineIoMessage engineIOMessage, CancellationToken cancellationToken)
     {
         switch (engineIOMessage.MessageType)
         {
@@ -118,24 +118,24 @@ internal class WebSocketTransport : ISocketIoTransport
 
             case EngineIoMessageType.Ping:
                 {
-                    await this.PingAsync();
+                    await this.PingAsync(cancellationToken);
                 }
                 break;
 
             case EngineIoMessageType.Pong:
                 break;
 
-            case EngineIoMessageType.Message:
+            case EngineIoMessageType.Message:            
                 {
-                    var socketIOMessage = this.m_socketIo.Decode(engineIOMessage);
+                    var socketIOMessage = (SystemTextJsonSocketIoMessage)this.m_socketIo.Decode(engineIOMessage);
                     if (socketIOMessage == null)
                     {
                         break;
                     }
 
-                    if (socketIOMessage.BytesIndexs.Length > 0)
+                    if (socketIOMessage.BytesIndices.Length > 0)
                     {
-                        socketIOMessage.Bytes = new List<byte[]>();
+                        socketIOMessage.Bytes = new List<ReadOnlyMemory<byte>>();
                         this.m_socketIOMessage = socketIOMessage;
                     }
                     else
@@ -156,9 +156,9 @@ internal class WebSocketTransport : ISocketIoTransport
         }
     }
 
-    private async Task ReceivedText(string text)
+    private async Task ReceivedData(ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
     {
-        var engineIOMessage = this.m_socketIo.EngineIo.Decode(text);
-        await this.ReceivedEngineIoMessage(engineIOMessage);
+        var engineIOMessage = this.m_socketIo.EngineIo.Decode(data);
+        await this.ReceivedEngineIoMessage(engineIOMessage, cancellationToken);
     }
 }

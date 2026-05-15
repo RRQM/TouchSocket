@@ -14,7 +14,7 @@ namespace TouchSocket.SocketIo;
 
 public static class EngineIoExtension
 {
-    public static bool UpgradeWebSocket(this IHandshakeMessage message)
+    public static bool UpgradeWebSocket(this IConnectMessage message)
     {
         if (message.Upgrades == null)
         {
@@ -31,7 +31,7 @@ public static class EngineIoExtension
         return false;
     }
 
-    public static void Validate(this IHandshakeMessage message)
+    public static void Validate(this IConnectMessage message)
     {
         if (message.Sid.IsNullOrEmpty())
         {

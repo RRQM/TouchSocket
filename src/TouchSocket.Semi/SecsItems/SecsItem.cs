@@ -18,7 +18,7 @@ namespace TouchSocket.Semi;
 /// <summary>
 /// 表示 SECS-II 数据项的抽象基类。
 /// </summary>
-public abstract class SecsItem : DisposableObject, IPackage
+public abstract class SecsItem : IPackage
 {
     /// <summary>
     /// 获取数据项的字节长度。

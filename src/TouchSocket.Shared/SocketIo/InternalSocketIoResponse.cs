@@ -24,7 +24,7 @@ internal class InternalSocketIoResponse : ISocketIoResponse
     }
 
     public int ArgsCount => this.m_socketIoMessage.ArgsCount;
-    public int[] BytesIndexs => this.m_socketIoMessage.BytesIndexs;
+    public int[] BytesIndices => this.m_socketIoMessage.BytesIndices;
     public bool CanAck => this.m_socketIoMessage.Id.HasValue;
 
     public object GetValue(Type targetType, int index)

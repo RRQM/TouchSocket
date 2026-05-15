@@ -14,9 +14,9 @@ namespace TouchSocket.SocketIo;
 
 public interface ISocketIoTransport
 {
-    Task BeginPolling();
+    Task BeginPolling(CancellationToken cancellationToken = default);
 
-    Task PingAsync();
+    Task PingAsync(CancellationToken cancellationToken = default);
 
-    Task SendAsync(List<DataItem> dataItems);
+    Task SendAsync(List<DataItem> dataItems, CancellationToken cancellationToken = default);
 }

@@ -28,7 +28,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
     /// <summary>
     /// 构建包含文本和二进制数据项的列表。
     /// </summary>
-    public static List<DataItem> NewDataItems(StringBuilder builder, IEnumerable<byte[]> bytes)
+    public static List<DataItem> NewDataItems(StringBuilder builder, IEnumerable<ReadOnlyMemory<byte>> bytes)
     {
         var result = new List<DataItem>
         {
@@ -38,37 +38,36 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
         return result;
     }
 
-    /// <inheritdoc/>
-    public ISocketIoMessage CreateMessage(EngineIoVersion eio, SocketIoMessageType messageType)
+    private static ISocketIoMessage CreateMessage(SocketIoMessageType messageType)
     {
         return new SystemTextJsonSocketIoMessage(messageType);
     }
 
     /// <inheritdoc/>
-    public ISocketIoMessage Decode(EngineIoVersion eio, in EngineIoMessage message)
+    public ISocketIoMessage Decode(in EngineIoMessage message)
     {
         if (!message.IsText)
         {
             return null;
         }
 
-        var text = message.GetText();
+        var text = message.RawData.Span.ToUtf8String();
         if (text.IsNullOrEmpty())
         {
             return null;
         }
 
-        var socketIOMessage = (SystemTextJsonSocketIoMessage)this.CreateMessage(eio, (SocketIoMessageType)(text[0] - '0'));
+        var socketIOMessage = (SystemTextJsonSocketIoMessage)CreateMessage((SocketIoMessageType)(text[0] - '0'));
         var body = text.Substring(1);
         if (body.HasValue())
         {
-            ReadMessage(socketIOMessage, eio, body);
+            ReadMessage(socketIOMessage, body);
         }
         return socketIOMessage;
     }
 
     /// <inheritdoc/>
-    public object Deserialize(EngineIoVersion eio, Type targetType, in ISocketIoMessage message, int index)
+    public object Deserialize(Type targetType, in ISocketIoMessage message, int index)
     {
         var msg = (SystemTextJsonSocketIoMessage)message;
         var jsonNode = msg.JsonArray[index];
@@ -76,18 +75,18 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
     }
 
     /// <inheritdoc/>
-    public IHandshakeMessage DeserializeHandshakeMessage(EngineIoVersion eio, in EngineIoMessage message)
+    public IConnectMessage DeserializeHandshakeMessage(in EngineIoMessage message)
     {
-        var handshakeMessage = JsonSerializer.Deserialize<SystemTextJsonHandshakeMessage>(message.GetText(), s_options)
+        var handshakeMessage = JsonSerializer.Deserialize<SystemTextJsonHandshakeMessage>(message.RawData.Span.ToUtf8String(), s_options)
             ?? throw new InvalidOperationException("握手消息反序列化失败");
         handshakeMessage.Validate();
         return handshakeMessage;
     }
 
     /// <inheritdoc/>
-    public List<DataItem> SerializeAck(EngineIoVersion eio, int? packetId, string nsp, object[] data)
+    public List<DataItem> SerializeAck(int? packetId, string nsp, object[] data)
     {
-        var bytes = new List<byte[]>();
+        var bytes = new List<ReadOnlyMemory<byte>>();
         var json = data.Length > 0 ? SerializeWithBinaryPlaceholders(data, bytes) : "[]";
 
         var builder = new StringBuilder();
@@ -110,13 +109,13 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
     }
 
     /// <inheritdoc/>
-    public List<DataItem> SerializeEvent(EngineIoVersion eio, string eventName, int? packetId, string nsp, object[] data)
+    public List<DataItem> SerializeEvent(string eventName, int? packetId, string nsp, object[] data)
     {
         var newData = new object[data.Length + 1];
         newData[0] = eventName;
         Array.Copy(data, 0, newData, 1, data.Length);
 
-        var bytes = new List<byte[]>();
+        var bytes = new List<ReadOnlyMemory<byte>>();
         var json = SerializeWithBinaryPlaceholders(newData, bytes);
 
         var builder = new StringBuilder();
@@ -143,14 +142,24 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
         return NewDataItems(builder, bytes);
     }
 
-    private static string SerializeWithBinaryPlaceholders(object[] data, List<byte[]> bytes)
+    private static string SerializeWithBinaryPlaceholders(object[] data, List<ReadOnlyMemory<byte>> bytes)
     {
         var nodes = new JsonArray();
         foreach (var item in data)
         {
             if (item is byte[] byteArray)
             {
-                bytes.Add(byteArray.ToArray());
+                bytes.Add(byteArray);
+                var placeholder = new JsonObject
+                {
+                    ["_placeholder"] = JsonValue.Create(true),
+                    ["num"] = JsonValue.Create(bytes.Count - 1)
+                };
+                nodes.Add(placeholder);
+            }
+            else if (item is ReadOnlyMemory<byte> romBytes)
+            {
+                bytes.Add(romBytes);
                 var placeholder = new JsonObject
                 {
                     ["_placeholder"] = JsonValue.Create(true),
@@ -239,7 +248,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
 
     private static void ReadBinaryMessage(SystemTextJsonSocketIoMessage message, string text)
     {
-        message.Bytes = new List<byte[]>();
+        message.Bytes = new List<ReadOnlyMemory<byte>>();
 
         var index1 = text.IndexOf('-');
         if (index1 < 0)
@@ -277,7 +286,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
         message.Text = text.Substring(index2);
     }
 
-    private static void ReadConnectedMessage(SystemTextJsonSocketIoMessage message, string text, EngineIoVersion eio)
+    private static void ReadConnectedMessage(SystemTextJsonSocketIoMessage message, string text)
     {
         var index = text.IndexOf('{');
         message.Namespace = index > 0 ? text.Substring(0, index - 1) : string.Empty;
@@ -288,7 +297,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
         message.Namespace = text.TrimEnd(',');
     }
 
-    private static void ReadErrorMessage(SystemTextJsonSocketIoMessage message, string text, EngineIoVersion eio)
+    private static void ReadErrorMessage(SystemTextJsonSocketIoMessage message, string text)
     {
         var index = text.IndexOf('{');
         if (index > 0)
@@ -335,12 +344,12 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
         message.Text = text.Substring(index);
     }
 
-    private static void ReadMessage(SystemTextJsonSocketIoMessage message, EngineIoVersion eio, string text)
+    private static void ReadMessage(SystemTextJsonSocketIoMessage message, string text)
     {
         switch (message.MessageType)
         {
             case SocketIoMessageType.Connected:
-                ReadConnectedMessage(message, text, eio);
+                ReadConnectedMessage(message, text);
                 break;
 
             case SocketIoMessageType.Disconnected:
@@ -356,7 +365,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
                 break;
 
             case SocketIoMessageType.Error:
-                ReadErrorMessage(message, text, eio);
+                ReadErrorMessage(message, text);
                 break;
 
             case SocketIoMessageType.Binary:

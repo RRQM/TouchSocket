@@ -52,43 +52,38 @@ internal sealed class SocketIoCore : ISocketIoCore
     public string Sid { get; set; }
 
     public EngineIoTransportType TransportType { get; set; }
-    public Func<List<DataItem>, Task> SendAsyncAction { get; set; }
+    public Func<List<DataItem>,CancellationToken, Task> SendAsyncAction { get; set; }
 
-    public EngineIoMessage Decode(string value)
+    public EngineIoMessage Decode(ReadOnlyMemory<byte> data)
     {
-        return this.EngineIo.Decode(value);
+        return this.EngineIo.Decode(data);
     }
 
     #region Serializer
 
-    public ISocketIoMessage CreateMessage(SocketIoMessageType messageType)
-    {
-        return this.Serializer.CreateMessage(this.EIO, messageType);
-    }
-
     public ISocketIoMessage Decode(in EngineIoMessage message)
     {
-        return this.Serializer.Decode(this.EIO, message);
+        return this.Serializer.Decode(message);
     }
 
     public object Deserialize(Type targetType, in ISocketIoMessage message, int index)
     {
-        return this.Serializer.Deserialize(this.EIO, targetType, message, index);
+        return this.Serializer.Deserialize(targetType, message, index);
     }
 
-    public IHandshakeMessage DeserializeHandshakeMessage(in EngineIoMessage message)
+    public IConnectMessage DeserializeHandshakeMessage(in EngineIoMessage message)
     {
-        return this.Serializer.DeserializeHandshakeMessage(this.EIO, message);
+        return this.Serializer.DeserializeHandshakeMessage(message);
     }
 
     public List<DataItem> SerializeAck(int? packetId, string nsp, object[] data)
     {
-        return this.Serializer.SerializeAck(this.EIO, packetId, nsp, data);
+        return this.Serializer.SerializeAck(packetId, nsp, data);
     }
 
     public List<DataItem> SerializeEvent(string eventName, int? packetId, string nsp, object[] data)
     {
-        return this.Serializer.SerializeEvent(this.EIO, eventName, packetId, nsp, data);
+        return this.Serializer.SerializeEvent(eventName, packetId, nsp, data);
     }
 
     //public List<DataItem> SerializeClose(string msg)
@@ -102,37 +97,26 @@ internal sealed class SocketIoCore : ISocketIoCore
 
     #region Emit
 
-    public async Task AckAsync(int packetId, object[] data)
+    public async Task AckAsync(int packetId, object[] data,CancellationToken cancellationToken)
     {
         var dataItems = this.SerializeAck(packetId, this.Namespace, data);
-        await this.SendAsync(dataItems);
+        await this.SendAsync(dataItems, cancellationToken);
     }
 
-    public async Task EmitAsync(string eventName, object[] data)
+    public async Task EmitAsync(string eventName, object[] data, CancellationToken cancellationToken)
     {
         var dataItems = this.SerializeEvent(eventName, null, this.Namespace, data);
-        await this.SendAsync(dataItems);
+        await this.SendAsync(dataItems, cancellationToken);
     }
 
-    public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async Task<ISocketIoResponse> EmitWithAckAsync(string eventName, object[] data, CancellationToken cancellationToken)
     {
         using var waitData = this.m_waitHandlePoolForEmit.GetWaitDataAsync(out var sign);
         var dataItems = this.SerializeEvent(eventName, sign, this.Namespace, data);
-        await this.SendAsync(dataItems);
+        await this.SendAsync(dataItems, cancellationToken);
 
         WaitDataStatus status;
-        if (millisecondsTimeout <= 0 || millisecondsTimeout == Timeout.Infinite)
-        {
-            status = await waitData.WaitAsync(cancellationToken);
-        }
-        else
-        {
-            using var cts = cancellationToken.CanBeCanceled
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                : new CancellationTokenSource();
-            cts.CancelAfter(millisecondsTimeout);
-            status = await waitData.WaitAsync(cts.Token);
-        }
+        status = await waitData.WaitAsync(cancellationToken);
 
         status.ThrowIfNotRunning();
         return new InternalSocketIoResponse(waitData.CompletedData, this);
@@ -142,9 +126,9 @@ internal sealed class SocketIoCore : ISocketIoCore
 
     #region Send
 
-    private Task SendAsync(List<DataItem> dataItems)
+    private Task SendAsync(List<DataItem> dataItems,CancellationToken cancellationToken)
     {
-        return this.SendAsyncAction.Invoke(dataItems);
+        return this.SendAsyncAction.Invoke(dataItems,cancellationToken);
     }
 
     #endregion Send

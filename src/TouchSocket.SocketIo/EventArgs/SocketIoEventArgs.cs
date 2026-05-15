@@ -24,16 +24,16 @@ public class SocketIoEventArgs : PluginEventArgs, ISocketIoResponse
     }
 
     public int ArgsCount => this.m_socketIoMessage.ArgsCount;
-    public int[] BytesIndexs => this.m_socketIoMessage.BytesIndexs;
+    public int[] BytesIndices => this.m_socketIoMessage.BytesIndices;
 
     public bool CanAck => this.m_socketIoMessage.Id.HasValue;
     public string Event => this.m_socketIoMessage.Event;
 
-    public async Task AckAsync(params object[] data)
+    public async Task AckAsync(object[] data, CancellationToken cancellationToken=default)
     {
         if (this.CanAck)
         {
-            await this.m_socketIo.AckAsync(this.m_socketIoMessage.Id.Value, data);
+            await this.m_socketIo.AckAsync(this.m_socketIoMessage.Id.Value, data, cancellationToken);
         }
     }
 
@@ -47,7 +47,7 @@ public class SocketIoEventArgs : PluginEventArgs, ISocketIoResponse
         return (T)this.m_socketIo.Deserialize(typeof(T), this.m_socketIoMessage, index);
     }
 
-    public bool TryGetBytes(int index, out byte[] bytes)
+    public bool TryGetBytes(int index, out ReadOnlyMemory<byte> bytes)
     {
         return this.m_socketIoMessage.TryGetBytes(index, out bytes);
     }

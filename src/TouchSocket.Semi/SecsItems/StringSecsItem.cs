@@ -32,6 +32,17 @@ public abstract class StringSecsItem : SecsItem
     }
 
     /// <summary>
+    /// 初始化 <see cref="StringSecsItem"/> 的新实例，并设置字符串值。
+    /// </summary>
+    /// <param name="encoding">字符串编码。</param>
+    /// <param name="value">字符串值。</param>
+    protected StringSecsItem(Encoding encoding, string value)
+    {
+        this.Encoding = encoding;
+        this.m_value = value ?? string.Empty;
+    }
+
+    /// <summary>
     /// 获取所使用的字符串编码。
     /// </summary>
     public Encoding Encoding { get; }

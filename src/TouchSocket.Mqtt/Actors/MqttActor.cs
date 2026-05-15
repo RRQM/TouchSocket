@@ -25,6 +25,7 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     private readonly ConcurrentDictionary<ushort, PooledArrivedMessage> m_qos2MqttArrivedMessage = new();
     private readonly CancellationTokenSource m_tokenSource = new();
     private readonly WaitHandlePool<MqttIdentifierMessage> m_waitHandlePool = new(1, ushort.MaxValue);
+    private readonly WaitDataAsync<MqttPingRespMessage> m_waitForPing = new();
 
     #endregion 字段
 
@@ -42,7 +43,18 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
             this.m_tokenSource.SafeCancel();
             this.m_tokenSource.SafeDispose();
             this.m_waitHandlePool.CancelAll();
+            this.m_waitForPing.Cancel();
+            this.m_waitForPing.SafeDispose();
         }
+    }
+
+    /// <summary>
+    /// 取消所有已挂起的等待操作。当底层连接断开时应调用此方法。
+    /// </summary>
+    public virtual void CancelPendingOperations()
+    {
+        this.m_waitHandlePool.CancelAll();
+        this.m_waitForPing.Cancel();
     }
 
     /// <inheritdoc/>
@@ -74,6 +86,33 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     public WaitHandlePool<MqttIdentifierMessage> WaitHandlePool => this.m_waitHandlePool;
 
     #endregion 属性
+
+    #region Ping
+
+    /// <summary>
+    /// 向对端发送 PING 请求并等待响应。客户端和服务端均可发起。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>操作结果。</returns>
+    public async ValueTask<Result> PingAsync(CancellationToken cancellationToken)
+    {
+        var contentForAck = new MqttPingReqMessage();
+        this.m_waitForPing.Reset();
+        await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureDefaultAwait();
+        var waitDataStatus = await this.m_waitForPing.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+
+        return waitDataStatus switch
+        {
+            WaitDataStatus.Default => Result.UnknownFail,
+            WaitDataStatus.Success => Result.Success,
+            WaitDataStatus.Overtime => Result.Overtime,
+            WaitDataStatus.Canceled => Result.Canceled,
+            WaitDataStatus.Disposed => Result.Disposed,
+            _ => Result.UnknownFail,
+        };
+    }
+
+    #endregion Ping
 
     #region Publish
 
@@ -233,7 +272,11 @@ public abstract class MqttActor : DisposableObject, IOnlineClient
     /// <param name="message">PING响应消息</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>任务</returns>
-    protected abstract Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken);
+    protected virtual Task InputMqttPingRespMessageAsync(MqttPingRespMessage message, CancellationToken cancellationToken)
+    {
+        this.m_waitForPing.Set(message);
+        return EasyTask.CompletedTask;
+    }
 
     /// <summary>
     /// 处理订阅消息

@@ -29,6 +29,8 @@ internal sealed class SerialPortTransport : BaseTransport
 
     public bool IsOpen => this.m_serialCore.SerialPort.IsOpen;
 
+    internal SerialCore SerialCore => this.m_serialCore;
+
     protected override void SafetyDispose(bool disposing)
     {
         this.m_serialCore.Dispose();

@@ -16,7 +16,7 @@ namespace TouchSocket.SocketIo;
 
 internal class SystemTextJsonSocketIoMessage : ISocketIoMessage
 {
-    private int[] m_bytesIndexs;
+    private int[] m_bytesIndices;
     private string m_event;
     private JsonArray m_jsonArray;
     private bool m_parsed;
@@ -35,16 +35,16 @@ internal class SystemTextJsonSocketIoMessage : ISocketIoMessage
         }
     }
 
-    public List<byte[]> Bytes { get; set; }
+    public List<ReadOnlyMemory<byte>> Bytes { get; set; }
 
     public int BytesCount { get; set; }
 
-    public int[] BytesIndexs
+    public int[] BytesIndices
     {
         get
         {
             this.Parse();
-            return this.m_bytesIndexs;
+            return this.m_bytesIndices;
         }
     }
 
@@ -79,19 +79,19 @@ internal class SystemTextJsonSocketIoMessage : ISocketIoMessage
 
     public string Text { get; set; }
 
-    public bool TryGetBytes(int index, out byte[] bytes)
+    public bool TryGetBytes(int index, out ReadOnlyMemory<byte> bytes)
     {
-        var indexs = this.BytesIndexs;
-        for (var i = 0; i < indexs.Length; i++)
+        var indices = this.BytesIndices;
+        for (var i = 0; i < indices.Length; i++)
         {
-            if (indexs[i] == index)
+            if (indices[i] == index)
             {
                 bytes = this.Bytes[i];
                 return true;
             }
         }
 
-        bytes = null;
+        bytes = default;
         return false;
     }
 
@@ -108,7 +108,7 @@ internal class SystemTextJsonSocketIoMessage : ISocketIoMessage
             this.SetEvent(jsonArray);
             this.m_jsonArray = jsonArray;
 
-            var bytesIndexs = new List<int>();
+            var bytesIndices = new List<int>();
             if (jsonArray != null)
             {
                 for (var i = 0; i < jsonArray.Count; i++)
@@ -116,16 +116,16 @@ internal class SystemTextJsonSocketIoMessage : ISocketIoMessage
                     var item = jsonArray[i];
                     if (item is JsonObject obj && obj["_placeholder"] != null)
                     {
-                        bytesIndexs.Add(i);
+                        bytesIndices.Add(i);
                     }
                 }
             }
 
-            this.m_bytesIndexs = bytesIndexs.ToArray();
+            this.m_bytesIndices = bytesIndices.ToArray();
         }
         else
         {
-            this.m_bytesIndexs = new int[0];
+            this.m_bytesIndices = new int[0];
             this.m_jsonArray = new JsonArray();
         }
 

@@ -13,16 +13,16 @@
 namespace TouchSocket.SocketIo;
 
 /// <summary>
-/// 定义在SocketIo完成握手连接之后的插件接口。
+/// 定义在 Socket.IO 会话已关闭后触发的插件接口。
 /// </summary>
 [DynamicMethod]
-public interface ISocketIoHandshakedPlugin : IPlugin
+public interface ISocketIoClosedPlugin : IPlugin
 {
     /// <summary>
-    /// 在SocketIo完成握手连接之后调用的方法。
+    /// 在 Socket.IO 会话关闭后调用。
     /// </summary>
-    /// <param name="client">客户端对象。</param>
-    /// <param name="e">包含握手验证事件数据的对象。</param>
+    /// <param name="client">已关闭的客户端对象。</param>
+    /// <param name="e">关闭事件参数，包含关闭原因。</param>
     /// <returns>表示异步操作的任务。</returns>
-    Task OnSocketIoHandshaked(object client, SocketIoVerifyEventArgs e);
+    Task OnSocketIoClosed(ISocketIoSession client, SocketIoClosedEventArgs e);
 }

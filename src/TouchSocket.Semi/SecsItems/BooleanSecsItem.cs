@@ -17,6 +17,17 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class BooleanSecsItem : SecsItem<byte>
 {
+    /// <summary>
+    /// 初始化 <see cref="BooleanSecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public BooleanSecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="BooleanSecsItem"/> 的新实例，并设置初始值。
+    /// </summary>
+    /// <param name="values">布尔值数组（以 <see langword="byte"/> 表示）。</param>
+    public BooleanSecsItem(ReadOnlyMemory<byte> values) : base(values) { }
+
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.Boolean;
 }

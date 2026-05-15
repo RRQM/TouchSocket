@@ -14,34 +14,38 @@ namespace TouchSocket.SocketIo;
 
 internal class SocketIoUtility
 {
-    public static string[] SplitEIO3(string value)
+    public static List<ReadOnlyMemory<byte>> SplitEIO3(ReadOnlyMemory<byte> value)
     {
-        var list = new List<string>();
+        var list = new List<ReadOnlyMemory<byte>>();
         var startIndex = 0;
-        while (true)
+        while (startIndex < value.Length)
         {
-            var index = value.IndexOf(':', startIndex);
-            if (index == -1)
+            var remaining = value.Slice(startIndex).Span;
+            var colonIndex = remaining.IndexOf((byte)':');
+            if (colonIndex == -1)
             {
                 break;
             }
-            if (int.TryParse(value.Substring(startIndex, index - startIndex), out var length))
+            var length = 0;
+            var valid = true;
+            for (var i = 0; i < colonIndex; i++)
             {
-                var msg = value.Substring(index + 1, length);
-
-                list.Add(msg);
+                var b = remaining[i];
+                if (b < '0' || b > '9') { valid = false; break; }
+                length = length * 10 + (b - '0');
             }
-            else
-            {
-                break;
-            }
-            startIndex = index + length + 1;
-            if (startIndex >= value.Length)
+            if (!valid)
             {
                 break;
             }
+            var dataStart = startIndex + colonIndex + 1;
+            if (dataStart + length > value.Length)
+            {
+                break;
+            }
+            list.Add(value.Slice(dataStart, length));
+            startIndex = dataStart + length;
         }
-
-        return list.ToArray();
+        return list;
     }
 }

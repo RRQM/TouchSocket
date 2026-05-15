@@ -51,50 +51,73 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
         using var webSocket = this.m_webSocket;
         var messageCombinator = webSocket.GetMessageCombinator();
         using var pipe = new SegmentedPipe();
-        while (true)
+        try
         {
-            using (var receiveResult = await webSocket.ReadAsync(cancellationToken))
+            while (true)
             {
-                var dataFrame = receiveResult.DataFrame;
-                if (!messageCombinator.TryCombine(dataFrame, out var webSocketMessage))
+                using (var receiveResult = await webSocket.ReadAsync(cancellationToken))
                 {
-                    continue;
-                }
-
-                using (webSocketMessage)
-                {
-                    if (webSocketMessage.Opcode == WSDataType.Binary)
+                    var dataFrame = receiveResult.DataFrame;
+                    if (!messageCombinator.TryCombine(dataFrame, out var webSocketMessage))
                     {
-                        foreach (var item in webSocketMessage.PayloadSequence)
+                        continue;
+                    }
+
+                    using (webSocketMessage)
+                    {
+                        if (webSocketMessage.Opcode == WSDataType.Binary)
                         {
-                            pipe.Writer.Write(item.Span);
-                        }
-
-                        while (pipe.Count > 0)
-                        {
-                            var readResult = pipe.Reader.Read();
-
-                            var sequence = readResult.Buffer;
-
-                            if (sequence.Length > 0)
+                            foreach (var item in webSocketMessage.PayloadSequence)
                             {
-                                var reader = new BytesReader(sequence);
-                                if (!this.m_adapter.TryParseRequest(ref reader, out var mqttMessage))
+                                pipe.Writer.Write(item.Span);
+                            }
+
+                            while (pipe.Count > 0)
+                            {
+                                var readResult = pipe.Reader.Read();
+
+                                var sequence = readResult.Buffer;
+
+                                if (sequence.Length > 0)
+                                {
+                                    var reader = new BytesReader(sequence);
+                                    if (!this.m_adapter.TryParseRequest(ref reader, out var mqttMessage))
+                                    {
+                                        break;
+                                    }
+                                    await this.ProcessMqttMessage(mqttMessage);
+
+                                    pipe.Reader.AdvanceTo(sequence.GetPosition(reader.BytesRead));
+                                }
+
+                                if (readResult.IsCompleted)
                                 {
                                     break;
                                 }
-                                await this.ProcessMqttMessage(mqttMessage);
-
-                                pipe.Reader.AdvanceTo(sequence.GetPosition(reader.BytesRead));
-                            }
-
-                            if (readResult.IsCompleted)
-                            {
-                                break;
                             }
                         }
                     }
                 }
+            }
+        }
+        finally
+        {
+            var mqttActor = this.m_mqttActor;
+            if (mqttActor is not null)
+            {
+                mqttActor.CancelPendingOperations();
+                mqttActor.OutputSendAsync = null;
+                mqttActor.Connecting = null;
+                mqttActor.Connected = null;
+                mqttActor.MessageArrived = null;
+                mqttActor.MessageDiscarded = null;
+                mqttActor.Closing = null;
+                await mqttActor.Deactivate().ConfigureDefaultAwait();
+                if (this.m_cleanSession)
+                {
+                    this.m_mqttBroker.RemoveMqttSessionActor(mqttActor.Id);
+                }
+                await this.PluginManager.RaiseIMqttClosedPluginAsync(this.Resolver, this, new MqttClosedEventArgs(string.Empty)).ConfigureDefaultAwait();
             }
         }
     }
@@ -134,6 +157,12 @@ internal class MqttWebSocketSessionClient : RoomDependencyObject, IMqttWebSocket
     public Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public ValueTask<Result> PingAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_mqttActor.PingAsync(cancellationToken);
     }
 
     private async Task PrivateMqttOnClosing(MqttActor actor, MqttClosingEventArgs e)

@@ -12,15 +12,25 @@
 
 namespace TouchSocket.SocketIo;
 
+/// <summary>
+/// Engine.IO 协议接口，负责消息编解码。
+/// </summary>
 public interface IEngineIo
 {
-    EngineIoTransportType EngineIoTransportType { get; }
+    /// <summary>
+    /// 将 UTF-8 编码的数据解码为 <see cref="EngineIoMessage"/>。
+    /// </summary>
+    EngineIoMessage Decode(ReadOnlyMemory<byte> data);
 
-    EngineIoMessage Decode(string value);
+    /// <summary>
+    /// 将消息编码为二进制并写入 <typeparamref name="TWriter"/>。
+    /// </summary>
+    void EncodeToBinary<TWriter>(EngineIoMessage message, ref TWriter writer)
+        where TWriter : IBytesWriter;
 
-    EngineIoMessage Decode(byte[] rawData);
-
-    void EncodeToBinary(EngineIoMessage message, ByteBlock byteBlock);
-
-    string EncodeToString(EngineIoMessage message);
+    /// <summary>
+    /// 将消息编码为文本并写入 <typeparamref name="TWriter"/>。
+    /// </summary>
+    void EncodeToText<TWriter>(EngineIoMessage message, ref TWriter writer)
+        where TWriter : IBytesWriter;
 }

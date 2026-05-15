@@ -10,24 +10,19 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Semi;
+namespace TouchSocket.SocketIo;
 
 /// <summary>
-/// 表示 SECS-II F8（Double）格式数据项。
+/// 定义在 Socket.IO 客户端成功建立连接后触发的插件接口。
 /// </summary>
-public class F8SecsItem : SecsItem<double>
+[DynamicMethod]
+public interface ISocketIoConnectedPlugin : IPlugin
 {
     /// <summary>
-    /// 初始化 <see cref="F8SecsItem"/> 的新实例（用于反序列化）。
+    /// 在 Socket.IO 客户端连接成功后调用。
     /// </summary>
-    public F8SecsItem() { }
-
-    /// <summary>
-    /// 初始化 <see cref="F8SecsItem"/> 的新实例，并设置初始值。
-    /// </summary>
-    /// <param name="values">双精度浮点值数组。</param>
-    public F8SecsItem(ReadOnlyMemory<double> values) : base(values) { }
-
-    /// <inheritdoc/>
-    public override SecsFormat SecsFormat => SecsFormat.F8;
+    /// <param name="client">客户端对象。</param>
+    /// <param name="e">连接成功事件参数。</param>
+    /// <returns>表示异步操作的任务。</returns>
+    Task OnSocketIoConnected(ISocketIoSession client, SocketIoConnectedEventArgs e);
 }

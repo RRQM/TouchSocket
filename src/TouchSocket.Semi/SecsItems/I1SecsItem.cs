@@ -17,6 +17,17 @@ namespace TouchSocket.Semi;
 /// </summary>
 public class I1SecsItem : SecsItem<sbyte>
 {
+    /// <summary>
+    /// 初始化 <see cref="I1SecsItem"/> 的新实例（用于反序列化）。
+    /// </summary>
+    public I1SecsItem() { }
+
+    /// <summary>
+    /// 初始化 <see cref="I1SecsItem"/> 的新实例，并设置初始值。
+    /// </summary>
+    /// <param name="values">有符号字节值数组。</param>
+    public I1SecsItem(ReadOnlyMemory<sbyte> values) : base(values) { }
+
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.I1;
 }

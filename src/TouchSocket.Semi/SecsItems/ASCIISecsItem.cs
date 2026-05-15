@@ -20,9 +20,15 @@ namespace TouchSocket.Semi;
 public class ASCIISecsItem : StringSecsItem
 {
     /// <summary>
-    /// 初始化 <see cref="ASCIISecsItem"/> 的新实例。
+    /// 初始化 <see cref="ASCIISecsItem"/> 的新实例（用于反序列化）。
     /// </summary>
     public ASCIISecsItem() : base(Encoding.ASCII) { }
+
+    /// <summary>
+    /// 初始化 <see cref="ASCIISecsItem"/> 的新实例，并设置字符串值。
+    /// </summary>
+    /// <param name="value">ASCII 字符串值。</param>
+    public ASCIISecsItem(string value) : base(Encoding.ASCII, value) { }
 
     /// <inheritdoc/>
     public override SecsFormat SecsFormat => SecsFormat.ASCII;
