@@ -30,7 +30,7 @@ public class ReadonlyMemoryHttpContent : HttpContent
     {
         this.m_memory = memory;
         this.m_contentType = contentType;
-        this.m_lengthString= this.m_memory.Length.ToString();
+        this.m_lengthString = this.m_memory.Length.ToString();
     }
 
     private readonly string m_contentType;

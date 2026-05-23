@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -18,7 +18,7 @@ namespace TouchSocket.Http;
 /// <summary>
 /// Http客户端基类
 /// </summary>
-public abstract class HttpClientBase : TcpClientBase, IHttpSession
+public abstract partial class HttpClientBase : TcpClientBase, IHttpSession
 {
     private readonly SemaphoreSlim m_connectSemaphore = new SemaphoreSlim(1, 1);
 
@@ -52,6 +52,11 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         try
         {
             await this.PrivateHttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
+
+            if (this.Config.GetValue(HttpConfigExtensions.HttpVersionProperty) == HttpVersion.Http2)
+                await this.Http2ActivateAsync(this.Transport, cancellationToken).ConfigureDefaultAwait();
+            else
+                this.Http2Deactivate();
         }
         finally
         {
@@ -231,6 +236,9 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
     /// <exception cref="Exception">当发生其他异常时抛出</exception>
     protected async ValueTask<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, bool allowRedirect, CancellationToken cancellationToken)
     {
+        if (this.m_http2Active)
+            return await this.Http2ProtectedRequestAsync(request, cancellationToken).ConfigureDefaultAwait();
+
         await this.m_connectSemaphore.WaitAsync(cancellationToken);
 
         try
@@ -350,7 +358,7 @@ public abstract class HttpClientBase : TcpClientBase, IHttpSession
         {
             var newIPHost = new IPHost($"{newScheme}://{newHost}:{newPort}");
 
-            await this.CloseAsync("重定向到不同主机",cancellationToken).ConfigureDefaultAwait();
+            await this.CloseAsync("重定向到不同主机", cancellationToken).ConfigureDefaultAwait();
 
             this.Config.SetRemoteIPHost(newIPHost);
 

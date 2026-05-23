@@ -15,13 +15,13 @@ namespace TouchSocket.Http;
 internal class InternalSseWriter : SseWriter
 {
     private readonly HttpResponse m_response;
-   
+
     public InternalSseWriter(HttpResponse response)
     {
         response.IsChunk = true;
         this.m_response = response;
     }
-    
+
     public override async Task WriteAsync(SseMessage message, CancellationToken cancellationToken = default)
     {
         if (message == null)

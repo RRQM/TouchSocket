@@ -70,6 +70,13 @@ public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlug
                 }
 
                 await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureDefaultAwait(), new HttpJsonRpcCallContext(client, e.Context,client.ClosedToken)).ConfigureDefaultAwait();
+
+                if (!e.Context.Response.Responsed)
+                {
+                    e.Context.Response.SetStatus(202, "Accepted");
+                    await e.Context.Response.AnswerAsync(client.ClosedToken).ConfigureDefaultAwait();
+                }
+
                 return;
             }
         }

@@ -64,7 +64,7 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     /// <inheritdoc/>
     /// <remarks>此处直接从 <see cref="ITransport"/> 的 <see cref="PipeReader"/> 读取数据，不再使用适配器机制。</remarks>
-    protected override sealed async Task ReceiveLoopAsync(ITransport transport)
+    protected sealed override async Task ReceiveLoopAsync(ITransport transport)
     {
         if (!await transport.ReadLocker.WaitAsync(0).ConfigureDefaultAwait())
         {
@@ -93,6 +93,12 @@ public abstract partial class HttpSessionClient : TcpSessionClientBase, IHttpSes
 
     private async Task HttpPipelineLoopAsync(PipeReader reader, CancellationToken closedToken)
     {
+        // 检测是否为 HTTP/2 明文连接（h2c）
+        if (await this.TryHandleHttp2ConnectionAsync(reader, closedToken).ConfigureDefaultAwait())
+        {
+            return;
+        }
+
         while (!closedToken.IsCancellationRequested && !this.DisposedValue)
         {
             // 阶段一：解析 HTTP 请求头部

@@ -17,18 +17,22 @@ namespace TouchSocket.Http;
 /// </summary>
 public readonly struct HttpResponseResult : IDisposable
 {
-    private readonly ClientHttpResponse m_response;
+    private readonly HttpResponse m_response;
 
     internal HttpResponseResult(ClientHttpResponse response)
     {
         this.m_response = response;
     }
 
+    internal HttpResponseResult(HttpResponse http2Response)
+    {
+        this.m_response = http2Response;
+    }
+
     /// <summary>
     /// 获取HTTP响应对象。
     /// </summary>
     public HttpResponse Response => this.m_response;
-
 
     /// <inheritdoc/>
     public void Dispose()

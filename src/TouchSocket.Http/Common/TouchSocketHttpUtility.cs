@@ -14,7 +14,7 @@ using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Http;
 
-static class TouchSocketHttpUtility
+internal static class TouchSocketHttpUtility
 {
     public const int MaxReadSize = 1024 * 1024;
 
@@ -27,10 +27,10 @@ static class TouchSocketHttpUtility
 
     private static readonly byte[] s_http11Response = "HTTP/1.1 "u8.ToArray();
     private static readonly byte[] s_http10Response = "HTTP/1.0 "u8.ToArray();
-    
+
     private static readonly string[] s_statusCodeCache = new string[600];
     private static readonly byte[][] s_statusCodeBytesCache = new byte[600][];
-    
+
     static TouchSocketHttpUtility()
     {
         for (var i = 0; i < 600; i++)

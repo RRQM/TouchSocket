@@ -247,11 +247,11 @@ internal abstract class InternalHttpCollection : IHttpValues
             var item = this.m_items[i];
             if (this.m_comparer.Equals(item.Key, key))
             {
-                value= item.Value;
+                value = item.Value;
                 return true;
             }
         }
-        value =TextValues.Empty;
+        value = TextValues.Empty;
         return false;
     }
 

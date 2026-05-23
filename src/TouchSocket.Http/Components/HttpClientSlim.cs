@@ -20,12 +20,14 @@ namespace TouchSocket.Http;
 public class HttpClientSlim : SetupConfigObject
 {
     private readonly System.Net.Http.HttpClient m_httpClient;
+    private readonly bool m_ownsHttpClient;
 
     /// <summary>
     /// 这是基于<see cref="System.Net.Http.HttpClient"/>的通讯模型。
     /// </summary>
     public HttpClientSlim(System.Net.Http.HttpClient httpClient = default)
     {
+        this.m_ownsHttpClient = httpClient == null;
         httpClient ??= new System.Net.Http.HttpClient();
         this.m_httpClient = httpClient;
     }
@@ -40,5 +42,16 @@ public class HttpClientSlim : SetupConfigObject
     {
         this.m_httpClient.BaseAddress ??= config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
         base.LoadConfig(config);
+    }
+
+    /// <inheritdoc/>
+    protected override void SafetyDispose(bool disposing)
+    {
+        if (disposing && this.m_ownsHttpClient)
+        {
+            this.m_httpClient.Dispose();
+        }
+
+        base.SafetyDispose(disposing);
     }
 }

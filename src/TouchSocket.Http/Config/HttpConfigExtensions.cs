@@ -26,6 +26,12 @@ public static class HttpConfigExtensions
     public static readonly DependencyProperty<IWebProxy> ProxyProperty = new DependencyProperty<IWebProxy>("Proxy", default);
 
     /// <summary>
+    /// HTTP 版本属性，默认为 <see cref="TouchSocket.Http.HttpVersion.Http1"/>。
+    /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig))]
+    public static readonly DependencyProperty<TouchSocket.Http.HttpVersion> HttpVersionProperty = new DependencyProperty<TouchSocket.Http.HttpVersion>("HttpVersion", TouchSocket.Http.HttpVersion.Http1);
+
+    /// <summary>
     /// 设置代理。
     /// </summary>
     /// <param name="config">配置对象</param>

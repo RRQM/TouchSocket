@@ -18,5 +18,5 @@ namespace TouchSocket.Http;
 /// </summary>
 public interface IHttpHeader : IHttpValues
 {
-    
+
 }

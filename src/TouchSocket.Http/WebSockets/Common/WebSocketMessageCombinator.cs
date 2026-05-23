@@ -96,7 +96,7 @@ public sealed class WebSocketMessageCombinator
                         this.m_wSDataType = dataFrame.Opcode;
                         this.m_combining = true;
 
-                        this.m_writer ??= new ();
+                        this.m_writer ??= new();
 
                         this.m_writer.Write(data.Span);
 

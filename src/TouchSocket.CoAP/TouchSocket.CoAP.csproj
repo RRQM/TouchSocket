@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net10.0;net8.0</TargetFrameworks>
+		<PackageTags>CoAP;TouchSocket</PackageTags>
+		<Description>这是一个 CoAP（RFC 7252）功能库，提供基于 UDP 传输的 CoAP 客户端和服务器。支持 CON/NON/ACK/RST 消息类型，GET/POST/PUT/DELETE 方法，以及标准 CoAP 选项。
+
+说明文档：https://touchsocket.net/	</Description>
+		<Title>TouchSocket.CoAP</Title>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Exceptions\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+
+</Project>

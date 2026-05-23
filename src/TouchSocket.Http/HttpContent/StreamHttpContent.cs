@@ -75,9 +75,9 @@ public class StreamHttpContent : HttpContent
         {
             header.Add(HttpHeaders.TransferEncoding, "chunked");
         }
-        else if (TryComputeLength(out var length))
+        else if (this.TryComputeLength(out var length))
         {
-            header.Add(HttpHeaders.ContentLength,length.ToString());
+            header.Add(HttpHeaders.ContentLength, length.ToString());
         }
     }
 

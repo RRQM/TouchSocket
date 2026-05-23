@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -20,7 +20,7 @@ namespace TouchSocket.Http.WebSockets;
 /// <summary>
 /// 表示一个WebSocket客户端的设置配置对象。
 /// </summary>
-public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient, IOnlineClient,IDependencyClient
+public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient, IOnlineClient, IDependencyClient
 {
     /// <summary>
     /// 初始化 <see cref="SetupClientWebSocket"/> 类的新实例。
@@ -45,7 +45,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     #region 连接
 
-   
+
     /// <summary>
     /// 异步连接 WebSocket。
     /// </summary>

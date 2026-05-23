@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -49,6 +49,15 @@ public abstract class HttpResponse : HttpBase
         this.Protocols = request.Protocols;
     }
 
+    /// <summary>
+    /// 供子类使用的受保护构造函数，用于 HTTP/2 等协议的响应实现。
+    /// </summary>
+    protected HttpResponse()
+    {
+        this.m_isServer = true;
+        this.m_canWrite = true;
+    }
+
     #region 属性
 
     /// <summary>
@@ -67,7 +76,7 @@ public abstract class HttpResponse : HttpBase
     /// <summary>
     /// 是否已经响应数据。
     /// </summary>
-    public bool Responsed { get; private set; }
+    public bool Responsed { get; protected set; }
 
     /// <summary>
     /// 状态码，默认200
@@ -85,7 +94,7 @@ public abstract class HttpResponse : HttpBase
     /// 构建数据并回应。
     /// <para>该方法仅在具有Client实例时有效。</para>
     /// </summary>
-    public async Task AnswerAsync(CancellationToken cancellationToken = default)
+    public virtual async Task AnswerAsync(CancellationToken cancellationToken = default)
     {
         this.ThrowIfResponsed();
 
@@ -102,7 +111,7 @@ public abstract class HttpResponse : HttpBase
         else
         {
             content.InternalBuildingHeader(this.Headers);
-            
+
             var writer = new PipeBytesWriter(transport.Writer);
             this.BuildHeader(ref writer);
 
@@ -127,7 +136,7 @@ public abstract class HttpResponse : HttpBase
     /// <summary>
     /// 当传输模式是Chunk时，用于结束传输。
     /// </summary>
-    public async Task CompleteChunkAsync(CancellationToken cancellationToken = default)
+    public virtual async Task CompleteChunkAsync(CancellationToken cancellationToken = default)
     {
         if (!this.m_canWrite)
         {
@@ -156,7 +165,7 @@ public abstract class HttpResponse : HttpBase
     /// <param name="memory">要写入的只读内存数据。</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>一个任务，表示异步写入操作。</returns>
-    public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
+    public virtual async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         this.ThrowIfResponsed();
 
@@ -320,12 +329,12 @@ public abstract class HttpResponse : HttpBase
             TouchSocketHttpUtility.AppendSlash(ref writer);
             TouchSocketHttpUtility.AppendUtf8String(ref writer, this.ProtocolVersion);
         }
-        
+
         TouchSocketHttpUtility.AppendSpace(ref writer);
-        
+
         var statusCodeBytes = TouchSocketHttpUtility.GetStatusCodeBytes(this.StatusCode);
         writer.Write(statusCodeBytes);
-        
+
         TouchSocketHttpUtility.AppendSpace(ref writer);
         TouchSocketHttpUtility.AppendUtf8String(ref writer, this.StatusMessage);
         TouchSocketHttpUtility.AppendRn(ref writer);

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net10.0;net8.0</TargetFrameworks>
+		<PackageTags>Mcp;ModelContextProtocol;TouchSocket</PackageTags>
+		<Description>这是一个提供 MCP (Model Context Protocol) 服务器和客户端的组件库。支持 stdio 和 Streamable HTTP 两种传输协议，支持 Tools、Resources、Prompts 功能。
+
+说明文档：https://touchsocket.net/	</Description>
+		<Title>TouchSocket.Mcp</Title>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\TouchSocket.Http\TouchSocket.Http.csproj" />
+		<ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Exceptions\" />
+	</ItemGroup>
+</Project>

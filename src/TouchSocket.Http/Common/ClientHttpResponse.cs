@@ -12,7 +12,6 @@
 
 using System.Buffers;
 using System.IO.Pipelines;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http;
 
