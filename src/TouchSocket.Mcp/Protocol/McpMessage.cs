@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -12,6 +12,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace TouchSocket.Mcp;
 
@@ -145,6 +146,13 @@ public sealed class McpError
 }
 
 /// <summary>
+/// 表示空对象结果。
+/// </summary>
+public sealed class McpEmptyResult
+{
+}
+
+/// <summary>
 /// 定义 MCP 标准错误码常量。
 /// </summary>
 public static class McpErrorCodes
@@ -185,71 +193,147 @@ public static class McpErrorCodes
 /// </summary>
 public static class McpMessageSerializer
 {
-    private static readonly JsonSerializerOptions s_options = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions s_options = McpOptionsBase.CreateDefaultJsonSerializerOptions();
+
+    private static JsonTypeInfo GetJsonTypeInfo(Type type, JsonSerializerOptions options)
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        PropertyNameCaseInsensitive = true
-    };
+        return (options ?? s_options).GetTypeInfo(type);
+    }
+
+    private static JsonTypeInfo GetJsonTypeInfo(object value, JsonSerializerOptions options)
+    {
+        return GetJsonTypeInfo(value?.GetType() ?? typeof(object), options);
+    }
 
     /// <summary>
-    /// 将对象序列化为 UTF-8 JSON 字节数组。
+    /// Serializes an object to UTF-8 JSON bytes.
     /// </summary>
-    /// <param name="value">要序列化的对象。</param>
-    /// <returns>UTF-8 编码的 JSON 字节数组。</returns>
+    /// <param name="value">The value to serialize.</param>
+    /// <returns>The UTF-8 JSON bytes.</returns>
     public static byte[] SerializeToBytes(object value)
     {
-        return JsonSerializer.SerializeToUtf8Bytes(value, value.GetType(), s_options);
+        return SerializeToBytes(value, s_options);
     }
 
     /// <summary>
-    /// 将 UTF-8 JSON 字节反序列化为指定类型。
+    /// Serializes an object to UTF-8 JSON bytes with the specified serializer options.
     /// </summary>
-    /// <typeparam name="T">目标类型。</typeparam>
-    /// <param name="bytes">UTF-8 编码的 JSON 字节。</param>
-    /// <returns>反序列化后的对象。</returns>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The UTF-8 JSON bytes.</returns>
+    public static byte[] SerializeToBytes(object value, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
+        return JsonSerializer.SerializeToUtf8Bytes(value, GetJsonTypeInfo(value, options));
+    }
+
+    /// <summary>
+    /// Deserializes UTF-8 JSON bytes to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="bytes">The UTF-8 JSON bytes.</param>
+    /// <returns>The deserialized object.</returns>
     public static T Deserialize<T>(ReadOnlySpan<byte> bytes)
     {
-        return JsonSerializer.Deserialize<T>(bytes, s_options);
+        return Deserialize<T>(bytes, s_options);
     }
 
     /// <summary>
-    /// 将对象序列化为 JSON 字符串。
+    /// Deserializes UTF-8 JSON bytes to the specified type with the specified serializer options.
     /// </summary>
-    /// <param name="value">要序列化的对象。</param>
-    /// <returns>JSON 字符串。</returns>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="bytes">The UTF-8 JSON bytes.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The deserialized object.</returns>
+    public static T Deserialize<T>(ReadOnlySpan<byte> bytes, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
+        return (T)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(T), options));
+    }
+
+    /// <summary>
+    /// Serializes an object to a JSON string.
+    /// </summary>
+    /// <param name="value">The value to serialize.</param>
+    /// <returns>The JSON string.</returns>
     public static string SerializeToString(object value)
     {
-        return JsonSerializer.Serialize(value, value.GetType(), s_options);
+        return SerializeToString(value, s_options);
     }
 
     /// <summary>
-    /// 将 JSON 字符串反序列化为指定类型。
+    /// Serializes an object to a JSON string with the specified serializer options.
     /// </summary>
-    /// <typeparam name="T">目标类型。</typeparam>
-    /// <param name="json">JSON 字符串。</param>
-    /// <returns>反序列化后的对象。</returns>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The JSON string.</returns>
+    public static string SerializeToString(object value, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
+        return JsonSerializer.Serialize(value, GetJsonTypeInfo(value, options));
+    }
+
+    /// <summary>
+    /// Deserializes a JSON string to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="json">The JSON string.</param>
+    /// <returns>The deserialized object.</returns>
     public static T DeserializeFromString<T>(string json)
     {
-        return JsonSerializer.Deserialize<T>(json, s_options);
+        return DeserializeFromString<T>(json, s_options);
     }
 
     /// <summary>
-    /// 尝试解析传入消息的类型（请求、响应或通知）。
+    /// Deserializes a JSON string to the specified type with the specified serializer options.
     /// </summary>
-    /// <param name="bytes">UTF-8 JSON 数据。</param>
-    /// <param name="request">如果是请求，输出解析结果；否则为 <see langword="null"/>。</param>
-    /// <param name="response">如果是响应，输出解析结果；否则为 <see langword="null"/>。</param>
-    /// <param name="notification">如果是通知，输出解析结果；否则为 <see langword="null"/>。</param>
-    /// <returns><see langword="true"/> 表示成功解析；否则为 <see langword="false"/>。</returns>
+    /// <typeparam name="T">The target type.</typeparam>
+    /// <param name="json">The JSON string.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The deserialized object.</returns>
+    public static T DeserializeFromString<T>(string json, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
+        return (T)JsonSerializer.Deserialize(json, GetJsonTypeInfo(typeof(T), options));
+    }
+
+    /// <summary>
+    /// Attempts to parse an MCP message as a request, response, or notification.
+    /// </summary>
+    /// <param name="bytes">The UTF-8 JSON bytes.</param>
+    /// <param name="request">The parsed request, or <see langword="null"/>.</param>
+    /// <param name="response">The parsed response, or <see langword="null"/>.</param>
+    /// <param name="notification">The parsed notification, or <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the message was parsed successfully; otherwise, <see langword="false"/>.</returns>
     public static bool TryParseMessage(
         ReadOnlySpan<byte> bytes,
         out McpRequest request,
         out McpResponse response,
         out McpNotification notification)
     {
+        return TryParseMessage(bytes, out request, out response, out notification, s_options);
+    }
+
+    /// <summary>
+    /// Attempts to parse an MCP message as a request, response, or notification with the specified serializer options.
+    /// </summary>
+    /// <param name="bytes">The UTF-8 JSON bytes.</param>
+    /// <param name="request">The parsed request, or <see langword="null"/>.</param>
+    /// <param name="response">The parsed response, or <see langword="null"/>.</param>
+    /// <param name="notification">The parsed notification, or <see langword="null"/>.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns><see langword="true"/> if the message was parsed successfully; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParseMessage(
+        ReadOnlySpan<byte> bytes,
+        out McpRequest request,
+        out McpResponse response,
+        out McpNotification notification,
+        JsonSerializerOptions jsonSerializerOptions)
+    {
         request = null;
         response = null;
         notification = null;
+        var options = jsonSerializerOptions ?? s_options;
 
         try
         {
@@ -284,17 +368,17 @@ public static class McpMessageSerializer
 
             if (hasMethod && hasId)
             {
-                request = JsonSerializer.Deserialize<McpRequest>(bytes, s_options);
+                request = (McpRequest)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(McpRequest), options));
                 return true;
             }
             else if (hasMethod && !hasId)
             {
-                notification = JsonSerializer.Deserialize<McpNotification>(bytes, s_options);
+                notification = (McpNotification)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(McpNotification), options));
                 return true;
             }
             else if (hasId && (hasResult || hasError))
             {
-                response = JsonSerializer.Deserialize<McpResponse>(bytes, s_options);
+                response = (McpResponse)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(McpResponse), options));
                 return true;
             }
 
@@ -307,54 +391,97 @@ public static class McpMessageSerializer
     }
 
     /// <summary>
-    /// 构建成功响应消息。
+    /// Builds a success response message.
     /// </summary>
-    /// <param name="id">请求 Id。</param>
-    /// <param name="result">结果对象。</param>
-    /// <returns>序列化后的响应字节。</returns>
+    /// <param name="id">The request id.</param>
+    /// <param name="result">The result object.</param>
+    /// <returns>The serialized response bytes.</returns>
     public static byte[] BuildSuccessResponse(JsonElement? id, object result)
     {
-        var resultElement = result != null
-            ? JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(result, result.GetType(), s_options)).RootElement
-            : (JsonElement?)null;
+        return BuildSuccessResponse(id, result, s_options);
+    }
+
+    /// <summary>
+    /// Builds a success response message with the specified serializer options.
+    /// </summary>
+    /// <param name="id">The request id.</param>
+    /// <param name="result">The result object.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The serialized response bytes.</returns>
+    public static byte[] BuildSuccessResponse(JsonElement? id, object result, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
+        JsonElement? resultElement = null;
+        if (result != null)
+        {
+            using var resultDocument = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(result, GetJsonTypeInfo(result, options)));
+            resultElement = resultDocument.RootElement.Clone();
+        }
 
         var response = new McpResponse
         {
             Id = id,
             Result = resultElement
         };
-        return SerializeToBytes(response);
+        return SerializeToBytes(response, options);
     }
 
     /// <summary>
-    /// 构建错误响应消息。
+    /// Builds an error response message.
     /// </summary>
-    /// <param name="id">请求 Id。</param>
-    /// <param name="code">错误码。</param>
-    /// <param name="message">错误信息。</param>
-    /// <returns>序列化后的响应字节。</returns>
+    /// <param name="id">The request id.</param>
+    /// <param name="code">The error code.</param>
+    /// <param name="message">The error message.</param>
+    /// <returns>The serialized response bytes.</returns>
     public static byte[] BuildErrorResponse(JsonElement? id, int code, string message)
+    {
+        return BuildErrorResponse(id, code, message, s_options);
+    }
+
+    /// <summary>
+    /// Builds an error response message with the specified serializer options.
+    /// </summary>
+    /// <param name="id">The request id.</param>
+    /// <param name="code">The error code.</param>
+    /// <param name="message">The error message.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The serialized response bytes.</returns>
+    public static byte[] BuildErrorResponse(JsonElement? id, int code, string message, JsonSerializerOptions jsonSerializerOptions)
     {
         var response = new McpResponse
         {
             Id = id,
             Error = new McpError { Code = code, Message = message }
         };
-        return SerializeToBytes(response);
+        return SerializeToBytes(response, jsonSerializerOptions);
     }
 
     /// <summary>
-    /// 构建通知消息。
+    /// Builds a notification message.
     /// </summary>
-    /// <param name="method">方法名。</param>
-    /// <param name="params">参数对象，可为 <see langword="null"/>。</param>
-    /// <returns>序列化后的通知字节。</returns>
+    /// <param name="method">The method name.</param>
+    /// <param name="params">The parameter object, or <see langword="null"/>.</param>
+    /// <returns>The serialized notification bytes.</returns>
     public static byte[] BuildNotification(string method, object @params = null)
     {
+        return BuildNotification(method, @params, s_options);
+    }
+
+    /// <summary>
+    /// Builds a notification message with the specified serializer options.
+    /// </summary>
+    /// <param name="method">The method name.</param>
+    /// <param name="params">The parameter object, or <see langword="null"/>.</param>
+    /// <param name="jsonSerializerOptions">The JSON serializer options.</param>
+    /// <returns>The serialized notification bytes.</returns>
+    public static byte[] BuildNotification(string method, object @params, JsonSerializerOptions jsonSerializerOptions)
+    {
+        var options = jsonSerializerOptions ?? s_options;
         JsonElement? paramsElement = null;
         if (@params != null)
         {
-            paramsElement = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(@params, @params.GetType(), s_options)).RootElement;
+            using var paramsDocument = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(@params, GetJsonTypeInfo(@params, options)));
+            paramsElement = paramsDocument.RootElement.Clone();
         }
 
         var notification = new McpNotification
@@ -362,6 +489,6 @@ public static class McpMessageSerializer
             Method = method,
             Params = paramsElement
         };
-        return SerializeToBytes(notification);
+        return SerializeToBytes(notification, options);
     }
 }

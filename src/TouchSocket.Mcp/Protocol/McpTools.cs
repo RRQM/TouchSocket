@@ -18,7 +18,7 @@ namespace TouchSocket.Mcp;
 /// <summary>
 /// 表示 MCP 工具定义。
 /// </summary>
-public sealed class McpTool
+public sealed class McpToolDefinition
 {
     /// <summary>
     /// 获取或设置工具的唯一名称。
@@ -195,7 +195,7 @@ public sealed class McpListToolsResult
     /// 获取或设置工具列表。
     /// </summary>
     [JsonPropertyName("tools")]
-    public List<McpTool> Tools { get; set; } = new List<McpTool>();
+    public List<McpToolDefinition> Tools { get; set; } = new List<McpToolDefinition>();
 
     /// <summary>
     /// 获取或设置下一页游标，用于分页。

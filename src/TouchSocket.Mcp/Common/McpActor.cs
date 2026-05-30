@@ -36,7 +36,7 @@ public sealed class McpActor : DisposableObject
     }
 
     private readonly McpServerOptions m_options;
-    private readonly List<McpTool> m_tools = new List<McpTool>();
+    private readonly List<McpToolDefinition> m_tools = new List<McpToolDefinition>();
     private readonly List<McpResource> m_resources = new List<McpResource>();
     private readonly List<McpResourceTemplate> m_resourceTemplates = new List<McpResourceTemplate>();
     private readonly List<McpPrompt> m_prompts = new List<McpPrompt>();
@@ -101,29 +101,46 @@ public sealed class McpActor : DisposableObject
     /// <param name="promptList">提示模板元数据列表。</param>
     public static void AddRpcToMaps(
         IRpcServerProvider rpcServerProvider,
-        ActionMap toolMap, List<McpTool> toolList,
+        ActionMap toolMap, List<McpToolDefinition> toolList,
         ActionMap resourceMap, List<McpResource> resourceList,
         ActionMap promptMap, List<McpPrompt> promptList)
     {
         AddRpcToMaps(
             rpcServerProvider,
             toolMap, toolList,
+            resourceMap, resourceList,
+            promptMap, promptList,
+            McpOptionsBase.CreateDefaultJsonSerializerOptions());
+    }
+
+    internal static void AddRpcToMaps(
+        IRpcServerProvider rpcServerProvider,
+        ActionMap toolMap, List<McpToolDefinition> toolList,
+        ActionMap resourceMap, List<McpResource> resourceList,
+        ActionMap promptMap, List<McpPrompt> promptList,
+        JsonSerializerOptions jsonSerializerOptions)
+    {
+        AddRpcToMaps(
+            rpcServerProvider,
+            toolMap, toolList,
             resourceMap, resourceList, new List<McpResourceTemplate>(), new Dictionary<string, RpcMethod>(StringComparer.OrdinalIgnoreCase), new List<McpResourceTemplateRoute>(),
-            promptMap, promptList);
+            promptMap, promptList,
+            jsonSerializerOptions);
     }
 
     private static void AddRpcToMaps(
         IRpcServerProvider rpcServerProvider,
-        ActionMap toolMap, List<McpTool> toolList,
+        ActionMap toolMap, List<McpToolDefinition> toolList,
         ActionMap resourceMap, List<McpResource> resourceList, List<McpResourceTemplate> resourceTemplateList, Dictionary<string, RpcMethod> legacyResourceMap, List<McpResourceTemplateRoute> resourceTemplateRoutes,
-        ActionMap promptMap, List<McpPrompt> promptList)
+        ActionMap promptMap, List<McpPrompt> promptList,
+        JsonSerializerOptions jsonSerializerOptions)
     {
         foreach (var rpcMethod in rpcServerProvider.GetMethods())
         {
             if (rpcMethod.GetAttribute<McpToolAttribute>() is McpToolAttribute toolAttr)
             {
                 toolMap.Add(toolAttr.GetInvokeKey(rpcMethod), rpcMethod);
-                toolList.Add(BuildToolMeta(rpcMethod, toolAttr));
+                toolList.Add(BuildToolMeta(rpcMethod, toolAttr, jsonSerializerOptions));
             }
             else if (rpcMethod.GetAttribute<McpResourceAttribute>() is McpResourceAttribute resourceAttr)
             {
@@ -256,7 +273,8 @@ public sealed class McpActor : DisposableObject
             rpcServerProvider,
             this.ToolActionMap, this.m_tools,
             this.ResourceActionMap, this.m_resources, this.m_resourceTemplates, this.m_legacyResourceActionMap, this.m_resourceTemplateRoutes,
-            this.PromptActionMap, this.m_prompts);
+            this.PromptActionMap, this.m_prompts,
+            this.m_options.JsonSerializerOptions);
         this.m_rpcServerProvider = rpcServerProvider;
     }
 
@@ -273,7 +291,7 @@ public sealed class McpActor : DisposableObject
     public void SetRpcServerProvider(
         IRpcServerProvider rpcServerProvider,
         ActionMap toolMap, ActionMap resourceMap, ActionMap promptMap,
-        List<McpTool> tools, List<McpResource> resources, List<McpPrompt> prompts)
+        List<McpToolDefinition> tools, List<McpResource> resources, List<McpPrompt> prompts)
     {
         this.m_rpcServerProvider = rpcServerProvider;
         this.ToolActionMap = toolMap;
@@ -306,7 +324,7 @@ public sealed class McpActor : DisposableObject
     /// <param name="callContext">MCP 调用上下文。</param>
     public async Task InputReceiveAsync(ReadOnlyMemory<byte> data, McpCallContextBase callContext)
     {
-        if (!McpMessageSerializer.TryParseMessage(data.Span, out var request, out _, out var notification))
+        if (!McpMessageSerializer.TryParseMessage(data.Span, out var request, out _, out var notification, this.m_options.JsonSerializerOptions))
         {
             await this.SendErrorResponseAsync(null, McpErrorCodes.ParseError, "Parse error", callContext.Token).ConfigureAwait(false);
             return;
@@ -334,7 +352,7 @@ public sealed class McpActor : DisposableObject
         base.Dispose(disposing);
     }
 
-    private static McpTool BuildToolMeta(RpcMethod rpcMethod, McpToolAttribute attr)
+    private static McpToolDefinition BuildToolMeta(RpcMethod rpcMethod, McpToolAttribute attr, JsonSerializerOptions jsonSerializerOptions)
     {
         var schema = new McpToolInputSchema
         {
@@ -349,7 +367,7 @@ public sealed class McpActor : DisposableObject
                 continue;
             }
 
-            schema.Properties[param.Name] = BuildJsonSchema(param.Type, param.ParameterInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description);
+            schema.Properties[param.Name] = McpJsonSchemaGenerator.GenerateForTool(param.Type, param.ParameterInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description, jsonSerializerOptions);
 
             if (!param.ParameterInfo.HasDefaultValue)
             {
@@ -367,162 +385,12 @@ public sealed class McpActor : DisposableObject
             schema.Required = null;
         }
 
-        return new McpTool
+        return new McpToolDefinition
         {
             Name = attr.GetInvokeKey(rpcMethod),
             Description = rpcMethod.GetDescription(),
             InputSchema = schema
         };
-    }
-
-    private static McpToolProperty BuildJsonSchema(Type type, string description = null, HashSet<Type> visitingTypes = null)
-    {
-        var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        var schema = new McpToolProperty
-        {
-            Description = description
-        };
-
-        visitingTypes ??= new HashSet<Type>();
-
-        if (underlying == typeof(string)
-            || underlying == typeof(char)
-            || underlying == typeof(DateTime)
-            || underlying == typeof(DateTimeOffset)
-            || underlying == typeof(Guid)
-            || underlying == typeof(TimeSpan)
-            || underlying == typeof(Uri))
-        {
-            schema.Type = "string";
-            return schema;
-        }
-
-        if (underlying == typeof(bool))
-        {
-            schema.Type = "boolean";
-            return schema;
-        }
-
-        if (underlying == typeof(int) || underlying == typeof(long)
-            || underlying == typeof(short) || underlying == typeof(byte)
-            || underlying == typeof(uint) || underlying == typeof(ulong)
-            || underlying == typeof(ushort) || underlying == typeof(sbyte))
-        {
-            schema.Type = "integer";
-            return schema;
-        }
-
-        if (underlying == typeof(float) || underlying == typeof(double) || underlying == typeof(decimal))
-        {
-            schema.Type = "number";
-            return schema;
-        }
-
-        if (underlying.IsEnum)
-        {
-            schema.Type = GetEnumJsonType(underlying);
-            schema.Enum = Enum.GetValues(underlying).Cast<object>().Select(value => Convert.ChangeType(value, Enum.GetUnderlyingType(underlying))).ToArray();
-            return schema;
-        }
-
-        if (TryGetEnumerableElementType(underlying, out var elementType))
-        {
-            schema.Type = "array";
-            schema.Items = BuildJsonSchema(elementType);
-            return schema;
-        }
-
-        schema.Type = "object";
-        if (!visitingTypes.Add(underlying))
-        {
-            return schema;
-        }
-
-        try
-        {
-            var properties = new Dictionary<string, McpToolProperty>();
-            var required = new List<string>();
-
-            foreach (var propertyInfo in underlying.GetProperties(BindingFlags.Instance | BindingFlags.Public))
-            {
-                if (propertyInfo.GetMethod is null || propertyInfo.GetIndexParameters().Length > 0)
-                {
-                    continue;
-                }
-
-                properties[propertyInfo.Name] = BuildJsonSchema(propertyInfo.PropertyType, propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description, visitingTypes);
-
-                if (IsRequired(propertyInfo))
-                {
-                    required.Add(propertyInfo.Name);
-                }
-            }
-
-            if (properties.Count > 0)
-            {
-                schema.Properties = properties;
-            }
-
-            if (required.Count > 0)
-            {
-                schema.Required = required;
-            }
-
-            return schema;
-        }
-        finally
-        {
-            visitingTypes.Remove(underlying);
-        }
-    }
-
-    private static string GetEnumJsonType(Type type)
-    {
-        return GetJsonType(Enum.GetUnderlyingType(type));
-    }
-
-    private static bool TryGetEnumerableElementType(Type type, out Type elementType)
-    {
-        if (type.IsArray)
-        {
-            elementType = type.GetElementType();
-            return true;
-        }
-
-        if (type != typeof(string) && typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && type.IsGenericType && type.GenericTypeArguments.Length == 1)
-        {
-            elementType = type.GenericTypeArguments[0];
-            return true;
-        }
-
-        elementType = null;
-        return false;
-    }
-
-    private static string GetJsonType(Type type)
-    {
-        var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        if (underlying == typeof(string)
-            || underlying == typeof(char)
-            || underlying == typeof(DateTime)
-            || underlying == typeof(DateTimeOffset)
-            || underlying == typeof(Guid)
-            || underlying == typeof(TimeSpan)
-            || underlying == typeof(Uri)) return "string";
-        if (underlying == typeof(bool)) return "boolean";
-        if (underlying == typeof(int) || underlying == typeof(long)
-            || underlying == typeof(short) || underlying == typeof(byte)
-            || underlying == typeof(uint) || underlying == typeof(ulong)
-            || underlying == typeof(ushort) || underlying == typeof(sbyte)) return "integer";
-        if (underlying == typeof(float) || underlying == typeof(double) || underlying == typeof(decimal)) return "number";
-        if (TryGetEnumerableElementType(underlying, out _)) return "array";
-        return "object";
-    }
-
-    private static bool IsRequired(PropertyInfo propertyInfo)
-    {
-        var type = propertyInfo.PropertyType;
-        return type.IsValueType && Nullable.GetUnderlyingType(type) == null;
     }
 
     private static McpResource BuildResourceMeta(RpcMethod rpcMethod, McpResourceAttribute attr)
@@ -580,7 +448,7 @@ public sealed class McpActor : DisposableObject
                 await this.HandleInitializeAsync(request, callContext.Token).ConfigureAwait(false);
                 break;
             case McpMethods.Ping:
-                await this.SendSuccessResponseAsync(request, new { }, callContext.Token).ConfigureAwait(false);
+                await this.SendSuccessResponseAsync(request, new McpEmptyResult(), callContext.Token).ConfigureAwait(false);
                 break;
             case McpMethods.ToolsList:
                 await this.HandleToolsListAsync(request, callContext.Token).ConfigureAwait(false);
@@ -638,7 +506,7 @@ public sealed class McpActor : DisposableObject
         McpCallToolParams callParams = null;
         if (request.Params.HasValue)
         {
-            callParams = JsonSerializer.Deserialize<McpCallToolParams>(request.Params.Value.GetRawText(), McpJsonOptions.Default);
+            callParams = JsonSerializer.Deserialize<McpCallToolParams>(request.Params.Value.GetRawText(), this.m_options.JsonSerializerOptions);
         }
 
         if (callParams == null || string.IsNullOrEmpty(callParams.Name))
@@ -730,7 +598,7 @@ public sealed class McpActor : DisposableObject
         McpGetPromptParams promptParams = null;
         if (request.Params.HasValue)
         {
-            promptParams = JsonSerializer.Deserialize<McpGetPromptParams>(request.Params.Value.GetRawText(), McpJsonOptions.Default);
+            promptParams = JsonSerializer.Deserialize<McpGetPromptParams>(request.Params.Value.GetRawText(), this.m_options.JsonSerializerOptions);
         }
 
         if (promptParams == null || string.IsNullOrEmpty(promptParams.Name))
@@ -783,7 +651,7 @@ public sealed class McpActor : DisposableObject
             else if (arguments.HasValue && arguments.Value.ValueKind == JsonValueKind.Object
                      && arguments.Value.TryGetProperty(param.Name, out var pv))
             {
-                ps[i] = pv.Deserialize(param.Type, McpJsonOptions.Default);
+                ps[i] = pv.Deserialize(param.Type, this.m_options.JsonSerializerOptions);
             }
             else if (param.ParameterInfo.HasDefaultValue)
             {
@@ -823,7 +691,7 @@ public sealed class McpActor : DisposableObject
             {
                 ps[i] = param.Type == typeof(string)
                     ? templateValue
-                    : JsonSerializer.Deserialize(JsonSerializer.Serialize(templateValue), param.Type, McpJsonOptions.Default);
+                    : JsonSerializer.Deserialize(JsonSerializer.Serialize(templateValue, this.m_options.JsonSerializerOptions), param.Type, this.m_options.JsonSerializerOptions);
             }
             else if (param.ParameterInfo.HasDefaultValue)
             {
@@ -859,7 +727,7 @@ public sealed class McpActor : DisposableObject
             {
                 ps[i] = param.Type == typeof(string)
                     ? (object)strVal
-                    : JsonSerializer.Deserialize(JsonSerializer.Serialize(strVal), param.Type, McpJsonOptions.Default);
+                    : JsonSerializer.Deserialize(JsonSerializer.Serialize(strVal, this.m_options.JsonSerializerOptions), param.Type, this.m_options.JsonSerializerOptions);
             }
             else if (param.ParameterInfo.HasDefaultValue)
             {
@@ -873,14 +741,22 @@ public sealed class McpActor : DisposableObject
         callContext.SetParameters(ps);
     }
 
-    private static string SerializeMcpValue(object value)
+    private string SerializeMcpValue(object value)
     {
-        return value == null
-            ? string.Empty
-            : value is string s ? s : JsonSerializer.Serialize(value, McpJsonOptions.Default);
+        if (value == null)
+        {
+            return string.Empty;
+        }
+
+        if (value is string s)
+        {
+            return s;
+        }
+
+        return JsonSerializer.Serialize(value, this.m_options.JsonSerializerOptions.GetTypeInfo(value.GetType()));
     }
 
-    private static McpCallToolResult BuildToolCallResult(object value)
+    private McpCallToolResult BuildToolCallResult(object value)
     {
         if (value is McpCallToolResult toolResult)
         {
@@ -926,7 +802,7 @@ public sealed class McpActor : DisposableObject
         return null;
     }
 
-    private static McpReadResourceResult BuildReadResourceResult(object value, McpCallContextBase callContext)
+    private McpReadResourceResult BuildReadResourceResult(object value, McpCallContextBase callContext)
     {
         if (value is McpReadResourceResult resourceResult)
         {
@@ -990,7 +866,7 @@ public sealed class McpActor : DisposableObject
         };
     }
 
-    private static McpGetPromptResult BuildPromptResult(object value)
+    private McpGetPromptResult BuildPromptResult(object value)
     {
         if (value is McpGetPromptResult promptResult)
         {
@@ -1060,13 +936,13 @@ public sealed class McpActor : DisposableObject
                     IsError = true,
                     Content = new List<McpContent> { new McpTextContent { Text = invokeResult.Message ?? "Internal error." } }
                 };
-                var errorBytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, errorResult);
+                var errorBytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, errorResult, this.m_options.JsonSerializerOptions);
                 await this.SendAction(errorBytes, CancellationToken.None).ConfigureAwait(false);
                 return;
             }
 
             var result = BuildToolCallResult(invokeResult.Result);
-            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result);
+            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
             await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -1098,7 +974,7 @@ public sealed class McpActor : DisposableObject
             }
 
             var result = BuildReadResourceResult(invokeResult.Result, ctx);
-            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result);
+            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
             await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -1130,7 +1006,7 @@ public sealed class McpActor : DisposableObject
             }
 
             var result = BuildPromptResult(invokeResult.Result);
-            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result);
+            var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
             await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -1145,13 +1021,13 @@ public sealed class McpActor : DisposableObject
 
     private async Task SendSuccessResponseAsync(McpRequest request, object result, CancellationToken cancellationToken)
     {
-        var bytes = McpMessageSerializer.BuildSuccessResponse(request.Id, result);
+        var bytes = McpMessageSerializer.BuildSuccessResponse(request.Id, result, this.m_options.JsonSerializerOptions);
         await this.SendAction(bytes, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task SendErrorResponseAsync(JsonElement? id, int code, string message, CancellationToken cancellationToken)
     {
-        var bytes = McpMessageSerializer.BuildErrorResponse(id, code, message);
+        var bytes = McpMessageSerializer.BuildErrorResponse(id, code, message, this.m_options.JsonSerializerOptions);
         await this.SendAction(bytes, cancellationToken).ConfigureAwait(false);
     }
 }

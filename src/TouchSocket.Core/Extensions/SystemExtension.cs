@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -708,6 +708,88 @@ public static class SystemExtension
         }
         return false;
     }
+
+    /// <summary>
+    /// 将只读字节范围转换为十六进制字符串。使用 <see cref="ArrayPool{T}"/> 避免中间数组分配。
+    /// </summary>
+    /// <param name="span">要转换的只读字节范围。</param>
+    /// <param name="split">字节之间的分隔符，默认为 <see langword="null"/>（无分隔符）。</param>
+    /// <returns>十六进制字符串。</returns>
+    public static string ToHexString(this ReadOnlySpan<byte> span, string split = default)
+    {
+        if (span.IsEmpty)
+        {
+            return string.Empty;
+        }
+
+#if NET5_0_OR_GREATER
+        if (string.IsNullOrEmpty(split))
+        {
+            return Convert.ToHexString(span);
+        }
+#endif
+        var hasSplit = !string.IsNullOrEmpty(split);
+        var splitLen = hasSplit ? split.Length : 0;
+        var charCount = span.Length * 2 + (hasSplit ? (span.Length - 1) * splitLen : 0);
+        var buffer = ArrayPool<char>.Shared.Rent(charCount);
+        try
+        {
+            WriteHexChars(span, buffer, hasSplit ? split : null);
+            return new string(buffer, 0, charCount);
+        }
+        finally
+        {
+            ArrayPool<char>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// 将只读字节范围转换为 Base64 字符串。使用 <see cref="ArrayPool{T}"/> 避免中间数组分配。
+    /// </summary>
+    /// <param name="span">要转换的只读字节范围。</param>
+    /// <returns>Base64 编码的字符串。</returns>
+    public static string ToBase64(this ReadOnlySpan<byte> span)
+    {
+        if (span.IsEmpty)
+        {
+            return string.Empty;
+        }
+
+#if NET5_0_OR_GREATER
+        return Convert.ToBase64String(span);
+#else
+        var rentedArray = ArrayPool<byte>.Shared.Rent(span.Length);
+        try
+        {
+            span.CopyTo(rentedArray);
+            return Convert.ToBase64String(rentedArray, 0, span.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rentedArray);
+        }
+#endif
+    }
+
+    private static void WriteHexChars(ReadOnlySpan<byte> span, char[] buffer, string split)
+    {
+        const string hexMap = "0123456789ABCDEF";
+        var pos = 0;
+        for (var i = 0; i < span.Length; i++)
+        {
+            var b = span[i];
+            buffer[pos++] = hexMap[b >> 4];
+            buffer[pos++] = hexMap[b & 0x0F];
+            if (split != null && i < span.Length - 1)
+            {
+                for (var j = 0; j < split.Length; j++)
+                {
+                    buffer[pos++] = split[j];
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region Memory

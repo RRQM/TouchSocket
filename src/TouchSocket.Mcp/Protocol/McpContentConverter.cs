@@ -36,16 +36,16 @@ internal sealed class McpContentConverter : JsonConverter<McpContent>
 
         return type switch
         {
-            "text" => JsonSerializer.Deserialize<McpTextContent>(raw, options),
-            "image" => JsonSerializer.Deserialize<McpImageContent>(raw, options),
-            "resource" => JsonSerializer.Deserialize<McpEmbeddedResourceContent>(raw, options),
-            _ => JsonSerializer.Deserialize<McpTextContent>(raw, options)
+            "text" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpTextContent))),
+            "image" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpImageContent))),
+            "resource" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpEmbeddedResourceContent))),
+            _ => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpTextContent)))
         };
     }
 
     /// <inheritdoc/>
     public override void Write(Utf8JsonWriter writer, McpContent value, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(writer, value, value.GetType(), options);
+        JsonSerializer.Serialize(writer, value, options.GetTypeInfo(value.GetType()));
     }
 }

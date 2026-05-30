@@ -15,7 +15,7 @@ namespace TouchSocket.Mcp;
 /// <summary>
 /// 表示 MCP 客户端配置选项。
 /// </summary>
-public sealed class McpClientOptions
+public sealed class McpClientOptions : McpOptionsBase
 {
     /// <summary>
     /// 获取或设置客户端实现信息。

@@ -67,7 +67,7 @@ public abstract class McpClientBase : IMcpClient
             Capabilities = this.ClientOptions.Capabilities
         }, cancellationToken).ConfigureAwait(false);
 
-        var notificationBytes = McpMessageSerializer.BuildNotification(McpMethods.NotificationsInitialized);
+        var notificationBytes = McpMessageSerializer.BuildNotification(McpMethods.NotificationsInitialized, null, this.ClientOptions.JsonSerializerOptions);
         await this.SendDataAsync(notificationBytes, cancellationToken).ConfigureAwait(false);
 
         return result;
@@ -85,7 +85,7 @@ public abstract class McpClientBase : IMcpClient
         object paramsObj;
         if (arguments != null && arguments.Count > 0)
         {
-            var argsJson = JsonSerializer.Serialize(arguments, McpJsonOptions.Default);
+            var argsJson = JsonSerializer.Serialize(arguments, this.ClientOptions.JsonSerializerOptions);
             var argsElement = JsonDocument.Parse(argsJson).RootElement.Clone();
             paramsObj = new McpCallToolParams { Name = name, Arguments = argsElement };
         }
@@ -141,7 +141,7 @@ public abstract class McpClientBase : IMcpClient
     /// <param name="cancellationToken">取消令牌。</param>
     protected void OnReceiveData(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
-        if (!McpMessageSerializer.TryParseMessage(data.Span, out _, out var response, out _))
+        if (!McpMessageSerializer.TryParseMessage(data.Span, out _, out var response, out _, this.ClientOptions.JsonSerializerOptions))
         {
             return;
         }
@@ -192,7 +192,7 @@ public abstract class McpClientBase : IMcpClient
         JsonElement? paramsElement = null;
         if (paramObj != null)
         {
-            var json = JsonSerializer.Serialize(paramObj, paramObj.GetType(), McpJsonOptions.Default);
+            var json = JsonSerializer.Serialize(paramObj, paramObj.GetType(), this.ClientOptions.JsonSerializerOptions);
             using var doc = JsonDocument.Parse(json);
             paramsElement = doc.RootElement.Clone();
         }
@@ -204,7 +204,7 @@ public abstract class McpClientBase : IMcpClient
             Params = paramsElement
         };
 
-        var requestBytes = McpMessageSerializer.SerializeToBytes(request);
+        var requestBytes = McpMessageSerializer.SerializeToBytes(request, this.ClientOptions.JsonSerializerOptions);
         await this.SendDataAsync(requestBytes, cancellationToken).ConfigureAwait(false);
 
         this.ThrowIfNotConnected();
@@ -241,6 +241,6 @@ public abstract class McpClientBase : IMcpClient
             return default;
         }
 
-        return JsonSerializer.Deserialize<T>(response.Result.Value.GetRawText(), McpJsonOptions.Default);
+        return JsonSerializer.Deserialize<T>(response.Result.Value.GetRawText(), this.ClientOptions.JsonSerializerOptions);
     }
 }

@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -96,9 +96,14 @@ public class SnowflakeIdGenerator
                 s_sequence = 0; //计数清0
             }
             if (timestamp < this.m_lastTimestamp)
-            { //如果当前时间戳比上一次生成Id时时间戳还小，抛出异常，因为不能保证现在生成的Id之前没有生成过
-                throw new Exception(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds",
-                    this.m_lastTimestamp - timestamp));
+            {
+                var offset = this.m_lastTimestamp - timestamp;
+                if (offset > 5)
+                {
+                    throw new Exception(string.Format("时钟回拨幅度过大，拒绝生成Id，回拨时间差：{0}毫秒", offset));
+                }
+                // 时钟回拨在容忍范围内（≤5ms），等待时钟追上
+                timestamp = this.TillNextMillis(this.m_lastTimestamp);
             }
             this.m_lastTimestamp = timestamp; //把当前时间戳保存为最后生成Id的时间戳
             var nextId = (timestamp - this.m_twepoch << TimestampLeftShift) | s_workerId << WorkerIdShift | s_sequence;
@@ -124,6 +129,11 @@ public class SnowflakeIdGenerator
     /// </summary>
     private long TimeGen()
     {
-        return Environment.TickCount;
+#if NET6_0_OR_GREATER
+        return Environment.TickCount64;
+#else
+        // net462/netstandard 先转 uint
+        return (uint)Environment.TickCount;
+#endif
     }
 }

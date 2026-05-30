@@ -28,7 +28,7 @@ public sealed class McpHttpPlugin : PluginBase, IHttpPlugin
     private readonly ActionMap m_toolActionMap = new ActionMap(true);
     private readonly ActionMap m_resourceActionMap = new ActionMap(true);
     private readonly ActionMap m_promptActionMap = new ActionMap(true);
-    private readonly List<McpTool> m_tools = new List<McpTool>();
+    private readonly List<McpToolDefinition> m_tools = new List<McpToolDefinition>();
     private readonly List<McpResource> m_resources = new List<McpResource>();
     private readonly List<McpPrompt> m_prompts = new List<McpPrompt>();
     private readonly ConcurrentDictionary<string, McpActor> m_sessions = new ConcurrentDictionary<string, McpActor>(StringComparer.Ordinal);
@@ -42,13 +42,15 @@ public sealed class McpHttpPlugin : PluginBase, IHttpPlugin
     {
         this.m_rpcServerProvider = rpcServerProvider;
         this.m_options = options ?? new McpHttpPluginOptions();
+        this.m_options.ServerOptions ??= new McpServerOptions();
 
         if (rpcServerProvider != null)
         {
             McpActor.AddRpcToMaps(rpcServerProvider,
                 this.m_toolActionMap, this.m_tools,
                 this.m_resourceActionMap, this.m_resources,
-                this.m_promptActionMap, this.m_prompts);
+                this.m_promptActionMap, this.m_prompts,
+                this.m_options.ServerOptions.JsonSerializerOptions);
         }
     }
 
