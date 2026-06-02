@@ -149,6 +149,9 @@
   <Folder Name="/JsonRpc/反向Rpc/">
     <Project Path="JsonRpc/ReverseJsonRpcConsoleApp/ReverseJsonRpcConsoleApp.csproj" />
   </Folder>
+  <Folder Name="/Mcp/">
+    <Project Path="Mcp/McpServerConsoleApp/McpServerConsoleApp.csproj" Id="77e59ae3-cc15-445c-a6a1-3c4afe3ca12b" />
+  </Folder>
   <Folder Name="/Modbus/">
     <Project Path="Modbus/ModbusMasterConsoleApp/ModbusMasterConsoleApp.csproj" />
     <Project Path="Modbus/ModbusObjectConsoleApp/ModbusObjectConsoleApp.csproj" />
