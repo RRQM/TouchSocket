@@ -72,7 +72,7 @@ public class MethodInvokeSourceGenerator : IIncrementalGenerator
             var methodInvokeClassCodeBuilder = new MethodInvokeClassCodeBuilder(pair.Key, compilation, pair.Value);
             context.AddSource(methodInvokeClassCodeBuilder);
 
-            var titleBuilder = new MethodInvokeTitleCodeBuilder(pair.Key);
+            var titleBuilder = new MethodInvokeTitleCodeBuilder(pair.Key, pair.Value);
             context.AddSource(titleBuilder);
 
 

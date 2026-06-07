@@ -36,7 +36,7 @@ public sealed class AsyncWaitData<T> : IValueTaskSource<WaitDataStatus>, IDispos
     // 0 = 未完成, 1 = 已完成
     private int m_sign;
 
-    private WaitDataStatus m_status;
+    private volatile WaitDataStatus m_status;
 
     /// <summary>
     /// 使用指定签名和移除回调初始化一个新的 <see cref="AsyncWaitData{T}"/> 实例。
@@ -132,14 +132,7 @@ public sealed class AsyncWaitData<T> : IValueTaskSource<WaitDataStatus>, IDispos
         this.m_status = status;
         this.m_completedData = result;
 
-        if (status == WaitDataStatus.Canceled)
-        {
-            this.m_core.SetException(new OperationCanceledException());
-        }
-        else
-        {
-            this.m_core.SetResult(result);
-        }
+        this.m_core.SetResult(result);
     }
 
     /// <summary>

@@ -21,19 +21,23 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     private bool m_canceled;
     private CancellationTokenSource m_tokenSource;
 
-    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver)
-        : base(caller, rpcMethod, scopedResolver.Resolver)
+    public DmtpRpcCallContext(IDmtpActor actor, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver)
+        : base(actor.Client, rpcMethod, scopedResolver.Resolver)
     {
+        this.Actor = actor;
         this.DmtpRpcPackage = dmtpRpcPackage;
         this.m_scopedResolver = scopedResolver;
     }
 
-    public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver)
-        : base(caller, rpcMethod, resolver)
+    public DmtpRpcCallContext(IDmtpActor actor, RpcMethod rpcMethod, DmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver)
+        : base(actor.Client, rpcMethod, resolver)
     {
+        this.Actor = actor;
         this.DmtpRpcPackage = dmtpRpcPackage;
         this.m_scopedResolver = default;
     }
+
+    public IDmtpActor Actor { get; }
 
     /// <inheritdoc/>
     public DmtpRpcRequestPackage DmtpRpcPackage { get; }
@@ -61,7 +65,7 @@ internal sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
                 {
                     return this.m_tokenSource.Token;
                 }
-                this.m_tokenSource = new CancellationTokenSource();
+                this.m_tokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.Actor.ClosedToken);
                 return this.m_tokenSource.Token;
             }
         }

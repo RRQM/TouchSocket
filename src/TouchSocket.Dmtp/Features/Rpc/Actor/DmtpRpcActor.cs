@@ -112,11 +112,11 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                     if (rpcMethod.Reenterable == false || this.Dispatcher.Reenterable == false)
                     {
                         //不可重入
-                        callContext = new DmtpRpcCallContext(this.DmtpActor.Client, rpcMethod, rpcPackage, this.m_resolver);
+                        callContext = new DmtpRpcCallContext(this.DmtpActor, rpcMethod, rpcPackage, this.m_resolver);
                     }
                     else
                     {
-                        callContext = new DmtpRpcCallContext(this.DmtpActor.Client, rpcMethod, rpcPackage, this.m_resolver.CreateScopedResolver());
+                        callContext = new DmtpRpcCallContext(this.DmtpActor, rpcMethod, rpcPackage, this.m_resolver.CreateScopedResolver());
                     }
 
                     rpcPackage.LoadInfo(callContext, this.m_serializationSelector);
@@ -230,21 +230,15 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
     }
 
-    private async Task CanceledInvokeAsync(CanceledPackage canceled, CancellationToken cancellationToken)
+    private async Task CanceledInvokeAsync(string targetId,long sign)
     {
-        using (var byteBlock = new ByteBlock(1024 * 64))
+        try
         {
-            var block = byteBlock;
-            canceled.Package(ref block);
-
-            try
-            {
-                await this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
-            }
-            catch
-            {
-                //不关心异常
-            }
+            await this.DmtpActor.SendAsync(this.m_cancelInvoke,new CanceledPackage {SourceId = this.DmtpActor.Id,TargetId=targetId,Sign=sign }, this.DmtpActor.ClosedToken).ConfigureDefaultAwait();
+        }
+        catch
+        {
+            //不关心异常
         }
     }
 
@@ -399,7 +393,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                         var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
-                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, cancellationToken).ConfigureDefaultAwait();
+                            await this.CanceledInvokeAsync(rpcPackage.TargetId, rpcPackage.Sign).ConfigureDefaultAwait();
                         }
                         ThrowExceptionIfNotSetRunning(waitDataStatus);
                         var resultRpcPackage = (DmtpRpcResponsePackage)waitData.CompletedData;
@@ -483,7 +477,7 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
                         var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
                         if (waitDataStatus == WaitDataStatus.Canceled)
                         {
-                            await this.CanceledInvokeAsync(new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign }, cancellationToken).ConfigureDefaultAwait();
+                            await this.CanceledInvokeAsync(rpcPackage.TargetId, rpcPackage.Sign).ConfigureDefaultAwait();
                         }
 
                         ThrowExceptionIfNotSetRunning(waitDataStatus);

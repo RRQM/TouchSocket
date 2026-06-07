@@ -190,9 +190,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             // 将继续下一次循环访问已被置 null 的 m_monitor，导致 NullReferenceException。
             this.m_serverState = ServerState.Stopped;
             this.m_monitor?.Socket.Dispose();
-            this.m_monitor = null;
             await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureDefaultAwait();
             this.m_receiveTasks.Clear();
+            this.m_monitor = null;
 
             this.m_receiver?.Complete(default);
             await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
@@ -303,6 +303,14 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     private void BeginReceive(IPHost iPHost)
     {
         var overlappedCount = this.Config.GetValue(TouchSocketConfigExtension.UdpOverlappedCountProperty);
+
+        // 释放旧的 m_monitor 及其 Socket（包括构造函数中创建的那个未绑定的 Socket），
+        // 防止 Socket 资源泄漏，并确保端口在 Bind 前已完全释放。
+        var oldMonitor = this.m_monitor;
+        if (oldMonitor != null)
+        {
+            oldMonitor.Socket.SafeDispose();
+        }
 
         var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
         {
