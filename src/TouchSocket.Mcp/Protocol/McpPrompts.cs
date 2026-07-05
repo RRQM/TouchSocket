@@ -20,6 +20,13 @@ namespace TouchSocket.Mcp;
 public sealed class McpPrompt
 {
     /// <summary>
+    /// 获取或设置提示模板显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
+    /// <summary>
     /// 获取或设置提示模板的唯一名称。
     /// </summary>
     [JsonPropertyName("name")]
@@ -38,6 +45,13 @@ public sealed class McpPrompt
     [JsonPropertyName("arguments")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<McpPromptArgument> Arguments { get; set; }
+
+    /// <summary>
+    /// 获取或设置提示模板图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
 }
 
 /// <summary>
@@ -45,6 +59,13 @@ public sealed class McpPrompt
 /// </summary>
 public sealed class McpPromptArgument
 {
+    /// <summary>
+    /// 获取或设置参数显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
     /// <summary>
     /// 获取或设置参数名称。
     /// </summary>

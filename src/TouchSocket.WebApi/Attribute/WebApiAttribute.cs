@@ -67,7 +67,7 @@ public sealed class WebApiAttribute : RpcAttribute
 
         foreach (var webApiParameterInfo in webApiParameterInfos)
         {
-            if (webApiParameterInfo.Parameter.Type.IsPrimitive())
+            if (IsSimpleType(webApiParameterInfo.Parameter.Type))
             {
                 if (webApiParameterInfo.IsFromBody)
                 {
@@ -149,6 +149,20 @@ public sealed class WebApiAttribute : RpcAttribute
         return $"{parameter.Name}?.ToString()";
     }
 
+    private static bool IsSimpleType(Type type)
+    {
+        if (type.IsPrimitive || type.IsEnum || type == TouchSocketCoreUtility.StringType)
+        {
+            return true;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            return IsSimpleType(actualType);
+        }
+        return false;
+    }
+
     private string GetFromHeaderString(RpcMethod rpcMethod, IEnumerable<WebApiParameterInfo> webApiParameterInfos)
     {
         var parameterInfos = webApiParameterInfos.Where(a => a.IsFromHeader);
@@ -190,7 +204,7 @@ public sealed class WebApiAttribute : RpcAttribute
     {
         var parameterInfos = webApiParameterInfos.Where(a =>
         {
-            if (a.Parameter.Type.IsPrimitive())
+            if (IsSimpleType(a.Parameter.Type))
             {
                 if (a.IsFromBody)
                 {
@@ -251,7 +265,7 @@ public sealed class WebApiAttribute : RpcAttribute
 
         foreach (var webApiParameterInfo in webApiParameterInfos)
         {
-            if (webApiParameterInfo.Parameter.Type.IsPrimitive())
+            if (IsSimpleType(webApiParameterInfo.Parameter.Type))
             {
                 if (webApiParameterInfo.IsFromBody)
                 {

@@ -28,6 +28,11 @@ public interface IModbusResponse
     ReadOnlyMemory<byte> Data { get; }
 
     /// <summary>
+    /// 响应的完整报文
+    /// </summary>
+    ReadOnlyMemory<byte> ResponseMemory { get; }
+
+    /// <summary>
     /// 功能码
     /// </summary>
     FunctionCode FunctionCode { get; }

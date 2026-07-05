@@ -389,7 +389,34 @@ public sealed class McpActor : DisposableObject
         {
             Name = attr.GetInvokeKey(rpcMethod),
             Description = rpcMethod.GetDescription(),
-            InputSchema = schema
+            InputSchema = schema,
+            OutputSchema = GetOutputSchema(rpcMethod, jsonSerializerOptions)
+        };
+    }
+
+    private static McpToolProperty GetOutputSchema(RpcMethod rpcMethod, JsonSerializerOptions jsonSerializerOptions)
+    {
+        if (rpcMethod.RealReturnType == null
+            || typeof(McpCallToolResult).IsAssignableFrom(rpcMethod.RealReturnType)
+            || typeof(McpContent).IsAssignableFrom(rpcMethod.RealReturnType))
+        {
+            return null;
+        }
+
+        var outputSchema = McpJsonSchemaGenerator.Generate(rpcMethod.RealReturnType, null, jsonSerializerOptions, false);
+        if (outputSchema.Type == "object")
+        {
+            return outputSchema;
+        }
+
+        return new McpToolProperty
+        {
+            Type = "object",
+            Properties = new Dictionary<string, McpToolProperty>
+            {
+                ["result"] = outputSchema
+            },
+            Required = new List<string> { "result" }
         };
     }
 
@@ -767,6 +794,7 @@ public sealed class McpActor : DisposableObject
         {
             return new McpCallToolResult
             {
+                IsError = false,
                 Content = new List<McpContent> { content }
             };
         }
@@ -775,14 +803,60 @@ public sealed class McpActor : DisposableObject
         {
             return new McpCallToolResult
             {
+                IsError = false,
                 Content = contents.ToList()
+            };
+        }
+
+        if (value == null)
+        {
+            return new McpCallToolResult
+            {
+                IsError = false,
+                Content = new List<McpContent> { new McpTextContent { Text = string.Empty } }
             };
         }
 
         return new McpCallToolResult
         {
-            Content = new List<McpContent> { new McpTextContent { Text = SerializeMcpValue(value) } }
+            IsError = false,
+            Content = new List<McpContent> { new McpTextContent { Text = SerializeMcpValue(value) } },
+            StructuredContent = CreateStructuredContent(value, this.m_options.JsonSerializerOptions)
         };
+    }
+
+    private static JsonElement? CreateStructuredContent(object value, JsonSerializerOptions jsonSerializerOptions)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        var type = value.GetType();
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+        if (underlying == typeof(string)
+            || underlying == typeof(char)
+            || underlying == typeof(DateTime)
+            || underlying == typeof(DateTimeOffset)
+            || underlying == typeof(Guid)
+            || underlying == typeof(TimeSpan)
+            || underlying == typeof(Uri)
+            || underlying == typeof(bool)
+            || underlying.IsPrimitive
+            || underlying.IsEnum
+            || underlying == typeof(decimal)
+            || (underlying != typeof(string) && typeof(System.Collections.IEnumerable).IsAssignableFrom(underlying)))
+        {
+            return CreateJsonElement(new Dictionary<string, object> { ["result"] = value }, jsonSerializerOptions);
+        }
+
+        return CreateJsonElement(value, jsonSerializerOptions);
+    }
+
+    private static JsonElement CreateJsonElement(object value, JsonSerializerOptions jsonSerializerOptions)
+    {
+        using var document = JsonDocument.Parse(JsonSerializer.SerializeToUtf8Bytes(value, jsonSerializerOptions.GetTypeInfo(value.GetType())));
+        return document.RootElement.Clone();
     }
 
     private static void ApplyResourceDefaults(McpResourceContent content, string uri, string mimeType)

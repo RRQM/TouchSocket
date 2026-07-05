@@ -10,12 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Buffers;
-using System.Net;
-
 namespace TouchSocket.Modbus;
 
-internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
+internal class ModbusUdpRtuAdapter : ModbusUdpCustomDataHandlingAdapter<ModbusRtuResponse>
 {
     private readonly ModbusFunctionHandlerRegistry m_registry;
 
@@ -24,96 +21,8 @@ internal class ModbusUdpRtuAdapter : UdpDataHandlingAdapter
         this.m_registry = registry;
     }
 
-    public override bool CanSendRequestInfo => true;
-
-    protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
+    protected override FilterResult Filter<TReader>(ref TReader reader, ref ModbusRtuResponse request)
     {
-        if (memory.Length < 4)
-        {
-            return;
-        }
-
-        var reader = new BytesReader(memory);
-        var slaveId = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-        var code = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-
-        var isError = (code & 0x80) != 0;
-        if (isError)
-        {
-            code = code.SetBit(7, false);
-        }
-        var functionCode = (FunctionCode)code;
-
-        if (isError)
-        {
-            if (reader.BytesRemaining < 3)
-            {
-                return;
-            }
-            var errorCode = (ModbusErrorCode)ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-            var crcDataLength = (int)reader.BytesRead;
-            var crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            var expectedCrc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcDataLength));
-            if (crc == expectedCrc)
-            {
-                var response = new ModbusRtuResponse()
-                {
-                    SlaveId = slaveId,
-                    FunctionCode = functionCode,
-                    ErrorCode = errorCode,
-                };
-                await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
-            }
-            return;
-        }
-
-        var handler = this.m_registry.GetHandler(functionCode);
-        if (handler == null)
-        {
-            return;
-        }
-
-        if (reader.BytesRemaining < 1)
-        {
-            return;
-        }
-
-        var firstByte = ReaderExtension.ReadValue<BytesReader, byte>(ref reader);
-        var afterFirstByteLength = handler.GetRtuResponseAfterFirstByteLength(firstByte);
-
-        if (reader.BytesRemaining < afterFirstByteLength + 2)
-        {
-            return;
-        }
-
-        var pduBodyLength = 1 + afterFirstByteLength;
-        var pduBodyBuffer = ArrayPool<byte>.Shared.Rent(pduBodyLength);
-        try
-        {
-            pduBodyBuffer[0] = firstByte;
-            ReaderExtension.ReadToSpan(ref reader, afterFirstByteLength).CopyTo(pduBodyBuffer.AsSpan(1));
-
-            var crcDataLength = (int)reader.BytesRead;
-            var crc = ReaderExtension.ReadValue<BytesReader, ushort>(ref reader, EndianType.Big);
-            var expectedCrc = TouchSocketModbusUtility.ToModbusCrcValue(memory.Span.Slice(0, crcDataLength));
-
-            if (crc == expectedCrc)
-            {
-                var responseData = handler.ParseResponsePdu(pduBodyBuffer.AsSpan(0, pduBodyLength));
-                var response = new ModbusRtuResponse()
-                {
-                    SlaveId = slaveId,
-                    FunctionCode = functionCode,
-                    Data = responseData.Data,
-                    StartingAddress = responseData.StartingAddress,
-                    Quantity = responseData.Quantity,
-                };
-                await base.GoReceived(remoteEndPoint, null, response).ConfigureDefaultAwait();
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(pduBodyBuffer);
-        }
+        return ModbusRtuResponseParser.Filter(ref reader, ref request, this.m_registry);
     }
 }

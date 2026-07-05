@@ -51,16 +51,7 @@ public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
         {
             var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request, this.FunctionHandlerRegistry);
 
-            var valueByteBlock = new ValueByteBlock(modbusTcpRequest.MaxLength);
-            try
-            {
-                modbusTcpRequest.Build(ref valueByteBlock);
-                await this.ProtectedSendAsync(valueByteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
-            }
-            finally
-            {
-                valueByteBlock.Dispose();
-            }
+            await this.ProtectedSendAsync(modbusTcpRequest, cancellationToken).ConfigureDefaultAwait();
 
             var waitDataStatus = await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             waitDataStatus.ThrowIfNotRunning();

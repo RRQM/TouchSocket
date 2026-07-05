@@ -12,69 +12,23 @@
 
 namespace TouchSocket.Modbus;
 
-internal sealed class ModbusTcpResponse : ModbusTcpBase, IFixedHeaderRequestInfo, IWaitHandle, IModbusResponse
+internal sealed class ModbusTcpResponse : ModbusTcpBase, IRequestInfo, IWaitHandle, IModbusResponse
 {
-    private readonly ModbusFunctionHandlerRegistry m_registry;
-    private int m_bodyLength;
-    private bool m_isError;
-
-    internal ModbusTcpResponse(ModbusFunctionHandlerRegistry registry)
+    internal ModbusTcpResponse(ushort transactionId, ushort protocolId, byte slaveId, FunctionCode functionCode, ModbusErrorCode errorCode, ReadOnlyMemory<byte> responseMemory)
     {
-        this.m_registry = registry;
+        this.TransactionId = transactionId;
+        this.ProtocolId = protocolId;
+        this.SlaveId = slaveId;
+        this.FunctionCode = functionCode;
+        this.ErrorCode = errorCode;
+        this.ResponseMemory = responseMemory;
     }
 
-    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+    public ModbusErrorCode ErrorCode { get; }
 
-    public ModbusErrorCode ErrorCode { get; private set; }
+    public ReadOnlyMemory<byte> ResponseMemory { get; }
 
     int IWaitHandle.Sign { get => this.TransactionId; set => this.TransactionId = (ushort)value; }
-
-    bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
-    {
-        if (this.m_isError)
-        {
-            this.ErrorCode = (ModbusErrorCode)body[0];
-            return true;
-        }
-
-        var handler = this.m_registry.GetHandler(this.FunctionCode);
-        if (handler == null)
-        {
-            return false;
-        }
-
-        var responseData = handler.ParseResponsePdu(body);
-        this.Data = responseData.Data;
-        this.StartingAddress = responseData.StartingAddress;
-        this.Quantity = responseData.Quantity;
-        return true;
-    }
-
-    bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
-    {
-        if (header.Length == 8)
-        {
-            this.TransactionId = TouchSocketBitConverter.BigEndian.To<ushort>(header);
-            this.ProtocolId = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2));
-            this.m_bodyLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(4)) - 2;
-            this.SlaveId = header[6];
-
-            var code = header[7];
-            if ((code & 0x80) == 0)
-            {
-                this.FunctionCode = (FunctionCode)code;
-            }
-            else
-            {
-                code = code.SetBit(7, false);
-                this.FunctionCode = (FunctionCode)code;
-                this.m_isError = true;
-            }
-            return true;
-        }
-
-        return false;
-    }
 
     public IModbusRequest Request { get; set; }
 

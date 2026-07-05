@@ -20,7 +20,7 @@ namespace TouchSocket.Modbus;
 ///
 /// 此处解析思路是，将数据之前的所有信息，均认为固定包头。则包头长度是8
 /// </summary>
-internal class ModbusTcpAdapterForPoll : CustomFixedHeaderDataHandlingAdapter<ModbusTcpResponse>
+internal class ModbusTcpAdapterForPoll : CustomDataHandlingAdapter<ModbusTcpResponse>
 {
     private readonly ModbusFunctionHandlerRegistry m_registry;
 
@@ -29,12 +29,10 @@ internal class ModbusTcpAdapterForPoll : CustomFixedHeaderDataHandlingAdapter<Mo
         this.m_registry = registry;
     }
 
-    public override int HeaderLength => 8;
-
     public override bool CanSendRequestInfo => true;
 
-    protected override ModbusTcpResponse GetInstance()
+    protected override FilterResult Filter<TReader>(ref TReader reader, bool _, ref ModbusTcpResponse request)
     {
-        return new ModbusTcpResponse(this.m_registry);
+        return ModbusTcpResponseParser.Filter(ref reader, ref request, this.m_registry);
     }
 }

@@ -38,6 +38,8 @@ internal sealed class McpContentConverter : JsonConverter<McpContent>
         {
             "text" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpTextContent))),
             "image" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpImageContent))),
+            "audio" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpAudioContent))),
+            "resource_link" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpResourceLinkContent))),
             "resource" => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpEmbeddedResourceContent))),
             _ => (McpContent)JsonSerializer.Deserialize(raw, options.GetTypeInfo(typeof(McpTextContent)))
         };

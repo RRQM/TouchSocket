@@ -21,6 +21,13 @@ namespace TouchSocket.Mcp;
 public sealed class McpToolDefinition
 {
     /// <summary>
+    /// 获取或设置工具的显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
+    /// <summary>
     /// 获取或设置工具的唯一名称。
     /// </summary>
     [JsonPropertyName("name")]
@@ -38,6 +45,27 @@ public sealed class McpToolDefinition
     /// </summary>
     [JsonPropertyName("inputSchema")]
     public McpToolInputSchema InputSchema { get; set; }
+
+    /// <summary>
+    /// 获取或设置工具结构化输出的 JSON Schema。
+    /// </summary>
+    [JsonPropertyName("outputSchema")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpToolProperty OutputSchema { get; set; }
+
+    /// <summary>
+    /// 获取或设置工具图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
+
+    /// <summary>
+    /// 获取或设置工具执行相关属性。
+    /// </summary>
+    [JsonPropertyName("execution")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpToolExecution Execution { get; set; }
 
     /// <summary>
     /// 获取或设置工具的可选注解。
@@ -146,6 +174,33 @@ public sealed class McpToolAnnotations
     [JsonPropertyName("destructiveHint")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? DestructiveHint { get; set; }
+
+    /// <summary>
+    /// 获取或设置一个值，指示工具是否幂等。
+    /// </summary>
+    [JsonPropertyName("idempotentHint")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? IdempotentHint { get; set; }
+
+    /// <summary>
+    /// 获取或设置一个值，指示工具是否与外部系统交互。
+    /// </summary>
+    [JsonPropertyName("openWorldHint")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? OpenWorldHint { get; set; }
+}
+
+/// <summary>
+/// 表示工具执行相关属性。
+/// </summary>
+public sealed class McpToolExecution
+{
+    /// <summary>
+    /// 获取或设置任务增强执行支持级别，取值通常为 "forbidden"、"optional" 或 "required"。
+    /// </summary>
+    [JsonPropertyName("taskSupport")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string TaskSupport { get; set; }
 }
 
 /// <summary>
@@ -165,6 +220,20 @@ public sealed class McpCallToolParams
     [JsonPropertyName("arguments")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public JsonElement? Arguments { get; set; }
+
+    /// <summary>
+    /// 获取或设置任务增强请求元数据。
+    /// </summary>
+    [JsonPropertyName("task")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpTaskMetadata Task { get; set; }
+
+    /// <summary>
+    /// 获取或设置请求元数据。
+    /// </summary>
+    [JsonPropertyName("_meta")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpRequestMeta Meta { get; set; }
 }
 
 /// <summary>
@@ -179,11 +248,17 @@ public sealed class McpCallToolResult
     public List<McpContent> Content { get; set; } = new List<McpContent>();
 
     /// <summary>
+    /// 获取或设置工具调用返回的结构化内容。
+    /// </summary>
+    [JsonPropertyName("structuredContent")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public JsonElement? StructuredContent { get; set; }
+
+    /// <summary>
     /// 获取或设置一个值，指示工具执行是否发生错误。
     /// </summary>
     [JsonPropertyName("isError")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? IsError { get; set; }
+    public bool IsError { get; set; }
 }
 
 /// <summary>

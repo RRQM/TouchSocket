@@ -84,7 +84,7 @@ public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
 
     private static bool IsSimpleType(Type type)
     {
-        if (type.IsPrimitive || type == TouchSocketCoreUtility.StringType)
+        if (type.IsPrimitive || type.IsEnum || type == TouchSocketCoreUtility.StringType)
         {
             return true;
         }

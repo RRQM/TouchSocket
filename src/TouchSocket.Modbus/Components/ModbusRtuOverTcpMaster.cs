@@ -41,17 +41,7 @@ public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
         {
             var modbusRequest = new ModbusRtuRequest(request, this.FunctionHandlerRegistry);
 
-            var byteBlock = new ValueByteBlock(modbusRequest.MaxLength);
-            try
-            {
-                modbusRequest.Build(ref byteBlock);
-
-                await this.ProtectedSendAsync(byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
+            await this.ProtectedSendAsync(modbusRequest, cancellationToken).ConfigureDefaultAwait();
 
             this.m_waitDataAsync = new TaskCompletionSource<ModbusRtuResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             var response = await this.m_waitDataAsync.Task.WithCancellation(cancellationToken).ConfigureDefaultAwait();

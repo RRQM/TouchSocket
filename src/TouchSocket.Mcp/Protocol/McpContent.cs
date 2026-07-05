@@ -25,6 +25,20 @@ public abstract class McpContent
     /// </summary>
     [JsonPropertyName("type")]
     public abstract string Type { get; }
+
+    /// <summary>
+    /// 获取或设置内容注解。
+    /// </summary>
+    [JsonPropertyName("annotations")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpAnnotations Annotations { get; set; }
+
+    /// <summary>
+    /// 获取或设置内容元数据。
+    /// </summary>
+    [JsonPropertyName("_meta")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, object> Meta { get; set; }
 }
 
 /// <summary>
@@ -63,6 +77,85 @@ public sealed class McpImageContent : McpContent
     /// </summary>
     [JsonPropertyName("mimeType")]
     public string MimeType { get; set; }
+}
+
+/// <summary>
+/// 表示音频类型内容（Base64 编码）。
+/// </summary>
+public sealed class McpAudioContent : McpContent
+{
+    /// <inheritdoc/>
+    [JsonPropertyName("type")]
+    public override string Type => "audio";
+
+    /// <summary>
+    /// 获取或设置 Base64 编码的音频数据。
+    /// </summary>
+    [JsonPropertyName("data")]
+    public string Data { get; set; }
+
+    /// <summary>
+    /// 获取或设置音频 MIME 类型，例如 "audio/mpeg"。
+    /// </summary>
+    [JsonPropertyName("mimeType")]
+    public string MimeType { get; set; }
+}
+
+/// <summary>
+/// 表示资源链接类型内容。
+/// </summary>
+public sealed class McpResourceLinkContent : McpContent
+{
+    /// <inheritdoc/>
+    [JsonPropertyName("type")]
+    public override string Type => "resource_link";
+
+    /// <summary>
+    /// 获取或设置资源 URI。
+    /// </summary>
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源名称。
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源描述。
+    /// </summary>
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Description { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源 MIME 类型。
+    /// </summary>
+    [JsonPropertyName("mimeType")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string MimeType { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源大小（字节数）。
+    /// </summary>
+    [JsonPropertyName("size")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? Size { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
 }
 
 /// <summary>

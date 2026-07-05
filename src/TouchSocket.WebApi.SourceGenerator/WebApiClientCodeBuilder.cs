@@ -212,7 +212,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
 
             foreach (var webApiParameterInfo in webApiParameterInfos)
             {
-                if (webApiParameterInfo.Parameter.Type.IsPrimitiveAndString())
+                if (IsSimpleType(webApiParameterInfo.Parameter.Type))
                 {
                     if (webApiParameterInfo.IsFromBody)
                     {
@@ -296,7 +296,7 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
     {
         var parameterInfos = webApiParameterInfos.Where(a =>
         {
-            if (a.Parameter.Type.IsPrimitiveAndString())
+            if (IsSimpleType(a.Parameter.Type))
             {
                 if (a.IsFromBody)
                 {
@@ -334,6 +334,20 @@ internal sealed class WebApiClientCodeBuilder : RpcClientCodeBuilder
     private string GetParameterToString(IParameterSymbol parameter)
     {
         return parameter.Type.IsValueType ? $"{parameter.Name}.ToString()" : $"{parameter.Name}?.ToString()";
+    }
+
+    private static bool IsSimpleType(ITypeSymbol type)
+    {
+        if (type.TypeKind == TypeKind.Enum || type.IsPrimitiveAndString())
+        {
+            return true;
+        }
+
+        if (type.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return IsSimpleType(type.GetNullableType());
+        }
+        return false;
     }
 
     private string GetRouteUrl(IMethodSymbol rpcMethod, AttributeData routerAttribute, Dictionary<string, TypedConstant> namedArguments)

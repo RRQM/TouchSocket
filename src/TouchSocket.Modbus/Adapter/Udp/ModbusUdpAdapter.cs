@@ -10,11 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net;
-
 namespace TouchSocket.Modbus;
 
-internal class ModbusUdpAdapter : UdpDataHandlingAdapter
+internal class ModbusUdpAdapter : ModbusUdpCustomDataHandlingAdapter<ModbusTcpResponse>
 {
     private readonly ModbusFunctionHandlerRegistry m_registry;
 
@@ -23,18 +21,8 @@ internal class ModbusUdpAdapter : UdpDataHandlingAdapter
         this.m_registry = registry;
     }
 
-    public override bool CanSendRequestInfo => true;
-
-    protected override async Task PreviewReceivedAsync(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory)
+    protected override FilterResult Filter<TReader>(ref TReader reader, ref ModbusTcpResponse request)
     {
-        var response = new ModbusTcpResponse(this.m_registry);
-
-        if (((IFixedHeaderRequestInfo)response).OnParsingHeader(memory.Span.Slice(0, 8)))
-        {
-            if (((IFixedHeaderRequestInfo)response).OnParsingBody(memory.Span.Slice(8)))
-            {
-                await this.GoReceived(remoteEndPoint, default, response).ConfigureDefaultAwait();
-            }
-        }
+        return ModbusTcpResponseParser.Filter(ref reader, ref request, this.m_registry);
     }
 }

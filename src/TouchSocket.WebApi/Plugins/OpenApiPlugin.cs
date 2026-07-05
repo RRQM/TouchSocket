@@ -167,7 +167,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
     private static bool IsSimpleType(Type type)
     {
-        if (type.IsPrimitive || type == TouchSocketCoreUtility.StringType)
+        if (type.IsPrimitive || type.IsEnum || type == TouchSocketCoreUtility.StringType)
         {
             return true;
         }
@@ -227,7 +227,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
         {
             var simpleParameters = parameters.Where(a =>
             {
-                if (!this.ParseDataTypes(a.Parameter.Type).IsPrimitive())
+                if (!IsSimpleType(a.Parameter.Type) && !this.ParseDataTypes(a.Parameter.Type).IsPrimitive())
                 {
                     return false;
                 }
@@ -274,7 +274,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
                 var last = parameters.Where(a => a.IsFromBody).FirstOrDefault();
                 if (last is null)
                 {
-                    if (!parameters.Last().Parameter.Type.IsPrimitive())
+                    if (!IsSimpleType(parameters.Last().Parameter.Type))
                     {
                         last = parameters.Last();
                     }

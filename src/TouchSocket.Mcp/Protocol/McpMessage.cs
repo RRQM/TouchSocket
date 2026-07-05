@@ -24,7 +24,7 @@ public static class McpProtocolVersion
     /// <summary>
     /// MCP 协议版本。
     /// </summary>
-    public const string Latest = "2025-03-26";
+    public const string Latest = "2025-11-25";
 }
 
 /// <summary>

@@ -20,6 +20,13 @@ namespace TouchSocket.Mcp;
 public sealed class McpResource
 {
     /// <summary>
+    /// 获取或设置资源显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
+    /// <summary>
     /// 获取或设置资源的唯一 URI。
     /// </summary>
     [JsonPropertyName("uri")]
@@ -46,6 +53,20 @@ public sealed class McpResource
     public string MimeType { get; set; }
 
     /// <summary>
+    /// 获取或设置资源注解。
+    /// </summary>
+    [JsonPropertyName("annotations")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpAnnotations Annotations { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
+
+    /// <summary>
     /// 获取或设置资源的大小（字节数）。
     /// </summary>
     [JsonPropertyName("size")]
@@ -58,6 +79,13 @@ public sealed class McpResource
 /// </summary>
 public sealed class McpResourceTemplate
 {
+    /// <summary>
+    /// 获取或设置模板显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
     /// <summary>
     /// 获取或设置 URI 模板（RFC 6570 格式）。
     /// </summary>
@@ -83,6 +111,20 @@ public sealed class McpResourceTemplate
     [JsonPropertyName("mimeType")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string MimeType { get; set; }
+
+    /// <summary>
+    /// 获取或设置模板注解。
+    /// </summary>
+    [JsonPropertyName("annotations")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpAnnotations Annotations { get; set; }
+
+    /// <summary>
+    /// 获取或设置模板图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
 }
 
 /// <summary>
@@ -116,6 +158,13 @@ public sealed class McpResourceContent
     [JsonPropertyName("blob")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Blob { get; set; }
+
+    /// <summary>
+    /// 获取或设置资源内容元数据。
+    /// </summary>
+    [JsonPropertyName("_meta")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, object> Meta { get; set; }
 }
 
 /// <summary>

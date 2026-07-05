@@ -20,6 +20,13 @@ namespace TouchSocket.Mcp;
 public sealed class McpImplementationInfo
 {
     /// <summary>
+    /// 获取或设置实现显示标题。
+    /// </summary>
+    [JsonPropertyName("title")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Title { get; set; }
+
+    /// <summary>
     /// 获取或设置实现名称。
     /// </summary>
     [JsonPropertyName("name")]
@@ -30,6 +37,27 @@ public sealed class McpImplementationInfo
     /// </summary>
     [JsonPropertyName("version")]
     public string Version { get; set; }
+
+    /// <summary>
+    /// 获取或设置实现描述。
+    /// </summary>
+    [JsonPropertyName("description")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Description { get; set; }
+
+    /// <summary>
+    /// 获取或设置实现网站 URL。
+    /// </summary>
+    [JsonPropertyName("websiteUrl")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string WebsiteUrl { get; set; }
+
+    /// <summary>
+    /// 获取或设置实现图标集合。
+    /// </summary>
+    [JsonPropertyName("icons")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<McpIcon> Icons { get; set; }
 }
 
 /// <summary>
@@ -99,6 +127,13 @@ public sealed class McpServerCapabilities
     public McpPromptsCapability Prompts { get; set; }
 
     /// <summary>
+    /// 获取或设置任务能力，非 <see langword="null"/> 则表示服务器支持任务增强请求。
+    /// </summary>
+    [JsonPropertyName("tasks")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpTasksCapability Tasks { get; set; }
+
+    /// <summary>
     /// 获取或设置日志能力，非 <see langword="null"/> 则表示服务器支持结构化日志。
     /// </summary>
     [JsonPropertyName("logging")]
@@ -157,6 +192,59 @@ public sealed class McpPromptsCapability
     [JsonPropertyName("listChanged")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? ListChanged { get; set; }
+}
+
+/// <summary>
+/// 表示任务能力配置。
+/// </summary>
+public sealed class McpTasksCapability
+{
+    /// <summary>
+    /// 获取或设置任务列表能力。
+    /// </summary>
+    [JsonPropertyName("list")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object List { get; set; }
+
+    /// <summary>
+    /// 获取或设置任务取消能力。
+    /// </summary>
+    [JsonPropertyName("cancel")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object Cancel { get; set; }
+
+    /// <summary>
+    /// 获取或设置可任务增强的请求类型。
+    /// </summary>
+    [JsonPropertyName("requests")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpTaskRequestsCapability Requests { get; set; }
+}
+
+/// <summary>
+/// 表示可任务增强的请求能力。
+/// </summary>
+public sealed class McpTaskRequestsCapability
+{
+    /// <summary>
+    /// 获取或设置工具请求的任务增强能力。
+    /// </summary>
+    [JsonPropertyName("tools")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public McpTaskToolsCapability Tools { get; set; }
+}
+
+/// <summary>
+/// 表示工具请求的任务增强能力。
+/// </summary>
+public sealed class McpTaskToolsCapability
+{
+    /// <summary>
+    /// 获取或设置 tools/call 的任务增强能力。
+    /// </summary>
+    [JsonPropertyName("call")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object Call { get; set; }
 }
 
 /// <summary>
