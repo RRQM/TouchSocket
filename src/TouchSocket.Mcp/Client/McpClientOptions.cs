@@ -18,6 +18,11 @@ namespace TouchSocket.Mcp;
 public sealed class McpClientOptions : McpOptionsBase
 {
     /// <summary>
+    /// 获取或设置客户端请求的 MCP 协议版本。
+    /// </summary>
+    public string ProtocolVersion { get; set; } = McpProtocolVersion.Latest;
+
+    /// <summary>
     /// 获取或设置客户端实现信息。
     /// </summary>
     public McpImplementationInfo ClientInfo { get; set; } = new McpImplementationInfo

@@ -62,7 +62,7 @@ public abstract class McpClientBase : IMcpClient
 
         var result = await this.InvokeAsync<McpInitializeResult>(McpMethods.Initialize, new McpInitializeParams
         {
-            ProtocolVersion = McpProtocolVersion.Latest,
+            ProtocolVersion = this.ClientOptions.ProtocolVersion,
             ClientInfo = this.ClientOptions.ClientInfo,
             Capabilities = this.ClientOptions.Capabilities
         }, cancellationToken).ConfigureAwait(false);

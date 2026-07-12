@@ -22,9 +22,29 @@ namespace TouchSocket.Mcp;
 public static class McpProtocolVersion
 {
     /// <summary>
+    /// MCP 2024-11-05 协议版本。
+    /// </summary>
+    public const string Version2024_11_05 = "2024-11-05";
+
+    /// <summary>
+    /// MCP 2025-03-26 协议版本。
+    /// </summary>
+    public const string Version2025_03_26 = "2025-03-26";
+
+    /// <summary>
+    /// MCP 2025-06-18 协议版本。
+    /// </summary>
+    public const string Version2025_06_18 = "2025-06-18";
+
+    /// <summary>
+    /// MCP 2025-11-25 协议版本。
+    /// </summary>
+    public const string Version2025_11_25 = "2025-11-25";
+
+    /// <summary>
     /// MCP 协议版本。
     /// </summary>
-    public const string Latest = "2025-11-25";
+    public const string Latest = Version2025_11_25;
 }
 
 /// <summary>

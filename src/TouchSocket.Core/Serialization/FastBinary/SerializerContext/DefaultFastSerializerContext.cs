@@ -41,6 +41,16 @@ internal sealed class DefaultFastSerializerContext : FastSerializerContext
             type = actualType;
         }
 
+        if (typeof(System.Net.IPAddress).IsAssignableFrom(type))
+        {
+            return base.GetSerializeObject(typeof(System.Net.IPAddress));
+        }
+
+        if (typeof(System.Net.IPEndPoint).IsAssignableFrom(type))
+        {
+            return base.GetSerializeObject(typeof(System.Net.IPEndPoint));
+        }
+
         if (this.m_instanceCache.TryGetValue(type, out var instance))
         {
             return instance;

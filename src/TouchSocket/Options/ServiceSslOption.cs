@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
 namespace TouchSocket.Sockets;
@@ -23,6 +24,13 @@ public class ServiceSslOption : SslOption
     /// 证书
     /// </summary>
     public X509Certificate Certificate { get; set; }
+
+#if NET6_0_OR_GREATER
+    /// <summary>
+    /// 服务器证书选择回调，可根据客户端提供的SNI主机名选择证书。
+    /// </summary>
+    public ServerCertificateSelectionCallback ServerCertificateSelectionCallback { get; set; }
+#endif
 
     /// <summary>
     /// 该值指定是否向客户端请求证书用于进行身份验证。 请注意，这只是一个请求 - 如果没有提供任何证书，服务器仍然可接受连接请求

@@ -30,6 +30,10 @@ public abstract class FastSerializerContext
         this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
         this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
         this.AddConverter(typeof(Guid), new GuidFastBinaryConverter());
+        this.AddConverter(typeof(DateTimeOffset), new DateTimeOffsetFastBinaryConverter());
+        this.AddConverter(typeof(Uri), new UriFastBinaryConverter());
+        this.AddConverter(typeof(System.Net.IPAddress), new IPAddressFastBinaryConverter());
+        this.AddConverter(typeof(System.Net.IPEndPoint), new IPEndPointFastBinaryConverter());
         this.AddConverter(typeof(Metadata), new MetadataFastBinaryConverter());
     }
 

@@ -506,9 +506,15 @@ public sealed class McpActor : DisposableObject
 
     private async Task HandleInitializeAsync(McpRequest request, CancellationToken cancellationToken)
     {
+        McpInitializeParams initializeParams = null;
+        if (request.Params.HasValue)
+        {
+            initializeParams = JsonSerializer.Deserialize<McpInitializeParams>(request.Params.Value.GetRawText(), this.m_options.JsonSerializerOptions);
+        }
+
         var result = new McpInitializeResult
         {
-            ProtocolVersion = McpProtocolVersion.Latest,
+            ProtocolVersion = this.m_options.NegotiateProtocolVersion(initializeParams?.ProtocolVersion),
             ServerInfo = this.m_options.ServerInfo,
             Instructions = this.m_options.Instructions,
             Capabilities = new McpServerCapabilities

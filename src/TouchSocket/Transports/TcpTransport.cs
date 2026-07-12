@@ -13,6 +13,7 @@
 using System.IO.Pipelines;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets;
@@ -63,6 +64,13 @@ internal sealed class TcpTransport : BaseTransport
         }
         var sourceStream = new TransportStream(this);
         SslStream sslStream;
+#if NET6_0_OR_GREATER
+        if (sslOption.ServerCertificateSelectionCallback != null)
+        {
+            sslStream = new SslStream(sourceStream, false);
+        }
+        else
+#endif
         if (sslOption.CertificateValidationCallback != null)
         {
             sslStream = new SslStream(sourceStream, false, sslOption.CertificateValidationCallback);
@@ -72,9 +80,27 @@ internal sealed class TcpTransport : BaseTransport
             sslStream = new SslStream(sourceStream, false);
         }
 
-        await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
-            , sslOption.SslProtocols
-            , sslOption.CheckCertificateRevocation).ConfigureDefaultAwait();
+#if NET6_0_OR_GREATER
+        if (sslOption.ServerCertificateSelectionCallback != null)
+        {
+            var serverCertificate = sslOption.Certificate;
+            var serverCertificateSelectionCallback = sslOption.ServerCertificateSelectionCallback;
+            await sslStream.AuthenticateAsServerAsync(new SslServerAuthenticationOptions()
+            {
+                ServerCertificateSelectionCallback = (sender, hostName) => serverCertificateSelectionCallback(sender, hostName) ?? serverCertificate,
+                RemoteCertificateValidationCallback = sslOption.CertificateValidationCallback,
+                ClientCertificateRequired = sslOption.ClientCertificateRequired,
+                EnabledSslProtocols = sslOption.SslProtocols,
+                CertificateRevocationCheckMode = sslOption.CheckCertificateRevocation ? X509RevocationMode.Online : X509RevocationMode.NoCheck
+            }).ConfigureDefaultAwait();
+        }
+        else
+#endif
+        {
+            await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
+                , sslOption.SslProtocols
+                , sslOption.CheckCertificateRevocation).ConfigureDefaultAwait();
+        }
 
         this.m_reader = PipeReader.Create(sslStream);
         this.m_writer = PipeWriter.Create(sslStream);

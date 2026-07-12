@@ -50,6 +50,13 @@ internal static class FastBinaryPrimitiveHelper
     public static bool TryReadPrimitive<TReader>(ref TReader reader, Type type, out object value)
         where TReader : IBytesReader
     {
+        if (type == typeof(TimeSpan))
+        {
+            //issue:https://github.com/RRQM/TouchSocket/issues/135
+            value = ReaderExtension.ReadValue<TReader, TimeSpan>(ref reader);
+            return true;
+        }
+
         switch (Type.GetTypeCode(type))
         {
             case TypeCode.Boolean: value = ReaderExtension.ReadValue<TReader, bool>(ref reader); return true;

@@ -10,6 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace TouchSocket.Mcp;
 
 /// <summary>
@@ -17,6 +21,14 @@ namespace TouchSocket.Mcp;
 /// </summary>
 public sealed class McpServerOptions : McpOptionsBase
 {
+    /// <summary>
+    /// 获取或设置服务端支持的 MCP 协议版本列表。
+    /// </summary>
+    public IList<string> SupportedProtocolVersions { get; set; } = new List<string>
+    {
+        McpProtocolVersion.Latest
+    };
+
     /// <summary>
     /// 获取或设置服务端实现信息。
     /// </summary>
@@ -30,4 +42,25 @@ public sealed class McpServerOptions : McpOptionsBase
     /// 获取或设置服务端的可选指令说明，会在 initialize 响应中返回给客户端。
     /// </summary>
     public string Instructions { get; set; }
+
+    /// <summary>
+    /// 协商服务端响应的 MCP 协议版本。
+    /// </summary>
+    /// <param name="protocolVersion">客户端请求的协议版本。</param>
+    /// <returns>服务端响应的协议版本。</returns>
+    public string NegotiateProtocolVersion(string protocolVersion)
+    {
+        if (this.SupportedProtocolVersions == null || this.SupportedProtocolVersions.Count == 0)
+        {
+            return McpProtocolVersion.Latest;
+        }
+
+        if (!string.IsNullOrEmpty(protocolVersion)
+            && this.SupportedProtocolVersions.Contains(protocolVersion, StringComparer.Ordinal))
+        {
+            return protocolVersion;
+        }
+
+        return this.SupportedProtocolVersions[0];
+    }
 }
