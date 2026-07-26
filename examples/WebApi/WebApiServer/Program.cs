@@ -143,6 +143,7 @@ internal class Program
         await service.StartAsync();
 
         Console.WriteLine("以下连接用于测试webApi");
+        //pr:https://github.com/RRQM/TouchSocket/pull/136
         Console.WriteLine($"使用：http://127.0.0.1:7789/DemoApiServer/Sum?a=10&b=20");
         #endregion
 

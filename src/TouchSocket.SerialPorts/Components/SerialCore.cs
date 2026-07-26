@@ -20,9 +20,11 @@ namespace TouchSocket.SerialPorts;
 internal sealed class SerialCore : SafetyDisposableObject
 {
     private readonly CancellationTokenSource m_cancellationTokenSource = new();
+    private readonly CancellationToken m_closedToken;
     private readonly SemaphoreSlim m_readSemaphore = new SemaphoreSlim(0, 1);
     private readonly SerialPort m_serialPort;
     private readonly bool m_streamAsync;
+    private int m_closeSignaled;
     private int m_readSemaphoreSignal = 0;
 
     /// <summary>
@@ -32,6 +34,7 @@ internal sealed class SerialCore : SafetyDisposableObject
     {
         this.m_serialPort = serialPort;
         this.m_streamAsync = streamAsync;
+        this.m_closedToken = this.m_cancellationTokenSource.Token;
 
         if (!streamAsync)
         {
@@ -40,6 +43,36 @@ internal sealed class SerialCore : SafetyDisposableObject
     }
 
     public SerialPort SerialPort => this.m_serialPort;
+
+    public Result Close()
+    {
+        if (Interlocked.CompareExchange(ref this.m_closeSignaled, 1, 0) != 0)
+        {
+            return Result.Success;
+        }
+
+        try
+        {
+            if (!this.m_streamAsync)
+            {
+                this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
+            }
+
+            this.m_cancellationTokenSource.SafeCancel();
+
+            if (this.m_serialPort.IsOpen)
+            {
+                this.m_serialPort.Close();
+            }
+
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            this.m_serialPort.SafeDispose();
+            return Result.FromException(ex);
+        }
+    }
 
     public async ValueTask<SerialOperationResult> ReceiveAsync(Memory<byte> memory, CancellationToken cancellationToken)
     {
@@ -59,7 +92,7 @@ internal sealed class SerialCore : SafetyDisposableObject
     {
         this.ThrowIfDisposed();
 
-        if (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
+        if (this.IsClosed())
         {
             ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
         }
@@ -70,7 +103,7 @@ internal sealed class SerialCore : SafetyDisposableObject
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                     cancellationToken,
-                    this.m_cancellationTokenSource.Token);
+                    this.m_closedToken);
 
                 var stream = this.m_serialPort.BaseStream;
                 await stream.WriteAsync(memory, linkedCts.Token).ConfigureDefaultAwait();
@@ -81,11 +114,7 @@ internal sealed class SerialCore : SafetyDisposableObject
                 this.m_serialPort.Write(bytes.Array, bytes.Offset, bytes.Count);
             }
         }
-        catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
-        {
-            ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
-        }
-        catch (IOException) when (this.DisposedValue)
+        catch (Exception ex) when (this.IsClosedException(ex))
         {
             ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
         }
@@ -95,27 +124,10 @@ internal sealed class SerialCore : SafetyDisposableObject
     {
         if (disposing)
         {
-            try
-            {
-                if (!this.m_streamAsync)
-                {
-                    this.m_serialPort.DataReceived -= this.SerialCore_DataReceived;
-                }
-
-                this.m_cancellationTokenSource.SafeCancel();
-
-                if (this.m_serialPort.IsOpen)
-                {
-                    this.m_serialPort.Close();
-                }
-
-                this.m_serialPort.SafeDispose();
-                this.m_cancellationTokenSource.SafeDispose();
-                this.m_readSemaphore.SafeDispose();
-            }
-            catch
-            {
-            }
+            this.Close();
+            this.m_serialPort.SafeDispose();
+            this.m_cancellationTokenSource.SafeDispose();
+            this.m_readSemaphore.SafeDispose();
         }
     }
 
@@ -127,7 +139,7 @@ internal sealed class SerialCore : SafetyDisposableObject
         {
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
-                this.m_cancellationTokenSource.Token);
+                this.m_closedToken);
 
             //循环等待，直到有数据可读或取消
             while (true)
@@ -162,7 +174,7 @@ internal sealed class SerialCore : SafetyDisposableObject
                 }
             }
         }
-        catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
+        catch (Exception ex) when (this.IsClosedException(ex))
         {
             ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
             return default;
@@ -171,7 +183,7 @@ internal sealed class SerialCore : SafetyDisposableObject
 
     private async ValueTask<SerialOperationResult> ReceiveFromStreamAsync(Memory<byte> memory, CancellationToken cancellationToken)
     {
-        if (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
+        if (this.IsClosed())
         {
             ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
         }
@@ -182,7 +194,7 @@ internal sealed class SerialCore : SafetyDisposableObject
 
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
-                this.m_cancellationTokenSource.Token);
+                this.m_closedToken);
 
             if (memory.IsEmpty)
             {
@@ -204,12 +216,7 @@ internal sealed class SerialCore : SafetyDisposableObject
 
             return new SerialOperationResult(bytesRead, SerialData.Chars);
         }
-        catch (OperationCanceledException) when (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
-        {
-            ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
-            return default;
-        }
-        catch (IOException) when (this.DisposedValue)
+        catch (Exception ex) when (this.IsClosedException(ex))
         {
             ThrowHelper.ThrowObjectDisposedException(nameof(SerialCore));
             return default;
@@ -222,12 +229,21 @@ internal sealed class SerialCore : SafetyDisposableObject
 
         //改为事件触发时仅释放信号，等待ReceiveFromEventAsync方法去读取数据
 
-        if (this.DisposedValue || this.m_cancellationTokenSource.Token.IsCancellationRequested)
+        if (this.IsClosed())
         {
             return;
         }
 
-        var bytesToRead = this.m_serialPort.BytesToRead;
+        int bytesToRead;
+        try
+        {
+            bytesToRead = this.m_serialPort.BytesToRead;
+        }
+        catch
+        {
+            return;
+        }
+
         if (bytesToRead <= 0)
         {
             return;
@@ -235,7 +251,24 @@ internal sealed class SerialCore : SafetyDisposableObject
 
         if (Interlocked.Exchange(ref this.m_readSemaphoreSignal, 1) == 0)
         {
-            this.m_readSemaphore.Release();
+            try
+            {
+                this.m_readSemaphore.Release();
+            }
+            catch
+            {
+            }
         }
+    }
+
+    private bool IsClosedException(Exception ex)
+    {
+        return this.IsClosed()
+            && ex is OperationCanceledException or ObjectDisposedException or InvalidOperationException or IOException;
+    }
+
+    private bool IsClosed()
+    {
+        return this.DisposedValue || Volatile.Read(ref this.m_closeSignaled) != 0 || this.m_closedToken.IsCancellationRequested;
     }
 }

@@ -18,7 +18,9 @@ namespace TouchSocket.SerialPorts;
 
 internal sealed class SerialPortTransport : BaseTransport
 {
+    private readonly object m_closeTaskLock = new object();
     private readonly SerialCore m_serialCore;
+    private Task m_shutdownTask;
 
     public SerialPortTransport(SerialCore serialCore, TransportOption option) : base(option)
     {
@@ -27,13 +29,46 @@ internal sealed class SerialPortTransport : BaseTransport
         this.Start();
     }
 
-    public bool IsOpen => this.m_serialCore.SerialPort.IsOpen;
+    public bool IsOpen => !this.m_serialCore.DisposedValue && this.m_serialCore.SerialPort.IsOpen;
 
     internal SerialCore SerialCore => this.m_serialCore;
 
+    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var began = this.TryBeginClose(msg);
+            if (began)
+            {
+                this.SignalClose();
+                this.m_serialCore.Close();
+            }
+
+            Task shutdownTask;
+            lock (this.m_closeTaskLock)
+            {
+                this.m_shutdownTask ??= this.WaitForTransportClosedAsync();
+                shutdownTask = this.m_shutdownTask;
+            }
+
+            await shutdownTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            this.m_serialCore.Dispose();
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            return Result.FromException(ex);
+        }
+    }
+
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_serialCore.Dispose();
+        if (disposing)
+        {
+            this.SignalClose();
+            this.m_serialCore.Dispose();
+        }
+
         base.SafetyDispose(disposing);
     }
 
