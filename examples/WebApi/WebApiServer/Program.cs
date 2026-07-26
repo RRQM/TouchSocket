@@ -143,7 +143,7 @@ internal class Program
         await service.StartAsync();
 
         Console.WriteLine("以下连接用于测试webApi");
-        Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
+        Console.WriteLine($"使用：http://127.0.0.1:7789/DemoApiServer/Sum?a=10&b=20");
         #endregion
 
     }
