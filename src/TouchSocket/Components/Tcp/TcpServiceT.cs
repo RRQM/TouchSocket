@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -157,6 +159,12 @@ public abstract class TcpService<TClient> : TcpServiceBase<TClient>, ITcpService
     public Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return this.GetClientOrThrow(id).SendAsync(memory);
+    }
+
+    /// <inheritdoc/>
+    public Task SendAsync(string id, ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return this.GetClientOrThrow(id).SendAsync(sequence, cancellationToken);
     }
 
     /// <inheritdoc/>

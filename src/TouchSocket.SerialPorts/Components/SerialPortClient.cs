@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.SerialPorts;
 
 /// <inheritdoc cref="SerialPortClientBase"/>
@@ -170,6 +172,12 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
     public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return this.ProtectedSendAsync(memory, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return this.ProtectedSendAsync(sequence, cancellationToken);
     }
 
     /// <inheritdoc/>

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.ComponentModel;
 using TouchSocket.Resources;
 
@@ -33,38 +34,41 @@ public class FixedHeaderPackageAdapter : SingleStreamDataHandlingAdapter
     public int MinPackageSize { get; set; } = 0;
 
     /// <inheritdoc/>
-    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlySequence<byte> sequence)
     {
-        this.ThrowIfLengthValidationFailed(memory.Length);
+        var length = checked((int)sequence.Length);
+        this.ThrowIfLengthValidationFailed(length);
         Span<byte> lenBytes = stackalloc byte[4];
 
         switch (this.FixedHeaderType)
         {
             case FixedHeaderType.Byte:
                 {
-                    var dataLen = (byte)(memory.Length);
+                    var dataLen = (byte)length;
                     lenBytes[0] = dataLen;
                     lenBytes = lenBytes.Slice(0, 1);
                     break;
                 }
             case FixedHeaderType.Ushort:
                 {
-                    var dataLen = (ushort)(memory.Length);
+                    var dataLen = (ushort)length;
                     TouchSocketBitConverter.Default.WriteBytes(lenBytes, dataLen);
                     lenBytes = lenBytes.Slice(0, 2);
                     break;
                 }
             case FixedHeaderType.Int:
                 {
-                    var dataLen = memory.Length;
-                    TouchSocketBitConverter.Default.WriteBytes(lenBytes, dataLen);
+                    TouchSocketBitConverter.Default.WriteBytes(lenBytes, length);
                     break;
                 }
             default: throw new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidParameter.Format(nameof(this.FixedHeaderType)));
         }
 
         writer.Write(lenBytes);
-        writer.Write(memory.Span);
+        foreach (var memory in sequence)
+        {
+            writer.Write(memory.Span);
+        }
     }
 
     /// <summary>

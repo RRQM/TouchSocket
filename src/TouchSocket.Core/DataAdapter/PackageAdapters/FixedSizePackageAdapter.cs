@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
@@ -54,13 +55,13 @@ public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
     }
 
     /// <inheritdoc/>
-    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlySequence<byte> sequence)
     {
-        var dataLen = memory.Length;
+        var dataLen = sequence.Length;
         if (dataLen != this.FixedSize)
         {
-            throw new OverlengthException(TouchSocketCoreResource.ValueMoreThan.Format(nameof(memory.Length), this.FixedSize));
+            throw new OverlengthException(TouchSocketCoreResource.ValueMoreThan.Format(nameof(sequence.Length), this.FixedSize));
         }
-        base.SendInput(ref writer, memory);
+        base.SendInput(ref writer, sequence);
     }
 }

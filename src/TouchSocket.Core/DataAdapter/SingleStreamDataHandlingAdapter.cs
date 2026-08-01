@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Core;
 
 /// <summary>
@@ -86,11 +88,14 @@ public abstract class SingleStreamDataHandlingAdapter : DataHandlingAdapter
     /// </summary>
     /// <typeparam name="TWriter">实现了 <see cref="IBytesWriter"/> 接口的写入器类型。</typeparam>
     /// <param name="writer">写入器的引用。</param>
-    /// <param name="memory">要写入的数据内存块。</param>
-    public virtual void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+    /// <param name="sequence">要写入的只读分段字节序列。</param>
+    public virtual void SendInput<TWriter>(ref TWriter writer, in ReadOnlySequence<byte> sequence)
         where TWriter : IBytesWriter
     {
-        writer.Write(memory.Span);
+        foreach (var memory in sequence)
+        {
+            writer.Write(memory.Span);
+        }
     }
 
     /// <summary>

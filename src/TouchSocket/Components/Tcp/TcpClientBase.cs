@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using TouchSocket.Resources;
@@ -572,9 +573,10 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         var locker = transport.WriteLocker;
 
         await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-        await this.OnTcpSending(memory).ConfigureDefaultAwait();
         try
         {
+            await this.OnTcpSending(memory).ConfigureDefaultAwait();
+
             // 如果数据处理适配器未设置，则使用默认发送方式。
             if (adapter == null)
             {
@@ -582,8 +584,56 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             }
             else
             {
+                var sequence = new System.Buffers.ReadOnlySequence<byte>(memory);
                 var writer = new PipeBytesWriter(transport.Writer);
-                adapter.SendInput(ref writer, in memory);
+                adapter.SendInput(ref writer, in sequence);
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+            }
+        }
+        finally
+        {
+            locker.Release();
+        }
+    }
+
+    /// <summary>
+    /// 异步发送分段数据，通过适配器模式灵活处理数据发送。
+    /// </summary>
+    /// <param name="sequence">待发送的只读分段字节序列。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
+    /// <returns>一个异步任务，表示发送操作。</returns>
+    protected async Task ProtectedSendAsync(System.Buffers.ReadOnlySequence<byte> sequence, CancellationToken cancellationToken)
+    {
+        this.ThrowIfDisposed();
+        this.ThrowIfClientNotConnected();
+
+        var transport = this.m_transport;
+        var adapter = this.m_dataHandlingAdapter;
+        var locker = transport.WriteLocker;
+
+        await locker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+        try
+        {
+            if (adapter == null)
+            {
+                var writer = new PipeBytesWriter(transport.Writer);
+                foreach (var memory in sequence)
+                {
+                    await this.OnTcpSending(memory).ConfigureDefaultAwait();
+                    writer.Write(memory.Span);
+                }
+
+                await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+            }
+            else
+            {
+                foreach (var memory in sequence)
+                {
+                    await this.OnTcpSending(memory).ConfigureDefaultAwait();
+                }
+
+                var writer = new PipeBytesWriter(transport.Writer);
+                adapter.SendInput(ref writer, in sequence);
                 await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
             }
         }

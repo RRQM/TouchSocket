@@ -120,7 +120,7 @@ public sealed class McpHttpPlugin : PluginBase, IHttpPlugin
             };
         }
 
-        var callContext = new McpHttpCallContext(client, client.ClosedToken);
+        var callContext = new McpHttpCallContext(client, e.Context, client.ClosedToken);
         await actor.InputReceiveAsync(bodyBytes, callContext).ConfigureDefaultAwait();
 
         if (!response.Responsed)

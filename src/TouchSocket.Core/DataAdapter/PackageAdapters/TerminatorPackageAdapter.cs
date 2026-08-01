@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Core;
@@ -88,13 +89,16 @@ public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
     }
 
     /// <inheritdoc/>
-    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlyMemory<byte> memory)
+    public override void SendInput<TWriter>(ref TWriter writer, in ReadOnlySequence<byte> sequence)
     {
-        if (memory.Length > this.MaxPackageSize)
+        if (sequence.Length > this.MaxPackageSize)
         {
-            throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(memory.Length), this.MaxPackageSize));
+            throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(sequence.Length), this.MaxPackageSize));
         }
-        writer.Write(memory.Span);
+        foreach (var memory in sequence)
+        {
+            writer.Write(memory.Span);
+        }
         writer.Write(this.m_terminatorCode.Span);
     }
 }

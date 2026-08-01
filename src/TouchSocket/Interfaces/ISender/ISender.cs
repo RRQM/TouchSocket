@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -18,13 +20,13 @@ namespace TouchSocket.Sockets;
 public interface ISender
 {
     /// <summary>
-    /// 异步发送数据。
+    /// 异步发送分段数据。
     /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
     /// </summary>
-    /// <param name="memory">要发送的数据，以字节的只读内存形式提供。</param>
+    /// <param name="sequence">要发送的数据，以分段只读序列形式提供。</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
-    Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
+    Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default);
 }

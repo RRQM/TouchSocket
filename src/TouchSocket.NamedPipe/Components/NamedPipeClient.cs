@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.NamedPipe;
 
 /// <summary>
@@ -174,6 +176,12 @@ public class NamedPipeClient : NamedPipeClientBase, INamedPipeClient
     public virtual Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return this.ProtectedSendAsync(memory, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return this.ProtectedSendAsync(sequence, cancellationToken);
     }
 
     /// <inheritdoc/>

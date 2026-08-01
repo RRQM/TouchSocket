@@ -15,26 +15,22 @@ using TouchSocket.Http;
 namespace TouchSocket.Mcp;
 
 /// <summary>
-/// 基于 HTTP 传输的 MCP 调用上下文。
+/// 基于 HTTP 传输的 MCP 调用上下文接口。
 /// </summary>
-public sealed class McpHttpCallContext : McpCallContextBase, IMcpHttpCallContext
+/// <remarks>
+/// 此接口定义了在基于 HTTP 的 MCP 调用中所需的上下文信息，包括 HTTP 上下文和 HTTP 会话客户端。
+/// 实现这个接口的类应该提供对这些属性的访问，以便在 MCP 调用过程中使用。
+/// issue:https://github.com/RRQM/TouchSocket/issues/137
+/// </remarks>
+public interface IMcpHttpCallContext : IMcpCallContext
 {
     /// <summary>
-    /// 初始化 <see cref="McpHttpCallContext"/>。
+    /// 获取当前 HTTP 上下文，包含 <see cref="HttpContext.Request"/> 和 <see cref="HttpContext.Response"/>。
     /// </summary>
-    /// <param name="client">HTTP 会话客户端。</param>
-    /// <param name="httpContext">当前 HTTP 上下文。</param>
-    /// <param name="cancellationToken">取消令牌。</param>
-    public McpHttpCallContext(IHttpSessionClient client, HttpContext httpContext, CancellationToken cancellationToken)
-        : base(client, cancellationToken)
-    {
-        this.HttpContext = httpContext;
-        this.HttpSessionClient = client;
-    }
+    HttpContext HttpContext { get; }
 
-    /// <inheritdoc/>
-    public HttpContext HttpContext { get; }
-
-    /// <inheritdoc/>
-    public IHttpSessionClient HttpSessionClient { get; }
+    /// <summary>
+    /// 获取 HTTP 会话客户端。
+    /// </summary>
+    IHttpSessionClient HttpSessionClient { get; }
 }

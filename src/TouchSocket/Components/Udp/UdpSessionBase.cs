@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -520,6 +521,18 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     }
 
     /// <summary>
+    /// 异步发送分段数据，使用默认远程端点。
+    /// </summary>
+    /// <param name="sequence">要发送的只读分段字节序列。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
+    /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
+    protected virtual Task ProtectedSendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken)
+    {
+        this.ThrowIfRemoteIPHostNull();
+        return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, sequence, cancellationToken);
+    }
+
+    /// <summary>
     /// 异步发送数据，使用提供的请求信息。
     /// </summary>
     /// <param name="requestInfo">包含要发送数据的请求信息的对象。</param>
@@ -549,6 +562,21 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
         return this.m_dataHandlingAdapter == null
             ? this.ProtectedDefaultSendAsync(endPoint, memory, cancellationToken) // 使用默认发送方式
             : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory, cancellationToken); // 通过适配器发送数据
+    }
+
+    /// <summary>
+    /// 异步发送分段数据到指定的端点。
+    /// </summary>
+    /// <param name="endPoint">要发送数据到的目标端点。</param>
+    /// <param name="sequence">待发送的只读分段字节序列。</param>
+    /// <param name="cancellationToken">可取消令箭</param>
+    /// <returns>返回一个任务，表示异步操作的结果。</returns>
+    protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlySequence<byte> sequence, CancellationToken cancellationToken)
+    {
+        ReadOnlyMemory<byte> memory = sequence.IsSingleSegment
+            ? sequence.First
+            : System.Buffers.BuffersExtensions.ToArray(sequence);
+        return this.ProtectedSendAsync(endPoint, memory, cancellationToken);
     }
 
     /// <summary>

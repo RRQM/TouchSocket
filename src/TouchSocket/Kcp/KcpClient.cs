@@ -139,6 +139,19 @@ public class KcpClient : UdpSessionBase
         return EasyTask.CompletedTask;
     }
 
+    /// <summary>
+    /// 将分段数据作为一条KCP应用层消息发送。
+    /// </summary>
+    /// <param name="sequence">要发送的只读分段字节序列。</param>
+    /// <param name="cancellationToken">取消令牌（当前未使用，为接口兼容保留）。</param>
+    public Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        ReadOnlyMemory<byte> memory = sequence.IsSingleSegment
+            ? sequence.First
+            : BuffersExtensions.ToArray(sequence);
+        return this.SendAsync(memory, cancellationToken);
+    }
+
     #endregion
 
     #region 内部 - UDP回调与KCP逻辑

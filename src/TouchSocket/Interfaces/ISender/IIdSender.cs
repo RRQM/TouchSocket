@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -18,13 +20,13 @@ namespace TouchSocket.Sockets;
 public interface IIdSender
 {
     /// <summary>
-    /// 异步向对应Id的客户端发送数据
+    /// 异步向对应Id的客户端发送分段数据
     /// </summary>
     /// <param name="id">目标客户端的唯一标识符</param>
-    /// <param name="memory">要发送的数据，以字节形式存储在内存中</param>
+    /// <param name="sequence">要发送的数据，以分段只读序列形式提供</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <exception cref="ClientNotConnectedException">如果目标客户端未连接，则抛出此异常</exception>
     /// <exception cref="ClientNotFindException">如果无法根据Id找到对应的客户端，则抛出此异常</exception>
     /// <exception cref="Exception">如果发生其他异常情况</exception>
-    Task SendAsync(string id, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
+    Task SendAsync(string id, ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default);
 }

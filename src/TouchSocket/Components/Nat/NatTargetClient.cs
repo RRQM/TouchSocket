@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
+
 namespace TouchSocket.Sockets;
 
 /// <summary>
@@ -56,6 +58,12 @@ public sealed class NatTargetClient : TcpClientBase, ITcpConnectableClient, ICli
     public Task SendAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return base.ProtectedSendAsync(memory, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return base.ProtectedSendAsync(sequence, cancellationToken);
     }
 
     /// <inheritdoc/>

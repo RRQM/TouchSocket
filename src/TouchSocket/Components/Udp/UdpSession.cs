@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Net;
 
 namespace TouchSocket.Sockets;
@@ -50,6 +51,12 @@ public class UdpSession : UdpSessionBase, IUdpSession
     }
 
     /// <inheritdoc/>
+    public virtual Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return this.ProtectedSendAsync(sequence, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public virtual Task SendAsync(IRequestInfo requestInfo, CancellationToken cancellationToken = default)
     {
         return this.ProtectedSendAsync(requestInfo, cancellationToken);
@@ -63,6 +70,12 @@ public class UdpSession : UdpSessionBase, IUdpSession
     public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
         return this.ProtectedSendAsync(endPoint, memory, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual Task SendAsync(EndPoint endPoint, ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        return this.ProtectedSendAsync(endPoint, sequence, cancellationToken);
     }
 
     /// <inheritdoc/>

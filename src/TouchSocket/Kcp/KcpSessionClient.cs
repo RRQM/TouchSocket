@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets;
 /// <remarks>
 /// 每个<see cref="KcpSessionClient"/>封装一个独立的<see cref="KcpCore"/>实例，
 /// 对应服务端收到的某个<c>(remoteEndPoint, conv)</c>组合。
-/// 通过<see cref="SendAsync"/>向对端发送数据；收到数据时通过服务端的<see cref="KcpService.Received"/>触发回调。
+/// 通过发送方法向对端发送数据；收到数据时通过服务端的<see cref="KcpService.Received"/>触发回调。
 /// </remarks>
 public sealed class KcpSessionClient : IDisposable
 {
@@ -118,6 +118,19 @@ public sealed class KcpSessionClient : IDisposable
     {
         this.m_kcp.Send(memory.Span);
         return EasyTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// 将分段数据作为一条KCP应用层消息发送。
+    /// </summary>
+    /// <param name="sequence">要发送的只读分段字节序列。</param>
+    /// <param name="cancellationToken">取消令牌（当前未使用，为接口兼容保留）。</param>
+    public Task SendAsync(ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default)
+    {
+        ReadOnlyMemory<byte> memory = sequence.IsSingleSegment
+            ? sequence.First
+            : BuffersExtensions.ToArray(sequence);
+        return this.SendAsync(memory, cancellationToken);
     }
 
     #endregion

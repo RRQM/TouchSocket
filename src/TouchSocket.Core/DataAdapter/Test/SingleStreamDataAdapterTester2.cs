@@ -67,7 +67,8 @@ public class SingleStreamDataAdapterTester<TAdapter, TRequest>
             var valueByteBlock = new ValueByteBlock(memory.Length + 1024);
             try
             {
-                this.m_adapter.SendInput(ref valueByteBlock, memory);
+                var sequence = new System.Buffers.ReadOnlySequence<byte>(memory);
+                this.m_adapter.SendInput(ref valueByteBlock, in sequence);
 
                 await this.SendCallback(valueByteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }

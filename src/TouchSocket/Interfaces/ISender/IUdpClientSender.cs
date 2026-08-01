@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
+using System.Buffers;
 
 namespace TouchSocket.Sockets;
 
@@ -20,14 +21,14 @@ namespace TouchSocket.Sockets;
 public interface IUdpClientSender : ISender, IUdpRequestInfoSender
 {
     /// <summary>
-    /// 异步组合发送数据。
+    /// 异步组合发送分段数据。
     /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
     /// </summary>
     /// <param name="endPoint">远程终结点</param>
-    /// <param name="memory">只读内存块，包含待发送的数据</param>
+    /// <param name="sequence">只读分段序列，包含待发送的数据</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <exception cref="OverlengthException">发送数据超长</exception>
     /// <exception cref="Exception">其他异常</exception>
     /// <returns>一个表示异步操作的Task对象</returns>
-    Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default);
+    Task SendAsync(EndPoint endPoint, ReadOnlySequence<byte> sequence, CancellationToken cancellationToken = default);
 }
