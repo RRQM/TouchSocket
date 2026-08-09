@@ -179,7 +179,12 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 }
 
                 this.m_hasGivenUp = false;
-                this.m_options.OnSuccessed?.Invoke(client);
+                await this.InvokeReconnectionLogAsync(
+                    client,
+                    ReconnectionLogType.Success,
+                    attempts,
+                    this.m_options.MaxRetryCount,
+                    $"重连成功，尝试次数: {attempts}").ConfigureDefaultAwait();
 
                 if (this.m_options.LogReconnection)
                 {
@@ -189,7 +194,13 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
             }
             catch (Exception ex)
             {
-                this.m_options.OnFailed?.Invoke(client, attempts, ex);
+                await this.InvokeReconnectionLogAsync(
+                    client,
+                    ReconnectionLogType.Failed,
+                    attempts,
+                    this.m_options.MaxRetryCount,
+                    $"重连失败，尝试次数: {attempts}，错误: {ex.Message}",
+                    ex).ConfigureDefaultAwait();
 
                 if (this.m_options.LogReconnection)
                 {
@@ -199,7 +210,12 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 if (this.m_options.MaxRetryCount > 0 && attempts >= this.m_options.MaxRetryCount)
                 {
                     this.m_hasGivenUp = true;
-                    this.m_options.OnGiveUp?.Invoke(client, attempts);
+                    await this.InvokeReconnectionLogAsync(
+                        client,
+                        ReconnectionLogType.GiveUp,
+                        attempts,
+                        this.m_options.MaxRetryCount,
+                        $"达到最大重连次数 {this.m_options.MaxRetryCount}，放弃重连").ConfigureDefaultAwait();
                     if (this.m_options.LogReconnection)
                     {
                         client.Logger?.Error(this, $"达到最大重连次数 {this.m_options.MaxRetryCount}，放弃重连");
@@ -211,6 +227,23 @@ public class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin
                 await Task.Delay(nextInterval, CancellationToken.None).ConfigureDefaultAwait();
             }
         }
+    }
+
+    private Task InvokeReconnectionLogAsync(
+        TClient client,
+        ReconnectionLogType type,
+        int attempts,
+        int maxRetryCount,
+        string message,
+        Exception? exception = null)
+    {
+        var onLog = this.m_options.OnLog;
+        if (onLog is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        return onLog(client, new ReconnectionLogEventArgs(type, attempts, maxRetryCount, message, exception));
     }
 
     private TimeSpan CalculateNextInterval(int attemptCount)

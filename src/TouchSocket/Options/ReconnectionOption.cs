@@ -33,6 +33,7 @@ public class ReconnectionOption<TClient>
         };
 
         this.ConnectAction = async (client, cancellationToken) => await client.ConnectAsync(cancellationToken).ConfigureDefaultAwait();
+        this.OnLog = this.DefaultOnLogAsync;
     }
 
     /// <summary>
@@ -79,32 +80,28 @@ public class ReconnectionOption<TClient>
     public int MaxRetryCount { get; set; } = -1;
 
     /// <summary>
-    /// 重连失败回调
-    /// <para>当单次重连尝试失败时触发此回调，每次重连失败都会调用</para>
-    /// <para>触发时机：在ConnectAsync抛出异常时立即触发</para>
-    /// <para>第1参数：重连失败的客户端实例</para>
-    /// <para>第2参数：当前重连尝试次数（从1开始计数）</para>
-    /// <para>第3参数：导致重连失败的异常信息</para>
+    /// 重连日志回调。
+    /// <para>默认实现会转调旧的 <see cref="OnFailed"/>、<see cref="OnGiveUp"/>、<see cref="OnSuccessed"/>。</para>
+    /// <para>当重新赋值此回调时，旧三个回调不会再被自动调用。</para>
+    /// <para>该回调支持异步返回。</para>
+    /// </summary>
+    public Func<TClient, ReconnectionLogEventArgs, Task> OnLog { get; set; }
+
+    /// <summary>
+    /// 重连失败回调。
+    /// <para>保留兼容性：当单次重连尝试失败时触发。</para>
     /// </summary>
     public Action<TClient, int, Exception> OnFailed { get; set; }
 
     /// <summary>
-    /// 重连放弃回调
-    /// <para>当达到最大重连次数限制，决定放弃继续重连时触发此回调</para>
-    /// <para>触发时机：当MaxRetryCount大于0且重连尝试次数达到该限制时</para>
-    /// <para>注意：如果MaxRetryCount设置为-1（无限重连），此回调永远不会被触发</para>
-    /// <para>第1参数：放弃重连的客户端实例</para>
-    /// <para>第2参数：总共尝试的重连次数</para>
+    /// 重连放弃回调。
+    /// <para>保留兼容性：当达到最大重连次数后触发。</para>
     /// </summary>
     public Action<TClient, int> OnGiveUp { get; set; }
 
     /// <summary>
-    /// 重连成功回调
-    /// <para>当重连操作成功完成时触发此回调</para>
-    /// <para>触发时机：</para>
-    /// <para>1. 检测到客户端已经在线时</para>
-    /// <para>2. 执行ConnectAsync成功后</para>
-    /// <para>第1参数：重连成功的客户端实例</para>
+    /// 重连成功回调。
+    /// <para>保留兼容性：当重连成功时触发。</para>
     /// </summary>
     public Action<TClient> OnSuccessed { get; set; }
 
@@ -178,6 +175,24 @@ public class ReconnectionOption<TClient>
         this.Strategy = ReconnectionStrategy.Simple;
         this.BaseInterval = interval ?? TimeSpan.FromSeconds(1);
         this.MaxRetryCount = maxRetryCount;
+    }
+
+    private Task DefaultOnLogAsync(TClient client, ReconnectionLogEventArgs e)
+    {
+        switch (e.Type)
+        {
+            case ReconnectionLogType.Failed:
+                this.OnFailed?.Invoke(client, e.Attempts, e.Exception ?? new InvalidOperationException(e.Message));
+                break;
+            case ReconnectionLogType.GiveUp:
+                this.OnGiveUp?.Invoke(client, e.Attempts);
+                break;
+            case ReconnectionLogType.Success:
+                this.OnSuccessed?.Invoke(client);
+                break;
+        }
+
+        return Task.CompletedTask;
     }
 
 }
