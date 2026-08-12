@@ -18,7 +18,7 @@ namespace TouchSocket.WebApi;
 [JsonSourceGenerationOptions(
     WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    Converters = [typeof(JsonStringEnumConverter<OpenApiDataTypes>)])]
+    Converters = [typeof(OpenApiDataTypesJsonConverter)])]
 [JsonSerializable(typeof(OpenApiRoot))]
 [JsonSerializable(typeof(OpenApiInfo))]
 [JsonSerializable(typeof(OpenApiPath))]

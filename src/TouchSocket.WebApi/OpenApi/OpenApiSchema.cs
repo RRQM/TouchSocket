@@ -54,4 +54,10 @@ public class OpenApiSchema
     /// </summary>
     [JsonPropertyName("enum")]
     public long[] Enum { get; set; }
+
+    /// <summary>
+    /// 获取或设置 Schema 是否允许为空。
+    /// </summary>
+    [JsonPropertyName("nullable")]
+    public bool? Nullable { get; set; }
 }
