@@ -11,6 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System.ComponentModel;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -49,6 +52,12 @@ internal class Program
                    a.UseDmtpRpc();
 
                    a.Add<MyRpcPlugin>();
+               })
+               .SetServiceSslOption(o =>
+               {
+                   o.Certificate = X509CertificateLoader.LoadPkcs12FromFile("certs/servertest.pfx1", "666123");
+                   o.ClientCertificateRequired = false;
+                   o.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
                })
                .SetDmtpOption(options =>
                {
@@ -113,6 +122,7 @@ internal class Program
         }
         #endregion
     }
+
 }
 
 

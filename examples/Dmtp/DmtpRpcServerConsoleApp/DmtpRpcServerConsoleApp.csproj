@@ -11,4 +11,10 @@
     <PackageReference Include="TouchSocket.Dmtp" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="certs\servertest.pfx1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

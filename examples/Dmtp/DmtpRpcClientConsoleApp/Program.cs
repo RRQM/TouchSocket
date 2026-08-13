@@ -10,8 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+#if !NETFRAMEWORK
 using MemoryPack;
+#endif
 using RpcProxy;
+using System.IO;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -249,6 +254,14 @@ internal class Program
                  });
              })
              .SetRemoteIPHost("127.0.0.1:7789")
+             .SetClientSslOption(o =>
+             {
+                 o.TargetHost = "host";
+                 o.SslProtocols = SslProtocols.Tls12;
+                 // 单向 TLS：客户端不加载客户端证书，仅验证服务端证书。
+                 o.CertificateValidationCallback = (sender, cert, chain, errors) => true;
+                 o.CheckCertificateRevocation = false;
+             })
              .SetDmtpOption(options =>
              {
                  options.VerifyToken = "Dmtp";
@@ -402,6 +415,8 @@ internal class ConfigureSerializationSelectorExample
 #endregion
 
 #region DmtpRpc自定义序列化配置
+#if !NETFRAMEWORK
+// MemoryPack 仅 net7.0+ 可用，net472 下排除此示例。
 internal class CustomSerializationExample
 {
     public void ConfigCustomSerialization()
@@ -438,6 +453,7 @@ public class MemoryPackSerializationSelector : ISerializationSelector
         span.WriteValue(memoryPackWriter.WrittenCount);
     }
 }
+#endif
 #endregion
 
 #region DmtpRpc使用自定义序列化类型
