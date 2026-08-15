@@ -54,4 +54,16 @@ public class OpenApiProperty
     /// </summary>
     [JsonPropertyName("type")]
     public OpenApiDataTypes? Type { get; set; }
+
+    /// <summary>
+    /// 获取或设置枚举类型的可选值列表。
+    /// </summary>
+    [JsonPropertyName("enum")]
+    public long[] Enum { get; set; }
+
+    /// <summary>
+    /// 获取或设置属性是否允许为空。
+    /// </summary>
+    [JsonPropertyName("nullable")]
+    public bool? Nullable { get; set; }
 }

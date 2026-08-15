@@ -133,6 +133,16 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "OpenApi内部使用，相信动态代码是有效的")]
     private void AddSchemaType(Type type, in List<Type> types)
     {
+        if (type is null)
+        {
+            return;
+        }
+
+        if (type.IsNullableType(out var actualType))
+        {
+            type = actualType;
+        }
+
         if (type.IsArray)
         {
             type = type.GetElementType();
@@ -259,6 +269,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
                 {
                     var openApiProperty = this.CreateProperty(item.Parameter.Type, item.Parameter.ParameterInfo.GetDescription());
                     properties.Add(this.GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
+                    this.AddSchemaType(item.Parameter.Type, schemaTypeList);
                 }
 
                 content.Schema = new OpenApiSchema()
@@ -367,8 +378,22 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     private OpenApiProperty CreateProperty(Type type, string description)
     {
         var openApiProperty = new OpenApiProperty();
+        if (type.IsNullableType(out var actualType))
+        {
+            type = actualType;
+            openApiProperty.Nullable = true;
+        }
+
         var dataTypes = this.ParseDataTypes(type);
         openApiProperty.Description = description;
+
+        if (type.IsEnum)
+        {
+            openApiProperty.Type = OpenApiDataTypes.Integer;
+            openApiProperty.Enum = GetEnumValues(type);
+            openApiProperty.Format = this.GetSchemaFormat(type);
+            return openApiProperty;
+        }
 
         switch (dataTypes)
         {
@@ -386,7 +411,31 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
                 break;
 
             case OpenApiDataTypes.Object:
-                openApiProperty.Ref = $"#/components/schemas/{type.Name}";
+                openApiProperty.Ref = $"#/components/schemas/{this.GetSchemaName(type)}";
+                return openApiProperty;
+
+            case OpenApiDataTypes.Binary:
+                openApiProperty.Type = OpenApiDataTypes.String;
+                openApiProperty.Format = "binary";
+                return openApiProperty;
+
+            case OpenApiDataTypes.BinaryCollection:
+                openApiProperty.Type = OpenApiDataTypes.Array;
+                openApiProperty.Items = new OpenApiProperty
+                {
+                    Type = OpenApiDataTypes.String,
+                    Format = "binary"
+                };
+                return openApiProperty;
+
+            case OpenApiDataTypes.Record:
+            case OpenApiDataTypes.Struct:
+                openApiProperty.Type = OpenApiDataTypes.Object;
+                return openApiProperty;
+
+            case OpenApiDataTypes.Tuple:
+                openApiProperty.Type = OpenApiDataTypes.Array;
+                openApiProperty.Items = new OpenApiProperty();
                 break;
         }
 
@@ -398,7 +447,21 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     private OpenApiSchema CreateSchema(Type type)
     {
         var schema = new OpenApiSchema();
+        if (type.IsNullableType(out var actualType))
+        {
+            type = actualType;
+            schema.Nullable = true;
+        }
+
         var dataTypes = this.ParseDataTypes(type);
+
+        if (type.IsEnum)
+        {
+            schema.Enum = GetEnumValues(type);
+            schema.Type = OpenApiDataTypes.Integer;
+            schema.Format = this.GetSchemaFormat(type);
+            return schema;
+        }
 
         switch (dataTypes)
         {
@@ -415,23 +478,32 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
                 break;
 
             case OpenApiDataTypes.Object:
-                if (type.IsEnum)
-                {
-                    var list = new List<long>();
-                    foreach (var item in Enum.GetValues(type))
-                    {
-                        list.Add(Convert.ToInt64(item));
-                    }
+                schema.Ref = $"#/components/schemas/{this.GetSchemaName(type)}";
+                return schema;
 
-                    schema.Enum = list.ToArray();
-                    schema.Type = OpenApiDataTypes.Integer;
-                }
-                else
-                {
-                    schema.Ref = $"#/components/schemas/{this.GetSchemaName(type)}";
-                }
+            case OpenApiDataTypes.Binary:
+                schema.Type = OpenApiDataTypes.String;
+                schema.Format = "binary";
+                return schema;
 
-                break;
+            case OpenApiDataTypes.BinaryCollection:
+                schema.Type = OpenApiDataTypes.Array;
+                schema.Items = new OpenApiSchema
+                {
+                    Type = OpenApiDataTypes.String,
+                    Format = "binary"
+                };
+                return schema;
+
+            case OpenApiDataTypes.Record:
+            case OpenApiDataTypes.Struct:
+                schema.Type = OpenApiDataTypes.Object;
+                return schema;
+
+            case OpenApiDataTypes.Tuple:
+                schema.Type = OpenApiDataTypes.Array;
+                schema.Items = new OpenApiSchema();
+                return schema;
         }
 
         schema.Format = this.GetSchemaFormat(type);
@@ -451,21 +523,25 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
         foreach (var type in types)
         {
-            var schema = this.CreateSchema(type);
+            var schema = new OpenApiSchema
+            {
+                Type = OpenApiDataTypes.Object
+            };
             var properties = new Dictionary<string, OpenApiProperty>();
 
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                if (properties.ContainsKey(propertyInfo.Name))
+                var propertyName = GetOpenApiPropertyName(propertyInfo);
+                if (properties.ContainsKey(propertyName))
                 {
                     if (propertyInfo.DeclaringType == type)
                     {
-                        properties[propertyInfo.Name] = this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription());
+                        properties[propertyName] = this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription());
                     }
                 }
                 else
                 {
-                    properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
+                    properties.Add(propertyName, this.CreateProperty(propertyInfo.PropertyType, propertyInfo.GetDescription()));
                 }
             }
 
@@ -527,6 +603,16 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
     private string GetSchemaFormat(Type type)
     {
+        if (type.IsNullableType(out var actualType))
+        {
+            type = actualType;
+        }
+
+        if (type == typeof(Guid))
+        {
+            return "uuid";
+        }
+
         return Type.GetTypeCode(type) switch
         {
             TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or TypeCode.UInt16 or TypeCode.Int32 or TypeCode.UInt32 => "int32",
@@ -535,7 +621,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
             TypeCode.Double or TypeCode.Decimal => "double",
             TypeCode.DateTime => "date-time",
             TypeCode.Boolean or TypeCode.Char or TypeCode.String => default,
-            _ => "object",
+            _ => default,
         };
     }
 
@@ -554,6 +640,25 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
         stringBuilder.Append(type.Name.Substring(0, type.Name.IndexOf('`')));
         return stringBuilder.ToString();
+    }
+
+    private static string GetOpenApiPropertyName(PropertyInfo propertyInfo)
+    {
+        var attribute = propertyInfo.GetCustomAttribute<System.Text.Json.Serialization.JsonPropertyNameAttribute>();
+        return attribute?.Name ?? JsonNamingPolicy.CamelCase.ConvertName(propertyInfo.Name);
+    }
+
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "OpenApi内部使用，相信动态代码是有效的")]
+    private static long[] GetEnumValues(Type type)
+    {
+        var values = Enum.GetValues(type);
+        var result = new long[values.Length];
+        for (var i = 0; i < values.Length; i++)
+        {
+            result[i] = Convert.ToInt64(values.GetValue(i));
+        }
+
+        return result;
     }
 
     private static bool IsFormFileCollection(Type type)
@@ -604,6 +709,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
             _ when type.IsDecimal() => OpenApiDataTypes.Number,
             _ when typeof(bool).IsAssignableFrom(type) => OpenApiDataTypes.Boolean,
             _ when typeof(DateTime).IsAssignableFrom(type) || typeof(DateTimeOffset).IsAssignableFrom(type) => OpenApiDataTypes.String,
+            _ when typeof(Guid).IsAssignableFrom(type) || typeof(Uri).IsAssignableFrom(type) => OpenApiDataTypes.String,
             _ when typeof(IFormFile).IsAssignableFrom(type) => OpenApiDataTypes.Binary,
             _ when IsFormFileCollection(type) => OpenApiDataTypes.BinaryCollection,
             _ when type.IsDictionary() => OpenApiDataTypes.Record,

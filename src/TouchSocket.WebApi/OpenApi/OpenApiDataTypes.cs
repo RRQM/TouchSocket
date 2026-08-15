@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace TouchSocket.WebApi.OpenApi;
@@ -17,7 +18,7 @@ namespace TouchSocket.WebApi.OpenApi;
 /// <summary>
 /// 表示 OpenAPI 规范中支持的数据类型。
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter<OpenApiDataTypes>))]
+[JsonConverter(typeof(OpenApiDataTypesJsonConverter))]
 public enum OpenApiDataTypes
 {
     /// <summary>
@@ -79,4 +80,28 @@ public enum OpenApiDataTypes
     /// Any
     /// </summary>
     Any
+}
+
+/// <summary>
+/// 按 OpenAPI 规范要求使用小写名称序列化数据类型。
+/// </summary>
+internal sealed class OpenApiDataTypesJsonConverter : JsonConverter<OpenApiDataTypes>
+{
+    /// <inheritdoc/>
+    public override OpenApiDataTypes Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var value = reader.GetString();
+        if (Enum.TryParse<OpenApiDataTypes>(value, true, out var dataType))
+        {
+            return dataType;
+        }
+
+        throw new JsonException($"不支持的 OpenAPI 数据类型：{value}");
+    }
+
+    /// <inheritdoc/>
+    public override void Write(Utf8JsonWriter writer, OpenApiDataTypes value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString().ToLowerInvariant());
+    }
 }
