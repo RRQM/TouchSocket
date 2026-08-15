@@ -133,6 +133,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "OpenApi内部使用，相信动态代码是有效的")]
     private void AddSchemaType(Type type, in List<Type> types)
     {
+        //PR:https://github.com/RRQM/TouchSocket/pull/138
         if (type is null)
         {
             return;
