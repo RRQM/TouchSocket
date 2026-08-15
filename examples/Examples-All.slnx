@@ -186,6 +186,9 @@
     <Project Path="PlcBridges/PlcBridgesConsoleApp/PlcBridgesConsoleApp.csproj" />
   </Folder>
   <Folder Name="/PluginPassingParameters/" />
+  <Folder Name="/Redis/">
+    <Project Path="Redis/RedisConsoleApp/RedisConsoleApp.csproj" Id="83b5ed71-346f-49d3-9d28-dcaaac8abffe" />
+  </Folder>
   <Folder Name="/Rpc/">
     <Project Path="Rpc/GenerateProxyFromServerConsoleApp/GenerateProxyFromServerConsoleApp.csproj" />
     <Project Path="Rpc/RpcAopConsoleApp/RpcAopConsoleApp.csproj" />

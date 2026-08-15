@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -19,28 +19,28 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	  <Reference Include="Newtonsoft.Json">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\Newtonsoft.Json.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\Newtonsoft.Json.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Core">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Core.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Core.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Core.DependencyInjection">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Core.DependencyInjection.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Core.DependencyInjection.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Dmtp">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Dmtp.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Dmtp.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Hosting">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Hosting.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Hosting.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Http">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Http.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Http.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Rpc">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net9.0\TouchSocket.Rpc.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net10.0\TouchSocket.Rpc.dll</HintPath>
 	  </Reference>
 	</ItemGroup>-->
 </Project>

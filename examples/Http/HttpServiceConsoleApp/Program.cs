@@ -294,7 +294,7 @@ public class MyHttpPlugin4 : PluginBase, IHttpPlugin
 
 
 
-                    //情况4，接收小文件。
+                    //情况4，接收小文件（旧方式：会先将全部数据加载到内存再分割）。
                     #region Http服务器获取Body小文件集合
                     if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
@@ -323,6 +323,28 @@ public class MyHttpPlugin4 : PluginBase, IHttpPlugin
                         {
                             await fileStream.WriteAsync(data);
                             await fileStream.FlushAsync();
+                        }
+                    }
+                    #endregion
+
+                    //情况5，使用流式表单读取器接收文件（推荐：不会将请求体整体加载到内存）。
+                    #region Http服务器流式读取Body小文件集合
+                    using (var reader = e.Context.Request.GetStreamingFormReader())
+                    {
+                        IStreamFormSection section;
+                        while ((section = await reader.ReadNextSectionAsync()) != null)
+                        {
+                            if (section.IsFile)
+                            {
+                                client.Logger.Info($"文件名={section.FileName}");
+                                using var fileStream = File.Create(section.FileName);
+                                await section.CopyToAsync(fileStream);
+                            }
+                            else
+                            {
+                                var value = await section.ReadAsStringAsync();
+                                client.Logger.Info($"字段名={section.Name}, 值={value}");
+                            }
                         }
                     }
                     #endregion

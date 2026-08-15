@@ -24,7 +24,7 @@ namespace HttpPerformanceConsoleApp.Controllers
 
         public override async Task HandleAsync(MyRequest req, CancellationToken ct)
         {
-            await this.SendAsync(new()
+            await this.Send.OkAsync(new()
             {
                 Result = req.A + req.B
             });

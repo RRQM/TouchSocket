@@ -1,52 +1,53 @@
 ﻿<Project>
-	<PropertyGroup>
-		<!-- Enable Central Package Management -->
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<TouchSocketVersion>4.2.18</TouchSocketVersion>
-	</PropertyGroup>
-	<!-- Centralized Package Version Management -->
-	<ItemGroup>
-		<!-- TouchSocket Core Packages -->
-		<PackageVersion Include="TouchSocket" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Core" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Core.DependencyInjection" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Http" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.JsonRpc" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Rpc" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.WebApi" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.WebApi.Swagger" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.XmlRpc" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Hosting" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.AspNetCore" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.NamedPipe" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.SerialPorts" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.SocketIo" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Dmtp" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Mqtt" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Mqtt.Rpc" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Modbus" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Mcp" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Rpc.RateLimiting" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocket.Semi" Version="$(TouchSocketVersion)" />
-		<!-- TouchSocketPro Packages -->
-		<PackageVersion Include="TouchSocketPro" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Dmtp" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.SocketIo" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.AspNetCore" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Modbus" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.PlcBridges" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Dmtp.PixStream" Version="$(TouchSocketVersion)" />
-		<!-- Microsoft Packages -->
-		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-		<!-- Third-party Packages -->
-		<PackageVersion Include="Consul" Version="1.7.14.9" />
-		<PackageVersion Include="log4net" Version="3.2.0" />
-		<PackageVersion Include="MemoryPack" Version="1.21.4" />
-		<PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageVersion Include="FastEndpoints" Version="6.2.0" />
-		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.2.0" />
-		<PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
-		<PackageVersion Include="MQTTnet.Server" Version="5.1.0.1559" />
-		<PackageVersion Include="Spectre.Console" Version="0.49.1" />
-	</ItemGroup>
+  <PropertyGroup>
+    <!-- Enable Central Package Management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <TouchSocketVersion>4.3.2</TouchSocketVersion>
+  </PropertyGroup>
+  <!-- Centralized Package Version Management -->
+  <ItemGroup>
+    <!-- TouchSocket Core Packages -->
+    <PackageVersion Include="TouchSocket" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Core" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Core.DependencyInjection" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Http" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.JsonRpc" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Rpc" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.WebApi" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.WebApi.Swagger" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.XmlRpc" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Hosting" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.AspNetCore" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.NamedPipe" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.SerialPorts" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.SocketIo" Version="$(TouchSocketVersion)" />
+    <PackageVersion Include="TouchSocket.Dmtp" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Mqtt" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Mqtt.Rpc" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Modbus" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Mcp" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Rpc.RateLimiting" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Semi" Version="4.3.1" />
+    <PackageVersion Include="TouchSocket.Redis" Version="4.3.1" />
+    <!-- TouchSocketPro Packages -->
+    <PackageVersion Include="TouchSocketPro" Version="4.3.1" />
+    <PackageVersion Include="TouchSocketPro.Dmtp" Version="4.3.1" />
+    <PackageVersion Include="TouchSocketPro.SocketIo" Version="$(TouchSocketVersion)" />
+    <PackageVersion Include="TouchSocketPro.AspNetCore" Version="4.3.1" />
+    <PackageVersion Include="TouchSocketPro.Modbus" Version="4.3.1" />
+    <PackageVersion Include="TouchSocketPro.PlcBridges" Version="4.3.1" />
+    <PackageVersion Include="TouchSocketPro.Dmtp.PixStream" Version="4.3.1" />
+    <!-- Microsoft Packages -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+    <!-- Third-party Packages -->
+    <PackageVersion Include="Consul" Version="1.8.0" />
+    <PackageVersion Include="log4net" Version="3.3.2" />
+    <PackageVersion Include="MemoryPack" Version="1.21.4" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="FastEndpoints" Version="8.2.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
+    <PackageVersion Include="MQTTnet.Server" Version="5.2.0.1603" />
+    <PackageVersion Include="Spectre.Console" Version="0.57.2" />
+  </ItemGroup>
 </Project>
