@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11217.181 d18.0
+VisualStudioVersion = 18.0.11217.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core", "Src\TouchSocket.Core\TouchSocket.Core.csproj", "{12471445-B5C5-49E2-A7AC-15782299C5A9}"
 EndProject
@@ -65,6 +65,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi.SourceGenerator", "Src\TouchSocket.WebApi.SourceGenerator\TouchSocket.WebApi.SourceGenerator.csproj", "{0A228D44-AE15-4515-A85A-DC9026E52615}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchSocket.Mqtt", "Src\TouchSocket.Mqtt\TouchSocket.Mqtt.csproj", "{201772F1-8C5E-4815-85F2-0CD8507006E7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SSLDemo", "SSLDemo", "{77B2F79B-C4FA-49FE-9157-79335E385C7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DmtpRpcClientConsoleApp", "examples\Dmtp\DmtpRpcClientConsoleApp\DmtpRpcClientConsoleApp.csproj", "{363360B1-593C-3DF0-3C66-E14F212EDD8B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DmtpRpcServerConsoleApp", "examples\Dmtp\DmtpRpcServerConsoleApp\DmtpRpcServerConsoleApp.csproj", "{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -168,6 +174,14 @@ Global
 		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{201772F1-8C5E-4815-85F2-0CD8507006E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{363360B1-593C-3DF0-3C66-E14F212EDD8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{363360B1-593C-3DF0-3C66-E14F212EDD8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{363360B1-593C-3DF0-3C66-E14F212EDD8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{363360B1-593C-3DF0-3C66-E14F212EDD8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -199,6 +213,8 @@ Global
 		{8C2A5D9A-5A3B-4643-922A-71344C5E5991} = {33F8723D-9853-4E00-97DB-521E34EC895C}
 		{0A228D44-AE15-4515-A85A-DC9026E52615} = {33F8723D-9853-4E00-97DB-521E34EC895C}
 		{201772F1-8C5E-4815-85F2-0CD8507006E7} = {065EA3E8-D90E-4074-9979-D651EE4E6B3E}
+		{363360B1-593C-3DF0-3C66-E14F212EDD8B} = {77B2F79B-C4FA-49FE-9157-79335E385C7E}
+		{CEE2ACCA-2350-D2F1-DAAF-E11D692B9FFC} = {77B2F79B-C4FA-49FE-9157-79335E385C7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD1F133D-9B7E-4CD1-97E0-31D529E5CD90}

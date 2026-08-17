@@ -13,8 +13,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Dmtp" />
+		<!--<PackageReference Include="TouchSocket.Dmtp" />-->
 		<!-- MemoryPack 1.21.4 只支持 net7.0/net8.0/netstandard2.1，net472 无可消费资产，故仅在非 net472 时引用 -->
 		<PackageReference Include="MemoryPack" Condition="'$(TargetFramework)' != 'net472'" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Src\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
 	</ItemGroup>
 </Project>

@@ -20,7 +20,7 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-[assembly: GeneratorRpcServerRegister]//生成注册
+//[assembly: GeneratorRpcServerRegister]//生成注册
 
 namespace ConsoleApp2;
 

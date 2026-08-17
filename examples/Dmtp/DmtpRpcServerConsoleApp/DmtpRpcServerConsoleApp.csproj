@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Dmtp" />
+    <ProjectReference Include="..\..\..\Src\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
   </ItemGroup>
 
   <ItemGroup>
