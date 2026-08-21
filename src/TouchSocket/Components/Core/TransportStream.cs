@@ -12,6 +12,7 @@
 
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Threading;
 
 namespace TouchSocket.Sockets;
 
@@ -80,6 +81,18 @@ public class TransportStream : Stream
     {
         return this.ReadAsync(buffer, offset, count).GetAwaiter().GetResult();
     }
+    /// <inheritdoc/>
+    public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+    {
+        return TaskToApm.Begin(this.ReadAsync(buffer, offset, count, CancellationToken.None), callback, state);
+    }
+
+    /// <inheritdoc/>
+    public override int EndRead(IAsyncResult asyncResult)
+    {
+        return TaskToApm.End<int>(asyncResult);
+    }
+
 
     /// <inheritdoc/>
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -178,6 +191,17 @@ public class TransportStream : Stream
     public override void Write(byte[] buffer, int offset, int count)
     {
         this.WriteAsync(buffer, offset, count).GetAwaiter().GetResult();
+    }
+    /// <inheritdoc/>
+    public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+    {
+        return TaskToApm.Begin(this.WriteAsync(buffer, offset, count, CancellationToken.None), callback, state);
+    }
+
+    /// <inheritdoc/>
+    public override void EndWrite(IAsyncResult asyncResult)
+    {
+        TaskToApm.End(asyncResult);
     }
 
     /// <inheritdoc/>
