@@ -85,14 +85,7 @@ public abstract class FlowOperator
     /// <returns>返回本次计算得到的速度</returns>
     public long Speed()
     {
-        // 将临时速度变量的值赋给速度变量，以反映本次计算得到的速度
-        var speed = this.m_speedTemp;
-
-        // 将临时速度变量重置为0，为下一次速度计算做准备
-        this.m_speedTemp = 0;
-
-        // 返回本次计算得到的速度
-        return speed;
+        return Interlocked.Exchange(ref this.m_speedTemp, 0);
     }
 
     /// <summary>
@@ -107,10 +100,11 @@ public abstract class FlowOperator
         // 使用Interlocked类确保在多线程环境下对m_speedTemp的访问是原子操作
         Interlocked.Add(ref this.m_speedTemp, flow);
 
+        var completedLength = Interlocked.Add(ref this.completedLength, flow);
         if (this.Length > 0)
         {
             // 更新进度：计算已完成长度与总长度的比例，转换为浮点数表示完成度
-            this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+            this.m_progress = (float)((double)completedLength / this.Length);
         }
     }
 
@@ -126,10 +120,11 @@ public abstract class FlowOperator
         // 原子操作更新临时速度值，以确保线程安全
         Interlocked.Add(ref this.m_speedTemp, flow);
 
+        var completedLength = Interlocked.Add(ref this.completedLength, flow);
         if (this.Length > 0)
         {
             // 更新进度，计算已完成长度与总长度的比例
-            this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+            this.m_progress = (float)((double)completedLength / this.Length);
         }
     }
 }

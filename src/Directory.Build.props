@@ -5,6 +5,7 @@
 
 	<PropertyGroup>
 		<Version>$(TouchSocketVersion)</Version>
+		<SolutionDir Condition="'$(SolutionDir)'==''">$(MSBuildThisFileDirectory)..\</SolutionDir>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
