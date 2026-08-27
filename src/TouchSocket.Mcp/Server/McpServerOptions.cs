@@ -44,6 +44,16 @@ public sealed class McpServerOptions : McpOptionsBase
     public string Instructions { get; set; }
 
     /// <summary>
+    /// 获取或设置 tools/list 每页返回的最大工具数。小于等于 0 表示不分页。
+    /// </summary>
+    public int ToolListPageSize { get; set; }
+
+    /// <summary>
+    /// 获取或设置 tools/list 是否包含工具输出 Schema。
+    /// </summary>
+    public bool IncludeToolOutputSchemaInToolList { get; set; } = true;
+
+    /// <summary>
     /// 协商服务端响应的 MCP 协议版本。
     /// </summary>
     /// <param name="protocolVersion">客户端请求的协议版本。</param>

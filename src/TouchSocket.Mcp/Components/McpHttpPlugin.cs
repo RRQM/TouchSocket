@@ -50,7 +50,8 @@ public sealed class McpHttpPlugin : PluginBase, IHttpPlugin
                 this.m_toolActionMap, this.m_tools,
                 this.m_resourceActionMap, this.m_resources,
                 this.m_promptActionMap, this.m_prompts,
-                this.m_options.ServerOptions.JsonSerializerOptions);
+                this.m_options.ServerOptions.JsonSerializerOptions,
+                this.m_options.ServerOptions.IncludeToolOutputSchemaInToolList);
         }
     }
 

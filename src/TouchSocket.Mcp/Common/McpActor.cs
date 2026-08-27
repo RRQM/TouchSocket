@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -118,14 +119,16 @@ public sealed class McpActor : DisposableObject
         ActionMap toolMap, List<McpToolDefinition> toolList,
         ActionMap resourceMap, List<McpResource> resourceList,
         ActionMap promptMap, List<McpPrompt> promptList,
-        JsonSerializerOptions jsonSerializerOptions)
+        JsonSerializerOptions jsonSerializerOptions,
+        bool includeToolOutputSchema = true)
     {
         AddRpcToMaps(
             rpcServerProvider,
             toolMap, toolList,
             resourceMap, resourceList, new List<McpResourceTemplate>(), new Dictionary<string, RpcMethod>(StringComparer.OrdinalIgnoreCase), new List<McpResourceTemplateRoute>(),
             promptMap, promptList,
-            jsonSerializerOptions);
+            jsonSerializerOptions,
+            includeToolOutputSchema);
     }
 
     private static void AddRpcToMaps(
@@ -133,14 +136,15 @@ public sealed class McpActor : DisposableObject
         ActionMap toolMap, List<McpToolDefinition> toolList,
         ActionMap resourceMap, List<McpResource> resourceList, List<McpResourceTemplate> resourceTemplateList, Dictionary<string, RpcMethod> legacyResourceMap, List<McpResourceTemplateRoute> resourceTemplateRoutes,
         ActionMap promptMap, List<McpPrompt> promptList,
-        JsonSerializerOptions jsonSerializerOptions)
+        JsonSerializerOptions jsonSerializerOptions,
+        bool includeToolOutputSchema)
     {
         foreach (var rpcMethod in rpcServerProvider.GetMethods())
         {
             if (rpcMethod.GetAttribute<McpToolAttribute>() is McpToolAttribute toolAttr)
             {
                 toolMap.Add(toolAttr.GetInvokeKey(rpcMethod), rpcMethod);
-                toolList.Add(BuildToolMeta(rpcMethod, toolAttr, jsonSerializerOptions));
+                toolList.Add(BuildToolMeta(rpcMethod, toolAttr, jsonSerializerOptions, includeToolOutputSchema));
             }
             else if (rpcMethod.GetAttribute<McpResourceAttribute>() is McpResourceAttribute resourceAttr)
             {
@@ -274,7 +278,8 @@ public sealed class McpActor : DisposableObject
             this.ToolActionMap, this.m_tools,
             this.ResourceActionMap, this.m_resources, this.m_resourceTemplates, this.m_legacyResourceActionMap, this.m_resourceTemplateRoutes,
             this.PromptActionMap, this.m_prompts,
-            this.m_options.JsonSerializerOptions);
+            this.m_options.JsonSerializerOptions,
+            this.m_options.IncludeToolOutputSchemaInToolList);
         this.m_rpcServerProvider = rpcServerProvider;
     }
 
@@ -352,7 +357,7 @@ public sealed class McpActor : DisposableObject
         base.Dispose(disposing);
     }
 
-    private static McpToolDefinition BuildToolMeta(RpcMethod rpcMethod, McpToolAttribute attr, JsonSerializerOptions jsonSerializerOptions)
+    private static McpToolDefinition BuildToolMeta(RpcMethod rpcMethod, McpToolAttribute attr, JsonSerializerOptions jsonSerializerOptions, bool includeOutputSchema)
     {
         var schema = new McpToolInputSchema
         {
@@ -390,7 +395,7 @@ public sealed class McpActor : DisposableObject
             Name = attr.GetInvokeKey(rpcMethod),
             Description = rpcMethod.GetDescription(),
             InputSchema = schema,
-            OutputSchema = GetOutputSchema(rpcMethod, jsonSerializerOptions)
+            OutputSchema = includeOutputSchema ? GetOutputSchema(rpcMethod, jsonSerializerOptions) : null
         };
     }
 
@@ -530,8 +535,44 @@ public sealed class McpActor : DisposableObject
 
     private async Task HandleToolsListAsync(McpRequest request, CancellationToken cancellationToken)
     {
-        var result = new McpListToolsResult { Tools = this.m_tools };
+        var pageSize = this.m_options.ToolListPageSize;
+        if (pageSize <= 0)
+        {
+            var allResult = new McpListToolsResult { Tools = this.m_tools };
+            await this.SendSuccessResponseAsync(request, allResult, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        pageSize = Math.Max(1, pageSize);
+        var offset = GetListCursorOffset(request.Params);
+        var tools = this.m_tools
+            .Skip(offset)
+            .Take(pageSize)
+            .ToList();
+        var nextOffset = offset + tools.Count;
+        var result = new McpListToolsResult
+        {
+            Tools = tools,
+            NextCursor = nextOffset < this.m_tools.Count
+                ? nextOffset.ToString(CultureInfo.InvariantCulture)
+                : null
+        };
         await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static int GetListCursorOffset(JsonElement? parameters)
+    {
+        if (parameters.HasValue
+            && parameters.Value.ValueKind == JsonValueKind.Object
+            && parameters.Value.TryGetProperty("cursor", out var cursorProperty)
+            && cursorProperty.ValueKind == JsonValueKind.String
+            && int.TryParse(cursorProperty.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out var cursor)
+            && cursor > 0)
+        {
+            return cursor;
+        }
+
+        return 0;
     }
 
     private async Task HandleToolsCallAsync(McpRequest request, McpCallContextBase callContext)
