@@ -217,7 +217,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
         }
 
         openApiRoot.Paths = paths;
-        openApiRoot.Components = this.GetComponents(schemaTypeList);
+        openApiRoot.Components = this.GetComponents(schemaTypeList, paths);
 
         return JsonSerializer.Serialize(openApiRoot, OpenApiJsonSerializerContext.Default.OpenApiRoot).ToUtf8Bytes();
     }
@@ -258,54 +258,60 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
                 openApiParameters.Add(openApiParameter);
             }
 
-            var forms = parameters.Where(a => a.IsFromForm);
-            if (forms.Any())
+            // OpenAPI 3 does not define requestBody semantics for GET, HEAD, or DELETE.
+            // Keep those operations body-free even when an invalid/legacy action declares
+            // a body or form parameter.
+            if (AllowsRequestBody(httpMethod))
             {
-                var body = new OpenApiRequestBody();
-                body.Content = new Dictionary<string, OpenApiContent>();
-                var content = new OpenApiContent();
-                var properties = new Dictionary<string, OpenApiProperty>();
-
-                foreach (var item in forms)
+                var forms = parameters.Where(a => a.IsFromForm);
+                if (forms.Any())
                 {
-                    var openApiProperty = this.CreateProperty(item.Parameter.Type, item.Parameter.ParameterInfo.GetDescription());
-                    properties.Add(this.GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
-                    this.AddSchemaType(item.Parameter.Type, schemaTypeList);
-                }
-
-                content.Schema = new OpenApiSchema()
-                {
-                    Type = OpenApiDataTypes.Object,
-                    Properties = properties
-                };
-                body.Content.Add("multipart/form-data", content);
-                openApiPathValue.RequestBody = body;
-            }
-            else
-            {
-                var last = parameters.Where(a => a.IsFromBody).FirstOrDefault();
-                if (last is null)
-                {
-                    if (!IsSimpleType(parameters.Last().Parameter.Type))
-                    {
-                        last = parameters.Last();
-                    }
-                }
-
-                if (last is not null)
-                {
-                    this.AddSchemaType(last.Parameter.Type, schemaTypeList);
-
                     var body = new OpenApiRequestBody();
                     body.Content = new Dictionary<string, OpenApiContent>();
                     var content = new OpenApiContent();
-                    content.Schema = this.CreateSchema(last.Parameter.Type);
-                    body.Content.Add("application/json", content);
-                    body.Content.Add("text/xml", content);
-                    body.Content.Add("text/plain", content);
-                    body.Content.Add("text/json", content);
-                    body.Content.Add("application/xml", content);
+                    var properties = new Dictionary<string, OpenApiProperty>();
+
+                    foreach (var item in forms)
+                    {
+                        var openApiProperty = this.CreateProperty(item.Parameter.Type, item.Parameter.ParameterInfo.GetDescription());
+                        properties.Add(this.GetOpenApiParameterName(item.Parameter.ParameterInfo), openApiProperty);
+                        this.AddSchemaType(item.Parameter.Type, schemaTypeList);
+                    }
+
+                    content.Schema = new OpenApiSchema()
+                    {
+                        Type = OpenApiDataTypes.Object,
+                        Properties = properties
+                    };
+                    body.Content.Add("multipart/form-data", content);
                     openApiPathValue.RequestBody = body;
+                }
+                else
+                {
+                    var last = parameters.Where(a => a.IsFromBody).FirstOrDefault();
+                    if (last is null)
+                    {
+                        if (!IsSimpleType(parameters.Last().Parameter.Type))
+                        {
+                            last = parameters.Last();
+                        }
+                    }
+
+                    if (last is not null)
+                    {
+                        this.AddSchemaType(last.Parameter.Type, schemaTypeList);
+
+                        var body = new OpenApiRequestBody();
+                        body.Content = new Dictionary<string, OpenApiContent>();
+                        var content = new OpenApiContent();
+                        content.Schema = this.CreateSchema(last.Parameter.Type);
+                        body.Content.Add("application/json", content);
+                        body.Content.Add("text/xml", content);
+                        body.Content.Add("text/plain", content);
+                        body.Content.Add("text/json", content);
+                        body.Content.Add("application/xml", content);
+                        openApiPathValue.RequestBody = body;
+                    }
                 }
             }
         }
@@ -512,7 +518,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "OpenApi内部使用，相信动态代码是有效的")]
-    private OpenApiComponent GetComponents(List<Type> types)
+    private OpenApiComponent GetComponents(List<Type> types, Dictionary<string, OpenApiPath> paths)
     {
         if (types.Count == 0)
         {
@@ -550,7 +556,129 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
             components.Schemas.TryAdd(this.GetSchemaName(type), schema);
         }
 
+        this.RemoveUnusedSchemas(components, paths);
+        if (components.Schemas.Count == 0)
+        {
+            return default;
+        }
+
         return components;
+    }
+
+    private void RemoveUnusedSchemas(OpenApiComponent components, Dictionary<string, OpenApiPath> paths)
+    {
+        var referencedSchemas = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var path in paths.Values)
+        {
+            foreach (var operation in path.Values)
+            {
+                if (operation.Parameters != null)
+                {
+                    foreach (var parameter in operation.Parameters)
+                    {
+                        this.CollectSchemaReference(parameter.Schema, referencedSchemas);
+                    }
+                }
+
+                if (operation.RequestBody?.Content != null)
+                {
+                    foreach (var content in operation.RequestBody.Content.Values)
+                    {
+                        this.CollectSchemaReference(content.Schema, referencedSchemas);
+                    }
+                }
+
+                if (operation.Responses != null)
+                {
+                    foreach (var response in operation.Responses.Values)
+                    {
+                        if (response.Content == null)
+                        {
+                            continue;
+                        }
+
+                        foreach (var content in response.Content.Values)
+                        {
+                            this.CollectSchemaReference(content.Schema, referencedSchemas);
+                        }
+                    }
+                }
+            }
+        }
+
+        var processedSchemas = new HashSet<string>(StringComparer.Ordinal);
+        var pendingSchemas = new Queue<string>(referencedSchemas);
+        while (pendingSchemas.Count > 0)
+        {
+            var schemaName = pendingSchemas.Dequeue();
+            if (!processedSchemas.Add(schemaName)
+                || !components.Schemas.TryGetValue(schemaName, out var schema))
+            {
+                continue;
+            }
+
+            var referencedCount = referencedSchemas.Count;
+            this.CollectSchemaReference(schema, referencedSchemas);
+            if (referencedSchemas.Count == referencedCount)
+            {
+                continue;
+            }
+
+            foreach (var referencedSchema in referencedSchemas)
+            {
+                if (!processedSchemas.Contains(referencedSchema))
+                {
+                    pendingSchemas.Enqueue(referencedSchema);
+                }
+            }
+        }
+
+        foreach (var schemaName in components.Schemas.Keys.ToArray())
+        {
+            if (!referencedSchemas.Contains(schemaName))
+            {
+                components.Schemas.Remove(schemaName);
+            }
+        }
+    }
+
+    private void CollectSchemaReference(OpenApiSchema schema, HashSet<string> referencedSchemas)
+    {
+        if (schema is null)
+        {
+            return;
+        }
+
+        CollectSchemaReference(schema.Ref, referencedSchemas);
+        this.CollectSchemaReference(schema.Items, referencedSchemas);
+        if (schema.Properties != null)
+        {
+            foreach (var property in schema.Properties.Values)
+            {
+                this.CollectSchemaReference(property, referencedSchemas);
+            }
+        }
+    }
+
+    private void CollectSchemaReference(OpenApiProperty property, HashSet<string> referencedSchemas)
+    {
+        if (property is null)
+        {
+            return;
+        }
+
+        CollectSchemaReference(property.Ref, referencedSchemas);
+        this.CollectSchemaReference(property.Items, referencedSchemas);
+    }
+
+    private static void CollectSchemaReference(string reference, HashSet<string> referencedSchemas)
+    {
+        const string schemaReferencePrefix = "#/components/schemas/";
+        if (!string.IsNullOrEmpty(reference)
+            && reference.StartsWith(schemaReferencePrefix, StringComparison.Ordinal))
+        {
+            referencedSchemas.Add(reference.Substring(schemaReferencePrefix.Length));
+        }
     }
 
     private string GetIn(ParameterInfo parameter)
@@ -628,9 +756,26 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
     private string GetSchemaName(Type type)
     {
+        if (type.IsArray)
+        {
+            var elementType = type.GetElementType();
+            var arraySuffix = type.GetArrayRank() == 1 ? "Array" : $"Array{type.GetArrayRank()}D";
+            return SanitizeSchemaName($"{this.GetSchemaName(elementType)}{arraySuffix}");
+        }
+
+        if (type.IsByRef)
+        {
+            return SanitizeSchemaName($"{this.GetSchemaName(type.GetElementType())}ByRef");
+        }
+
+        if (type.IsPointer)
+        {
+            return SanitizeSchemaName($"{this.GetSchemaName(type.GetElementType())}Pointer");
+        }
+
         if (!type.IsGenericType)
         {
-            return type.Name;
+            return SanitizeSchemaName(type.Name);
         }
 
         var stringBuilder = new StringBuilder();
@@ -640,7 +785,33 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
         }
 
         stringBuilder.Append(type.Name.Substring(0, type.Name.IndexOf('`')));
-        return stringBuilder.ToString();
+        return SanitizeSchemaName(stringBuilder.ToString());
+    }
+
+    private static string SanitizeSchemaName(string name)
+    {
+        if (name.IsNullOrEmpty())
+        {
+            return "Schema";
+        }
+
+        var stringBuilder = new StringBuilder(name.Length);
+        foreach (var character in name)
+        {
+            if ((character >= 'A' && character <= 'Z')
+                || (character >= 'a' && character <= 'z')
+                || (character >= '0' && character <= '9')
+                || character is '.' or '_' or '-')
+            {
+                stringBuilder.Append(character);
+            }
+            else
+            {
+                stringBuilder.Append('_');
+            }
+        }
+
+        return stringBuilder.Length == 0 ? "Schema" : stringBuilder.ToString();
     }
 
     private static string GetOpenApiPropertyName(PropertyInfo propertyInfo)
@@ -653,13 +824,25 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
     private static long[] GetEnumValues(Type type)
     {
         var values = Enum.GetValues(type);
-        var result = new long[values.Length];
+        var result = new List<long>(values.Length);
+        var seen = new HashSet<long>();
         for (var i = 0; i < values.Length; i++)
         {
-            result[i] = Convert.ToInt64(values.GetValue(i));
+            var value = Convert.ToInt64(values.GetValue(i));
+            if (seen.Add(value))
+            {
+                result.Add(value);
+            }
         }
 
-        return result;
+        return result.ToArray();
+    }
+
+    private static bool AllowsRequestBody(HttpMethod httpMethod)
+    {
+        return httpMethod != HttpMethod.Get
+            && httpMethod != HttpMethod.Delete
+            && !string.Equals(httpMethod.ToString(), "HEAD", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsFormFileCollection(Type type)
