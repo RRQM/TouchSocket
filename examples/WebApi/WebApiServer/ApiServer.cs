@@ -365,4 +365,60 @@ public partial class ApiServer : SingletonRpcServer
     }
 
     #endregion WebApi调用上下文条件响应
+
+    #region OpenAPI文档生成验证
+
+    /// <summary>
+    /// 返回包含数组泛型参数的对象，用于验证数组 SchemaId 不包含方括号。
+    /// </summary>
+    [Router("/api/openapi/array-result")]
+    [WebApi(Method = HttpMethodType.Get)]
+    public OpenApiArrayResult<int[]> GetOpenApiArrayResult()
+    {
+        return new OpenApiArrayResult<int[]> { Data = new[] { 1, 2, 3 } };
+    }
+
+    /// <summary>
+    /// 这是一个故意带 GET 请求体的兼容性示例，OpenAPI 文档不应生成 requestBody。
+    /// </summary>
+    [Router("/api/openapi/get-body")]
+    [WebApi(Method = HttpMethodType.Get)]
+    public OpenApiArrayResult<int[]> GetOpenApiBody([FromBody] OpenApiArrayResult<int[]> request)
+    {
+        return request;
+    }
+
+    /// <summary>
+    /// 返回包含重复枚举别名的对象，用于验证 OpenAPI enum 值会被去重。
+    /// </summary>
+    [Router("/api/openapi/enum-alias")]
+    [WebApi(Method = HttpMethodType.Get)]
+    public OpenApiEnumResult GetOpenApiEnumResult()
+    {
+        return new OpenApiEnumResult { Value = System.Reflection.MethodAttributes.PrivateScope };
+    }
+
+    #endregion OpenAPI文档生成验证
+}
+
+/// <summary>
+/// 用于 OpenAPI 示例的泛型返回模型。
+/// </summary>
+public sealed class OpenApiArrayResult<T>
+{
+    /// <summary>
+    /// 返回数据。
+    /// </summary>
+    public T Data { get; set; }
+}
+
+/// <summary>
+/// 用于 OpenAPI 示例的枚举返回模型。
+/// </summary>
+public sealed class OpenApiEnumResult
+{
+    /// <summary>
+    /// 枚举值。
+    /// </summary>
+    public System.Reflection.MethodAttributes Value { get; set; }
 }

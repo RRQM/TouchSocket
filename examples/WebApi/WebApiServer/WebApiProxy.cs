@@ -176,6 +176,30 @@ Task<System.Object> GetRequestInfoAsync(InvokeOption invokeOption = default);
 /// <exception cref="System.Exception">其他异常</exception>
 Task ConditionalResponseAsync(System.String type,InvokeOption invokeOption = default);
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<OpenApiArrayResult_> GetOpenApiArrayResultAsync(InvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<OpenApiArrayResult_> GetOpenApiBodyAsync(OpenApiArrayResult_ request,InvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<OpenApiEnumResult> GetOpenApiEnumResultAsync(InvokeOption invokeOption = default);
+
 }
 public class ApiServer :IApiServer
 {
@@ -545,6 +569,61 @@ return this.Client.InvokeAsync("/apiserver/conditionalresponse", default, invoke
 
 }
 
+///<summary>
+///无注释信息
+///</summary>
+public async Task<OpenApiArrayResult_> GetOpenApiArrayResultAsync(InvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+return (OpenApiArrayResult_) await this.Client.InvokeAsync("/api/openapi/array-result", typeof(OpenApiArrayResult_), invokeOption, _request);
+
+}
+
+///<summary>
+///无注释信息
+///</summary>
+public async Task<OpenApiArrayResult_> GetOpenApiBodyAsync(OpenApiArrayResult_ request,InvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+_request.Body = request;
+return (OpenApiArrayResult_) await this.Client.InvokeAsync("/api/openapi/get-body", typeof(OpenApiArrayResult_), invokeOption, _request);
+
+}
+
+///<summary>
+///无注释信息
+///</summary>
+public async Task<OpenApiEnumResult> GetOpenApiEnumResultAsync(InvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+return (OpenApiEnumResult) await this.Client.InvokeAsync("/api/openapi/enum-alias", typeof(OpenApiEnumResult), invokeOption, _request);
+
+}
+
 }
 public static class ApiServerExtensions
 {
@@ -829,11 +908,64 @@ return client.InvokeAsync("/apiserver/conditionalresponse", default, invokeOptio
 
 }
 
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<OpenApiArrayResult_> GetOpenApiArrayResultAsync<TClient>(this TClient client,InvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+return (OpenApiArrayResult_) await client.InvokeAsync("/api/openapi/array-result", typeof(OpenApiArrayResult_), invokeOption, _request);
+
 }
+
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<OpenApiArrayResult_> GetOpenApiBodyAsync<TClient>(this TClient client,OpenApiArrayResult_ request,InvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+_request.Body = request;
+return (OpenApiArrayResult_) await client.InvokeAsync("/api/openapi/get-body", typeof(OpenApiArrayResult_), invokeOption, _request);
+
+}
+
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<OpenApiEnumResult> GetOpenApiEnumResultAsync<TClient>(this TClient client,InvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+var _request=new WebApiRequest();
+_request.Method = "Get";
+_request.Headers = null;
+_request.Querys = null;
+_request.Forms = null;
+return (OpenApiEnumResult) await client.InvokeAsync("/api/openapi/enum-alias", typeof(OpenApiEnumResult), invokeOption, _request);
+
+}
+
+}
+public class OpenApiEnumResult
+{
+public System.Reflection.MethodAttributes Value { get; set; }
+}
+
 public class MyClass
 {
 public System.Int32 A { get; set; }
 public System.Int32 B { get; set; }
+}
+
+public class OpenApiArrayResult_
+{
+public System.Int32[] Data { get; set; }
 }
 
 }
