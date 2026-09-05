@@ -204,6 +204,19 @@ public sealed class McpToolExecution
 }
 
 /// <summary>
+/// 表示分页列表请求的参数。
+/// </summary>
+public sealed class McpListRequestParams
+{
+    /// <summary>
+    /// 获取或设置分页游标。
+    /// </summary>
+    [JsonPropertyName("cursor")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string Cursor { get; set; }
+}
+
+/// <summary>
 /// 表示 tools/call 请求的参数。
 /// </summary>
 public sealed class McpCallToolParams

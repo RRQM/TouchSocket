@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Microsoft.Extensions.AI;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -19,7 +20,7 @@ namespace TouchSocket.Mcp;
 /// <summary>
 /// 基于 HTTP（Streamable HTTP 传输）的 MCP 客户端。
 /// </summary>
-public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
+public sealed class McpHttpClient : HttpClientSlim, IMcpClient
 {
     private readonly McpClientBaseImpl m_clientBase = new McpClientBaseImpl();
     private Uri m_endpoint;
@@ -27,9 +28,9 @@ public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
     private bool m_connected;
 
     /// <summary>
-    /// 初始化 <see cref="McpHttpClientSlim"/> 的新实例。
+    /// 初始化 <see cref="McpHttpClient"/> 的新实例。
     /// </summary>
-    public McpHttpClientSlim(System.Net.Http.HttpClient httpClient = default) : base(httpClient)
+    public McpHttpClient(System.Net.Http.HttpClient httpClient = default) : base(httpClient)
     {
     }
 
@@ -62,6 +63,30 @@ public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
     }
 
     /// <inheritdoc/>
+    public Task<McpListToolsResult> ListToolsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListToolsAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListToolsResult> ListAllToolsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllToolsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<List<AIFunction>> ListAllAIFunctionsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllAIFunctionsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<List<AITool>> ListAllAIToolsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllAIToolsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public Task<McpCallToolResult> CallToolAsync(string name, Dictionary<string, object> arguments = null, CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.CallToolAsync(name, arguments, cancellationToken);
@@ -74,9 +99,33 @@ public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
     }
 
     /// <inheritdoc/>
+    public Task<McpListResourcesResult> ListResourcesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListResourcesAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourcesResult> ListAllResourcesAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllResourcesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.ListResourceTemplatesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListResourceTemplatesAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourceTemplatesResult> ListAllResourceTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllResourceTemplatesAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -89,6 +138,18 @@ public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
     public Task<McpListPromptsResult> ListPromptsAsync(CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.ListPromptsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListPromptsResult> ListPromptsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListPromptsAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListPromptsResult> ListAllPromptsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllPromptsAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -122,7 +183,7 @@ public sealed class McpHttpClientSlim : HttpClientSlim, IMcpClient
         this.m_endpoint = this.HttpClient.BaseAddress;
         if (this.m_endpoint == null)
         {
-            throw new InvalidOperationException("McpHttpClientSlim endpoint is required.");
+            throw new InvalidOperationException("McpHttpClient endpoint is required.");
         }
 
         this.m_connected = false;

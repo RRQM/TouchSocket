@@ -45,6 +45,7 @@ namespace TouchSocket.Mcp;
 [JsonSerializable(typeof(McpToolProperty))]
 [JsonSerializable(typeof(McpToolAnnotations))]
 [JsonSerializable(typeof(McpToolExecution))]
+[JsonSerializable(typeof(McpListRequestParams))]
 [JsonSerializable(typeof(McpCallToolParams))]
 [JsonSerializable(typeof(McpCallToolResult))]
 [JsonSerializable(typeof(McpListToolsResult))]

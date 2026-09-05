@@ -567,6 +567,7 @@ public class OpenApiPlugin : PluginBase, IHttpPlugin
 
     private void RemoveUnusedSchemas(OpenApiComponent components, Dictionary<string, OpenApiPath> paths)
     {
+        //PR:https://github.com/RRQM/TouchSocket/pull/142
         var referencedSchemas = new HashSet<string>(StringComparer.Ordinal);
         foreach (var path in paths.Values)
         {

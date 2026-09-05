@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Microsoft.Extensions.AI;
 using System.Text.Json;
 
 namespace TouchSocket.Mcp;
@@ -76,7 +77,72 @@ public abstract class McpClientBase : IMcpClient
     /// <inheritdoc/>
     public Task<McpListToolsResult> ListToolsAsync(CancellationToken cancellationToken = default)
     {
-        return this.InvokeAsync<McpListToolsResult>(McpMethods.ToolsList, null, cancellationToken);
+        return this.ListToolsAsync(null, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListToolsResult> ListToolsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.InvokeAsync<McpListToolsResult>(McpMethods.ToolsList, CreateListParams(cursor), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<McpListToolsResult> ListAllToolsAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new McpListToolsResult();
+        var cursor = default(string);
+        var visitedCursors = new HashSet<string>(StringComparer.Ordinal);
+
+        while (true)
+        {
+            var page = await this.ListToolsAsync(cursor, cancellationToken).ConfigureAwait(false);
+            if (page?.Tools != null)
+            {
+                result.Tools.AddRange(page.Tools);
+            }
+
+            cursor = page?.NextCursor;
+            if (string.IsNullOrEmpty(cursor))
+            {
+                return result;
+            }
+
+            if (!visitedCursors.Add(cursor))
+            {
+                throw new InvalidOperationException("MCP tools/list returned a repeated cursor.");
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<AIFunction>> ListAllAIFunctionsAsync(CancellationToken cancellationToken = default)
+    {
+        var toolsResult = await this.ListAllToolsAsync(cancellationToken).ConfigureAwait(false);
+        var functions = new List<AIFunction>();
+        if (toolsResult?.Tools == null)
+        {
+            return functions;
+        }
+
+        foreach (var tool in toolsResult.Tools)
+        {
+            functions.Add(new McpAIFunction(this, tool));
+        }
+
+        return functions;
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<AITool>> ListAllAIToolsAsync(CancellationToken cancellationToken = default)
+    {
+        var functions = await this.ListAllAIFunctionsAsync(cancellationToken).ConfigureAwait(false);
+        var tools = new List<AITool>(functions.Count);
+        foreach (var function in functions)
+        {
+            tools.Add(function);
+        }
+
+        return tools;
     }
 
     /// <inheritdoc/>
@@ -100,13 +166,75 @@ public abstract class McpClientBase : IMcpClient
     /// <inheritdoc/>
     public Task<McpListResourcesResult> ListResourcesAsync(CancellationToken cancellationToken = default)
     {
-        return this.InvokeAsync<McpListResourcesResult>(McpMethods.ResourcesList, null, cancellationToken);
+        return this.ListResourcesAsync(null, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourcesResult> ListResourcesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.InvokeAsync<McpListResourcesResult>(McpMethods.ResourcesList, CreateListParams(cursor), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<McpListResourcesResult> ListAllResourcesAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new McpListResourcesResult();
+        var cursor = default(string);
+        var visitedCursors = new HashSet<string>(StringComparer.Ordinal);
+
+        while (true)
+        {
+            var page = await this.ListResourcesAsync(cursor, cancellationToken).ConfigureAwait(false);
+            if (page?.Resources != null)
+            {
+                result.Resources.AddRange(page.Resources);
+            }
+
+            cursor = page?.NextCursor;
+            if (string.IsNullOrEmpty(cursor))
+            {
+                return result;
+            }
+
+            ThrowIfCursorRepeated(visitedCursors, cursor, McpMethods.ResourcesList);
+        }
     }
 
     /// <inheritdoc/>
     public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(CancellationToken cancellationToken = default)
     {
-        return this.InvokeAsync<McpListResourceTemplatesResult>(McpMethods.ResourcesTemplatesList, null, cancellationToken);
+        return this.ListResourceTemplatesAsync(null, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.InvokeAsync<McpListResourceTemplatesResult>(McpMethods.ResourcesTemplatesList, CreateListParams(cursor), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<McpListResourceTemplatesResult> ListAllResourceTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new McpListResourceTemplatesResult();
+        var cursor = default(string);
+        var visitedCursors = new HashSet<string>(StringComparer.Ordinal);
+
+        while (true)
+        {
+            var page = await this.ListResourceTemplatesAsync(cursor, cancellationToken).ConfigureAwait(false);
+            if (page?.ResourceTemplates != null)
+            {
+                result.ResourceTemplates.AddRange(page.ResourceTemplates);
+            }
+
+            cursor = page?.NextCursor;
+            if (string.IsNullOrEmpty(cursor))
+            {
+                return result;
+            }
+
+            ThrowIfCursorRepeated(visitedCursors, cursor, McpMethods.ResourcesTemplatesList);
+        }
     }
 
     /// <inheritdoc/>
@@ -118,13 +246,59 @@ public abstract class McpClientBase : IMcpClient
     /// <inheritdoc/>
     public Task<McpListPromptsResult> ListPromptsAsync(CancellationToken cancellationToken = default)
     {
-        return this.InvokeAsync<McpListPromptsResult>(McpMethods.PromptsList, null, cancellationToken);
+        return this.ListPromptsAsync(null, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListPromptsResult> ListPromptsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.InvokeAsync<McpListPromptsResult>(McpMethods.PromptsList, CreateListParams(cursor), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<McpListPromptsResult> ListAllPromptsAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new McpListPromptsResult();
+        var cursor = default(string);
+        var visitedCursors = new HashSet<string>(StringComparer.Ordinal);
+
+        while (true)
+        {
+            var page = await this.ListPromptsAsync(cursor, cancellationToken).ConfigureAwait(false);
+            if (page?.Prompts != null)
+            {
+                result.Prompts.AddRange(page.Prompts);
+            }
+
+            cursor = page?.NextCursor;
+            if (string.IsNullOrEmpty(cursor))
+            {
+                return result;
+            }
+
+            ThrowIfCursorRepeated(visitedCursors, cursor, McpMethods.PromptsList);
+        }
     }
 
     /// <inheritdoc/>
     public Task<McpGetPromptResult> GetPromptAsync(string name, Dictionary<string, string> arguments = null, CancellationToken cancellationToken = default)
     {
         return this.InvokeAsync<McpGetPromptResult>(McpMethods.PromptsGet, new McpGetPromptParams { Name = name, Arguments = arguments }, cancellationToken);
+    }
+
+    private static McpListRequestParams CreateListParams(string cursor)
+    {
+        return string.IsNullOrEmpty(cursor)
+            ? null
+            : new McpListRequestParams { Cursor = cursor };
+    }
+
+    private static void ThrowIfCursorRepeated(HashSet<string> visitedCursors, string cursor, string method)
+    {
+        if (!visitedCursors.Add(cursor))
+        {
+            throw new InvalidOperationException($"MCP {method} returned a repeated cursor.");
+        }
     }
 
     /// <summary>

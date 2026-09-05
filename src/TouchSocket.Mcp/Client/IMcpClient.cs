@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Microsoft.Extensions.AI;
+
 namespace TouchSocket.Mcp;
 
 /// <summary>
@@ -25,11 +27,40 @@ public interface IMcpClient
     Task<McpInitializeResult> InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 获取服务端所有可用工具列表。
+    /// 获取服务端默认页的可用工具列表。
     /// </summary>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>工具列表结果。</returns>
     Task<McpListToolsResult> ListToolsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端指定游标页的可用工具列表。
+    /// </summary>
+    /// <param name="cursor">分页游标。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>工具列表结果。</returns>
+    Task<McpListToolsResult> ListToolsAsync(string cursor, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有可用工具列表，自动拉取所有分页。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>合并后的工具列表结果。</returns>
+    Task<McpListToolsResult> ListAllToolsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有可用工具，并转换为 <see cref="AIFunction"/> 列表。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>可由 Microsoft.Extensions.AI 使用的函数列表。</returns>
+    Task<List<AIFunction>> ListAllAIFunctionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有可用工具，并转换为 <see cref="AITool"/> 列表。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>可由 Microsoft.Extensions.AI 使用的工具列表。</returns>
+    Task<List<AITool>> ListAllAIToolsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 调用服务端指定工具。
@@ -41,18 +72,48 @@ public interface IMcpClient
     Task<McpCallToolResult> CallToolAsync(string name, Dictionary<string, object> arguments = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 获取服务端所有可用资源列表。
+    /// 获取服务端默认页的可用资源列表。
     /// </summary>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>资源列表结果。</returns>
     Task<McpListResourcesResult> ListResourcesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 获取服务端所有资源模板列表。
+    /// 获取服务端指定游标页的可用资源列表。
+    /// </summary>
+    /// <param name="cursor">分页游标。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>资源列表结果。</returns>
+    Task<McpListResourcesResult> ListResourcesAsync(string cursor, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有可用资源列表，自动拉取所有分页。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>合并后的资源列表结果。</returns>
+    Task<McpListResourcesResult> ListAllResourcesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端默认页的资源模板列表。
     /// </summary>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>资源模板列表结果。</returns>
     Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端指定游标页的资源模板列表。
+    /// </summary>
+    /// <param name="cursor">分页游标。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>资源模板列表结果。</returns>
+    Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(string cursor, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有资源模板列表，自动拉取所有分页。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>合并后的资源模板列表结果。</returns>
+    Task<McpListResourceTemplatesResult> ListAllResourceTemplatesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 读取指定 URI 的资源内容。
@@ -63,11 +124,26 @@ public interface IMcpClient
     Task<McpReadResourceResult> ReadResourceAsync(string uri, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 获取服务端所有可用提示模板列表。
+    /// 获取服务端默认页的可用提示模板列表。
     /// </summary>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>提示模板列表结果。</returns>
     Task<McpListPromptsResult> ListPromptsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端指定游标页的可用提示模板列表。
+    /// </summary>
+    /// <param name="cursor">分页游标。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>提示模板列表结果。</returns>
+    Task<McpListPromptsResult> ListPromptsAsync(string cursor, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取服务端所有可用提示模板列表，自动拉取所有分页。
+    /// </summary>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>合并后的提示模板列表结果。</returns>
+    Task<McpListPromptsResult> ListAllPromptsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 获取指定提示模板的内容。

@@ -200,6 +200,9 @@
   <Folder Name="/Serial/">
     <Project Path="Serial/SerialPortClientConsoleApp/SerialPortClientConsoleApp.csproj" />
   </Folder>
+  <Folder Name="/Ssh/">
+    <Project Path="Ssh/SshConsoleApp/SshConsoleApp.csproj" Id="4c3156be-496b-4308-9722-ab32dd0b52fd" />
+  </Folder>
   <Folder Name="/Ssl证书相关/">
     <File Path="Ssl证书相关/证书生成.zip" />
   </Folder>

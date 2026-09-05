@@ -957,15 +957,15 @@ public class OpenApiEnumResult
 public System.Reflection.MethodAttributes Value { get; set; }
 }
 
+public class OpenApiArrayResult_
+{
+public System.Int32[] Data { get; set; }
+}
+
 public class MyClass
 {
 public System.Int32 A { get; set; }
 public System.Int32 B { get; set; }
-}
-
-public class OpenApiArrayResult_
-{
-public System.Int32[] Data { get; set; }
 }
 
 }

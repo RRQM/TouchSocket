@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Microsoft.Extensions.AI;
 using System.Diagnostics;
 using TouchSocket.Core;
 
@@ -94,6 +95,30 @@ public sealed class McpStdioClient : SetupConfigObject, IMcpClient, IDisposable
     }
 
     /// <inheritdoc/>
+    public Task<McpListToolsResult> ListToolsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListToolsAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListToolsResult> ListAllToolsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllToolsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<List<AIFunction>> ListAllAIFunctionsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllAIFunctionsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<List<AITool>> ListAllAIToolsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllAIToolsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public Task<McpCallToolResult> CallToolAsync(string name, Dictionary<string, object> arguments = null, CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.CallToolAsync(name, arguments, cancellationToken);
@@ -106,9 +131,33 @@ public sealed class McpStdioClient : SetupConfigObject, IMcpClient, IDisposable
     }
 
     /// <inheritdoc/>
+    public Task<McpListResourcesResult> ListResourcesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListResourcesAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourcesResult> ListAllResourcesAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllResourcesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.ListResourceTemplatesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourceTemplatesResult> ListResourceTemplatesAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListResourceTemplatesAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListResourceTemplatesResult> ListAllResourceTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllResourceTemplatesAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -121,6 +170,18 @@ public sealed class McpStdioClient : SetupConfigObject, IMcpClient, IDisposable
     public Task<McpListPromptsResult> ListPromptsAsync(CancellationToken cancellationToken = default)
     {
         return this.m_clientBase.ListPromptsAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListPromptsResult> ListPromptsAsync(string cursor, CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListPromptsAsync(cursor, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<McpListPromptsResult> ListAllPromptsAsync(CancellationToken cancellationToken = default)
+    {
+        return this.m_clientBase.ListAllPromptsAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
