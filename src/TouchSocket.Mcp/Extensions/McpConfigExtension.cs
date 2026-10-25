@@ -24,6 +24,12 @@ public static class McpConfigExtension
     public static readonly DependencyProperty<McpClientOptions> McpClientOptionsProperty = new("McpClientOptions", null);
 
     /// <summary>
+    /// MCP 命名管道服务端协议配置属性。
+    /// </summary>
+    [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]
+    public static readonly DependencyProperty<McpServerOptions> McpServerOptionsProperty = new("McpServerOptions", null);
+
+    /// <summary>
     /// MCP stdio 客户端配置属性。
     /// </summary>
     [GeneratorProperty(TargetType = typeof(TouchSocketConfig), ActionMode = true)]

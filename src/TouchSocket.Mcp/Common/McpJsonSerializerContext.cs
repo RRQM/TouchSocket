@@ -61,6 +61,7 @@ namespace TouchSocket.Mcp;
 [JsonSerializable(typeof(McpListResourcesResult))]
 [JsonSerializable(typeof(McpListResourceTemplatesResult))]
 [JsonSerializable(typeof(McpReadResourceResult))]
+[JsonSerializable(typeof(McpReadResourceParams))]
 [JsonSerializable(typeof(McpPrompt))]
 [JsonSerializable(typeof(McpPromptArgument))]
 [JsonSerializable(typeof(McpPromptMessage))]

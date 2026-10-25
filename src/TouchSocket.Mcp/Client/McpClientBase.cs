@@ -240,7 +240,7 @@ public abstract class McpClientBase : IMcpClient
     /// <inheritdoc/>
     public Task<McpReadResourceResult> ReadResourceAsync(string uri, CancellationToken cancellationToken = default)
     {
-        return this.InvokeAsync<McpReadResourceResult>(McpMethods.ResourcesRead, new { uri }, cancellationToken);
+        return this.InvokeAsync<McpReadResourceResult>(McpMethods.ResourcesRead, new McpReadResourceParams { Uri = uri }, cancellationToken);
     }
 
     /// <inheritdoc/>

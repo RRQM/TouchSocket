@@ -206,6 +206,18 @@ public sealed class McpListResourceTemplatesResult
 }
 
 /// <summary>
+/// 表示 resources/read 的请求参数。
+/// </summary>
+public sealed class McpReadResourceParams
+{
+    /// <summary>
+    /// 获取或设置要读取的资源 URI。
+    /// </summary>
+    [JsonPropertyName("uri")]
+    public string Uri { get; set; }
+}
+
+/// <summary>
 /// 表示 resources/read 的响应结果。
 /// </summary>
 public sealed class McpReadResourceResult
