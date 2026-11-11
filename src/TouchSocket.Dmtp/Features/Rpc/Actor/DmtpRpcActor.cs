@@ -234,11 +234,13 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
     {
         try
         {
-            await this.DmtpActor.SendAsync(this.m_cancelInvoke,new CanceledPackage {SourceId = this.DmtpActor.Id,TargetId=targetId,Sign=sign }, this.DmtpActor.ClosedToken).ConfigureDefaultAwait();
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(this.DmtpActor.ClosedToken);
+            cts.CancelAfter(1000);
+            await this.DmtpActor.SendAsync(this.m_cancelInvoke,new CanceledPackage {SourceId = this.DmtpActor.Id,TargetId=targetId,Sign=sign }, cts.Token).ConfigureDefaultAwait();
         }
         catch
         {
-            //不关心异常
+            //取消通知是尽力而为，失败不影响调用方
         }
     }
 
