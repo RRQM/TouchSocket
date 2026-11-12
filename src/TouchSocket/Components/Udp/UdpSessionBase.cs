@@ -28,13 +28,11 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     #region 字段
 
     private ServerState m_serverState;
-    private InternalUdpReceiver m_receiver;
     private UdpDataHandlingAdapter m_dataHandlingAdapter;
     private DateTimeOffset m_lastReceivedTime;
     private DateTimeOffset m_lastSendTime;
     private UdpNetworkMonitor m_monitor;
     private readonly List<Task> m_receiveTasks = new List<Task>();
-    private readonly SemaphoreSlim m_semaphoreSlimForReceiver = new SemaphoreSlim(1, 1);
 
     #endregion 字段
 
@@ -190,12 +188,13 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
             // 而此时 m_serverState 仍为 Running，RunReceive 无法感知停止状态，
             // 将继续下一次循环访问已被置 null 的 m_monitor，导致 NullReferenceException。
             this.m_serverState = ServerState.Stopped;
+
+
             this.m_monitor?.Socket.Dispose();
             await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureDefaultAwait();
             this.m_receiveTasks.Clear();
             this.m_monitor = null;
 
-            this.m_receiver?.Complete(default);
             await this.PluginManager.RaiseIServerStartedPluginAsync(this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureDefaultAwait();
 
             return Result.Success;
@@ -461,21 +460,9 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
     private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        if (this.m_receiver != null)
-        {
-            await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureDefaultAwait();
-            try
-            {
-                await this.m_receiver.InputReceive(remoteEndPoint, memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-                return;
-            }
-            finally
-            {
-                this.m_semaphoreSlimForReceiver.Release();
-            }
-        }
         await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, memory, requestInfo)).ConfigureDefaultAwait();
     }
+
 
     #region Throw
 
@@ -687,27 +674,4 @@ public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
 
     #endregion DefaultSendAsync
 
-    #region Receiver
-
-    /// <summary>
-    /// 创建或获取一个UDP接收器对象。
-    /// </summary>
-    /// <param name="receiverObject">接收器客户端对象，用于处理UDP接收结果。</param>
-    /// <returns>返回一个<see cref="IReceiver{TResult}"/>类型的接收器对象。</returns>
-    protected IReceiver<IUdpReceiverResult> ProtectedCreateReceiver(IReceiverClient<IUdpReceiverResult> receiverObject)
-    {
-        // 使用null合并运算符确保m_receiver只在首次调用时被实例化，以提高性能并减少资源消耗。
-        return this.m_receiver ??= new InternalUdpReceiver(receiverObject);
-    }
-
-    /// <summary>
-    /// 清除当前的UDP接收器对象。
-    /// </summary>
-    protected void ProtectedClearReceiver()
-    {
-        // 将m_receiver设置为<see langword="null"/>，以确保在不再需要时，接收器对象可以被垃圾回收。
-        this.m_receiver = null;
-    }
-
-    #endregion Receiver
 }

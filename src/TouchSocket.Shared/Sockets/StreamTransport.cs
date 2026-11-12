@@ -30,8 +30,28 @@ internal class StreamTransport : BaseTransport
     {
         try
         {
-            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-            this.m_stream.Close();
+            if (this.TryBeginClose(msg))
+            {
+                try
+                {
+                    await this.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+                    try
+                    {
+                        await this.CompleteSendAsync(cancellationToken).ConfigureDefaultAwait();
+                    }
+                    finally
+                    {
+                        this.WriteLocker.Release();
+                    }
+                }
+                finally
+                {
+                    // .NET Framework 的管道读取不能仅靠取消令牌退出，先关闭流再等待循环。
+                    this.SignalClose();
+                    this.m_stream.Close();
+                }
+            }
+            await this.WaitForTransportClosedAsync(cancellationToken).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
@@ -53,8 +73,7 @@ internal class StreamTransport : BaseTransport
 
                 if (result == 0)
                 {
-                    this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
-                    await pipeWriter.CompleteAsync().ConfigureDefaultAwait();
+                    this.TrySetClosedEventArgs(new ClosedEventArgs(TouchSocketResource.RemoteDisconnects));
                     return;
                 }
 
@@ -62,7 +81,7 @@ internal class StreamTransport : BaseTransport
 
                 pipeWriter.Advance(result);
                 var flushResult = await pipeWriter.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-                if (flushResult.IsCompleted)
+                if (flushResult.IsCompleted || flushResult.IsCanceled)
                 {
                     break;
                 }
@@ -70,8 +89,12 @@ internal class StreamTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(ex.Message, ex);
-            await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureDefaultAwait();
+            this.TrySetClosedEventArgs(new ClosedEventArgs(ex.Message, ex));
+        }
+        finally
+        {
+            // 每个退出分支都结束管道，解除上层接收等待。
+            await this.m_pipeReceive.Writer.CompleteAsync().ConfigureDefaultAwait();
         }
     }
 

@@ -62,7 +62,7 @@ public partial class TcpClientBase
 
                 // 确保上次接收任务已经结束
                 var runTask = this.m_runTask;
-                if (runTask != null)
+                if (runTask != null && !SessionRunContext.IsInSession(this))
                 {
                     await runTask.ConfigureDefaultAwait();
                 }

@@ -163,7 +163,7 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
     {
         lock (this.m_closeLock)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(msg);
+            this.TrySetClosedEventArgs(new ClosedEventArgs(msg));
 
             if (Interlocked.CompareExchange(ref this.m_closeSignaled, 1, 0) != 0)
             {
@@ -172,6 +172,17 @@ internal abstract class BaseTransport : SafetyDisposableObject, ITransport
 
             return true;
         }
+    }
+
+    /// <summary>
+    /// 尝试记录关闭原因。只有第一次记录生效（主动关闭、远端断开、异常三者以先到者为准），
+    /// 保证并发关闭时 Closing 与 Closed 使用同一个关闭原因。
+    /// </summary>
+    /// <param name="e">关闭原因。</param>
+    /// <returns>本次调用记录成功时返回 <see langword="true"/>；已有关闭原因时返回 <see langword="false"/>。</returns>
+    public bool TrySetClosedEventArgs(ClosedEventArgs e)
+    {
+        return Interlocked.CompareExchange(ref this.m_closedEventArgs, e, null) == null;
     }
 
     protected Task WaitForTransportClosedAsync(CancellationToken cancellationToken = default)

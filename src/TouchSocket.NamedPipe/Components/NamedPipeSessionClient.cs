@@ -137,21 +137,6 @@ public class NamedPipeSessionClient : NamedPipeSessionClientBase, INamedPipeSess
 
     #endregion 事件&委托
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    public void ClearReceiver()
-    {
-        this.ProtectedClearReceiver();
-    }
-
-    /// <inheritdoc/>
-    public IReceiver<IReceiverResult> CreateReceiver()
-    {
-        return this.ProtectedCreateReceiver(this);
-    }
-
-    #endregion Receiver
 
     /// <summary>
     /// 处理已接收到的数据。

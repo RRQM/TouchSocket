@@ -86,19 +86,4 @@ public class UdpSession : UdpSessionBase, IUdpSession
 
     #endregion 向设置的远程异步发送
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    public void ClearReceiver()
-    {
-        this.ProtectedClearReceiver();
-    }
-
-    /// <inheritdoc/>
-    public IReceiver<IUdpReceiverResult> CreateReceiver()
-    {
-        return this.ProtectedCreateReceiver(this);
-    }
-
-    #endregion Receiver
 }

@@ -24,9 +24,9 @@
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\BaseTransport.cs" Link="Transports\BaseTransport.cs" />
-	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Common\InternalReceiver.cs" />
-	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Common\InternalReceiverResult.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\WaitingResponseCore.cs" Link="Common\WaitingResponseCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\SessionRunContext.cs" Link="Common\SessionRunContext.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />

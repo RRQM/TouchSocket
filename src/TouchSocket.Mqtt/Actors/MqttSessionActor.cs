@@ -226,6 +226,7 @@ public class MqttSessionActor : MqttActor
             ReceiveMaximum = message.ReceiveMaximum,
             SessionExpiryInterval = message.SessionExpiryInterval,
             ReasonCode = MqttReasonCode.Success,
+            RetainAvailable = true,
             ReasonString = "Success",
             ResponseInformation = "Success"
         };
@@ -253,16 +254,28 @@ public class MqttSessionActor : MqttActor
 
     protected override async Task InputMqttSubscribeMessageAsync(MqttSubscribeMessage message, CancellationToken cancellationToken)
     {
+        var retainedRequests = new List<SubscribeRequest>();
         var contentForAck = new MqttSubAckMessage()
         {
             MessageId = message.MessageId
         };
         foreach (var item in message.SubscribeRequests)
         {
+            var existed = this.m_mqttBroker.ContainsSubscriber(item.Topic, new Subscription(this.Id));
             this.m_mqttBroker.RegisterActor(this.Id, item.Topic, item.QosLevel);
             contentForAck.AddReturnCode(item.QosLevel);
+            if (this.Version != MqttProtocolVersion.V500 ||
+                item.RetainHandling == MqttRetainHandling.SendAtSubscribe ||
+                (item.RetainHandling == MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly && !existed))
+            {
+                retainedRequests.Add(item);
+            }
         }
         await this.ProtectedOutputSendAsync(contentForAck, cancellationToken).ConfigureDefaultAwait();
+        foreach (var request in retainedRequests)
+        {
+            await this.m_mqttBroker.SendRetainedMessagesAsync(this, request).ConfigureDefaultAwait();
+        }
     }
 
     /// <inheritdoc/>

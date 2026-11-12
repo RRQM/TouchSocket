@@ -16,7 +16,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 定义了一个接口，该接口继承了多个与TCP客户端相关的接口，用于统一和扩展TCP客户端的功能。
 /// </summary>
-public interface ITcpClient : ITcpSession, ISetupConfigObject, ITcpConnectableClient, IClientSender, IReceiverClient<IReceiverResult>
+public interface ITcpClient : ITcpSession, ISetupConfigObject, ITcpConnectableClient, IClientSender
 {
     /// <summary>
     /// 连接事件处理程序，用于处理与 ITcpClient 接口相关的连接事件

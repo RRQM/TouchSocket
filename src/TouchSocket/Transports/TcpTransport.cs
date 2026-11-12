@@ -185,13 +185,30 @@ internal sealed class TcpTransport : BaseTransport
             var began = this.TryBeginClose(msg);
             if (began)
             {
-                // 先发出关闭信号，解除所有基于 Pipe 的等待，再关闭底层 Socket。
-                // 这样 SSL 包装层在 CompleteAsync 时不会继续等待底层管道读写自然结束。
-                this.SignalClose();
-                this.Close();
-
-                this.m_reader?.CancelPendingRead();
-                this.m_writer?.CancelPendingFlush();
+                try
+                {
+                    // SendAsync 完成仅表示写入管道，关闭前必须等待底层发送完成。
+                    await this.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+                    try
+                    {
+                        if (this.m_writer != null)
+                        {
+                            await this.m_writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+                        }
+                        await this.CompleteSendAsync(cancellationToken).ConfigureDefaultAwait();
+                    }
+                    finally
+                    {
+                        this.WriteLocker.Release();
+                    }
+                }
+                finally
+                {
+                    this.SignalClose();
+                    this.Close();
+                    this.m_reader?.CancelPendingRead();
+                    this.m_writer?.CancelPendingFlush();
+                }
             }
 
             Task shutdownTask;
@@ -233,7 +250,7 @@ internal sealed class TcpTransport : BaseTransport
 
                     if (waitResult.SocketError != SocketError.Success)
                     {
-                        this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
+                        this.TrySetClosedEventArgs(new ClosedEventArgs(TouchSocketResource.RemoteDisconnects));
                         error = new SocketException((int)waitResult.SocketError);
                         break;
                     }
@@ -260,7 +277,7 @@ internal sealed class TcpTransport : BaseTransport
                     if (result.BytesTransferred == 0)
                     {
                         // 远程连接已断开（收到 FIN）
-                        this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
+                        this.TrySetClosedEventArgs(new ClosedEventArgs(TouchSocketResource.RemoteDisconnects));
                         break;
                     }
 
@@ -294,7 +311,7 @@ internal sealed class TcpTransport : BaseTransport
                 else
                 {
                     // 处理接收失败的情况
-                    this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
+                    this.TrySetClosedEventArgs(new ClosedEventArgs(TouchSocketResource.RemoteDisconnects));
                     error = new SocketException((int)result.SocketError);
                     break;
                 }
@@ -302,7 +319,7 @@ internal sealed class TcpTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(ex.Message, ex);
+            this.TrySetClosedEventArgs(new ClosedEventArgs(ex.Message, ex));
             error = ex;
         }
         finally
@@ -313,8 +330,7 @@ internal sealed class TcpTransport : BaseTransport
             // 若不在此处 Complete，而 CancelPendingRead() 标志已被消费，则 ReceiveLoopAsync 将死锁。
             await CompleteReceivePipeAsync(pipeWriter, error).ConfigureDefaultAwait();
 
-            // 取消内置接收和发送任务
-            base.m_tokenSource.SafeCancel();
+            // 收到 FIN 后仍允许上层处理剩余请求并发送响应，由会话结束时关闭传输层。
         }
     }
 

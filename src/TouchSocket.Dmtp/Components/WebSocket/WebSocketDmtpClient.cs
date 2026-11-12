@@ -68,10 +68,12 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
                 Connected = this.OnDmtpActorConnected,
                 Closing = this.OnDmtpActorClose,
                 Closed = this.OnDmtpActorClosed,
+                TransportClosing = (msg, manual, token) => base.CloseAsync(msg, token),
                 Logger = this.Logger,
                 Client = this,
                 FindDmtpActor = this.m_findDmtpActor,
                 CreatedChannel = this.OnDmtpActorCreateChannel,
+                MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? new DmtpAdapter().MaxPackageSize,
             };
             this.m_dmtpAdapter = new DmtpAdapter();
             this.m_dmtpAdapter.Config(this.Config);
@@ -81,6 +83,11 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
             ThrowHelper.ThrowIfNull(dmtpOption, nameof(dmtpOption));
 
             await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureDefaultAwait();
+        }
+        catch (Exception ex)
+        {
+            await this.WebSocketCloseAsync(ex.Message, false, CancellationToken.None).ConfigureDefaultAwait();
+            throw;
         }
         finally
         {
@@ -101,24 +108,9 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public override Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var dmtpActor = this.m_dmtpActor;
-            if (dmtpActor != null)
-            {
-                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-            }
-
-            await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-
-            return Result.Success;
-        }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? base.CloseAsync(msg, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -130,6 +122,7 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     /// <inheritdoc/>
     protected override void LoadConfig(TouchSocketConfig config)
     {
+        base.LoadConfig(config);
         var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
         if (dmtpRouteService != null)
         {
@@ -145,6 +138,10 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         {
             using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
+                if (buffer.Memory.Length > this.m_dmtpAdapter.MaxPackageSize)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(sequence), "Dmtp报文超过最大包长。");
+                }
                 var message = DmtpMessage.CreateFrom(buffer.Memory);
                 if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
                 {
@@ -155,19 +152,32 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
         catch (Exception ex)
         {
             this.Logger?.Debug(this, ex);
+            await base.CloseAsync(ex.Message).ConfigureDefaultAwait();
         }
     }
 
     #region 内部委托绑定
 
     /// <inheritdoc/>
-    protected override Task OnWebSocketClosed(ClosedEventArgs e)
+    protected override async Task OnWebSocketClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor?.ClosedMessage.HasValue() == true)
+        var actor = this.m_dmtpActor;
+        try
         {
-            e.Message = this.m_dmtpActor.ClosedMessage;
+            if (actor != null)
+            {
+                if (actor.ClosedMessage.HasValue())
+                {
+                    e.Message = actor.ClosedMessage;
+                }
+                await actor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
+            }
+            await base.OnWebSocketClosed(e).ConfigureDefaultAwait();
         }
-        return this.m_dmtpActor?.FinalizeAsync(e.Message, e.Exception) ?? EasyTask.CompletedTask;
+        finally
+        {
+            actor.SafeDispose();
+        }
     }
 
     private Task OnDmtpActorClose(DmtpActor actor, string msg)
@@ -182,22 +192,22 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
     {
-        return this.OnCreateChannel(e);
+        return this.OnDmtpCreatedChannel(e);
     }
 
     private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnected(e);
+        return this.OnDmtpConnected(e);
     }
 
     private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnecting(e);
+        return this.OnDmtpConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
     {
-        return this.OnRouting(e);
+        return this.OnDmtpRouting(e);
     }
 
     private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
@@ -305,4 +315,20 @@ public class WebSocketDmtpClient : SetupClientWebSocket, IWebSocketDmtpClient
     }
 
     #endregion 事件触发
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnecting(DmtpVerifyEventArgs e) => this.OnConnecting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnected(DmtpVerifyEventArgs e) => this.OnConnected(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpRouting(PackageRouterEventArgs e) => this.OnRouting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpCreatedChannel(CreateChannelEventArgs e) => this.OnCreateChannel(e);
 }

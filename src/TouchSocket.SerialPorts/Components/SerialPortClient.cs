@@ -150,21 +150,6 @@ public class SerialPortClient : SerialPortClientBase, ISerialPortClient
 
     #endregion 事件
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    public void ClearReceiver()
-    {
-        this.ProtectedClearReceiver();
-    }
-
-    /// <inheritdoc/>
-    public IReceiver<IReceiverResult> CreateReceiver()
-    {
-        return this.ProtectedCreateReceiver(this);
-    }
-
-    #endregion Receiver
 
     #region 异步发送
 

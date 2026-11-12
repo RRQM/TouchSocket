@@ -166,6 +166,30 @@
 
 	<ItemGroup Condition="'$(Configuration)'=='Debug' And '$(IsSourceGenerator)'!='True'">
 		<InternalsVisibleTo Include="XUnitTestProject" />
+        <InternalsVisibleTo Include="TouchSocket.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Core.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Dmtp.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Http.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.JsonRpc.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Mcp.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Modbus.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Mqtt.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Mqtt.Rpc.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.NamedPipe.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Redis.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Rpc.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.Semi.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.SerialPorts.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.SocketIo.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.WebApi.Tests" />
+        <InternalsVisibleTo Include="TouchSocket.XmlRpc.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.Dmtp.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.Modbus.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.PlcBridges.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.S7.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.SocketIo.Tests" />
+        <InternalsVisibleTo Include="TouchSocketPro.Ssh.Tests" />
+
 		<InternalsVisibleTo Include="SimpleTest" />
 		<InternalsVisibleTo Include="SimpleTest2" />
 	</ItemGroup>

@@ -33,7 +33,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     public IDmtpActor DmtpActor => this.m_dmtpActor;
 
     /// <inheritdoc cref="IIdClient.Id"/>
-    public string Id => this.m_dmtpActor.Id;
+    public string Id => this.m_dmtpActor?.Id;
 
     #region 字段
 
@@ -46,7 +46,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     #endregion 字段
 
     /// <inheritdoc cref="IOnlineClient.Online"/>
-    public override bool Online => this.m_dmtpActor != null && this.m_dmtpActor.Online;
+    public override bool Online => base.Online && this.m_dmtpActor?.Online == true;
 
     #region 断开
 
@@ -56,14 +56,18 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <param name="msg">关闭消息的内容</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public override Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        if (this.m_dmtpActor != null)
-        {
-            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-        }
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? base.CloseAsync(msg, cancellationToken);
+    }
 
-        return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
+    private Task<Result> CloseTransportAsync(string msg, bool manual, CancellationToken cancellationToken)
+    {
+        if (manual)
+        {
+            return base.CloseAsync(msg, cancellationToken);
+        }
+        return this.Transport?.CloseAsync(msg, cancellationToken) ?? Task.FromResult(Result.Success);
     }
 
     #endregion 断开
@@ -93,6 +97,15 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
 
             await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureDefaultAwait();
         }
+        catch (Exception ex)
+        {
+            var transport = this.Transport;
+            if (transport != null)
+            {
+                await transport.CloseAsync(ex.Message, CancellationToken.None).ConfigureDefaultAwait();
+            }
+            throw;
+        }
         finally
         {
             this.m_semaphoreForConnect.Release();
@@ -121,6 +134,11 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             this.m_allowRoute = true;
             this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
         }
+        this.InitDmtpActor();
+    }
+
+    private void InitDmtpActor()
+    {
         this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
         {
             MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
@@ -130,6 +148,7 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
             Connected = this.OnDmtpActorConnected,
             Closing = this.OnDmtpActorClose,
             Closed = this.OnDmtpActorClosed,
+            TransportClosing = this.CloseTransportAsync,
             Logger = this.Logger,
             Client = this,
             FindDmtpActor = this.m_findDmtpActor,
@@ -285,19 +304,33 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_dmtpActor?.SafeDispose();
+        if (disposing && !base.Online)
+        {
+            this.m_dmtpActor?.SafeDispose();
+        }
         base.SafetyDispose(disposing);
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor.ClosedMessage.HasValue())
+        var actor = this.m_dmtpActor;
+        try
         {
-            e.Message = this.m_dmtpActor.ClosedMessage;
+            if (actor != null)
+            {
+                if (actor.ClosedMessage.HasValue())
+                {
+                    e.Message = actor.ClosedMessage;
+                }
+                await actor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
+            }
+            await base.OnTcpClosed(e).ConfigureDefaultAwait();
         }
-        await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
-        await base.OnTcpClosed(e).ConfigureDefaultAwait();
+        finally
+        {
+            actor.SafeDispose();
+        }
     }
 
     /// <inheritdoc/>
@@ -309,16 +342,22 @@ public partial class TcpDmtpClient : TcpClientBase, ITcpDmtpClient
     /// <inheritdoc/>
     protected sealed override async Task OnTcpConnecting(ConnectingEventArgs e)
     {
+        this.InitDmtpActor();
         var adapter = new DmtpAdapter();
         adapter.Config(this.Config);
         this.SetAdapter(adapter);
         this.m_dmtpAdapter = adapter;
+        this.m_dmtpActor.MaxPackageSize = adapter.MaxPackageSize;
         await base.OnTcpConnecting(e).ConfigureDefaultAwait();
     }
 
     /// <inheritdoc/>
     protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
+        if (await base.OnTcpReceiving(reader).ConfigureDefaultAwait())
+        {
+            return true;
+        }
         while (reader.BytesRemaining > 0)
         {
             if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))

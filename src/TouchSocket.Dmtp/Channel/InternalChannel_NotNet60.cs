@@ -22,7 +22,6 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 {
     private readonly Queue<ChannelPackage> m_dataQueue;
     private readonly SemaphoreSlim m_dataAvailable;
-    private bool m_closed;
 
     public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
     {
@@ -54,6 +53,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
     {
         if (disposing)
         {
+            this.DisposeState();
             lock (this.m_dataQueue)
             {
                 this.m_closed = true;
@@ -63,7 +63,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
                 }
             }
             try { this.m_dataAvailable.Release(); } catch { }
-            this.m_dataAvailable.SafeDispose();
+
         }
     }
 

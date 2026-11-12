@@ -33,6 +33,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     #region 字段
 
+    private static readonly AsyncLocal<SetupClientWebSocket> s_sessionOwner = new();
     private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
     private ClientWebSocket m_client;
     private Task m_runTask;
@@ -102,11 +103,11 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
                     await this.m_client.ConnectAsync(this.RemoteIPHost, cancellationToken).ConfigureDefaultAwait();
 
+                    this.m_closedEventArgs = null;
                     this.m_tokenSourceForOnline = new CancellationTokenSource();
 
-                    this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
-
                     this.m_online = true;
+                    this.m_runTask = EasyTask.SafeRun(this.PrivateOnConnected, this.m_tokenSourceForOnline.Token);
                 }
                 catch
                 {
@@ -124,6 +125,7 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
 
     private async Task PrivateOnConnected(CancellationToken cancellationToken)
     {
+        s_sessionOwner.Value = this;
         var receiveTask = EasyTask.SafeRun(this.ReceiveLoopAsync, cancellationToken);
 
         await receiveTask.ConfigureDefaultAwait();
@@ -131,15 +133,6 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
         await this.OnWebSocketClosed(this.m_closedEventArgs).ConfigureDefaultAwait();
     }
 
-    private async Task WaitClearConnect()
-    {
-        // 确保上次接收任务已经结束
-        var runTask = this.m_runTask;
-        if (runTask != null)
-        {
-            await runTask.ConfigureDefaultAwait();
-        }
-    }
     #endregion 连接
 
     /// <inheritdoc/>
@@ -169,38 +162,49 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     public bool IsClient => true;
 
     /// <inheritdoc/>
-    public virtual async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public virtual Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
+        return this.WebSocketCloseAsync(msg, true, cancellationToken);
+    }
+
+    /// <summary>
+    /// 关闭当前WebSocket传输，可在握手失败时仅关闭传输而不等待用户回调。
+    /// </summary>
+    /// <param name="msg">关闭原因。</param>
+    /// <param name="waitForClosed">是否等待关闭回调完成。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    protected async Task<Result> WebSocketCloseAsync(string msg, bool waitForClosed, CancellationToken cancellationToken)
+    {
+        // 回调可能重连，因此关闭和等待必须始终针对调用时的连接。
+        var client = this.m_client;
+        var runTask = this.m_runTask;
+        var tokenSource = this.m_tokenSourceForOnline;
         try
         {
-            if (!this.m_online)
+            var result = Result.Success;
+            if (this.m_online && client != null)
             {
-                return Result.Success;
+                Interlocked.CompareExchange(ref this.m_closedEventArgs, new ClosedEventArgs(msg), null);
+                result = await client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
+                tokenSource.SafeCancel();
+                if (ReferenceEquals(this.m_tokenSourceForOnline, tokenSource))
+                {
+                    this.m_tokenSourceForOnline = null;
+                }
+                tokenSource.SafeDispose();
             }
-
-            this.m_closedEventArgs ??= new ClosedEventArgs(msg);
-            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
-            this.CancelReceive();
-            await this.WaitClearConnect().ConfigureDefaultAwait();
-            return Result.Success;
+            if (waitForClosed && runTask != null && !ReferenceEquals(s_sessionOwner.Value, this))
+            {
+                await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
+            }
+            return result;
         }
         catch (Exception ex)
         {
+            client?.Abort();
+            tokenSource.SafeCancel();
             return Result.FromException(ex);
         }
-    }
-
-
-
-    private void CancelReceive()
-    {
-        var tokenSourceForReceive = this.m_tokenSourceForOnline;
-        if (tokenSourceForReceive != null)
-        {
-            tokenSourceForReceive.SafeCancel();
-            tokenSourceForReceive.SafeDispose();
-        }
-        this.m_tokenSourceForOnline = null;
     }
 
     /// <inheritdoc/>
@@ -208,10 +212,34 @@ public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient,
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () => await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait());
+            _ = this.DisposeConnectionAsync();
         }
+        else
+        {
+            base.SafetyDispose(false);
+        }
+    }
 
-        base.SafetyDispose(disposing);
+    private async Task DisposeConnectionAsync()
+    {
+        try
+        {
+            await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
+            if (this.m_runTask != null)
+            {
+                await this.m_runTask.ConfigureDefaultAwait();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            this.m_client.SafeDispose();
+            this.m_semaphoreForConnect.SafeDispose();
+            base.SafetyDispose(true);
+        }
     }
 
     /// <summary>

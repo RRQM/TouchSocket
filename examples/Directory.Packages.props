@@ -1,8 +1,8 @@
-﻿<Project>
+<Project>
 	<PropertyGroup>
 		<!-- Enable Central Package Management -->
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-		<TouchSocketVersion>4.3.6</TouchSocketVersion>
+		<TouchSocketVersion>4.3.10</TouchSocketVersion>
 	</PropertyGroup>
 	<!-- Centralized Package Version Management -->
 	<ItemGroup>
@@ -30,14 +30,14 @@
 		<PackageVersion Include="TouchSocket.Semi" Version="$(TouchSocketVersion)" />
 		<PackageVersion Include="TouchSocket.Redis" Version="$(TouchSocketVersion)" />
 		<!-- TouchSocketPro Packages -->
-		<PackageVersion Include="TouchSocketPro" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Dmtp" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Ssh" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.SocketIo" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.AspNetCore" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Modbus" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.PlcBridges" Version="$(TouchSocketVersion)" />
-		<PackageVersion Include="TouchSocketPro.Dmtp.PixStream" Version="$(TouchSocketVersion)" />
+		
+		
+		
+		
+		
+		
+		
+		
 		<!-- Microsoft Packages -->
 		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
 		<!-- Third-party Packages -->

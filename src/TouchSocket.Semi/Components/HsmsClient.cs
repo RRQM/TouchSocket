@@ -95,6 +95,11 @@ public class HsmsClient : TcpClientBase, IHsmsClient
             switch (message.MessageType)
             {
                 case HsmsMessageType.DataMessage:
+                    // 偶数 Function 为应答，按 SystemBytes 唤醒对应请求。
+                    if ((message.F & 1) == 0 && this.m_waitHandlePool.Set(message))
+                    {
+                        break;
+                    }
                     await this.OnHsmsReceived(new HsmsReceivedEventArgs(message)).ConfigureDefaultAwait();
                     break;
                 case HsmsMessageType.SelectRequest:

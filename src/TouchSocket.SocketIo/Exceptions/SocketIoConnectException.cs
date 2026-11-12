@@ -17,5 +17,11 @@ namespace TouchSocket.SocketIo;
 /// </summary>
 public class SocketIoConnectException : Exception
 {
+    public SocketIoConnectException()
+    {
+    }
 
+    public SocketIoConnectException(string message) : base(message)
+    {
+    }
 }

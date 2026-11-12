@@ -16,7 +16,7 @@ namespace TouchSocket.Sockets;
 /// 定义一个UDP会话接口，该接口继承自多个与UDP通信相关的接口。
 /// 整合了UDP会话的基础功能、客户端发送功能、UDP客户端发送特性和接收客户端特性。
 /// </summary>
-public interface IUdpSession : IUdpSessionBase, IClientSender, IUdpClientSender, IReceiverClient<IUdpReceiverResult>
+public interface IUdpSession : IUdpSessionBase, IClientSender, IUdpClientSender
 {
     /// <summary>
     /// 数据处理适配器

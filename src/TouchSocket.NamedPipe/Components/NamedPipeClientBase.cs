@@ -38,7 +38,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     private int m_closeFlag;
     private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private volatile bool m_online;
-    private InternalReceiver m_receiver;
     private Task m_runTask;
     private NamedPipeTransport m_transport;
 
@@ -104,6 +103,9 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
 
     private async Task RunSessionAsync(NamedPipeTransport transport)
     {
+        // 标记当前异步流程属于本会话，回调中调用关闭或重连时不再等待会话任务自身，避免死锁。
+        SessionRunContext.Enter(this);
+
         try
         {
             await this.OnNamedPipeConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
@@ -183,9 +185,14 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
             }
             else
             {
-                await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
                 transport = this.m_transport;
                 runTask = this.m_runTask;
+
+                // 先占用关闭原因：若远端断开等已先记录了原因，本次关闭不再视为主动关闭，不触发 Closing，保证 Closing 与 Closed 的原因一致。
+                if (transport == null || transport.TrySetClosedEventArgs(new ClosedEventArgs(msg)))
+                {
+                    await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+                }
             }
         }
         catch (Exception ex)
@@ -204,7 +211,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
 
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -222,13 +229,35 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () =>
-            {
-                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
-                this.m_semaphoreForConnectAndClose.SafeDispose();
-            });
+            _ = this.DisposeConnectionAsync();
         }
-        base.SafetyDispose(disposing);
+        else
+        {
+            base.SafetyDispose(false);
+        }
+    }
+
+    private async Task DisposeConnectionAsync()
+    {
+        try
+        {
+            await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
+            var runTask = this.m_runTask;
+            if (runTask != null)
+            {
+                // Dispose不等待此后台任务；即使从会话回调释放，也可以在回调退出后再清理配置。
+                await runTask.ConfigureDefaultAwait();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            this.m_semaphoreForConnectAndClose.SafeDispose();
+            base.SafetyDispose(true);
+        }
     }
 
     #endregion 断开操作
@@ -313,7 +342,7 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
     {
         // 确保上次接收任务已经结束
         var runTask = this.m_runTask;
-        if (runTask != null)
+        if (runTask != null && !SessionRunContext.IsInSession(this))
         {
             await runTask.ConfigureDefaultAwait();
         }
@@ -321,21 +350,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
 
     #endregion Connect
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <inheritdoc/>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
 
     /// <summary>
     /// 处理已接收到的数据。
@@ -401,12 +415,6 @@ public abstract partial class NamedPipeClientBase : SetupConfigObject, INamedPip
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-            return;
-        }
         await this.OnNamedPipeReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 }

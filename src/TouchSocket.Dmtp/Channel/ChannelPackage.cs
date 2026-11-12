@@ -24,7 +24,7 @@ internal class ChannelPackage : MsgRouterPackage, IDisposable
 
     public void Dispose()
     {
-        this.m_memoryOwner?.Dispose();
+        Interlocked.Exchange(ref this.m_memoryOwner, null)?.Dispose();
     }
 
     public int GetLen()

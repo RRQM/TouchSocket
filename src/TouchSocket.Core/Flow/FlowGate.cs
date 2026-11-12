@@ -33,15 +33,10 @@ public class FlowGate : Counter
     /// </summary>
     public void AddCheckWait(long increment)
     {
-        if (this.Increment(increment))
+        this.Increment(increment);
+        if (this.m_count > this.Maximum)
         {
-            if (this.m_count > this.Maximum)
-            {
-                var time = (DateTimeOffset.UtcNow - this.LastIncrement);
-                var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
-                waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
-                Thread.Sleep(waitTime);
-            }
+            Thread.Sleep(this.GetWaitTime());
         }
     }
 
@@ -56,26 +51,24 @@ public class FlowGate : Counter
     /// </remarks>
     public async Task AddCheckWaitAsync(long increment)
     {
-        // 尝试增加计数器，如果返回<see langword="true"/>，则表示增加成功，需要进一步处理
-        if (this.Increment(increment))
+        this.Increment(increment);
+        if (this.m_count > this.Maximum)
         {
-            // 如果当前计数超过设定的最大值
-            if (this.m_count > this.Maximum)
-            {
-                // 计算自上次增加以来的时间差
-                var time = (DateTimeOffset.UtcNow - this.LastIncrement);
-                // 计算还需要等待的时间，确保等待时间不为负
-                var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
-                // 将等待时间小于0的情况调整为0
-                waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
-                // 异步延迟等待，不阻塞主线程
-                await Task.Delay(waitTime).ConfigureDefaultAwait();
-            }
+            await Task.Delay(this.GetWaitTime()).ConfigureDefaultAwait();
         }
     }
 
-    private TimeSpan GetBaseTime()
+    private TimeSpan GetWaitTime()
     {
-        return TimeSpan.FromTicks(Math.Min((int)((double)this.m_count / this.Maximum * this.Period.Ticks), this.MaximumWaitTime.Ticks));
+        var elapsed = DateTimeOffset.UtcNow - this.LastIncrement;
+        var ticks = (long)Math.Min((double)this.m_count / this.Maximum * this.Period.Ticks, this.MaximumWaitTime.Ticks);
+        var waitTime = TimeSpan.FromTicks(ticks) - elapsed;
+        if (elapsed >= this.Period || waitTime <= TimeSpan.Zero)
+        {
+            return TimeSpan.Zero;
+        }
+
+        // 延迟按毫秒向上取整，避免周期末尾不足一毫秒时持续放行。
+        return TimeSpan.FromMilliseconds(Math.Ceiling(waitTime.TotalMilliseconds));
     }
 }

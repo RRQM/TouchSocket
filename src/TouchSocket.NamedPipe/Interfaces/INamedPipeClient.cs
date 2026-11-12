@@ -15,7 +15,7 @@ namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 命名管道客户端接口
 /// </summary>
-public interface INamedPipeClient : INamedPipeSession, ISetupConfigObject, IConnectableClient, IClientSender, IReceiverClient<IReceiverResult>
+public interface INamedPipeClient : INamedPipeSession, ISetupConfigObject, IConnectableClient, IClientSender
 {
     /// <summary>
     /// 成功连接到服务器

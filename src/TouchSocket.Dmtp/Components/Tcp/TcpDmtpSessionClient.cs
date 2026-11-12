@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -37,7 +37,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     public IDmtpActor DmtpActor => this.m_dmtpActor;
 
     /// <inheritdoc cref="IOnlineClient.Online"/>
-    public override bool Online => this.m_dmtpActor != null && this.m_dmtpActor.Online;
+    public override bool Online => base.Online && this.m_dmtpActor?.Online == true;
 
     /// <summary>
     /// 验证超时时间,默认为3000ms
@@ -63,12 +63,12 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
     {
-        return this.OnCreateChannel(e);
+        return this.OnDmtpCreatedChannel(e);
     }
 
     private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnected(e);
+        return this.OnDmtpConnected(e);
     }
 
     private async Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
@@ -82,12 +82,12 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             e.Message = "Token不受理";
         }
 
-        await this.OnConnecting(e).ConfigureDefaultAwait();
+        await this.OnDmtpConnecting(e).ConfigureDefaultAwait();
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
     {
-        return this.OnRouting(e);
+        return this.OnDmtpRouting(e);
     }
 
     #endregion 内部委托绑定
@@ -200,20 +200,27 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <param name="msg">关闭消息的内容</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public override Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        if (this.m_dmtpActor != null)
-        {
-            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-        }
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? base.CloseAsync(msg, cancellationToken);
+    }
 
-        return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
+    private Task<Result> CloseTransportAsync(string msg, bool manual, CancellationToken cancellationToken)
+    {
+        if (manual)
+        {
+            return base.CloseAsync(msg, cancellationToken);
+        }
+        return this.Transport?.CloseAsync(msg, cancellationToken) ?? Task.FromResult(Result.Success);
     }
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_dmtpActor?.SafeDispose();
+        if (disposing && !base.Online)
+        {
+            this.m_dmtpActor?.SafeDispose();
+        }
         base.SafetyDispose(disposing);
     }
 
@@ -270,6 +277,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
             Client = this,
             Closing = this.OnDmtpActorClose,
             Closed = this.OnDmtpActorClosed,
+            TransportClosing = this.CloseTransportAsync,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -279,6 +287,7 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
 
         this.m_dmtpActor = actor;
         this.m_dmtpAdapter.Config(this.Config);
+        this.m_dmtpActor.MaxPackageSize = this.m_dmtpAdapter.MaxPackageSize;
     }
 
     private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
@@ -301,12 +310,23 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor.ClosedMessage.HasValue())
+        var actor = this.m_dmtpActor;
+        try
         {
-            e.Message = this.m_dmtpActor.ClosedMessage;
+            if (actor != null)
+            {
+                if (actor.ClosedMessage.HasValue())
+                {
+                    e.Message = actor.ClosedMessage;
+                }
+                await actor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
+            }
+            await base.OnTcpClosed(e).ConfigureDefaultAwait();
         }
-        await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
-        await base.OnTcpClosed(e).ConfigureDefaultAwait();
+        finally
+        {
+            actor.SafeDispose();
+        }
     }
 
     /// <inheritdoc/>
@@ -319,13 +339,21 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     protected override async Task OnTcpConnected(ConnectedEventArgs e)
     {
         this.m_dmtpActor.TransportWriter = this.Transport;
+        var transport = this.Transport;
+        var actor = this.m_dmtpActor;
 
         _ = EasyTask.SafeRun(async () =>
         {
-            await Task.Delay(this.VerifyTimeout).ConfigureDefaultAwait();
-            if (!this.Online)
+            try
             {
-                await base.CloseAsync("握手验证超时").ConfigureDefaultAwait();
+                await Task.Delay(this.VerifyTimeout, transport.ClosedToken).ConfigureDefaultAwait();
+                if (!actor.Online)
+                {
+                    await transport.CloseAsync("握手验证超时").ConfigureDefaultAwait();
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
         });
 
@@ -352,6 +380,10 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     /// <inheritdoc/>
     protected override async ValueTask<bool> OnTcpReceiving(IBytesReader reader)
     {
+        if (await base.OnTcpReceiving(reader).ConfigureDefaultAwait())
+        {
+            return true;
+        }
         while (reader.BytesRemaining > 0)
         {
             if (this.m_dmtpAdapter.TryParseRequest(ref reader, out var message))
@@ -370,4 +402,20 @@ public abstract class TcpDmtpSessionClient : TcpSessionClientBase, ITcpDmtpSessi
     }
 
     #endregion Override
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnecting(DmtpVerifyEventArgs e) => this.OnConnecting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnected(DmtpVerifyEventArgs e) => this.OnConnected(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpRouting(PackageRouterEventArgs e) => this.OnRouting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpCreatedChannel(CreateChannelEventArgs e) => this.OnCreateChannel(e);
 }

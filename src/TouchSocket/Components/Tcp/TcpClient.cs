@@ -113,21 +113,6 @@ public class TcpClient : TcpClientBase, ITcpClient
 
     #endregion Connect
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    public void ClearReceiver()
-    {
-        this.ProtectedClearReceiver();
-    }
-
-    /// <inheritdoc/>
-    public IReceiver<IReceiverResult> CreateReceiver()
-    {
-        return this.ProtectedCreateReceiver(this);
-    }
-
-    #endregion Receiver
 
     /// <summary>
     /// 当收到适配器处理的数据时。

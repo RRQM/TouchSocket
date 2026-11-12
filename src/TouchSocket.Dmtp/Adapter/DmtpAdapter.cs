@@ -37,17 +37,22 @@ public sealed class DmtpAdapter : CustomDataHandlingAdapter<DmtpMessage>
         }
         var protocolFlags = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(offset));
         offset += 2;
-        var m_bodyLength = TouchSocketBitConverter.BigEndian.To<int>(header.Slice(offset));
+        var bodyLength = TouchSocketBitConverter.BigEndian.To<int>(header.Slice(offset));
 
-        if (reader.BytesRemaining < m_bodyLength + 8)
+        if (bodyLength < 0 || bodyLength > int.MaxValue - 8)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bodyLength), "Dmtp报文长度无效。");
+        }
+        this.ThrowIfMoreThanMaxPackageSize(bodyLength + 8);
+        if (reader.BytesRemaining < bodyLength + 8L)
         {
             request = default;
             return FilterResult.Cache;
         }
 
         reader.Advance(8);
-        var bodyMemory = reader.GetMemory(m_bodyLength);
-        reader.Advance(m_bodyLength);
+        var bodyMemory = reader.GetMemory(bodyLength);
+        reader.Advance(bodyLength);
 
         request = new DmtpMessage(protocolFlags, bodyMemory);
         return FilterResult.Success;

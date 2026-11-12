@@ -48,7 +48,6 @@ internal sealed class FolderEntry : IDisposable
 
         this.m_watcher = new FileSystemWatcher(rootPath.TrimEnd('/'), filter)
         {
-            EnableRaisingEvents = true,
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
         };
@@ -56,6 +55,8 @@ internal sealed class FolderEntry : IDisposable
         this.m_watcher.Deleted += this.OnDeleted;
         this.m_watcher.Changed += this.OnChanged;
         this.m_watcher.Renamed += this.OnRenamed;
+        this.m_watcher.Error += this.OnWatcherError;
+        this.m_watcher.EnableRaisingEvents = true;
     }
 
     /// <summary>根物理路径（带尾部'/'，使用'/'分隔符）。</summary>
@@ -78,7 +79,14 @@ internal sealed class FolderEntry : IDisposable
     /// </summary>
     public void TrackDirectory(string normalizedDirPath, IReadOnlyList<string> urlKeys)
     {
-        this.m_dirToKeys[normalizedDirPath] = new HashSet<string>(urlKeys);
+        // 目录扫描在锁外读取文件，此时按需加载可能已经登记了新的缓存键。
+        // 合并这些键，保证后续删除或重载仍能清理对应缓存。
+        if (!this.m_dirToKeys.TryGetValue(normalizedDirPath, out var keys))
+        {
+            keys = new HashSet<string>();
+            this.m_dirToKeys[normalizedDirPath] = keys;
+        }
+        keys.UnionWith(urlKeys);
         this.m_knownDirs.TryAdd(normalizedDirPath, 0);
     }
 
@@ -166,6 +174,12 @@ internal sealed class FolderEntry : IDisposable
     private void MarkDirChanged(string physicalPath)
     {
         this.m_changedDirs.TryAdd(NormalizeDirPath(physicalPath), 0);
+    }
+
+    private void OnWatcherError(object sender, ErrorEventArgs e)
+    {
+        // 缓冲区溢出时部分事件已经丢失，重新扫描根目录以恢复缓存一致性。
+        this.MarkDirChanged(this.RootPath);
     }
 
     private void OnCreated(object sender, FileSystemEventArgs e)

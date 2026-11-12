@@ -21,8 +21,12 @@ namespace TouchSocket.Dmtp;
 internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpChannel
 {
     private readonly DmtpActor m_actor;
+    private readonly Lock m_syncRoot = new();
+    private volatile bool m_closed;
     private DateTimeOffset m_lastOperationTime;
-    private bool m_using;
+    private int m_using;
+    private int m_reading;
+    private ChannelPackage m_readPackage;
 
     internal void SetId(int id)
     {
@@ -31,13 +35,14 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     internal void MakeUsing()
     {
-        this.m_using = true;
+        Interlocked.Exchange(ref this.m_using, 1);
     }
 
-    public bool CanRead => this.Status == ChannelStatus.Default ||
-                           this.Status == ChannelStatus.HoldOn;
+    internal bool TryMakeUsing() => !this.DisposedValue && Interlocked.CompareExchange(ref this.m_using, 1, 0) == 0;
 
-    public bool CanWrite => this.m_actor.Online && (byte)this.Status <= 1;
+    public bool CanRead => !this.m_closed && !this.DisposedValue && (this.Status == ChannelStatus.Default || this.Status == ChannelStatus.HoldOn);
+
+    public bool CanWrite => !this.m_closed && !this.DisposedValue && this.m_actor.Online && (byte)this.Status <= 1;
 
     public int Id { get; private set; }
 
@@ -51,55 +56,77 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     public string TargetId { get; }
 
-    public bool Using => this.m_using;
+    public bool Using => Volatile.Read(ref this.m_using) != 0;
 
     #region 读取
 
     public async Task<ReadOnlyMemory<byte>> ReadAsync(CancellationToken cancellationToken = default)
     {
+        this.ThrowIfDisposed();
         if (!this.CanRead)
         {
             throw new InvalidOperationException($"通道状态为{this.Status}，无法读取数据");
         }
-
-        if (this.DisposedValue)
+        if (Interlocked.CompareExchange(ref this.m_reading, 1, 0) != 0)
         {
-            throw new ObjectDisposedException(nameof(InternalChannel), "通道已被释放");
+            throw new InvalidOperationException("同一通道不支持并发读取。");
         }
-
-        var channelPackage = await this.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-
+        ChannelPackage package = null;
         try
         {
-            switch (channelPackage.DataType)
+            Interlocked.Exchange(ref this.m_readPackage, null).SafeDispose();
+            package = await this.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+            lock (this.m_syncRoot)
             {
-                case ChannelDataType.Data:
+                if (this.m_closed)
+                {
+                    throw new ObjectDisposedException(nameof(InternalChannel));
+                }
+                if (package.DataType == ChannelDataType.Data)
+                {
                     this.Status = ChannelStatus.Default;
                     this.LastOperationMes = string.Empty;
-                    return channelPackage.Data;
-
+                    Interlocked.Exchange(ref this.m_readPackage, package).SafeDispose();
+                    var memory = package.Data;
+                    package = null;
+                    return memory;
+                }
+            }
+            switch (package.DataType)
+            {
                 case ChannelDataType.Completed:
                     this.Status = ChannelStatus.Completed;
-                    this.LastOperationMes = channelPackage.Message;
-                    return ReadOnlyMemory<byte>.Empty;
-
+                    break;
                 case ChannelDataType.Canceled:
                     this.Status = ChannelStatus.Cancel;
-                    this.LastOperationMes = channelPackage.Message;
-                    return ReadOnlyMemory<byte>.Empty;
-
+                    break;
                 case ChannelDataType.HoldOn:
                     this.Status = ChannelStatus.HoldOn;
-                    this.LastOperationMes = channelPackage.Message;
-                    return ReadOnlyMemory<byte>.Empty;
-
+                    break;
                 default:
                     throw new InvalidOperationException("未知的通道数据类型");
             }
+            this.LastOperationMes = package.Message;
+            if ((byte)this.Status > 1)
+            {
+                this.Dispose();
+            }
+            return ReadOnlyMemory<byte>.Empty;
         }
         finally
         {
-            channelPackage.SafeDispose();
+            package.SafeDispose();
+            Volatile.Write(ref this.m_reading, 0);
+        }
+    }
+
+    private void DisposeState()
+    {
+        lock (this.m_syncRoot)
+        {
+            this.m_closed = true;
+            this.m_actor.RemoveChannel(this.Id, this);
+            Interlocked.Exchange(ref this.m_readPackage, null).SafeDispose();
         }
     }
 
@@ -127,6 +154,10 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            if ((byte)this.Status > 1)
+            {
+                this.Dispose();
+            }
             return Result.Success;
         }
         catch (Exception ex)
@@ -155,6 +186,10 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            if ((byte)this.Status > 1)
+            {
+                this.Dispose();
+            }
             return Result.Success;
         }
         catch (Exception ex)
@@ -183,6 +218,10 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage, cancellationToken).ConfigureDefaultAwait();
             this.m_lastOperationTime = DateTimeOffset.UtcNow;
+            if ((byte)this.Status > 1)
+            {
+                this.Dispose();
+            }
             return Result.Success;
         }
         catch (Exception ex)
@@ -195,7 +234,12 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
 
     public async Task WriteAsync(ReadOnlyMemory<byte> memory, CancellationToken cancellationToken = default)
     {
-        if ((byte)this.Status > 1)
+        this.ThrowIfDisposed();
+        if (!this.m_actor.Online)
+        {
+            ThrowHelper.ThrowClientNotConnectedException();
+        }
+        if (!this.CanWrite)
         {
             throw new InvalidOperationException($"通道已{this.Status}");
         }

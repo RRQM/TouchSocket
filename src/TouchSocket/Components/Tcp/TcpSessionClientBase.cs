@@ -55,7 +55,6 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
     private EndPoint m_localEndPoint;
     private volatile bool m_online;
     private IPluginManager m_pluginManager;
-    private InternalReceiver m_receiver;
     private EndPoint m_remoteEndPoint;
     private Task m_runTask;
     private IScopedResolver m_scopedResolver;
@@ -196,6 +195,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     private async Task RunSessionAsync(TcpTransport transport)
     {
+        // 标记当前异步流程属于本会话，回调中调用关闭或重连时不再等待会话任务自身，避免死锁。
+        SessionRunContext.Enter(this);
+
         try
         {
             await this.OnTcpConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
@@ -207,6 +209,9 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
         }
         finally
         {
+
+            // 等待底层收发退出，避免连接关闭后 TcpCore 被连接池提前复用。
+            await transport.CloseAsync(transport.ClosedEventArgs.Message).ConfigureDefaultAwait();
             transport.SafeDispose();
 
             this.m_online = false;
@@ -310,21 +315,27 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
             {
                 // 已有其他调用方正在关闭，等待会话彻底结束后返回
                 var waitTask = this.m_runTask;
-                if (waitTask != null)
+                if (waitTask != null && !SessionRunContext.IsInSession(this))
                 {
                     await waitTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
                 }
                 return Result.Success;
             }
 
-            await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
+
+            // 先占用关闭原因：若远端断开等已先记录了原因，本次关闭不再视为主动关闭，不触发 Closing，保证 Closing 与 Closed 的原因一致。
+            if (transport == null || transport.TrySetClosedEventArgs(new ClosedEventArgs(msg)))
+            {
+                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+            }
+
             if (transport != null)
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
             var runTask = this.m_runTask;
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -488,35 +499,8 @@ public abstract partial class TcpSessionClientBase : ResolverConfigObject, ITcpS
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-            return;
-        }
         await this.OnTcpReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
-    #region Receiver
 
-    /// <summary>
-    /// 清除接收器对象。
-    /// </summary>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <summary>
-    /// 创建或获取接收器对象。
-    /// </summary>
-    /// <param name="receiverObject">接收器客户端对象，用于创建接收器。</param>
-    /// <returns>返回一个接收器对象，用于处理接收操作。</returns>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        // 使用空合并操作符确保接收器对象只被创建一次。
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
 }

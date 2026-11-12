@@ -13,6 +13,7 @@
 #if NET6_0_OR_GREATER
 using System.Diagnostics;
 using System.Threading.Channels;
+using TouchSocket.Sockets;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Dmtp;
@@ -30,7 +31,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         this.m_channel = Channel.CreateBounded<ChannelPackage>(new BoundedChannelOptions(512)
         {
             FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
+            SingleReader = false,
             SingleWriter = false
         });
         this.Metadata = metadata;
@@ -41,7 +42,9 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
         this.m_lastOperationTime = DateTimeOffset.UtcNow;
         try
         {
-            await this.m_channel.Writer.WriteAsync(channelPackage).ConfigureDefaultAwait();
+            var closedToken = this.m_actor.TransportWriter is ITransport transport ? transport.ClosedToken
+                : this.m_actor.Client is IClosableClient client ? client.ClosedToken : this.m_actor.ClosedToken;
+            await this.m_channel.Writer.WriteAsync(channelPackage, closedToken).ConfigureDefaultAwait();
         }
         catch
         {
@@ -53,6 +56,7 @@ internal sealed partial class InternalChannel : SafetyDisposableObject, IDmtpCha
     {
         if (disposing)
         {
+            this.DisposeState();
             this.m_channel.Writer.TryComplete();
             while (this.m_channel.Reader.TryRead(out var pkg))
             {

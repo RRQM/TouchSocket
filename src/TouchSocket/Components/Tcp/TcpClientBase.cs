@@ -40,7 +40,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private EndPoint m_localEndPoint;
     private volatile bool m_online;
-    private InternalReceiver m_receiver;
     private EndPoint m_remoteEndPoint;
     private Task m_runTask;
     private TcpTransport m_transport;
@@ -127,6 +126,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     private async Task RunSessionAsync(TcpTransport transport)
     {
+        // 标记当前异步流程属于本会话，回调中调用关闭或重连时不再等待会话任务自身，避免死锁。
+        SessionRunContext.Enter(this);
+
         try
         {
             await this.OnTcpConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
@@ -138,6 +140,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
         finally
         {
+
+            // 后台收发完全退出后才允许复用 TcpCore。
+            await transport.CloseAsync(transport.ClosedEventArgs.Message).ConfigureDefaultAwait();
             transport.SafeDispose();
 
             this.m_online = false;
@@ -226,9 +231,14 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
             }
             else
             {
-                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
                 transport = this.m_transport;
                 runTask = this.m_runTask;
+
+                // 先占用关闭原因：若远端断开等已先记录了原因，本次关闭不再视为主动关闭，不触发 Closing，保证 Closing 与 Closed 的原因一致。
+                if (transport == null || transport.TrySetClosedEventArgs(new ClosedEventArgs(msg)))
+                {
+                    await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+                }
             }
         }
         catch (Exception ex)
@@ -247,7 +257,7 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
 
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -265,15 +275,36 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
     {
         if (disposing)
         {
-            _ = EasyTask.SafeRun(async () =>
-            {
-                await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
-                this.m_semaphoreForConnectAndClose.SafeDispose();
-            });
-            this.m_tcpCore.Dispose();
+            _ = this.DisposeConnectionAsync();
         }
+        else
+        {
+            base.SafetyDispose(false);
+        }
+    }
 
-        base.SafetyDispose(disposing);
+    private async Task DisposeConnectionAsync()
+    {
+        try
+        {
+            await this.CloseAsync(TouchSocketResource.DisposeClose).ConfigureDefaultAwait();
+            var runTask = this.m_runTask;
+            if (runTask != null)
+            {
+                // Dispose不等待此后台任务；即使从会话回调释放，也可以在回调退出后再清理配置。
+                await runTask.ConfigureDefaultAwait();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger?.Debug(this, ex);
+        }
+        finally
+        {
+            this.m_tcpCore.SafeDispose();
+            this.m_semaphoreForConnectAndClose.SafeDispose();
+            base.SafetyDispose(true);
+        }
     }
 
     #endregion 断开操作
@@ -431,7 +462,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         }
         finally
         {
-            this.m_receiver?.Complete(transport.ClosedEventArgs.Message);
             transport.ReadLocker.Release();
         }
     }
@@ -464,14 +494,9 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-            return;
-        }
         await this.OnTcpReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
+
 
     private void SetSocket(Socket socket)
     {
@@ -506,27 +531,6 @@ public abstract partial class TcpClientBase : SetupConfigObject, ITcpSession
         await this.AuthenticateAsync(sslOption).ConfigureDefaultAwait();
     }
 
-    #region Receiver
-
-    /// <summary>
-    /// 清除内部接收器。
-    /// </summary>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <summary>
-    /// 创建内部接收器。
-    /// </summary>
-    /// <param name="receiverObject">接收器客户端对象</param>
-    /// <returns>接收器实例</returns>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
 
     #region 内置常规数据发送
 

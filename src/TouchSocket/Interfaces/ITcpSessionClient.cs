@@ -16,7 +16,7 @@ namespace TouchSocket.Sockets;
 /// <summary>
 /// 定义 ITcpSessionClient 接口，继承自多个接口，以支持 TCP 会话客户端的功能。
 /// </summary>
-public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequestInfoSender, ITcpListenableClient, ISessionClient, IReceiverClient<IReceiverResult>
+public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequestInfoSender, ITcpListenableClient, ISessionClient
 {
     /// <summary>
     /// 断开连接

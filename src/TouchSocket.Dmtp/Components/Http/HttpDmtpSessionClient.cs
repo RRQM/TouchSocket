@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -28,7 +28,7 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     public IDmtpActor DmtpActor => this.m_dmtpActor;
 
     /// <inheritdoc/>
-    public override bool Online => this.m_dmtpActor == null ? base.Online : this.m_dmtpActor.Online;
+    public override bool Online => base.Online && (this.m_dmtpActor == null || this.m_dmtpActor.Online);
 
     /// <summary>
     /// 验证超时时间
@@ -43,28 +43,28 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     #region 断开
 
     /// <inheritdoc/>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public override Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        if (this.m_dmtpActor != null)
-        {
-            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-        }
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? base.CloseAsync(msg, cancellationToken);
+    }
 
-        return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
+    private Task<Result> CloseTransportAsync(string msg, bool manual, CancellationToken cancellationToken)
+    {
+        if (manual)
+        {
+            return base.CloseAsync(msg, cancellationToken);
+        }
+        return this.Transport?.CloseAsync(msg, cancellationToken) ?? Task.FromResult(Result.Success);
     }
 
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        if (this.DisposedValue)
+        if (disposing && !base.Online)
         {
-            return;
+            this.m_dmtpActor?.SafeDispose();
         }
         base.SafetyDispose(disposing);
-        if (disposing && this.m_dmtpActor != null)
-        {
-            this.m_dmtpActor.Dispose();
-        }
     }
 
     #endregion 断开
@@ -126,11 +126,12 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             FindDmtpActor = FindDmtpActor,
             IdChanged = this.OnDmtpIdChanged,
             TransportWriter = this.Transport,
-            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? new DmtpAdapter().MaxPackageSize,
             OutputSendAsync = this.ThisDmtpActorOutputSendAsync,
             Client = this,
             Closing = this.OnDmtpActorClose,
             Closed = this.OnDmtpActorClosed,
+            TransportClosing = this.CloseTransportAsync,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -183,16 +184,23 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor != null)
+        var actor = this.m_dmtpActor;
+        try
         {
-            if (this.m_dmtpActor.ClosedMessage.HasValue())
+            if (actor != null)
             {
-                e.Message = this.m_dmtpActor.ClosedMessage;
+                if (actor.ClosedMessage.HasValue())
+                {
+                    e.Message = actor.ClosedMessage;
+                }
+                await actor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
             }
-            await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
+            await base.OnTcpClosed(e).ConfigureDefaultAwait();
         }
-
-        await base.OnTcpClosed(e).ConfigureDefaultAwait();
+        finally
+        {
+            actor.SafeDispose();
+        }
     }
 
     /// <inheritdoc/>
@@ -297,12 +305,12 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
 
     private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
     {
-        return this.OnCreatedChannel(e);
+        return this.OnDmtpCreatedChannel(e);
     }
 
     private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnected(e);
+        return this.OnDmtpConnected(e);
     }
 
     private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
@@ -316,12 +324,12 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
             e.Message = "Token不受理";
         }
 
-        return this.OnConnecting(e);
+        return this.OnDmtpConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
     {
-        return this.OnRouting(e);
+        return this.OnDmtpRouting(e);
     }
 
     #endregion 内部委托绑定
@@ -422,4 +430,20 @@ public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessio
     }
 
     #endregion 事件
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnecting(DmtpVerifyEventArgs e) => this.OnConnecting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnected(DmtpVerifyEventArgs e) => this.OnConnected(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpRouting(PackageRouterEventArgs e) => this.OnRouting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpCreatedChannel(CreateChannelEventArgs e) => this.OnCreatedChannel(e);
 }

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Concurrent;
+using System.Buffers;
 
 namespace TouchSocket.Mqtt;
 
@@ -21,6 +22,7 @@ public class MqttBroker : DisposableObject
 {
     private readonly ConcurrentDictionary<string, MqttSessionActor> m_sessionActors = new();
     private readonly ThreadSafeTopicSubscriptions m_topicToActors = new();
+    private readonly ConcurrentDictionary<string, MqttArrivedMessage> m_retainedMessages = new(StringComparer.Ordinal);
     private Timer m_cleanupTimer;
     private TimeSpan m_sessionExpiry = TimeSpan.Zero;
 
@@ -74,6 +76,7 @@ public class MqttBroker : DisposableObject
     public void Clear()
     {
         this.m_topicToActors.Clear();
+        this.m_retainedMessages.Clear();
     }
 
     /// <summary>
@@ -102,6 +105,18 @@ public class MqttBroker : DisposableObject
     public async ValueTask<int> ForwardMessageAsync(MqttArrivedMessage message)
     {
         var topic = message.TopicName;
+        if (message.Retain)
+        {
+            if (message.Payload.IsEmpty)
+            {
+                this.m_retainedMessages.TryRemove(topic, out _);
+            }
+            else
+            {
+                // 接收缓冲会被复用，保留消息必须持有独立的负载快照。
+                this.m_retainedMessages[topic] = new MqttArrivedMessage(topic, message.QosLevel, true, message.Payload.ToArray());
+            }
+        }
         var subscribers = this.m_topicToActors.GetSubscribers(topic);
 
         if (subscribers.Count == 0)
@@ -127,6 +142,20 @@ public class MqttBroker : DisposableObject
             deliveredCount++;
         }
         return deliveredCount;
+    }
+
+    internal async Task SendRetainedMessagesAsync(MqttSessionActor actor, SubscribeRequest request)
+    {
+        foreach (var message in this.m_retainedMessages.Values)
+        {
+            if (!MqttExtension.IsTopicMatch(message.TopicName, request.Topic))
+            {
+                continue;
+            }
+            var payload = new SharedPayload(message.Payload, 1);
+            var qosLevel = MqttExtension.MinQosLevel(request.QosLevel, message.QosLevel);
+            await actor.PostDistributeMessageAsync(new DistributeMessage(message.TopicName, true, qosLevel, payload)).ConfigureDefaultAwait();
+        }
     }
 
     /// <summary>

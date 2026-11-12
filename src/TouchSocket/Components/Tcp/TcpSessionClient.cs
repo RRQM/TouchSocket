@@ -241,19 +241,4 @@ public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
 
     #endregion Id发送
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    public void ClearReceiver()
-    {
-        this.ProtectedClearReceiver();
-    }
-
-    /// <inheritdoc/>
-    public IReceiver<IReceiverResult> CreateReceiver()
-    {
-        return this.ProtectedCreateReceiver(this);
-    }
-
-    #endregion Receiver
 }

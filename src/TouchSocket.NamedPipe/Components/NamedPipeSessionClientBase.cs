@@ -32,7 +32,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
     private NamedPipeListenOption m_listenOption;
     private volatile bool m_online;
     private IPluginManager m_pluginManager;
-    private InternalReceiver m_receiver;
     private Task m_runTask;
     private IScopedResolver m_scopedResolver;
     private INamedPipeServiceBase m_service;
@@ -156,6 +155,9 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
 
     private async Task RunSessionAsync(NamedPipeTransport transport)
     {
+        // 标记当前异步流程属于本会话，回调中调用关闭或重连时不再等待会话任务自身，避免死锁。
+        SessionRunContext.Enter(this);
+
         try
         {
             await this.OnNamedPipeConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
@@ -194,21 +196,27 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
             if (Interlocked.CompareExchange(ref this.m_closeFlag, 1, 0) != 0)
             {
                 var waitTask = this.m_runTask;
-                if (waitTask != null)
+                if (waitTask != null && !SessionRunContext.IsInSession(this))
                 {
                     await waitTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
                 }
                 return Result.Success;
             }
 
-            await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
             var transport = this.m_transport;
+
+            // 先占用关闭原因：若远端断开等已先记录了原因，本次关闭不再视为主动关闭，不触发 Closing，保证 Closing 与 Closed 的原因一致。
+            if (transport == null || transport.TrySetClosedEventArgs(new ClosedEventArgs(msg)))
+            {
+                await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+            }
+
             if (transport != null)
             {
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
             var runTask = this.m_runTask;
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -378,12 +386,6 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-            return;
-        }
         await this.OnNamedPipeReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
@@ -442,19 +444,4 @@ public abstract partial class NamedPipeSessionClientBase : ResolverConfigObject,
 
     #endregion 事件&委托
 
-    #region Receiver
-
-    /// <inheritdoc/>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <inheritdoc/>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
 }

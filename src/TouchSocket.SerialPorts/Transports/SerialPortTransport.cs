@@ -82,7 +82,7 @@ internal sealed class SerialPortTransport : BaseTransport
                 var result = await this.m_serialCore.ReceiveAsync(memory, cancellationToken).ConfigureDefaultAwait();
                 if (result.BytesTransferred == 0)
                 {
-                    this.m_closedEventArgs ??= new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
+                    this.TrySetClosedEventArgs(new ClosedEventArgs(TouchSocketResource.RemoteDisconnects));
                     await this.m_pipeReceive.Writer.CompleteAsync().ConfigureDefaultAwait();
                     return;
                 }
@@ -99,7 +99,7 @@ internal sealed class SerialPortTransport : BaseTransport
         }
         catch (Exception ex)
         {
-            this.m_closedEventArgs ??= new ClosedEventArgs(ex.Message, ex);
+            this.TrySetClosedEventArgs(new ClosedEventArgs(ex.Message, ex));
             await this.m_pipeReceive.Writer.CompleteAsync(ex).ConfigureDefaultAwait();
         }
         finally

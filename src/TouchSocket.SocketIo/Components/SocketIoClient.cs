@@ -28,6 +28,7 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
     private readonly SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
     private HttpClient m_httpClient;
     private ClientWebSocket m_clientWebSocket;
+    private TaskCompletionSource<bool> m_connectCompletion;
 
     public SocketIoClient()
     {
@@ -195,6 +196,9 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             }
 
             this.m_closedTokenSource = new CancellationTokenSource();
+            this.m_socketIo.Sid = null;
+            this.m_socketIo.ResetConnection();
+            this.m_connectCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             await this.OnConnecting(new SocketIoVerifyEventArgs()).ConfigureDefaultAwait();
             if (this.TransportType == EngineIoTransportType.Polling)
             {
@@ -213,8 +217,16 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
                 //直接使用ws
                 await this.ConnectWithWebSocket(token).ConfigureDefaultAwait();
             }
+            // WebSocket 建连只完成 Engine.IO 握手，必须等待 Socket.IO 命名空间确认。
+            await this.m_connectCompletion.Task.WithCancellation(token).ConfigureDefaultAwait();
             this.m_online = true;
-            await this.OnConnected().ConfigureDefaultAwait();
+            await this.m_socketIo.NotifyConnectedAsync(this.OnConnected).ConfigureDefaultAwait();
+        }
+        catch
+        {
+            this.m_closedTokenSource.SafeCancel();
+            this.m_clientWebSocket.SafeDispose();
+            throw;
         }
         finally
         {
@@ -238,7 +250,8 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
     private async Task SendNamespaceConnectAsync(HttpClient httpClient)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, this.BuildUrl(false));
-        request.Content = new StringContent($"40{this.m_option.Namespace}");
+        var packet = string.IsNullOrEmpty(this.Namespace) ? "40" : $"40{this.Namespace},";
+        request.Content = new StringContent(this.EIO == EngineIoVersion.V3 ? $"{packet.Length}:{packet}" : packet);
         var response = await httpClient.SendAsync(request).ConfigureDefaultAwait();
         response.EnsureSuccessStatusCode();
     }
@@ -282,7 +295,19 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         {
             this.m_socketIo.Sid = handshakeMessage.Sid;
             this.m_transport = new Eio3HttpSockeIoTransport(this.m_socketIo, httpClient, this.GetRequest, this.ReceivedSocketIoMessage);
+            foreach (var value in values.Skip(1))
+            {
+                var message = this.m_socketIo.Decode(value);
+                if (message.MessageType == EngineIoMessageType.Message)
+                {
+                    await this.ReceivedSocketIoMessage(this.m_socketIo.Decode(message)).ConfigureDefaultAwait();
+                }
+            }
             _ = Task.Run(() => this.m_transport.BeginPolling(this.m_closedTokenSource.Token));
+            if (!string.IsNullOrEmpty(this.Namespace))
+            {
+                await this.SendNamespaceConnectAsync(httpClient).ConfigureDefaultAwait();
+            }
         }
     }
 
@@ -331,6 +356,15 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             await postTask.ConfigureDefaultAwait();
 
             this.m_transport = new Eio4HttpSockeIoTransport(this.m_socketIo, httpClient, this.GetRequest, this.ReceivedSocketIoMessage);
+            var payload = await getResponse.Content.ReadAsStringAsync().ConfigureDefaultAwait();
+            foreach (var packet in payload.Split((char)0x1e))
+            {
+                var message = this.m_socketIo.Decode(Encoding.UTF8.GetBytes(packet));
+                if (message.MessageType == EngineIoMessageType.Message)
+                {
+                    await this.ReceivedSocketIoMessage(this.m_socketIo.Decode(message)).ConfigureDefaultAwait();
+                }
+            }
             _ = Task.Run(() => this.m_transport.BeginPolling(this.m_closedTokenSource.Token));
         }
     }
@@ -408,6 +442,10 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
         switch (socketIOMessage.MessageType)
         {
             case SocketIoMessageType.Connected:
+                if (string.Equals(socketIOMessage.Namespace ?? string.Empty, this.Namespace ?? string.Empty, StringComparison.Ordinal))
+                {
+                    this.m_connectCompletion?.TrySetResult(true);
+                }
                 break;
 
             case SocketIoMessageType.Disconnected:
@@ -416,11 +454,12 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             case SocketIoMessageType.Binary:
             case SocketIoMessageType.Event:
                 {
-                    await this.PluginManager.RaiseISocketIoReceivedPluginAsync(this.Resolver, this, new SocketIoEventArgs(socketIOMessage, this.m_socketIo));
+                    this.m_socketIo.DispatchEvent(() => this.PluginManager.RaiseISocketIoReceivedPluginAsync(this.Resolver, this, new SocketIoEventArgs(socketIOMessage, this.m_socketIo)).AsTask());
                 }
                 break;
 
             case SocketIoMessageType.Error:
+                this.m_connectCompletion?.TrySetException(new SocketIoConnectException(socketIOMessage.Error));
                 break;
 
             case SocketIoMessageType.Ack:
@@ -458,19 +497,23 @@ public class SocketIoClient : SetupConfigObject, ISocketIoClient
             await this.OnClosing(closedArgs).ConfigureDefaultAwait();
 
             this.m_online = false;
-            this.m_closedTokenSource.SafeCancel();
-
             if (this.m_clientWebSocket != null && this.m_clientWebSocket.State == WebSocketState.Open)
             {
-                await this.m_clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken);
+                // 接收循环负责读取对端关闭帧；避免与 CloseAsync 同时等待读取而互锁。
+                await this.m_clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, msg, cancellationToken).ConfigureDefaultAwait();
             }
 
-            await this.OnClosed(closedArgs).ConfigureDefaultAwait();
             return Result.Success;
         }
         catch (Exception ex)
         {
             return Result.FromException(ex);
+        }
+        finally
+        {
+            this.m_online = false;
+            this.m_closedTokenSource.SafeCancel();
+            await this.OnClosed(new SocketIoClosedEventArgs(msg)).ConfigureDefaultAwait();
         }
     }
 

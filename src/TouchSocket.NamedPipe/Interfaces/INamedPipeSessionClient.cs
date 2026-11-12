@@ -15,7 +15,7 @@ namespace TouchSocket.NamedPipe;
 /// <summary>
 /// 命名管道服务器客户端接口
 /// </summary>
-public interface INamedPipeSessionClient : INamedPipeSession, ISessionClient, IClientSender, IIdSender, IIdRequestInfoSender, IReceiverClient<IReceiverResult>, IDependencyClient, IIdClient, INamedPipeStreamClient, INamedPipeListenableClient
+public interface INamedPipeSessionClient : INamedPipeSession, ISessionClient, IClientSender, IIdSender, IIdRequestInfoSender, IDependencyClient, IIdClient, INamedPipeStreamClient, INamedPipeListenableClient
 {
     /// <summary>
     /// 断开连接

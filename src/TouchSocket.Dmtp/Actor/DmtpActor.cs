@@ -24,7 +24,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     #region 委托
 
     /// <summary>
-    /// 即将关闭时触发（主动方与被动方均会触发）。
+    /// 即将关闭时触发，仅主动关闭的一方触发。
     /// </summary>
     public Func<DmtpActor, string, Task> Closing { get; init; }
 
@@ -89,7 +89,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public IDmtpActorObject Client { get; set; }
 
     /// <inheritdoc/>
-    public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
+    public CancellationToken ClosedToken => this.m_cancellationTokenSource?.Token ?? CancellationToken.None;
 
     /// <inheritdoc/>
     public string Id { get => this.m_id; init => this.m_id = value; }
@@ -124,9 +124,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
     private CancellationTokenSource m_cancellationTokenSource;
     private string m_closedMessage;
-    private bool m_online;
+    private volatile bool m_online;
+    private bool m_connecting;
+    private bool m_finalized;
+    private TaskCompletionSource<Result> m_closeCompletion;
+    private static readonly AsyncLocal<DmtpActor> s_closingActor = new();
     private string m_id;
-    // 0=在线，1=关闭中（Closing已触发）；用 Interlocked 操作确保 Closing 最多触发一次
+    // 0=可用，1=关闭中。
     private int m_closeState;
 
     #endregion 字段
@@ -157,70 +161,80 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     public virtual async Task ConnectAsync(DmtpOption dmtpOption, CancellationToken cancellationToken)
     {
-        var verifyToken = dmtpOption.VerifyToken;
-        var id = dmtpOption.Id;
-        var metadata = dmtpOption.Metadata;
-
-        if (this.m_online)
+        this.ThrowIfDisposed();
+        ThrowHelper.ThrowIfNull(dmtpOption, nameof(dmtpOption));
+        if (this.Online)
         {
             return;
         }
-        var args = new DmtpVerifyEventArgs()
+        this.BeginConnection();
+        try
         {
-            Token = verifyToken,
-            Id = id,
-            Metadata = metadata
-        };
-
-        this.m_handshakeFinished.Reset();
-
-        await this.OnConnecting(args).ConfigureDefaultAwait();
-
-        var waitVerify = new WaitVerify()
-        {
-            Token = args.Token,
-            Id = args.Id,
-            Metadata = args.Metadata
-        };
-
-        using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify))
-        {
-            await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, cancellationToken).ConfigureDefaultAwait();
-            switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
+            var args = new DmtpVerifyEventArgs
             {
-                case WaitDataStatus.Success:
-                    {
-                        var verifyResult = (WaitVerify)waitData.CompletedData;
-                        if (verifyResult.Status == 1)
-                        {
-                            this.m_id = verifyResult.Id;
-                            this.m_online = true;
-                            Volatile.Write(ref this.m_closeState, 0);
-                            _ = EasyTask.SafeRun(this.PrivateOnConnected, new DmtpVerifyEventArgs()
-                            {
-                                Id = verifyResult.Id,
-                                Metadata = verifyResult.Metadata,
-                                Token = verifyResult.Token,
-                            });
-
-                            this.m_cancellationTokenSource = new CancellationTokenSource();
-                            this.m_handshakeFinished.Set();
-                            break;
-                        }
-                        else
-                        {
-                            this.m_handshakeFinished.Set();
-                            //verifyResult.Handle = true;
-                            throw new TokenVerifyException(verifyResult.Metadata, verifyResult.Message);
-                        }
-                    }
-                case WaitDataStatus.Overtime:
-                    throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
-                case WaitDataStatus.Canceled:
-                case WaitDataStatus.Disposed:
-                default:
-                    throw new OperationCanceledException();
+                Token = dmtpOption.VerifyToken,
+                Id = dmtpOption.Id,
+                Metadata = dmtpOption.Metadata,
+                IsPermitOperation = true
+            };
+            await this.OnConnecting(args).ConfigureDefaultAwait();
+            if (!args.IsPermitOperation)
+            {
+                throw new TokenVerifyException(args.Metadata, args.Message);
             }
+            var waitVerify = new WaitVerify { Token = args.Token, Id = args.Id, Metadata = args.Metadata };
+            using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitVerify))
+            {
+                await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify, cancellationToken).ConfigureDefaultAwait();
+                switch (await waitData.WaitAsync(cancellationToken).ConfigureDefaultAwait())
+                {
+                    case WaitDataStatus.Success:
+                        var response = (WaitVerify)waitData.CompletedData;
+                        if (response.Status != 1)
+                        {
+                            throw new TokenVerifyException(response.Metadata, response.Message);
+                        }
+                        lock (this.m_syncRoot)
+                        {
+                            if (this.m_finalized || Volatile.Read(ref this.m_closeState) != 0)
+                            {
+                                throw new OperationCanceledException(this.ClosedToken);
+                            }
+                            this.m_id = response.Id;
+                            this.m_online = true;
+                            this.m_connecting = false;
+                        }
+                        this.m_handshakeFinished.Set();
+                        _ = EasyTask.SafeRun(this.PrivateOnConnected, new DmtpVerifyEventArgs
+                        {
+                            Id = response.Id, Metadata = response.Metadata, Token = response.Token
+                        });
+                        return;
+                    case WaitDataStatus.Overtime:
+                        throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
+                    default:
+                        throw new OperationCanceledException(cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            this.m_handshakeFinished.Set();
+        }
+    }
+
+    private void BeginConnection()
+    {
+        lock (this.m_syncRoot)
+        {
+            this.m_cancellationTokenSource.SafeDispose();
+            this.m_cancellationTokenSource = new CancellationTokenSource();
+            this.m_connecting = true;
+            this.m_finalized = false;
+            this.m_closedMessage = null;
+            this.m_closeCompletion = null;
+            this.m_closeState = 0;
+            this.m_handshakeFinished.Reset();
         }
     }
 
@@ -250,20 +264,80 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return EasyTask.CompletedTask;
     }
 
-    private async Task PrivateOnClosed(string msg,Exception ex)
+    private async Task PrivateOnClosed(string msg, Exception ex)
     {
+        bool notify;
+        IActor[] actors;
+        InternalChannel[] channels;
         lock (this.m_syncRoot)
         {
-            if (!this.m_online)
+            if (this.m_finalized)
             {
                 return;
             }
+            this.m_finalized = true;
+            notify = this.m_online || this.m_connecting;
             this.m_online = false;
-            this.WaitHandlePool.CancelAll();
-            this.m_cancellationTokenSource?.Cancel();
+            this.m_connecting = false;
+            Interlocked.Exchange(ref this.m_closeState, 1);
+            actors = this.m_actors.Values.ToArray();
+            this.m_actors.Clear();
+            channels = this.m_userChannels.Values.ToArray();
+            this.m_userChannels.Clear();
         }
-        await this.OnClosed(msg,ex).ConfigureDefaultAwait();
+        this.m_handshakeFinished.Set();
+        this.WaitHandlePool.CancelAll();
+        this.m_cancellationTokenSource.SafeCancel();
+        foreach (var channel in channels)
+        {
+            channel.SafeDispose();
+        }
+        foreach (var actor in actors)
+        {
+            if (actor is IReconnectableActor reconnectableActor)
+            {
+                try
+                {
+                    reconnectableActor.OnDisconnected();
+                }
+                catch (Exception exception)
+                {
+                    this.Logger?.Debug(this, exception);
+                }
+            }
+            else
+            {
+                actor.SafeDispose();
+            }
+        }
+        if (notify)
+        {
+            var previous = s_closingActor.Value;
+            s_closingActor.Value = this;
+            try
+            {
+                await this.OnClosed(msg, ex).ConfigureDefaultAwait();
+            }
+            finally
+            {
+                s_closingActor.Value = previous;
+            }
+        }
     }
+
+    /// <summary>
+    /// 关闭承载当前协议的传输连接。由宿主在传输结束后调用 FinalizeAsync。
+    /// </summary>
+    /// <param name="message">关闭原因。</param>
+    /// <param name="manual">是否由本端主动关闭。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    protected virtual async Task<Result> OnTransportClosing(string message, bool manual, CancellationToken cancellationToken)
+    {
+        await this.FinalizeAsync(message).ConfigureDefaultAwait();
+        return Result.Success;
+    }
+
+
 
     /// <summary>
     /// 握手连接完成
@@ -410,38 +484,45 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// </summary>
     public virtual async Task<bool> InputReceivedData(DmtpMessage message)
     {
+        this.ThrowIfDisposed();
+        if (this.IsReliable && (!this.Online || Volatile.Read(ref this.m_closeState) != 0)
+            && message.ProtocolFlags is not P0_Close and not P1_Handshake_Request and not P2_Handshake_Response and not P10_CloseAcknowledge)
+        {
+            throw new InvalidOperationException("Dmtp握手尚未完成或连接正在关闭。");
+        }
         this.LastActiveTime = DateTimeOffset.UtcNow;
-        var reader = new BytesReader(message.Memory);
+        using var readerOwner = new BytesReader(message.Memory);
+        var reader = readerOwner;
         switch (message.ProtocolFlags)
         {
             case P0_Close:
                 {
+                    var waitClose = ResolveJsonObject<WaitClose>(message.GetBodyString());
+                    this.m_closedMessage = waitClose.Message;
+                    Interlocked.Exchange(ref this.m_closeState, 1);
+                    this.CancelPendingOperations();
                     try
                     {
-                        var waitClose = ResolveJsonObject<WaitClose>(message.GetBodyString());
-                        this.m_closedMessage = waitClose.Message;
-
-                        // 原子抢占：若本端尚未触发 Closing，则在此触发（被动方）
-                        // 若本端已主动发起关闭（m_closeState==1），则跳过 Closing，仅回应确认
-                        if (Interlocked.CompareExchange(ref this.m_closeState, 1, 0) == 0)
-                        {
-                            await this.OnClosing(waitClose.Message).ConfigureDefaultAwait();
-                        }
-
-                        // 回应关闭确认报文（无论哪方先发起，均需回应）
                         await this.SendJsonObjectAsync(P10_CloseAcknowledge, waitClose).ConfigureDefaultAwait();
-
-                        // 标记为下线并触发 Closed（被动）
-                        await this.PrivateOnClosed(waitClose.Message,default).ConfigureDefaultAwait();
                     }
                     catch (Exception ex)
                     {
-                        this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                        this.Logger?.Debug(this, ex);
+                    }
+                    finally
+                    {
+                        await this.OnTransportClosing(waitClose.Message, false, CancellationToken.None).ConfigureDefaultAwait();
                     }
                     return true;
                 }
+
             case P1_Handshake_Request:
                 {
+                    if (this.Online || this.m_connecting || this.m_finalized)
+                    {
+                        throw new InvalidOperationException("当前连接不允许重复握手。");
+                    }
+                    this.BeginConnection();
                     try
                     {
                         var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
@@ -454,14 +535,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         };
                         await this.OnConnecting(args).ConfigureDefaultAwait();
 
-                        if (args.Id.HasValue())
-                        {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureDefaultAwait();
-                            this.m_id = args.Id;
-                        }
-
                         if (args.IsPermitOperation)
                         {
+                            if (args.Id.HasValue())
+                            {
+                                await this.OnIdChanged(new IdChangedEventArgs(this.m_id, args.Id)).ConfigureDefaultAwait();
+                                this.m_id = args.Id;
+                            }
                             waitVerify.Id = this.m_id;
                             waitVerify.Status = 1;
                             waitVerify.Metadata = args.Metadata;
@@ -470,7 +550,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             this.m_online = true;
                             Volatile.Write(ref this.m_closeState, 0);
                             args.Message ??= TouchSocketCoreResource.OperationSuccessful;
-                            this.m_cancellationTokenSource = new CancellationTokenSource();
+                            this.m_connecting = false;
                             _ = EasyTask.SafeRun(this.PrivateOnConnected, args);
                         }
                         else//不允许连接
@@ -479,13 +559,13 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                             waitVerify.Metadata = args.Metadata;
                             waitVerify.Message = TouchSocketDmtpResource.RemoteRefuse.Format(args.Message);
                             await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureDefaultAwait();
-                            await this.OnClosed(args.Message,default).ConfigureDefaultAwait();
+                            await this.OnTransportClosing(args.Message, false, CancellationToken.None).ConfigureDefaultAwait();
                         }
                     }
                     catch (Exception ex)
                     {
                         this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
-                        await this.OnClosed(ex.Message,ex).ConfigureDefaultAwait();
+                        await this.OnTransportClosing(ex.Message, false, CancellationToken.None).ConfigureDefaultAwait();
                     }
                     return true;
                 }
@@ -494,8 +574,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                     try
                     {
                         var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
-                        this.WaitHandlePool.Set(waitVerify);
-                        await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureDefaultAwait();
+                        if (this.WaitHandlePool.Set(waitVerify))
+                        {
+                            await this.m_handshakeFinished.WaitOneAsync(this.ClosedToken).ConfigureDefaultAwait();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -692,9 +774,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                 }
             case P9_ChannelPackage:
                 {
+                    ChannelPackage channelPackage = new ChannelPackage();
                     try
                     {
-                        var channelPackage = new ChannelPackage();
 
                         channelPackage.UnpackageRouter(ref reader);
                         if (this.AllowRoute && channelPackage.Route)
@@ -716,11 +798,16 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         {
                             channelPackage.UnpackageBody(ref reader);
                             await this.QueueChannelPackageAsync(channelPackage).ConfigureDefaultAwait();
+                            channelPackage = null;
                         }
                     }
                     catch (Exception ex)
                     {
                         this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                    }
+                    finally
+                    {
+                        channelPackage.SafeDispose();
                     }
                     return true;
                 }
@@ -770,9 +857,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     /// <inheritdoc/>
     public virtual async Task ResetIdAsync(string newId, CancellationToken cancellationToken = default)
     {
+        this.EnsureCanSend(P3_ResetId_Request);
+        ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(newId, nameof(newId));
         var waitSetId = new WaitSetId(this.m_id, newId);
 
-        var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
+        using var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
         await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId, cancellationToken).ConfigureDefaultAwait();
 
@@ -794,7 +883,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             case WaitDataStatus.Overtime:
                 throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
             case WaitDataStatus.Canceled:
-                break;
+                throw new OperationCanceledException(cancellationToken);
 
             case WaitDataStatus.Disposed:
             default:
@@ -895,11 +984,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     public TActor GetActor<TActor>() where TActor : class, IActor
     {
         var type = typeof(TActor);
-        if (this.m_actors.TryGetValue(type, out var actor))
+        lock (this.m_syncRoot)
         {
-            return (TActor)actor;
+            return this.m_actors.TryGetValue(type, out var actor) ? (TActor)actor : default;
         }
-        return default;
     }
 
     /// <inheritdoc/>
@@ -924,58 +1012,75 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     #region 断开
 
     /// <inheritdoc/>
-    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        // 原子抢占关闭权：确保 Closing 最多触发一次
-        // 失败方直接返回，由 PrivateOnClosed 内部锁保证 Closed 最多触发一次
-        if (Interlocked.CompareExchange(ref this.m_closeState, 1, 0) != 0)
+        if (ReferenceEquals(s_closingActor.Value, this))
         {
-            return Result.Success;
+            return Task.FromResult(Result.Success);
         }
+        TaskCompletionSource<Result> completion;
+        lock (this.m_syncRoot)
+        {
+            if (this.m_closeCompletion != null)
+            {
+                return this.m_closeCompletion.Task;
+            }
+            completion = new TaskCompletionSource<Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+            this.m_closeCompletion = completion;
+        }
+        _ = this.CloseCoreAsync(msg, cancellationToken, completion);
+        return completion.Task;
+    }
 
-        // 注意：此处不再检查 m_online，原因如下：
-        // 在并发场景中，其他失去 CAS 的调用方会立即触发传输层关闭（base.CloseAsync），
-        // 进而通过 FinalizeAsync → PrivateOnClosed 将 m_online 置为 false。
-        // 若此处检查 m_online，CAS 赢得方会提前返回导致 OnClosing 从不触发（Closing计数=0）。
-        // CAS 保证 OnClosing 恰好触发一次，PrivateOnClosed 内部锁保证 OnClosed 恰好触发一次，
-        // 两层保护已足够，无需再用 m_online 做额外短路。
+    private void CancelPendingOperations()
+    {
+        this.m_cancellationTokenSource.SafeCancel();
+        this.WaitHandlePool.CancelAll();
+        foreach (var channel in this.m_userChannels.Values)
+        {
+            channel.SafeDispose();
+        }
+    }
 
-        Exception exception;
+    private async Task CloseCoreAsync(string msg, CancellationToken cancellationToken, TaskCompletionSource<Result> completion)
+    {
+        var previous = s_closingActor.Value;
+        s_closingActor.Value = this;
+        Exception exception = null;
         try
         {
-            // 1. 触发 Closing 相关方法和插件
-            await this.OnClosing(msg).ConfigureDefaultAwait();
-
-            // 2. 发送关闭请求报文，并等待对方的关闭确认
-            var waitClose = new WaitClose { Message = msg };
-            using (var waitData = this.WaitHandlePool.GetWaitDataAsync(waitClose))
+            if (Interlocked.CompareExchange(ref this.m_closeState, 1, 0) == 0 && this.Online && (this.Client is not IOnlineClient client || client.Online))
             {
-                await this.SendJsonObjectAsync(P0_Close, waitClose, cancellationToken).ConfigureDefaultAwait();
-
-                // 等待关闭确认，超时5秒后继续处理
-                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                try
                 {
-                    cts.CancelAfter(TimeSpan.FromSeconds(5));
-                    await waitData.WaitAsync(cts.Token).ConfigureDefaultAwait();
+                    await this.OnClosing(msg).ConfigureDefaultAwait();
+                    // 传输层负责排空发送管道；不在接收回调中等待关闭确认，避免等待自身。
+                    await this.SendJsonObjectAsync(P0_Close, new WaitClose { Message = msg }, cancellationToken).ConfigureDefaultAwait();
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
                 }
             }
-
-           exception = null;
+            this.CancelPendingOperations();
+            // 即使调用方已取消，也必须完成传输连接与等待项的收尾。
+            var result = await this.OnTransportClosing(msg, true, CancellationToken.None).ConfigureDefaultAwait();
+            completion.TrySetResult(exception == null ? result : Result.FromException(exception));
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            exception = ex;
+            completion.TrySetResult(Result.FromException(ex));
         }
-        // 3. 标记为下线并触发 Closed（主动）
-        await this.PrivateOnClosed(msg, exception).ConfigureDefaultAwait();
-        return Result.Success;
+        finally
+        {
+            s_closingActor.Value = previous;
+        }
     }
 
     /// <summary>
-    /// 由传输层驱动的直接关闭，不发送关闭报文，仅完成状态变更并触发 <see cref="Closed"/> 回调。
-    /// 用于传输层意外断开时（如 TCP 连接中断）同步 DmtpActor 状态。
+    /// 传输连接结束后，取消所有等待、释放通道与功能件，并触发一次关闭通知。
     /// </summary>
-    /// <param name="msg">关闭消息。</param>
+    /// <param name="msg">关闭原因。</param>
     /// <param name="exception">关闭时的异常。</param>
     public Task FinalizeAsync(string msg, Exception exception = null)
     {
@@ -987,25 +1092,25 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     {
         if (disposing)
         {
+            this.WaitHandlePool.CancelAll();
+            this.m_cancellationTokenSource.SafeCancel();
+            this.m_cancellationTokenSource.SafeDispose();
+            this.m_handshakeFinished.Set();
             lock (this.m_syncRoot)
             {
-                if (!this.m_online)
-                {
-                    return;
-                }
                 this.m_online = false;
-                foreach (var item in this.m_actors)
+                foreach (var item in this.m_userChannels.Values)
                 {
-                    item.Value.SafeDispose();
+                    item.SafeDispose();
                 }
-
-                this.m_handshakeFinished.Set();
-
+                this.m_userChannels.Clear();
+                foreach (var item in this.m_actors.Values)
+                {
+                    item.SafeDispose();
+                }
                 this.m_actors.Clear();
-                this.WaitHandlePool.CancelAll();
             }
         }
-
         base.Dispose(disposing);
     }
 
@@ -1017,8 +1122,9 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     private void EnsureCanSend(ushort protocol)
     {
-        // 允许在未连接状态下发送控制协议（protocol < 20），如握手、关闭、心跳、通道管理等。
-        if (!this.Online && protocol >= 20)
+        this.ThrowIfDisposed();
+        // 只有握手及关闭报文可以在未上线时发送。
+        if ((!this.Online || Volatile.Read(ref this.m_closeState) != 0) && protocol is not P0_Close and not P1_Handshake_Request and not P2_Handshake_Response and not P10_CloseAcknowledge)
         {
             ThrowHelper.ThrowClientNotConnectedException();
         }
@@ -1050,6 +1156,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
 
     private void CheckMaxPackageSize(int bodyLength)
     {
+        if (bodyLength < 0 || bodyLength > int.MaxValue - 8)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bodyLength));
+        }
         var maxPackageSize = this.MaxPackageSize;
         if (maxPackageSize <= 0)
         {
@@ -1070,7 +1180,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         this.CheckMaxPackageSize(memory.Length);
 
         var transportWriter = this.TransportWriter;
-        if (transportWriter != null)
+        if (transportWriter != null && this.OutputSendAsync == null)
         {
             await transportWriter.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
             try
@@ -1087,17 +1197,35 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
             return;
         }
 
-        ThrowHelper.ThrowIfNull(this.OutputSendAsync, nameof(this.OutputSendAsync));
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var segmentedWriter = new SegmentedBytesWriter(memory.Length + 8);
             try
             {
                 BuildPackage(ref segmentedWriter, protocol, memory);
-                foreach (var item in segmentedWriter.Sequence)
+                // 委托可能对应 WebSocket 或 UDP，每次调用必须包含完整的 DMTP 报文。
+                using var buffer = new ContiguousMemoryBuffer(segmentedWriter.Sequence);
+                this.CheckMaxPackageSize(buffer.Memory.Length - 8);
+                if (this.OutputSendAsync != null)
                 {
-                    await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureDefaultAwait();
+                    await this.OutputSendAsync.Invoke(this, buffer.Memory, cancellationToken).ConfigureDefaultAwait();
+                }
+                else
+                {
+                    var transport = this.TransportWriter;
+                    ThrowHelper.ThrowIfNull(transport, nameof(this.TransportWriter));
+                    await transport.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+                    try
+                    {
+                        var writer = new PipeBytesWriter(transport.Writer);
+                        writer.Write(buffer.Memory.Span);
+                        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+                    }
+                    finally
+                    {
+                        transport.WriteLocker.Release();
+                    }
                 }
             }
             finally
@@ -1117,35 +1245,35 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         where TPackage : IPackage
     {
         this.EnsureCanSend(protocol);
-        var transportWriter = this.TransportWriter;
-        if (transportWriter != null)
-        {
-            await transportWriter.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
-            try
-            {
-                var pipeWriter = new PipeBytesWriter(transportWriter.Writer);
-                BuildPackage(ref pipeWriter, protocol, package);
-                await pipeWriter.FlushAsync(cancellationToken).ConfigureDefaultAwait();
-            }
-            finally
-            {
-                transportWriter.WriteLocker.Release();
-            }
-
-            return;
-        }
-
-        ThrowHelper.ThrowIfNull(this.OutputSendAsync, nameof(this.OutputSendAsync));
-        await this.m_semaphoreSlim.WaitAsync(cancellationToken);
+        await this.m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureDefaultAwait();
         try
         {
             var segmentedWriter = new SegmentedBytesWriter(1024);
             try
             {
                 BuildPackage(ref segmentedWriter, protocol, package);
-                foreach (var item in segmentedWriter.Sequence)
+                // 委托可能对应 WebSocket 或 UDP，每次调用必须包含完整的 DMTP 报文。
+                using var buffer = new ContiguousMemoryBuffer(segmentedWriter.Sequence);
+                this.CheckMaxPackageSize(buffer.Memory.Length - 8);
+                if (this.OutputSendAsync != null)
                 {
-                    await this.OutputSendAsync.Invoke(this, item, cancellationToken).ConfigureDefaultAwait();
+                    await this.OutputSendAsync.Invoke(this, buffer.Memory, cancellationToken).ConfigureDefaultAwait();
+                }
+                else
+                {
+                    var transport = this.TransportWriter;
+                    ThrowHelper.ThrowIfNull(transport, nameof(this.TransportWriter));
+                    await transport.WriteLocker.WaitAsync(cancellationToken).ConfigureDefaultAwait();
+                    try
+                    {
+                        var writer = new PipeBytesWriter(transport.Writer);
+                        writer.Write(buffer.Memory.Span);
+                        await writer.FlushAsync(cancellationToken).ConfigureDefaultAwait();
+                    }
+                    finally
+                    {
+                        transport.WriteLocker.Release();
+                    }
                 }
             }
             finally
@@ -1176,10 +1304,16 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         }
     }
 
-    private Task SendJsonObjectAsync<T>(ushort protocol, in T obj, CancellationToken cancellationToken = default)
+    private async Task SendJsonObjectAsync<T>(ushort protocol, T obj, CancellationToken cancellationToken = default)
     {
-        var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
-        return this.SendAsync(protocol, bytes, cancellationToken);
+        using var writer = new SegmentedBytesWriter(256);
+        using (var jsonWriter = new System.Text.Json.Utf8JsonWriter(writer))
+        {
+            System.Text.Json.JsonSerializer.Serialize(jsonWriter, obj, typeof(T), TouchSocketDmtpSourceGenerationContext.Default);
+            jsonWriter.Flush();
+        }
+        using var buffer = new ContiguousMemoryBuffer(writer.Sequence);
+        await this.SendAsync(protocol, buffer.Memory, cancellationToken).ConfigureDefaultAwait();
     }
 
     #endregion 协议异步发送
@@ -1245,12 +1379,11 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     {
         if (this.m_userChannels.TryGetValue(id, out var channelOut))
         {
-            if (channelOut.Using)
+            if (!channelOut.TryMakeUsing())
             {
                 channel = null;
                 return false;
             }
-            channelOut.MakeUsing();
             channel = channelOut;
             return true;
         }
@@ -1258,9 +1391,10 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
         return false;
     }
 
-    internal bool RemoveChannel(int id)
+    internal bool RemoveChannel(int id, InternalChannel channel)
     {
-        return this.m_userChannels.TryRemove(id, out _);
+        return ((ICollection<KeyValuePair<int, InternalChannel>>)this.m_userChannels)
+            .Remove(new KeyValuePair<int, InternalChannel>(id, channel));
     }
 
     internal async Task SendChannelPackageAsync(ChannelPackage channelPackage, CancellationToken cancellationToken)
@@ -1286,6 +1420,7 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
     private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata, CancellationToken cancellationToken)
     {
         this.CheckChannelShouldBeReliable();
+        this.EnsureCanSend(P7_CreateChannel_Request);
 
         if (random)
         {
@@ -1351,6 +1486,8 @@ public abstract class DmtpActor : DisposableObject, IDmtpActor
                         {
                             throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
                         }
+                    case WaitDataStatus.Canceled:
+                        throw new OperationCanceledException(cancellationToken);
                     default:
                         {
                             throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());

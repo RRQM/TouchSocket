@@ -289,7 +289,7 @@ public class SystemTextJsonSerializer : ISocketIoSerializer
     private static void ReadConnectedMessage(SystemTextJsonSocketIoMessage message, string text)
     {
         var index = text.IndexOf('{');
-        message.Namespace = index > 0 ? text.Substring(0, index - 1) : string.Empty;
+        message.Namespace = index > 0 ? text.Substring(0, index - 1) : index == 0 ? string.Empty : text.TrimEnd(',');
     }
 
     private static void ReadDisconnectedMessage(SystemTextJsonSocketIoMessage message, string text)

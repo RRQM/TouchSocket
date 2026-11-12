@@ -28,8 +28,8 @@ public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
     /// <summary>
     /// DMTP协议的消息头部标识符。
     /// </summary>
-    /// <value>固定为"dm"的字节数组。</value>
-    public static readonly byte[] Head = "dm"u8.ToArray();
+    /// <value>固定为"dm"的字节序列。</value>
+    public static ReadOnlySpan<byte> Head => "dm"u8;
 
     private readonly ReadOnlyMemory<byte> m_memory;
 
@@ -99,7 +99,7 @@ public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
     /// <para>重要注意事项：</para>
     /// <list type="number">
     /// <item>此解析方法只能解析一个完整的消息，使用前请确认已接收到完整的<see cref="DmtpMessage"/>数据包。</item>
-    /// <item>解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，需要手动释放相关资源。</item>
+    /// <item>解析结果借用输入内存，输入内存必须在消息使用期间保持有效。</item>
     /// </list>
     /// <para>解析过程会验证消息头部是否为"dm"标识，如果不匹配则抛出异常。</para>
     /// </remarks>
@@ -107,7 +107,7 @@ public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
     {
         var offset = 0;
         var span = memory.Span;
-        if (span[offset++] != Head[0] || span[offset++] != Head[1])
+        if (span.Length < 8 || span[offset++] != Head[0] || span[offset++] != Head[1])
         {
             throw new Exception("这可能不是Dmtp协议数据");
         }
@@ -115,6 +115,10 @@ public sealed class DmtpMessage : IBytesBuilder, IRequestInfo
         offset += 2;
         var bodyLength = TouchSocketBitConverter.BigEndian.To<int>(span.Slice(offset));
         offset += 4;
+        if (bodyLength < 0 || bodyLength != memory.Length - 8)
+        {
+            throw new ArgumentException("Dmtp报文长度与实际数据不一致。", nameof(memory));
+        }
         return new DmtpMessage(protocolFlags, memory.Slice(offset, bodyLength));
     }
 

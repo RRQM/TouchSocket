@@ -18,6 +18,9 @@ internal sealed class SocketIoCore : ISocketIoCore
 
     private readonly WaitHandlePool<ISocketIoMessage> m_waitHandlePoolForEmit = new WaitHandlePool<ISocketIoMessage>(0, 99);
     private IEngineIo m_engineIO;
+    private readonly object m_eventLock = new object();
+    private Task m_eventTask = Task.CompletedTask;
+    private TaskCompletionSource<bool> m_connectedCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
     #endregion 字段
 
@@ -53,6 +56,43 @@ internal sealed class SocketIoCore : ISocketIoCore
 
     public EngineIoTransportType TransportType { get; set; }
     public Func<List<DataItem>,CancellationToken, Task> SendAsyncAction { get; set; }
+
+    public void ResetConnection()
+    {
+        this.m_connectedCompletion.TrySetCanceled();
+        this.m_connectedCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    public async Task NotifyConnectedAsync(Func<Task> handler)
+    {
+        var completion = this.m_connectedCompletion;
+        try
+        {
+            await handler().ConfigureDefaultAwait();
+            completion.TrySetResult(true);
+        }
+        catch
+        {
+            completion.TrySetCanceled();
+            throw;
+        }
+    }
+
+    public void DispatchEvent(Func<Task> handler)
+    {
+        lock (this.m_eventLock)
+        {
+            var previous = this.m_eventTask;
+            var connected = this.m_connectedCompletion.Task;
+            // 应用事件顺序执行，协议接收循环继续处理 ACK，避免双向确认互相等待。
+            this.m_eventTask = EasyTask.SafeRun(async () =>
+            {
+                await previous.ConfigureDefaultAwait();
+                await connected.ConfigureDefaultAwait();
+                await handler().ConfigureDefaultAwait();
+            });
+        }
+    }
 
     public EngineIoMessage Decode(ReadOnlyMemory<byte> data)
     {

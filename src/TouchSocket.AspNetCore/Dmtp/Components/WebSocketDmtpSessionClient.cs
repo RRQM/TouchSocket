@@ -34,6 +34,8 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     }
 
     #region 字段
+    private static readonly AsyncLocal<WebSocketDmtpSessionClient> s_sessionOwner = new();
+    private readonly TaskCompletionSource<bool> m_closedCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private WebSocket m_client;
     private ClosedEventArgs m_closedEventArgs;
     private TouchSocketConfig m_config;
@@ -95,29 +97,20 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
     public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
     /// <inheritdoc/>
-    public async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        try
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? this.CloseTransportAsync(msg, true, cancellationToken);
+    }
+
+    private async Task<Result> CloseTransportAsync(string msg, bool manual, CancellationToken cancellationToken)
+    {
+        this.m_closedEventArgs ??= new ClosedEventArgs(msg);
+        var result = await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
+        if (manual && !ReferenceEquals(s_sessionOwner.Value, this))
         {
-            if (!this.Online)
-            {
-                return Result.Success;
-            }
-
-            var dmtpActor = this.m_dmtpActor;
-            if (dmtpActor != null)
-            {
-                await dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-            }
-
-            await this.m_client.SafeCloseClientAsync(msg, cancellationToken).ConfigureDefaultAwait();
-
-            return Result.Success;
+            await this.m_closedCompletion.Task.WithCancellation(cancellationToken).ConfigureDefaultAwait();
         }
-        catch (Exception ex)
-        {
-            return Result.FromException(ex);
-        }
+        return result;
     }
 
     /// <inheritdoc/>
@@ -176,6 +169,8 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
             Client = this,
             Closing = this.OnDmtpActorClose,
             Closed = this.OnDmtpActorClosed,
+            TransportClosing = this.CloseTransportAsync,
+            MaxPackageSize = this.m_dmtpAdapter.MaxPackageSize,
             Routing = this.OnDmtpActorRouting,
             Connected = this.OnDmtpActorConnected,
             Connecting = this.OnDmtpActorConnecting,
@@ -188,15 +183,24 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
 
     internal async Task Start(WebSocket client, HttpContext context)
     {
+        s_sessionOwner.Value = this;
         var cancellationToken = context.RequestAborted;
         this.m_client = client;
         this.m_httpContext = context;
         await this.ReceiveLoopAsync(client, cancellationToken).ConfigureDefaultAwait();
 
         var closedArgs = this.m_closedEventArgs ?? new ClosedEventArgs(TouchSocketResource.RemoteDisconnects);
-        await this.m_dmtpActor.FinalizeAsync(closedArgs.Message, closedArgs.Exception).ConfigureDefaultAwait();
-
-        this.m_service.TryRemove(this.m_id, out _);
+        var actor = this.m_dmtpActor;
+        try
+        {
+            await actor.FinalizeAsync(actor.ClosedMessage ?? closedArgs.Message, closedArgs.Exception).ConfigureDefaultAwait();
+        }
+        finally
+        {
+            actor.SafeDispose();
+            this.m_service.TryRemove(this.m_id, out _);
+            this.m_closedCompletion.TrySetResult(true);
+        }
     }
 
     /// <summary>
@@ -264,6 +268,10 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         {
             using (var buffer = new ContiguousMemoryBuffer(sequence))
             {
+                if (buffer.Memory.Length > this.m_dmtpAdapter.MaxPackageSize)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(sequence));
+                }
                 var message = DmtpMessage.CreateFrom(buffer.Memory);
                 if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureDefaultAwait())
                 {
@@ -274,6 +282,7 @@ public class WebSocketDmtpSessionClient : ResolverConfigObject, IWebSocketDmtpSe
         catch (Exception ex)
         {
             this.Logger?.Debug(this, ex);
+            await this.CloseTransportAsync(ex.Message, false, CancellationToken.None).ConfigureDefaultAwait();
         }
     }
 

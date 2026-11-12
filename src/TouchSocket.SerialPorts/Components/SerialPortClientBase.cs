@@ -37,7 +37,6 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
     private int m_closeFlag;
     private volatile SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
     private volatile bool m_online;
-    private InternalReceiver m_receiver;
     private Task m_runTask;
     private SerialPortTransport m_transport;
 
@@ -138,6 +137,9 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
     private async Task RunSessionAsync(SerialPortTransport transport)
     {
+        // 标记当前异步流程属于本会话，回调中调用关闭或重连时不再等待会话任务自身，避免死锁。
+        SessionRunContext.Enter(this);
+
         try
         {
             await this.OnSerialConnected(new ConnectedEventArgs()).SafeWaitAsync().ConfigureDefaultAwait();
@@ -222,9 +224,14 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
             }
             else
             {
-                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
                 transport = this.m_transport;
                 runTask = this.m_runTask;
+
+                // 先占用关闭原因：若远端断开等已先记录了原因，本次关闭不再视为主动关闭，不触发 Closing，保证 Closing 与 Closed 的原因一致。
+                if (transport == null || transport.TrySetClosedEventArgs(new ClosedEventArgs(msg)))
+                {
+                    await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureDefaultAwait();
+                }
             }
         }
         catch (Exception ex)
@@ -243,7 +250,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
                 await transport.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
             }
 
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -294,7 +301,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
             // 确保上次接收任务已经结束
             var runTask = this.m_runTask;
-            if (runTask != null)
+            if (runTask != null && !SessionRunContext.IsInSession(this))
             {
                 await runTask.WithCancellation(cancellationToken).ConfigureDefaultAwait();
             }
@@ -386,41 +393,7 @@ public abstract partial class SerialPortClientBase : SetupConfigObject, ISerialP
 
     private async Task PrivateHandleReceivedData(ReadOnlyMemory<byte> memory, IRequestInfo requestInfo)
     {
-        var receiver = this.m_receiver;
-        if (receiver != null)
-        {
-            await receiver.InputReceiveAsync(memory, requestInfo, CancellationToken.None).ConfigureDefaultAwait();
-            return;
-        }
         await this.OnSerialReceived(m_receivedDataEventArgs.Reset(memory, requestInfo)).ConfigureDefaultAwait();
     }
 
-    #region Receiver
-
-    /// <summary>
-    /// 清除接收器对象
-    /// </summary>
-    /// <remarks>
-    /// 将内部接收器对象置为<see langword="null"/>，以释放资源或重置状态
-    /// </remarks>
-    protected void ProtectedClearReceiver()
-    {
-        this.m_receiver = null;
-    }
-
-    /// <summary>
-    /// 创建或获取一个接收器对象。
-    /// </summary>
-    /// <param name="receiverObject">接收器客户端对象，用于接收操作结果。</param>
-    /// <returns>返回一个实现了IReceiver&lt;IReceiverResult&gt;接口的接收器对象。</returns>
-    /// <remarks>
-    /// 这个方法使用了空条件运算符（??=）来实现懒加载，即只有当m_receiver为<see langword="null"/>时才会创建一个新的InternalReceiver对象。
-    /// 这样做可以提高性能，因为无需频繁地创建接收器实例。
-    /// </remarks>
-    protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
-    {
-        return this.m_receiver ??= new InternalReceiver(receiverObject);
-    }
-
-    #endregion Receiver
 }

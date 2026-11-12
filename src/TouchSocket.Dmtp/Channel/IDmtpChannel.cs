@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
 //  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
 //  CSDN博客：https://blog.csdn.net/qq_40374647
@@ -81,7 +81,7 @@ public partial interface IDmtpChannel : IDisposableObject
     Task<Result> HoldOnAsync(string operationMes = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 异步读取数据
+    /// 异步读取数据。返回内存在下一次读取开始或通道释放前有效；需要长期保存时请复制到自行管理的内存。
     /// </summary>
     /// <param name="cancellationToken">取消令箭</param>
     /// <returns>返回读取到的数据。当通道状态发生变化或出现错误时会抛出相应异常。</returns>

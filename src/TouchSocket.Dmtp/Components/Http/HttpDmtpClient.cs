@@ -36,10 +36,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     public IDmtpActor DmtpActor => this.m_dmtpActor;
 
     /// <inheritdoc cref="IIdClient.Id"/>
-    public string Id => this.m_dmtpActor.Id;
+    public string Id => this.m_dmtpActor?.Id;
 
     /// <inheritdoc cref="IOnlineClient.Online"/>
-    public override bool Online => this.m_dmtpActor != null && this.m_dmtpActor.Online;
+    public override bool Online => base.Online && this.m_dmtpActor?.Online == true;
 
     #region 连接
 
@@ -65,6 +65,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 如果基础连接不在状态，则尝试建立TCP连接
             if (!base.Online)
             {
+                this.InitDmtpActor();
                 await base.HttpConnectAsync(cancellationToken).ConfigureDefaultAwait();
             }
 
@@ -97,6 +98,15 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             // 与Dmtp服务器进行握手操作，完成连接
             await this.m_dmtpActor.ConnectAsync(dmtpOption, cancellationToken).ConfigureDefaultAwait();
         }
+        catch (Exception ex)
+        {
+            var transport = this.Transport;
+            if (transport != null)
+            {
+                await transport.CloseAsync(ex.Message, CancellationToken.None).ConfigureDefaultAwait();
+            }
+            throw;
+        }
         finally
         {
             // 释放信号量，允许其他连接操作
@@ -114,14 +124,18 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// <param name="msg">关闭消息的内容</param>
     /// <param name="cancellationToken">可取消令箭</param>
     /// <returns>异步任务</returns>
-    public override async Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
+    public override Task<Result> CloseAsync(string msg, CancellationToken cancellationToken = default)
     {
-        if (this.m_dmtpActor != null)
-        {
-            await this.m_dmtpActor.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
-        }
+        return this.m_dmtpActor?.CloseAsync(msg, cancellationToken) ?? base.CloseAsync(msg, cancellationToken);
+    }
 
-        return await base.CloseAsync(msg, cancellationToken).ConfigureDefaultAwait();
+    private Task<Result> CloseTransportAsync(string msg, bool manual, CancellationToken cancellationToken)
+    {
+        if (manual)
+        {
+            return base.CloseAsync(msg, cancellationToken);
+        }
+        return this.Transport?.CloseAsync(msg, cancellationToken) ?? Task.FromResult(Result.Success);
     }
 
     #endregion 断开
@@ -131,7 +145,10 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     /// <inheritdoc/>
     protected override void SafetyDispose(bool disposing)
     {
-        this.m_dmtpActor?.SafeDispose();
+        if (disposing && !base.Online)
+        {
+            this.m_dmtpActor?.SafeDispose();
+        }
         base.SafetyDispose(disposing);
     }
 
@@ -146,31 +163,29 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
             this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
         }
 
-        this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
-        {
-            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0,
-            OutputSendAsync = this.DmtpActorSendAsync,
-            Routing = this.OnDmtpActorRouting,
-            Connecting = this.OnDmtpActorConnecting,
-            Connected = this.OnDmtpActorConnected,
-            Closing = this.OnDmtpActorClose,
-            Closed = this.OnDmtpActorClosed,
-            CreatedChannel = this.OnDmtpActorCreateChannel,
-            Logger = this.Logger,
-            Client = this,
-            FindDmtpActor = this.m_findDmtpActor
-        };
+        this.InitDmtpActor();
     }
 
     /// <inheritdoc/>
     protected override async Task OnTcpClosed(ClosedEventArgs e)
     {
-        if (this.m_dmtpActor.ClosedMessage.HasValue())
+        var actor = this.m_dmtpActor;
+        try
         {
-            e.Message = this.m_dmtpActor.ClosedMessage;
+            if (actor != null)
+            {
+                if (actor.ClosedMessage.HasValue())
+                {
+                    e.Message = actor.ClosedMessage;
+                }
+                await actor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
+            }
+            await base.OnTcpClosed(e).ConfigureDefaultAwait();
         }
-        await this.m_dmtpActor.FinalizeAsync(e.Message, e.Exception).ConfigureDefaultAwait();
-        await base.OnTcpClosed(e).ConfigureDefaultAwait();
+        finally
+        {
+            actor.SafeDispose();
+        }
     }
 
     /// <inheritdoc/>
@@ -215,7 +230,7 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
         this.SetAdapter(adapter);
         this.m_adapter = adapter;
         this.m_dmtpActor.TransportWriter = base.Transport;
-        this.m_dmtpActor.MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? 0;
+        this.m_dmtpActor.MaxPackageSize = adapter.MaxPackageSize;
         this.m_dmtpActor.Logger = this.Logger;
         this.m_dmtpActor.Client = this;
 
@@ -277,6 +292,25 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
         }
     }
 
+    private void InitDmtpActor()
+    {
+        this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
+        {
+            MaxPackageSize = this.Config.AdapterOption?.MaxPackageSize ?? new DmtpAdapter().MaxPackageSize,
+            OutputSendAsync = this.DmtpActorSendAsync,
+            Routing = this.OnDmtpActorRouting,
+            Connecting = this.OnDmtpActorConnecting,
+            Connected = this.OnDmtpActorConnected,
+            Closing = this.OnDmtpActorClose,
+            Closed = this.OnDmtpActorClosed,
+            TransportClosing = this.CloseTransportAsync,
+            CreatedChannel = this.OnDmtpActorCreateChannel,
+            Logger = this.Logger,
+            Client = this,
+            FindDmtpActor = this.m_findDmtpActor
+        };
+    }
+
     #region 内部委托绑定
 
     private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
@@ -296,22 +330,22 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
 
     private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
     {
-        return this.OnCreateChannel(e);
+        return this.OnDmtpCreatedChannel(e);
     }
 
     private Task OnDmtpActorConnected(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnected(e);
+        return this.OnDmtpConnected(e);
     }
 
     private Task OnDmtpActorConnecting(DmtpActor actor, DmtpVerifyEventArgs e)
     {
-        return this.OnConnecting(e);
+        return this.OnDmtpConnecting(e);
     }
 
     private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
     {
-        return this.OnRouting(e);
+        return this.OnDmtpRouting(e);
     }
 
     #endregion 内部委托绑定
@@ -415,4 +449,20 @@ public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     }
 
     #endregion 事件触发
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnecting(DmtpVerifyEventArgs e) => this.OnConnecting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpConnected(DmtpVerifyEventArgs e) => this.OnConnected(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpRouting(PackageRouterEventArgs e) => this.OnRouting(e);
+
+    /// <summary>触发Dmtp协议事件。</summary>
+    /// <param name="e">事件参数。</param>
+    protected virtual Task OnDmtpCreatedChannel(CreateChannelEventArgs e) => this.OnCreateChannel(e);
 }
