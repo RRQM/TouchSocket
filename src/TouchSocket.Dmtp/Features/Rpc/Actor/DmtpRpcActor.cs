@@ -230,17 +230,18 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
         }
     }
 
-    private async Task CanceledInvokeAsync(string targetId,long sign)
+    private async Task CanceledInvokeAsync(string targetId, long sign)
     {
         try
         {
+            // https://github.com/RRQM/TouchSocket/pull/146：限制取消通知的发送等待，避免调用取消后继续阻塞。
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(this.DmtpActor.ClosedToken);
             cts.CancelAfter(1000);
-            await this.DmtpActor.SendAsync(this.m_cancelInvoke,new CanceledPackage {SourceId = this.DmtpActor.Id,TargetId=targetId,Sign=sign }, cts.Token).ConfigureDefaultAwait();
+            await this.DmtpActor.SendAsync(this.m_cancelInvoke, new CanceledPackage { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = sign }, cts.Token).ConfigureDefaultAwait();
         }
         catch
         {
-            //取消通知是尽力而为，失败不影响调用方
+            // 取消通知是尽力而为，失败不影响调用方退出。
         }
     }
 
@@ -377,7 +378,8 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
 
         try
         {
-            await this.DmtpActor.SendAsync(this.m_invoke_Request, rpcPackage).ConfigureDefaultAwait();
+            // https://github.com/RRQM/TouchSocket/pull/146：请求发送阶段也必须响应调用取消或超时。
+            await this.DmtpActor.SendAsync(this.m_invoke_Request, rpcPackage, cancellationToken).ConfigureDefaultAwait();
 
             switch (invokeOption.FeedbackType)
             {
@@ -456,7 +458,8 @@ public class DmtpRpcActor : DisposableObject, IDmtpRpcActor
             {
                 rpcPackage.Package(ref byteBlock);
 
-                await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureDefaultAwait();
+                // https://github.com/RRQM/TouchSocket/pull/146：路由请求发送阶段同样应用调用令牌。
+                await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory, cancellationToken).ConfigureDefaultAwait();
             }
             finally
             {

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Globalization;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -45,6 +46,11 @@ public sealed class McpActor : DisposableObject
     private readonly List<McpResourceTemplateRoute> m_resourceTemplateRoutes = new List<McpResourceTemplateRoute>();
     private IRpcServerProvider m_rpcServerProvider;
     private bool m_initialized;
+    private bool m_initializeReceived;
+    private readonly ConcurrentDictionary<string, McpCallContextBase> m_requests = new ConcurrentDictionary<string, McpCallContextBase>(StringComparer.Ordinal);
+
+    /// <summary>获取当前会话协商的协议版本。</summary>
+    public string ProtocolVersion { get; private set; }
 
     /// <summary>
     /// 初始化 <see cref="McpActor"/> 实例。
@@ -329,21 +335,29 @@ public sealed class McpActor : DisposableObject
     /// <param name="callContext">MCP 调用上下文。</param>
     public async Task InputReceiveAsync(ReadOnlyMemory<byte> data, McpCallContextBase callContext)
     {
+        callContext.SendAction ??= this.SendAction;
         if (!McpMessageSerializer.TryParseMessage(data.Span, out var request, out _, out var notification, this.m_options.JsonSerializerOptions))
         {
-            await this.SendErrorResponseAsync(null, McpErrorCodes.ParseError, "Parse error", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(null, McpErrorCodes.ParseError, "Parse error", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
         if (notification != null)
         {
-            await this.HandleNotificationAsync(notification, callContext.Token).ConfigureAwait(false);
+            await this.HandleNotificationAsync(notification, callContext.Token).ConfigureDefaultAwait();
             return;
         }
 
         if (request != null)
         {
-            await this.HandleRequestAsync(request, callContext).ConfigureAwait(false);
+            try
+            {
+                await this.HandleRequestAsync(request, callContext).ConfigureDefaultAwait();
+            }
+            catch (Exception error) when (error is JsonException or ArgumentException or FormatException or OverflowException)
+            {
+                await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, error.Message, CancellationToken.None, callContext).ConfigureDefaultAwait();
+            }
         }
     }
 
@@ -352,6 +366,10 @@ public sealed class McpActor : DisposableObject
     {
         if (disposing)
         {
+            foreach (var context in this.m_requests.Values)
+            {
+                context.Cancel();
+            }
             this.RpcDispatcher.SafeDispose();
         }
         base.Dispose(disposing);
@@ -395,6 +413,13 @@ public sealed class McpActor : DisposableObject
             Name = attr.GetInvokeKey(rpcMethod),
             Description = rpcMethod.GetDescription(),
             InputSchema = schema,
+            Annotations = new McpToolAnnotations
+            {
+                ReadOnlyHint = attr.ReadOnlyHint,
+                DestructiveHint = attr.DestructiveHint,
+                IdempotentHint = attr.IdempotentHint,
+                OpenWorldHint = attr.OpenWorldHint
+            },
             OutputSchema = includeOutputSchema ? GetOutputSchema(rpcMethod, jsonSerializerOptions) : null
         };
     }
@@ -463,63 +488,91 @@ public sealed class McpActor : DisposableObject
         switch (notification.Method)
         {
             case McpMethods.NotificationsInitialized:
-                this.m_initialized = true;
+                this.m_initialized = this.m_initializeReceived;
+                break;
+            case "notifications/cancelled":
+                if (notification.Params.HasValue && notification.Params.Value.ValueKind == JsonValueKind.Object
+                    && notification.Params.Value.TryGetProperty("requestId", out var requestId)
+                    && requestId.ValueKind is JsonValueKind.Number or JsonValueKind.String
+                    && this.m_requests.TryGetValue(requestId.GetRawText(), out var context))
+                {
+                    context.Cancel();
+                }
                 break;
             default:
                 break;
         }
 
-        await Task.CompletedTask.ConfigureAwait(false);
+        await Task.CompletedTask.ConfigureDefaultAwait();
     }
 
     private async Task HandleRequestAsync(McpRequest request, McpCallContextBase callContext)
     {
+        if (request.Method != McpMethods.Initialize && request.Method != McpMethods.Ping && !this.m_initialized)
+        {
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidRequest, "The MCP session has not been initialized.", callContext.Token, callContext).ConfigureDefaultAwait();
+            return;
+        }
         switch (request.Method)
         {
             case McpMethods.Initialize:
-                await this.HandleInitializeAsync(request, callContext.Token).ConfigureAwait(false);
+                await this.HandleInitializeAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.Ping:
-                await this.SendSuccessResponseAsync(request, new McpEmptyResult(), callContext.Token).ConfigureAwait(false);
+                await this.SendSuccessResponseAsync(request, new McpEmptyResult(), callContext.Token, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.ToolsList:
-                await this.HandleToolsListAsync(request, callContext.Token).ConfigureAwait(false);
+                await this.HandleToolsListAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.ToolsCall:
-                await this.HandleToolsCallAsync(request, callContext).ConfigureAwait(false);
+                await this.HandleToolsCallAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.ResourcesList:
-                await this.HandleResourcesListAsync(request, callContext.Token).ConfigureAwait(false);
+                await this.HandleResourcesListAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.ResourcesTemplatesList:
-                await this.HandleResourcesTemplatesListAsync(request, callContext.Token).ConfigureAwait(false);
+                await this.HandleResourcesTemplatesListAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.ResourcesRead:
-                await this.HandleResourcesReadAsync(request, callContext).ConfigureAwait(false);
+                await this.HandleResourcesReadAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.PromptsList:
-                await this.HandlePromptsListAsync(request, callContext.Token).ConfigureAwait(false);
+                await this.HandlePromptsListAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             case McpMethods.PromptsGet:
-                await this.HandlePromptsGetAsync(request, callContext).ConfigureAwait(false);
+                await this.HandlePromptsGetAsync(request, callContext).ConfigureDefaultAwait();
                 break;
             default:
-                await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Method '{request.Method}' not found.", callContext.Token).ConfigureAwait(false);
+                await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Method '{request.Method}' not found.", callContext.Token, callContext).ConfigureDefaultAwait();
                 break;
         }
     }
 
-    private async Task HandleInitializeAsync(McpRequest request, CancellationToken cancellationToken)
+    private async Task HandleInitializeAsync(McpRequest request, McpCallContextBase callContext)
     {
+        var cancellationToken = callContext.Token;
+        if (this.m_initializeReceived)
+        {
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidRequest, "The MCP session is already initialized.", cancellationToken, callContext).ConfigureDefaultAwait();
+            return;
+        }
         McpInitializeParams initializeParams = null;
         if (request.Params.HasValue)
         {
             initializeParams = JsonSerializer.Deserialize<McpInitializeParams>(request.Params.Value.GetRawText(), this.m_options.JsonSerializerOptions);
         }
 
+        if (initializeParams is null || string.IsNullOrWhiteSpace(initializeParams.ProtocolVersion)
+            || initializeParams.Capabilities is null || initializeParams.ClientInfo is null
+            || string.IsNullOrWhiteSpace(initializeParams.ClientInfo.Name) || string.IsNullOrWhiteSpace(initializeParams.ClientInfo.Version))
+        {
+            throw new ArgumentException("initialize requires protocolVersion, capabilities and clientInfo.name/version.");
+        }
+        this.ProtocolVersion = this.m_options.NegotiateProtocolVersion(initializeParams.ProtocolVersion);
+        this.m_initializeReceived = true;
         var result = new McpInitializeResult
         {
-            ProtocolVersion = this.m_options.NegotiateProtocolVersion(initializeParams?.ProtocolVersion),
+            ProtocolVersion = this.ProtocolVersion,
             ServerInfo = this.m_options.ServerInfo,
             Instructions = this.m_options.Instructions,
             Capabilities = new McpServerCapabilities
@@ -530,21 +583,27 @@ public sealed class McpActor : DisposableObject
             }
         };
 
-        await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await this.SendSuccessResponseAsync(request, result, cancellationToken, callContext).ConfigureDefaultAwait();
     }
 
-    private async Task HandleToolsListAsync(McpRequest request, CancellationToken cancellationToken)
+    private async Task HandleToolsListAsync(McpRequest request, McpCallContextBase callContext)
     {
+        var cancellationToken = callContext.Token;
         var pageSize = this.m_options.ToolListPageSize;
         if (pageSize <= 0)
         {
             var allResult = new McpListToolsResult { Tools = this.m_tools };
-            await this.SendSuccessResponseAsync(request, allResult, cancellationToken).ConfigureAwait(false);
+            await this.SendSuccessResponseAsync(request, allResult, cancellationToken, callContext).ConfigureDefaultAwait();
             return;
         }
 
         pageSize = Math.Max(1, pageSize);
         var offset = GetListCursorOffset(request.Params);
+        if (offset < 0 || offset > 0 && offset >= this.m_tools.Count)
+        {
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Invalid tools/list cursor.", cancellationToken, callContext).ConfigureDefaultAwait();
+            return;
+        }
         var tools = this.m_tools
             .Skip(offset)
             .Take(pageSize)
@@ -557,22 +616,22 @@ public sealed class McpActor : DisposableObject
                 ? nextOffset.ToString(CultureInfo.InvariantCulture)
                 : null
         };
-        await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await this.SendSuccessResponseAsync(request, result, cancellationToken, callContext).ConfigureDefaultAwait();
     }
 
     private static int GetListCursorOffset(JsonElement? parameters)
     {
-        if (parameters.HasValue
-            && parameters.Value.ValueKind == JsonValueKind.Object
-            && parameters.Value.TryGetProperty("cursor", out var cursorProperty)
-            && cursorProperty.ValueKind == JsonValueKind.String
+        if (!parameters.HasValue || !parameters.Value.TryGetProperty("cursor", out var cursorProperty))
+        {
+            return 0;
+        }
+        if (cursorProperty.ValueKind == JsonValueKind.String
             && int.TryParse(cursorProperty.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out var cursor)
             && cursor > 0)
         {
             return cursor;
         }
-
-        return 0;
+        return -1;
     }
 
     private async Task HandleToolsCallAsync(McpRequest request, McpCallContextBase callContext)
@@ -585,13 +644,13 @@ public sealed class McpActor : DisposableObject
 
         if (callParams == null || string.IsNullOrEmpty(callParams.Name))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing tool name.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing tool name.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
         if (!this.ToolActionMap.TryGetRpcMethod(callParams.Name, out var rpcMethod))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Tool '{callParams.Name}' not found.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Tool '{callParams.Name}' not found.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
@@ -600,28 +659,31 @@ public sealed class McpActor : DisposableObject
 
         if (rpcMethod.Reenterable == false || this.RpcDispatcher.Reenterable == false)
         {
-            callContext.SetResolver(this.Resolver);
+            callContext.SetResolver(callContext.Resolver ?? this.Resolver);
         }
         else
         {
-            callContext.SetResolver(this.Resolver.CreateScopedResolver());
+            var resolver = callContext.Resolver ?? this.Resolver;
+            callContext.SetResolver(resolver.CreateScopedResolver());
         }
 
         this.BuildToolParameters(callContext, rpcMethod, callParams.Arguments);
 
-        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeToolAsync).ConfigureAwait(false);
+        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeToolAsync).ConfigureDefaultAwait();
     }
 
-    private async Task HandleResourcesListAsync(McpRequest request, CancellationToken cancellationToken)
+    private async Task HandleResourcesListAsync(McpRequest request, McpCallContextBase callContext)
     {
+        var cancellationToken = callContext.Token;
         var result = new McpListResourcesResult { Resources = this.m_resources };
-        await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await this.SendSuccessResponseAsync(request, result, cancellationToken, callContext).ConfigureDefaultAwait();
     }
 
-    private async Task HandleResourcesTemplatesListAsync(McpRequest request, CancellationToken cancellationToken)
+    private async Task HandleResourcesTemplatesListAsync(McpRequest request, McpCallContextBase callContext)
     {
+        var cancellationToken = callContext.Token;
         var result = new McpListResourceTemplatesResult { ResourceTemplates = this.m_resourceTemplates };
-        await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await this.SendSuccessResponseAsync(request, result, cancellationToken, callContext).ConfigureDefaultAwait();
     }
 
     private async Task HandleResourcesReadAsync(McpRequest request, McpCallContextBase callContext)
@@ -634,13 +696,13 @@ public sealed class McpActor : DisposableObject
 
         if (string.IsNullOrEmpty(uri))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing resource uri.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing resource uri.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
         if (!this.TryResolveResource(uri, out var rpcMethod, out var templateArguments))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Resource '{uri}' not found.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Resource '{uri}' not found.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
@@ -649,22 +711,24 @@ public sealed class McpActor : DisposableObject
 
         if (rpcMethod.Reenterable == false || this.RpcDispatcher.Reenterable == false)
         {
-            callContext.SetResolver(this.Resolver);
+            callContext.SetResolver(callContext.Resolver ?? this.Resolver);
         }
         else
         {
-            callContext.SetResolver(this.Resolver.CreateScopedResolver());
+            var resolver = callContext.Resolver ?? this.Resolver;
+            callContext.SetResolver(resolver.CreateScopedResolver());
         }
 
         this.BuildResourceParameters(callContext, rpcMethod, uri, templateArguments);
 
-        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeResourceAsync).ConfigureAwait(false);
+        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokeResourceAsync).ConfigureDefaultAwait();
     }
 
-    private async Task HandlePromptsListAsync(McpRequest request, CancellationToken cancellationToken)
+    private async Task HandlePromptsListAsync(McpRequest request, McpCallContextBase callContext)
     {
+        var cancellationToken = callContext.Token;
         var result = new McpListPromptsResult { Prompts = this.m_prompts };
-        await this.SendSuccessResponseAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await this.SendSuccessResponseAsync(request, result, cancellationToken, callContext).ConfigureDefaultAwait();
     }
 
     private async Task HandlePromptsGetAsync(McpRequest request, McpCallContextBase callContext)
@@ -677,13 +741,13 @@ public sealed class McpActor : DisposableObject
 
         if (promptParams == null || string.IsNullOrEmpty(promptParams.Name))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing prompt name.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.InvalidParams, "Missing prompt name.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
         if (!this.PromptActionMap.TryGetRpcMethod(promptParams.Name, out var rpcMethod))
         {
-            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Prompt '{promptParams.Name}' not found.", callContext.Token).ConfigureAwait(false);
+            await this.SendErrorResponseAsync(request.Id, McpErrorCodes.MethodNotFound, $"Prompt '{promptParams.Name}' not found.", callContext.Token, callContext).ConfigureDefaultAwait();
             return;
         }
 
@@ -692,20 +756,25 @@ public sealed class McpActor : DisposableObject
 
         if (rpcMethod.Reenterable == false || this.RpcDispatcher.Reenterable == false)
         {
-            callContext.SetResolver(this.Resolver);
+            callContext.SetResolver(callContext.Resolver ?? this.Resolver);
         }
         else
         {
-            callContext.SetResolver(this.Resolver.CreateScopedResolver());
+            var resolver = callContext.Resolver ?? this.Resolver;
+            callContext.SetResolver(resolver.CreateScopedResolver());
         }
 
         this.BuildPromptParameters(callContext, rpcMethod, promptParams.Arguments);
 
-        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokePromptAsync).ConfigureAwait(false);
+        await this.RpcDispatcher.Dispatcher(this, callContext, this.ThisInvokePromptAsync).ConfigureDefaultAwait();
     }
 
     private void BuildToolParameters(McpCallContextBase callContext, RpcMethod rpcMethod, JsonElement? arguments)
     {
+        if (arguments.HasValue && arguments.Value.ValueKind != JsonValueKind.Object)
+        {
+            throw new ArgumentException("Tool arguments must be an object.");
+        }
         var ps = new object[rpcMethod.Parameters.Length];
         for (var i = 0; i < rpcMethod.Parameters.Length; i++)
         {
@@ -725,6 +794,10 @@ public sealed class McpActor : DisposableObject
             else if (arguments.HasValue && arguments.Value.ValueKind == JsonValueKind.Object
                      && arguments.Value.TryGetProperty(param.Name, out var pv))
             {
+                if (pv.ValueKind == JsonValueKind.Null && !param.ParameterInfo.HasDefaultValue)
+                {
+                    throw new ArgumentException($"Required argument '{param.Name}' cannot be null.");
+                }
                 ps[i] = pv.Deserialize(param.Type, this.m_options.JsonSerializerOptions);
             }
             else if (param.ParameterInfo.HasDefaultValue)
@@ -733,7 +806,7 @@ public sealed class McpActor : DisposableObject
             }
             else
             {
-                ps[i] = param.Type.GetDefault();
+                throw new ArgumentException($"Missing required argument '{param.Name}'.");
             }
         }
         callContext.SetParameters(ps);
@@ -869,6 +942,11 @@ public sealed class McpActor : DisposableObject
             IsError = value is IMcpToolResult businessResult && !businessResult.IsSuccess,
             StructuredContent = CreateStructuredContent(value, this.m_options.JsonSerializerOptions)
         };
+        result.Content.Add(new McpTextContent { Text = this.SerializeMcpValue(value) });
+        if (this.ProtocolVersion is McpProtocolVersion.Version2024_11_05 or McpProtocolVersion.Version2025_03_26)
+        {
+            result.StructuredContent = null;
+        }
         return result;
     }
 
@@ -1041,11 +1119,19 @@ public sealed class McpActor : DisposableObject
     private async Task ThisInvokeToolAsync(IMcpCallContext callContext)
     {
         var ctx = (McpCallContextBase)callContext;
+        ctx.EnableCancellation();
+        var requestKey = ctx.McpRequest.Id?.GetRawText();
+        if (requestKey is not null && !this.m_requests.TryAdd(requestKey, ctx))
+        {
+            await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InvalidRequest, "A request with this id is already running.", CancellationToken.None, ctx).ConfigureDefaultAwait();
+            ctx.Dispose();
+            return;
+        }
         try
         {
-            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(false);
+            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureDefaultAwait();
 
-            if (!callContext.McpRequestId.HasValue)
+            if (!callContext.McpRequestId.HasValue || callContext.Token.IsCancellationRequested)
             {
                 return;
             }
@@ -1058,13 +1144,13 @@ public sealed class McpActor : DisposableObject
                     Content = new List<McpContent> { new McpTextContent { Text = invokeResult.Message ?? "Internal error." } }
                 };
                 var errorBytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, errorResult, this.m_options.JsonSerializerOptions);
-                await this.SendAction(errorBytes, CancellationToken.None).ConfigureAwait(false);
+                await this.SendResponseAsync(ctx, errorBytes, CancellationToken.None).ConfigureDefaultAwait();
                 return;
             }
 
             var result = BuildToolCallResult(invokeResult.Result);
             var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
-            await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
+            await this.SendResponseAsync(ctx, bytes, CancellationToken.None).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -1072,6 +1158,10 @@ public sealed class McpActor : DisposableObject
         }
         finally
         {
+            if (requestKey is not null)
+            {
+                this.m_requests.TryRemove(requestKey, out _);
+            }
             ctx.Dispose();
         }
     }
@@ -1079,24 +1169,32 @@ public sealed class McpActor : DisposableObject
     private async Task ThisInvokeResourceAsync(IMcpCallContext callContext)
     {
         var ctx = (McpCallContextBase)callContext;
+        ctx.EnableCancellation();
+        var requestKey = ctx.McpRequest.Id?.GetRawText();
+        if (requestKey is not null && !this.m_requests.TryAdd(requestKey, ctx))
+        {
+            await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InvalidRequest, "A request with this id is already running.", CancellationToken.None, ctx).ConfigureDefaultAwait();
+            ctx.Dispose();
+            return;
+        }
         try
         {
-            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(false);
+            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureDefaultAwait();
 
-            if (!callContext.McpRequestId.HasValue)
+            if (!callContext.McpRequestId.HasValue || callContext.Token.IsCancellationRequested)
             {
                 return;
             }
 
             if (invokeResult.Status != InvokeStatus.Success)
             {
-                await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InternalError, invokeResult.Message ?? "Internal error.", CancellationToken.None).ConfigureAwait(false);
+                await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InternalError, invokeResult.Message ?? "Internal error.", CancellationToken.None, ctx).ConfigureDefaultAwait();
                 return;
             }
 
             var result = BuildReadResourceResult(invokeResult.Result, ctx);
             var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
-            await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
+            await this.SendResponseAsync(ctx, bytes, CancellationToken.None).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -1104,6 +1202,10 @@ public sealed class McpActor : DisposableObject
         }
         finally
         {
+            if (requestKey is not null)
+            {
+                this.m_requests.TryRemove(requestKey, out _);
+            }
             ctx.Dispose();
         }
     }
@@ -1111,24 +1213,32 @@ public sealed class McpActor : DisposableObject
     private async Task ThisInvokePromptAsync(IMcpCallContext callContext)
     {
         var ctx = (McpCallContextBase)callContext;
+        ctx.EnableCancellation();
+        var requestKey = ctx.McpRequest.Id?.GetRawText();
+        if (requestKey is not null && !this.m_requests.TryAdd(requestKey, ctx))
+        {
+            await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InvalidRequest, "A request with this id is already running.", CancellationToken.None, ctx).ConfigureDefaultAwait();
+            ctx.Dispose();
+            return;
+        }
         try
         {
-            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureAwait(false);
+            var invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, new InvokeResult(InvokeStatus.Ready)).ConfigureDefaultAwait();
 
-            if (!callContext.McpRequestId.HasValue)
+            if (!callContext.McpRequestId.HasValue || callContext.Token.IsCancellationRequested)
             {
                 return;
             }
 
             if (invokeResult.Status != InvokeStatus.Success)
             {
-                await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InternalError, invokeResult.Message ?? "Internal error.", CancellationToken.None).ConfigureAwait(false);
+                await this.SendErrorResponseAsync(ctx.McpRequest.Id, McpErrorCodes.InternalError, invokeResult.Message ?? "Internal error.", CancellationToken.None, ctx).ConfigureDefaultAwait();
                 return;
             }
 
             var result = BuildPromptResult(invokeResult.Result);
             var bytes = McpMessageSerializer.BuildSuccessResponse(ctx.McpRequest.Id, result, this.m_options.JsonSerializerOptions);
-            await this.SendAction(bytes, CancellationToken.None).ConfigureAwait(false);
+            await this.SendResponseAsync(ctx, bytes, CancellationToken.None).ConfigureDefaultAwait();
         }
         catch (Exception ex)
         {
@@ -1136,19 +1246,28 @@ public sealed class McpActor : DisposableObject
         }
         finally
         {
+            if (requestKey is not null)
+            {
+                this.m_requests.TryRemove(requestKey, out _);
+            }
             ctx.Dispose();
         }
     }
 
-    private async Task SendSuccessResponseAsync(McpRequest request, object result, CancellationToken cancellationToken)
+    private async Task SendSuccessResponseAsync(McpRequest request, object result, CancellationToken cancellationToken, McpCallContextBase callContext = null)
     {
         var bytes = McpMessageSerializer.BuildSuccessResponse(request.Id, result, this.m_options.JsonSerializerOptions);
-        await this.SendAction(bytes, cancellationToken).ConfigureAwait(false);
+        await this.SendResponseAsync(callContext, bytes, cancellationToken).ConfigureDefaultAwait();
     }
 
-    private async Task SendErrorResponseAsync(JsonElement? id, int code, string message, CancellationToken cancellationToken)
+    private async Task SendErrorResponseAsync(JsonElement? id, int code, string message, CancellationToken cancellationToken, McpCallContextBase callContext = null)
     {
         var bytes = McpMessageSerializer.BuildErrorResponse(id, code, message, this.m_options.JsonSerializerOptions);
-        await this.SendAction(bytes, cancellationToken).ConfigureAwait(false);
+        await this.SendResponseAsync(callContext, bytes, cancellationToken).ConfigureDefaultAwait();
+    }
+    private Task SendResponseAsync(McpCallContextBase callContext, ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
+    {
+        var sender = callContext?.SendAction ?? this.SendAction;
+        return sender(data, cancellationToken);
     }
 }

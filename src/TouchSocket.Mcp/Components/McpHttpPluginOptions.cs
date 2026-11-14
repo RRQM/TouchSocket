@@ -26,4 +26,19 @@ public sealed class McpHttpPluginOptions
     /// 获取或设置 MCP 服务端协议选项。
     /// </summary>
     public McpServerOptions ServerOptions { get; set; } = new McpServerOptions();
+
+    /// <summary>获取或设置允许的浏览器源。默认拒绝全部携带 Origin 的请求；不携带 Origin 的本地客户端不受此项限制。</summary>
+    public ISet<string> AllowedOrigins { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>获取或设置请求授权验证器。返回 false 时拒绝请求；应用可在此验证配对令牌。</summary>
+    public Func<TouchSocket.Http.HttpRequest, bool> AuthorizeRequest { get; set; }
+
+    /// <summary>获取或设置最大会话数量，默认 1024。</summary>
+    public int MaximumSessions { get; set; } = 1024;
+
+    /// <summary>获取或设置会话空闲超时，默认 30 分钟。执行中的请求不会因空闲超时被回收。</summary>
+    public TimeSpan SessionIdleTimeout { get; set; } = TimeSpan.FromMinutes(30);
+
+    /// <summary>获取或设置单次 JSON 请求体的最大字节数，默认 4 MiB。</summary>
+    public int MaximumRequestBytes { get; set; } = 4 * 1024 * 1024;
 }

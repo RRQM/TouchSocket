@@ -77,7 +77,26 @@ public sealed class McpAIFunction : AIFunction
     {
         var mcpArguments = CreateMcpArguments(arguments);
         var result = await this.m_client.CallToolAsync(this.Name, mcpArguments, cancellationToken).ConfigureAwait(false);
+        if (result.StructuredContent.HasValue)
+        {
+            var structured = result.StructuredContent.Value;
+            result.Content.RemoveAll(content => content is McpTextContent text && IsDuplicateText(text.Text, structured));
+        }
         return JsonSerializer.SerializeToElement(result, JsonOptions);
+    }
+
+    private static bool IsDuplicateText(string text, JsonElement structured)
+    {
+        if (text == structured.GetRawText())
+        {
+            return true;
+        }
+        if (structured.ValueKind == JsonValueKind.Object && structured.EnumerateObject().Count() == 1
+            && structured.TryGetProperty("result", out var value))
+        {
+            return text == (value.ValueKind == JsonValueKind.String ? value.GetString() : value.GetRawText());
+        }
+        return false;
     }
 
     private static Dictionary<string, object> CreateMcpArguments(AIFunctionArguments arguments)

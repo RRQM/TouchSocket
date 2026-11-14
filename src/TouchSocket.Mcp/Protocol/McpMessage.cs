@@ -358,32 +358,37 @@ public static class McpMessageSerializer
         try
         {
             var reader = new Utf8JsonReader(bytes);
-            var hasMethod = false;
-            var hasId = false;
-            var hasResult = false;
-            var hasError = false;
-
-            while (reader.Read())
+            using var document = JsonDocument.ParseValue(ref reader);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || reader.Read()
+                || !root.TryGetProperty("jsonrpc", out var version)
+                || version.ValueKind != JsonValueKind.String || version.GetString() != "2.0")
             {
-                if (reader.TokenType == JsonTokenType.PropertyName)
+                return false;
+            }
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var property in root.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
                 {
-                    if (reader.ValueTextEquals("method"u8))
-                    {
-                        hasMethod = true;
-                    }
-                    else if (reader.ValueTextEquals("id"u8))
-                    {
-                        hasId = true;
-                    }
-                    else if (reader.ValueTextEquals("result"u8))
-                    {
-                        hasResult = true;
-                    }
-                    else if (reader.ValueTextEquals("error"u8))
-                    {
-                        hasError = true;
-                    }
+                    return false;
                 }
+            }
+            var hasMethod = root.TryGetProperty("method", out var method);
+            var hasId = root.TryGetProperty("id", out var id);
+            var hasResult = root.TryGetProperty("result", out _);
+            var hasError = root.TryGetProperty("error", out var error);
+            if (hasId && id.ValueKind is not (JsonValueKind.String or JsonValueKind.Number))
+            {
+                return false;
+            }
+            if (root.TryGetProperty("params", out var parameters) && parameters.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+            if (hasMethod && (method.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(method.GetString()) || hasResult || hasError))
+            {
+                return false;
             }
 
             if (hasMethod && hasId)
@@ -396,8 +401,14 @@ public static class McpMessageSerializer
                 notification = (McpNotification)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(McpNotification), options));
                 return true;
             }
-            else if (hasId && (hasResult || hasError))
+            else if (hasId && hasResult != hasError)
             {
+                if (hasError && (error.ValueKind != JsonValueKind.Object
+                    || !error.TryGetProperty("code", out var code) || !code.TryGetInt32(out _)
+                    || !error.TryGetProperty("message", out var errorMessage) || errorMessage.ValueKind != JsonValueKind.String))
+                {
+                    return false;
+                }
                 response = (McpResponse)JsonSerializer.Deserialize(bytes, GetJsonTypeInfo(typeof(McpResponse), options));
                 return true;
             }

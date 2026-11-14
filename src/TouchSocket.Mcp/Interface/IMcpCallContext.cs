@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Rpc;
+using System.Text.Json;
 
 namespace TouchSocket.Mcp;
 
@@ -22,5 +23,5 @@ public interface IMcpCallContext : ICallContext
     /// <summary>
     /// 获取当前 MCP 请求的 ID，若请求无 ID（通知）则为 <see langword="null"/>。
     /// </summary>
-    int? McpRequestId { get; }
+    JsonElement? McpRequestId { get; }
 }

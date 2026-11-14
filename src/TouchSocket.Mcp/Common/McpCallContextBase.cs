@@ -21,6 +21,8 @@ namespace TouchSocket.Mcp;
 public abstract class McpCallContextBase : CallContext, IMcpCallContext
 {
     private IScopedResolver m_scopedResolver;
+    private CancellationTokenSource m_cancellation;
+    private CancellationToken m_token;
 
     /// <summary>
     /// 初始化 <see cref="McpCallContextBase"/>。
@@ -30,14 +32,38 @@ public abstract class McpCallContextBase : CallContext, IMcpCallContext
     protected McpCallContextBase(object caller, CancellationToken cancellationToken)
     {
         this.Caller = caller;
-        this.Token = cancellationToken;
+        this.m_token = cancellationToken;
     }
 
     /// <inheritdoc/>
-    public int? McpRequestId { get; private set; }
+    public JsonElement? McpRequestId { get; private set; }
 
     /// <inheritdoc/>
-    public override CancellationToken Token { get; }
+    public override CancellationToken Token => this.m_token;
+
+    internal Func<ReadOnlyMemory<byte>, CancellationToken, Task> SendAction { get; set; }
+
+    internal void EnableCancellation()
+    {
+        if (this.m_cancellation is not null)
+        {
+            return;
+        }
+        this.m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(this.m_token);
+        this.m_token = this.m_cancellation.Token;
+    }
+
+    internal void Cancel()
+    {
+        try
+        {
+            this.m_cancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // 请求完成和取消通知可以同时到达。
+        }
+    }
 
     /// <summary>
     /// 获取当前处理的 MCP 请求。
@@ -46,8 +72,9 @@ public abstract class McpCallContextBase : CallContext, IMcpCallContext
 
     internal void SetMcpRequest(McpRequest request)
     {
+        this.EnableCancellation();
         this.McpRequest = request;
-        this.McpRequestId = ParseRequestId(request.Id);
+        this.McpRequestId = request.Id;
     }
 
     internal void SetRpcMethod(RpcMethod rpcMethod)
@@ -77,21 +104,9 @@ public abstract class McpCallContextBase : CallContext, IMcpCallContext
         if (disposing)
         {
             this.m_scopedResolver.SafeDispose();
+            this.m_cancellation.SafeDispose();
         }
         base.SafetyDispose(disposing);
     }
 
-    internal static int? ParseRequestId(JsonElement? id)
-    {
-        if (!id.HasValue)
-        {
-            return null;
-        }
-        var elem = id.Value;
-        if (elem.ValueKind == JsonValueKind.Number && elem.TryGetInt32(out var intVal))
-        {
-            return intVal;
-        }
-        return null;
-    }
 }

@@ -21,6 +21,18 @@ namespace TouchSocket.Mcp;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
 public sealed class McpToolAttribute : RpcAttribute
 {
+    /// <summary>获取或设置工具是否只读取状态。默认按有写入行为处理。</summary>
+    public bool ReadOnlyHint { get; set; }
+
+    /// <summary>获取或设置工具是否可能破坏数据。未声明时采用保守值。</summary>
+    public bool DestructiveHint { get; set; } = true;
+
+    /// <summary>获取或设置重复执行相同参数是否幂等。</summary>
+    public bool IdempotentHint { get; set; }
+
+    /// <summary>获取或设置工具是否可能与外部环境交互。</summary>
+    public bool OpenWorldHint { get; set; } = true;
+
     /// <summary>
     /// 初始化 <see cref="McpToolAttribute"/>。
     /// </summary>

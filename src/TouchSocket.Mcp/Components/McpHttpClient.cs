@@ -26,6 +26,7 @@ public sealed class McpHttpClient : HttpClientSlim, IMcpClient
     private Uri m_endpoint;
     private string m_sessionId;
     private bool m_connected;
+    private string m_protocolVersion;
 
     /// <summary>
     /// 初始化 <see cref="McpHttpClient"/> 的新实例。
@@ -51,9 +52,11 @@ public sealed class McpHttpClient : HttpClientSlim, IMcpClient
     }
 
     /// <inheritdoc/>
-    public Task<McpInitializeResult> InitializeAsync(CancellationToken cancellationToken = default)
+    public async Task<McpInitializeResult> InitializeAsync(CancellationToken cancellationToken = default)
     {
-        return this.m_clientBase.InitializeAsync(cancellationToken);
+        var result = await this.m_clientBase.InitializeAsync(cancellationToken).ConfigureDefaultAwait();
+        this.m_protocolVersion = result.ProtocolVersion;
+        return result;
     }
 
     /// <inheritdoc/>
@@ -171,8 +174,11 @@ public sealed class McpHttpClient : HttpClientSlim, IMcpClient
 
         using var deleteRequest = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Delete, this.m_endpoint);
         deleteRequest.Headers.Add("Mcp-Session-Id", this.m_sessionId);
-        await this.HttpClient.SendAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+        deleteRequest.Headers.Add("MCP-Protocol-Version", this.m_protocolVersion);
+        using var response = await this.HttpClient.SendAsync(deleteRequest, cancellationToken).ConfigureDefaultAwait();
         this.m_sessionId = null;
+        this.m_connected = false;
+        this.m_clientBase.SetConnected(false);
     }
 
     /// <inheritdoc/>
@@ -188,7 +194,9 @@ public sealed class McpHttpClient : HttpClientSlim, IMcpClient
 
         this.m_connected = false;
         this.m_sessionId = null;
-        this.m_clientBase.Bind(this.SendDataAsync, config.GetValue(McpConfigExtension.McpClientOptionsProperty) ?? new McpClientOptions());
+        var options = config.GetValue(McpConfigExtension.McpClientOptionsProperty) ?? new McpClientOptions();
+        this.m_protocolVersion = options.ProtocolVersion;
+        this.m_clientBase.Bind(this.SendDataAsync, options);
     }
 
     /// <inheritdoc/>
@@ -211,6 +219,8 @@ public sealed class McpHttpClient : HttpClientSlim, IMcpClient
         using var httpRequest = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, this.m_endpoint);
         httpRequest.Content = content;
         httpRequest.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/event-stream"));
+        httpRequest.Headers.Add("MCP-Protocol-Version", this.m_protocolVersion);
 
         if (!string.IsNullOrEmpty(this.m_sessionId))
         {

@@ -81,7 +81,7 @@ public static class McpJsonSchemaGenerator
 
     internal static McpToolProperty GenerateForTool(Type type, string description = null, JsonSerializerOptions jsonSerializerOptions = null)
     {
-        return Generate(type, description, jsonSerializerOptions, true);
+        return Generate(type, description, jsonSerializerOptions, false);
     }
 
     private static McpToolProperty Generate(JsonTypeInfo jsonTypeInfo, string description, JsonSerializerOptions jsonSerializerOptions, bool requireValueTypes, HashSet<Type> visitingTypes)
@@ -232,13 +232,8 @@ public static class McpJsonSchemaGenerator
 
     private static bool IsRequired(JsonPropertyInfo propertyInfo, bool requireValueTypes)
     {
-        if (!requireValueTypes)
-        {
-            return false;
-        }
-
         return propertyInfo.IsRequired
-            || (propertyInfo.PropertyType.IsValueType && Nullable.GetUnderlyingType(propertyInfo.PropertyType) == null);
+            || (requireValueTypes && propertyInfo.PropertyType.IsValueType && Nullable.GetUnderlyingType(propertyInfo.PropertyType) == null);
     }
 
     private static bool TryGetEnumerableElementType(Type type, out Type elementType)
