@@ -50,5 +50,6 @@
 		<PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
 		<PackageVersion Include="MQTTnet.Server" Version="5.2.0.1603" />
 		<PackageVersion Include="Spectre.Console" Version="0.57.2" />
+		<PackageVersion Include="Vortice.Direct3D11" Version="3.8.3" />
 	</ItemGroup>
 </Project>
